@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -197,6 +197,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('ucx', default=False, description='Enable UCX support')
+    variant('pmi', default=False, description='Enable PMI support')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -211,8 +212,8 @@ class Openmpi(AutotoolsPackage):
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
-    conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
+    conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -279,26 +280,18 @@ class Openmpi(AutotoolsPackage):
             line += '={0}'.format(path)
         return line
 
-    def with_or_without_schedulers(self, activated):
-        spec = self.spec
-        opts = []
-
-        for x in ['alps', 'lsf', 'tm', 'sge', 'loadleveler']:
-            if 'schedulers={0}'.format(x) in spec:
-                opts.append('--with-{0}'.format(x))
-
-        if 'schedulers=slurm' in spec:
-            # PMI support was added in 1.5.5
-            if self.spec.satisfies('@1.5.4:'):
-                # See how SLURM and OpenMPI work together
-                # https://www.open-mpi.org/faq/?category=slurm
-                # https://slurm.schedmd.com/mpi_guide.html#open_mpi
-                # TODO: Add PMIx support since OpenMPI 2.0
-                opts.append('--with-slurm')
-                opts.append('--with-pmi')
-            else:
-                opts.append('--with-slurm')
-        return opts
+    def with_or_without_slurm(self, activated):
+        # PMI and SLURM
+        # https://www.open-mpi.org/faq/?category=slurm
+        # https://slurm.schedmd.com/mpi_guide.html#open_mpi
+        # TODO: Add PMIx support for openmpi(>2.0.0)
+        if not activated:
+            return '--without-slurm'
+        elif self.stisfies('@1.5.4:') and '+pmi' not in self.spec:
+            raise SpackError(
+                "+pmi is required for openmpi(>=1.5.5) to work with SLURM.")
+        else:
+            return '--with-slurm'
 
     @run_before('autoreconf')
     def die_without_fortran(self):
@@ -320,9 +313,12 @@ class Openmpi(AutotoolsPackage):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
 
-        # Fabrics and schedulers
+        # Fabrics
         config_args.extend(self.with_or_without('fabrics'))
+        # Schedulers
         config_args.extend(self.with_or_without('schedulers'))
+        # PMI
+        config_args.extend(self.with_or_without('pmi'))
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
