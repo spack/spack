@@ -25,21 +25,14 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class RFastmatch(RPackage):
+    """Package providing a fast match() replacement for cases that require
+       repeated look-ups. It is slightly faster that R's built-in match()
+       function on first match against a table, but extremely fast on any
+       subsequent lookup as it keeps the hash table in memory."""
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    homepage = "http://www.rforge.net/fastmatch"
+    url      = "https://cran.r-project.org/src/contrib/fastmatch_1.1-0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fastmatch"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
-
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+    version('1.1-0', '900c2363c15059ac9d63c4c71ea2d6b2')

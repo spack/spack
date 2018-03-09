@@ -25,21 +25,22 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class RPhangorn(RPackage):
+    """Package contains methods for estimation of phylogenetic trees and
+       networks using Maximum Likelihood, Maximum Parsimony, distance methods
+       and Hadamard conjugation. Allows to compare trees, models selection and
+       offers visualizations for trees and split networks."""
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    homepage = "http://www.example.co://github.com/KlausVigo/phangorn"
+    url      = "https://cran.r-project.org/src/contrib/phangorn_2.3.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/phangorn"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    version('2.3.1', '85e7309900d061432508ab6f7e3e627e')
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+    depends_on('r-ape@5.0:', type=('build', 'run'))
+    depends_on('r-quadprog', type=('build', 'run'))
+    depends_on('r-igraph@1.0:', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-fastmatch', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.0:', type=('build', 'run'))
