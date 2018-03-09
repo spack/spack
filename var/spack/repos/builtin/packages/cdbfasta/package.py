@@ -33,6 +33,8 @@ class Cdbfasta(MakefilePackage):
 
     version('2017-03-16', git='https://github.com/gpertea/cdbfasta.git', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
 
+    depends_on('zlib')
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('cdbfasta', prefix.bin)

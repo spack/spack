@@ -97,7 +97,7 @@ class NetlibLapack(Package):
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
 
     @property
@@ -120,7 +120,7 @@ class NetlibLapack(Package):
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
 
     def install_one(self, spec, prefix, shared):

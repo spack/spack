@@ -46,6 +46,7 @@ class Clamr(CMakePackage):
         values=('single', 'mixed', 'full'),
         description='single, mixed, or full double precision values')
 
+    depends_on('cmake@3.1:')
     depends_on('mpi')
     depends_on('mpe', when='graphics=mpe')
 

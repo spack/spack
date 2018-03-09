@@ -95,7 +95,7 @@ class SuiteSparse(Package):
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk,
             # even though this fix is ugly
             'BLAS=%s' % (spec['blas'].libs.ld_flags + (
-                '-lstdc++' if '@4.5.1' in spec else '')),
+                ' -lstdc++' if '@4.5.1' in spec else '')),
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
 
@@ -125,3 +125,22 @@ class SuiteSparse(Package):
             ]
 
         make('install', *make_args)
+
+    @property
+    def libs(self):
+        """Export the libraries of SuiteSparse.
+        Sample usage: spec['suite-sparse'].libs.ld_flags
+                      spec['suite-sparse:klu,btf'].libs.ld_flags
+        """
+        # Component libraries, ordered by dependency. Any missing components?
+        all_comps = ['klu', 'btf', 'umfpack', 'cholmod', 'colamd', 'amd',
+                     'camd', 'ccolamd', 'cxsparse', 'ldl', 'rbio', 'spqr',
+                     'suitesparseconfig']
+        query_parameters = self.spec.last_query.extra_parameters
+        comps = all_comps if not query_parameters else query_parameters
+        libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
+                              shared=True, recursive=False)
+        if not libs:
+            return None
+        libs += find_system_libraries('librt')
+        return libs

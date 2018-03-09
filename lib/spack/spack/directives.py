@@ -74,7 +74,7 @@ __all__ = []
 reserved_names = ['patches']
 
 
-class DirectiveMetaMixin(type):
+class DirectiveMeta(type):
     """Flushes the directives that were temporarily stored in the staging
     area into the package.
     """
@@ -107,12 +107,12 @@ class DirectiveMetaMixin(type):
 
         # Move things to be executed from module scope (where they
         # are collected first) to class scope
-        if DirectiveMetaMixin._directives_to_be_executed:
+        if DirectiveMeta._directives_to_be_executed:
             attr_dict['_directives_to_be_executed'].extend(
-                DirectiveMetaMixin._directives_to_be_executed)
-            DirectiveMetaMixin._directives_to_be_executed = []
+                DirectiveMeta._directives_to_be_executed)
+            DirectiveMeta._directives_to_be_executed = []
 
-        return super(DirectiveMetaMixin, mcs).__new__(
+        return super(DirectiveMeta, mcs).__new__(
             mcs, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
@@ -127,7 +127,7 @@ class DirectiveMetaMixin(type):
 
             # Ensure the presence of the dictionaries associated
             # with the directives
-            for d in DirectiveMetaMixin._directive_names:
+            for d in DirectiveMeta._directive_names:
                 setattr(cls, d, {})
 
             # Lazily execute directives
@@ -136,9 +136,9 @@ class DirectiveMetaMixin(type):
 
             # Ignore any directives executed *within* top-level
             # directives by clearing out the queue they're appended to
-            DirectiveMetaMixin._directives_to_be_executed = []
+            DirectiveMeta._directives_to_be_executed = []
 
-        super(DirectiveMetaMixin, cls).__init__(name, bases, attr_dict)
+        super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
     def directive(dicts=None):
@@ -188,7 +188,7 @@ class DirectiveMetaMixin(type):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
         # Add the dictionary names if not already there
-        DirectiveMetaMixin._directive_names |= set(dicts)
+        DirectiveMeta._directive_names |= set(dicts)
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
@@ -202,7 +202,7 @@ class DirectiveMetaMixin(type):
                 # This allows nested directive calls in packages.  The
                 # caller can return the directive if it should be queued.
                 def remove_directives(arg):
-                    directives = DirectiveMetaMixin._directives_to_be_executed
+                    directives = DirectiveMeta._directives_to_be_executed
                     if isinstance(arg, (list, tuple)):
                         # Descend into args that are lists or tuples
                         for a in arg:
@@ -228,18 +228,17 @@ class DirectiveMetaMixin(type):
                 if not isinstance(values, collections.Sequence):
                     values = (values, )
 
-                DirectiveMetaMixin._directives_to_be_executed.extend(values)
+                DirectiveMeta._directives_to_be_executed.extend(values)
 
                 # wrapped function returns same result as original so
                 # that we can nest directives
                 return result
-
             return _wrapper
 
         return _decorator
 
 
-directive = DirectiveMetaMixin.directive
+directive = DirectiveMeta.directive
 
 
 @directive('versions')

@@ -24,18 +24,14 @@
 ##############################################################################
 import argparse
 
-import os
 import llnl.util.tty as tty
 
 import spack
 import spack.cmd
 import spack.binary_distribution as bindist
-from spack.binary_distribution import NoOverwriteException, NoGpgException
-from spack.binary_distribution import NoKeyException, PickKeyException
-from spack.binary_distribution import NoVerifyException, NoChecksumException
 
-description = "Create, download and install build cache files."
-section = "caching"
+description = "create, download and install binary packages"
+section = "packaging"
 level = "long"
 
 
@@ -43,15 +39,15 @@ def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help='buildcache sub-commands')
 
-    create = subparsers.add_parser('create')
+    create = subparsers.add_parser('create', help=createtarball.__doc__)
     create.add_argument('-r', '--rel', action='store_true',
                         help="make all rpaths relative" +
                              " before creating tarballs.")
     create.add_argument('-f', '--force', action='store_true',
                         help="overwrite tarball if it exists.")
-    create.add_argument('-y', '--yes-to-all', action='store_true',
-                        help="answer yes to all create unsigned " +
-                             "buildcache questions")
+    create.add_argument('-a', '--allow_root', action='store_true',
+                        help="allow install root string in binary files " +
+                             "after RPATH substitution")
     create.add_argument('-k', '--key', metavar='key',
                         type=str, default=None,
                         help="Key for signing.")
@@ -63,18 +59,20 @@ def setup_parser(subparser):
         help="specs of packages to create buildcache for")
     create.set_defaults(func=createtarball)
 
-    install = subparsers.add_parser('install')
+    install = subparsers.add_parser('install', help=installtarball.__doc__)
     install.add_argument('-f', '--force', action='store_true',
                          help="overwrite install directory if it exists.")
-    install.add_argument('-y', '--yes-to-all', action='store_true',
-                         help="answer yes to all install unsigned " +
-                              "buildcache questions")
+    install.add_argument('-m', '--multiple', action='store_true',
+                         help="allow all matching packages ")
+    install.add_argument('-a', '--allow_root', action='store_true',
+                         help="allow install root string in binary files " +
+                              "after RPATH substitution")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install biuldache for")
     install.set_defaults(func=installtarball)
 
-    listcache = subparsers.add_parser('list')
+    listcache = subparsers.add_parser('list', help=listspecs.__doc__)
     listcache.add_argument('-f', '--force', action='store_true',
                            help="force new download of specs")
     listcache.add_argument(
@@ -82,12 +80,12 @@ def setup_parser(subparser):
         help="specs of packages to search for")
     listcache.set_defaults(func=listspecs)
 
-    dlkeys = subparsers.add_parser('keys')
+    dlkeys = subparsers.add_parser('keys', help=getkeys.__doc__)
     dlkeys.add_argument(
         '-i', '--install', action='store_true',
         help="install Keys pulled from mirror")
     dlkeys.add_argument(
-        '-y', '--yes-to-all', action='store_true',
+        '-y', '--yes_to_all', action='store_true',
         help="answer yes to all trust questions")
     dlkeys.add_argument('-f', '--force', action='store_true',
                         help="force new download of keys")
@@ -179,22 +177,23 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
 
 
 def createtarball(args):
+    """create a binary package from an existing install"""
     if not args.packages:
         tty.die("build cache file creation requires at least one" +
                 " installed package argument")
     pkgs = set(args.packages)
     specs = set()
-    outdir = os.getcwd()
+    outdir = '.'
     if args.directory:
         outdir = args.directory
     signkey = None
     if args.key:
         signkey = args.key
-    yes_to_all = False
+    allow_root = False
     force = False
     relative = False
-    if args.yes_to_all:
-        yes_to_all = True
+    if args.allow_root:
+        allow_root = True
     if args.force:
         force = True
     if args.rel:
@@ -219,38 +218,27 @@ def createtarball(args):
                     tty.msg('adding dependency %s' % node.format())
                     specs.add(node)
 
+    tty.msg('writing tarballs to %s/build_cache' % outdir)
+
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force,
-                                  relative, yes_to_all, signkey)
-        except NoOverwriteException as e:
-            tty.warn("%s exists, use -f to force overwrite." % e)
-        except NoGpgException:
-            tty.die("gpg2 is not available,"
-                    " use -y to create unsigned build caches")
-        except NoKeyException:
-            tty.die("no default key available for signing,"
-                    " use -y to create unsigned build caches"
-                    " or spack gpg init to create a default key")
-        except PickKeyException:
-            tty.die("multi keys available for signing,"
-                    " use -y to create unsigned build caches"
-                    " or -k <key hash> to pick a key")
+        bindist.build_tarball(spec, outdir, force,
+                              relative, allow_root, signkey)
 
 
 def installtarball(args):
+    """install from a binary package"""
     if not args.packages:
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.packages)
-    yes_to_all = False
-    if args.yes_to_all:
-        yes_to_all = True
+    multiple = False
+    if args.multiple:
+        multiple = True
     force = False
     if args.force:
         force = True
-    matches = match_downloaded_specs(pkgs, yes_to_all, force)
+    matches = match_downloaded_specs(pkgs, multiple, force)
 
     for match in matches:
         install_tarball(match, args)
@@ -261,9 +249,9 @@ def install_tarball(spec, args):
     if s.external or s.virtual:
         tty.warn("Skipping external or virtual package %s" % spec.format())
         return
-    yes_to_all = False
-    if args.yes_to_all:
-        yes_to_all = True
+    allow_root = False
+    if args.allow_root:
+        allow_root = True
     force = False
     if args.force:
         force = True
@@ -272,30 +260,20 @@ def install_tarball(spec, args):
         install_tarball(d, args)
     package = spack.repo.get(spec)
     if s.concrete and package.installed and not force:
-        tty.warn("Package for spec %s already installed." % spec.format(),
-                 " Use -f flag to overwrite.")
+        tty.warn("Package for spec %s already installed." % spec.format())
     else:
         tarball = bindist.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            try:
-                bindist.extract_tarball(spec, tarball, yes_to_all, force)
-            except NoOverwriteException as e:
-                tty.warn("%s exists. use -f to force overwrite." % e.args)
-            except NoVerifyException:
-                tty.die("Package spec file failed signature verification,"
-                        " use -y flag to install build cache")
-            except NoChecksumException:
-                tty.die("Package tarball failed checksum verification,"
-                        " use -y flag to install build cache")
-            finally:
-                spack.store.db.reindex(spack.store.layout)
+            bindist.extract_tarball(spec, tarball, allow_root, force)
+            spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
                     spec.format())
 
 
 def listspecs(args):
+    """list binary packages available from mirrors"""
     specs = bindist.get_specs(args.force)
     if args.packages:
         pkgs = set(args.packages)
@@ -318,6 +296,7 @@ def listspecs(args):
 
 
 def getkeys(args):
+    """get public keys available on mirrors"""
     install = False
     if args.install:
         install = True

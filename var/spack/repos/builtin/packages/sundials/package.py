@@ -216,9 +216,9 @@ class Sundials(CMakePackage):
 
         fortran_flag = self.compiler.pic_flag
         if spec.satisfies('%clang platform=darwin'):
-            mpif77 = Executable(self.spec['mpi'].mpif77)
-            libgfortran = LibraryList(mpif77('--print-file-name',
-                                             'libgfortran.a', output=str))
+            f77 = Executable(self.compiler.f77)
+            libgfortran = LibraryList(f77('--print-file-name',
+                                          'libgfortran.a', output=str))
             fortran_flag += ' ' + libgfortran.ld_flags
 
         # List of CMake arguments
@@ -476,3 +476,37 @@ class Sundials(CMakePackage):
         for filename in f90_files:
             filter_file(os.environ['FC'], self.compiler.fc,
                         os.path.join(dirname, filename), **kwargs)
+
+    @property
+    def headers(self):
+        """Export the headers and defines of SUNDIALS.
+           Sample usage: spec['sundials'].headers.cpp_flags
+        """
+        # SUNDIALS headers are inside subdirectories, so we use a fake header
+        # in the include directory.
+        hdr = find(self.prefix.include.nvector, 'nvector_serial.h',
+                   recursive=False)
+        return HeaderList(join_path(self.spec.prefix.include, 'fake.h')) \
+            if hdr else None
+
+    @property
+    def libs(self):
+        """Export the libraries of SUNDIALS.
+           Sample usage: spec['sundials'].libs.ld_flags
+                         spec['sundials:arkode,cvode'].libs.ld_flags
+        """
+        query_parameters = self.spec.last_query.extra_parameters
+        if not query_parameters:
+            sun_libs = 'libsundials_*[!0-9]'
+            # Q: should the result be ordered by dependency?
+        else:
+            sun_libs = ['libsundials_' + p for p in query_parameters]
+        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
+                        [self.prefix, True]]
+        is_shared = '+shared' in self.spec
+        for path, recursive in search_paths:
+            libs = find_libraries(sun_libs, root=path, shared=is_shared,
+                                  recursive=recursive)
+            if libs:
+                return libs
+        return None  # Raise an error

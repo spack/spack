@@ -53,11 +53,6 @@ class PkgConfig(AutotoolsPackage):
         Adds the ACLOCAL path for autotools."""
         spack_env.append_path('ACLOCAL_PATH',
                               join_path(self.prefix.share, 'aclocal'))
-        if 'platform=cray' in self.spec:
-            spack_env.append_path('PKG_CONFIG_PATH',
-                                  '/usr/lib64/pkgconfig')
-            spack_env.append_path('PKG_CONFIG_PATH',
-                                  '/usr/local/lib64/pkgconfig')
 
     def configure_args(self):
         config_args = ['--enable-shared']
