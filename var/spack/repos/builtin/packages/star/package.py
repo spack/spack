@@ -36,6 +36,8 @@ class Star(Package):
     version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
             url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
 
+    depends_on('zlib')
+
     def install(self, spec, prefix):
         with working_dir('source'):
             make('STAR', 'STARlong')

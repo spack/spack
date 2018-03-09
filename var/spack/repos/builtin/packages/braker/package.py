@@ -31,6 +31,7 @@ class Braker(Package):
 
     homepage = "http://exon.gatech.edu/braker1.html"
     url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER1_v1.11.tar.gz"
+    list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
     version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
 
