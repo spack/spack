@@ -77,7 +77,7 @@ class Ghost(CMakePackage):
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
                 % ('ON' if '+shared' in spec else 'OFF'),
                 '-DCBLAS_INCLUDE_DIR:STRING=%s'
-                % format(spec['blas:c'].headers.directories[0]),
+                % format(spec['blas'].headers.directories[0]),
                 '-DBLAS_LIBRARIES=%s'
                 % spec['blas:c'].libs.joined(';')
                 ]
