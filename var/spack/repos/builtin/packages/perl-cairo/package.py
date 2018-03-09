@@ -33,5 +33,6 @@ class PerlCairo(PerlPackage):
 
     version('1.106', '47ca0ae0f5b9bc4c16a27627ff48bd8b')
 
+    depends_on('cairo')
     depends_on('perl-extutils-depends')
     depends_on('perl-extutils-pkgconfig')
