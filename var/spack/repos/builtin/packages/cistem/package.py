@@ -27,9 +27,9 @@ from spack import *
 
 
 class Cistem(AutotoolsPackage):
-    """cisTEM is user-friendly software to process cryo-EM images of 
-       macromolecular complexes and obtain high-resolution 3D reconstructions 
-       from them.""" 
+    """cisTEM is user-friendly software to process cryo-EM images of
+       macromolecular complexes and obtain high-resolution 3D reconstructions
+       from them."""
 
     homepage = "https://cistem.org/"
     url      = "https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0"
