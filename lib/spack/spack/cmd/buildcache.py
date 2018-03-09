@@ -264,7 +264,7 @@ def install_tarball(spec, args):
     force = False
     if args.force:
         force = True
-    unsigned = True
+    unsigned = False
     if args.unsigned:
         unsigned = True
     for d in s.dependencies(deptype=('link', 'run')):
