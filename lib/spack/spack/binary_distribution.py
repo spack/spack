@@ -349,7 +349,8 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
 
     # cleanup file moved to archive
     os.remove(tarfile_path)
-    if not unsigned: os.remove('%s.asc' % specfile_path)
+    if not unsigned:
+        os.remove('%s.asc' % specfile_path)
 
     # create an index.html for the build_cache directory so specs can be found
     if os.path.exists(indexfile_path):
@@ -437,7 +438,8 @@ def relocate_package(workdir, allow_root):
                                  allow_root)
 
 
-def extract_tarball(spec, filename, allow_root=False, unsigned=False, force=False):
+def extract_tarball(spec, filename, allow_root=False, unsigned=False,
+                    force=False):
     """
     extract binary tarball for given package into install area
     """

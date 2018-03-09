@@ -164,7 +164,7 @@ echo $PATH"""
         pkg.do_uninstall(force=True)
 
         # install build cache without verification
-	args = parser.parse_args(['install', '-u', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification

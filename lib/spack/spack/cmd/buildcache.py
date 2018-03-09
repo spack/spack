@@ -71,8 +71,8 @@ def setup_parser(subparser):
                          help="allow install root string in binary files " +
                               "after RPATH substitution")
     install.add_argument('-u', '--unsigned', action='store_true',
-                        help="install unsigned buildcache" +
-                             " tarballs for testing")
+                         help="install unsigned buildcache" +
+                              " tarballs for testing")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install biuldache for")
