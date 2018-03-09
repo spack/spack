@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class NetlibLapack(Package):
@@ -122,6 +123,24 @@ class NetlibLapack(Package):
         return find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
         )
+
+    @property
+    def lapack_headers(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        query2headers = {
+            tuple(): ['lapacke.h'],
+            ('c',): [
+                'lapacke.h',
+            ]
+        }
+        key = tuple(sorted(query_parameters))
+        headers = query2headers[key]
+
+        paths = join_path(self.spec.prefix.include, headers[0])
+        if os.path.exists(paths):
+            return HeaderList(paths)
+        else:
+            return None
 
     def install_one(self, spec, prefix, shared):
         cmake_args = [
