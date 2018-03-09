@@ -70,12 +70,8 @@ library or Trilinos/Tpetra).
     def cmake_args(self):
         spec = self.spec
         outlev = spec.variants['outlev'].value
-        lapack_libs = (spec['lapack'].libs + spec['blas'].libs).joined(';')
-        lapacke_inc = self.lapacke_include_dir()
-        tpl_lapacke_include_dirs = ''
-        if lapacke_inc != "NOTFOUND":
-            tpl_lapacke_include_dirs = '-DTPL_LAPACKE_INCLUDE_DIRS='
-            + lapacke_inc
+        lapacke_libs = (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
+        lapacke_include_dir = format(spec['lapack:c'].headers.directories[0])
 
         # Use everything until the first '+' sign as the kernel library.
         # Note that we already restrict the string to a list of given values,
@@ -84,8 +80,8 @@ library or Trilinos/Tpetra).
 
         args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
                 '-DPHIST_OUTLEV=%s' % outlev,
-                '-DTPL_LAPACKE_LIBRARIES=%s' % lapack_libs,
-                tpl_lapacke_include_dirs,
+                '-DTPL_LAPACKE_LIBRARIES=%s' % lapacke_libs,
+                '-DTPL_LAPACKE_INCLUDE_DIRS=%s' % lapacke_include_dir,
                 '-DPHIST_ENABLE_MPI:BOOL=%s'
                 % ('ON' if '+mpi' in spec else 'OFF'),
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
@@ -107,7 +103,7 @@ library or Trilinos/Tpetra).
             make("check")
 
     @run_after('install')
-    @on_package_attributes(smoke_test=True)
+    @on_package_attributes(run_tests=True)
     def test_install(self):
         with working_dir(self.build_directory):
             make("test_install")
