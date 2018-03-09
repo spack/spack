@@ -27,7 +27,7 @@ from spack import *
 
 class RTfbstools(RPackage):
     """TFBSTools is a package for the analysis and manipulation of
-       transcription factor binding sites. 
+       transcription factor binding sites.
 
        It includes matrices conversion between Position Frequency Matirx (PFM),
        Position Weight Matirx (PWM) and Information Content Matrix (ICM). It
