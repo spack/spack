@@ -42,6 +42,7 @@ class Pandaseq(AutotoolsPackage):
     depends_on('m4',          type='build')
     depends_on('zlib',        type='build')
     depends_on('pkg-config',  type='build')
+    depends_on('bzip2')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
