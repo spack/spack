@@ -64,11 +64,8 @@ class Ghost(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        cblas_include_dir = ''
-        if '^mkl' not in spec:
-            cblas_include_dir = '-DCBLAS_INCLUDE_DIR=' + \
-                spec['blas'].prefix.include
-
+        # note: we require the cblas_include_dir property from the blas provider,
+        # this is implemented at least for intel-mkl and netlib-lapack
         args = ['-DGHOST_ENABLE_MPI:BOOL=%s'
                 % ('ON' if '+mpi' in spec else 'OFF'),
                 '-DGHOST_USE_CUDA:BOOL=%s'
@@ -78,9 +75,12 @@ class Ghost(CMakePackage):
                 '-DGHOST_USE_ZOLTAN:BOOL=%s'
                 % ('ON' if '+zoltan' in spec else 'OFF'),
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
-                % ('ON' if '+shared' in spec else 'OFF'), cblas_include_dir
+                % ('ON' if '+shared' in spec else 'OFF'),
+                '-DCBLAS_INCLUDE_DIR:STRING=%s'
+                % format(spec['blas:c'].headers.directories[0]),
+                '-DBLAS_LIBRARIES=%s'
+                % spec['blas:c'].libs.joined(';')
                 ]
-
         return args
 
     def check(self):
