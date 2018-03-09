@@ -45,6 +45,9 @@ def setup_parser(subparser):
                              " before creating tarballs.")
     create.add_argument('-f', '--force', action='store_true',
                         help="overwrite tarball if it exists.")
+    create.add_argument('-u', '--unsigned', action='store_true',
+                        help="create unsigned buildcache" +
+                             " tarballs for testing")
     create.add_argument('-a', '--allow_root', action='store_true',
                         help="allow install root string in binary files " +
                              "after RPATH substitution")
@@ -67,6 +70,9 @@ def setup_parser(subparser):
     install.add_argument('-a', '--allow_root', action='store_true',
                          help="allow install root string in binary files " +
                               "after RPATH substitution")
+    install.add_argument('-u', '--unsigned', action='store_true',
+                        help="install unsigned buildcache" +
+                             " tarballs for testing")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install biuldache for")
@@ -85,8 +91,8 @@ def setup_parser(subparser):
         '-i', '--install', action='store_true',
         help="install Keys pulled from mirror")
     dlkeys.add_argument(
-        '-y', '--yes_to_all', action='store_true',
-        help="answer yes to all trust questions")
+        '-t', '--trust', action='store_true',
+        help="trust all downloaded keys")
     dlkeys.add_argument('-f', '--force', action='store_true',
                         help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
@@ -192,6 +198,9 @@ def createtarball(args):
     allow_root = False
     force = False
     relative = False
+    unsigned = False
+    if args.unsigned:
+        unsigned = True
     if args.allow_root:
         allow_root = True
     if args.force:
@@ -223,7 +232,7 @@ def createtarball(args):
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
         bindist.build_tarball(spec, outdir, force,
-                              relative, allow_root, signkey)
+                              relative, unsigned, allow_root, signkey)
 
 
 def installtarball(args):
@@ -255,6 +264,9 @@ def install_tarball(spec, args):
     force = False
     if args.force:
         force = True
+    unsigned = True
+    if args.unsigned:
+        unsigned = True
     for d in s.dependencies(deptype=('link', 'run')):
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
@@ -265,7 +277,7 @@ def install_tarball(spec, args):
         tarball = bindist.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            bindist.extract_tarball(spec, tarball, allow_root, force)
+            bindist.extract_tarball(spec, tarball, allow_root, unsigned, force)
             spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
@@ -300,13 +312,13 @@ def getkeys(args):
     install = False
     if args.install:
         install = True
-    yes_to_all = False
-    if args.yes_to_all:
-        yes_to_all = True
+    trust = False
+    if args.trust:
+        trust = True
     force = False
     if args.force:
         force = True
-    bindist.get_keys(install, yes_to_all, force)
+    bindist.get_keys(install, trust, force)
 
 
 def buildcache(parser, args):
