@@ -41,6 +41,8 @@ class Tcptrace(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('libpcap')
 
+    # Fixes incorrect API access in libpcap.
+    # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=545595
     patch('tcpdump.patch')
 
     @run_after('configure')
