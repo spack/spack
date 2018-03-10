@@ -25,21 +25,36 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class DeconseqStandalone(Package):
+    """The DeconSeq tool can be used to automatically detect and efficiently
+    remove sequence contaminations from genomic and metagenomic datasets."""
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    homepage = "http://deconseq.sourceforge.net"
+    url      = "https://sourceforge.net/projects/deconseq/files/standalone/deconseq-standalone-0.4.3.tar.gz"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    version('0.4.3', 'cb3fddb90e584d89fd9c2b6b8f2e20a2')
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
+    depends_on('perl@5:')
 
     def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl', 'deconseq.pl')
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl', 'splitFasta.pl')
+
+        mkdirp(prefix.bin)
+        install('bwa64', prefix.bin)
+        install('bwaMAC', prefix.bin)
+        install('deconseq.pl', prefix.bin)
+        install('splitFasta.pl', prefix.bin)
+        install('DeconSeqConfig.pm', prefix)
+
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix.bin, 'bwa64'))
+        chmod('+x', join_path(prefix.bin, 'bwaMAC'))
+        chmod('+x', join_path(prefix.bin, 'deconseq.pl'))
+        chmod('+x', join_path(prefix.bin, 'splitFasta.pl'))
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PERL5LIB', prefix)
