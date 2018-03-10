@@ -48,6 +48,7 @@ class Conduit(Package):
     homepage = "http://software.llnl.gov/conduit"
     url = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
 
+    version('0.3.1', 'b98d1476199a46bde197220cd9cde042')
     version('0.3.0', '6396f1d1ca16594d7c66d4535d4f898e')
     # note: checksums on github automatic release source tars changed ~9/17
     version('0.2.1', 'ed7358af3463ba03f07eddd6a6e626ff')
@@ -79,6 +80,9 @@ class Conduit(Package):
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
+    # doxygen support is wip, since doxygen has several dependencies
+    # we want folks to explicitly opt in to building doxygen
+    variant("doxygen", default=False, description="Build Conduit's Doxygen documentation")
 
     ###########################################################################
     # package dependencies
@@ -124,7 +128,7 @@ class Conduit(Package):
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
-    depends_on("doxygen", when="+doc")
+    depends_on("doxygen", when="+doc+doxygen")
 
     def url_for_version(self, version):
         """
@@ -135,11 +139,12 @@ class Conduit(Package):
             return "https://github.com/LLNL/conduit/archive/v0.2.0.tar.gz"
         elif v == "0.2.1":
             return "https://github.com/LLNL/conduit/archive/v0.2.1.tar.gz"
-        elif v == "0.3.0":
-            # conduit uses BLT (https://github.com/llnl/blt) as a submodule,
-            # since github does not automatically package source from
-            # submodules, conduit provides a custom src tarball
-            return "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
+        else:
+            # starting with v 0.3.0, conduit uses BLT
+            # (https://github.com/llnl/blt) as a submodule, since github does
+            # not automatically package source from submodules, conduit
+            # provides a custom src tarball
+            return "https://github.com/LLNL/conduit/releases/download/v{0}/conduit-v{1}-src-with-blt.tar.gz".format(v, v)
         return url
 
     def install(self, spec, prefix):
@@ -287,10 +292,10 @@ class Conduit(Package):
             sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
                                          "sphinx-build")
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
-
-            cfg.write("# doxygen from uberenv\n")
-            doxygen_exe = spec['doxygen'].command.path
-            cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
+            if "+doxygen" in spec:
+                cfg.write("# doxygen from uberenv\n")
+                doxygen_exe = spec['doxygen'].command.path
+                cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
 

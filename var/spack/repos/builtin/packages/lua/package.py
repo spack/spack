@@ -102,6 +102,7 @@ class Lua(Package):
                 deptypes=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
+                lua_paths.append(os.path.join(d.prefix, self.lua_lib64_dir))
                 lua_paths.append(os.path.join(d.prefix, self.lua_share_dir))
 
         lua_patterns = []
@@ -112,6 +113,7 @@ class Lua(Package):
 
         # Always add this package's paths
         for p in (os.path.join(self.spec.prefix, self.lua_lib_dir),
+                  os.path.join(self.spec.prefix, self.lua_lib64_dir),
                   os.path.join(self.spec.prefix, self.lua_share_dir)):
             self.append_paths(lua_patterns, lua_cpatterns, p)
 
@@ -154,6 +156,10 @@ class Lua(Package):
     @property
     def lua_lib_dir(self):
         return os.path.join('lib', 'lua', str(self.version.up_to(2)))
+
+    @property
+    def lua_lib64_dir(self):
+        return os.path.join('lib64', 'lua', str(self.version.up_to(2)))
 
     @property
     def lua_share_dir(self):

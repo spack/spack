@@ -33,6 +33,7 @@ class Bowtie2(Package):
     homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
     url      = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
 
+    version('2.3.4.1', '8371bbb6eb02ae99c5cf633054265cb9')
     version('2.3.1', 'b4efa22612e98e0c23de3d2c9f2f2478')
     version('2.3.0', '3ab33f30f00f3c30fec1355b4e569ea2')
     version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
@@ -48,7 +49,7 @@ class Bowtie2(Package):
     patch('bowtie2-2.3.0.patch', when='@2.3.0', level=0)
 
     # seems to have trouble with 6's -std=gnu++14
-    conflicts('%gcc@6:')
+    conflicts('%gcc@6:', when='@:2.3.1')
 
     @run_before('install')
     def filter_sbang(self):
