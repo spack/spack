@@ -35,8 +35,9 @@ class Openssh(AutotoolsPackage):
     """
 
     homepage = "https://www.openssh.com/"
-    url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.5p1.tar.gz"
+    url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.6p1.tar.gz"
 
+    version('7.6p1',   '06a88699018e5fef13d4655abfed1f63')
     version('7.5p1',   '652fdc7d8392f112bef11cacf7e69e23')
     version('7.4p1',   'b2db2a83caf66a208bb78d6d287cdaa3')
     version('7.3p1',   'dfadd9f035d38ce5d58a3bf130b86d08')

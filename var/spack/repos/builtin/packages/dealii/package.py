@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.build_systems.cuda import CudaPackage
-import os
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -58,6 +56,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('gmsh',     default=False,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
@@ -70,6 +69,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with P4est (only with MPI)')
     variant('petsc',    default=True,
             description='Compile with Petsc (only with MPI)')
+    variant('scalapack', default=False,
+            description='Compile with ScaLAPACK (only with MPI)')
     variant('sundials', default=False,
             description='Compile with Sundials')
     variant('slepc',    default=True,
@@ -87,79 +88,80 @@ class Dealii(CMakePackage, CudaPackage):
             values=('Debug', 'Release', 'DebugRelease'))
 
     # required dependencies, light version
-    depends_on("blas")
-    # Boost 1.58 is blacklisted, see
+    depends_on('blas')
+    # Boost 1.58 is blacklisted, require at least 1.59, see
     # https://github.com/dealii/dealii/issues/1591
-    # Require at least 1.59
-    # +python won't affect @:8.4.2
-    # FIXME: once concretizer can unite unconditional and
-    # conditional dependencies, simplify to:
-    # depends_on("boost@1.59.0+thread+system+serialization+iostreams")
-    # depends_on("boost+mpi", when='+mpi')
-    # depends_on("boost+python", when='+python')
-    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
-               when='@:8.4.2~mpi')
-    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
-               when='@:8.4.2+mpi')
-    # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
-               when='@8.5.0:~mpi~python')
-    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
-               when='@8.5.0:+mpi~python')
-    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+python",
-               when='@8.5.0:~mpi+python')
-    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
-               when='@8.5.0:+mpi+python')
+    # There are issues with 1.65.1 and 1.65.0:
+    # https://github.com/dealii/dealii/issues/5262
+    # we take the patch from https://github.com/boostorg/serialization/pull/79
+    # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
+    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams',
+               patches=patch('boost_1.65.1_singleton.patch',
+                       level=1,
+                       when='@1.65.1'),
+               when='~python')
+    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams+python',
+               patches=patch('boost_1.65.1_singleton.patch',
+                       level=1,
+                       when='@1.65.1'),
+               when='+python')
     # bzip2 is not needed since 9.0
-    depends_on("bzip2", when='@:8.99')
-    depends_on("lapack")
-    depends_on("muparser")
-    depends_on("suite-sparse")
-    depends_on("tbb")
-    depends_on("zlib")
+    depends_on('bzip2', when='@:8.99')
+    depends_on('lapack')
+    depends_on('muparser')
+    depends_on('suite-sparse')
+    depends_on('tbb')
+    depends_on('zlib')
 
     # optional dependencies
-    depends_on("mpi",              when="+mpi")
-    depends_on("adol-c@2.6.4:",    when='@9.0:+adol-c')
-    depends_on("arpack-ng+mpi",    when='+arpack+mpi')
-    depends_on("assimp",           when='@9.0:+assimp')
-    depends_on("doxygen+graphviz", when='+doc')
-    depends_on("graphviz",         when='+doc')
-    depends_on("gsl",              when='@8.5.0:+gsl')
-    depends_on("hdf5+mpi+hl",      when='+hdf5+mpi')
-    depends_on("cuda@8:",          when='+cuda')
-    depends_on("cmake@3.9:",       when='+cuda')
-    # currently deal.II does not build with Cmake 3.10, see
+    depends_on('mpi',              when='+mpi')
+    depends_on('adol-c@2.6.4:',    when='@9.0:+adol-c')
+    depends_on('arpack-ng+mpi',    when='+arpack+mpi')
+    depends_on('assimp',           when='@9.0:+assimp')
+    depends_on('doxygen+graphviz', when='+doc')
+    depends_on('graphviz',         when='+doc')
+    depends_on('gmsh',             when='@9.0:+gmsh', type=('build', 'run'))
+    depends_on('gsl',              when='@8.5.0:+gsl')
+    depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
+    depends_on('cuda@8:',          when='+cuda')
+    depends_on('cmake@3.9:',       when='+cuda')
+    # older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on("cmake@:3.9.99")
+    depends_on('cmake@:3.9.99',    when='@:8.99')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
-    depends_on("metis@5:+int64+real64",   when='+metis+int64')
-    depends_on("metis@5:~int64+real64",   when='+metis~int64')
-    depends_on("nanoflann",        when="@9.0:+nanoflann")
-    depends_on("netcdf+mpi",       when="+netcdf+mpi")
-    depends_on("netcdf-cxx",       when='+netcdf+mpi')
-    depends_on("oce",              when='+oce')
-    depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi~int64",  when='+petsc+mpi~int64')
-    depends_on("petsc+mpi+int64",  when='+petsc+mpi+int64')
-    depends_on("petsc@:3.6.4",     when='@:8.4.1+petsc+mpi')
+    depends_on('metis@5:+int64+real64',   when='+metis+int64')
+    depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('nanoflann',        when='@9.0:+nanoflann')
+    depends_on('netcdf+mpi',       when='+netcdf+mpi')
+    depends_on('netcdf-cxx',       when='+netcdf+mpi')
+    depends_on('oce',              when='+oce')
+    depends_on('p4est',            when='+p4est+mpi')
+    depends_on('petsc+mpi~int64',  when='+petsc+mpi~int64')
+    depends_on('petsc+mpi+int64',  when='+petsc+mpi+int64')
+    depends_on('petsc@:3.6.4',     when='@:8.4.1+petsc+mpi')
     depends_on('python',           when='@8.5.0:+python')
-    depends_on("slepc",            when='+slepc+petsc+mpi')
-    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
-    depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
-    depends_on("sundials~pthread", when='@9.0:+sundials')
-    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
-    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
+    depends_on('scalapack',        when='@9.0:+scalapack')
+    depends_on('slepc',            when='+slepc+petsc+mpi')
+    depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
+    depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
+    depends_on('sundials~pthread', when='@9.0:+sundials')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
 
     # check that the combination of variants makes sense
+    conflicts('^openblas+ilp64', when='@:8.5.1')
+    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
+    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
     conflicts('+assimp', when='@:8.5.1')
+    conflicts('+gmsh', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
+    conflicts('+scalapack', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
     conflicts('+adol-c', when='@:8.5.1')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
-    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc', '+scalapack',
               '+slepc', '+trilinos']:
         conflicts(p, when='~mpi')
 
@@ -189,6 +191,11 @@ class Dealii(CMakePackage, CudaPackage):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
 
         if spec.satisfies('@:8.99'):
             options.extend([
@@ -269,8 +276,8 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann'):
-            if library in spec:
+                'sundials', 'nanoflann', 'assimp', 'gmsh'):
+            if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
                     '-DDEAL_II_WITH_%s:BOOL=ON' % library.upper()
@@ -309,36 +316,12 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_ARPACK=OFF'
             ])
 
-        # Assimp
-        if '+assimp' in spec:
-            options.extend([
-                '-DDEAL_II_WITH_ASSIMP=ON',
-                '-DASSIMP_DIR=%s' % spec['assimp'].prefix
-            ])
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_ASSIMP=OFF'
-            ])
-
         # since Netcdf is spread among two, need to do it by hand:
         if '+netcdf' in spec and '+mpi' in spec:
-            # take care of lib64 vs lib installed lib locations:
-            if os.path.isdir(spec['netcdf-cxx'].prefix.lib):
-                netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib
-            else:
-                netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib64
-            if os.path.isdir(spec['netcdf'].prefix.lib):
-                netcdf_lib_dir = spec['netcdf'].prefix.lib
-            else:
-                netcdf_lib_dir = spec['netcdf'].prefix.lib64
-
+            netcdf = spec['netcdf-cxx'].libs + spec['netcdf'].libs
             options.extend([
                 '-DNETCDF_FOUND=true',
-                '-DNETCDF_LIBRARIES=%s;%s' % (
-                    join_path(netcdfcxx_lib_dir,
-                              'libnetcdf_c++.%s' % dso_suffix),
-                    join_path(netcdf_lib_dir,
-                              'libnetcdf.%s' % dso_suffix)),
+                '-DNETCDF_LIBRARIES=%s' % netcdf.joined(';'),
                 '-DNETCDF_INCLUDE_DIRS=%s;%s' % (
                     spec['netcdf-cxx'].prefix.include,
                     spec['netcdf'].prefix.include),
@@ -346,6 +329,20 @@ class Dealii(CMakePackage, CudaPackage):
         else:
             options.extend([
                 '-DDEAL_II_WITH_NETCDF=OFF'
+            ])
+
+        if '+scalapack' in spec:
+            scalapack = spec['scalapack'].libs
+            options.extend([
+                '-DSCALAPACK_FOUND=true',
+                '-DSCALAPACK_INCLUDE_DIRS=%s' % (
+                    spec['scalapack'].prefix.include),
+                '-DSCALAPACK_LIBRARIES=%s' % scalapack.joined(';'),
+                '-DDEAL_II_WITH_SCALAPACK=ON'
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_SCALAPACK=OFF'
             ])
 
         # Open Cascade

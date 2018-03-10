@@ -689,7 +689,7 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If no headers are found
     """
-    headers = find_headers('*', root=spec.prefix.include, recurse=True)
+    headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
     if headers:
         return headers
@@ -731,22 +731,22 @@ def _libs_default_handler(descriptor, spec, cls):
 
     if '+shared' in spec:
         libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
+            name, root=spec.prefix, shared=True, recursive=True
         )
     elif '~shared' in spec:
         libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
+            name, root=spec.prefix, shared=False, recursive=True
         )
     else:
         # Prefer shared
         libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
+            name, root=spec.prefix, shared=True, recursive=True
         )
         if libs:
             return libs
 
         libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
+            name, root=spec.prefix, shared=False, recursive=True
         )
 
     if libs:
@@ -770,10 +770,6 @@ class ForwardQueryToPackage(object):
                 instance
         """
         self.attribute_name = attribute_name
-        # Turn the default handler into a function with the right
-        # signature that always returns None
-        if default_handler is None:
-            default_handler = lambda descriptor, spec, cls: None
         self.default = default_handler
 
     def __get__(self, instance, cls):
@@ -792,8 +788,11 @@ class ForwardQueryToPackage(object):
 
         The first call that produces a value will stop the chain.
 
-        If no call can handle the request or a None value is produced,
-        then AttributeError is raised.
+        If no call can handle the request then AttributeError is raised with a
+        message indicating that no relevant attribute exists.
+        If a call returns None, an AttributeError is raised with a message
+        indicating a query failure, e.g. that library files were not found in a
+        'libs' query.
         """
         pkg = instance.package
         try:
@@ -814,34 +813,53 @@ class ForwardQueryToPackage(object):
         # Try to get the generic method from Package
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
         # Final resort : default callback
-        callbacks_chain.append(lambda: self.default(self, instance, cls))
+        if self.default is not None:
+            callbacks_chain.append(lambda: self.default(self, instance, cls))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
         value = None
+        message = None
         for f in callbacks_chain:
             try:
                 value = f()
+                # A callback can return None to trigger an error indicating
+                # that the query failed.
+                if value is None:
+                    msg  = "Query of package '{name}' for '{attrib}' failed\n"
+                    msg += "\tprefix : {spec.prefix}\n"
+                    msg += "\tspec : {spec}\n"
+                    msg += "\tqueried as : {query.name}\n"
+                    msg += "\textra parameters : {query.extra_parameters}"
+                    message = msg.format(
+                        name=pkg.name, attrib=self.attribute_name,
+                        spec=instance, query=instance.last_query)
+                else:
+                    return value
                 break
             except AttributeError:
                 pass
-        # 'None' value raises AttributeError : this permits to 'disable'
-        # the call in a particular package by returning None from the
-        # queried attribute, or will trigger an exception if  things
-        # searched for were not found
-        if value is None:
-            fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
-            fmt += '\tspec : \'{spec}\'\n'
-            fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
-            fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
-            message = fmt.format(
-                name=pkg.name,
-                query=self.attribute_name,
-                spec=instance
-            )
+        # value is 'None'
+        if message is not None:
+            # Here we can use another type of exception. If we do that, the
+            # unit test 'test_getitem_exceptional_paths' in the file
+            # lib/spack/spack/test/spec_dag.py will need to be updated to match
+            # the type.
             raise AttributeError(message)
-
-        return value
+        # 'None' value at this point means that there are no appropriate
+        # properties defined and no default handler, or that all callbacks
+        # raised AttributeError. In this case, we raise AttributeError with an
+        # appropriate message.
+        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+        fmt += '\tspec : \'{spec}\'\n'
+        fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
+        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+        message = fmt.format(
+            name=pkg.name,
+            query=self.attribute_name,
+            spec=instance
+        )
+        raise AttributeError(message)
 
     def __set__(self, instance, value):
         cls_name = type(instance).__name__
@@ -883,6 +901,9 @@ class SpecBuildInterface(ObjectWrapper):
 
 @key_ordering
 class Spec(object):
+
+    #: Cache for spec's prefix, computed lazily in the corresponding property
+    _prefix = None
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -1194,7 +1215,9 @@ class Spec(object):
 
     @property
     def package(self):
-        return spack.repo.get(self)
+        if not self._package:
+            self._package = spack.repo.get(self)
+        return self._package
 
     @property
     def package_class(self):
@@ -1374,12 +1397,13 @@ class Spec(object):
 
     @property
     def prefix(self):
-        if hasattr(self, 'test_prefix'):
-            return Prefix(self.test_prefix)
-        return Prefix(spack.store.layout.path_for_spec(self))
+        if self._prefix is None:
+            self.prefix = spack.store.layout.path_for_spec(self)
+        return self._prefix
 
-    def _set_test_prefix(self, val):
-        self.test_prefix = val
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = Prefix(value)
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
@@ -1769,17 +1793,8 @@ class Spec(object):
 
         Some rigorous validation and checks are also performed on the spec.
         Concretizing ensures that it is self-consistent and that it's
-        consistent with requirements of its pacakges. See flatten() and
+        consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
-
-        It also ensures that:
-
-        .. code-block:: python
-
-            for x in self.traverse():
-                assert x.package.spec == x
-
-        which may not be true *during* the concretization step.
         """
         if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
@@ -1868,18 +1883,13 @@ class Spec(object):
         # there are declared conflicts
         matches = []
         for x in self.traverse():
-            for conflict_spec, when_list in x.package.conflicts.items():
-                if x.satisfies(conflict_spec):
+            for conflict_spec, when_list in x.package_class.conflicts.items():
+                if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+                        if x.satisfies(when_spec, strict=True):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
-
-        # At this point the spec-package mutual references should
-        # be self-consistent
-        for x in self.traverse():
-            x.package.spec = x
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -1897,7 +1907,7 @@ class Spec(object):
         """This is a non-destructive version of concretize().  First clones,
            then returns a concrete version of this package without modifying
            this package. """
-        clone = self.copy()
+        clone = self.copy(caches=False)
         clone.concretize()
         return clone
 
@@ -1964,8 +1974,7 @@ class Spec(object):
         If no conditions are True (and we don't depend on it), return
         ``(None, None)``.
         """
-        pkg = spack.repo.get(self.fullname)
-        conditions = pkg.dependencies[name]
+        conditions = self.package_class.dependencies[name]
 
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
@@ -2132,10 +2141,9 @@ class Spec(object):
         any_change = False
         changed = True
 
-        pkg = spack.repo.get(self.fullname)
         while changed:
             changed = False
-            for dep_name in pkg.dependencies:
+            for dep_name in self.package_class.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
                 # If dep is a needed dependency, merge it.
@@ -2552,7 +2560,7 @@ class Spec(object):
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            patch = self.package.lookup_patch(sha256)
+            patch = self.package_class.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
                 continue
@@ -2560,7 +2568,7 @@ class Spec(object):
             # if not found in this package, check immediate dependents
             # for dependency patches
             for dep_spec in self._dependents.values():
-                patch = dep_spec.parent.package.lookup_patch(sha256)
+                patch = dep_spec.parent.package_class.lookup_patch(sha256)
 
                 if patch:
                     patches.append(patch)
@@ -2605,6 +2613,8 @@ class Spec(object):
                        self.external_path != other.external_path and
                        self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
+
+        self._package = None
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -3370,6 +3380,7 @@ class SpecParser(spack.parse.Parser):
         spec._hash = None
         spec._cmp_key_cache = None
 
+        spec._package = None
         spec._normal = False
         spec._concrete = False
 

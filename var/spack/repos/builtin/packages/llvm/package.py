@@ -50,6 +50,7 @@ class Llvm(CMakePackage):
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
+    variant('lld', default=True, description="Build the LLVM linker")
     variant('internal_unwind', default=True,
             description="Build the libcxxabi libunwind")
     variant('polly', default=True,
@@ -80,7 +81,8 @@ class Llvm(CMakePackage):
     depends_on('cmake@3.4.3:', type='build')
 
     # Universal dependency
-    depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
+    depends_on('python@2.7:2.8', when='@:4.999')
+    depends_on('python')
     depends_on('py-lit', type=('build', 'run'))
 
     # lldb dependencies
@@ -141,6 +143,12 @@ class Llvm(CMakePackage):
             'placement': 'lldb',
             'variant': '+lldb',
         },
+        'lld': {
+            'url':  base_url % {'pkg': 'lld'},
+            'destination': 'tools',
+            'placement': 'lld',
+            'variant': '+lld',
+        },
         'polly': {
             'url':  base_url % {'pkg': 'polly'},
             'destination': 'tools',
@@ -167,7 +175,24 @@ class Llvm(CMakePackage):
                 'cfe': 'http://llvm.org/svn/llvm-project/cfe/trunk',
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
+                'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '5.0.1',
+            'md5': '3a4ec6dcbc71579eeaec7cb157fe2168',
+            'resources': {
+                'compiler-rt': '6329380d643fb5dc5f5abdd0d5eecd70',
+                'openmp': '7f9c8f6aecd97df9c18187157ed2f813',
+                'polly': '49c49fb61b0e73855fc21a60db9f5ab3',
+                'libcxx': 'a9dd49822f2c82cef9a9240d1714a67c',
+                'libcxxabi': '60972ef307539aa517c9878d45b43452',
+                'cfe': 'e4daa278d8f252585ab73d196484bf11',
+                'clang-tools-extra': 'c2bd3733c183b033b49f7a416c6dca36',
+                'lldb': 'd64078681215b5935614b6b83b2d1463',
+                'lld': 'a873c7fdaac647613d8eed2cb03d82de',
+                'libunwind': 'ccf48200065481244d3d09828d54e87f',
             }
         },
         {
@@ -182,6 +207,7 @@ class Llvm(CMakePackage):
                 'cfe': '699c448c6d6d0edb693c87beb1cc8c6e',
                 'clang-tools-extra': '0cda05d1a61becb393eb63746963d7f5',
                 'lldb': '8de19973d044ca2cfe325d4625a5cfef',
+                'lld': 'a39cbecced3263feab9139b47118e062',
                 'libunwind': '98fb2c677068c6f36727fb1d5397bca3',
             }
         },
@@ -197,6 +223,7 @@ class Llvm(CMakePackage):
                 'cfe': 'a6c7b3e953f8b93e252af5917df7db97',
                 'clang-tools-extra': 'cfd46027a0ab7eed483dfcc803e86bd9',
                 'lldb': '908bdd777d3b527a914ba360477b8ab3',
+                'lld': '39cd3512cddcfd7d37ef12066c961660',
                 'libunwind': 'b72ec95fb784e61f15d6196414b92f5e',
             }
         },
@@ -212,6 +239,7 @@ class Llvm(CMakePackage):
                 'cfe': '756e17349fdc708c62974b883bf72d37',
                 'clang-tools-extra': '99e711337ec3e9a8bb36e8dd62b2cd6e',
                 'lldb': 'bd41ba7fcca55d2a554409bbccd34d2d',
+                'lld': 'e5784656e0f38e3578f10ff7551d3896',
                 'libunwind': '0c3534eaa11c0cae33a1dcf5f36ce287',
             }
         },
@@ -227,6 +255,7 @@ class Llvm(CMakePackage):
                 'cfe': '45713ec5c417ed9cad614cd283d786a1',
                 'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
                 'lldb': '91399402f287d3f637db1207113deecb',
+                'lld': '6254dd138e23b098df4ef7840c11e2c8',
                 'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
             }
         },
@@ -242,6 +271,7 @@ class Llvm(CMakePackage):
                 'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
                 'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
                 'lldb': '968d053c3c3d7297983589164c6999e9',
+                'lld': 'c23c895c0d855a0dc426af686538a95e',
                 'libunwind': '3e5c87c723a456be599727a444b1c166',
             }
         },
@@ -257,6 +287,7 @@ class Llvm(CMakePackage):
                 'cfe': '4ff2f8844a786edb0220f490f7896080',
                 'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
                 'lldb': '9e4787b71be8e432fffd31e13ac87623',
+                'lld': '68cd069bf99c71ebcfbe01d557c0e14d',
                 'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
             }
         },
@@ -272,6 +303,7 @@ class Llvm(CMakePackage):
                 'cfe': 'cc99e7019bb74e6459e80863606250c5',
                 'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
                 'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
+                'lld': 'de33b5c6c77698ee2f8d024fbffb8df1',
                 'libunwind': '162ade468607f153cca12be90b5194fa',
             }
         },
@@ -287,6 +319,7 @@ class Llvm(CMakePackage):
                 'cfe': '0acd026b5529164197563d135a8fd83e',
                 'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
                 'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
+                'lld': '6c3794e30fbe118a601fb694627f34f8',
                 'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
             }
         },
@@ -302,6 +335,7 @@ class Llvm(CMakePackage):
                 'cfe': '8f9d27335e7331cf0a4711e952f21f01',
                 'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
                 'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
+                'lld': '91bd593a67293d84dad0bf11845546c2',
                 'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
             }
         },
@@ -316,6 +350,7 @@ class Llvm(CMakePackage):
                 'cfe': 'ff862793682f714bb7862325b9c06e20',
                 'clang-tools-extra': '3ebc1dc41659fcec3db1b47d81575e06',
                 'lldb': '51e5eb552f777b950bb0ff326e60d5f0',
+                'lld': '7143cc4fa88851a9f9b9a03621fbb387',
             }
         },
         {
@@ -329,6 +364,7 @@ class Llvm(CMakePackage):
                 'cfe': '93f9532f8f7e6f1d8e5c1116907051cb',
                 'clang-tools-extra': 'f13f31ed3038acadc6fa63fef812a246',
                 'lldb': 'cc5ea8a414c62c33e760517f8929a204',
+                'lld': '173be02b7ff4e5e31fbb0a591a03d7a3',
             }
         },
     ]
@@ -365,6 +401,10 @@ class Llvm(CMakePackage):
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
+        if '+clang' in self.spec:
+            run_env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
+            run_env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
+
     def cmake_args(self):
         spec = self.spec
 
@@ -390,6 +430,8 @@ class Llvm(CMakePackage):
         if '+lldb' not in spec:
             cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF',
                                '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
+        if '+lld' not in spec:
+            cmake_args.append('-DLLVM_TOOL_LLD_BUILD:Bool=OFF')
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
         if '+libcxx' in spec:
@@ -408,7 +450,15 @@ class Llvm(CMakePackage):
             cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
 
         if '+all_targets' not in spec:  # all is default on cmake
-            targets = ['CppBackend', 'NVPTX', 'AMDGPU']
+
+            if spec.version < Version('3.9.0'):
+                targets = ['CppBackend', 'NVPTX', 'AMDGPU']
+            else:
+                # Starting in 3.9.0 CppBackend is no longer a target (see
+                # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
+                # the complete list of targets)
+                targets = ['NVPTX', 'AMDGPU']
+
             if 'x86' in spec.architecture.target.lower():
                 targets.append('X86')
             elif 'arm' in spec.architecture.target.lower():
@@ -416,7 +466,7 @@ class Llvm(CMakePackage):
             elif 'aarch64' in spec.architecture.target.lower():
                 targets.append('AArch64')
             elif 'sparc' in spec.architecture.target.lower():
-                targets.append('sparc')
+                targets.append('Sparc')
             elif ('ppc' in spec.architecture.target.lower() or
                   'power' in spec.architecture.target.lower()):
                 targets.append('PowerPC')
@@ -433,7 +483,9 @@ class Llvm(CMakePackage):
         with working_dir(self.build_directory):
             # When building shared libraries these need to be installed first
             make('install-LLVMTableGen')
-            make('install-LLVMDemangle')
+            if self.spec.version >= Version('4.0.0'):
+                # LLVMDemangle target was added in 4.0.0
+                make('install-LLVMDemangle')
             make('install-LLVMSupport')
 
     @run_after('install')

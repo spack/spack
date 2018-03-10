@@ -276,7 +276,8 @@ class URLFetchStrategy(FetchStrategy):
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
         # redirects properly.
-        content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
+        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
+                                   flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
             tty.warn("The contents of ",
                      (self.archive_file if self.archive_file is not None
@@ -914,7 +915,7 @@ def from_kwargs(**kwargs):
     # Raise an error in case we can't instantiate any known strategy
     message = "Cannot instantiate any FetchStrategy"
     long_message = message + " from the given arguments : {arguments}".format(
-        srguments=kwargs)
+        arguments=kwargs)
     raise FetchError(message, long_message)
 
 

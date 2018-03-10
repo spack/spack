@@ -278,27 +278,11 @@ class Compiler(object):
 
                     match = re.match(regex, exe)
                     if match:
-                        key = (full_path,) + match.groups()
+                        key = (full_path,) + match.groups() + (detect_version,)
                         checks.append(key)
 
-        def check(key):
-            try:
-                full_path, prefix, suffix = key
-                version = detect_version(full_path)
-                return (version, prefix, suffix, full_path)
-            except ProcessError as e:
-                tty.debug(
-                    "Couldn't get version for compiler %s" % full_path, e)
-                return None
-            except Exception as e:
-                # Catching "Exception" here is fine because it just
-                # means something went wrong running a candidate executable.
-                tty.debug("Error while executing candidate compiler %s"
-                          % full_path,
-                          "%s: %s" % (e.__class__.__name__, e))
-                return None
-
-        successful = [k for k in parmap(check, checks) if k is not None]
+        successful = [k for k in parmap(_get_versioned_tuple, checks)
+                      if k is not None]
 
         # The 'successful' list is ordered like the input paths.
         # Reverse it here so that the dict creation (last insert wins)
@@ -320,6 +304,28 @@ class Compiler(object):
             self.name, '\n     '.join((str(s) for s in (
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
+
+
+def _get_versioned_tuple(compiler_check_tuple):
+    full_path, prefix, suffix, detect_version = compiler_check_tuple
+    try:
+        version = detect_version(full_path)
+        if (not version) or (not str(version).strip()):
+            tty.debug(
+                "Couldn't get version for compiler %s" % full_path)
+            return None
+        return (version, prefix, suffix, full_path)
+    except ProcessError as e:
+        tty.debug(
+            "Couldn't get version for compiler %s" % full_path, e)
+        return None
+    except Exception as e:
+        # Catching "Exception" here is fine because it just
+        # means something went wrong running a candidate executable.
+        tty.debug("Error while executing candidate compiler %s"
+                  % full_path,
+                  "%s: %s" % (e.__class__.__name__, e))
+        return None
 
 
 class CompilerAccessError(spack.error.SpackError):

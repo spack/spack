@@ -42,7 +42,8 @@ from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import get_patchelf
+from spack.relocate import strings_contains_installroot
+from spack.relocate import get_patchelf, relocate_text
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -72,7 +73,7 @@ def fake_fetchify(url, pkg):
 
 
 @pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
-def test_packaging(mock_archive, tmpdir):
+def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
     spec = Spec("patchelf")
     spec.concretize()
@@ -92,7 +93,7 @@ echo $PATH"""
     spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
     pkghash = '/' + spec.dag_hash(7)
@@ -106,9 +107,8 @@ echo $PATH"""
     # put it directly into the mirror
 
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
-    specs = [spec]
     spack.mirror.create(
-        mirror_path, specs, no_checksum=True
+        mirror_path, specs=[], no_checksum=True
     )
 
     # register mirror with spack config
@@ -157,34 +157,34 @@ echo $PATH"""
     else:
         # create build cache without signing
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-y', str(spec)])
+            ['create', '-d', mirror_path, '-u', str(spec)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
 
         # install build cache without verification
-        args = parser.parse_args(['install', '-y', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
+        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-y', str(pkghash)])
+            ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
 
         # install build cache
-        args = parser.parse_args(['install', '-y', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
+        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     # Validate the relocation information
@@ -217,10 +217,43 @@ echo $PATH"""
     stage.destroy()
 
 
-def test_relocate():
-    assert (needs_binary_relocation('relocatable') is False)
-    assert (needs_binary_relocation('link') is False)
-    assert (needs_text_relocation('link') is False)
+def test_relocate_text(tmpdir):
+    with tmpdir.as_cwd():
+        # Validate the text path replacement
+        old_dir = '/home/spack/opt/spack'
+        filename = 'dummy.txt'
+        with open(filename, "w") as script:
+            script.write(old_dir)
+            script.close()
+        filenames = [filename]
+        new_dir = '/opt/rh/devtoolset/'
+        relocate_text(filenames, old_dir, new_dir)
+        with open(filename, "r")as script:
+            for line in script:
+                assert(new_dir in line)
+        assert(strings_contains_installroot(filename, old_dir) is False)
+
+
+def test_needs_relocation():
+    binary_type = (
+        'ELF 64-bit LSB executable, x86-64, version 1 (SYSV),'
+        ' dynamically linked (uses shared libs),'
+        ' for GNU/Linux x.y.z, stripped')
+
+    assert needs_binary_relocation(binary_type, os_id='Linux')
+    assert not needs_binary_relocation('relocatable',
+                                       os_id='Linux')
+    assert not needs_binary_relocation('symbolic link to `foo\'',
+                                       os_id='Linux')
+
+    assert needs_text_relocation('ASCII text')
+    assert not needs_text_relocation('symbolic link to `foo.text\'')
+
+    macho_type = 'Mach-O 64-bit executable x86_64'
+    assert needs_binary_relocation(macho_type, os_id='Darwin')
+
+
+def test_macho_paths():
 
     out = macho_make_paths_relative('/Users/Shares/spack/pkgC/lib/libC.dylib',
                                     '/Users/Shared/spack',
@@ -289,6 +322,8 @@ def test_relocate():
                     '/usr/local/lib/libloco.dylib'],
                    None)
 
+
+def test_elf_paths():
     out = get_relative_rpaths(
         '/usr/bin/test', '/usr',
         ('/usr/lib', '/usr/lib64', '/opt/local/lib'))
@@ -303,8 +338,8 @@ def test_relocate():
                     reason="only works with Mach-o objects")
 def test_relocate_macho(tmpdir):
     with tmpdir.as_cwd():
-        get_patchelf()
-        assert (needs_binary_relocation('Mach-O'))
+
+        get_patchelf()  # this does nothing on Darwin
 
         rpaths, deps, idpath = macho_get_paths('/bin/bash')
         nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',
@@ -341,9 +376,3 @@ def test_relocate_macho(tmpdir):
             'libncurses.5.4.dylib',
             rpaths, deps, idpath,
             nrpaths, ndeps, nid)
-
-
-@pytest.mark.skipif(sys.platform != 'linux2',
-                    reason="only works with Elf objects")
-def test_relocate_elf():
-    assert (needs_binary_relocation('ELF'))

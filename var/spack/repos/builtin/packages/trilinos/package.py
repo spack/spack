@@ -124,7 +124,7 @@ class Trilinos(CMakePackage):
             description='Compile with Amesos')
     variant('amesos2',      default=True,
             description='Compile with Amesos2')
-    variant('anasazi',       default=True,
+    variant('anasazi',      default=True,
             description='Compile with Anasazi')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
@@ -162,8 +162,10 @@ class Trilinos(CMakePackage):
             description='Enable Shards')
     variant('intrepid',     default=False,
             description='Enable Intrepid')
-    variant('intrepid2',     default=False,
+    variant('intrepid2',    default=False,
             description='Enable Intrepid2')
+    variant('cgns',         default=False,
+            description='Enable CGNS')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -206,6 +208,7 @@ class Trilinos(CMakePackage):
     depends_on('netcdf+mpi', when="~pnetcdf")
     depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
+    depends_on('cgns', when='+cgns')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
@@ -340,7 +343,8 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_STKTopology:BOOL=ON',
                 '-DTrilinos_ENABLE_STKUnit_tests:BOOL=ON',
                 '-DTrilinos_ENABLE_STKUnit_test_utils:BOOL=ON',
-                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF'
+                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF',
+                '-DTrilinos_ENABLE_STKExprEval:BOOL=ON'
             ])
 
         if '+dtk' in spec:
@@ -447,8 +451,9 @@ class Trilinos(CMakePackage):
                 '-DParMETIS_LIBRARY_DIRS=%s;%s' % (
                     spec['parmetis'].prefix.lib, spec['metis'].prefix.lib),
                 '-DParMETIS_LIBRARY_NAMES=parmetis;metis',
-                '-DTPL_ParMETIS_INCLUDE_DIRS=%s' % (
-                    spec['parmetis'].prefix.include)
+                '-DTPL_ParMETIS_INCLUDE_DIRS=%s;%s' % (
+                    spec['parmetis'].prefix.include,
+                    spec['metis'].prefix.include)
             ])
         else:
             options.extend([
@@ -537,6 +542,17 @@ class Trilinos(CMakePackage):
         else:
             options.extend([
                 '-DTPL_ENABLE_Zlib:BOOL=OFF'
+            ])
+
+        if '+cgns' in spec:
+            options.extend([
+                '-DTPL_ENABLE_CGNS:BOOL=ON',
+                '-DCGNS_INCLUDE_DIRS:PATH=%s' % spec['cgns'].prefix.include,
+                '-DCGNS_LIBRARY_DIRS:PATH=%s' % spec['cgns'].prefix.lib
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_GGNS:BOOL=OFF'
             ])
 
         # ################# Miscellaneous Stuff ######################

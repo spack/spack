@@ -819,7 +819,7 @@ class Repo(object):
                     % (self.config_file, self.root))
 
     @_autospec
-    def get(self, spec, new=False):
+    def get(self, spec):
         if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
@@ -828,18 +828,13 @@ class Repo(object):
                 "Repository %s does not contain package %s"
                 % (self.namespace, spec.fullname))
 
-        key = hash(spec)
-        if new or key not in self._instances:
-            package_class = self.get_pkg_class(spec.name)
-            try:
-                copy = spec.copy()  # defensive copy.  Package owns its spec.
-                self._instances[key] = package_class(copy)
-            except Exception:
-                if spack.debug:
-                    sys.excepthook(*sys.exc_info())
-                raise FailedConstructorError(spec.fullname, *sys.exc_info())
-
-        return self._instances[key]
+        package_class = self.get_pkg_class(spec.name)
+        try:
+            return package_class(spec)
+        except Exception:
+            if spack.debug:
+                sys.excepthook(*sys.exc_info())
+            raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
     @_autospec
     def dump_provenance(self, spec, path):
@@ -987,7 +982,14 @@ class Repo(object):
             # e.g., spack.pkg.builtin.mpich
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
-            module = imp.load_source(fullname, file_path)
+            try:
+                module = imp.load_source(fullname, file_path)
+            except SyntaxError as e:
+                # SyntaxError strips the path from the filename so we need to
+                # manually construct the error message in order to give the
+                # user the correct package.py where the syntax error is located
+                raise SyntaxError('invalid syntax in {0:}, line {1:}'
+                                  ''.format(file_path, e.lineno))
             module.__package__ = self.full_namespace
             module.__loader__ = self
             self._modules[pkg_name] = module

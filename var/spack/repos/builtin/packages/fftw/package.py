@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import llnl.util.lang
+
 
 class Fftw(AutotoolsPackage):
     """FFTW is a C subroutine library for computing the discrete Fourier
@@ -37,6 +39,7 @@ class Fftw(AutotoolsPackage):
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
+    version('3.3.7', '0d5915d7d39b3253c1cc05030d79ac47')
     version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
@@ -65,6 +68,21 @@ class Fftw(AutotoolsPackage):
         'pfft_patches', default=False,
         description='Add extra transpose functions for PFFT compatibility')
 
+    variant(
+        'simd',
+        default='sse2,avx,avx2',
+        values=(
+            'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
+            'avx-128-fma', 'kcvi',  # Intel
+            'altivec', 'vsx',  # IBM
+            'neon',  # ARM
+            'generic-simd128', 'generic-simd256'  # Generic
+        ),
+        description='Optimizations that are enabled in this build',
+        multi=True
+    )
+    variant('fma', default=False, description='Activate support for fma')
+
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
@@ -72,8 +90,35 @@ class Fftw(AutotoolsPackage):
 
     @property
     def libs(self):
-        result = find_libraries(['libfftw3'], root=self.prefix, recurse=True)
-        return result
+
+        # Reduce repetitions of entries
+        query_parameters = list(llnl.util.lang.dedupe(
+            self.spec.last_query.extra_parameters
+        ))
+
+        # List of all the suffixes associated with float precisions
+        precisions = [
+            ('float', 'f'),
+            ('double', ''),
+            ('long_double', 'l'),
+            ('quad', 'q')
+        ]
+
+        # Retrieve the correct suffixes, or use double as a default
+        suffixes = [v for k, v in precisions if k in query_parameters] or ['']
+
+        # Construct the list of libraries that needs to be found
+        libraries = []
+        for sfx in suffixes:
+            if 'mpi' in query_parameters and '+mpi' in self.spec:
+                libraries.append('libfftw3' + sfx + '_mpi')
+
+            if 'openmp' in query_parameters and '+openmp' in self.spec:
+                libraries.append('libfftw3' + sfx + '_omp')
+
+            libraries.append('libfftw3' + sfx)
+
+        return find_libraries(libraries, root=self.prefix, recursive=True)
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:
@@ -108,12 +153,11 @@ class Fftw(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # SIMD support
-        # TODO: add support for more architectures
-        float_options = []
-        double_options = []
-        if 'x86_64' in spec.architecture and spec.satisfies('@3:'):
-            float_options.append('--enable-sse2')
-            double_options.append('--enable-sse2')
+        float_options, double_options = [], []
+        if spec.satisfies('@3:', strict=True):
+            for opts in (float_options, double_options):
+                opts += self.enable_or_disable('simd')
+                opts += self.enable_or_disable('fma')
 
         configure = Executable('../configure')
 

@@ -43,6 +43,10 @@ sys.path.insert(0, spack_lib_path)
 
 # Add external libs
 spack_external_libs = os.path.join(spack_lib_path, "external")
+
+if sys.version_info[:2] == (2, 6):
+    sys.path.insert(0, os.path.join(spack_external_libs, 'py26'))
+
 sys.path.insert(0, spack_external_libs)
 
 # Handle vendoring of YAML specially, as it has two versions.

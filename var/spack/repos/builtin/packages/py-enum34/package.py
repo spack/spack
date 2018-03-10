@@ -34,6 +34,7 @@ class PyEnum34(PythonPackage):
     version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
 
     depends_on('python')
+    conflicts('python@3.4:')
 
     # This dependency breaks concretization
     # See https://github.com/spack/spack/issues/2793

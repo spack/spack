@@ -46,6 +46,8 @@ class Boost(Package):
             branch='develop',
             submodules=True)
 
+    version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
+            url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
             url='https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2')
     version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
@@ -54,8 +56,10 @@ class Boost(Package):
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
     #       See: https://github.com/spack/spack/issues/3963
-    version('1.64.0', '93eecce2abed9d2442c9676914709349')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+    version('1.64.0', '93eecce2abed9d2442c9676914709349',
+            url='https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2')
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847',
+            url='https://dl.bintray.com/boostorg/release/1.63.0/source/boost_1_63_0.tar.bz2')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
@@ -91,6 +95,7 @@ class Boost(Package):
     default_install_libs = set(['atomic',
                                 'chrono',
                                 'date_time',
+                                'exception',
                                 'filesystem',
                                 'graph',
                                 'iostreams',
@@ -339,6 +344,8 @@ class Boost(Package):
             withLibs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
+        if not spec.satisfies('@1.39.0:'):
+            withLibs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             withLibs.append('graph_parallel')
 

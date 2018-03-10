@@ -49,7 +49,7 @@ class Neovim(CMakePackage):
 
     def cmake_args(self):
         args = []
-        if version >= Version('0.2.1'):
+        if self.version >= Version('0.2.1'):
             args = ['-DPREFER_LUA=ON']
 
         return args

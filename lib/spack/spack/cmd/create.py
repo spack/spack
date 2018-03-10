@@ -332,20 +332,13 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
+    base_class_name = 'OctavePackage'
+
     dependencies = """\
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
     # depends_on('octave-foo', type=('build', 'run'))"""
-
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        octave('--quiet', '--norc',
-               '--built-in-docstrings-file=/dev/null',
-               '--texi-macros-file=/dev/null',
-               '--eval', 'pkg prefix {0}; pkg install {1}'.format(
-                   prefix, self.stage.archive_file))"""
 
     def __init__(self, name, *args):
         # If the user provided `--name octave-splines`, don't rename it
@@ -464,6 +457,7 @@ class BuildSystemGuesser:
             (r'/Makefile\.PL$',       'perlmake'),
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
+            (r'/DESCRIPTION$',        'octave'),
         ]
 
         # Peek inside the compressed file.
@@ -657,7 +651,7 @@ def get_repository(args, name):
         repo = Repo(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die("Can't create package with namespace {0} in repo with "
-                    "namespace {0}".format(spec.namespace, repo.namespace))
+                    "namespace {1}".format(spec.namespace, repo.namespace))
     else:
         if spec.namespace:
             repo = spack.repo.get_repo(spec.namespace, None)

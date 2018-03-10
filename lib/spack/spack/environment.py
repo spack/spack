@@ -26,9 +26,11 @@ import collections
 import inspect
 import json
 import os
+import re
 import sys
 import os.path
 import subprocess
+from llnl.util.lang import dedupe
 
 
 class NameModifier(object):
@@ -289,6 +291,12 @@ class EnvironmentModifications(object):
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): Operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
+            blacklist ([str or re]): Ignore any modifications of these
+                variables (default: [])
+            whitelist ([str or re]): Always respect modifications of these
+                variables (default: []). Has precedence over blacklist.
+            clean (bool): In addition to removing empty entries,
+                also remove duplicate entries (default: False).
 
         Returns:
             EnvironmentModifications: an object that, if executed, has
@@ -305,6 +313,9 @@ class EnvironmentModifications(object):
         source_command         = kwargs.get('source_command', 'source')
         suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
         concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
+        blacklist              = kwargs.get('blacklist', [])
+        whitelist              = kwargs.get('whitelist', [])
+        clean                  = kwargs.get('clean', False)
 
         source_file = [source_command, filename]
         source_file.extend(args)
@@ -346,24 +357,45 @@ class EnvironmentModifications(object):
             env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
                              for k, v in env_after.items())
 
-        # Filter variables that are not related to sourcing a file
-        to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'
+        # Other variables unrelated to sourcing a file
+        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+
+        def set_intersection(fullset, *args):
+            # A set intersection using string literals and regexs
+            meta = '[' + re.escape('[$()*?[]^{|}') + ']'
+            subset = fullset & set(args)   # As literal
+            for name in args:
+                if re.search(meta, name):
+                    pattern = re.compile(name)
+                    for k in fullset:
+                        if re.match(pattern, k):
+                            subset.add(k)
+            return subset
+
         for d in env_after, env_before:
-            for name in to_be_filtered:
-                d.pop(name, None)
+            # Retain (whitelist) has priority over prune (blacklist)
+            prune = set_intersection(set(d), *blacklist)
+            prune -= set_intersection(prune, *whitelist)
+            for k in prune:
+                d.pop(k, None)
 
         # Fill the EnvironmentModifications instance
         env = EnvironmentModifications()
 
         # New variables
-        new_variables = set(env_after) - set(env_before)
+        new_variables = list(set(env_after) - set(env_before))
         # Variables that have been unset
-        unset_variables = set(env_before) - set(env_after)
+        unset_variables = list(set(env_before) - set(env_after))
         # Variables that have been modified
-        common_variables = set(
-            env_before).intersection(set(env_after))
+        common_variables = set(env_before).intersection(set(env_after))
+
         modified_variables = [x for x in common_variables
                               if env_before[x] != env_after[x]]
+
+        # Consistent output order - looks nicer, easier comparison...
+        new_variables.sort()
+        unset_variables.sort()
+        modified_variables.sort()
 
         def return_separator_if_any(*args):
             separators = ':', ';'
@@ -401,6 +433,14 @@ class EnvironmentModifications(object):
                 before_list = list(filter(None, before_list))
                 after_list = list(filter(None, after_list))
 
+                # Remove duplicate entries (worse matching, bloats env)
+                if clean:
+                    before_list = list(dedupe(before_list))
+                    after_list = list(dedupe(after_list))
+                    # The reassembled cleaned entries
+                    before = sep.join(before_list)
+                    after = sep.join(after_list)
+
                 # Paths that have been removed
                 remove_list = [
                     ii for ii in before_list if ii not in after_list]
@@ -413,14 +453,15 @@ class EnvironmentModifications(object):
                     end = after_list.index(remaining_list[-1])
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
-                    env.prepend_path(x, env_after[x])
+                    env.prepend_path(x, after)
 
                 if search not in before:
                     # We just need to set the variable to the new value
-                    env.prepend_path(x, env_after[x])
+                    env.prepend_path(x, after)
                 else:
                     try:
                         prepend_list = after_list[:start]
+                        prepend_list.reverse()  # Preserve order after prepend
                     except KeyError:
                         prepend_list = []
                     try:
@@ -436,7 +477,7 @@ class EnvironmentModifications(object):
                         env.prepend_path(x, item)
             else:
                 # We just need to set the variable to the new value
-                env.set(x, env_after[x])
+                env.set(x, after)
 
         return env
 

@@ -68,10 +68,10 @@ def test_parse(data):
 def test_dict_order(data):
 
     expected_order = ['x86_64', 'some_list', 'another_list', 'some_key']
-    assert data['config_file'].keys() == expected_order
+    assert list(data['config_file'].keys()) == expected_order
 
     expected_order = ['foo', 'bar', 'baz']
-    assert data['config_file']['x86_64'].keys() == expected_order
+    assert list(data['config_file']['x86_64'].keys()) == expected_order
 
 
 def test_line_numbers(data):
