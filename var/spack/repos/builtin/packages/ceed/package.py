@@ -53,7 +53,7 @@ class Ceed(Package):
     depends_on('nekbone@17.0', when='@1.0.0')
     depends_on('nekcem@0b8bedd', when='@1.0.0')
     depends_on('petsc@3.8.3+mpi+hypre+superlu-dist+metis+hdf5+mumps+boost+double~int64', when='@1.0.0')
-    depends_on('pumi@0.0.1', when='@1.0.0')
+    depends_on('pumi@2.1.0', when='@1.0.0')
     depends_on('occa@0.2', when='@1.0.0')
 
 
