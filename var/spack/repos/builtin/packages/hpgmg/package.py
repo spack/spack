@@ -78,9 +78,7 @@ class Hpgmg(Package):
             args.append('--no-fv')
         else:
             # Apple's Clang doesn't support OpenMP
-            if (self.spec.satisfies('threads=openmp') and not
-                (self.spec.satisfies('%clang') and
-                 str(self.spec.compiler.version).endswith('-apple'))):
+            if not (self.spec.satisfies('%clang') and self.compiler.is_apple):
                 cflags.append(self.compiler.openmp_flag)
 
         if '+debug' in self.spec:

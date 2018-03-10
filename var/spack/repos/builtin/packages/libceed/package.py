@@ -27,24 +27,30 @@ from spack import *
 import os
 import re
 
+
 class Libceed(Package):
     """The CEED API Library: Code for Efficient Extensible Discretizations
     """
 
     homepage = "https://github.com/CEED/libCEED"
 
+    version('develop', git='https://github.com/CEED/libCEED.git',
+            branch='master')
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
-    variant('occa', default=True,description='Enable OCCA backends.')
+    variant('occa', default=True, description='Enable OCCA backends.')
 
-    depends_on('occa@0.2:', when='+occa')
+    depends_on('occa@develop', when='+occa')
 
     phases = ['build', 'install']
 
     def build(self, spec, prefix):
-        make('clean')
         make('all')
 
+    def install(self, spec, prefix):
+        make('install', 'DESTDIR=%s' % prefix, parallel=False)
+
+    @when('@0.1')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install('ceed.h', prefix.include)
@@ -52,3 +58,5 @@ class Libceed(Package):
         for f in os.listdir('.'):
             if re.match(r'.*\.(a|so|dylib)$', f):
                 install(f, prefix.lib)
+        mkdirp(prefix.lib.pkgconfig)
+        install('ceed.pc', prefix.lib.pkgconfig)

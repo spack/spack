@@ -35,7 +35,6 @@ class Magma(CMakePackage):
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
 
-
     version('2.2.0', '6c1ebf4cdf63eb302ff6258ff8c49217')
 
     variant('fortran', default=True,

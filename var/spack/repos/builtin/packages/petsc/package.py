@@ -87,6 +87,8 @@ class Petsc(Package):
     variant('clanguage', default='C', values=('C', 'C++'),
             description='Specify C (recommended) or C++ to compile PETSc',
             multi=False)
+    variant('suite-sparse', default=False,
+            description='Activates support for SuiteSparse')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -149,6 +151,7 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('suite-sparse', when='+suite-sparse')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -250,6 +253,18 @@ class Petsc(Package):
             options.append(
                 '--with-superlu_dist=0'
             )
+        # SuiteSparse: configuring using '--with-suitesparse-dir=...' has some
+        # issues, so specify directly the include path and the libraries.
+        if '+suite-sparse' in spec:
+            ss_spec = 'suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,' \
+                'camd,amd,suitesparseconfig'
+            options.extend([
+                '--with-suitesparse-include=%s' % spec[ss_spec].prefix.include,
+                '--with-suitesparse-lib=%s' % spec[ss_spec].libs.ld_flags,
+                '--with-suitesparse=1'
+            ])
+        else:
+            options.append('--with-suitesparse=0')
 
         python('configure', '--prefix=%s' % prefix, *options)
 

@@ -59,11 +59,22 @@ class Occa(Package):
         os.environ['OCCA_CXX'] = self.compiler.cxx
         # TODO: How can I get all the Cxx flags that Spack is using?
         # os.environ['OCCA_CXXFLAGS'] =
-        os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')
+        if '+cuda' in spec:
+            os.environ['OCCA_CUDA_COMPILER'] = \
+                os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')
         # TODO: Set variables for the other variants
-        make()
-        shutil.copytree('lib', os.path.join(prefix, 'lib'))
+
+        # Copy the source to the installation directory and build OCCA there.
+        for file in os.listdir('.'):
+            print 'copy source:', file
+            dest = join_path(prefix, os.path.basename(file))
+            print '       dest:', dest
+            if os.path.isdir(file):
+                shutil.copytree(file, dest)
+            else:
+                shutil.copy2(file, dest)
+        make('-C', prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # Set up OCCA_DIR for everyone using the OCCA library
-        spack_env.set('OCCA_DIR', os.path.join(self.prefix, 'lib'))
+        # Export OCCA_DIR for everyone using the OCCA package.
+        spack_env.set('OCCA_DIR', self.prefix)
