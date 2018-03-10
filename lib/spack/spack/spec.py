@@ -2121,8 +2121,10 @@ class Spec(object):
         if dep.name not in self._dependencies:
             self._add_dependency(spec_dependency, dependency.type)
 
+        visited_dependency = set()
         changed |= spec_dependency._normalize_helper(
-            visited, spec_deps, provider_index)
+            visited_dependency, spec_deps, provider_index)
+        visited.update(visited_dependency)
         return changed
 
     def _normalize_helper(self, visited, spec_deps, provider_index):
@@ -2151,6 +2153,10 @@ class Spec(object):
                             set(dep.type) - set(['test'])):
                     changed |= self._merge_dependency(
                         dep, visited, spec_deps, provider_index)
+                elif dep is None:
+                    # dep_name didn't satisfy conditions, but we still need
+                    # to mark it as visited
+                    visited.add(dep_name)
             any_change |= changed
 
         return any_change
