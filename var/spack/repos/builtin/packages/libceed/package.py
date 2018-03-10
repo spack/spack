@@ -24,9 +24,11 @@
 ##############################################################################
 from spack import *
 
+import os
+import re
 
 class Libceed(Package):
-    """The CEED API Library: Code for Efficient Extensible Discretization
+    """The CEED API Library: Code for Efficient Extensible Discretizations
     """
 
     homepage = "https://github.com/CEED/libCEED"
@@ -37,9 +39,16 @@ class Libceed(Package):
 
     depends_on('occa@0.2:', when='+occa')
 
+    phases = ['build', 'install']
+
+    def build(self, spec, prefix):
+        make('clean')
+        make('all')
+
     def install(self, spec, prefix):
-        make('DESTDIR=%s' % prefix)
+        mkdirp(prefix.include)
+        install('ceed.h', prefix.include)
         mkdirp(prefix.lib)
-        install('libceed.so', prefix.lib)
-        mkdirp(prefix.inc)
-        install('ceed.h', prefix.inc)        
+        for f in os.listdir('.'):
+            if re.match(r'.*\.(a|so|dylib)$', f):
+                install(f, prefix.lib)

@@ -26,10 +26,9 @@
 import os
 from spack import *
 
-
 class Ceed(Package):
     """Ceed is a suite of Department of Energy (DOE) packages partially
-       supported by the Exascale Computing Project (ECP). This is a Spack 
+       supported by the Exascale Computing Project (ECP). This is a Spack
        bundle package that installs the CEED packages
     """
 
@@ -44,18 +43,17 @@ class Ceed(Package):
     variant('cuda', default=False, description='Enable CUDA dependent packages')
 
     depends_on('gslib@1.0.1', when='@1.0.0')
-    depends_on('hpgmg@a0a5510', when='@1.0.0')
+    depends_on('hpgmg@a0a5510+fe', when='@1.0.0')
     depends_on('laghos@1.0', when='@1.0.0')
-    depends_on('libceed@0.1+occa', when='@1.0.0')
+    depends_on('libceed@0.1+occa', when='@1.0.0 +cuda')
     depends_on('magma@2.2.0', when='@1.0.0 +cuda')
-    depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+examples+miniapps', when='@1.0.0')    
+    depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+examples+miniapps', when='@1.0.0')
     depends_on('nek5000@17.0', when='@1.0.0')
     depends_on('nekbone@17.0', when='@1.0.0')
     depends_on('nekcem@0b8bedd', when='@1.0.0')
     depends_on('petsc@3.8.3+mpi+hypre+superlu-dist+metis+hdf5+mumps+boost+double~int64', when='@1.0.0')
     depends_on('pumi@2.1.0', when='@1.0.0')
-    depends_on('occa@0.2', when='@1.0.0')
-
+    depends_on('occa@0.2', when='@1.0.0 +cuda')
 
     # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):

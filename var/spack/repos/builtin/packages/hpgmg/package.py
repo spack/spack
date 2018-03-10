@@ -43,9 +43,8 @@ class Hpgmg(Package):
     version('a0a5510df23b', 'b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
     version('develop', git='https://bitbucket.org/hpgmg/hpgmg.git', branch='master')
     version('a0a5510', git='https://bitbucket.org/hpgmg/hpgmg.git',
-            commit='a0a5510df23b0f8ab0decf5d084175adb6418c81')    
+            commit='a0a5510df23b0f8ab0decf5d084175adb6418c81')
     version('0.3', git='https://bitbucket.org/hpgmg/hpgmg.git', tag='v0.3')
-
 
     variant(
         'fe', default=False, description='Build finite element solver')
@@ -78,7 +77,11 @@ class Hpgmg(Package):
         if 'fv=none' in self.spec:
             args.append('--no-fv')
         else:
-            cflags.append(self.compiler.openmp_flag)
+            # Apple's Clang doesn't support OpenMP
+            if (self.spec.satisfies('threads=openmp') and not
+                (self.spec.satisfies('%clang') and
+                 str(self.spec.compiler.version).endswith('-apple'))):
+                cflags.append(self.compiler.openmp_flag)
 
         if '+debug' in self.spec:
             cflags.append('-g')

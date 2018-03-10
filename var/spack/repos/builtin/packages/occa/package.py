@@ -63,3 +63,7 @@ class Occa(Package):
         # TODO: Set variables for the other variants
         make()
         shutil.copytree('lib', os.path.join(prefix, 'lib'))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # Set up OCCA_DIR for everyone using the OCCA library
+        spack_env.set('OCCA_DIR', os.path.join(self.prefix, 'lib'))
