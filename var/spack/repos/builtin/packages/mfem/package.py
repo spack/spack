@@ -297,14 +297,17 @@ class Mfem(Package):
 
         if '+libunwind' in spec:
             libunwind = spec['libunwind']
-            header = find_headers('libunwind', libunwind.prefix.include)
+            headers = find_headers('libunwind', libunwind.prefix.include)
+            headers.add_macro('-g')
             libs = find_libraries('libunwind', libunwind.prefix.lib,
                                   shared=True, recursive=True)
             if not libs:
                 libs = find_libraries('libunwind', libunwind.prefix.lib,
                                       shared=False, recursive=True)
+            # When mfem uses libunwind, it also needs 'libdl'.
+            libs += LibraryList(find_system_libraries('libdl'))
             options += [
-                'LIBUNWIND_OPT=-g %s' % header.cpp_flags,
+                'LIBUNWIND_OPT=%s' % headers.cpp_flags,
                 'LIBUNWIND_LIB=%s' % libs.ld_flags]
 
         if '+openmp' in spec:
