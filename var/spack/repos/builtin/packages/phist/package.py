@@ -51,8 +51,8 @@ library or Trilinos/Tpetra).
             git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
     version('master',
             git='https://bitbucket.org/essex/phist/phist.git', branch='master')
-    version('1.4.1', '53ca2c2c000a36790e1626ed1eb642e3',
-            url='https://bitbucket.org/essex/phist/get/phist-1.4.1.tar.gz')
+    version('1.4.2', 'df6b73102d9ae597dd8cd51e5943cfd6',
+            url='https://bitbucket.org/essex/phist/get/phist-1.4.2.tar.gz')
 
     # note: there is no virtual package for lapacke (the C bindings for
     # lapack), We look for a file like lapacke.h in the lapack prefix, if it
@@ -145,14 +145,14 @@ library or Trilinos/Tpetra).
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos@12.12.1', when='+trilinos')
-    depends_on('trilinos@12.12.1', when='kernel_lib=tpetra')
+    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
+    depends_on('trilinos+tpetra', when='kernel_lib=tpetra')
     # Epetra backend also works with older Trilinos versions
-    depends_on('trilinos@11.12.1:12.12.1', when='kernel_lib=epetra')
+    depends_on('trilinos+epetra', when='kernel_lib=epetra')
     depends_on('petsc~complex', when='kernel_lib=petsc')
     depends_on('petsc+complex', when='kernel_lib=petsc+complex')
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
     depends_on('trilinos', when='+trilinos')
-    depends_on('parmetis', when='+parmetis')
+    depends_on('parmetis ^metis+int64', when='+parmetis')
