@@ -36,6 +36,7 @@ class Astral(Package):
     version('4.10.7', '38c81020570254e3f5c75d6c3c27fc6d')
 
     depends_on('java', type=('build', 'run'))
+    depends_on('zip', type='build')
 
     phases = ['build', 'install']
 

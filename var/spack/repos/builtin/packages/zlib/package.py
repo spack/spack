@@ -54,7 +54,7 @@ class Zlib(Package):
     def libs(self):
         shared = '+shared' in self.spec
         return find_libraries(
-            ['libz'], root=self.prefix, recurse=True, shared=shared
+            ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
     def setup_environment(self, spack_env, run_env):

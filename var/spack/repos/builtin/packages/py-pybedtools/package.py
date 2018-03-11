@@ -33,10 +33,12 @@ class PyPybedtools(PythonPackage):
     url      = "https://pypi.io/packages/source/p/pybedtools/pybedtools-0.7.10.tar.gz"
 
     version('0.7.10', 'f003c67e22c48b77f070538368ece70c')
+    version('0.6.9',  'a24e4bcd0c89beb9535295db964f6a4a')
 
     depends_on('py-setuptools', type='build')
     depends_on('bedtools2',     type=('build', 'run'))
     depends_on('py-numpy',      type=('build', 'run'))
     depends_on('py-pandas',     type=('build', 'run'))
-    depends_on('py-pysam@0.8.1:', type=('build', 'run'))
+    depends_on('py-pysam@0.8.1:', type=('build', 'run'), when='@0.7.0:')
+    depends_on('py-pysam@0.7.7',  type=('build', 'run'), when='@0.6.9')
     depends_on('py-six',        type=('build', 'run'))
