@@ -29,6 +29,8 @@ import os
 class Mfem(Package):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
+    tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
+
     homepage = 'http://www.mfem.org'
     url      = 'https://github.com/mfem/mfem'
 
@@ -111,7 +113,7 @@ class Mfem(Package):
     variant('suite-sparse', default=False,
         description='Enable serial, sparse direct solvers')
     variant('petsc', default=False,
-        description='Enable PETSc solvers, preconditioners, etc..')
+        description='Enable PETSc solvers, preconditioners, etc.')
     variant('sundials', default=False,
         description='Enable Sundials time integrators')
     variant('mpfr', default=False,
@@ -122,6 +124,8 @@ class Mfem(Package):
         description='Build debug instead of optimized version')
     variant('netcdf', default=False,
         description='Enable Cubit/Genesis reader')
+    variant('conduit', default=False,
+        description='Enable binary data I/O using Conduit')
     variant('gzstream', default=True,
         description='Support zip\'d streams for I/O')
     variant('gnutls', default=False,
@@ -151,6 +155,7 @@ class Mfem(Package):
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
     conflicts('+metis~mpi', when='@:3.3.0')
+    conflicts('+conduit', when='@:3.3.2')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+petsc', when='~mpi')
@@ -180,6 +185,8 @@ class Mfem(Package):
     depends_on('libunwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
+    depends_on('conduit@0.3.1:', when='+conduit')
+    depends_on('conduit+mpi', when='+conduit+mpi')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
 
@@ -220,7 +227,8 @@ class Mfem(Package):
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
-            'MFEM_USE_OPENMP=%s' % yes_no('+openmp')]
+            'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
+            'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
 
         if '~static' in spec:
             options += ['STATIC=NO']
@@ -317,6 +325,23 @@ class Mfem(Package):
         timer = spec.variants['timer'].value
         if timer != 'auto':
             options += ['MFEM_TIMER_TYPE=%s' % timer_ids[timer]]
+
+        if '+conduit' in spec:
+            conduit = spec['conduit']
+            headers = HeaderList(find(conduit.prefix.include, 'conduit.hpp',
+                                      recursive=True))
+            conduit_libs = ['libconduit', 'libconduit_relay',
+                            'libconduit_blueprint']
+            libs = find_libraries(conduit_libs, conduit.prefix.lib,
+                                  shared=('+shared' in conduit))
+            libs += LibraryList(find_system_libraries('libdl'))
+            if '+hdf5' in conduit:
+                hdf5 = conduit['hdf5']
+                headers += find_headers('hdf5', hdf5.prefix.include)
+                libs += hdf5.libs
+            options += [
+                'CONDUIT_OPT=%s' % headers.cpp_flags,
+                'CONDUIT_LIB=%s' % libs.ld_flags]
 
         make('config', *options, parallel=False)
         make('info', parallel=False)
