@@ -66,9 +66,7 @@ class Occa(Package):
 
         # Copy the source to the installation directory and build OCCA there.
         for file in os.listdir('.'):
-            print 'copy source:', file
             dest = join_path(prefix, os.path.basename(file))
-            print '       dest:', dest
             if os.path.isdir(file):
                 shutil.copytree(file, dest)
             else:
