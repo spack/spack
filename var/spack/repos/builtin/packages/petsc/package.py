@@ -268,7 +268,7 @@ class Petsc(Package):
 
         # zlib: configuring using '--with-zlib-dir=...' has some issues with
         # SuiteSparse so specify directly the include path and the libraries.
-        if '+zlib' in spec:
+        if 'zlib' in spec:
             options.extend([
                 '--with-zlib-include=%s' % spec['zlib'].prefix.include,
                 '--with-zlib-lib=%s'     % spec['zlib'].libs.ld_flags,
