@@ -22,16 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Libpcap(AutotoolsPackage):
-    "libpcap is a portable library in C/C++ for packet capture"
-    homepage = "http://www.tcpdump.org/"
-    list_url = "http://www.tcpdump.org/release/"
-    url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
+class Cistem(AutotoolsPackage):
+    """cisTEM is user-friendly software to process cryo-EM images of
+       macromolecular complexes and obtain high-resolution 3D reconstructions
+       from them."""
 
-    version('1.8.1', '3d48f9cd171ff12b0efd9134b52f1447')
+    homepage = "https://cistem.org/"
+    url      = "https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0"
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
+    version('1.0.0', '479f395b30ad630df3cbba9c56eb29c2')
+
+    depends_on('wx@3.0.2')
+    depends_on('fftw')

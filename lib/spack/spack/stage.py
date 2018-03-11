@@ -566,7 +566,7 @@ class ResourceStage(Stage):
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path
                          ))
-                shutil.move(source_path, destination_path)
+                shutil.move(os.path.realpath(source_path), destination_path)
 
 
 @pattern.composite(method_list=[
