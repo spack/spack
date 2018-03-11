@@ -228,7 +228,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos', 'zlib'):
+                        'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
@@ -265,6 +265,17 @@ class Petsc(Package):
             ])
         else:
             options.append('--with-suitesparse=0')
+
+        # zlib: configuring using '--with-zlib-dir=...' has some issues with
+        # SuiteSparse so specify directly the include path and the libraries.
+        if '+zlib' in spec:
+            options.extend([
+                '--with-zlib-include=%s' % spec['zlib'].prefix.include,
+                '--with-zlib-lib=%s'     % spec['zlib'].libs.ld_flags,
+                '--with-zlib=1'
+            ])
+        else:
+            options.append('--with-zlib=0')
 
         python('configure', '--prefix=%s' % prefix, *options)
 

@@ -278,9 +278,12 @@ class Mfem(Package):
                 'NETCDF_LIB=-L%s -lnetcdf' % spec['netcdf'].prefix.lib]
 
         if '+gzstream' in spec:
-            options += [
-                'ZLIB_OPT=-I%s' % spec['zlib'].prefix.include,
-                'ZLIB_LIB=%s' % spec['zlib'].libs.ld_flags]
+            if "@:3.3.2" in spec:
+                options += ['ZLIB_DIR=%s' % spec['zlib'].prefix]
+            else:
+                options += [
+                    'ZLIB_OPT=-I%s' % spec['zlib'].prefix.include,
+                    'ZLIB_LIB=%s' % spec['zlib'].libs.ld_flags]
 
         if '+mpfr' in spec:
             options += [
