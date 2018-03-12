@@ -38,8 +38,11 @@
 # please first remove this boilerplate and all FIXME comments.
 #
 from spack import *
+from subprocess import call
+from os import chdir
+import platform
 
-class PyThirdorder(PythonPackage):
+class PyThirdorder(Package):
     """Thirdorder scripts helps users of ShengBTE and almaBTE FORCE\_CONSTANTS\_3RD files in an efficient and convenient manner"""
 
     homepage = "http://www.shengbte.org"
@@ -52,19 +55,49 @@ class PyThirdorder(PythonPackage):
     depends_on('py-scipy',        type=('build', 'run'))
     depends_on('spglib',        type=('build', 'run'))
 
-    def patch(self):
-      makefile = FileFilter('setup.py')
-      makefile.filter('LIBRARY_DIRS = .*', 'LIBRARY_DIRS = ["%s"]' % self.spec['spglib'].prefix.lib)
-      makefile.filter('INCLUDE_DIRS = .*', 'INCLUDE_DIRS = ["%s"]' % self.spec['spglib'].prefix.include)
+    def setup_environment(self, spack_env, run_env):    
+      python_version = self.spec['python'].version.up_to(2)
+      arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
+        
+      run_env.prepend_path('PYTHONPATH', join_path(self.spec['python'].prefix.lib, 'python{0}'.format(python_version), 'site-packages'))
+      run_env.prepend_path('LIBRARY_PATH', self.spec ['python'].prefix.lib)
+      run_env.prepend_path('LD_LIBRARY_PATH', self.spec['python'].prefix.lib)
 
-      makefile = FileFilter('thirdorder_core.c')
-      makefile.filter('#include "spglib.*"', '#include "spglib.h"')
+      run_env.prepend_path('PYTHONPATH', join_path(prefix.lib, 'python{0}'.format(python_version), 'site-packages'))
+      run_env.prepend_path('LIBRARY_PATH', prefix.lib)
+      run_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
 
-    def post_install(self, spec, prefix):
+      run_env.prepend_path('PYTHONPATH', join_path(self.spec['py-numpy'].prefix.lib, 'python{0}'.format(python_version), 'site-packages'))
+      run_env.prepend_path('LIBRARY_PATH', self.spec ['py-numpy'].prefix.lib)
+      run_env.prepend_path('LD_LIBRARY_PATH', self.spec['py-numpy'].prefix.lib)
+
+      run_env.prepend_path('PYTHONPATH', join_path(self.spec['py-scipy'].prefix.lib, 'python{0}'.format(python_version), 'site-packages'))
+      run_env.prepend_path('LIBRARY_PATH', self.spec['py-scipy'].prefix.lib)
+      run_env.prepend_path('LD_LIBRARY_PATH', self.spec['py-scipy'].prefix.lib)
+
+    def edit(self):
+      setupfile = FileFilter('setup.py')
+      setupfile.filter('LIBRARY_DIRS = .*', 'LIBRARY_DIRS = ["%s"]' % self.spec['spglib'].prefix.lib)
+      setupfile.filter('INCLUDE_DIRS = .*', 'INCLUDE_DIRS = ["%s"]' % self.spec['spglib'].prefix.include)
+
+      sourcefile = FileFilter('thirdorder_core.c')
+      sourcefile.filter('#include "spglib.*"', '#include "spglib.h"')
+
+    @run_after('install')
+    @on_package_attributes(test=True)
+    def check_install(self):
+      python('-c', 'import thirdorder_core')
+      with working_dir('..'):
+        testfile=open('POSCAR','w')
+        testfile.writelines('InAs\n   6.00000000000000\n     0.0000000000000000    0.5026468896190005    0.5026468896190005\n     0.5026468896190005    0.0000000000000000    0.5026468896190005\n     0.5026468896190005    0.5026468896190005    0.0000000000000000\n   In   As\n   1   1\nDirect\n  0.0000000000000000  0.0000000000000000  0.0000000000000000\n  0.2500000000000000  0.2500000000000000  0.2500000000000000')
+        testfile.close()
+        call([prefix.bin+'/thirdorder_vasp.py', 'sow 4 4 4 -3'])
+
+    def install(self, spec, prefix):
+      call(['python', 'setup.py', 'build'])
+      call(['python', 'setup.py', 'install', '--prefix=%s' % prefix])
       mkdirp(prefix.bin)
-      install('thirdorder_espresso.py', prefix.bin+'thirdorder_espresso.py')
-      install('thirdorder_vasp.py', prefix.bin+'thirdorder_vasp.py')
-      install('thirdorder_castep.py', prefix.bin+'thirdorder_castep.py')
-
-    def test(self):
-      pass
+      install('thirdorder_espresso.py', prefix.bin)
+      install('thirdorder_vasp.py', prefix.bin)
+      install('thirdorder_castep.py', prefix.bin)
+      install('thirdorder_common.py', prefix.bin)
