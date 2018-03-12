@@ -344,6 +344,7 @@ def set_build_environment_variables(pkg, env, dirty):
         # unload the cray-libsci module to prevently silently linking
         # with module.
         unload_module("cray-libsci")
+        unload_module("darshan")
     return env
 
 
