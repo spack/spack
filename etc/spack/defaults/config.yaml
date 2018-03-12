@@ -52,7 +52,7 @@ config:
 
 
   # Whether or not to use configs from the user's home directory ~/.spack.
-  user_configs: false
+  user_configs: true
 
 
   # Cache directory for miscellaneous files, like the package index.

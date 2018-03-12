@@ -62,6 +62,7 @@ schema = {
                     },
                 },
                 'source_cache': {'type': 'string'},
+                'user_configs': {'type': 'boolean'},
                 'misc_cache': {'type': 'string'},
                 'verify_ssl': {'type': 'boolean'},
                 'checksum': {'type': 'boolean'},
