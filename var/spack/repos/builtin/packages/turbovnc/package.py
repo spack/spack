@@ -34,6 +34,7 @@ class Turbovnc(CMakePackage):
     homepage = "http://www.turbovnc.org/"
     url      = "http://downloads.sourceforge.net/project/turbovnc/2.0.1/turbovnc-2.0.1.tar.gz"
 
+    version('2.1.2', '9d04b26d40664d0d8072e8b1828f69c4')
     version('2.1.1', 'b1b1537eb5f8e6bd90acfd853277a9cf')
     version('2.1', '6748bb13647d318f0c932394f8298d10')
     version('2.0.1', 'a279fdb9ac86a1ebe82f85ab68353dcc')
