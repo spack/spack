@@ -35,6 +35,6 @@ class RSnowfall(RPackage):
     homepage = "https://cran.r-project.org/web/packages/snowfall/index.html"
     url      = "https://cran.r-project.org/src/contrib/snowfall_1.84-6.1.tar.gz"
 
-    version('1.84-6.1', '2403a27767eaf28f39c2686c7fe2ca6b')
+    version('1.84-6.1', '5ec38116aa9cac237d56f59ba5bd60e3')
 
     depends_on('r-snow', type=('build', 'run'))
