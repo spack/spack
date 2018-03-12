@@ -41,13 +41,21 @@ class YamlCpp(CMakePackage):
 
     depends_on('boost', when='@:0.5.3')
 
+    # run cmake flow twice to build/install shared/static into same prefix
+    # FIXME: how avoid second build when shared is False?
+    phases = ['patch_cmake_args'] + CMakePackage.phases + \
+             ['patch_cmake_args'] + CMakePackage.phases
+
+    def patch_cmake_args(self, spec, prefix):
+        self.first_run = not hasattr(self, 'first_run')
+
     def cmake_args(self):
         spec = self.spec
         options = []
 
         options.extend([
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+                'ON' if ('+shared' in spec and self.first_run) else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
                 'ON' if '+pic' in spec else 'OFF'),
         ])
