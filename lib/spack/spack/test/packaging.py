@@ -157,34 +157,34 @@ echo $PATH"""
     else:
         # create build cache without signing
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-y', str(spec)])
+            ['create', '-d', mirror_path, '-u', str(spec)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
 
         # install build cache without verification
-        args = parser.parse_args(['install', '-y', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
+        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-y', str(pkghash)])
+            ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
 
         # install build cache
-        args = parser.parse_args(['install', '-y', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
+        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     # Validate the relocation information

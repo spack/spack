@@ -22,24 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class Cistem(AutotoolsPackage):
+    """cisTEM is user-friendly software to process cryo-EM images of
+       macromolecular complexes and obtain high-resolution 3D reconstructions
+       from them."""
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    homepage = "https://cistem.org/"
+    url      = "https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    version('1.0.0', '479f395b30ad630df3cbba9c56eb29c2')
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+    depends_on('wx@3.0.2')
+    depends_on('fftw')

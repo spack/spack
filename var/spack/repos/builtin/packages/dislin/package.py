@@ -25,21 +25,29 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class Dislin(Package):
+    """DISLIN is a high level and easy to use graphics library for displaying
+       data as curves,  bar graphs,  pie charts,  3D-colour plots,  surfaces,
+       contours and maps."""
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    homepage = "http://www.mps.mpg.de/dislin"
+    url      = "ftp://ftp.gwdg.de/pub/grafik/dislin/linux/i586_64/dislin-11.0.linux.i586_64.tar.gz"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    version('11.0.linux.i586_64', '6fb099b54f41db009cafc702eebb5bc6')
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
+    depends_on('motif')
+    depends_on('mesa')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('DISLIN', self.prefix)
+        run_env.set('DISLIN', self.prefix)
+        run_env.prepend_path('PATH', self.prefix)
+        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
+        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['motif'].prefix.lib)
+        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['mesa'].prefix.lib)
 
     def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+        INSTALL = Executable('./INSTALL')
+        INSTALL()
+        with working_dir('examples'):
+            install('dislin_d.h', prefix)

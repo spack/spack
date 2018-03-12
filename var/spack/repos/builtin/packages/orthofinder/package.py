@@ -25,21 +25,29 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class Orthofinder(Package):
+    """OrthoFinder is a fast, accurate and comprehensive analysis tool for
+    comparative genomics.
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    It finds orthologues and orthogroups infers rooted  gene trees for all
+    orthogroups and infers a rooted species tree for the species being
+    analysed. OrthoFinder also provides comprehensive statistics for
+    comparative genomic analyses. OrthoFinder is simple to use and all you
+    need to run it is a set of protein sequence files (one per species)
+    in FASTA format."""
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    homepage = "https://github.com/davidemms/OrthoFinder"
+    url      = "https://github.com/davidemms/OrthoFinder/releases/download/2.2.0/OrthoFinder-2.2.0.tar.gz"
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
+    version('2.2.0', '4ff585e1eb148fc694a219296fbdd431')
+
+    depends_on('blast-plus', type='run')
+    depends_on('mcl', type='run')
+    depends_on('fastme', type='run')
+    depends_on('py-dlcpar', type='run')
 
     def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+        install_tree('.', prefix.bin)
+
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix.bin, 'orthofinder'))

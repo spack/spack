@@ -25,21 +25,24 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class Gcta(Package):
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    """GCTA (Genome-wide Complex Trait Analysis) was originally designed to
+    estimate the proportion of phenotypic variance explained by all genome-wide
+    SNPs for complex traits (the GREML method), and has subsequently extended
+    for many other analyses to better understand the genetic architecture of
+    complex traits. GCTA currently supports the following analyses."""
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    homepage = "http://cnsgenomics.com/software/gcta/#Overview"
+    url      = "http://cnsgenomics.com/software/gcta/gcta_1.91.2beta.zip"
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
+    version('1.91.2beta_mac', 'ce0882ad35dd9474ffe40911da369274700af1ecb9916c0a355b7bad14850234')
+    version('1.91.2beta', '192efb767be1c7ca9c2dac5d2c2317a97c7a9db1f801168d19ad2a51b98d9b10', preferred=True)
+
+    conflicts('@1.91.2beta', when='platform=darwin')
+    conflicts('@1.91.2beta_mac', when='platform=linux')
 
     def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+        mkdirp(prefix.bin)
+        install('gcta64', join_path(prefix.bin, 'gcta64'))
+        set_executable(join_path(prefix.bin, 'gcta64'))

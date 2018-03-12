@@ -25,21 +25,15 @@
 from spack import *
 
 
-class Prank(Package):
-    """A powerful multiple sequence alignment browser."""
+class PyBcbioGff(PythonPackage):
+    """Read and write Generic Feature Format (GFF) with Biopython
+    integration."""
 
-    homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    homepage = "https://pypi.python.org/pypi/bcbio-gff/0.6.2"
+    url      = "https://pypi.io/packages/source/b/bcbio-gff/bcbio-gff-0.6.2.tar.gz"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    version('0.6.2', 'd5aae8b125cdad4291f15bec20cfb0ef')
 
-    depends_on('mafft')
-    depends_on('exonerate')
-    depends_on('bpp-suite')      # for bppancestor
-    conflicts('%gcc@7.2.0', when='@:150803')
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            make()
-            mkdirp(prefix.bin)
-            install('prank', prefix.bin)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-biopython',  type=('build', 'run'))
