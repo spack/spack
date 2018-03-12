@@ -45,7 +45,10 @@ class Libceed(Package):
     phases = ['build', 'install']
 
     def build(self, spec, prefix):
+        # Note: The occa package exports OCCA_DIR in the environment
         make('all')
+        if self.run_tests:
+            make('prove')
 
     def install(self, spec, prefix):
         make('install', 'DESTDIR=%s' % prefix, parallel=False)
