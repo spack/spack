@@ -1,16 +1,8 @@
-#=============================================================================
-# Project settings
-#=============================================================================
-# Only build master and develop on push; do not build every branch.
 branches:
   only:
-    - master
-    - develop
-    - /^releases\/.*$/
-
-#=============================================================================
-# Build matrix
-#=============================================================================
+  - master
+  - develop
+  - "/^releases\\/.*$/"
 jobs:
   fast_finish: true
   include:
@@ -108,8 +100,6 @@ stages:
 #=============================================================================
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
-
-# Docs need graphviz to build
 addons:
   apt:
     packages:
@@ -141,13 +131,13 @@ before_install:
 
 # Install various dependencies
 install:
-  - pip install --upgrade pip
-  - pip install --upgrade six
-  - pip install --upgrade setuptools
-  - pip install --upgrade codecov
-  - pip install --upgrade flake8
-  - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt; fi
-
+- pip install --upgrade pip
+- pip install --upgrade six
+- pip install --upgrade setuptools
+- pip install --upgrade codecov
+- pip install --upgrade flake8
+- if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt;
+  fi
 before_script:
   # Need this for the git tests to succeed.
   - git config --global user.email "spack@example.com"
@@ -170,7 +160,7 @@ script:
 # Notifications
 #=============================================================================
 notifications:
-  email:
-    recipients: tgamblin@llnl.gov
-    on_success: change
-    on_failure: always
+  slack:
+    secure: URUDHl7AJRCT8cykDCIuaMpHEPDY9VWHGi+jjmoKXZkZJY1wqpQsMQSRoDK59NIFFnLfbSmAISFEw1Tyn3wwyJE9088RD4dp8y1uoH1mZk+s/jPpJsH6OS1erTn1CnWo6k9/GceZldc1dBnOk6F+rciLLvmEIgYmCueSmp99DQcUIMzdU3zsrBfNRHmbahBxvwL3sPElzWJrnMT35q+ve5Sxbw1hnxkkHjfDDU48EE2Pc8Lw8GLFiYEFvKv7jNKlH8UTsBTOGJV4YDgVXEIZyjE1KxNqaGrE2DHDrMYGfX65oi84Nee+Fc9ecJ0NdhStFaF0sKpwhZ9DHULQ0IHBBitsioa8iW+Q8evaKlSkIi44JNHsBJXGdZ0LTPZBhsguVm3dpdKR55piwNG4IvLgPZzaHBrjdG2HY4yIb95dwihMeCEJlMe0vHO0D58FrC4ZpwN97oBfSAlViBglZcrnv0zWkQVDjYjnzlwCrL6GBcDF4EB3Dd2Ur8RQrlaJ19rtiAk69GRw6YbPLd/jFu5UYuL7VMsYYO13wYzZsxUMpv7lRCLfs+zmlRnJb1PJoGTHorEF+Nu12lcJRyX8lCQY2XktopfWfSoeLxaElWNaIRPE++eMYXSXdqjUIpTky/BQUsl7j1nR4i3tfUFekcRIBoZSQv+z4k/yhJrnhqEp5m0=
+    rooms:
+      secure: o4i7jyh5c6nwm8Uvia6YmE5Ahm6TZQb/FwY3LnMY44ywI6SD4BjuG2yXYsZolvaUuv4xeLe9usdgX2yU9sHvoAVrEkPVd0UQFYF5sK0xcn1Skr+dwrCbbByror7a5IlwrYNba9LUAL4qqCRFuzF79ELKG7aej5vngaW4BUa3NqwznzbC4LsWkxHKFySMbQWe4qAgAqctxmZKfSDSBZd1QA0vBg64pJSwYveZniB9awywYEBhswijGf2+ELcvyk0KXZhxK7GHftqnSSnaDkGG92E7A/MCdoTYcMgtPRe47N2+Nzip6c2mWF6wUPhQExL3i8kUT+mLFAJqSB2e7sbIy5a0ovtXzWhbintgN5y9nPVA3W3JTYFDOOvCQTDeip4jgKOXbizBCFqOwba5s2yCJ/J2rpbaBKs9q7/eHsWuxMFPNJ5NZgPOGXkJuVmlWUgSPZSkthodmvjSDVMb+qrqmXcG2NzJMcIey+xv7y3SmCVSOuV77xELd5XN7ZxjVLCyVU09ETWY9FdvphKt8f/Ti7Vyx30no/67k2EU448j8q3rbNw/qZqHr0/MLsqwxZlrmQIDdL//SopvjOK1zQQx8qnmrDH3L9Z03nl1MZI4WGAD/SdKQSB+MCe3iIMd8nqFgVgKVJgDLKCLIj7wJViqyXsueM2PX+/x5m2KpfZXKtI=

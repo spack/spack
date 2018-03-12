@@ -1,9 +1,8 @@
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
-[![Build Status](https://travis-ci.org/spack/spack.svg?branch=develop)](https://travis-ci.org/spack/spack)
-[![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
+[![Build Status](https://travis-ci.org/kaust-rc/spack.svg?branch=develop)](https://travis-ci.org/kaust-rc/spack)
+[![codecov](https://codecov.io/gh/kaust-rc/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/kaust-rc/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
-[![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
@@ -31,8 +30,7 @@ Then:
 Documentation
 ----------------
 
-[**Full documentation**](http://spack.readthedocs.io/) for Spack is
-the first place to look.
+[**Full documentation**](http://spack.readthedocs.io/) for Spack is the first place to look.
 
 Try the
 [**Spack Tutorial**](http://spack.readthedocs.io/en/latest/tutorial.html),

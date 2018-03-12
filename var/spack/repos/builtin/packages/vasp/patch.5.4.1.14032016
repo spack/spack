@@ -1,0 +1,199 @@
+diff -Naur src/chi.F /fs/home/mmars/src/vasp/release/src/chi.F
+--- src/chi.F	2016-02-08 15:28:27.000000000 +0100
++++ /fs/home/mmars/src/vasp/release/src/chi.F	2016-03-11 12:10:11.576559826 +0100
+@@ -1418,6 +1418,9 @@
+     USE hamil_high
+     USE david
+     USE subrot
++#ifdef CUDA_GPU
++    USE main_gpu
++#endif
+     IMPLICIT NONE
+ ! structures
+     TYPE (tau_handle)  KINEDEN
+@@ -3343,6 +3346,9 @@
+ 
+     ! not GW stop now
+     IF (.NOT. LGW) THEN
++#ifdef CUDA_GPU
++       CALL GPU_FINALIZE()
++#endif
+        CALL DUMP_FINAL_TIMING(IO%IU6)
+        CALL STOP_XML
+        CALLMPI_C(M_exit())
+diff -Naur src/CUDA/cuda_main.cu /fs/home/mmars/src/vasp/release/src/CUDA/cuda_main.cu
+--- src/CUDA/cuda_main.cu	2016-02-08 15:28:27.000000000 +0100
++++ /fs/home/mmars/src/vasp/release/src/CUDA/cuda_main.cu	2016-03-11 12:10:11.568559772 +0100
+@@ -91,6 +91,80 @@
+     // free device pointer arrays
+     CUDA_ERROR( cudaFree(d_ptrs), "Failed to allocate device memory!" );
+     CUDA_ERROR( cudaFree(d_ptrs1), "Failed to allocate device memory!" );
++
++    // reset device
++    CUDA_ERROR( cudaDeviceReset(), "Failed to reset the device!" );
++}
++
++// wrapper for MPI API errors
++inline void __mpi_error(int status, const char *file, int line)
++{
++    if(status != MPI_SUCCESS)
++    {
++        printf("\nMPI Error in %s, line %d: %d\n", file, line, status);
++        exit(-1);
++    }
++}
++#define MPI_ERROR(status)   __mpi_error( status, __FILE__, __LINE__ )
++
++unsigned long djb2_hash(char *str, int len)
++{
++    unsigned long hash = 5381;
++    for(int i = 0; i < len; i++)
++        hash = hash * 33 ^ str[i];
++    return hash;
++}
++
++void mpi_get_local_rank(int *local_rank, int *local_size)
++{
++    // see https://blogs.fau.de/wittmann/2013/02/mpi-node-local-rank-determination/
++#ifdef __PARA
++    typedef char PName_t[MPI_MAX_PROCESSOR_NAME + 1];//make space for the 0 delimiter
++
++    //step 1: compute hash of local node name
++    int pname_len;
++    PName_t pname;
++    MPI_ERROR(MPI_Get_processor_name(pname, &pname_len));
++    //NOTE(ca): we must delimit the processor name because if we only rely on pname_len
++    //there is a chance that we have a hash collision where this processor name is a
++    //prefix of the other processor name and strncmp with pname_len would falsely return true
++    pname[pname_len] = '\0';
++    unsigned long hash = djb2_hash(pname, pname_len);
++
++    //step 2: split WORLD communicator with hash as "color"
++    MPI_Comm collision_comm;
++    int collision_size, collision_rank;
++    MPI_ERROR(MPI_Comm_split(MPI_COMM_WORLD, hash, myPE_, &collision_comm));
++    MPI_ERROR(MPI_Comm_size(collision_comm, &collision_size));
++    //collision_rank is 'almost' what we want but may be incorrect in case of collisions
++    MPI_ERROR(MPI_Comm_rank(collision_comm, &collision_rank)); 
++
++    //step 3: collect all processor names from local group to detect collisions
++    PName_t* local_pnames = new PName_t[collision_size];
++    //local_pnames will be sorted by rank, therefore if my_global_rank < other_global_rank then my_local_rank < other_local_rank
++    MPI_ERROR(MPI_Allgather(pname, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
++        local_pnames, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR, collision_comm));
++
++    //step 4: cycle through local processor names to make sure the we don't count collisions
++    *local_rank = 0;
++    *local_size = 0;
++    for (int i = 0; i < collision_size; i++) {
++        //Note(ca): don't use strncmp here, see above.
++        if (strcmp(pname, local_pnames[i]) == 0) {
++            if(i < collision_rank) {
++                *local_rank += 1;
++            }
++            *local_size += 1;
++        }
++    }
++
++    MPI_ERROR(MPI_Comm_free(&collision_comm));
++
++    delete [] local_pnames;
++#else
++    *local_rank = 0;
++    *local_size = 1;
++#endif
+ }
+ 
+ // TODO: replace with init from exact exchange?
+@@ -109,11 +183,12 @@
+     nPE_ = 1; myPE_ = 0;
+ #endif
+ 
+-
+-
+     CUDA_ERROR( cudaGetDeviceCount(&deviceCount), "No CUDA-supporting devices found!" );
+ 
+-    gpu_rank = (*CudaDevice)*deviceCount/nPE_;
++    int local_rank, local_size;
++    mpi_get_local_rank(&local_rank, &local_size);
++
++    gpu_rank = local_rank * deviceCount / local_size;
+     CUDA_ERROR( cudaGetDeviceProperties(&deviceProp, gpu_rank),
+ 		"Device does not support CUDA!" );
+     if(deviceProp.major < 1)
+@@ -122,7 +197,7 @@
+         cudaDeviceReset();
+ 	exit(1);
+     }
+-    printf("Using device %d (rank %d) : %s\n", gpu_rank,*CudaDevice,deviceProp.name);
++    printf("Using device %d (rank %d, local rank %d, local size %d) : %s\n", gpu_rank,*CudaDevice,local_rank, local_size, deviceProp.name);
+     CUDA_ERROR(cudaSetDevice(gpu_rank), "Failed to set the device!" );
+ #endif
+ }
+diff -Naur src/lib/makefile /fs/home/mmars/src/vasp/release/src/lib/makefile
+--- src/lib/makefile	2016-02-08 15:28:28.000000000 +0100
++++ /fs/home/mmars/src/vasp/release/src/lib/makefile	2016-03-14 22:53:58.705353642 +0100
+@@ -12,9 +12,12 @@
+ OBJS_STD = preclib.o timing_.o derrf_.o dclock_.o diolib.o dlexlib.o drdatab.o
+ OBJS = $(filter-out $(OBJECTS_LIB),$(OBJS_STD)) $(OBJECTS_LIB)
+ 
+-.PHONY: all 
++.PHONY: all
+ 
+-all: $(OBJS)
++all:
++	make libdmy.a
++
++libdmy.a: $(OBJS)
+ 	rm -f libdmy.a
+ 	ar vq libdmy.a $(OBJS)
+ 
+diff -Naur src/main.F /fs/home/mmars/src/vasp/release/src/main.F
+--- src/main.F	2016-02-08 15:28:28.000000000 +0100
++++ /fs/home/mmars/src/vasp/release/src/main.F	2016-03-11 12:10:11.584559878 +0100
+@@ -4969,7 +4969,6 @@
+       ENDIF
+ 
+ #ifdef CUDA_GPU
+-      CALL GPU_FINALIZE()
+ #ifdef USE_PINNED_MEMORY
+       CALL nvpinnedfree(CHTOT_PTR)
+       CALL nvpinnedfree(SV_PTR)
+@@ -4978,6 +4977,7 @@
+       nv_profile_stop(NVP_TOTAL)
+       nv_profile_print(NODE_ME)
+       nv_profile_free()
++      CALL GPU_FINALIZE()
+ #endif
+ 
+       CALL DUMP_ALLOCATE(IO%IU6)
+diff -Naur src/makefile /fs/home/mmars/src/vasp/release/src/makefile
+--- src/makefile	2016-02-08 15:28:28.000000000 +0100
++++ /fs/home/mmars/src/vasp/release/src/makefile	2016-03-14 22:53:58.709353669 +0100
+@@ -141,7 +141,7 @@
+ all: libs sources
+ 	$(MAKE) vasp ; cp vasp $(BINDIR)/$(EXE)
+ 	
+-vasp: $(OBJS) $(FFT3D) $(INC) main.o
++vasp: $(OBJS) $(FFT3D) $(INC) $(LIB) main.o
+ 	rm -f vasp
+ 	$(FCL) -o vasp $(OBJS) main.o $(FFT3D) $(LLIB) $(LINK)
+ 
+diff -Naur src/.objects /fs/home/mmars/src/vasp/release/src/.objects
+--- src/.objects	2016-02-08 15:28:27.000000000 +0100
++++ /fs/home/mmars/src/vasp/release/src/.objects	2016-03-11 12:10:11.560559718 +0100
+@@ -345,6 +345,7 @@
+ 	bse_te.o \
+ 	bse.o \
+ 	acfdt.o \
++	main_gpu.o \
+ 	chi.o \
+ 	sydmat.o \
+ 	rmm-diis_mlr.o \
+@@ -355,5 +356,4 @@
+ 	wnpr.o \
+ 	dmft.o \
+ 	auger.o \
+-	dmatrix.o \
+-	main_gpu.o
++	dmatrix.o 
