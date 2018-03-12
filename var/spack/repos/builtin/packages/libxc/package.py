@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxc(Package):
+class Libxc(AutotoolsPackage):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
 
@@ -35,6 +35,10 @@ class Libxc(Package):
     version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
     version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
+
+    # libxc provides a testsuite, but many tests fail
+    # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
+    phases = ['configure', 'build', 'install']
 
     @property
     def libs(self):
@@ -63,31 +67,24 @@ class Libxc(Package):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
-    def install(self, spec, prefix):
+    def setup_environment(self, spack_env, run_env):
         # Optimizations for the Intel compiler, suggested by CP2K
         optflags = '-O2'
         if self.compiler.name == 'intel':
-            optflags += ' -xAVX -axCORE-AVX2 -ipo'
+            #optflags += ' -xAVX -axCORE-AVX2 -ipo'
+            ## Well, not every lowly login node has AVX or AVX2:
+            #       $ icc  -xAVX -axCORE-AVX2 -ipo hello.c 
+            #       $ ./a.out 
+            #       
+            #       Please verify that both the operating system and the processor support Intel(R) AVX instructions.
+            #       
+            optflags += ' -xSSE4.2 -axCORE-AVX2 -ipo'
             if which('xiar'):
-                env['AR'] = 'xiar'
+                spack_env.set('AR', 'xiar')
 
-        if 'CFLAGS' in env and env['CFLAGS']:
-            env['CFLAGS'] += ' ' + optflags
-        else:
-            env['CFLAGS'] = optflags
+        spack_env.append_flags('CFLAGS',  optflags)
+        spack_env.append_flags('FCFLAGS', optflags)
 
-        if 'FCFLAGS' in env and env['FCFLAGS']:
-            env['FCFLAGS'] += ' ' + optflags
-        else:
-            env['FCFLAGS'] = optflags
-
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-shared')
-
-        make()
-
-        # libxc provides a testsuite, but many tests fail
-        # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
-        # make('check')
-
-        make('install')
+    def configure_args(self):
+        args = ['--enable-shared']
+        return args
