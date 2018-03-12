@@ -32,6 +32,7 @@ class Libxc(Package):
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
+    variant("shared", default=True, description="Build shared libraries")
     version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
     version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
@@ -81,8 +82,11 @@ class Libxc(Package):
         else:
             env['FCFLAGS'] = optflags
 
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-shared')
+        if "+shared" in spec:
+            libraries = "--enable-shared"
+        else:
+            libraries = "--disable-shared"
+        configure('--prefix={0}'.format(prefix), libraries)
 
         make()
 

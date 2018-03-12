@@ -60,6 +60,8 @@ class Abinit(AutotoolsPackage):
             description='Enables OpenMP threads. Use threaded FFTW3')
     variant('scalapack', default=False,
             description='Enables scalapack support. Requires MPI')
+    variant("atompaw", default=False,
+            description="Enables AtomPaw with LibXC")
     # variant('elpa', default=False,
     #         description='Uses elpa instead of scalapack. Requires MPI')
 
@@ -95,7 +97,7 @@ class Abinit(AutotoolsPackage):
     depends_on('hdf5+mpi', when='+mpi+hdf5')  # required for NetCDF-4 support
 
     # pin libxc version
-    depends_on("libxc@2.2.2")
+    depends_on("libxc@2.2.2", when="+atompaw")
 
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts('+scalapack', when='~mpi')
@@ -103,6 +105,10 @@ class Abinit(AutotoolsPackage):
     # Elpa is a substitute for scalapack and needs mpi
     # conflicts('+elpa', when='~mpi')
     # conflicts('+elpa', when='+scalapack')
+    def setup_environment(self, spack_env, run_env):
+        """Extremely NERSC specific. Load hugepages to avoid linking error"""
+        from spack.util.module_cmd import load_module
+        load_module("craype-hugepages2M")
 
     def configure_args(self):
 
@@ -127,8 +133,8 @@ class Abinit(AutotoolsPackage):
         if '+scalapack' in spec:
             oapp('--with-linalg-flavor=custom+scalapack')
             linalg = spec['scalapack'].libs + linalg
-
-        # elif '+elpa' in spec:
+        elif spec.satisfies("^intel-mkl"):
+            oapp("--with-linalg-flavor=mkl")
         else:
             oapp('--with-linalg-flavor=custom')
 
@@ -145,14 +151,15 @@ class Abinit(AutotoolsPackage):
             '--with-fft-incs=-I%s' % spec['fftw'].prefix.include,
             '--with-fft-libs=-L%s %s' % (spec['fftw'].prefix.lib, fftlibs),
         ])
-        oapp('--with-dft-flavor=atompaw+libxc')
 
         # LibXC library
-        libxc = spec['libxc:fortran']
-        options.extend([
-            'with_libxc_incs={0}'.format(libxc.headers.cpp_flags),
-            'with_libxc_libs={0}'.format(libxc.libs.ld_flags + ' -lm')
-        ])
+        if "+atompaw" in spec:
+            oapp('--with-dft-flavor=atompaw+libxc')
+            libxc = spec['libxc:fortran']
+            options.extend([
+                'with_libxc_incs={0}'.format(libxc.headers.cpp_flags),
+                'with_libxc_libs={0}'.format(libxc.libs.ld_flags + ' -lm')
+            ])
 
         # Netcdf4/HDF5
         if '+hdf5' in spec:
@@ -171,6 +178,8 @@ class Abinit(AutotoolsPackage):
             # In Spack we do our best to avoid building any internally provided
             # dependencies, such as netcdf3 in this case.
             oapp('--with-trio-flavor=none')
+
+        oapp("--enable-zdot-bugfix")
 
         return options
 
