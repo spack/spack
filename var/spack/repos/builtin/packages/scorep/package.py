@@ -101,6 +101,20 @@ class Scorep(AutotoolsPackage):
         elif spec.satisfies('^openmpi'):
             config_args.append('--with-mpi=openmpi')
 
+        if spec.satisfies('%gcc'):
+            config_args.append('--with-nocross-compiler-suite=gcc')
+        elif spec.satisfies('%intel'):
+            config_args.append('--with-nocross-compiler-suite=intel')
+        elif spec.satisfies('%pgi'):
+            config_args.append('--with-nocross-compiler-suite=pgi')
+
+        if spec.satisfies('^intel-mpi'):
+            config_args.append('--with-mpi=intel3')
+        elif spec.satisfies('^mpich') or spec.satisfies('^mvapich2'):
+            config_args.append('--with-mpi=mpich3')
+        elif spec.satisfies('^openmpi'):
+            config_args.append('--with-mpi=openmpi')
+
         if '~shmem' in spec:
             config_args.append("--without-shmem")
 

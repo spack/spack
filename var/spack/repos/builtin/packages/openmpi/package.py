@@ -285,6 +285,14 @@ class Openmpi(AutotoolsPackage):
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
 
+    def setup_environment(self, spack_env, run_env):
+        ''' often we use external mpich/openmpi
+            packages and by defualt they are using system clang.
+            we need to set compiler here to avoid link errors
+        '''
+        run_env.set('OMPI_CC', self.compiler.cc)
+        run_env.set('OMPI_CXX', self.compiler.cxx)
+
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
