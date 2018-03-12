@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
+import inspect
 
 
 class YamlCpp(CMakePackage):
@@ -35,29 +37,39 @@ class YamlCpp(CMakePackage):
     version('develop', git='https://github.com/jbeder/yaml-cpp', branch='master')
 
     variant('shared', default=True,
-            description='Enable build of shared libraries')
+            description='Additionally build shared libraries')
     variant('pic',   default=True,
             description='Build with position independent code')
 
     depends_on('boost', when='@:0.5.3')
 
-    # run cmake flow twice to build/install shared/static into same prefix
-    # FIXME: how avoid second build when shared is False?
-    phases = ['patch_cmake_args'] + CMakePackage.phases + \
-             ['patch_cmake_args'] + CMakePackage.phases
-
-    def patch_cmake_args(self, spec, prefix):
-        self.first_run = not hasattr(self, 'first_run')
-
     def cmake_args(self):
-        spec = self.spec
         options = []
 
         options.extend([
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if ('+shared' in spec and self.first_run) else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+pic' in spec else 'OFF'),
+                'ON' if '+pic' in self.spec else 'OFF'),
         ])
 
         return options
+
+    def cmake(self, spec, prefix):
+        options = [os.path.abspath(self.root_cmakelists_dir)]
+        options += self.std_cmake_args
+        options += self.cmake_args()
+        with working_dir(self.build_directory, create=True):
+            inspect.getmodule(self).cmake(*options)
+            inspect.getmodule(self).make(*self.build_targets)
+            inspect.getmodule(self).make(*self.install_targets)
+        if '+shared' in self.spec:
+            options += ['-DBUILD_SHARED_LIBS:BOOL=ON']
+            with working_dir(self.build_directory, create=True):
+                inspect.getmodule(self).cmake(*options)
+                inspect.getmodule(self).make(*self.build_targets)
+                inspect.getmodule(self).make(*self.install_targets)
+
+    def build(self, spec, prefix):
+        pass
+
+    def install(self, spec, prefix):
+        pass
