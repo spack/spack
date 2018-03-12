@@ -1,0 +1,140 @@
+modules:
+  enable::
+      - lmod
+      - tcl
+  prefix_inspections:
+    bin:
+      - PATH
+    bin64:
+      - PATH
+    share/man:
+      - MANPATH
+    man:
+      - MANPATH
+    lib:
+      - LD_LIBRARY_PATH
+    lib64:
+      - LD_LIBRARY_PATH
+    lib/pkgconfig:
+      - PKG_CONFIG_PATH
+    lib64/pkgconfig:
+      - PKG_CONFIG_PATH
+    '':
+      - CMAKE_PREFIX_PATH
+  lmod:
+    core_compilers:
+      - 'gcc@4.8.5'
+    hierarchy:
+      - 'mpi'
+      - 'lapack'
+    hash_length: 0
+    all:
+      suffixes:
+        '^cuda': gpu
+        '^python@3.5.2': python3
+        '^python@2': python2
+        '^openblas~openmp': blas
+        '^openblas+openmp': 'blas+thread'
+        '^intel-mkl~openmp': mkl
+        '^intel-mkl+openmp': 'mkl+thread'
+      filter:
+        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+    whitelist:
+      - mvapich2
+      - mpich
+      - intel-mpi
+      - openmpi
+      - ior
+      - darshan-runtime
+      - netlib-scalapack
+      - adios
+      - paraview
+      - petsc
+      - hdf5
+      - hpctoolkit
+      - scorep
+      - python
+      - py-numpy
+      - py-scipy
+      - py-theano
+      - caffe
+      - tau
+      - cudnn
+      - cuda
+      - py-ipython
+      - py-jupyter-notebook
+      - spark
+      - iozone
+      - qt
+      - zeromq
+      - intel-mkl
+      - 'openblas+openmp'
+      - gcc
+      - intel
+      - clang
+      - llvm
+      - pgi
+      - imb
+      - osu-micro-benchmarks
+      - 'cmake%gcc@4.8.5'
+    blacklist:
+      - '%gcc'
+      - '%intel'
+      - '%clang'
+      - '%pgi'
+      - 'cmake'
+  tcl:
+    all:
+      filter:
+        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+      suffixes:
+        '^mpich': mpich
+        '^mvapich2': mvapich2
+        '^openmpi': openmpi
+        '^intel-mpi': intel-mpi
+        '^cuda': gpu
+        '^python@3.5.2': python3
+        '^python@2': python2
+        '^openblas~openmp': blas
+        '^openblas+openmp': 'blas+thread'
+        '^intel-mkl~openmp': mkl
+        '^intel-mkl+openmp': 'mkl+thread'
+    naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+    hash_length: 0
+    whitelist:
+      - mvapich2
+      - mpich
+      - intel-mpi
+      - openmpi
+      - ior
+      - darshan-runtime
+      - netlib-scalapack
+      - adios
+      - paraview
+      - petsc
+      - hdf5
+      - hpctoolkit
+      - scorep
+      - python
+      - py-numpy
+      - py-scipy
+      - py-theano
+      - caffe
+      - tau
+      - cudnn
+      - cuda
+      - py-ipython
+      - py-jupyter-notebook
+      - spark
+      - iozone
+      - qt
+      - zeromq
+      - imb
+      - osu-micro-benchmarks
+      - 'cmake%gcc@4.8.5'
+    blacklist:
+      - '%gcc'
+      - '%intel'
+      - '%clang'
+      - '%pgi'
+      - 'cmake'
