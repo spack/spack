@@ -101,6 +101,13 @@ class Scorep(AutotoolsPackage):
         elif spec.satisfies('^openmpi'):
             config_args.append('--with-mpi=openmpi')
 
+        if spec.satisfies('%gcc'):
+            config_args.append('--with-nocross-compiler-suite=gcc')
+        elif spec.satisfies('%intel'):
+            config_args.append('--with-nocross-compiler-suite=intel')
+        elif spec.satisfies('%pgi'):
+            config_args.append('--with-nocross-compiler-suite=pgi')
+
         config_args.extend([
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag)

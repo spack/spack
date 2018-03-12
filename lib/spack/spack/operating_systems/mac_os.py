@@ -15,7 +15,6 @@ def macos_version():
     """
     return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))
 
-
 class MacOs(OperatingSystem):
     """This class represents the macOS operating system. This will be
     auto detected using the python platform.mac_ver. The macOS
