@@ -183,16 +183,16 @@ class Llvm(CMakePackage):
             'version': '6.0.0',
             'md5': '788a11a35fa62eb008019b37187d09d2',
             'resources': {
-                'compiler-rt': 'a05f2285e9e3f3698aac35e946de4716',
-                'openmp': 'a24de6873e10f22033fbbf4d37878c19',
-                'polly': 'e41d3f632eff3a71aa4fa4e1db559e00',
-                'libcxx': '0c224e9e2bcf47777005e25c6d754d0f',
-                'libcxxabi': '016237b401f7bb00070b9f2dc7dc2b64',
-                'cfe': 'fa32ed485123115d0cb98658fb3c0f35',
-                'clang-tools-extra': '630655df552201b93e01a377c59ee220',
-                'lldb': 'b02eedaeba00af92259b25c8f7dd5511',
-                'lld': 'c71775bbfc3e1cd6ea9862899533de81',
-                'libunwind': '94fa7ac6bd6080094225dfe79110d706'
+                'compiler-rt': 'ba6368e894b5528e527d86a69d8533c6',
+                'openmp': 'eb6b8d0318a950a8192933a3b500585d',
+                'polly': 'e5808a3a1ed1c23f56dd1854b86689d0',
+                'libcxx': '4ecad7dfd8ea636205d3ffef028df73a',
+                'libcxxabi': '9d06327892fc5d8acec4ef2e2821ab3d',
+                'cfe': '121b3896cb0c7765d690acc5d9495d24',
+                'clang-tools-extra': '6b1d543116dab5a3caba10091d983743',
+                'lldb': '1ec6498066e273b7261270f344b68121',
+                'lld': '7ab2612417477b03538f11cd8b5e12f8',
+                'libunwind': '022a4ee2c3bf7b6d151e0444f66aca64'
             }
         },
         {
