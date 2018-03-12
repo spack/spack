@@ -54,6 +54,19 @@ class Nekcem(Package):
             msg = 'NekCEM can not be built without a Fortran compiler.'
             raise RuntimeError(msg)
 
+    @run_after('install')
+    def test_install(self):
+        currentDir = os.getcwd()
+        testDir = 'tests/2dboxpec'
+        os.chdir(testDir)
+
+        os.system(join_path(self.prefix.bin, 'makenek') + ' 2dboxpec')
+        if not os.path.isfile(join_path(os.getcwd(), 'nekcem')):
+            msg = 'Cannot build example: tests/2dboxpec.'
+            raise RuntimeError(msg)
+
+        os.chdir(currentDir)
+
     def install(self, spec, prefix):
         binDir = 'bin'
         nek = 'nek'
