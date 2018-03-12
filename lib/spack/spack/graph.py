@@ -543,7 +543,9 @@ def graph_dot(specs, deptype='all', static=False, out=None):
 
     # Static graph includes anything a package COULD depend on.
     if static:
-        names = set.union(*[s.package.possible_dependencies() for s in specs])
+        names = set.union(*[
+            s.package.possible_dependencies(expand_virtuals=False)
+            for s in specs])
         specs = [Spec(name) for name in names]
 
     labeled = set()

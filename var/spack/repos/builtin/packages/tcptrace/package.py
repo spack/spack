@@ -23,15 +23,37 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from os.path import join
 
 
-class Libpcap(AutotoolsPackage):
-    "libpcap is a portable library in C/C++ for packet capture"
-    homepage = "http://www.tcpdump.org/"
-    list_url = "http://www.tcpdump.org/release/"
-    url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
+class Tcptrace(AutotoolsPackage):
+    """tcptrace is a tool written by Shawn Ostermann at Ohio University for
+       analysis of TCP dump files. It can take as input the files produced by
+       several popular packet-capture programs, including tcpdump, snoop,
+       etherpeek, HP Net Metrix, and WinDump."""
 
-    version('1.8.1', '3d48f9cd171ff12b0efd9134b52f1447')
+    homepage = "http://www.tcptrace.org/"
+    url      = "http://www.tcptrace.org/download/tcptrace-6.6.7.tar.gz"
 
-    depends_on('flex', type='build')
+    version('6.6.7', '68128dc1817b866475e2f048e158f5b9')
+
     depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('libpcap')
+
+    # Fixes incorrect API access in libpcap.
+    # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=545595
+    patch('tcpdump.patch')
+
+    @run_after('configure')
+    def patch_makefile(self):
+        # see https://github.com/blitz/tcptrace/blob/master/README.linux
+        Makefile = FileFilter('Makefile')
+        Makefile.filter(
+            "PCAP_LDLIBS = -lpcap",
+            "DEFINES += -D_BSD_SOURCE\nPCAP_LDLIBS = -lpcap")
+
+    def install(self, spec, prefix):
+        # The build system has trouble creating directories
+        mkdirp(prefix.bin)
+        install('tcptrace', join(prefix.bin, 'tcptrace'))

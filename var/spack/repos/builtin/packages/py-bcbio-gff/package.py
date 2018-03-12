@@ -25,13 +25,15 @@
 from spack import *
 
 
-class Libpcap(AutotoolsPackage):
-    "libpcap is a portable library in C/C++ for packet capture"
-    homepage = "http://www.tcpdump.org/"
-    list_url = "http://www.tcpdump.org/release/"
-    url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
+class PyBcbioGff(PythonPackage):
+    """Read and write Generic Feature Format (GFF) with Biopython
+    integration."""
 
-    version('1.8.1', '3d48f9cd171ff12b0efd9134b52f1447')
+    homepage = "https://pypi.python.org/pypi/bcbio-gff/0.6.2"
+    url      = "https://pypi.io/packages/source/b/bcbio-gff/bcbio-gff-0.6.2.tar.gz"
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
+    version('0.6.2', 'd5aae8b125cdad4291f15bec20cfb0ef')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-biopython',  type=('build', 'run'))

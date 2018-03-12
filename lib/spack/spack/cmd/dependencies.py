@@ -43,7 +43,10 @@ def setup_parser(subparser):
         "instead of possible dependencies of a package.")
     subparser.add_argument(
         '-t', '--transitive', action='store_true', default=False,
-        help="Show all transitive dependencies.")
+        help="show all transitive dependencies")
+    subparser.add_argument(
+        '-V', '--no-expand-virtuals', action='store_false', default=True,
+        dest="expand_virtuals", help="do not expand virtual dependencies")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec or package name")
 
@@ -76,7 +79,8 @@ def dependencies(parser, args):
         dependencies = set()
         for pkg in packages:
             dependencies.update(
-                set(pkg.possible_dependencies(args.transitive)))
+                set(pkg.possible_dependencies(
+                    args.transitive, args.expand_virtuals)))
 
         if spec.name in dependencies:
             dependencies.remove(spec.name)

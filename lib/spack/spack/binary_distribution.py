@@ -254,8 +254,8 @@ def generate_index(outdir, indexfile_path):
     f.close()
 
 
-def build_tarball(spec, outdir, force=False, rel=False, allow_root=False,
-                  key=None):
+def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
+                  allow_root=False, key=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -337,17 +337,20 @@ def build_tarball(spec, outdir, force=False, rel=False, allow_root=False,
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
     # sign the tarball and spec file with gpg
-    sign_tarball(key, force, specfile_path)
+    if not unsigned:
+        sign_tarball(key, force, specfile_path)
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
-        tar.add(name='%s.asc' % specfile_path,
-                arcname='%s.asc' % specfile_name)
+        if not unsigned:
+            tar.add(name='%s.asc' % specfile_path,
+                    arcname='%s.asc' % specfile_name)
 
     # cleanup file moved to archive
     os.remove(tarfile_path)
-    os.remove('%s.asc' % specfile_path)
+    if not unsigned:
+        os.remove('%s.asc' % specfile_path)
 
     # create an index.html for the build_cache directory so specs can be found
     if os.path.exists(indexfile_path):
@@ -435,7 +438,8 @@ def relocate_package(workdir, allow_root):
                                  allow_root)
 
 
-def extract_tarball(spec, filename, allow_root=False, force=False):
+def extract_tarball(spec, filename, allow_root=False, unsigned=False,
+                    force=False):
     """
     extract binary tarball for given package into install area
     """
@@ -456,19 +460,19 @@ def extract_tarball(spec, filename, allow_root=False, force=False):
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(tmpdir)
-
-    if os.path.exists('%s.asc' % specfile_path):
-        try:
-            Gpg.verify('%s.asc' % specfile_path, specfile_path)
-        except Exception as e:
+    if not unsigned:
+        if os.path.exists('%s.asc' % specfile_path):
+            try:
+                Gpg.verify('%s.asc' % specfile_path, specfile_path)
+            except Exception as e:
+                shutil.rmtree(tmpdir)
+                tty.die(str(e))
+        else:
             shutil.rmtree(tmpdir)
-            tty.die(str(e))
-    else:
-        shutil.rmtree(tmpdir)
-        raise NoVerifyException(
-            "Package spec file failed signature verification.\n"
-            "Use spack buildcache keys to download "
-            "and install a key for verification from the mirror.")
+            raise NoVerifyException(
+                "Package spec file failed signature verification.\n"
+                "Use spack buildcache keys to download "
+                "and install a key for verification from the mirror.")
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
@@ -580,7 +584,7 @@ def get_specs(force=False):
     return specs
 
 
-def get_keys(install=False, yes_to_all=False, force=False):
+def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
     """
@@ -617,9 +621,9 @@ def get_keys(install=False, yes_to_all=False, force=False):
                         continue
             tty.msg('Found key %s' % link)
             if install:
-                if yes_to_all:
+                if trust:
                     Gpg.trust(stage.save_filename)
                     tty.msg('Added this key to trusted keys.')
                 else:
                     tty.msg('Will not add this key to trusted keys.'
-                            'Use -y to override')
+                            'Use -t to install all downloaded keys')
