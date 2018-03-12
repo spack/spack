@@ -554,7 +554,7 @@ class IntelPackage(PackageBase):
 
         mkl_libs = find_libraries(
             mkl_libnames,
-            root=self.component_lib_dir,
+            root=self.component_lib_dir(component='mkl'),
             shared=self._want_shared)
         debug_print(mkl_libs)
 
@@ -615,7 +615,7 @@ class IntelPackage(PackageBase):
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
-            root=self.component_lib_dir,
+            root=self.component_lib_dir(component='mkl'),
             shared=self._want_shared)
         debug_print(sca_libs)
 
@@ -633,13 +633,13 @@ class IntelPackage(PackageBase):
         if 'cxx' in self.spec.last_query.extra_parameters:
             libnames = ['libmpicxx'] + libnames
         return find_libraries(libnames,
-                              root=self.component_lib_dir,
+                              root=self.component_lib_dir(component='mpi'),
                               shared=True, recursive=True)
 
     @property
     def mpi_headers(self):
         return find_headers('mpi',
-                            root=self.component_include_dir,
+                            root=self.component_include_dir(component='mpi'),
                             recursive=False)
 
     def setup_environment(self, spack_env, run_env):
@@ -860,42 +860,74 @@ class IntelPackage(PackageBase):
         # filepat     - the file location pattern (/path/to/license.lic)
         # lspat       - the license server address pattern (0123@hostname)
         # snpat       - the serial number pattern (ABCD-01234567)
+
+# Flags are checked by <stage_dir>/pset/check.awk
+#
+#   ..../l_mkl_2018.1.163/pset/check.awk .
+#   ..../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk
+#
+## Valid in all incarnations:
+# ACCEPT_EULA                                  {accept, decline}
+# CONTINUE_WITH_OPTIONAL_ERROR                 {yes, no}
+# PSET_INSTALL_DIR                             {/opt/intel, , filepat}
+# CONTINUE_WITH_INSTALLDIR_OVERWRITE           {yes, no}
+# COMPONENTS                                   {ALL, DEFAULTS, , anythingpat}
+# PSET_MODE                                    {install, repair, uninstall}
+# NONRPM_DB_DIR                                {, filepat}
+#
+# SIGNING_ENABLED                              {yes, no}
+# ARCH_SELECTED                                {IA32, INTEL64, ALL}
+#
+## Mentioned but unexplained in check.awk:
+#
+# NO_VALIDATE   (?!)
+#
+## Only for licensed incarnations (obviously):
+# ACTIVATION_SERIAL_NUMBER                     {, snpat}
+# ACTIVATION_LICENSE_FILE                      {, lspat, filepat}
+# ACTIVATION_TYPE                              {exist_lic, license_server,
+#                                              license_file, trial_lic,
+#                                              serial_number}
+#
+## Only for Amplifier (obviously):
+# AMPLIFIER_SAMPLING_DRIVER_INSTALL_TYPE       {build, kit}
+# AMPLIFIER_DRIVER_ACCESS_GROUP                {, anythingpat, vtune}
+# AMPLIFIER_DRIVER_PERMISSIONS                 {, anythingpat, 666}
+# AMPLIFIER_LOAD_DRIVER                        {yes, no}
+# AMPLIFIER_C_COMPILER                         {, filepat, auto, none}
+# AMPLIFIER_KERNEL_SRC_DIR                     {, filepat, auto, none}
+# AMPLIFIER_MAKE_COMMAND                       {, filepat, auto, none}
+# AMPLIFIER_INSTALL_BOOT_SCRIPT                {yes, no}
+# AMPLIFIER_DRIVER_PER_USER_MODE               {yes, no}
+#
+## Only for MKL and Studio:
+# CLUSTER_INSTALL_REMOTE                       {yes, no}
+# CLUSTER_INSTALL_TEMP                         {, filepat}
+# CLUSTER_INSTALL_MACHINES_FILE                {, filepat}
+#
+## -- Not -- for MKL, and possibly others:
+# PHONEHOME_SEND_USAGE_DATA                    {yes, no}
+#
+## "backward compatibility" (?)
+# INSTALL_MODE                                 {RPM, NONRPM}
+# download_only                                {yes}
+# download_dir                                 {, filepat}
+
         config = {
-            # Accept EULA, valid values are: {accept, decline}
             'ACCEPT_EULA': 'accept',
-
-            # Optional error behavior, valid values are: {yes, no}
             'CONTINUE_WITH_OPTIONAL_ERROR': 'yes',
-
-            # Install location, valid values are: {/opt/intel, filepat}
             'PSET_INSTALL_DIR': prefix,
-
-            # Continue with overwrite of existing installation directory,
-            # valid values are: {yes, no}
             'CONTINUE_WITH_INSTALLDIR_OVERWRITE': 'yes',
-
-            # List of components to install,
-            # valid values are: {ALL, DEFAULTS, anythingpat}
             'COMPONENTS': ';'.join(self._filtered_components),
-
-            # Installation mode, valid values are: {install, repair, uninstall}
             'PSET_MODE': 'install',
-
-            # Directory for non-RPM database, valid values are: {filepat}
             'NONRPM_DB_DIR': prefix,
-
-            # Perform validation of digital signatures of RPM files,
-            # valid values are: {yes, no}
             'SIGNING_ENABLED': 'no',
-
-            # Select target architecture of your applications,
-            # valid values are: {IA32, INTEL64, ALL}
             'ARCH_SELECTED': 'ALL',
-
-            # Intel(R) Software Improvement Program opt-in,
-            # valid values are: {yes, no}
-            'PHONEHOME_SEND_USAGE_DATA': 'no',
         }
+
+        if 'mkl' not in self.name:
+            # Not supported for MKL-only pkg; specifying it stops installer.
+            config.update({'PHONEHOME_SEND_USAGE_DATA': 'no'})
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
