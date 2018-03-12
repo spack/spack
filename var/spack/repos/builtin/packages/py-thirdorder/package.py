@@ -75,24 +75,16 @@ class PyThirdorder(Package):
       run_env.prepend_path('LIBRARY_PATH', self.spec['py-scipy'].prefix.lib)
       run_env.prepend_path('LD_LIBRARY_PATH', self.spec['py-scipy'].prefix.lib)
 
-    def edit(self):
-      setupfile = FileFilter('setup.py')
-      setupfile.filter('LIBRARY_DIRS = .*', 'LIBRARY_DIRS = ["%s"]' % self.spec['spglib'].prefix.lib)
-      setupfile.filter('INCLUDE_DIRS = .*', 'INCLUDE_DIRS = ["%s"]' % self.spec['spglib'].prefix.include)
+    def patch(self):
+      makefile = FileFilter('setup.py')
+      makefile.filter('LIBRARY_DIRS = .*', 'LIBRARY_DIRS = ["%s"]' % self.spec['spglib'].prefix.lib)
+      makefile.filter('INCLUDE_DIRS = .*', 'INCLUDE_DIRS = ["%s"]' % self.spec['spglib'].prefix.include)
 
-      sourcefile = FileFilter('thirdorder_core.c')
-      sourcefile.filter('#include "spglib.*"', '#include "spglib.h"')
+      makefile = FileFilter('thirdorder_core.c')
+      makefile.filter('#include "spglib.*"', '#include "spglib.h"')
 
-    @run_after('install')
-    @on_package_attributes(test=True)
-    def check_install(self):
-      python('-c', 'import thirdorder_core')
-      with working_dir('..'):
-        testfile=open('POSCAR','w')
-        testfile.writelines('InAs\n   6.00000000000000\n     0.0000000000000000    0.5026468896190005    0.5026468896190005\n     0.5026468896190005    0.0000000000000000    0.5026468896190005\n     0.5026468896190005    0.5026468896190005    0.0000000000000000\n   In   As\n   1   1\nDirect\n  0.0000000000000000  0.0000000000000000  0.0000000000000000\n  0.2500000000000000  0.2500000000000000  0.2500000000000000')
-        testfile.close()
-        call([prefix.bin+'/thirdorder_vasp.py', 'sow 4 4 4 -3'])
-
+    # @run_after('install')
+    # @on_package_attributes(run_tests=True)
     def install(self, spec, prefix):
       call(['python', 'setup.py', 'build'])
       call(['python', 'setup.py', 'install', '--prefix=%s' % prefix])
@@ -101,3 +93,13 @@ class PyThirdorder(Package):
       install('thirdorder_vasp.py', prefix.bin)
       install('thirdorder_castep.py', prefix.bin)
       install('thirdorder_common.py', prefix.bin)
+      #print 'Run tests? %s' % self.run_tests
+      if self.run_tests:
+        self.check_install()
+
+    def check_install(self):
+      python('-c', 'import thirdorder_core')
+      with open('POSCAR','w') as testfile:
+        testfile.writelines('InAs\n   6.00000000000000\n     0.0000000000000000    0.5026468896190005    0.5026468896190005\n     0.5026468896190005    0.0000000000000000    0.5026468896190005\n     0.5026468896190005    0.5026468896190005    0.0000000000000000\n   In   As\n   1   1\nDirect\n  0.0000000000000000  0.0000000000000000  0.0000000000000000\n  0.2500000000000000  0.2500000000000000  0.2500000000000000')
+      #with working_dir('..'):
+      call(['%s/thirdorder_vasp.py' % prefix.bin, 'sow', '4', '4', '4', '-3'])
