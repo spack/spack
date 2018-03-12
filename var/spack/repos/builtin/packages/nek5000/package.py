@@ -25,6 +25,7 @@
 from spack import *
 
 import numbers
+import os
 
 
 def is_integral(x):
@@ -41,6 +42,7 @@ class Nek5000(Package):
        dynamics"""
 
     homepage = "https://nek5000.mcs.anl.gov/"
+    url      = "https://github.com/Nek5000/Nek5000"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
             'spectral-elements', 'fluid']
@@ -83,6 +85,19 @@ class Nek5000(Package):
         if not self.compiler.fc:
             msg = 'Cannot build Nek5000 without a Fortran compiler.'
             raise RuntimeError(msg)
+
+    @run_after('install')
+    def test_install(self):
+        currentDir = os.getcwd()
+        eddyDir = 'short_tests/eddy'
+        os.chdir(eddyDir)
+
+        os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
+        if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
+            msg = 'Cannot build example: short_tests/eddy.'
+            raise RuntimeError(msg)
+
+        os.chdir(currentDir)
 
     def install(self, spec, prefix):
         toolsDir   = 'tools'
