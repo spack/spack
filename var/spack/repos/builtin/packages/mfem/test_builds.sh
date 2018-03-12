@@ -18,9 +18,11 @@ builds=(
         +superlu-dist+suite-sparse+petsc+sundials+mpfr+netcdf+gzstream \
         +gnutls+libunwind+conduit ^hypre~internal-superlu \
         ^petsc~boost+suite-sparse+mumps ^conduit~python~hdf5'
+    # TODO: The options '^netcdf~mpi ^hdf5@1.8.19~mpi' are added just to make
+    # conduit happy.
     'mfem@develop+shared~static~mpi \
         +suite-sparse+sundials+mpfr+netcdf+gzstream+gnutls+libunwind \
-        +conduit ^conduit~python'
+        +conduit ^conduit~python ^netcdf~mpi ^hdf5@1.8.19~mpi'
 )
 
 builds2=(
