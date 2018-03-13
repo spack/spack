@@ -26,7 +26,6 @@ import os
 
 from spack import *
 
-#from spack.build_systems.intel import debug_print
 from spack.package import InstallError
 
 
@@ -291,7 +290,7 @@ class IntelParallelStudio(IntelPackage):
 
     @run_after('install')
     def rpath_configuration(self):
-        if not '+rpath' in self.spec:
+        if '+rpath' not in self.spec:
             return
 
         # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-using-configuration-files

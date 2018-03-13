@@ -25,8 +25,6 @@
 
 from spack import *
 
-#from spack.build_systems.intel import debug_print
-
 
 class IntelMpi(IntelPackage):
     """Intel MPI"""

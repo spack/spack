@@ -152,10 +152,10 @@ class IntelPackage(PackageBase):
         else:
             return 'lp64'
 
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # Analysis of the directory layout for a Spack-born installation of
     # intel-mkl@2018.1.163
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     #
     #   $ ls -l <prefix>
     #   # Unix metadata removed, entries rearranged, "->" still means symlink.
@@ -205,9 +205,9 @@ class IntelPackage(PackageBase):
     #   tbb -> compilers_and_libraries/linux/tbb/
     #                   - auxiliaries and convenience links
     #
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # Directory analysis for intel-mpi@2018.1.163
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # For MPI, the layout is slightly different than MKL. The prefix will have
     # to include the sub-arch, which contains bin/, lib/, ..., all without
     # further arch splits. I_MPI_ROOT, however, must be the package dir.
@@ -237,9 +237,9 @@ class IntelPackage(PackageBase):
     #   man/
     #   test/
     #
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # Spack-external installation of intel-parallel-studio :
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     #
     # This is a product bundle whose install dir mostly holds merely symlinks
     # to components installed in sibling dirs:i
@@ -266,7 +266,7 @@ class IntelPackage(PackageBase):
     # The only relevant regular files are *vars.*sh, but those also just churn
     # through the subordinate vars files of the components.
     #
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     #
     # Note on macOS support, i.e., sys.platform == 'darwin':
     #
@@ -276,7 +276,7 @@ class IntelPackage(PackageBase):
     # - URLs in child packages will be Linux-specific; macOS download packages
     #   are located in differently numbered dirs and are named m_*.dmg.
     #
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
 
     def product_dir(self, product_dir_name, version_glob='_2???.*.*[0-9]',
                     postfix_dir=''):
@@ -314,8 +314,8 @@ class IntelPackage(PackageBase):
             # NB: Code may never be reached if self.prefix is abspath()'ed!?
             # NB2: Warning could get tiresome without a seen++ test.
             #
-            #tty.warn('Intel product found in a version-neutral directory - '
-            #         'future builds may not be reproducible.')
+            # tty.warn('Intel product found in a version-neutral directory - '
+            #          'future builds may not be reproducible.')
             pass
         else:
             # By contrast, a Spack-born MKL installation will inherit its
@@ -330,21 +330,21 @@ class IntelPackage(PackageBase):
             # won't land in the same parent. However, only the fully qualified
             # directory contains the regular files for the compiler commands:
             #
-    # $ ls -lF <HASH>/compilers_and_libraries*/linux/bin/intel64/icc
-    #
-    # <HASH>/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
-    #
-    # <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> \
-    #    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
-    #
-    # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
-    #    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+# $ ls -lF <HASH>/compilers_and_libraries*/linux/bin/intel64/icc
+#
+# <HASH>/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+#
+# <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> \
+#    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+#
+# <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
+#    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
             #
-            # Now, the Spack packages for MKL and MPI packges use version
-            # triplets, but the one for intel-parallel-studio does not.
-            # So, we can't have it quite as easy as:
-            #d = Prefix(d.append('compilers_and_libraries_' + self.version))
-            # Alright, let's see what we can find instead:
+            #  Now, the Spack packages for MKL and MPI packges use version
+            #  triplets, but the one for intel-parallel-studio does not.
+            #  So, we can't have it quite as easy as:
+            # d = Prefix(d.append('compilers_and_libraries_' + self.version))
+            #  Alright, let's see what we can find instead:
             matching_dirs = glob.glob(
                 join_path(d, product_dir_name + version_glob))
 
@@ -396,10 +396,10 @@ class IntelPackage(PackageBase):
         # components, so it's rarely needed, except for, ta-da, psxevars.sh.
 
         d = self.product_dir('parallel_studio_xe', postfix_dir='')
-        # NODO: The sole 2015 "composer" version in the Spack repos (as of
-        # 2018-02) would in fact need:
-        #d = self.product_dir('composer_xe', postfix_dir='')
-        # But a site running Spack likely has the successors licensed, right?
+        #  NODO: The sole 2015 "composer" version in the Spack repos (as of
+        #  2018-02) would in fact need:
+        # d = self.product_dir('composer_xe', postfix_dir='')
+        #  But a site running Spack likely has the successors licensed, right?
 
         debug_print(d)
         return d
@@ -427,8 +427,8 @@ class IntelPackage(PackageBase):
                 # Note analysis of MPI dir above:  Since both I_MPI_ROOT and
                 # MANPATH need the 'mpi' dir, do NOT qualify further.
                 #NODO: d = d.intel64
-            #elif ...
-            #    component = ...
+            # elif ...
+            #     component = ...
             else:
                 component = 'compiler'
 
@@ -599,9 +599,9 @@ class IntelPackage(PackageBase):
         elif '^mpich@1' in spec_root:
             # Was supported only up to 2015.
             blacs_lib = 'libmkl_blacs'
-        elif ('^mpich@2:' in spec_root
-              or '^mvapich2' in spec_root
-              or '^intel-mpi' in spec_root):
+        elif ('^mpich@2:' in spec_root or
+              '^mvapich2' in spec_root or
+              '^intel-mpi' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:
             blacs_lib = 'libmkl_blacs_sgimpt'
@@ -691,7 +691,7 @@ class IntelPackage(PackageBase):
         # fails because flake8 says spack_cc & friends are undefined - grep(1)
         # failed me in determining where these are defined.
         #
-        #if '+mpi' in self.spec or 'intel-mpi' in self.name:
+        # if '+mpi' in self.spec or 'intel-mpi' in self.name:
         #   spack_env.set('I_MPI_CC', spack_cc)
         #   spack_env.set('I_MPI_CXX', spack_cxx)
         #   spack_env.set('I_MPI_F77', spack_fc)
@@ -728,7 +728,7 @@ class IntelPackage(PackageBase):
 
         # For other Intel packages, either not needed or not implemented.
 
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # https://software.intel.com/en-us/articles/configuration-file-format
     #
     # ...
@@ -804,7 +804,7 @@ class IntelPackage(PackageBase):
     #    https://registrationcenter.intel.com and click on the hyperlinked
     #    product name to get to a screen where you can cut and paste or mail
     #    yourself a copy of your registered license file.
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
 
     # See also:  lib/spack/spack/hooks/licensing.py
 
@@ -866,7 +866,7 @@ class IntelPackage(PackageBase):
 #   ..../l_mkl_2018.1.163/pset/check.awk .
 #   ..../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk
 #
-## Valid in all incarnations:
+# * Valid in all incarnations:
 # ACCEPT_EULA                                  {accept, decline}
 # CONTINUE_WITH_OPTIONAL_ERROR                 {yes, no}
 # PSET_INSTALL_DIR                             {/opt/intel, , filepat}
@@ -878,18 +878,18 @@ class IntelPackage(PackageBase):
 # SIGNING_ENABLED                              {yes, no}
 # ARCH_SELECTED                                {IA32, INTEL64, ALL}
 #
-## Mentioned but unexplained in check.awk:
+# * Mentioned but unexplained in check.awk:
 #
 # NO_VALIDATE   (?!)
 #
-## Only for licensed incarnations (obviously):
+# * Only for licensed incarnations (obviously):
 # ACTIVATION_SERIAL_NUMBER                     {, snpat}
 # ACTIVATION_LICENSE_FILE                      {, lspat, filepat}
 # ACTIVATION_TYPE                              {exist_lic, license_server,
 #                                              license_file, trial_lic,
 #                                              serial_number}
 #
-## Only for Amplifier (obviously):
+# * Only for Amplifier (obviously):
 # AMPLIFIER_SAMPLING_DRIVER_INSTALL_TYPE       {build, kit}
 # AMPLIFIER_DRIVER_ACCESS_GROUP                {, anythingpat, vtune}
 # AMPLIFIER_DRIVER_PERMISSIONS                 {, anythingpat, 666}
@@ -900,15 +900,15 @@ class IntelPackage(PackageBase):
 # AMPLIFIER_INSTALL_BOOT_SCRIPT                {yes, no}
 # AMPLIFIER_DRIVER_PER_USER_MODE               {yes, no}
 #
-## Only for MKL and Studio:
+# * Only for MKL and Studio:
 # CLUSTER_INSTALL_REMOTE                       {yes, no}
 # CLUSTER_INSTALL_TEMP                         {, filepat}
 # CLUSTER_INSTALL_MACHINES_FILE                {, filepat}
 #
-## -- Not -- for MKL, and possibly others:
+# * -- Not -- for MKL, and possibly others:
 # PHONEHOME_SEND_USAGE_DATA                    {yes, no}
 #
-## "backward compatibility" (?)
+# * "backward compatibility" (?)
 # INSTALL_MODE                                 {RPM, NONRPM}
 # download_only                                {yes}
 # download_dir                                 {, filepat}
@@ -967,7 +967,7 @@ class IntelPackage(PackageBase):
             uninstall = Executable(f)
             uninstall('--silent')
 
-        #TODO? also try
+        # TODO? also try
         #   ~/intel/ism/uninstall --silent
 
         debug_print(os.getcwd())

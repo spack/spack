@@ -71,14 +71,16 @@ class Libxc(AutotoolsPackage):
         # Optimizations for the Intel compiler, suggested by CP2K
         optflags = '-O2'
         if self.compiler.name == 'intel':
-            #optflags += ' -xAVX -axCORE-AVX2 -ipo'
-            ## Well, not every lowly login node has AVX or AVX2:
-            #       $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
-            #       $ ./a.out
+            # Oh flake8 E265, why won't you let us distinguish commented-out
+            # code from discursive comments?
             #
-            #       Please verify that both the operating system and the \
-            #       processor support Intel(R) AVX instructions.
+            # optflags += ' -xAVX -axCORE-AVX2 -ipo'
             #
+            # Well, not every lowly login node has AVX or AVX2:
+            #      $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
+            #      $ ./a.out
+            #      Please verify that both the operating system and the \
+            #      processor support Intel(R) AVX instructions.
             optflags += ' -xSSE4.2 -axCORE-AVX2 -ipo'
             if which('xiar'):
                 spack_env.set('AR', 'xiar')
