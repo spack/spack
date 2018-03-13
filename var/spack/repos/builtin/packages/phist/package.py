@@ -146,7 +146,7 @@ library or Trilinos/Tpetra).
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('trilinos+tpetra', when='kernel_lib=tpetra')
+    depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
     # Epetra backend also works with older Trilinos versions
     depends_on('trilinos+epetra', when='kernel_lib=epetra')
     depends_on('petsc~complex', when='kernel_lib=petsc')
