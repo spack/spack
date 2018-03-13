@@ -35,7 +35,7 @@ class Casacore(CMakePackage):
 
     variant('openmp', default=False, description='Build OpenMP support')
     variant('shared', default=True, description='Build shared libraries')
-    variant('sofa', default=False, description='Build SOFA support to test casacore measures.')
+    variant('sofa', default=False, description='Build SOFA support')
     variant('fftw', default=False, description='Build FFTW3 support')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
@@ -58,10 +58,26 @@ class Casacore(CMakePackage):
     def cmake_args(self):
         args = []
         spec = self.spec
-        args.extend(['-DENABLE_SHARED={0}'.format('YES' if '+shared' in spec else 'NO'),
-                     '-DUSE_OPENMP={0}'.format('YES' if '+openmp' in spec else 'NO'),
-                     '-DUSE_HDF5={0}'.format('YES' if 'hdf5' in spec else 'NO'),
-                     '-DUSE_FFTW3={0}'.format('YES' if 'fftw' in spec else 'NO')])
+
+        if '+shared' in spec:
+            args.append('-DENABLE_SHARED=YES')
+        else:
+            args.append('-DENABLE_SHARED=NO')
+
+        if '+openmp' in spec:
+            args.append('-DUSE_OPENMP=YES')
+        else:
+            args.append('-DUSE_OPENMP=NO')
+
+        if '+hdf5' in spec:
+            args.append('-DUSE_HDF5=YES')
+        else:
+            args.append('-DUSE_HDF5=NO')
+
+        if '+fftw' in spec:
+            args.appen('-DUSE_FFTW3=YES')
+        else:
+            args.appen('-DUSE_FFTW3=NO')
 
         # Python2 and Python3 binding
         if('+python' not in spec):
