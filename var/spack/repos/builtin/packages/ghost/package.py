@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Ghost(CMakePackage):
+class Ghost(CMakePackage,CudaPackage):
     """GHOST: a General, Hybrid and Optimized Sparse Toolkit.
        This library provides highly optimized building blocks for implementing
        sparse iterative eigenvalue and linear solvers multi- and manycore
@@ -44,8 +44,6 @@ class Ghost(CMakePackage):
             description='Enables the build of shared libraries')
     variant('mpi', default=True,
             description='enable/disable MPI')
-    variant('cuda', default=False,
-            description='enable/disable CUDA')
     variant('scotch', default=False,
             description='enable/disable matrix reordering with PT-SCOTCH')
     variant('zoltan', default=False,
@@ -58,7 +56,6 @@ class Ghost(CMakePackage):
     depends_on('hwloc')
     depends_on('blas')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda@8:', when='+cuda')
     depends_on('scotch', when='+scotch')
     depends_on('zoltan', when='+zoltan')
 
