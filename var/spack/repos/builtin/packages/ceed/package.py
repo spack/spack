@@ -42,27 +42,34 @@ class Ceed(Package):
     version('1.0.0', sha1, expand=False)
 
     variant('cuda', default=False, description='Enable CUDA dependent packages')
+    variant('mfem', default=True, description='Enable MFEM dependent packages')
+    variant('nek', default=True, description='Enable Nek dependent packages')
+    variant('petsc', default=True, description='Enable PETSc dependent packages')
+    variant('hdf5', default=True, description='Enable HDF5 dependent packages')
     # TODO: Add 'int64' variant?
 
-    depends_on('gslib@1.0.1', when='@1.0.0')
-    depends_on('hpgmg@a0a5510+fe', when='@1.0.0')
-    depends_on('laghos@1.0', when='@1.0.0')
+    depends_on('gslib@1.0.1', when='@1.0.0+nek')
+    depends_on('hpgmg@a0a5510+fe', when='@1.0.0+petsc')
+    depends_on('laghos@1.0', when='@1.0.0+mfem')
     # FIXME: Make a v0.2 release of libceed from the current master?
-    depends_on('libceed@0.1+occa', when='@1.0.0')
-    depends_on('magma@2.2.0', when='@1.0.0 +cuda')
+    depends_on('libceed@0.1+occa', when='@1.0.0+mfem+nek')
+    depends_on('magma@2.2.0', when='@1.0.0+cuda')
     # The next line seems to be necessary because the concretizer somehow
     # decides that mfem requires 'hypre+internal-superlu' even though the mfem
     # package lists simply 'hypre' as dependency. This is only an issue because
     # petsc explicitly requires 'hypre~internal-superlu' which for the
     # concretizer is a conflict.
     depends_on('hypre~internal-superlu')
-    depends_on('mfem@3.3.2+mpi+petsc+examples+miniapps', when='@1.0.0')
-    depends_on('nek5000@17.0', when='@1.0.0')
-    depends_on('nekbone@17.0', when='@1.0.0')
-    depends_on('nekcem@0b8bedd', when='@1.0.0')
+    depends_on('mfem@3.3.2+mpi+petsc+examples+miniapps', when='@1.0.0+mfem+petsc')
+    depends_on('mfem@3.3.2+mpi+examples+miniapps', when='@1.0.0+mfem~petsc')
+    depends_on('nek5000@17.0', when='@1.0.0+nek')
+    depends_on('nekbone@17.0', when='@1.0.0+nek')
+    depends_on('nekcem@0b8bedd', when='@1.0.0+nek')
     # The mfem petsc examples need the petsc variants '+suite-sparse+mumps':
     depends_on('petsc@3.8.3+mpi+hypre+suite-sparse+metis+hdf5+mumps~boost'
-               '+double~int64', when='@1.0.0')
+               '+double~int64', when='@1.0.0+petsc+hdf5')
+    depends_on('petsc@3.8.3+mpi+hypre+suite-sparse+metis~hdf5+mumps~boost'
+               '+double~int64', when='@1.0.0+petsc~hdf5')
     depends_on('pumi@2.1.0', when='@1.0.0')
     # FIXME: pick a fixed occa version:
     depends_on('occa@develop+cuda', when='@1.0.0+cuda')
