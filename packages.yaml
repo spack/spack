@@ -91,7 +91,7 @@ packages:
 
     cmake:
         paths:
-            cmake@3.10.0%gcc~doc+ncurses~openssl+ownlibs~qt: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.10.0-euwbqdiaiptsypytoftjn4ckhozxjtqs
+            cmake@3.10.0%gcc@4.8.5~doc+ncurses~openssl+ownlibs~qt: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.10.0-euwbqdiaiptsypytoftjn4ckhozxjtqs
         version: [3.10.0]
         buildable: False
 
