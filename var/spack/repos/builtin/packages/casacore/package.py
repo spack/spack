@@ -75,9 +75,9 @@ class Casacore(CMakePackage):
             args.append('-DUSE_HDF5=NO')
 
         if '+fftw' in spec:
-            args.appen('-DUSE_FFTW3=YES')
+            args.append('-DUSE_FFTW3=YES')
         else:
-            args.appen('-DUSE_FFTW3=NO')
+            args.append('-DUSE_FFTW3=NO')
 
         # Python2 and Python3 binding
         if('+python' not in spec):
