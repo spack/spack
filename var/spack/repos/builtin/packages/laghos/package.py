@@ -59,6 +59,18 @@ class Laghos(MakefilePackage):
 
         return targets
 
+    # See lib/spack/spack/build_systems/makefile.py
+    def check(self):
+        targets = []
+        spec = self.spec
+
+        targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
+        targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
+        targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
+
+        with working_dir(self.build_directory):
+            make('test', *targets)
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('laghos', prefix.bin)
