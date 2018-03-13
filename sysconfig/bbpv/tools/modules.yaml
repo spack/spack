@@ -30,7 +30,7 @@ modules:
     hash_length: 0
     all:
       suffixes:
-        '^cuda': gpu
+        '^cuda': cuda
         '^python@3.5.2': python3
         '^python@2': python2
         '^openblas~openmp': blas
@@ -40,6 +40,7 @@ modules:
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     whitelist:
+      - allinea-forge
       - mvapich2
       - mpich
       - intel-mpi
@@ -92,16 +93,17 @@ modules:
         '^mvapich2': mvapich2
         '^openmpi': openmpi
         '^intel-mpi': intel-mpi
-        '^cuda': gpu
+        '^cuda': cuda
         '^python@3.5.2': python3
         '^python@2': python2
         '^openblas~openmp': blas
         '^openblas+openmp': 'blas+thread'
         '^intel-mkl~openmp': mkl
         '^intel-mkl+openmp': 'mkl+thread'
-    naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+    naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}'
     hash_length: 0
     whitelist:
+      - allinea-forge
       - mvapich2
       - mpich
       - intel-mpi

@@ -110,24 +110,27 @@ packages:
         version: [5.2]
     gcc:
         paths:
-            gcc@5.4.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/gcc-5.4.0
-            gcc@6.4.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/gcc-6.4.0
-            gcc@7.3.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/gcc-7.3.0
+            gcc@5.4.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/install/gcc-5.4.0
+            gcc@6.4.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/install/gcc-6.4.0
+            gcc@7.3.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/install/gcc-7.3.0
         version: [5.4.0, 6.4.0, 7.3.0]
-    llvm:
-        paths:
-            llvm@4.0.1%gcc@4.8.5: $APPS_DIR_PATH/compilers/llvm-4.0.1
-            llvm@5.0.1%gcc@4.8.5: $APPS_DIR_PATH/compilers/llvm-5.0.1
-        version: [4.0.1, 5.0.1]
-    intel-parallel-studio:
-        paths:
-            intel-parallel-studio@cluster.2018.1%gcc@4.8.5: $APPS_DIR_PATH/compilers/intel-parallel-studio-cluster.2018.1
-        version: [cluster.2018.1]
     intel:
         paths:
-            intel@18.0.1%gcc@4.8.5: $APPS_DIR_PATH/compilers/intel-parallel-studio-cluster.2018.1
+            intel@18.0.1%gcc@4.8.5: $APPS_DIR_PATH/compilers/install/intel-parallel-studio-cluster.2018.1
         version: [18.0.1]
     pgi:
         paths:
-            pgi@17.10%gcc@4.8.5: $APPS_DIR_PATH/compilers/pgi-17.10
+            pgi@17.10%gcc@4.8.5: $APPS_DIR_PATH/compilers/install/pgi-17.10
         version: [17.10]
+
+    intel-parallel-studio:
+        paths:
+            intel-parallel-studio@cluster.2018.1%gcc: $APPS_DIR_PATH/compilers/install/intel-parallel-studio-cluster.2018.1
+            intel-parallel-studio@cluster.2018.1%intel: $APPS_DIR_PATH/compilers/install/intel-parallel-studio-cluster.2018.1
+            intel-parallel-studio@cluster.2018.1%pgi: $APPS_DIR_PATH/compilers/install/intel-parallel-studio-cluster.2018.1
+        buildable: False
+        version: [cluster.2018.1]
+    all:
+        compiler: [gcc, intel]
+        providers:
+            mpi: [intel-parallel-studio]
