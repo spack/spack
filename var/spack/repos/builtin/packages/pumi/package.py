@@ -39,7 +39,7 @@ class Pumi(CMakePackage):
     url      = "https://github.com/SCOREC/core.git"
 
     version('2.1.0', git='https://github.com/SCOREC/core.git',
-        commit='55ac229ce97f0971f5bed2b474557600cf911b76')
+        commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
     version('develop', git='https://github.com/SCOREC/core.git',
         branch='master')
 
