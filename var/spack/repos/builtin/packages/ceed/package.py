@@ -34,10 +34,8 @@ class Ceed(Package):
 
     homepage = "https://ceed.exascaleproject.org/"
 
-    # Dummy url since Spack complains if we don't list something, will be
-    # removed when metapackage is available.
-    url      = 'file:///dev/null'
-    sha1     = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+    url  = 'file://' + os.path.dirname(__file__) + '/README.md'
+    sha1 = 'b2eefd95c09ba573f663a761b84811a2d7e39788'
 
     version('1.0.0', sha1, expand=False)
 
@@ -75,11 +73,6 @@ class Ceed(Package):
     depends_on('occa@develop+cuda', when='@1.0.0+cuda')
     depends_on('occa@develop~cuda', when='@1.0.0~cuda')
 
-    # Dummy install for now, will be removed when metapackage is available.
+    # Dummy install
     def install(self, spec, prefix):
-        # Prevent the error message
-        #      ==> Error: Install failed for ceed.  Nothing was installed!
-        #      ==> Error: Installation process had nonzero exit code : 256
-        with open(os.path.join(spec.prefix, 'bundle-package.txt'), 'w') as out:
-            out.write('This is a bundle\n')
-            out.close()
+        install('README.md', prefix)
