@@ -35,6 +35,7 @@ from llnl.util.filesystem import \
     install, join_path, ancestor, \
     LibraryList, find_headers, find_libraries, find_system_libraries
 
+from spack.version import Version
 from spack.package import PackageBase, run_after, InstallError
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
@@ -480,7 +481,25 @@ class IntelPackage(PackageBase):
                 d = d.intel64.lib
             else:
                 d = d.lib.intel64
-            # A bit weird, but  I'm sure there are good reasons for it.
+            # A bit weird, but I'm sure there are good reasons for it.
+
+            if component == 'tbb' or 'intel-tbb' in self.name:
+                # Determine the applicable "gcc-4.x" subdir as in tbbvars.sh
+                gcc = Executable('gcc')
+                matches = re.search(
+                    r'gcc.* ([0-9]+\.[0-9]+\.[0-9]+).*',
+                    gcc('--version', output=str))
+                if matches:
+                    gcc_version = Version(matches.groups()[0])
+                    if gcc_version >= Version('4.7'):
+                        tbb_abi = 'gcc4.7'
+                    elif gcc_version >= Version('4.4'):
+                        tbb_abi = 'gcc4.4'
+                else:
+                    tbb_abi = 'gcc4.1'     # unlikely, one hopes.
+
+                # Alrighty then ...
+                d = Prefix(join_path(d, tbb_abi))
 
         if relative:
             d = self.relative_path(d)
@@ -535,22 +554,49 @@ class IntelPackage(PackageBase):
         return omp_libs
 
     @property
+    def tbb_libs(self):
+        '''Supply LibraryList for linking TBB'''
+
+        tbb_lib = find_libraries(
+            ['libtbb'], root=self.component_lib_dir(component='tbb'))
+        # NB: shared=False is not and has never been supported for TBB:
+        # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
+        #
+        # NB2: Like icc with -qopenmp, so does icpc steer us towards using an
+        # option: "icpc -tbb"
+
+        gcc = Executable('gcc')     # must be gcc, not self.compiler.cc
+        cxx_lib_path = gcc(
+            '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
+
+        libs = tbb_lib + LibraryList(cxx_lib_path)
+        debug_print(libs)
+        return libs
+
+    @property
     def blas_libs(self):
         # Main magic here.
         # For reference, see The Intel Math Kernel Library Link Line Advisor:
         # https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
 
-        mkl_libnames = ['libmkl_intel_' + self.intel64_int_suffix]
-        if not self.spec.satisfies('threads=openmp'):
-            mkl_libnames.append('libmkl_sequential')
-        elif '%intel' in self.spec:
-            mkl_libnames.append('libmkl_intel_thread')
-        elif '%gcc' in self.spec:
-            mkl_libnames.append('libmkl_gnu_thread')
+        mkl_integer = ['libmkl_intel_' + self.intel64_int_suffix]
+
+        if self.spec.satisfies('threads=openmp'):
+            if '%intel' in self.spec:
+                mkl_threading = 'libmkl_intel_thread'
+            elif '%gcc' in self.spec:
+                mkl_threading = 'libmkl_gnu_thread'
+            threading_engine_libs = self.openmp_libs()
+        elif self.spec.satisfies('threads=tbb'):    # TODO: allow in MKL
+            mkl_threading = 'libmkl_tbb_thread'
+            threading_engine_libs = self.tbb_libs()
+        elif self.spec.satisfies('threads=none'):
+            mkl_threading = 'libmkl_sequential'
+            threading_engine_libs = LibraryList([])
         else:
             raise_lib_error('Cannot determine MKL threading libraries.')
-        mkl_libnames.append('libmkl_core')
 
+        mkl_libnames = [mkl_integer, mkl_threading, 'libmkl_core']
         mkl_libs = find_libraries(
             mkl_libnames,
             root=self.component_lib_dir(component='mkl'),
@@ -560,24 +606,13 @@ class IntelPackage(PackageBase):
         if len(mkl_libs) < 3:
             raise_lib_error('Cannot locate core MKL libraries:', mkl_libnames)
 
-        # TODO? TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
-        #
-        # NB: TBB is C++, and I don't think here is the right place to try
-        # messing with compiler specifics to spit out the right libtbb and
-        # libstdc++. Can't a user now use the Spack 'tbb' provider concept?
-
-        if self.spec.satisfies('threads=openmp'):
-            omp_libs = self.omp_libs()
-        else:
-            omp_libs = LibraryList([])
-
         # The Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
             'libpthread libm libdl'.split(),
             shared=self._want_shared)
         debug_print(system_libs)
 
-        return mkl_libs + omp_libs + system_libs
+        return mkl_libs + threading_engine_libs + system_libs
 
     @property
     def lapack_libs(self):
