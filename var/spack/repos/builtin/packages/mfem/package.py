@@ -212,6 +212,8 @@ class Mfem(Package):
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no('+debug'),
+            # NOTE: env['CXX'] is the spack c++ compiler wrapper. The real
+            # compiler is defined by env['SPACK_CXX'].
             'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+libunwind'),
             'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
@@ -229,6 +231,13 @@ class Mfem(Package):
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
+
+        cxxflags = spec.compiler_flags['cxxflags']
+        if cxxflags:
+            # The cxxflags are set by the spack c++ compiler wrapper. We also
+            # set CXXFLAGS explicitly, for clarity, and to properly export the
+            # cxxflags in the variable MFEM_CXXFLAGS in config.mk.
+            options += ['CXXFLAGS=%s' % ' '.join(cxxflags)]
 
         if '~static' in spec:
             options += ['STATIC=NO']
