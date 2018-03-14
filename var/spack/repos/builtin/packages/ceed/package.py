@@ -43,7 +43,7 @@ class Ceed(Package):
     variant('mfem', default=True, description='Enable MFEM dependent packages')
     variant('nek', default=True, description='Enable Nek dependent packages')
     variant('petsc', default=True, description='Enable PETSc dependent packages')
-    variant('hdf5', default=True, description='Enable HDF5 dependent packages')
+    variant('hdf5', default=False, description='Enable HDF5 dependent packages')
     # TODO: Add 'int64' variant?
 
     depends_on('gslib@1.0.1', when='@1.0.0+nek')
