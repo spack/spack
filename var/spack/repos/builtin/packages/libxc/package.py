@@ -68,15 +68,14 @@ class Libxc(AutotoolsPackage):
         )
 
     def setup_environment(self, spack_env, run_env):
-        # Optimizations for the Intel compiler, suggested by CP2K
         optflags = '-O2'
         if self.compiler.name == 'intel':
-            # Oh flake8 E265, why won't you let us distinguish commented-out
-            # code from discursive comments?
+            # Optimizations for the Intel compiler, suggested by CP2K
             #
             # optflags += ' -xAVX -axCORE-AVX2 -ipo'
             #
-            # Well, not every lowly login node has AVX or AVX2:
+            # Note that not every lowly login node has AVX or AVX2:
+            #
             #      $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
             #      $ ./a.out
             #      Please verify that both the operating system and the \
@@ -92,7 +91,10 @@ class Libxc(AutotoolsPackage):
             #   - ../openblas/package.py    variants: cpu_target!?!
             #   - ../cp2k/package.py
             #
-            optflags += ' -xSSE4.2 -axCORE-AVX2 -ipo'
+            # Documentation at:
+            # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-ax-qax
+            #
+            optflags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
             if which('xiar'):
                 spack_env.set('AR', 'xiar')
 
