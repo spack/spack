@@ -81,6 +81,17 @@ class Libxc(AutotoolsPackage):
             #      $ ./a.out
             #      Please verify that both the operating system and the \
             #      processor support Intel(R) AVX instructions.
+            #
+            # TODO: This really should be handled via variants.
+            #
+            # See also:
+            #   - ../libint/package.py      hardcoded like here
+            #   - ../fftw/package.py        variants: simd, fma
+            #   - ../c-blosc/package.py     variant:  avx2
+            #   - ../r-rcppblaze/package.py AVX* in "info" but not in code?
+            #   - ../openblas/package.py    variants: cpu_target!?!
+            #   - ../cp2k/package.py
+            #
             optflags += ' -xSSE4.2 -axCORE-AVX2 -ipo'
             if which('xiar'):
                 spack_env.set('AR', 'xiar')
