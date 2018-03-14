@@ -503,17 +503,15 @@ class IntelPackage(PackageBase):
         return d
 
     @property
-    def omp_libs(self):
-        # Supply LibraryList for linking OpenMP
-
-        # FIXME  if sys.platform == 'darwin' ....
-
-        # TODO?  Across Spack packages for "client" applications, are variants
-        #   named consistently enough to determine if OpenMP is even needed?
+    def openmp_libs(self):
+        '''Supply LibraryList for linking OpenMP'''
 
         if '%intel' in self.spec:
             omp_libnames = ['libiomp5']
-
+            # NB: Hunting down explicit library files may be the Spack-way of
+            # doing things, but be aware that "{icc|ifort} --help openmp"
+            # steers us towards options instead: -qopenmp-link={dynamic,static}
+            #
             # Note about search root: For MKL, the directory
             # "$MKLROOT/../compiler" will be present even for an MKL-only
             # product installation (as opposed to one being ghosted via
