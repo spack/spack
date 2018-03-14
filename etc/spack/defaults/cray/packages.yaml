@@ -26,15 +26,15 @@ packages:
     intel-mkl:
         buildable: false
         paths:
-            intel-mkl@2018.1.163%intel threads=openmp: /opt/intel
-            intel-mkl@2018.1.163%gcc threads=openmp: /opt/intel
-            intel-mkl@2018.1.163%cce threads=openmp: /opt/intel
+            intel-mkl@2018.1.163%intel: /opt/intel
+            intel-mkl@2018.1.163%gcc: /opt/intel
+            intel-mkl@2018.1.163%cce: /opt/intel
     fftw:
         buildable: false
         modules:
-            fftw@3.3.6.2%gcc: cray-fftw
-            fftw@3.3.6.2%intel: cray-fftw
-            fftw@3.3.6.2%cce: cray-fftw
+            fftw@3.3.6.2%gcc+openmp: cray-fftw
+            fftw@3.3.6.2%intel+openmp: cray-fftw
+            fftw@3.3.6.2%cce+openmp: cray-fftw
     hdf5:
         buildable: false
         modules:
@@ -43,7 +43,21 @@ packages:
             hdf5@1.10.0.3%cce~mpi+hl: cray-hdf5
             hdf5@1.10.0.3%intel+mpi+hl: cray-netcdf-hdf5parallel
             hdf5@1.10.0.3%gcc+mpi+hl: cray-netcdf-hdf5parallel
-            hdf5@1.10.0.3%cce+mpi+hl: cray-netcdf-hdf5parallel
+    petsc: 
+         buildable: false            
+         modules:            
+            petsc@3.7.6.0%gcc~complex~int64 : cray-petsc
+            petsc@3.7.6.0%intel~complex~int64 : cray-petsc
+            petsc@3.7.6.0%cce~complex~int64: cray-petsc
+            petsc@3.7.6.0%gcc+complex~int64 : cray-petsc-complex
+            petsc@3.7.6.0%intel+complex~int64 : cray-petsc-complex
+            petsc@3.7.6.0%cce+complex~int64: cray-petsc-complex
+            petsc@3.7.6.0%gcc~complex+int64 : cray-petsc-64
+            petsc@3.7.6.0%intel~complex+int64: cray-petsc-64
+            petsc@3.7.6.0%cce~complex+int64: cray-petsc-64
+            petsc@3.7.6.0%gcc+complex+int64 : cray-petsc-complex-64
+            petsc@3.7.6.0%intel+complex+int64 : cray-petsc-complex-64
+            petsc@3.7.6.0%cce+complex+int64: cray-petsc-complex-64
     cray-libsci:
         buildable: false
         modules:
@@ -59,21 +73,12 @@ packages:
             netcdf@4.4.1.1.3%gcc~parallel-netcdf~mpi: cray-netcdf
             netcdf@4.4.1.1.3%intel~parallel-netcdf~mpi: cray-netcdf
             netcdf@4.4.1.1.3%cce~parallel-netcdf~mpi: cray-netcdf
-    petsc:
+    netcdf-fortran:
         buildable: false
         modules:
-            petsc@3.7.6.0%gcc~complex~int64 : cray-petsc
-            petsc@3.7.6.0%intel~complex~int64 : cray-petsc
-            petsc@3.7.6.0%cce~complex~int64: cray-petsc
-            petsc@3.7.6.0%gcc+complex~int64 : cray-petsc-complex
-            petsc@3.7.6.0%intel+complex~int64 : cray-petsc-complex
-            petsc@3.7.6.0%cce+complex~int64: cray-petsc-complex
-            petsc@3.7.6.0%gcc~complex+int64 : cray-petsc-64
-            petsc@3.7.6.0%intel~complex+int64: cray-petsc-64
-            petsc@3.7.6.0%cce~complex+int64: cray-petsc-64
-            petsc@3.7.6.0%gcc+complex+int64 : cray-petsc-complex-64
-            petsc@3.7.6.0%intel+complex+int64 : cray-petsc-complex-64
-            petsc@3.7.6.0%cce+complex+int64: cray-petsc-complex-64
+            netcdf-fortran@4.4.1.1.3%intel: cray-netcdf-hdf5parallel
+            netcdf-fortran@4.4.1.1.3%cce: cray-netcdf-hdf5parallel
+            netcdf-fortran@4.4.1.1.3%gcc: cray-netcdf-hdf5parallel
     papi:
         buildable: false
         modules:
