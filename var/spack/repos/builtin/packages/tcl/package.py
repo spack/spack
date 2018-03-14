@@ -75,7 +75,14 @@ class Tcl(AutotoolsPackage):
     def tcl_lib_dir(self):
         """The Tcl version-specific library directory where all extensions are
         installed."""
-        return join_path('lib', 'tcl{0}'.format(self.version.up_to(2)))
+        return 'lib'
+
+    @property
+    def tcl_builtin_lib_dir(self):
+        """The Tcl version-specific library directory where all builtin
+        extensions are installed."""
+        return join_path(self.tcl_lib_dir,
+                         'tcl{0}'.format(self.version.up_to(2)))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
@@ -89,17 +96,24 @@ class Tcl(AutotoolsPackage):
         # it boils down to the same situation we have here.
         spack_env.prepend_path('PATH', os.path.dirname(self.prefix.bin))
 
-        tcl_paths = [join_path(self.prefix, self.tcl_lib_dir)]
+        tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
 
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
                 tcl_paths.append(join_path(d.prefix, self.tcl_lib_dir))
 
-        tcllibpath = ':'.join(tcl_paths)
+        # WARNING: paths in $TCLLIBPATH must be *space* separated,
+        # its value is meant to be a Tcl list, *not* an env list
+        # as explained here: https://wiki.tcl.tk/1787:
+        # "TCLLIBPATH is a Tcl list, not some platform-specific
+        # colon-separated or semi-colon separated format"
+        tcllibpath = ' '.join(tcl_paths)
         spack_env.set('TCLLIBPATH', tcllibpath)
 
         # For run time environment set only the path for
         # dependent_spec and prepend it to TCLLIBPATH
         if dependent_spec.package.extends(self.spec):
-            run_env.prepend_path('TCLLIBPATH', join_path(
-                dependent_spec.prefix, self.tcl_lib_dir))
+            dependent_tcllibpath = join_path(dependent_spec.prefix,
+                                             self.tcl_lib_dir)
+            run_env.prepend_path('TCLLIBPATH', dependent_tcllibpath,
+                                 separator=' ')
