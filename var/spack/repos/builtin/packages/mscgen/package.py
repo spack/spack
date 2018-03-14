@@ -22,34 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Xterm(AutotoolsPackage):
-    """The xterm program is a terminal emulator for the X Window System. It
-    provides DEC VT102 and Tektronix 4014 compatible terminals for programs
-    that can't use the window system directly."""
+class Mscgen(AutotoolsPackage):
+    """Mscgen is a small program that parses Message Sequence Chart descriptions
+    and produces PNG, SVG, EPS or server side image maps (ismaps) as the
+    output."""
 
-    homepage = "http://invisible-island.net/xterm/"
-    url      = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
+    homepage = "http://www.mcternan.me.uk/mscgen/"
+    url      = "http://www.mcternan.me.uk/mscgen/software/mscgen-src-0.20.tar.gz"
 
-    version('327', '3c32e931adcad44e64e57892e75d9e02')
+    version('0.20', '65c90fb5150d7176b65b793f0faa7377')
 
-    depends_on('libxft')
-    depends_on('fontconfig')
-    depends_on('libxaw')
-    depends_on('libxmu')
-    depends_on('libxt')
-    depends_on('libx11')
-    depends_on('libxinerama')
-    depends_on('libxpm')
-    depends_on('libice')
-    depends_on('freetype')
-    depends_on('libxrender')
-    depends_on('libxext')
-    depends_on('libsm')
-    depends_on('libxcb')
-    depends_on('libxau')
-    depends_on('bzip2')
-
-    depends_on('pkgconfig', type='build')
+    depends_on('flex')
+    depends_on('bison')
+    depends_on('pkgconf')
+    depends_on('libgd')
