@@ -73,11 +73,11 @@ class Libxc(AutotoolsPackage):
             # Optimizations for the Intel compiler, suggested by CP2K
             #
             # Note that not every lowly login node has advanced CPUs:
-            # 
-            #   $ icc  -xAVX -axCORE-AVX2 -ipo hello.c 
-            #   $ ./a.out 
-            #   Please verify that both the operating system and the \ 
-            #   processor support Intel(R) AVX instructions. 
+            #
+            #   $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
+            #   $ ./a.out
+            #   Please verify that both the operating system and the \
+            #   processor support Intel(R) AVX instructions.
             #
             # NB: The same flags are applied in:
             #   - ../libint/package.py
