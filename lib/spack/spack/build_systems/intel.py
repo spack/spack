@@ -945,7 +945,7 @@ class IntelPackage(PackageBase):
 # download_only                                {yes}
 # download_dir                                 {, filepat}
 
-        components_joined = ';'.join(self._filtered_components),
+        components_joined = ';'.join(self._filtered_components)
         config = {
             'ACCEPT_EULA':                          'accept',
             'CONTINUE_WITH_OPTIONAL_ERROR':         'yes',
