@@ -579,7 +579,7 @@ class IntelPackage(PackageBase):
         # For reference, see The Intel Math Kernel Library Link Line Advisor:
         # https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
 
-        mkl_integer = ['libmkl_intel_' + self.intel64_int_suffix]
+        mkl_integer = 'libmkl_intel_' + self.intel64_int_suffix
 
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
