@@ -397,8 +397,6 @@ class Llvm(CMakePackage):
                            '.txt for details on how to create this identity.')
             raise RuntimeError(explanation)
 
-        return
-
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
