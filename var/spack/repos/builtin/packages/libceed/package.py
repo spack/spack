@@ -38,9 +38,11 @@ class Libceed(Package):
             branch='master')
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
-    variant('occa', default=True, description='Enable OCCA backends.')
+    variant('occa', default=True, description='Enable OCCA backends')
+    variant('cuda', default=False, description='Enable CUDA dependent packages')
 
-    depends_on('occa@develop', when='+occa')
+    depends_on('occa@develop+cuda', when='+occa+cuda')
+    depends_on('occa@develop~cuda', when='+occa~cuda')
 
     phases = ['build', 'install']
 
