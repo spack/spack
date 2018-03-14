@@ -330,15 +330,16 @@ class IntelPackage(PackageBase):
             # won't land in the same parent. However, only the fully qualified
             # directory contains the regular files for the compiler commands:
             #
-# $ ls -lF <HASH>/compilers_and_libraries*/linux/bin/intel64/icc
-#
-# <HASH>/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
-#
-# <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> \
-#    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
-#
-# <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
-#    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+            # $ ls -lF <HASH>/compilers_and_libraries*/linux/bin/intel64/icc
+            #
+            # <HASH>/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+            #
+            # <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> \
+            #     ../../../../comp[...]ies_2018.1.163/linux/bin/intel64/icc*
+            #  [abbreviated for flake8 E115 opinionation]
+            #
+            # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
+            #    ../../../../comp[...]ies_2018.1.163/linux/bin/intel64/icc*
             #
             #  Now, the Spack packages for MKL and MPI packges use version
             #  triplets, but the one for intel-parallel-studio does not.
@@ -407,8 +408,8 @@ class IntelPackage(PackageBase):
     def component_dir(self, component=None):
         '''Returns the directory of a product component, appropriate for
         presenting to users in environment variables like MKLROOT and
-        I_MPI_ROOT, or the product dir itself (when the component not evident
-        from the package name and wasn't specified).
+        I_MPI_ROOT, or the product dir itself (when the component is not
+        evident from the package name and wasn't specified).
         '''
         # Assign early so advanced add-ons (VTune, Advisor, ...) can override.
         d = self.compilers_dir
@@ -467,8 +468,9 @@ class IntelPackage(PackageBase):
         return d
 
     def component_lib_dir(self, component=None, relative=False):
-        # Provide starting directory for find_libraries() and
-        # SPACK_COMPILER_EXTRA_RPATHS.
+        '''Provide directory suitable for find_libraries() and
+        SPACK_COMPILER_EXTRA_RPATHS.
+        '''
         d = self.component_dir(component)
 
         if sys.platform == 'darwin':
