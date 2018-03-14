@@ -74,7 +74,7 @@ class CrayLibsci(Package):
                      "libsci_%s_mpi_mp" % (compiler)]
 
         return find_libraries(libraries, root=self.prefix.lib, shared=shared,
-                recurse=False)
+                recursive=False)
 
     @property
     def lapack_libs(self):
