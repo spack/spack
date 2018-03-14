@@ -36,11 +36,12 @@ class Rust(Package):
     homepage = "http://www.rust-lang.org"
     url = "https://github.com/rust-lang/rust"
 
+    version('1.23.0', tag='1.23.0', git="https://github.com/rust-lang/rust")
     version('1.8.0', tag='1.8.0', git="https://github.com/rust-lang/rust")
 
     resource(name='cargo',
              git="https://github.com/rust-lang/cargo.git",
-             tag='0.10.0',
+             tag='0.24.0',
              destination='cargo')
 
     extendable = True

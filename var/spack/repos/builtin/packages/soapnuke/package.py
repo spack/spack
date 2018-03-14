@@ -22,27 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
-class DocbookXml(Package):
-    """Docbook DTD XML files."""
-    homepage = "http://www.oasis-open.org/docbook"
-    url = "http://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
+class Soapnuke(CMakePackage):
+    """SOAPnuke is a novel analysis tool developed for
+    ultrafast quality control and preprocessing of
+    high throughput sequencing (HTS) data."""
 
-    version('4.5', '03083e288e87a7e829e437358da7ef9e')
-    version('4.3', 'ab200202b9e136a144db1e0864c45074')
+    homepage = "https://github.com/BGI-flexlab/SOAPnuke"
+    url      = "https://github.com/BGI-flexlab/SOAPnuke/archive/SOAPnuke1.6.2.tar.gz"
+
+    version('1.6.2', '6ba6833e0d9d25bedf73cd7374a0e785')
+
+    depends_on('zlib')
+    depends_on('boost')
+    depends_on('boost')
+    depends_on('openssl')
+    depends_on('log4cplus@:1.0.99')
+
+    root_cmakelists_dir = 'src'
+    parallel = False
 
     def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
-
-    def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+        mkdir(prefix.bin)
+        install('SOAPnuke', prefix.bin)

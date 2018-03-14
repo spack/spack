@@ -22,27 +22,44 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install plib
+#
+# You can edit this file again by typing:
+#
+#     spack edit plib
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class DocbookXml(Package):
-    """Docbook DTD XML files."""
-    homepage = "http://www.oasis-open.org/docbook"
-    url = "http://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
+class Plib(AutotoolsPackage):
+    """PLIB is a suite of portable game libraries."""
 
-    version('4.5', '03083e288e87a7e829e437358da7ef9e')
-    version('4.3', 'ab200202b9e136a144db1e0864c45074')
+    homepage = "http://plib.sourceforge.net"
+    url      = "http://plib.sourceforge.net/dist/plib-1.8.5.tar.gz"
 
-    def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+    version('1.8.5', '47a6fbf63668c1eed631024038b2ea90')
 
-    def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+    variant('X', default=False, description='Enable X support')
+
+    depends_on('libx11', when='+X')
+    depends_on('mesa', when='+X')
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if '+X' in spec:
+            args.extend(['--with-x',
+                         '--with-GL={0}'.format(spec['mesa'].prefix)])
+        else:
+            args.extend(['--without-x',
+                         '--without-GL'])
+        return args

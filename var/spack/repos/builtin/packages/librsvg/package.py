@@ -22,27 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
-class DocbookXml(Package):
-    """Docbook DTD XML files."""
-    homepage = "http://www.oasis-open.org/docbook"
-    url = "http://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
+class Librsvg(AutotoolsPackage):
+    """"""
 
-    version('4.5', '03083e288e87a7e829e437358da7ef9e')
-    version('4.3', 'ab200202b9e136a144db1e0864c45074')
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.example.com"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/librsvg/2.42/librsvg-2.42.1.tar.xz"
 
-    def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+    version('2.42.2', '6c142d792873a7c397b731e7486ac496')
 
-    def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')
+
+    def configure_args(self):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete this function
+        args = []
+        return args

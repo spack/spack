@@ -48,7 +48,7 @@ class Casacore(CMakePackage):
     depends_on('cfitsio@3.181:')
     depends_on('wcslib@4.20:')
     depends_on('fftw@3.0.0:', when='+fftw')
-    depends_on('sofa', when='+sofa')
+    depends_on('sofa-c', when='+sofa')
     depends_on('hdf5', when='+hdf5')
     depends_on('ncurses', when='+ncurses')
     depends_on('python@2.6:', when='+python')
