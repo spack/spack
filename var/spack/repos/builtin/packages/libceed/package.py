@@ -51,7 +51,7 @@ class Libceed(Package):
             make('prove')
 
     def install(self, spec, prefix):
-        make('install', 'DESTDIR=%s' % prefix, parallel=False)
+        make('install', 'prefix=%s' % prefix, parallel=False)
 
     @when('@0.1')
     def install(self, spec, prefix):
