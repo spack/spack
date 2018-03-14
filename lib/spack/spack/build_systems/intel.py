@@ -673,8 +673,6 @@ class IntelPackage(PackageBase):
         else:
             run_env.extend(
                 EnvironmentModifications.from_sourcing_file(f, 'intel64'))
-        # DEBUG
-        self.setup_dependent_environment(spack_env, run_env, '')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mkl' in self.spec or 'intel-mkl' in self.name:
@@ -915,26 +913,27 @@ class IntelPackage(PackageBase):
 # download_only                                {yes}
 # download_dir                                 {, filepat}
 
+        components_joined = ';'.join(self._filtered_components),
         config = {
-            'ACCEPT_EULA': 'accept',
-            'CONTINUE_WITH_OPTIONAL_ERROR': 'yes',
-            'PSET_INSTALL_DIR': prefix,
-            'CONTINUE_WITH_INSTALLDIR_OVERWRITE': 'yes',
-            'COMPONENTS': ';'.join(self._filtered_components),
-            'PSET_MODE': 'install',
-            'NONRPM_DB_DIR': prefix,
-            'SIGNING_ENABLED': 'no',
-            'ARCH_SELECTED': 'ALL',
+            'ACCEPT_EULA':                          'accept',
+            'CONTINUE_WITH_OPTIONAL_ERROR':         'yes',
+            'PSET_INSTALL_DIR':                     prefix,
+            'CONTINUE_WITH_INSTALLDIR_OVERWRITE':   'yes',
+            'COMPONENTS':                           components_joined,
+            'PSET_MODE':                            'install',
+            'NONRPM_DB_DIR':                        prefix,
+            'SIGNING_ENABLED':                      'no',
+            'ARCH_SELECTED':                        'ALL',
         }
-
-        if 'mkl' not in self.name:
-            # Not supported for MKL-only pkg; specifying it stops installer.
-            config.update({'PHONEHOME_SEND_USAGE_DATA': 'no'})
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
         if self.license_required:
             config.update(self.determine_license_type)
+
+        if not re.search('mkl|mpi', self.name):
+            # Not supported for those packages, would also stop installer.
+            config.update({'PHONEHOME_SEND_USAGE_DATA': 'no'})
 
         with open('silent.cfg', 'w') as cfg:
             for key in config:
