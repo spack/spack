@@ -428,7 +428,7 @@ class IntelPackage(PackageBase):
                 component = 'mpi'
                 # Note analysis of MPI dir above:  Since both I_MPI_ROOT and
                 # MANPATH need the 'mpi' dir, do NOT qualify further.
-                #NODO: d = d.intel64
+                # NODO: d = d.intel64
             # elif ...
             #     component = ...
             else:
