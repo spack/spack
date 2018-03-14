@@ -100,7 +100,7 @@ modules:
         '^openblas+openmp': 'blas+thread'
         '^intel-mkl~openmp': mkl
         '^intel-mkl+openmp': 'mkl+thread'
-    naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}'
+    naming_scheme: '${PACKAGE}/${VERSION}'
     hash_length: 0
     whitelist:
       - allinea-forge
