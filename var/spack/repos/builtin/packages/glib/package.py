@@ -24,16 +24,24 @@
 ##############################################################################
 from spack import *
 
+import os.path
+import shutil
+
 
 class Glib(AutotoolsPackage):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
+    """GLib provides the core application building blocks for
+    libraries and applications written in C.
+
+    The GLib package contains a low-level libraries useful for
+    providing data structure handling for C, portability wrappers
+    and interfaces for such runtime functionality as an event loop,
+    threads, dynamic loading and an object system.
+    """
 
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.56.0', 'f2b59392f2fb514bbe7791dda0c36da5')
     version('2.55.1', '9cbb6b3c7e75ba75575588497c7707b6')
     version('2.53.1', '3362ef4da713f834ea26904caf3a75f5')
     version('2.49.7', '397ead3fcf325cb921d54e2c9e7dfd7a')
@@ -42,6 +50,13 @@ class Glib(AutotoolsPackage):
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
     variant('libmount', default=False, description='Build with libmount support')
+    variant(
+        'tracing',
+        default='',
+        values=('dtrace', 'systemtap'),
+        multi=True,
+        description='Enable tracing support'
+    )
 
     depends_on('pkgconfig', type='build')
     depends_on('libffi')
@@ -64,15 +79,17 @@ class Glib(AutotoolsPackage):
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
     def configure_args(self):
-        spec = self.spec
         args = []
-
-        if '+libmount' in spec:
-            args.append('--enable-libmount')
-        else:
-            args.append('--disable-libmount')
-
+        args.extend(self.enable_or_disable('libmount'))
+        args.append('--with-python={0}'.format(
+            os.path.basename(self.spec['python'].command.path))
+        )
+        args.extend(self.enable_or_disable('tracing'))
         return args
+
+    @property
+    def dtrace_copy_path(self):
+        return join_path(self.stage.source_path, 'dtrace-copy')
 
     @run_before('configure')
     def fix_python_path(self):
@@ -84,6 +101,32 @@ class Glib(AutotoolsPackage):
         filter_file('^#!/usr/bin/env @PYTHON@',
                     '#!/usr/bin/env python',
                     *files)
+
+    @run_before('configure')
+    def fix_dtrace_usr_bin_path(self):
+        if 'tracing=dtrace' not in self.spec:
+            return
+
+        # dtrace may cause glib build to fail because it uses
+        # '/usr/bin/python' in the shebang. To work around that
+        # we copy the original script into a temporary folder, and
+        # change the shebang to '/usr/bin/env python'
+        dtrace = which('dtrace').path
+        dtrace_copy = join_path(self.dtrace_copy_path, 'dtrace')
+
+        with working_dir(self.dtrace_copy_path, create=True):
+            shutil.copy(dtrace, dtrace_copy)
+            filter_file(
+                '^#!/usr/bin/python',
+                '#!/usr/bin/env python',
+                dtrace_copy
+            )
+
+        # To have our own copy of dtrace in PATH, we need to
+        # prepend to PATH the temporary folder where it resides
+        env['PATH'] = ':'.join(
+            [self.dtrace_copy_path] + env['PATH'].split(':')
+        )
 
     @run_after('install')
     def filter_sbang(self):
