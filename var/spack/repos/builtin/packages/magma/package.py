@@ -35,14 +35,18 @@ class Magma(CMakePackage):
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
 
+    version('2.3.0', '9aaf85a338d3a17303e0c69f86f0ec52')
     version('2.2.0', '6c1ebf4cdf63eb302ff6258ff8c49217')
 
     variant('fortran', default=True,
             description='Enable Fortran bindings support')
 
     depends_on('lapack')
-    depends_on('cuda@9.0:', when='%gcc@6.0:6.9.9')
-    depends_on('cuda@8.0:', when='%gcc@5.0:')
+    depends_on('cuda')
+
+    conflicts('%gcc@6:', when='^cuda@:8')
+    conflicts('%gcc@7:', when='^cuda@:9')
+
     patch('ibm-xl.patch', when='@2.2:%xl')
     patch('ibm-xl.patch', when='@2.2:%xl_r')
 
@@ -67,8 +71,9 @@ class Magma(CMakePackage):
                 ])
 
         if spec.satisfies('^cuda@9.0:'):
-            options.extend([
-                '-DGPU_TARGET=sm30'
-            ])
+            if '@:2.2.0' in spec:
+                options.extend(['-DGPU_TARGET=sm30'])
+            else:
+                options.extend(['-DGPU_TARGET=sm_30'])
 
         return options
