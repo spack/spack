@@ -49,6 +49,7 @@ class Stat(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('libdwarf')
+    depends_on('binutils+libiberty')
     depends_on('dyninst', when='~dysect')
     depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
     depends_on('graphlib@2.0.0', when='@2.0.0:2.2.0')

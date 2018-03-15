@@ -64,6 +64,8 @@ class Dyninst(Package):
     patch('stat_dysect.patch', when='+stat_dysect')
     patch('stackanalysis_h.patch', when='@9.2.0')
 
+    parallel = False
+
     # new version uses cmake
     def install(self, spec, prefix):
         if spec.satisfies('@:8.1'):
