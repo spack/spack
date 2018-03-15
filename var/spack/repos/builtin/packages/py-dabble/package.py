@@ -40,4 +40,3 @@ class PyDabble(PythonPackage):
     depends_on('py-networkx@1.11:',    type=('build', 'run'))
     depends_on('py-pydot',             type=('build', 'run'))
     depends_on('py-vmd-python@2.0.4:', type=('build', 'run'))
-
