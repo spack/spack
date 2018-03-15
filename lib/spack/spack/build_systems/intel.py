@@ -157,12 +157,31 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
     # ---------------------------------------------------------------------
-
-    def product_dir(self, product_dir_name, version_glob='_2???.*.*[0-9]',
+    def product_dir(self, product_dir_name, version_glob='_*.*.*',
                     postfix_dir=''):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and possibly auxiliary files from other
         products.
+
+        Arguments:
+
+        ``product_dir_name``
+            Name of component directory, without a numeric version.
+
+            - Supported::
+                compilers_and_libraries, parallel_studio_xe
+            - TBD::
+                advisor_xe, composer_xe, inspector_xe, vtune_amplifier_xe,
+                performance_snapshots
+
+        ``version_glob``
+            A glob pattern that fully qualifies ``product_dir_name`` to a
+            specific version within an actual directory (not a symlink).
+
+        ``postfix_dir``
+            Subdirectory below ``product_dir_name + version_glob``.
+            Example:
+                ``('compilers_and_libraries', postfix_dir='linux')``
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
@@ -171,10 +190,9 @@ class IntelPackage(PackageBase):
             # TODO: Verify on Mac.
             return d
 
-        # Distinguish between product installations that were done outside of
-        # Spack (as "ghost package" integrated via packages.yaml) and
-        # Spack-native ones. The key issue is that their prefixes will
-        # qualitatively differ in directory depth.
+        # Distinguish between product installations that were done external to
+        # Spack (integrated via packages.yaml) and Spack-internal ones. The
+        # resulting prefixes may differ in directory depth and specificity.
         if ('%s_' % product_dir_name) in d and '.' in d:
             # If e.g. MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
@@ -205,7 +223,7 @@ class IntelPackage(PackageBase):
             # means the high-level installation directory that is specific to
             # the *vendor* (think of the default "/opt/intel"). We must now
             # step down into the *product* directory to get the usual
-            # hierarchy. but let's not do that in haste ...
+            # hierarchy. But let's not do that in haste ...
             #
             # For a Spack-born install, the fully-qualified release directory
             # desired above may seem less important since product upgrades
@@ -215,13 +233,16 @@ class IntelPackage(PackageBase):
             # $ ls -lF <HASH>/compilers_and_libraries*/linux/bin/intel64/icc
             #
             # <HASH>/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+            #   A regular file in the actual release directory. Bingo!
             #
-            # <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> \
-            #     ../../../../comp[...]ies_2018.1.163/linux/bin/intel64/icc*
-            #  [abbreviated for flake8 E115 opinionation]
+            # <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> ...
+            #   A symlink - no good. Note that "compilers_and_libraries_2018/"
+            #   is itself a directory (not symlink) but it merely holds a
+            #   compatibility dir hierarchy with lots of symlinks into the
+            #   release dir.
             #
-            # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
-            #    ../../../../comp[...]ies_2018.1.163/linux/bin/intel64/icc*
+            # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> ...
+            #   Ditto.
             #
             #  Now, the Spack packages for MKL and MPI packges use version
             #  triplets, but the one for intel-parallel-studio does not.
@@ -255,9 +276,9 @@ class IntelPackage(PackageBase):
         platform = 'linux'
         d = self.product_dir('compilers_and_libraries', postfix_dir=platform)
 
-        # On my system, using a ghosted MKL, self.prefix showed up as ending
-        # with "/compiler". I think this is because I provide that MKL by means
-        # of the side effect of loading an env. module for the Intel
+        # On my system, when using a external MKL, self.prefix showed up as
+        # ending with "/compiler". I think this is because I provided that MKL
+        # by means of the side effect of loading an env. module for the Intel
         # *compilers*, and Spack inspects $PATH(?) Well, I can live with that!
         # It's just a jump to the left, and then a step to the right; let's do
         # the time warp again:
@@ -303,12 +324,13 @@ class IntelPackage(PackageBase):
             #  intel-daal/          intel-mkl/          intel-parallel-studio
             #  intel-gpu-tools/     intel-mkl-dnn/      intel-tbb/
             #
-            if 'intel-mkl' in self.name:
+            if self._wants_personality('mkl'):
                 component = 'mkl'
-            elif 'intel-mpi' in self.name:
+            elif self._wants_personality('mpi'):
                 component = 'mpi'
-                # Note analysis of MPI dir above:  Since both I_MPI_ROOT and
-                # MANPATH need the 'mpi' dir, do NOT qualify further.
+                # Note analysis of MPI dir in ./README-intel.rst :
+                # Since both I_MPI_ROOT and MANPATH need the 'mpi' dir, do NOT
+                # qualify further.
                 # NODO: d = d.intel64
             # elif ...
             #     component = ...
@@ -319,14 +341,6 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    def relative_path(self, file_or_dir, relative_to=''):
-        if not relative_to:
-            relative_to = self.prefix
-        file_or_dir = os.path.realpath(file_or_dir)
-        relative_to = os.path.realpath(relative_to)
-        p = os.path.relpath(file_or_dir, relative_to)
-        return p
-
     def component_bin_dir(self, component=None, relative=False):
         d = self.component_dir(component)
 
@@ -334,7 +348,7 @@ class IntelPackage(PackageBase):
             # TODO: verify
             d = d.bin
         else:
-            if component == 'mpi' or 'intel-mpi' in self.name:
+            if self._wants_personality('mpi', component):
                 d = d.intel64.bin
             elif component == 'compiler' or 'parallel-studio' in self.name:
                 d = Prefix(ancestor(d)).bin.intel64
@@ -358,29 +372,14 @@ class IntelPackage(PackageBase):
         if sys.platform == 'darwin':
             d = d.lib
         else:
-            if component == 'mpi' or 'intel-mpi' in self.name:
+            if self._wants_personality('mpi', component):
                 d = d.intel64.lib
             else:
                 d = d.lib.intel64
-            # A bit weird, but I'm sure there are good reasons for it.
 
-            if component == 'tbb' or 'intel-tbb' in self.name:
-                # Determine the applicable "gcc-4.x" subdir as in tbbvars.sh
-                gcc = Executable('gcc')
-                matches = re.search(
-                    r'gcc.* ([0-9]+\.[0-9]+\.[0-9]+).*',
-                    gcc('--version', output=str))
-                if matches:
-                    gcc_version = Version(matches.groups()[0])
-                    if gcc_version >= Version('4.7'):
-                        tbb_abi = 'gcc4.7'
-                    elif gcc_version >= Version('4.4'):
-                        tbb_abi = 'gcc4.4'
-                else:
-                    tbb_abi = 'gcc4.1'     # unlikely, one hopes.
-
-                # Alrighty then ...
-                d = Prefix(join_path(d, tbb_abi))
+        if self._wants_personality('tbb', component):
+            # Must qualify further
+            d = Prefix(join_path(d, self._tbb_abi))
 
         if relative:
             d = self.relative_path(d)
@@ -392,7 +391,7 @@ class IntelPackage(PackageBase):
     def component_include_dir(self, component=None, relative=False):
         d = self.component_dir(component)
 
-        if component == 'mpi' or 'intel-mpi' in self.name:
+        if self._wants_personality('mpi', component):
             d = d.intel64
         d = d.include
 
@@ -403,7 +402,40 @@ class IntelPackage(PackageBase):
         return d
 
     # ---------------------------------------------------------------------
-    # Support for virtual 'blas/lapack/scalapack'
+    # Utilities
+    # ---------------------------------------------------------------------
+    def _wants_personality(self, nominal_component, client_component=None):
+        '''Provide the Intel component as explicitly requested in
+        ``client_component``, or, when called as virtual package, provide the
+        appropriate component.
+        '''
+        # This part acts as a mere macro for equality testing.
+        if nominal_component == client_component:
+            return True
+
+        # This part is both the fallback for the personality test and the
+        # inverse for "provides()" in child packages.
+        satisfies = {
+            'mkl': r'intel-mkl|mkl|blas|lapack|scalapack',
+            'mpi': r'intel-mpi|mpi',
+            'tbb': r'intel-tbb|tbb',
+        }
+        try:
+            return bool(re.match(satisfies[nominal_component], self.name))
+        except KeyError:
+            raise InstallError("Support for component '%s' not available." %
+                               nominal_component)
+
+    def relative_path(self, file_or_dir, relative_to=''):
+        if not relative_to:
+            relative_to = self.prefix
+        file_or_dir = os.path.realpath(file_or_dir)
+        relative_to = os.path.realpath(relative_to)
+        p = os.path.relpath(file_or_dir, relative_to)
+        return p
+
+    # ---------------------------------------------------------------------
+    # Threading, including (WIP) support for virtual 'tbb'
     # ---------------------------------------------------------------------
     @property
     def openmp_libs(self):
@@ -448,6 +480,7 @@ class IntelPackage(PackageBase):
         # NB2: Like icc with -qopenmp, so does icpc steer us towards using an
         # option: "icpc -tbb"
 
+        # TODO: clang
         gcc = Executable('gcc')     # must be gcc, not self.compiler.cc
         cxx_lib_path = gcc(
             '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
@@ -455,6 +488,31 @@ class IntelPackage(PackageBase):
         libs = tbb_lib + LibraryList(cxx_lib_path)
         debug_print(libs)
         return libs
+
+    def _tbb_abi(self):
+        '''Select the ABI needed for linking TBB'''
+        # Match the available gcc (or clang?), as it's done in tbbvars.sh.
+
+        # TODO: clang
+        gcc = Executable('gcc')
+        matches = re.search(r'gcc.* ([0-9]+\.[0-9]+\.[0-9]+).*',
+                            gcc('--version', output=str))
+        if matches:
+            gcc_version = Version(matches.groups()[0])
+            if gcc_version >= Version('4.7'):
+                abi = 'gcc4.7'
+            elif gcc_version >= Version('4.4'):
+                abi = 'gcc4.4'
+        else:
+            abi = 'gcc4.1'     # unlikely, one hopes.
+
+        # Alrighty then ...
+        debug_print(abi)
+        return abi
+
+    # ---------------------------------------------------------------------
+    # Support for virtual 'blas/lapack/scalapack'
+    # ---------------------------------------------------------------------
 
     @property
     def blas_libs(self):
@@ -539,6 +597,12 @@ class IntelPackage(PackageBase):
         if len(sca_libs) < 2:
             raise_lib_error(
                 'Cannot locate ScaLapack/BLACS libraries:', scalapack_libnames)
+        # NB: ScaLapack is installed as "cluster" components within MKL or
+        # MKL-encompassing products.  But those were *optional* for the ca.
+        # 2015/2016 product releases, which was easy to overlook, and I have
+        # been bitten by that.  Thus, complain early because it'd be a sore
+        # disappointment to have missing ScaLapack libs show up as a link error
+        # near the end phase of a client package's build phase.
 
         return sca_libs
 
@@ -563,7 +627,7 @@ class IntelPackage(PackageBase):
                             recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if '+mkl' in self.spec or 'intel-mkl' in self.name:
+        if '+mkl' in self.spec or self._wants_personality('mkl'):
             # BTW: The name and meaning of the 'root=' keyword arg of
             # find_libraries() entices us to feed it an "mkl_root" variable,
             # but that is a siren song that pulls us down and under from the
@@ -589,7 +653,7 @@ class IntelPackage(PackageBase):
         #   spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
 
     def setup_dependent_package(self, module, dep_spec):
-        if '+mpi' in self.spec or 'intel-mpi' in self.name:
+        if '+mpi' in self.spec or self._wants_personality('mpi'):
             # Intel comes with 2 different flavors of MPI wrappers:
             #
             # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
