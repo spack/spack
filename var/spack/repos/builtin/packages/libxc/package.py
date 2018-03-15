@@ -36,10 +36,6 @@ class Libxc(AutotoolsPackage):
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
     version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
 
-    # libxc provides a testsuite, but many tests fail
-    # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
-    phases = ['configure', 'build', 'install']
-
     @property
     def libs(self):
         """Libxc can be queried for the following parameters:
@@ -56,7 +52,7 @@ class Libxc(AutotoolsPackage):
         # Libxc installs both shared and static libraries.
         # If a client ask for static explicitly then return
         # the static libraries
-        shared = False if 'static' in query_parameters else True
+        shared = ('static' not in query_parameters)
 
         # Libxc has a fortran90 interface: give clients the
         # possibility to query for it
@@ -102,3 +98,8 @@ class Libxc(AutotoolsPackage):
     def configure_args(self):
         args = ['--enable-shared']
         return args
+
+    def check(self):
+        # libxc provides a testsuite, but many tests fail
+        # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
+        pass
