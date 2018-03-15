@@ -24,8 +24,6 @@
 ##############################################################################
 from spack import *
 
-import os
-
 
 class Libceed(Package):
     """The CEED API Library: Code for Efficient Extensible Discretizations
