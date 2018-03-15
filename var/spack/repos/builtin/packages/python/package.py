@@ -145,11 +145,15 @@ class Python(AutotoolsPackage):
         dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
         config_args = [
             '--with-threads',
+            '--enable-optimizations',
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
+
+        if '%intel' in spec:
+            config_args.append('--with-icc')
 
         if '+shared' in spec:
             config_args.append('--enable-shared')
