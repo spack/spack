@@ -32,7 +32,6 @@ modules:
       suffixes:
         '^cuda': cuda
         '^python@3.5.2': python3
-        '^python@2': python2
         '^openblas~openmp': blas
         '^openblas+openmp': 'blas+thread'
         '^intel-mkl~openmp': mkl
@@ -51,22 +50,14 @@ modules:
       - adios
       - paraview
       - petsc
-      - hdf5
       - hpctoolkit
       - scorep
-      - python
-      - py-numpy
-      - py-scipy
-      - py-theano
       - caffe
       - tau
       - cudnn
       - cuda
-      - py-ipython
-      - py-jupyter-notebook
       - spark
       - iozone
-      - qt
       - zeromq
       - intel-mkl
       - 'openblas+openmp'
@@ -77,6 +68,7 @@ modules:
       - pgi
       - imb
       - osu-micro-benchmarks
+      - stat
       - 'cmake%gcc@4.8.5'
     blacklist:
       - '%gcc'
@@ -95,7 +87,6 @@ modules:
         '^intel-mpi': intel-mpi
         '^cuda': cuda
         '^python@3.5.2': python3
-        '^python@2': python2
         '^openblas~openmp': blas
         '^openblas+openmp': 'blas+thread'
         '^intel-mkl~openmp': mkl
@@ -114,25 +105,19 @@ modules:
       - adios
       - paraview
       - petsc
-      - hdf5
       - hpctoolkit
       - scorep
-      - python
-      - py-numpy
-      - py-scipy
-      - py-theano
       - caffe
       - tau
       - cudnn
       - cuda
-      - py-ipython
-      - py-jupyter-notebook
       - spark
       - iozone
       - qt
       - zeromq
       - imb
       - osu-micro-benchmarks
+      - stat
       - 'cmake%gcc@4.8.5'
     blacklist:
       - '%gcc'

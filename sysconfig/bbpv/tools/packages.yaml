@@ -11,6 +11,14 @@ packages:
         paths:
             bison@3.0.4: /usr
         version: [3.0.4]
+    boost:
+        paths:
+            boost@1.53.0: /usr
+        version: [1.53.0]
+    bzip2:
+        paths:
+            bzip2@1.0.6: /usr
+        version: [1.0.6]
     cairo:
         paths:
             cairo@1.8.10: /usr
@@ -35,6 +43,10 @@ packages:
         paths:
             glib@2.50.3: /usr
         version: [2.50.3]
+    gtkplus:
+        paths:
+            gtkplus@2.24.31: /usr
+        version: [2.24.31]
     hwloc:
         paths:
             hwloc@1.11.2: /usr
@@ -47,6 +59,10 @@ packages:
         paths:
             libjpeg@1.2.90: /usr
         version: [1.2.90]
+    libgcrypt:
+        paths:
+            libgcrypt@1.5.3: /usr
+        version: [1.5.3]
     libmng:
         paths:
             libmng@1.0.10: /usr
@@ -55,6 +71,10 @@ packages:
         paths:
             libtool@2.4.2: /usr
         version: [2.4.2]
+    libxml2:
+        paths:
+            libxml2@2.9.1: /usr
+        version: [2.9.1]
     m4:
         paths:
             m4@1.4.16: /usr
@@ -79,6 +99,14 @@ packages:
         paths:
             pkg-config@0.27.1: /usr
         version: [0.27.1]
+    python:
+        paths:
+            python@2.7.13: /usr
+        version: [2.7.13]
+    py-pygtk:
+        paths:
+            py-pygtk@2.24.0: /usr
+        version: [2.24.0]
     readline:
         paths:
             readline@6.2.10: /usr
@@ -88,6 +116,10 @@ packages:
             slurm@17.02: /usr
         buildable: False
         version: [17.02]
+    swig:
+        paths:
+            swig@2.0.10: /usr
+        version: [2.0.10]
     sqlite:
         paths:
             sqlite@3.7.17: /usr
@@ -108,6 +140,10 @@ packages:
         paths:
             xz@5.2: /usr
         version: [5.2]
+    zlib:
+        paths:
+            zlib@1.2.7: /usr
+        version: [1.2.7]
     gcc:
         paths:
             gcc@5.4.0%gcc@4.8.5: $APPS_DIR_PATH/compilers/install/gcc-5.4.0
