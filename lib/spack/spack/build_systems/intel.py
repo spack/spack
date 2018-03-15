@@ -153,131 +153,9 @@ class IntelPackage(PackageBase):
         else:
             return 'lp64'
 
-    # --------------------------------------------------------------------
-    # Analysis of the directory layout for a Spack-born installation of
-    # intel-mkl@2018.1.163
-    # --------------------------------------------------------------------
-    #
-    #   $ ls -l <prefix>
-    #   # Unix metadata removed, entries rearranged, "->" still means symlink.
-    #
-    #   bin/
-    #       - compilervars.*sh (symlinked) ONLY
-    #
-    #   compilers_and_libraries -> compilers_and_libraries_2018
-    #       - generically-named entry point, stable across versions (one hopes)
-    #
-    #   compilers_and_libraries_2018/
-    #       - vaguely-versioned dirname, holding a stub hierarchy --ignorable
-    #
-    #       $ ls -l compilers_and_libraries_2018/linux/
-    #       bin         - actual compilervars.*sh (reg. files) ONLY
-    #       documentation -> ../../documentation_2018/
-    #       lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
-    #       mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
-    #       pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
-    #       samples -> ../../samples_2018/
-    #       tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
-    #
-    #   compilers_and_libraries_2018.1.163/
-    #       - Main "product" + a minimal set of libs from related products
-    #
-    #       $ ls -l compilers_and_libraries_2018.1.163/linux/
-    #       bin/        - compilervars.*sh, link_install*sh  ONLY
-    #       mkl/        - Main Product ==> to be assigned to MKLROOT
-    #       compiler/   - lib/intel64_lin/libiomp5*  ONLY
-    #       tbb/        - tbb/lib/intel64_lin/gcc4.[147]/libtbb*.so* ONLY
-    #
-    #   parallel_studio_xe_2018 -> parallel_studio_xe_2018.1.038/
-    #   parallel_studio_xe_2018.1.038/
-    #       - Alternate product packaging - ignorable
-    #
-    #       $ ls -l parallel_studio_xe_2018.1.038/
-    #       bin/               - actual psxevars.*sh (reg. files)
-    #       compilers_and_libraries_2018 -> <full_path>/comp...aries_2018.1.163
-    #       documentation_2018 -> <full_path_prefix>/documentation_2018
-    #       samples_2018 -> <full_path_prefix>/samples_2018
-    #       ...
-    #
-    #   documentation_2018/
-    #   samples_2018/
-    #   lib -> compilers_and_libraries/linux/lib/
-    #   mkl -> compilers_and_libraries/linux/mkl/
-    #   tbb -> compilers_and_libraries/linux/tbb/
-    #                   - auxiliaries and convenience links
-    #
-    # --------------------------------------------------------------------
-    # Directory analysis for intel-mpi@2018.1.163
-    # --------------------------------------------------------------------
-    # For MPI, the layout is slightly different than MKL. The prefix will have
-    # to include the sub-arch, which contains bin/, lib/, ..., all without
-    # further arch splits. I_MPI_ROOT, however, must be the package dir.
-    #
-    # FIXME: For MANPATH, need the parent dir.
-    #
-    #   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/
-    #   bin64 -> intel64/bin/
-    #   etc64 -> intel64/etc/
-    #   include64 -> intel64/include/
-    #   lib64 -> intel64/lib/
-    #
-    #   benchmarks/
-    #   binding/
-    #   intel64/
-    #   man/
-    #   test/
-    #
-    #   MPI-2019 preview; Relnotes contain: "File structure clean-up."
-    #   https://software.intel.com/en-us/articles/restoring-legacy-path-structure-on-intel-mpi-library-2019
-    #
-    #   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi_2019/
-    #   binding/
-    #   doc/
-    #   imb/
-    #   intel64/
-    #   man/
-    #   test/
-    #
-    # --------------------------------------------------------------------
-    # Spack-external installation of intel-parallel-studio :
-    # --------------------------------------------------------------------
-    #
-    # This is a product bundle whose install dir mostly holds merely symlinks
-    # to components installed in sibling dirs:i
-    #
-    #   $ ls -lF /opt/intel/parallel_studio_xe_2018.1.038/
-    #   advisor_2018		 -> /opt/intel/advisor_2018/
-    #   clck_2018		 -> /opt/intel/clck/2018.1/
-    #   compilers_and_libraries_2018 -> /opt/intel/comp....aries_2018.1.163/
-    #   documentation_2018	 -> /opt/intel/documentation_2018/
-    #   ide_support_2018	 -> /opt/intel/ide_support_2018/
-    #   inspector_2018		 -> /opt/intel/inspector_2018/
-    #   itac_2018		 -> /opt/intel/itac/2018.1.017/
-    #   man		         -> /opt/intel/man/
-    #   samples_2018		 -> /opt/intel/samples_2018/
-    #   vtune_amplifier_2018	 -> /opt/intel/vtune_amplifier_2018/
-    #
-    #   psxevars.csh		 -> ./bin/psxevars.csh*
-    #   psxevars.sh		 -> ./bin/psxevars.sh*
-    #   bin/            - *vars.*sh scripts + sshconnectivity.exp ONLY
-    #
-    #   licensing/
-    #   uninstall*
-    #
-    # The only relevant regular files are *vars.*sh, but those also just churn
-    # through the subordinate vars files of the components.
-    #
-    # --------------------------------------------------------------------
-    #
-    # Note on macOS support, i.e., sys.platform == 'darwin':
-    #
-    # - On macOS, the Spack methods here only include support to integrate an
-    #   externally installed MKL.
-    #
-    # - URLs in child packages will be Linux-specific; macOS download packages
-    #   are located in differently numbered dirs and are named m_*.dmg.
-    #
-    # --------------------------------------------------------------------
+    # ---------------------------------------------------------------------
+    # Directory handling common to all Intel components
+    # ---------------------------------------------------------------------
 
     def product_dir(self, product_dir_name, version_glob='_2???.*.*[0-9]',
                     postfix_dir=''):
@@ -285,6 +163,8 @@ class IntelPackage(PackageBase):
         holding the main product and possibly auxiliary files from other
         products.
         '''
+        # See ./README-intel.rst for background and analysis of dir layouts.
+
         d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
@@ -521,25 +401,27 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
+    # ---------------------------------------------------------------------
+    # Support for virtual 'blas/lapack/scalapack'
+    # ---------------------------------------------------------------------
     @property
     def openmp_libs(self):
         '''Supply LibraryList for linking OpenMP'''
 
         if '%intel' in self.spec:
-            omp_libnames = ['libiomp5']
-            # NB: Hunting down explicit library files may be the Spack-way of
+            # NB: Hunting down explicit library files may be the Spack way of
             # doing things, but be aware that "{icc|ifort} --help openmp"
             # steers us towards options instead: -qopenmp-link={dynamic,static}
-            #
-            # Note about search root: For MKL, the directory
-            # "$MKLROOT/../compiler" will be present even for an MKL-only
-            # product installation (as opposed to one being ghosted via
-            # packages.yaml), specificially to provide the 'iomp5' libs.
 
+            omp_libnames = ['libiomp5']
             omp_libs = find_libraries(
                 omp_libnames,
                 root=self.component_lib_dir(component='compiler'),
                 shared=self._want_shared)
+            # Note about search root here: For MKL, the directory
+            # "$MKLROOT/../compiler" will be present even for an MKL-only
+            # product installation (as opposed to one being ghosted via
+            # packages.yaml), specificially to provide the 'iomp5' libs.
 
         elif '%gcc' in self.spec:
             gcc = Executable(self.compiler.cc)
@@ -659,6 +541,9 @@ class IntelPackage(PackageBase):
 
         return sca_libs
 
+    # ---------------------------------------------------------------------
+    # Support for virtual 'mpi' and 'mkl'
+    # ---------------------------------------------------------------------
     @property
     def mpi_libs(self):
         # If prefix is too general, recursive searches may get file variants
@@ -675,36 +560,6 @@ class IntelPackage(PackageBase):
         return find_headers('mpi',
                             root=self.component_include_dir(component='mpi'),
                             recursive=False)
-
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
-
-        These environment variables come from running:
-
-        .. code-block:: console
-
-           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
-           [and likewise for MKL, MPI, and other components]
-        """
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment v=ariables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
-        f = self.file_to_source
-        debug_print(f)
-        if not os.path.isfile(f):
-            return
-
-        if sys.platform == 'darwin':
-            run_env.extend(
-                EnvironmentModifications.from_sourcing_file(f))
-        else:
-            run_env.extend(
-                EnvironmentModifications.from_sourcing_file(f, 'intel64'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mkl' in self.spec or 'intel-mkl' in self.name:
@@ -758,98 +613,69 @@ class IntelPackage(PackageBase):
                 self.spec.mpifc  = bindir.mpif90
                 self.spec.mpif77 = bindir.mpif77
 
-        # For other Intel packages, either not needed or not implemented.
+    # ---------------------------------------------------------------------
+    # General support for child packages
+    # ---------------------------------------------------------------------
 
-    # --------------------------------------------------------------------
-    # https://software.intel.com/en-us/articles/configuration-file-format
-    #
-    # ...
-    # ACTIVATION=exist_lic
-    #
-    #    This directive tells the install program to look for an existing
-    #    license during the install process.  This is the preferred method for
-    #    silent installs.  Take the time to register your serial number and get
-    #    a license file (see below).  Having a license file on the system
-    #    simplifies the process.  In addition, as an administrator it is good
-    #    practice to know WHERE your licenses are saved on your system.
-    #    License files are plain text files with a .lic extension.  By default
-    #    these are saved in /opt/intel/licenses which is searched by default.
-    #    If you save your license elsewhere, perhaps under an NFS folder, set
-    #    environment variable INTEL_LICENSE_FILE to the full path to your
-    #    license file prior to starting the installation or use the
-    #    configuration file directive ACTIVATION_LICENSE_FILE to specify the
-    #    full pathname to the license file.
-    #
-    #    Options for ACTIVATION are { exist_lic, license_file, server_lic,
-    #    serial_number, trial_lic }
-    #
-    # exist_lic
-    #    directs the installer to search for a valid license on the server.
-    #    Searches will utilize the environment variable INTEL_LICENSE_FILE,
-    #    search the default license directory /opt/intel/licenses, or use the
-    #    ACTIVATION_LICENSE_FILE directive to find a valid license file.
-    #
-    # license_file
-    #    is similar to exist_lic but directs the installer to use
-    #    ACTIVATION_LICENSE_FILE to find the license file.
-    #
-    # server_lic
-    #    is similar to exist_lic and exist_lic but directs the installer that
-    #    this is a client installation and a floating license server will be
-    #    contacted to active the product.  This option will contact your
-    #    floating license server on your network to retrieve the license
-    #    information.  BEFORE using this option make sure your client is
-    #    correctly set up for your network including all networking, routing,
-    #    name service, and firewall configuration.  Insure that your client has
-    #    direct access to your floating license server and that firewalls are
-    #    set up to allow TCP/IP access for the 2 license server ports.
-    #    server_lic will use INTEL_LICENSE_FILE containing a port@host format
-    #    OR a client license file.  The formats for these are described here
-    #    https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license
-    #
-    # serial_number
-    #    directs the installer to use directive ACTIVATION_SERIAL_NUMBER for
-    #    activation.  This method will require the installer to contact an
-    #    external Intel activation server over the Internet to confirm your
-    #    serial number.  Due to user and company firewalls, this method is more
-    #    complex and hence error prone of the available activation methods.  We
-    #    highly recommend using a license file or license server for activation
-    #    instead.
-    #
-    # trial_lic
-    #    is used only if you do not have an existing license and intend to
-    #    temporarily evaluate the compiler.  This method creates a temporary
-    #    trial license in Trusted Storage on your system.
-    #
-    # No license file but you have a serial number?
-    #    If you have only a serial number, please visit
-    #    https://registrationcenter.intel.com to register your serial number.
-    #    As part of registration, you will receive email with an attached
-    #    license file.  If your serial is already registered and you need to
-    #    retrieve a license file, read this:
-    #    https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
-    #
-    #    Save the license file in /opt/intel/licenses/ directory, or in your
-    #    preferred directory and set INTEL_LICENSE_FILE environment variable to
-    #    this non-default location.  If you have already registered your serial
-    #    number but have lost the license file, revisit
-    #    https://registrationcenter.intel.com and click on the hyperlinked
-    #    product name to get to a screen where you can cut and paste or mail
-    #    yourself a copy of your registered license file.
-    # --------------------------------------------------------------------
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
 
-    # See also:  lib/spack/spack/hooks/licensing.py
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
+           [and likewise for MKL, MPI, and other components]
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment v=ariables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        f = self.file_to_source
+        debug_print(f)
+        if not os.path.isfile(f):
+            return
+
+        if sys.platform == 'darwin':
+            run_env.extend(
+                EnvironmentModifications.from_sourcing_file(f))
+        else:
+            run_env.extend(
+                EnvironmentModifications.from_sourcing_file(f, 'intel64'))
+
+    # ---------------------------------------------------------------------
+    # Specifics for installation phase
+    # ---------------------------------------------------------------------
+    @property
+    def global_license_file(self):
+        """Returns the path where a Spack-global license file should be stored.
+
+        All Intel software shares the same license, so we store it in a
+        common 'intel' directory."""
+        return join_path(self.global_license_dir, 'intel',
+                         os.path.basename(self.license_files[0]))
 
     @property
-    def determine_license_type(self):
-        # Consider spack-internal Intel license store only when populated.
+    def _determine_license_type(self):
+        '''Provide license-related tokens for ``silent.cfg``.'''
+        # See also: ./README-intel.rst, section "licensing tokens"
 
         license_type = {}
         f = self.global_license_file
         if os.path.isfile(f):
+            # Consider the spack-internal Intel license store *only*
+            # when it has been populated.
+            #
             # NB: Spack brings up $EDITOR in set_up_license() when
             # self.license_files been defined, regardless of
             # self.license_required. So, the "if" is usually True here.
+            #
+            # Reference:  lib/spack/spack/hooks/licensing.py
+            #
             with open(f) as fh:
                 if re.search(r'^[ \t]*[^' + self.license_comment + '\n]',
                              fh.read(), re.MULTILINE):
@@ -872,15 +698,6 @@ class IntelPackage(PackageBase):
         debug_print(license_type)
         return license_type
 
-    @property
-    def global_license_file(self):
-        """Returns the path where a global license file should be stored.
-
-        All Intel software shares the same license, so we store it in a
-        common 'intel' directory."""
-        return join_path(self.global_license_dir, 'intel',
-                         os.path.basename(self.license_files[0]))
-
     def configure(self, spec, prefix):
         """Writes the ``silent.cfg`` file used to configure the installation.
 
@@ -892,58 +709,6 @@ class IntelPackage(PackageBase):
         # filepat     - the file location pattern (/path/to/license.lic)
         # lspat       - the license server address pattern (0123@hostname)
         # snpat       - the serial number pattern (ABCD-01234567)
-
-# Flags are checked by <stage_dir>/pset/check.awk
-#
-#   ..../l_mkl_2018.1.163/pset/check.awk .
-#   ..../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk
-#
-# * Valid in all incarnations:
-# ACCEPT_EULA                                  {accept, decline}
-# CONTINUE_WITH_OPTIONAL_ERROR                 {yes, no}
-# PSET_INSTALL_DIR                             {/opt/intel, , filepat}
-# CONTINUE_WITH_INSTALLDIR_OVERWRITE           {yes, no}
-# COMPONENTS                                   {ALL, DEFAULTS, , anythingpat}
-# PSET_MODE                                    {install, repair, uninstall}
-# NONRPM_DB_DIR                                {, filepat}
-#
-# SIGNING_ENABLED                              {yes, no}
-# ARCH_SELECTED                                {IA32, INTEL64, ALL}
-#
-# * Mentioned but unexplained in check.awk:
-#
-# NO_VALIDATE   (?!)
-#
-# * Only for licensed incarnations (obviously):
-# ACTIVATION_SERIAL_NUMBER                     {, snpat}
-# ACTIVATION_LICENSE_FILE                      {, lspat, filepat}
-# ACTIVATION_TYPE                              {exist_lic, license_server,
-#                                              license_file, trial_lic,
-#                                              serial_number}
-#
-# * Only for Amplifier (obviously):
-# AMPLIFIER_SAMPLING_DRIVER_INSTALL_TYPE       {build, kit}
-# AMPLIFIER_DRIVER_ACCESS_GROUP                {, anythingpat, vtune}
-# AMPLIFIER_DRIVER_PERMISSIONS                 {, anythingpat, 666}
-# AMPLIFIER_LOAD_DRIVER                        {yes, no}
-# AMPLIFIER_C_COMPILER                         {, filepat, auto, none}
-# AMPLIFIER_KERNEL_SRC_DIR                     {, filepat, auto, none}
-# AMPLIFIER_MAKE_COMMAND                       {, filepat, auto, none}
-# AMPLIFIER_INSTALL_BOOT_SCRIPT                {yes, no}
-# AMPLIFIER_DRIVER_PER_USER_MODE               {yes, no}
-#
-# * Only for MKL and Studio:
-# CLUSTER_INSTALL_REMOTE                       {yes, no}
-# CLUSTER_INSTALL_TEMP                         {, filepat}
-# CLUSTER_INSTALL_MACHINES_FILE                {, filepat}
-#
-# * -- Not -- for MKL, and possibly others:
-# PHONEHOME_SEND_USAGE_DATA                    {yes, no}
-#
-# * "backward compatibility" (?)
-# INSTALL_MODE                                 {RPM, NONRPM}
-# download_only                                {yes}
-# download_dir                                 {, filepat}
 
         components_joined = ';'.join(self._filtered_components)
         config = {
@@ -960,11 +725,9 @@ class IntelPackage(PackageBase):
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
+        # Ditto for PHONEHOME_SEND_USAGE_DATA.
         if self.license_required:
-            config.update(self.determine_license_type)
-
-        if not re.search('mkl|mpi', self.name):
-            # Not supported for those packages, would also stop installer.
+            config.update(self._determine_license_type)
             config.update({'PHONEHOME_SEND_USAGE_DATA': 'no'})
 
         with open('silent.cfg', 'w') as cfg:

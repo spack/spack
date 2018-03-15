@@ -1,0 +1,359 @@
+========================
+Notes on Intel Packages
+========================
+
+-------------------------------------------------------------------------------
+Installation and path handling as implemented in ./intel.py
+-------------------------------------------------------------------------------
+
+Path handling, issues with ``prefix``
+--------------------------------------
+
+Spack makes packages available through two routes: 
+
+A. Packages pre-installed external to Spack and configured *for Spack*
+B. Packages built and installed *by Spack*.
+
+For a user who is interested in building end-user applications, it should not
+matter through which route any of its dependent packages has been installed.
+Most packages natively support a ``prefix`` concept which unifies the two
+routes just fine.
+
+Intel packages, however, are more complicated because they consist of a number
+of components that are released as a suite of varying extent, like "Intel
+Parallel Studio *Foo* Edition", or subsetted into products like "MKL" or "MPI",
+each of which also contain libraries from other components like the compiler
+runtime and multithreading libraries. For this reason, an Intel package is
+"anchored" during installation at a directory level higher than just the
+user-facing directory that has the conventional hierarchy of ``bin``, ``lib``,
+and others relevant for the end-product.
+
+As a result, internal to Spack, there is a conceptual difference in what
+``self.prefix`` represents for the two routes.
+
+For route A, consider MKL installed outside of Spack. It will likely be one
+product component among other products, at one particular release among others
+that are installed in sibling or cousin directories on the local system.
+Therefore, the path given to Spack in ``packages.yaml`` should be a
+*product-specific and fully version-specific* directory.  E.g., for an
+``intel-mkl`` package, ``self.prefix`` should look like::
+
+  /opt/intel/compilers_and_libraries_2018.1.163/linux/mkl
+
+In this route, the interaction point with the user is encapsulated in an
+environment variable which will be (in pseudo-code)::
+
+    MKLROOT := {self.prefix}
+
+For route B, a Spack-based installation of MKL will be placed in the directory
+given to the ``./install.sh`` script of Intel's package distribution.  This
+directory is taken to be the *vendor*-specific anchor directory, playing the
+same role as the default ``/opt/intel``. In this case, ``self.prefix`` will
+be::
+
+  $SPACK_ROOT/opt/spack/linux-centos6-x86_64/gcc-4.9.3/intel-mkl-2018.1.163-<HASH>
+
+However, now the environment variable will have to be constructed as *several
+directory levels down*::
+
+    MKLROOT := {self.prefix}/compilers_and_libraries_2018.1.163/linux/mkl
+
+A recent post on the Spack mailing list illustrates the confusion when route A
+was taken while route B was the only one that was coded in Spack:
+https://groups.google.com/d/msg/spack/x28qlmqPAys/Ewx6220uAgAJ
+
+
+Analysis of directory layouts
+------------------------------
+
+Let's look at some sample directory layouts, using ``ls -lF``,
+but focusing on names and symlinks only.
+
+Spack-born installation of ``intel-mkl@2018.1.163``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+  $ ls -l <prefix>
+
+  bin/
+      - compilervars.*sh (symlinked) ONLY
+
+  compilers_and_libraries -> compilers_and_libraries_2018
+      - generically-named entry point, stable across versions (one hopes)
+
+  compilers_and_libraries_2018/
+      - vaguely-versioned dirname, holding a stub hierarchy --ignorable
+
+      $ ls -l compilers_and_libraries_2018/linux/
+      bin         - actual compilervars.*sh (reg. files) ONLY
+      documentation -> ../../documentation_2018/
+      lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
+      mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
+      pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
+      samples -> ../../samples_2018/
+      tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
+
+  compilers_and_libraries_2018.1.163/
+      - Main "product" + a minimal set of libs from related products
+
+      $ ls -l compilers_and_libraries_2018.1.163/linux/
+      bin/        - compilervars.*sh, link_install*sh  ONLY
+      mkl/        - Main Product ==> to be assigned to MKLROOT
+      compiler/   - lib/intel64_lin/libiomp5*  ONLY
+      tbb/        - tbb/lib/intel64_lin/gcc4.[147]/libtbb*.so* ONLY
+
+  parallel_studio_xe_2018 -> parallel_studio_xe_2018.1.038/
+  parallel_studio_xe_2018.1.038/
+      - Alternate product packaging - ignorable
+
+      $ ls -l parallel_studio_xe_2018.1.038/
+      bin/               - actual psxevars.*sh (reg. files)
+      compilers_and_libraries_2018 -> <full_path>/comp...aries_2018.1.163
+      documentation_2018 -> <full_path_prefix>/documentation_2018
+      samples_2018 -> <full_path_prefix>/samples_2018
+      ...
+
+  documentation_2018/
+  samples_2018/
+  lib -> compilers_and_libraries/linux/lib/
+  mkl -> compilers_and_libraries/linux/mkl/
+  tbb -> compilers_and_libraries/linux/tbb/
+                  - auxiliaries and convenience links
+
+Spack-external installation of Intel-MPI 2018
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For MPI, the layout is slightly different than MKL. The prefix will have to
+include an architecture directory (typically ``intel64``), which then contains
+bin/, lib/, ..., all without further architecture branching.  The environment
+variable ``I_MPI_ROOT`` from the API documentation, however, must be the
+package's top directory, not including the architecture.
+
+FIXME: For MANPATH, need the parent dir.
+
+::
+
+  $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/
+  bin64 -> intel64/bin/
+  etc64 -> intel64/etc/
+  include64 -> intel64/include/
+  lib64 -> intel64/lib/
+
+  benchmarks/
+  binding/
+  intel64/
+  man/
+  test/
+
+The package contains an MPI-2019 preview; Curiously, its release notes contain
+the tag: "File structure clean-up." I could not find further documentation on
+this, however, so it is unclear what, if any, changes will make it to release.
+
+https://software.intel.com/en-us/articles/restoring-legacy-path-structure-on-intel-mpi-library-2019
+
+::
+
+  $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi_2019/
+  binding/
+  doc/
+  imb/
+  intel64/
+  man/
+  test/
+
+Spack-external installation of Intel Parallel Studio 2018
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is the main product bundle that I actually downloaded and installed on my
+system.  Its nominal installation directory mostly holds merely symlinks
+to components installed in sibling dirs::
+
+  $ ls -lF /opt/intel/parallel_studio_xe_2018.1.038/
+  advisor_2018		 -> /opt/intel/advisor_2018/
+  clck_2018		 -> /opt/intel/clck/2018.1/
+  compilers_and_libraries_2018 -> /opt/intel/comp....aries_2018.1.163/
+  documentation_2018	 -> /opt/intel/documentation_2018/
+  ide_support_2018	 -> /opt/intel/ide_support_2018/
+  inspector_2018		 -> /opt/intel/inspector_2018/
+  itac_2018		 -> /opt/intel/itac/2018.1.017/
+  man		         -> /opt/intel/man/
+  samples_2018		 -> /opt/intel/samples_2018/
+  vtune_amplifier_2018	 -> /opt/intel/vtune_amplifier_2018/
+
+  psxevars.csh		 -> ./bin/psxevars.csh*
+  psxevars.sh		 -> ./bin/psxevars.sh*
+  bin/            - *vars.*sh scripts + sshconnectivity.exp ONLY
+
+  licensing/
+  uninstall*
+
+The only relevant regular files are ``*vars.*sh``, but those also just churn
+through the subordinate vars files of the components.
+
+
+
+-------------------
+Installation stage
+-------------------
+
+Installation model
+~~~~~~~~~~~~~~~~~~~~
+
+Intel packages come with an ``install.sh`` script that is normally run
+interactively (in either text or GUI mode) but can run unattended with a
+``--silent <file>`` option, which is of course what Spack uses.
+
+Format of configuration file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The configuration file is conventionally called ``silent.cfg`` and has a simple
+``token=value`` syntax.  Before using the configuration file, the installer
+calls ``<staging_dir>/pset/check.awk`` to validate it. Example paths to the
+validator are::
+
+      .../l_mkl_2018.1.163/pset/check.awk .
+      .../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk
+
+The tokens that are accepted in the configuration file vary between packages.
+Tokens not supported for a given package are **will cause the installer to stop
+and fail.** This is particularly relevant for license-related tokens, which are
+accepted only for packages that actually require a license.
+
+Reference: [Intel's documentation](https://software.intel.com/en-us/articles/configuration-file-format)
+
+The following is from ``.../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk``:
+
+* Tokens valid for all packages encountered::
+
+    ACCEPT_EULA                                  {accept, decline}
+    CONTINUE_WITH_OPTIONAL_ERROR                 {yes, no}
+    PSET_INSTALL_DIR                             {/opt/intel, , filepat}
+    CONTINUE_WITH_INSTALLDIR_OVERWRITE           {yes, no}
+    COMPONENTS                                   {ALL, DEFAULTS, , anythingpat}
+    PSET_MODE                                    {install, repair, uninstall}
+    NONRPM_DB_DIR                                {, filepat}
+
+    SIGNING_ENABLED                              {yes, no}
+    ARCH_SELECTED                                {IA32, INTEL64, ALL}
+
+* Mentioned but unexplained in ``check.awk``::
+
+    NO_VALIDATE   (?!)
+
+* Only for licensed packages::
+
+    ACTIVATION_SERIAL_NUMBER                     {, snpat}
+    ACTIVATION_LICENSE_FILE                      {, lspat, filepat}
+    ACTIVATION_TYPE                              {exist_lic, license_server,
+                                                 license_file, trial_lic,
+
+    PHONEHOME_SEND_USAGE_DATA                    {yes, no}
+                                                 serial_number}
+
+NB: The [documentation page](https://software.intel.com/en-us/articles/configuration-file-format)
+has a slip-up: Instead of the correct ``ACTIVATION_TYPE`` token, it references
+``ACTIVATION``, which was used only until about 2012.
+
+* Only for Amplifier (obviously)::
+
+    AMPLIFIER_SAMPLING_DRIVER_INSTALL_TYPE       {build, kit}
+    AMPLIFIER_DRIVER_ACCESS_GROUP                {, anythingpat, vtune}
+    AMPLIFIER_DRIVER_PERMISSIONS                 {, anythingpat, 666}
+    AMPLIFIER_LOAD_DRIVER                        {yes, no}
+    AMPLIFIER_C_COMPILER                         {, filepat, auto, none}
+    AMPLIFIER_KERNEL_SRC_DIR                     {, filepat, auto, none}
+    AMPLIFIER_MAKE_COMMAND                       {, filepat, auto, none}
+    AMPLIFIER_INSTALL_BOOT_SCRIPT                {yes, no}
+    AMPLIFIER_DRIVER_PER_USER_MODE               {yes, no}
+
+* Only for MKL and Studio::
+
+    CLUSTER_INSTALL_REMOTE                       {yes, no}
+    CLUSTER_INSTALL_TEMP                         {, filepat}
+    CLUSTER_INSTALL_MACHINES_FILE                {, filepat}
+
+* "backward compatibility" (?)::
+
+    INSTALL_MODE                                 {RPM, NONRPM}
+    download_only                                {yes}
+    download_dir                                 {, filepat}
+
+
+Details for licensing tokens
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Quoted from
+https://software.intel.com/en-us/articles/configuration-file-format,
+for reference:
+
+    ...
+
+    ``ACTIVATION=exist_lic``
+       This directive tells the install program to look for an existing
+       license during the install process.  This is the preferred method for
+       silent installs.  Take the time to register your serial number and get
+       a license file (see below).  Having a license file on the system
+       simplifies the process.  In addition, as an administrator it is good
+       practice to know WHERE your licenses are saved on your system.
+       License files are plain text files with a .lic extension.  By default
+       these are saved in /opt/intel/licenses which is searched by default.
+       If you save your license elsewhere, perhaps under an NFS folder, set
+       environment variable **INTEL_LICENSE_FILE** to the full path to your
+       license file prior to starting the installation or use the
+       configuration file directive ``ACTIVATION_LICENSE_FILE`` to specify the
+       full pathname to the license file.
+    
+       Options for ``ACTIVATION`` are ``{ exist_lic, license_file, server_lic,
+       serial_number, trial_lic }``
+    
+    ``exist_lic``
+       directs the installer to search for a valid license on the server.
+       Searches will utilize the environment variable **INTEL_LICENSE_FILE**,
+       search the default license directory /opt/intel/licenses, or use the
+       ``ACTIVATION_LICENSE_FILE`` directive to find a valid license file.
+    
+    ``license_file``
+       is similar to exist_lic but directs the installer to use
+       ``ACTIVATION_LICENSE_FILE`` to find the license file.
+    
+    ``server_lic``
+       is similar to exist_lic and exist_lic but directs the installer that
+       this is a client installation and a floating license server will be
+       contacted to active the product.  This option will contact your
+       floating license server on your network to retrieve the license
+       information.  BEFORE using this option make sure your client is
+       correctly set up for your network including all networking, routing,
+       name service, and firewall configuration.  Insure that your client has
+       direct access to your floating license server and that firewalls are
+       set up to allow TCP/IP access for the 2 license server ports.
+       server_lic will use **INTEL_LICENSE_FILE** containing a port@host format
+       OR a client license file.  The formats for these are described here
+       https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license
+    
+    ``serial_number``
+       directs the installer to use directive ``ACTIVATION_SERIAL_NUMBER`` for
+       activation.  This method will require the installer to contact an
+       external Intel activation server over the Internet to confirm your
+       serial number.  Due to user and company firewalls, this method is more
+       complex and hence error prone of the available activation methods.  We
+       highly recommend using a license file or license server for activation
+       instead.
+    
+    ``trial_lic``
+       is used only if you do not have an existing license and intend to
+       temporarily evaluate the compiler.  This method creates a temporary
+       trial license in Trusted Storage on your system.
+    
+    ...
+
+
+--------------
+macOS support
+--------------
+
+- On macOS, the Spack methods here only include support to integrate an
+  externally installed MKL.
+
+- URLs in child packages will be Linux-specific; macOS download packages
+  are located in differently numbered dirs and are named m_*.dmg.
