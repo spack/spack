@@ -25,7 +25,6 @@
 from spack import *
 
 import os
-import re
 
 
 class Libceed(Package):
@@ -39,7 +38,7 @@ class Libceed(Package):
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
     variant('occa', default=True, description='Enable OCCA backends')
-    variant('cuda', default=False, description='Enable CUDA dependent packages')
+    variant('cuda', default=False, description='Enable CUDA support')
 
     depends_on('occa@develop+cuda', when='+occa+cuda')
     depends_on('occa@develop~cuda', when='+occa~cuda')
@@ -60,8 +59,11 @@ class Libceed(Package):
         mkdirp(prefix.include)
         install('ceed.h', prefix.include)
         mkdirp(prefix.lib)
-        for f in os.listdir('.'):
-            if re.match(r'.*\.(a|so|dylib)$', f):
-                install(f, prefix.lib)
+        install('libceed.%s' % dso_suffix, prefix.lib)
+        filter_file('^prefix=.*$', 'prefix=%s' % prefix, 'ceed.pc')
+        filter_file('^includedir=\$\{prefix\}$',
+                    'includedir=${prefix}/include', 'ceed.pc')
+        filter_file('^libdir=\$\{prefix\}$', 'libdir=${prefix}/lib', 'ceed.pc')
+        filter_file('Version:.*$', 'Version: 0.1', 'ceed.pc')
         mkdirp(prefix.lib.pkgconfig)
         install('ceed.pc', prefix.lib.pkgconfig)
