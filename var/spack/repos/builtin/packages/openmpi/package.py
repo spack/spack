@@ -65,14 +65,16 @@ def _mxm_dir():
 
 
 class Openmpi(AutotoolsPackage):
-    """The Open MPI Project is an open source Message Passing Interface
-       implementation that is developed and maintained by a consortium
-       of academic, research, and industry partners. Open MPI is
-       therefore able to combine the expertise, technologies, and
-       resources from all across the High Performance Computing
-       community in order to build the best MPI library available.
-       Open MPI offers advantages for system and software vendors,
-       application developers and computer science researchers.
+    """An open source Message Passing Interface implementation.
+
+    The Open MPI Project is an open source Message Passing Interface
+    implementation that is developed and maintained by a consortium
+    of academic, research, and industry partners. Open MPI is
+    therefore able to combine the expertise, technologies, and
+    resources from all across the High Performance Computing
+    community in order to build the best MPI library available.
+    Open MPI offers advantages for system and software vendors,
+    application developers and computer science researchers.
     """
 
     homepage = "http://www.open-mpi.org"
@@ -204,6 +206,12 @@ class Openmpi(AutotoolsPackage):
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
+    # ompi@:3.0.0 doesn't support newer hwloc releases:
+    # "configure: error: OMPI does not currently support hwloc v2 API"
+    # Future ompi releases may support it, needs to be verified.
+    # See #7483 for context.
+    depends_on('hwloc@:1.999')
+
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
