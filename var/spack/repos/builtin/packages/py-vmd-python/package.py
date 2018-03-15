@@ -38,4 +38,3 @@ class PyVmdPython(PythonPackage):
     depends_on('tcl')
     depends_on('netcdf')
     depends_on('expat')
-
