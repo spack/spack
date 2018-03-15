@@ -143,10 +143,11 @@ class IntelPackage(PackageBase):
     @property
     def intel64_int_suffix(self):
         '''Provide the suffix for Intel library names to match a client
-        application's int size.
+        application's desired int size, conveyed by the active spec variant.
+        The possible suffixes and their meanings are:
 
-            ilp64: all of int, long, and pointer are 64 bit.
-             lp64: only long and pointer are 64 bit; int will be 32bit.
+          ``ilp64``  all of int, long, and pointer are 64 bit,
+          `` lp64``  only long and pointer are 64 bit; int will be 32bit.
         '''
         if '+ilp64' in self.spec:
             return 'ilp64'
