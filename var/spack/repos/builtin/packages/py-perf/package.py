@@ -25,20 +25,15 @@
 from spack import *
 
 
-class PyPerformance(PythonPackage):
-    """The performance project is intended to be an authoritative source
-    of benchmarks for all Python implementations.
-
-    The focus is on real-world benchmarks, rather than synthetic benchmarks,
-    using whole applications when possible.
+class PyPerf(PythonPackage):
+    """The Python perf module is a toolkit to write, run and
+    analyze benchmarks.
     """
 
-    homepage = 'http://pyperformance.readthedocs.io/'
-    url = 'https://github.com/python/performance/archive/0.6.1.tar.gz'
+    homepage = "https://pypi.python.org/pypi/perf"
+    url = "https://github.com/vstinner/perf/archive/1.5.1.tar.gz"
 
-    version('0.6.1', '95477b584a284582b66c922a5335b427')
-    version('0.6.0', 'b93661e07668fa0b461236dca164eedf')
+    version('1.5.1', 'e3dc532fdbaf44f2d921556164bd74e5')
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-perf', type=('build', 'run'))
