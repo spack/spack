@@ -108,6 +108,9 @@ class Python(AutotoolsPackage):
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
 
+    # An in-source build with --enable-optimizations fails for python@3.X
+    build_directory = 'spack-build'
+
     @when('@2.7:2.8,3.4:')
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
