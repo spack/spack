@@ -85,9 +85,10 @@ class Occa(Package):
             # Run-time compiler flags:
             s_env.set('OCCA_CXXFLAGS', ' '.join(cxxflags))
         if '+cuda' in spec:
+            cuda_dir = spec['cuda'].prefix
             # Run-time CUDA compiler:
             s_env.set('OCCA_CUDA_COMPILER',
-                      join_path(cuda_path, 'bin', 'nvcc'))
+                      join_path(cuda_dir, 'bin', 'nvcc'))
             # Set OCCA_CUDA_COMPILER_FLAGS?
         # TODO: export other OCCA_* variables.
 
