@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Ghost(CMakePackage,CudaPackage):
+class Ghost(CMakePackage, CudaPackage):
     """GHOST: a General, Hybrid and Optimized Sparse Toolkit.
        This library provides highly optimized building blocks for implementing
        sparse iterative eigenvalue and linear solvers multi- and manycore
