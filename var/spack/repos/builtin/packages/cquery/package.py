@@ -73,7 +73,9 @@ class Cquery(WafPackage):
             resource(name=name,
                      git=resources[name]['url'],
                      commit=commit,
-                     placement='third_party/{0}'.format(name))
+                     placement='{0}'.format(name),
+                     destination='third_party'
+                     )
 
     depends_on('llvm@3.3:+clang')
 
