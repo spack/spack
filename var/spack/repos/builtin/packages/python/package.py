@@ -84,6 +84,8 @@ class Python(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
+    variant('dbm', default=True, description='Provide support for dbm')
+
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -92,6 +94,7 @@ class Python(AutotoolsPackage):
     depends_on("zlib")
     depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
+    depends_on("gdbm", when='+dbm')
 
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
