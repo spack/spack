@@ -287,7 +287,7 @@ class Openmpi(AutotoolsPackage):
         # TODO: Add PMIx support for openmpi(>2.0.0)
         if not activated:
             return '--without-slurm'
-        elif self.stisfies('@1.5.4:') and '+pmi' not in self.spec:
+        elif self.satisfies('@1.5.4:') and '+pmi' not in self.spec:
             raise SpackError(
                 "+pmi is required for openmpi(>=1.5.5) to work with SLURM.")
         else:
