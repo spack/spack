@@ -33,21 +33,33 @@ class Libceed(Package):
 
     version('develop', git='https://github.com/CEED/libCEED.git',
             branch='master')
+    # FIXME: replace this version with '0.2' when it is tagged.
+    version('0.2b', git='https://github.com/CEED/libCEED.git',
+            commit='c7d9a6b63ee59ce697822a689e452e9abab4d0cb')
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
     variant('occa', default=True, description='Enable OCCA backends')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('debug', default=False, description='Enable debug build')
 
-    depends_on('occa@develop+cuda', when='+occa+cuda')
-    depends_on('occa@develop~cuda', when='+occa~cuda')
+    depends_on('occa@48cf18a,develop', when='+occa')
+    depends_on('occa@develop', when='@develop+occa')
+    depends_on('occa+cuda', when='+occa+cuda')
+    depends_on('occa~cuda', when='+occa~cuda')
 
     phases = ['build', 'install']
 
     def build(self, spec, prefix):
         # Note: The occa package exports OCCA_DIR in the environment
-        make('all')
+
+        # Note: FC is overwritten in the Makefile, so we need to force set the
+        # value on the command line.
+        makeopts = ['FC=%s' % env['FC'], 'V=1']
+        if '~debug' in spec:
+            makeopts += ['NDEBUG=1']
+        make(*makeopts)
         if self.run_tests:
-            make('prove')
+            make('prove', *makeopts, parallel=False)
 
     def install(self, spec, prefix):
         make('install', 'prefix=%s' % prefix, parallel=False)
