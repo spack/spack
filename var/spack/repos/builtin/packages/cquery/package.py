@@ -81,7 +81,3 @@ class Cquery(WafPackage):
 
     def configure_args(self):
         return ['--llvm-config=llvm-config']
-
-
-    # FIXME: Override configure_args(), build_args(),
-    # or install_args() if necessary.
