@@ -77,7 +77,7 @@ class Fenics(CMakePackage):
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5+hl', when='+hdf5')
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
     depends_on('scotch+mpi~metis', when='+scotch+mpi')

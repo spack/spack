@@ -22,33 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Postgresql(AutotoolsPackage):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class Cistem(AutotoolsPackage):
+    """cisTEM is user-friendly software to process cryo-EM images of
+       macromolecular complexes and obtain high-resolution 3D reconstructions
+       from them."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://cistem.org/"
+    url      = "https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0"
 
-    version('10.3', '506498796a314c549388cafb3d5c717a')
-    version('10.2', 'e97c3cc72bdf661441f29069299b260a')
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('1.0.0', '479f395b30ad630df3cbba9c56eb29c2')
 
-    depends_on('openssl')
-    depends_on('readline')
-
-    variant('threadsafe', default=False, description='Build with thread safe.')
-
-    def configure_arg(self):
-        config_args = ["--with-openssl"]
-        if '+threadsafe' in self.spec:
-            config_args.append("--enable-thread-safety")
-        else:
-            config_args.append("--disable-thread-safety")
-
-        return config_args
+    depends_on('wx@3.0.2')
+    depends_on('fftw')

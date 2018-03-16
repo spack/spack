@@ -31,7 +31,7 @@ class Xterm(AutotoolsPackage):
     that can't use the window system directly."""
 
     homepage = "http://invisible-island.net/xterm/"
-    url      = "http://invisible-island.net/xterm/xterm-327.tgz"
+    url      = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
 
     version('327', '3c32e931adcad44e64e57892e75d9e02')
 

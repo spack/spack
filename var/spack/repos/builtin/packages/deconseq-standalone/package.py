@@ -23,43 +23,38 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os.path
 
 
-class Astral(Package):
-    """ASTRAL is a tool for estimating an unrooted species tree given a set of
-       unrooted gene trees."""
+class DeconseqStandalone(Package):
+    """The DeconSeq tool can be used to automatically detect and efficiently
+    remove sequence contaminations from genomic and metagenomic datasets."""
 
-    homepage = "https://github.com/smirarab/ASTRAL"
-    url      = "https://github.com/smirarab/ASTRAL/archive/v4.10.7.tar.gz"
+    homepage = "http://deconseq.sourceforge.net"
+    url      = "https://sourceforge.net/projects/deconseq/files/standalone/deconseq-standalone-0.4.3.tar.gz"
 
-    version('4.10.7', '38c81020570254e3f5c75d6c3c27fc6d')
+    version('0.4.3', 'cb3fddb90e584d89fd9c2b6b8f2e20a2')
 
-    depends_on('java', type=('build', 'run'))
-    depends_on('zip', type='build')
-
-    phases = ['build', 'install']
-
-    def build(self, spec, prefix):
-        make = Executable('./make.sh')
-        make()
+    depends_on('perl@5:')
 
     def install(self, spec, prefix):
+
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl', 'deconseq.pl')
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl', 'splitFasta.pl')
+
         mkdirp(prefix.bin)
-        install_tree('lib', prefix.tools.lib)
-        jar_file = 'astral.{v}.jar'.format(v=self.version)
-        install(jar_file, prefix.tools)
+        install('bwa64', prefix.bin)
+        install('bwaMAC', prefix.bin)
+        install('deconseq.pl', prefix.bin)
+        install('splitFasta.pl', prefix.bin)
+        install('DeconSeqConfig.pm', prefix)
 
-        script_sh = join_path(os.path.dirname(__file__), "astral.sh")
-        script = prefix.bin.astral
-        install(script_sh, script)
-        set_executable(script)
-
-        java = self.spec['java'].prefix.bin.java
-        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
-        filter_file('^java', java, script, **kwargs)
-        filter_file('astral.jar', join_path(prefix.tools, jar_file),
-                    script, **kwargs)
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix.bin, 'bwa64'))
+        chmod('+x', join_path(prefix.bin, 'bwaMAC'))
+        chmod('+x', join_path(prefix.bin, 'deconseq.pl'))
+        chmod('+x', join_path(prefix.bin, 'splitFasta.pl'))
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('ASTRAL_HOME', self.prefix.tools)
+        run_env.prepend_path('PERL5LIB', prefix)
