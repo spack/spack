@@ -55,20 +55,20 @@ class Ceed(Package):
     # TODO: Add 'int64' variant?
 
     # LibCEED
-    # FIXME: Make a v0.2 release of libceed from the current master?
-    depends_on('libceed@0.1~cuda', when='@1.0.0~cuda')
-    depends_on('libceed@0.1+cuda', when='@1.0.0+cuda')
-    depends_on('libceed@0.1+occa', when='@1.0.0+occa')
-    depends_on('libceed@0.1~occa', when='@1.0.0~occa')
+    # FIXME: Replace the '0.2b' version with '0.2' when it is tagged.
+    depends_on('libceed@0.2b~cuda', when='@1.0.0~cuda')
+    depends_on('libceed@0.2b+cuda', when='@1.0.0+cuda')
+    depends_on('libceed@0.2b+occa', when='@1.0.0+occa')
+    depends_on('libceed@0.2b~occa', when='@1.0.0~occa')
     # TODO:
     # depends_on('libceed@0.1+examples-mfem', when='@1.0.0+mfem')
     # depends_on('libceed@0.1+examples-nek', when='@1.0.0+nek')
     # depends_on('libceed@0.1+examples-petsc', when='@1.0.0+petsc')
 
     # OCCA
-    # FIXME: pick a fixed occa version:
-    depends_on('occa@develop~cuda', when='@1.0.0+occa~cuda')
-    depends_on('occa@develop+cuda', when='@1.0.0+occa+cuda')
+    # FIXME: Replace the '48cf18a' version with tagged version?
+    depends_on('occa@48cf18a~cuda', when='@1.0.0+occa~cuda')
+    depends_on('occa@48cf18a+cuda', when='@1.0.0+occa+cuda')
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     depends_on('nek5000@17.0', when='@1.0.0+nek')
