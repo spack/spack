@@ -6,8 +6,27 @@ Notes on Intel Packages
 Installation and path handling as implemented in ./intel.py
 -------------------------------------------------------------------------------
 
-Path handling, issues with ``prefix``
---------------------------------------
+
+***************************************************************************
+Prefix differences between Spack-external and Spack-internal installations
+***************************************************************************
+
+
+Problem summary
+~~~~~~~~~~~~~~~~
+
+For Intel packages that were installed external to Spack, ``self.prefix`` will
+be a *component-specific* path (e.g. to an MKL-specific dir hierarchy), whereas
+for a package installed by Spack itself, ``self.prefix`` will be a
+*vendor-level* path that holds one or more components (or parts thereof), and
+must be further qualified down to a particular desired component.
+
+It is possible that a similar conceptual difference is inherent to other
+package families that use a common vendor-style installer.
+
+
+Description
+~~~~~~~~~~~~
 
 Spack makes packages available through two routes: 
 
@@ -63,8 +82,33 @@ was taken while route B was the only one that was coded in Spack:
 https://groups.google.com/d/msg/spack/x28qlmqPAys/Ewx6220uAgAJ
 
 
+Solution
+~~~~~~~~~
+
+Introduce a series of functions which will return the appropriate
+directory levels, regardless of the route under which .prefix has been set:
+
+==================  ============================================================
+Function            Example return values
+------------------  ------------------------------------------------------------
+product_dir()       /opt/intel/compilers_and_libraries_2018.1.163
+                    {self.prefix}/compilers_and_libraries_2018.1.163
+------------------  ------------------------------------------------------------
+compilers_dir()     {product_dir}/linux
+------------------  ------------------------------------------------------------
+component_dir()     {compilers_dir}/mkl
+component_bin_dir() {compilers_dir}/mkl/bin
+component_lib_dir() {compilers_dir}/mkl/lib/intel64
+------------------  ------------------------------------------------------------
+component_dir()     {compilers_dir}/mpi
+component_bin_dir() {compilers_dir}/mpi/intel64/bin
+component_lib_dir() {compilers_dir}/mpi/intel64/lib
+==================  ============================================================
+
+
+*********************************
 Analysis of directory layouts
-------------------------------
+*********************************
 
 Let's look at some sample directory layouts, using ``ls -lF``,
 but focusing on names and symlinks only.
@@ -193,9 +237,9 @@ through the subordinate vars files of the components.
 
 
 
--------------------
+*******************
 Installation stage
--------------------
+*******************
 
 Installation model
 ~~~~~~~~~~~~~~~~~~~~
@@ -348,9 +392,128 @@ for reference:
     ...
 
 
---------------
+********************
+MPI linkage
+********************
+
+
+Library selection
+~~~~~~~~~~~~~~~~~~~~~
+
+In the Spack code so far, the library selections for MPI are:
+
+::
+
+        libnames = ['libmpifort', 'libmpi']
+        if 'cxx' in self.spec.last_query.extra_parameters:
+            libnames = ['libmpicxx'] + libnames
+        return find_libraries(libnames,
+                              root=self.component_lib_dir(component='mpi'),
+                              shared=True, recursive=False)
+
+The problem is that there are multiple library versions under ``component_lib_dir``::
+
+    $ cd $I_MPI_ROOT 
+    $ find . -name libmpi.so | sort
+    ./intel64/lib/debug/libmpi.so
+    ./intel64/lib/debug_mt/libmpi.so
+    ./intel64/lib/libmpi.so
+    ./intel64/lib/release/libmpi.so
+    ./intel64/lib/release_mt/libmpi.so
+
+"mt" refers to multi-threading, not in the explicit sense but in the sense of being thread-safe::
+
+    $ mpiifort -help | grep mt
+       -mt_mpi         link the thread safe version of the Intel(R) MPI Library
+
+Well, why should we not inspect what the canonical script does?  The wrapper
+has its own hardcoded "prefix=..." and can thus tell us what it will do, from a
+*wiped environment* no less!::
+
+    $ env - intel64/bin/mpiicc -show hello.c | ld-unwrap-args 
+    icc 'hello.c' \
+        -I/opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/intel64/include \
+        -L/opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/intel64/lib/release_mt \
+        -L/opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/intel64/lib \
+        -Xlinker --enable-new-dtags \
+        -Xlinker -rpath=/opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/intel64/lib/release_mt \
+        -Xlinker -rpath=/opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/intel64/lib \
+        -Xlinker -rpath=/opt/intel/mpi-rt/2017.0.0/intel64/lib/release_mt \
+        -Xlinker -rpath=/opt/intel/mpi-rt/2017.0.0/intel64/lib \
+        -lmpifort \
+        -lmpi \
+        -lmpigi \
+        -ldl \
+        -lrt \
+        -lpthread
+
+
+MPI Wrapper options
+~~~~~~~~~~~~~~~~~~~~~
+
+For reference, here's the wrapper's builtin help output::
+
+    $ mpiifort -help
+    Simple script to compile and/or link MPI programs.
+    Usage: mpiifort [options] <files>
+    ----------------------------------------------------------------------------
+    The following options are supported:
+       -fc=<name> | -f90=<name>
+                       specify a FORTRAN compiler name: i.e. -fc=ifort
+       -echo           print the scripts during their execution
+       -show           show command lines without real calling
+       -config=<name>  specify a configuration file: i.e. -config=ifort for mpif90-ifort.conf file
+       -v              print version info of mpiifort and its native compiler
+       -profile=<name> specify a profile configuration file (an MPI profiling
+                       library): i.e. -profile=myprofile for the myprofile.cfg file.
+                       As a special case, lib<name>.so or lib<name>.a may be used
+                       if the library is found
+       -check_mpi      link against the Intel(R) Trace Collector (-profile=vtmc).
+       -static_mpi     link the Intel(R) MPI Library statically
+       -mt_mpi         link the thread safe version of the Intel(R) MPI Library
+       -ilp64          link the ILP64 support of the Intel(R) MPI Library
+       -no_ilp64       disable ILP64 support explicitly
+       -fast           the same as -static_mpi + pass -fast option to a compiler.
+       -t or -trace
+                       link against the Intel(R) Trace Collector
+       -trace-imbalance
+                       link against the Intel(R) Trace Collector imbalance library
+                       (-profile=vtim)
+       -dynamic_log    link against the Intel(R) Trace Collector dynamically
+       -static         use static linkage method
+       -nostrip        turn off the debug information stripping during static linking
+       -O              enable optimization
+       -link_mpi=<name>
+                       link against the specified version of the Intel(R) MPI Library
+    All other options will be passed to the compiler without changing.
+    ----------------------------------------------------------------------------
+    The following environment variables are used:
+       I_MPI_ROOT      the Intel(R) MPI Library installation directory path
+       I_MPI_F90 or MPICH_F90
+                       the path/name of the underlying compiler to be used
+       I_MPI_FC_PROFILE or I_MPI_F90_PROFILE or MPIF90_PROFILE
+                       the name of profile file (without extension)
+       I_MPI_COMPILER_CONFIG_DIR
+                       the folder which contains configuration files *.conf
+       I_MPI_TRACE_PROFILE
+                       specify a default profile for the -trace option
+       I_MPI_CHECK_PROFILE
+                       specify a default profile for the -check_mpi option
+       I_MPI_CHECK_COMPILER
+                       enable compiler setup checks
+       I_MPI_LINK      specify the version of the Intel(R) MPI Library
+       I_MPI_DEBUG_INFO_STRIP
+                       turn on/off the debug information stripping during static linking
+       I_MPI_FCFLAGS
+                       special flags needed for compilation
+       I_MPI_LDFLAGS 
+                       special flags needed for linking
+    ----------------------------------------------------------------------------
+
+
+**************
 macOS support
---------------
+**************
 
 - On macOS, the Spack methods here only include support to integrate an
   externally installed MKL.
