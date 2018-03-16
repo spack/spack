@@ -40,10 +40,10 @@ class Examinimd(MakefilePackage):
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "https://github.com/ECP-copa/ExaMiniMD"
-    url      = "https://github.com/ECP-copa/ExaMiniMD/archive/master.zip"
+    url      = "https://github.com/ECP-copa/ExaMiniMD/archive/1.0.zip"
 
+    version('1.0', '5db7679a4b9296c0cc3b2ff3a7e8f38f')
     version('develop', git='https://github.com/ECP-copa/ExaMiniMD', branch='master')
-    # TODO: Add proper tagged release when available
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')

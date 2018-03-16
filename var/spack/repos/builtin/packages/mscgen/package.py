@@ -22,33 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Postgresql(AutotoolsPackage):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class Mscgen(AutotoolsPackage):
+    """Mscgen is a small program that parses Message Sequence Chart descriptions
+    and produces PNG, SVG, EPS or server side image maps (ismaps) as the
+    output."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "http://www.mcternan.me.uk/mscgen/"
+    url      = "http://www.mcternan.me.uk/mscgen/software/mscgen-src-0.20.tar.gz"
 
-    version('10.3', '506498796a314c549388cafb3d5c717a')
-    version('10.2', 'e97c3cc72bdf661441f29069299b260a')
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('0.20', '65c90fb5150d7176b65b793f0faa7377')
 
-    depends_on('openssl')
-    depends_on('readline')
-
-    variant('threadsafe', default=False, description='Build with thread safe.')
-
-    def configure_arg(self):
-        config_args = ["--with-openssl"]
-        if '+threadsafe' in self.spec:
-            config_args.append("--enable-thread-safety")
-        else:
-            config_args.append("--disable-thread-safety")
-
-        return config_args
+    depends_on('flex')
+    depends_on('bison')
+    depends_on('pkgconf')
+    depends_on('libgd')
