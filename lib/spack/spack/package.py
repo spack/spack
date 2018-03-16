@@ -627,31 +627,40 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         super(PackageBase, self).__init__()
 
-    def possible_dependencies(self, transitive=True, visited=None):
-        """Return set of possible transitive dependencies of this package.
+    def possible_dependencies(
+            self, transitive=True, expand_virtuals=True, visited=None):
+        """Return set of possible dependencies of this package.
+
+        Note: the set returned *includes* the package itself.
 
         Args:
-            transitive (bool): include all transitive dependencies if True,
+            transitive (bool): return all transitive dependencies if True,
                 only direct dependencies if False.
+            expand_virtuals (bool): expand virtual dependencies into all
+                possible implementations.
+            visited (set): set of names of dependencies visited so far.
         """
         if visited is None:
-            visited = set()
+            visited = set([self.name])
 
-        visited.add(self.name)
-        for name in self.dependencies:
-            spec = spack.spec.Spec(name)
-
-            if not spec.virtual:
-                visited.add(name)
-                if transitive:
-                    pkg = spack.repo.get(name)
-                    pkg.possible_dependencies(transitive, visited)
+        for i, name in enumerate(self.dependencies):
+            if spack.repo.is_virtual(name):
+                if expand_virtuals:
+                    providers = spack.repo.providers_for(name)
+                    dep_names = [spec.name for spec in providers]
+                else:
+                    visited.add(name)
+                    continue
             else:
-                for provider in spack.repo.providers_for(spec):
-                    visited.add(provider.name)
+                dep_names = [name]
+
+            for dep_name in dep_names:
+                if dep_name not in visited:
+                    visited.add(dep_name)
                     if transitive:
-                        pkg = spack.repo.get(provider.name)
-                        pkg.possible_dependencies(transitive, visited)
+                        pkg = spack.repo.get(dep_name)
+                        pkg.possible_dependencies(
+                            transitive, expand_virtuals, visited)
 
         return visited
 
@@ -1288,7 +1297,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tty.msg('Installing %s from binary cache' % self.name)
         tarball = binary_distribution.download_tarball(binary_spec)
         binary_distribution.extract_tarball(
-            binary_spec, tarball, allow_root=False, force=False)
+            binary_spec, tarball, allow_root=False,
+            unsigned=False, force=False)
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 

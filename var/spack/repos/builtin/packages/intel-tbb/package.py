@@ -56,6 +56,9 @@ class IntelTbb(Package):
 
     provides('tbb')
 
+    variant('shared', default=True,
+            description='Builds a shared version of TBB libraries')
+
     # include patch for gcc rtm options
     patch("tbb_gcc_rtm_key.patch", level=0)
 
@@ -102,11 +105,20 @@ class IntelTbb(Package):
         mkdirp(prefix)
         mkdirp(prefix.lib)
 
+        make_opts = []
+
+        # Static builds of TBB are enabled by including 'big_iron.inc' file
+        # See caveats in 'big_iron.inc' for limits on using TBB statically
+        # Lore states this file must be handed to make before other options
+        if '+shared' not in self.spec:
+            make_opts.append("extra_inc=big_iron.inc")
+
         #
         # tbb does not have a configure script or make install target
         # we simply call make, and try to put the pieces together
         #
-        make("compiler=%s"  % (tbb_compiler))
+        make_opts.append("compiler={0}".format(tbb_compiler))
+        make(*make_opts)
 
         # install headers to {prefix}/include
         install_tree('include', prefix.include)

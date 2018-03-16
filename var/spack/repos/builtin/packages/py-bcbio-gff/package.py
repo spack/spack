@@ -25,30 +25,15 @@
 from spack import *
 
 
-class Postgresql(AutotoolsPackage):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class PyBcbioGff(PythonPackage):
+    """Read and write Generic Feature Format (GFF) with Biopython
+    integration."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://pypi.python.org/pypi/bcbio-gff/0.6.2"
+    url      = "https://pypi.io/packages/source/b/bcbio-gff/bcbio-gff-0.6.2.tar.gz"
 
-    version('10.3', '506498796a314c549388cafb3d5c717a')
-    version('10.2', 'e97c3cc72bdf661441f29069299b260a')
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('0.6.2', 'd5aae8b125cdad4291f15bec20cfb0ef')
 
-    depends_on('openssl')
-    depends_on('readline')
-
-    variant('threadsafe', default=False, description='Build with thread safe.')
-
-    def configure_arg(self):
-        config_args = ["--with-openssl"]
-        if '+threadsafe' in self.spec:
-            config_args.append("--enable-thread-safety")
-        else:
-            config_args.append("--disable-thread-safety")
-
-        return config_args
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-biopython',  type=('build', 'run'))

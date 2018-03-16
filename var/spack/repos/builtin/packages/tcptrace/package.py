@@ -23,32 +23,37 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from os.path import join
 
 
-class Postgresql(AutotoolsPackage):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class Tcptrace(AutotoolsPackage):
+    """tcptrace is a tool written by Shawn Ostermann at Ohio University for
+       analysis of TCP dump files. It can take as input the files produced by
+       several popular packet-capture programs, including tcpdump, snoop,
+       etherpeek, HP Net Metrix, and WinDump."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "http://www.tcptrace.org/"
+    url      = "http://www.tcptrace.org/download/tcptrace-6.6.7.tar.gz"
 
-    version('10.3', '506498796a314c549388cafb3d5c717a')
-    version('10.2', 'e97c3cc72bdf661441f29069299b260a')
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('6.6.7', '68128dc1817b866475e2f048e158f5b9')
 
-    depends_on('openssl')
-    depends_on('readline')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('libpcap')
 
-    variant('threadsafe', default=False, description='Build with thread safe.')
+    # Fixes incorrect API access in libpcap.
+    # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=545595
+    patch('tcpdump.patch')
 
-    def configure_arg(self):
-        config_args = ["--with-openssl"]
-        if '+threadsafe' in self.spec:
-            config_args.append("--enable-thread-safety")
-        else:
-            config_args.append("--disable-thread-safety")
+    @run_after('configure')
+    def patch_makefile(self):
+        # see https://github.com/blitz/tcptrace/blob/master/README.linux
+        Makefile = FileFilter('Makefile')
+        Makefile.filter(
+            "PCAP_LDLIBS = -lpcap",
+            "DEFINES += -D_BSD_SOURCE\nPCAP_LDLIBS = -lpcap")
 
-        return config_args
+    def install(self, spec, prefix):
+        # The build system has trouble creating directories
+        mkdirp(prefix.bin)
+        install('tcptrace', join(prefix.bin, 'tcptrace'))

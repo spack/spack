@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
 
 
@@ -42,6 +44,8 @@ class Tcl(AutotoolsPackage):
     version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f')
     version('8.5.19', '0e6426a4ca9401825fbc6ecf3d89a326')
 
+    extendable = True
+
     depends_on('zlib')
 
     configure_directory = 'unix'
@@ -49,8 +53,7 @@ class Tcl(AutotoolsPackage):
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        run_env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
-            self.spec.version.up_to(2))))
+        run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -63,3 +66,54 @@ class Tcl(AutotoolsPackage):
     def symlink_tclsh(self):
         with working_dir(self.prefix.bin):
             symlink('tclsh{0}'.format(self.version.up_to(2)), 'tclsh')
+
+    # ========================================================================
+    # Set up environment to make install easy for tcl extensions.
+    # ========================================================================
+
+    @property
+    def tcl_lib_dir(self):
+        """The Tcl version-specific library directory where all extensions are
+        installed."""
+        return 'lib'
+
+    @property
+    def tcl_builtin_lib_dir(self):
+        """The Tcl version-specific library directory where all builtin
+        extensions are installed."""
+        return join_path(self.tcl_lib_dir,
+                         'tcl{0}'.format(self.version.up_to(2)))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Set TCLLIBPATH to include the tcl-shipped directory for
+        extensions and any other tcl extension it depends on.
+        For further info see: https://wiki.tcl.tk/1787"""
+
+        # If we set TCLLIBPATH, we must also ensure that the corresponding
+        # tcl is found in the build environment. This to prevent cases
+        # where a system provided tcl is run against the standard libraries
+        # of a Spack built tcl. See issue #7128 that relates to python but
+        # it boils down to the same situation we have here.
+        spack_env.prepend_path('PATH', os.path.dirname(self.prefix.bin))
+
+        tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
+
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
+            if d.package.extends(self.spec):
+                tcl_paths.append(join_path(d.prefix, self.tcl_lib_dir))
+
+        # WARNING: paths in $TCLLIBPATH must be *space* separated,
+        # its value is meant to be a Tcl list, *not* an env list
+        # as explained here: https://wiki.tcl.tk/1787:
+        # "TCLLIBPATH is a Tcl list, not some platform-specific
+        # colon-separated or semi-colon separated format"
+        tcllibpath = ' '.join(tcl_paths)
+        spack_env.set('TCLLIBPATH', tcllibpath)
+
+        # For run time environment set only the path for
+        # dependent_spec and prepend it to TCLLIBPATH
+        if dependent_spec.package.extends(self.spec):
+            dependent_tcllibpath = join_path(dependent_spec.prefix,
+                                             self.tcl_lib_dir)
+            run_env.prepend_path('TCLLIBPATH', dependent_tcllibpath,
+                                 separator=' ')

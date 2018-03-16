@@ -23,8 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
+import llnl.util.lang
 import spack
 import spack.architecture
+
 from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
@@ -444,3 +446,22 @@ class TestConcretize(object):
         s._concrete = False
 
         assert not s.concrete
+
+    @pytest.mark.regression('7239')
+    def test_regression_issue_7239(self):
+        # Constructing a SpecBuildInterface from another SpecBuildInterface
+        # results in an inconsistent MRO
+
+        # Normal Spec
+        s = Spec('mpileaks')
+        s.concretize()
+
+        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+
+        # Spec wrapped in a build interface
+        build_interface = s['mpileaks']
+        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+
+        # Mimics asking the build interface from a build interface
+        build_interface = s['mpileaks']['mpileaks']
+        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
