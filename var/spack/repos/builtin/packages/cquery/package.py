@@ -73,11 +73,14 @@ class Cquery(WafPackage):
             resource(name=name,
                      git=resources[name]['url'],
                      commit=commit,
-                     placement='{0}'.format(name),
-                     destination='third_party'
+                     # destination='third_party/',
+                     placement='third_party/{0}/'.format(name),
                      )
 
     depends_on('llvm@3.3:+clang')
 
     def configure_args(self):
-        return ['--llvm-config=llvm-config']
+        return [
+            '--variant=system',
+            '--llvm-config=llvm-config'
+        ]
