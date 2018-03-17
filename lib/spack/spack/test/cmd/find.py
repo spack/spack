@@ -63,7 +63,7 @@ def test_query_arguments():
         unknown=False,
         explicit=False,
         implicit=False,
-        start_date="2018-02-23 14:36:00",
+        start_date="2018-02-23",
         end_date=None
     )
 

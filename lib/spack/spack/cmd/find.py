@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import datetime
 import sys
 
 import llnl.util.tty as tty
@@ -99,10 +100,10 @@ def setup_parser(subparser):
 
     subparser.add_argument(
         '--start-date',
-        help='earliest date of installation [YYYY-MM-DD HH:MM:SS]'
+        help='earliest date of installation [YYYY-MM-DD]'
     )
     subparser.add_argument(
-        '--end-date', help='latest date of installation [YYYY-MM-DD HH:MM:SS]'
+        '--end-date', help='latest date of installation [YYYY-MM-DD]'
     )
 
     arguments.add_common_arguments(subparser, ['constraint'])
@@ -128,7 +129,27 @@ def query_arguments(args):
     for attribute in ('start_date', 'end_date'):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = spack.database.str2datetime(date)
+            # Permits to have different, telescopic, time formats
+            time_formats = [
+                '%Y',
+                '%Y-%m',
+                '%Y-%m-%d',
+            ]
+            datetime_value = None
+            for time_fmt in time_formats:
+                try:
+                    datetime_value = datetime.datetime.strptime(
+                        date, time_fmt
+                    )
+                    break
+                except ValueError:
+                    pass
+
+            if datetime_value is None:
+                msg = 'date {0} does not match any valid format'.format(date)
+                raise ValueError(msg)
+
+            q_args[attribute] = datetime_value
 
     return q_args
 

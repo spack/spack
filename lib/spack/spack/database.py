@@ -40,6 +40,7 @@ filesystem.
 
 """
 import datetime
+import time
 import os
 import sys
 import socket
@@ -76,26 +77,10 @@ _db_lock_timeout = 60
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
 
-#: Time format used in database entries
-_time_format = '%Y-%m-%d %H:%M:%S'
 
-
-def _today():
-    """Returns ``datetime.today()`` in the correct time format"""
-    today = datetime.datetime.today()
-    return today.strftime(_time_format)
-
-
-def str2datetime(datetime_str):
-    """Parses a date string and return an appropriate datetime object
-
-    Args:
-        datetime_str (str): string with date and time
-
-    Returns:
-        Corresponding ``datetime`` object
-    """
-    return datetime.datetime.strptime(datetime_str, _time_format)
+def _now():
+    """Returns the time since the epoch"""
+    return time.time()
 
 
 def _autospec(function):
@@ -137,7 +122,7 @@ class InstallRecord(object):
                 whether or not this spec was explicitly installed,
                 or pulled-in as a dependency of something else
 
-            installation_datetime
+            installation_time
                 date and time of the installation
     """
 
@@ -147,8 +132,8 @@ class InstallRecord(object):
         self.installed = bool(installed)
         self.ref_count = ref_count
         self.explicit = kwargs.get('explicit', False)
-        self.installation_datetime = kwargs.get(
-            'installation_datetime', _today()
+        self.installation_time = kwargs.get(
+            'installation_time', _now()
         )
 
     def to_dict(self):
@@ -158,7 +143,7 @@ class InstallRecord(object):
             'installed': self.installed,
             'ref_count': self.ref_count,
             'explicit': self.explicit,
-            'installation_datetime': self.installation_datetime
+            'installation_time': self.installation_time
         }
 
     @classmethod
@@ -482,16 +467,16 @@ class Database(object):
                     tty.debug(
                         'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
                     explicit = True
-                    inst_datetime = _today()
+                    inst_time = _now()
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
                         if old_info is not None:
                             explicit = old_info.explicit
-                            inst_datetime = old_info.installation_datetime
+                            inst_time = old_info.installation_time
 
                     extra_args = {
                         'explicit': explicit,
-                        'installation_datetime': inst_datetime
+                        'installation_time': inst_time
                     }
                     self._add(spec, directory_layout, **extra_args)
 
@@ -526,7 +511,7 @@ class Database(object):
                                 'spec': entry.spec,
                                 'directory_layout': layout,
                                 'explicit': entry.explicit,
-                                'installation_datetime': entry.installation_datetime  # noqa: E501
+                                'installation_time': entry.installation_time  # noqa: E501
                             }
                             self._add(**kwargs)
                             processed_specs.add(entry.spec)
@@ -647,7 +632,7 @@ class Database(object):
                     pulled-in as a dependency of a user requested spec
                     it's considered implicit.
 
-                installation_datetime
+                installation_time
                     Date and time of installation
 
         """
@@ -657,8 +642,8 @@ class Database(object):
 
         # Retrieve optional arguments
         explicit = kwargs.get('explicit', False)
-        installation_datetime = kwargs.get(
-            'installation_datetime', _today()
+        installation_time = kwargs.get(
+            'installation_time', _now()
         )
 
         for dep in spec.dependencies(_tracked_deps):
@@ -666,7 +651,7 @@ class Database(object):
             if dkey not in self._data:
                 extra_args = {
                     'explicit': False,
-                    'installation_datetime': installation_datetime
+                    'installation_time': installation_time
                 }
                 self._add(dep, directory_layout, **extra_args)
 
@@ -688,7 +673,7 @@ class Database(object):
             new_spec = spec.copy(deps=False)
             extra_args = {
                 'explicit': explicit,
-                'installation_datetime': installation_datetime
+                'installation_time': installation_time
             }
             self._data[key] = InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
@@ -940,7 +925,9 @@ class Database(object):
                         rec.spec.name) != known:
                     continue
 
-                inst_date = str2datetime(rec.installation_datetime)
+                inst_date = datetime.datetime.fromtimestamp(
+                    rec.installation_time
+                )
                 if not (start_date < inst_date < end_date):
                     continue
 
