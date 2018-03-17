@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import shutil
 
 
 class Mfem(Package):
@@ -377,6 +378,16 @@ class Mfem(Package):
         # TODO: The way the examples and miniapps are being installed is not
         # perfect. For example, the makefiles do not work.
 
+        install_em = ('+examples' in spec) or ('+miniapps' in spec)
+        if install_em and ('+shared' in spec):
+            make('examples/clean', 'miniapps/clean')
+            # This is a hack to get the examples and miniapps to link with the
+            # installed shared mfem library:
+            with working_dir('config'):
+                os.rename('config.mk', 'config.mk.orig')
+                shutil.copyfile(str(self.config_mk), 'config.mk')
+                shutil.copystat('config.mk.orig', 'config.mk')
+
         if '+examples' in spec:
             make('examples')
             install_tree('examples', join_path(prefix, 'examples'))
@@ -385,7 +396,7 @@ class Mfem(Package):
             make('miniapps')
             install_tree('miniapps', join_path(prefix, 'miniapps'))
 
-        if ('+examples' in spec) or ('+miniapps' in spec):
+        if install_em:
             install_tree('data', join_path(prefix, 'data'))
 
     @property

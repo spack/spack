@@ -40,7 +40,9 @@ class Occa(Package):
     homepage = "http://libocca.org"
 
     version('develop', git='https://github.com/libocca/occa.git')
-    # FIXME: Replace this version with tagged version?
+    # FIXME: Replace these hash-versions with tagged version?
+    version('197e34d', git='https://github.com/libocca/occa.git',
+            commit='197e34dda633277a40485353835b0548a40377a3')
     version('48cf18a', git='https://github.com/libocca/occa.git',
             commit='48cf18af79da6463074b8757b923f7ad1e6a5174')
     version('0.2', git='https://github.com/libocca/occa.git', tag='0.2')
@@ -60,6 +62,9 @@ class Occa(Package):
 
     depends_on('cuda', when='+cuda')
 
+    conflicts('%gcc@6:', when='^cuda@:8')
+    conflicts('%gcc@7:', when='^cuda@:9')
+
     def install(self, spec, prefix):
         # The build environment is set by the 'setup_environment' method.
 
@@ -70,10 +75,10 @@ class Occa(Package):
                 shutil.copytree(file, dest)
             else:
                 shutil.copy2(file, dest)
-        make('-C', prefix, 'CC=%s' % env['CC'])
+        make('-C', prefix)
 
         if self.run_tests:
-            make('-C', prefix, 'test', 'CC=%s' % env['CC'], parallel=False)
+            make('-C', prefix, 'test', parallel=False)
 
     def _setup_rt_env(self, s_env):
         spec = self.spec
@@ -114,10 +119,11 @@ class Occa(Package):
 
         if '+cuda' in spec:
             cuda_dir = spec['cuda'].prefix
+            cuda_libs_list = ['libcuda', 'libcudart', 'libOpenCL']
+            cuda_libs = find_libraries(cuda_libs_list, cuda_dir, shared=True,
+                                       recursive=True)
             spack_env.set('OCCA_INCLUDE_PATH', cuda_dir.include)
-            spack_env.set('OCCA_LIBRARY_PATH',
-                          join_path(cuda_dir, 'lib*') + ':' +
-                          join_path(cuda_dir, 'lib*/stubs'))
+            spack_env.set('OCCA_LIBRARY_PATH', ':'.join(cuda_libs.directories))
         else:
             spack_env.set('OCCA_CUDA_ENABLED', '0')
 

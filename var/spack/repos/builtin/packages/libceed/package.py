@@ -33,7 +33,9 @@ class Libceed(Package):
 
     version('develop', git='https://github.com/CEED/libCEED.git',
             branch='master')
-    # FIXME: replace this version with '0.2' when it is tagged.
+    # FIXME: replace all '0.2*' versions with '0.2' when it is tagged.
+    version('0.2b2', git='https://github.com/CEED/libCEED.git',
+            commit='86fd388eb24c480f4b9de2865e7877baa8107da7')
     version('0.2b', git='https://github.com/CEED/libCEED.git',
             commit='c7d9a6b63ee59ce697822a689e452e9abab4d0cb')
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
@@ -42,7 +44,8 @@ class Libceed(Package):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('debug', default=False, description='Enable debug build')
 
-    depends_on('occa@48cf18a,develop', when='+occa')
+    # FIXME: replace the occa hash-version with a tagged version?
+    depends_on('occa@197e34d,develop', when='+occa')
     depends_on('occa@develop', when='@develop+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     depends_on('occa~cuda', when='+occa~cuda')
@@ -58,6 +61,7 @@ class Libceed(Package):
         if '~debug' in spec:
             makeopts += ['NDEBUG=1']
         make(*makeopts)
+
         if self.run_tests:
             make('prove', *makeopts, parallel=False)
 
