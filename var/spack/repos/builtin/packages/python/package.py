@@ -86,6 +86,11 @@ class Python(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
 
     variant('dbm', default=True, description='Provide support for dbm')
+    variant(
+        'optimizations',
+        default=False,
+        description='Enable expensive build-time optimizations, if available'
+    )
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -125,7 +130,6 @@ class Python(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        prefix = self.prefix
 
         # TODO: The '--no-user-cfg' option for Python installation is only in
         # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
@@ -136,8 +140,6 @@ class Python(AutotoolsPackage):
                       'user configurations are present.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
-        spack_env.set('PYTHONHOME', prefix)
-        spack_env.set('PYTHONPATH', prefix)
         spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
     def configure_args(self):
@@ -152,7 +154,7 @@ class Python(AutotoolsPackage):
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
 
-        if '@2.7.13:2.8,3.5.3:' in spec:
+        if '@2.7.13:2.8,3.5.3:' in spec and '+optimizations' in spec:
             config_args.append('--enable-optimizations')
 
         if spec.satisfies('%gcc platform=darwin'):
