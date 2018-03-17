@@ -29,7 +29,7 @@ import re
 import functools
 import collections
 import inspect
-from datetime import datetime
+from datetime import datetime, timedelta
 from six import string_types
 
 # Ignore emacs backups when listing modules
@@ -440,6 +440,59 @@ def pretty_date(time, now=None):
         return "a year ago"
     else:
         return str(diff) + " years ago"
+
+
+def str2date(date_str):
+    """Parses a string representing a date and returns a datetime object.
+
+    Args:
+        date_str (str): string representing a date. This string might be
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            or be a *pretty date* (like ``yesterday`` or ``two months ago``)
+
+    Returns:
+        (datetime): datetime object corresponding to ``date_str``
+    """
+
+    pattern = {}
+
+    # datetime formats
+    pattern[re.compile('^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile('^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m'
+    )
+    pattern[re.compile('^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m-%d'
+    )
+
+    # yesterday
+    callback = lambda x: datetime.now() - timedelta(days=1)
+    pattern[re.compile('^yesterday$')] = callback
+
+    # {n} days ago
+    n_days_regexp = re.compile('^(\d*) day[s]? ago')
+
+    def _n_days_ago(x):
+        ndays = n_days_regexp.search(x).group(1)
+        return datetime.now() - timedelta(days=int(ndays))
+
+    pattern[n_days_regexp] = _n_days_ago
+
+    # {n} weeks ago
+    n_weeks_regexp = re.compile('^(\d*) week[s]? ago')
+
+    def _n_weeks_ago(x):
+        nweeks = n_weeks_regexp.search(x).group(1)
+        return datetime.now() - timedelta(weeks=int(nweeks))
+
+    pattern[n_weeks_regexp] = _n_weeks_ago
+
+    for regexp, parser in pattern.items():
+        if bool(regexp.match(date_str)):
+            return parser(date_str)
+
+    msg = 'date {0} does not match any valid format'.format(date_str)
+    raise ValueError(msg)
 
 
 class RequiredAttributeError(ValueError):

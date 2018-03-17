@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import datetime
 import sys
 
 import llnl.util.tty as tty
+import llnl.util.lang
 import spack
 import spack.database
 import spack.cmd.common.arguments as arguments
@@ -129,27 +129,7 @@ def query_arguments(args):
     for attribute in ('start_date', 'end_date'):
         date = getattr(args, attribute)
         if date:
-            # Permits to have different, telescopic, time formats
-            time_formats = [
-                '%Y',
-                '%Y-%m',
-                '%Y-%m-%d',
-            ]
-            datetime_value = None
-            for time_fmt in time_formats:
-                try:
-                    datetime_value = datetime.datetime.strptime(
-                        date, time_fmt
-                    )
-                    break
-                except ValueError:
-                    pass
-
-            if datetime_value is None:
-                msg = 'date {0} does not match any valid format'.format(date)
-                raise ValueError(msg)
-
-            q_args[attribute] = datetime_value
+            q_args[attribute] = llnl.util.lang.str2date(date)
 
     return q_args
 
