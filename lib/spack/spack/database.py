@@ -115,26 +115,26 @@ class InstallRecord(object):
         path (str): path where the spec has been installed
         installed (bool): whether or not the spec is currently installed
         ref_count (int): number of specs that depend on this one
-
-        **kwargs: optional keyword arguments
-
-            explicit
-                whether or not this spec was explicitly installed,
-                or pulled-in as a dependency of something else
-
-            installation_time
-                date and time of the installation
+        explicit (bool, optional): whether or not this spec was explicitly
+            installed, or pulled-in as a dependency of something else
+        installation_time (time, optional): time of the installation
     """
 
-    def __init__(self, spec, path, installed, ref_count=0, **kwargs):
+    def __init__(
+            self,
+            spec,
+            path,
+            installed,
+            ref_count=0,
+            explicit=False,
+            installation_time=None
+    ):
         self.spec = spec
         self.path = str(path)
         self.installed = bool(installed)
         self.ref_count = ref_count
-        self.explicit = kwargs.get('explicit', False)
-        self.installation_time = kwargs.get(
-            'installation_time', _now()
-        )
+        self.explicit = explicit
+        self.installation_time = installation_time or _now()
 
     def to_dict(self):
         return {
@@ -829,7 +829,15 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(self, query_spec=any, **kwargs):
+    def query(
+            self,
+            query_spec=any,
+            known=any,
+            installed=True,
+            explicit=any,
+            start_date=None,
+            end_date=None
+    ):
         """Run a query on the database
 
         Args:
@@ -839,44 +847,29 @@ class Database(object):
                 database.  If it is a spec, we'll evaluate
                 ``spec.satisfies(query_spec)``
 
-            **kwargs: optional constraint arguments
+            known (bool or any, optional): Specs that are "known" are those
+                for which Spack can locate a ``package.py`` file -- i.e.,
+                Spack "knows" how to install them.  Specs that are unknown may
+                represent packages that existed in a previous version of
+                Spack, but have since either changed their name or
+                been removed
 
-                known
-                    Possible values: True, False, any
+            installed (bool or any, optional): Specs for which a prefix exists
+                are "installed". A spec that is NOT installed will be in the
+                database if some other spec depends on it but its installation
+                has gone away since Spack installed it.
 
-                    Specs that are "known" are those for which Spack can
-                    locate a ``package.py`` file -- i.e., Spack "knows" how to
-                    install them.  Specs that are unknown may represent
-                    packages that existed in a previous version of Spack, but
-                    have since either changed their name or been removed
+            explicit (bool or any, optional): A spec that was installed
+                following a specific user request is marked as explicit. If
+                instead it was pulled-in as a dependency of a user requested
+                spec it's considered implicit.
 
-                installed
-                    Possible values: True, False, any
+            start_date (datetime, optional): filters the query discarding
+                specs that have been installed before ``start_date``.
 
-                    Specs for which a prefix exists are "installed". A spec
-                    that is NOT installed will be in the database if some
-                    other spec depends on it but its installation has gone
-                    away since Spack installed it.
+            end_date (datetime, optional): filters the query discarding
+                specs that have been installed after ``end_date``.
 
-                explicit
-                    Possible values: True, False, any
-
-                    A spec that was installed following a specific user
-                    request is marked as explicit. If instead it was
-                    pulled-in as a dependency of a user requested spec
-                    it's considered implicit.
-
-                start_date
-                    date in format YYYY-MM-DD HH:MM:SS
-
-                    Filters the query discarding specs that have been
-                    installed before ``start_date``.
-
-                end_date
-                    date in format YYYY-MM-DD HH:MM:SS
-
-                    Filters the query discarding specs that have been
-                    installed after ``end_date``.
         Returns:
             list of specs that match the query
         """
@@ -897,22 +890,8 @@ class Database(object):
             # Abstract specs require more work -- currently we test
             # against everything.
             results = []
-
-            # Take care of managing the keyword arguments to the query
-            known = kwargs.pop('known', any)
-            installed = kwargs.pop('installed', True)
-            explicit = kwargs.pop('explicit', any)
-            start_date = kwargs.pop('start_date', datetime.datetime.min)
-            end_date = kwargs.pop('end_date', datetime.datetime.max)
-
-            # Raise an exception if we have still entries in kwargs
-            # Mimic what python would do in case of a single unexpected
-            # keyword argument
-            if kwargs:
-                msg = 'spack.database.query() got unexpected keyword arguments'
-                keys = ["'{0}'".format(x) for x in kwargs]
-                msg += ' {0}'.format(', '.join(keys))
-                raise TypeError(msg)
+            start_date = start_date or datetime.datetime.min
+            end_date = end_date or datetime.datetime.max
 
             for key, rec in self._data.items():
                 if installed is not any and rec.installed != installed:
