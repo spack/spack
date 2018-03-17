@@ -44,7 +44,6 @@ class Nekcem(Package):
 
     # dependencies
     depends_on('mpi', when='+mpi')
-    depends_on('python@2.7:')
     depends_on('blas')
     depends_on('lapack')
 
