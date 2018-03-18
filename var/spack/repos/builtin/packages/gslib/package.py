@@ -31,10 +31,9 @@ class Gslib(Package):
     homepage = "https://github.com/gslib/gslib"
     url      = "https://github.com/gslib/gslib"
 
-    version('1.0.1', git='https://github.com/gslib/gslib.git',
-        commit='d16685f24551b7efd69e58d96dc76aec75239ea3')
-    version('1.0.0', git='https://github.com/gslib/gslib.git',
-        commit='9533e652320a3b26a72c36487ae265b02072cd48')
+    version('1.0.2', git='https://github.com/gslib/gslib.git', tag='v1.0.2')
+    version('1.0.1', git='https://github.com/gslib/gslib.git', tag='v1.0.1')
+    version('1.0.0', git='https://github.com/gslib/gslib.git', tag='v1.0.0')
 
     variant('mpi', default=True, description='Build with MPI')
     variant('mpiio', default=True, description='Build with MPI I/O')

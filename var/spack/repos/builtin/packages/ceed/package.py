@@ -72,7 +72,7 @@ class Ceed(Package):
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     depends_on('nek5000@17.0', when='@1.0.0+nek')
-    depends_on('gslib@1.0.1', when='@1.0.0+nek')
+    depends_on('gslib@1.0.2', when='@1.0.0+nek')
     depends_on('nekbone@17.0', when='@1.0.0+nek')
     depends_on('nekcem@0b8bedd', when='@1.0.0+nek')
 
