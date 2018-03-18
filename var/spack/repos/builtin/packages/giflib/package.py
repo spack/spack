@@ -35,3 +35,6 @@ class Giflib(AutotoolsPackage):
     version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
 
     patch('bsd-head.patch')
+
+    def check(self):
+        make('check', parallel=False)
