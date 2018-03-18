@@ -33,3 +33,5 @@ class Giflib(AutotoolsPackage):
     url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
 
     version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
+
+    patch('bsd-head.patch')
