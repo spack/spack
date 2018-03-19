@@ -42,17 +42,12 @@ library or Trilinos/Tpetra).
 
     homepage = "https://bitbucket.org/essex/phist/"
 
-    # run expensive test suite (recommended oly if you have 12 physical cores,
-    # takes a few minutes)
-    run_tests  = False
-    smoke_test = True
-
     version('develop',
             git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
     version('master',
             git='https://bitbucket.org/essex/phist/phist.git', branch='master')
-    version('1.4.2', 'df6b73102d9ae597dd8cd51e5943cfd6',
-            url='https://bitbucket.org/essex/phist/get/phist-1.4.2.tar.gz')
+    version('1.4.3', '1ca0a20e18c5523ec3d1d2ff3b31d6d0',
+            url='https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz')
 
     # note: there is no virtual package for lapacke (the C bindings for
     # lapack), We look for a file like lapacke.h in the lapack prefix, if it
@@ -72,7 +67,7 @@ library or Trilinos/Tpetra).
 
         kernel_lib = spec.variants['kernel_lib'].value
         outlev = spec.variants['outlev'].value
-        
+
         lapacke_libs = \
             (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
         lapacke_include_dir = format(spec['lapack:c'].headers.directories[0])
