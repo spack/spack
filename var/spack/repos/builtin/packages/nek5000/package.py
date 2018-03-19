@@ -82,8 +82,8 @@ class Nek5000(Package):
 
     @run_before('install')
     def fortran_check(self):
-        if not self.compiler.fc:
-            msg = 'Cannot build Nek5000 without a Fortran compiler.'
+        if not self.compiler.f77:
+            msg = 'Cannot build Nek5000 without a Fortran 77 compiler.'
             raise RuntimeError(msg)
 
     @run_after('install')
@@ -103,15 +103,26 @@ class Nek5000(Package):
         toolsDir   = 'tools'
         binDir     = 'bin'
 
-        FC  = self.compiler.fc
+        # Do not use the Spack compiler wrappers.
+        # Use directly the compilers:
+        FC  = self.compiler.f77
         CC  = self.compiler.cc
+
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        cflags = ' '.join(spec.compiler_flags['cflags'])
 
         # Build the tools, maketools copy them to Nek5000/bin by default.
         # We will then install Nek5000/bin under prefix after that.
         with working_dir(toolsDir):
             # Update the maketools script to use correct compilers
-            filter_file(r'^FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
-            filter_file(r'^CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
+            if fflags:
+                filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
+                            'maketools')
+            if cflags:
+                filter_file(r'^#CFLAGS=.*', 'CFLAGS="{0}"'.format(cflags),
+                            'maketools')
 
             maxnel = self.spec.variants['MAXNEL'].value
             filter_file(r'^#MAXNEL\s*=.*', 'MAXNEL=' + maxnel, 'maketools')
@@ -158,6 +169,12 @@ class Nek5000(Package):
                 filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'makenek')
                 filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
                             prefix.bin.Nek5000 + '\"',  'makenek')
+                if fflags:
+                    filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
+                                'maketools')
+                if cflags:
+                    filter_file(r'^#CFLAGS=.*', 'CFLAGS="{0}"'.format(cflags),
+                                'maketools')
 
         # Install Nek5000/bin in prefix/bin
         install_tree(binDir, prefix.bin)
