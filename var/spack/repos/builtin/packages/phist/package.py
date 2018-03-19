@@ -46,7 +46,7 @@ library or Trilinos/Tpetra).
             git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
     version('master',
             git='https://bitbucket.org/essex/phist/phist.git', branch='master')
-    version('1.4.3', '1ca0a20e18c5523ec3d1d2ff3b31d6d0',
+    version('1.4.3', 'af3300378d4282366d148e38c3a3199a',
             url='https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz')
 
     # note: there is no virtual package for lapacke (the C bindings for
