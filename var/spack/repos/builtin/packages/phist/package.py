@@ -69,15 +69,13 @@ library or Trilinos/Tpetra).
 
     def cmake_args(self):
         spec = self.spec
+
+        kernel_lib = spec.variants['kernel_lib'].value
         outlev = spec.variants['outlev'].value
+        
         lapacke_libs = \
             (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
         lapacke_include_dir = format(spec['lapack:c'].headers.directories[0])
-
-        # Use everything until the first '+' sign as the kernel library.
-        # Note that we already restrict the string to a list of given values,
-        # so we don't need to check more carefully here.
-        kernel_lib = spec.variants['kernel_lib'].value.split('+', 1)[0]
 
         args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
                 '-DPHIST_OUTLEV=%s' % outlev,
@@ -115,7 +113,6 @@ library or Trilinos/Tpetra).
                     'epetra',
                     'tpetra',
                     'petsc',
-                    'petsc+complex',
                     'eigen',
                     'ghost'])
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
@@ -149,8 +146,7 @@ library or Trilinos/Tpetra).
     depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
     # Epetra backend also works with older Trilinos versions
     depends_on('trilinos+epetra', when='kernel_lib=epetra')
-    depends_on('petsc~complex', when='kernel_lib=petsc')
-    depends_on('petsc+complex', when='kernel_lib=petsc+complex')
+    depends_on('petsc', when='kernel_lib=petsc')
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
