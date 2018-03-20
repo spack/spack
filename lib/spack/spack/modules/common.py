@@ -579,7 +579,13 @@ class BaseContext(tengine.Context):
                 pass
             x.name = str(x.name).replace('-', '_')
 
-        return [(type(x).__name__, x) for x in env if x.name not in blacklist]
+        # blacklist WILL be None if the keyword is present in the YAML configs
+        # but without any entries or with all entries commented out.
+        if blacklist is None:
+            tty.debug('blacklist is defined but empty in your configuration.')
+
+        return [(type(x).__name__, x) for x in env if (
+            blacklist is None or x.name not in blacklist)]
 
     @tengine.context_property
     def autoload(self):
