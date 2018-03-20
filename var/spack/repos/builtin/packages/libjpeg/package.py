@@ -31,9 +31,15 @@ class Libjpeg(AutotoolsPackage):
     alongside various utilities for handling JPEG data."""
 
     homepage = "http://www.ijg.org"
-    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
+    url      = "http://www.ijg.org/files/jpegsrc.v9c.tar.gz"
 
+    version('9c', '7794e558c60605424fb1025d836fbf47')
     version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
     version('9a', '3353992aecaee1805ef4109aadd433e7')
 
     provides('jpeg')
+
+    def check(self):
+        # Libjpeg has both 'check' and 'test' targets that are aliases.
+        # Only need to run the tests once.
+        make('check')

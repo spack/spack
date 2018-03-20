@@ -30,8 +30,9 @@ class SuiteSparse(Package):
     SuiteSparse is a suite of sparse matrix algorithms
     """
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
-    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
+    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.2.0.tar.gz'
 
+    version('5.2.0', '8e625539dbeed061cc62fbdfed9be7cf')
     version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
     version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
     version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
