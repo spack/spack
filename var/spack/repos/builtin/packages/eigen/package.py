@@ -54,8 +54,10 @@ class Eigen(CMakePackage):
 
     # TODO : dependency on googlehash, superlu, adolc missing
     depends_on('metis@5:', when='+metis')
-    depends_on('scotch+mpi', when='+scotch')
+    depends_on('scotch', when='+scotch')
     depends_on('fftw', when='+fftw')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('mpfr@2.3.0:', when='+mpfr')
     depends_on('gmp', when='+mpfr')
+
+    patch('find-ptscotch.patch', when='@3.3.4')
