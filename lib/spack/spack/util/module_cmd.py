@@ -41,13 +41,15 @@ def get_module_cmd(bashopts=''):
         # on a Spack install/module/... command.
         # tty.warn("Could not detect module function from bash."
         #         " Trying to detect modulecmd from `which`")
-        try:
-            return get_module_cmd_from_which()
-        except ModuleError:
-            raise ModuleError('Spack requires modulecmd or a defined module'
-                              ' fucntion. Make sure modulecmd is in your path'
-                              ' or the function "module" is defined in your'
-                              ' bash environment.')
+        pass
+
+    try:
+        return get_module_cmd_from_which()
+    except ModuleError:
+        raise ModuleError(
+            'Spack requires "modulecmd" or a "module" function.'
+            ' Ensure that either "modulecmd" is in your path or that'
+            ' a "module" function is defined in your bash environment.')
 
 
 def get_module_cmd_from_which():
@@ -202,4 +204,4 @@ def get_path_from_module(mod):
 
 
 class ModuleError(Exception):
-    """Raised the the module_cmd utility to indicate errors."""
+    """Failure to interface with evironment modules."""
