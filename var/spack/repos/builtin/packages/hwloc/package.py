@@ -77,7 +77,7 @@ class Hwloc(AutotoolsPackage):
     depends_on('libpciaccess', when='+pci')
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
-    depends_on('numactl', when='@:1.11.9')
+    depends_on('numactl', when='@:1.11.9 platform=linux')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)

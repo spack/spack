@@ -46,6 +46,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
     version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
     version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
@@ -84,6 +85,8 @@ class Python(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
+    variant('dbm', default=True, description='Provide support for dbm')
+
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -92,6 +95,7 @@ class Python(AutotoolsPackage):
     depends_on("zlib")
     depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
+    depends_on("gdbm", when='+dbm')
 
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')

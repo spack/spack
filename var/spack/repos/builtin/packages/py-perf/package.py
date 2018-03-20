@@ -25,24 +25,15 @@
 from spack import *
 
 
-class LibjpegTurbo(AutotoolsPackage):
-    """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
-       accelerate baseline JPEG compression and decompression. libjpeg is a
-       library that implements JPEG image encoding, decoding and
-       transcoding."""
+class PyPerf(PythonPackage):
+    """The Python perf module is a toolkit to write, run and
+    analyze benchmarks.
+    """
 
-    homepage = "http://libjpeg-turbo.virtualgl.org"
-    url      = "https://sourceforge.net/projects/libjpeg-turbo/files/1.5.3/libjpeg-turbo-1.5.3.tar.gz"
+    homepage = "https://pypi.python.org/pypi/perf"
+    url = "https://github.com/vstinner/perf/archive/1.5.1.tar.gz"
 
-    version('1.5.3', '7c82f0f6a3130ec06b8a4d0b321cbca3')
-    version('1.5.0', '3fc5d9b6a8bce96161659ae7a9939257')
-    version('1.3.1', '2c3a68129dac443a72815ff5bb374b05')
+    version('1.5.1', 'e3dc532fdbaf44f2d921556164bd74e5')
 
-    provides('jpeg')
-
-    # Can use either of these. But in the current version of the package
-    # only nasm is used. In order to use yasm an environmental variable
-    # NASM must be set.
-    # TODO: Implement the selection between two supported assemblers.
-    # depends_on("yasm", type='build')
-    depends_on("nasm", type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))
