@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -206,13 +206,15 @@ class TestConcretize(object):
         is provided by an intermediate dependency.
 
         test_architecture_deep_inheritance will fail on a regression
-        of git commit f2cb582f10aaa5c78031ca5f2c20d7eed0db4208. If the
-        dependency structure in the mock repo changes such that a DAG
-        traversal towards the root of the spec from mpi reaches
-        mpileaks before callpath, it will no longer fail on that
-        regression. This could be caused by either a change in virtual
-        traversal or alphanumeric sorting among parents nodes.
+        of git commit f2cb582f10aaa5c78031ca5f2c20d7eed0db4208.
+
+        This test is slightly fragile. If DAG traversal changes such
+        that DAG traversal towards the root of the spec from mpi
+        reaches mpileaks before callpath, it will no longer fail on
+        that regression. This could be caused by either a change in
+        virtual traversal or alphanumeric sorting among parents nodes.
         """
+
         spec = Spec('mpileaks %clang@3.3 os=CNL target=foo' +
                     ' ^callpath os=SuSE11 ^mpich os=be')
         spec.concretize()
