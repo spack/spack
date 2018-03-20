@@ -192,20 +192,22 @@ class TestConcretize(object):
         assert not set(cmake.compiler_flags['fflags'])
 
     def test_architecture_inheritance(self):
+        """test_architecture_inheritance is likely to fail with an
+        UnavailableCompilerVersionError if the architecture is concretized
+        incorrectly.
+        """
         spec = Spec('cmake-client %gcc@4.7.2 os=fe ^ cmake')
-        try:
-            spec.concretize()
-        except UnavailableCompilerVersionError:
-            # Concretization will fail with an UnavailableCompilerVersionError
-            # if the architecture is concretized incorrectly.
-            assert False
+        spec.concretize()
         assert spec['cmake'].architecture == spec.architecture
 
     def test_architecture_deep_inheritance(self):
-        # This test is dependent on traversal towards the root from mpich
-        # reaching callpath before mpileaks despite both depending on mpi.
-        # May only work because mpi is virtual, or because of artifacts of
-        # the ordering.
+        """test_architecture_deep_inheritance will fail on a regression of
+        f2cb582f10aaa5c78031ca5f2c20d7eed0db4208. If the dependency structure
+        in the mock repo changes such that a DAG traversal towards the root of
+        the spec from mpi reaches mpileaks before callpath, it will no longer
+        fail on that regression. This could be caused by either a change in
+        virtual traversal or alphanumeric sorting among parents nodes.
+        """
         spec = Spec('mpileaks %clang@3.3 os=CNL target=foo' +
                     ' ^callpath os=SuSE11 ^mpich os=be')
         spec.concretize()
@@ -225,6 +227,7 @@ class TestConcretize(object):
         assert s['mpi'].version == ver('1.10.3')
 
     def test_concretize_two_virtuals(self):
+
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
 
