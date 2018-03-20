@@ -34,10 +34,8 @@ class Libceed(Package):
     version('develop', git='https://github.com/CEED/libCEED.git',
             branch='master')
     # FIXME: replace all '0.2*' versions with '0.2' when it is tagged.
-    version('0.2b2', git='https://github.com/CEED/libCEED.git',
-            commit='86fd388eb24c480f4b9de2865e7877baa8107da7')
     version('0.2b', git='https://github.com/CEED/libCEED.git',
-            commit='c7d9a6b63ee59ce697822a689e452e9abab4d0cb')
+            commit='37c58ae62292f5bf5da798432c6e8317ee76aee3')
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
     variant('occa', default=True, description='Enable OCCA backends')

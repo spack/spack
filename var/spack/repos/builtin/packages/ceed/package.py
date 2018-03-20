@@ -56,10 +56,10 @@ class Ceed(Package):
 
     # LibCEED
     # FIXME: Replace the '0.2b2' version with '0.2' when it is tagged.
-    depends_on('libceed@0.2b2~cuda', when='@1.0.0~cuda')
-    depends_on('libceed@0.2b2+cuda', when='@1.0.0+cuda')
-    depends_on('libceed@0.2b2+occa', when='@1.0.0+occa')
-    depends_on('libceed@0.2b2~occa', when='@1.0.0~occa')
+    depends_on('libceed@0.2b~cuda', when='@1.0.0~cuda')
+    depends_on('libceed@0.2b+cuda', when='@1.0.0+cuda')
+    depends_on('libceed@0.2b+occa', when='@1.0.0+occa')
+    depends_on('libceed@0.2b~occa', when='@1.0.0~occa')
     # TODO:
     # depends_on('libceed@0.1+examples-mfem', when='@1.0.0+mfem')
     # depends_on('libceed@0.1+examples-nek', when='@1.0.0+nek')
