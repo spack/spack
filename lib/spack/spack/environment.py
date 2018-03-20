@@ -531,8 +531,8 @@ def validate(env, errstream):
 
 
 def filter_environment_blacklist(env, variables):
-    """Generator that filters out any change to environment variables present in
-    the input list.
+    """Generator that filters out any change to environment variables present
+    in the input list.
 
     Args:
         env: list of environment modifications
