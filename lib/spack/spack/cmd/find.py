@@ -129,7 +129,7 @@ def query_arguments(args):
     for attribute in ('start_date', 'end_date'):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = llnl.util.lang.str2date(date)
+            q_args[attribute] = llnl.util.lang.pretty_string_to_date(date)
 
     return q_args
 

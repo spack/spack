@@ -467,7 +467,7 @@ class Database(object):
                     tty.debug(
                         'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
                     explicit = True
-                    inst_time = _now()
+                    inst_time = os.stat(spec.prefix).st_ctime
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
                         if old_info is not None:
@@ -611,7 +611,13 @@ class Database(object):
                 self._write(None, None, None)
             self.reindex(spack.store.layout)
 
-    def _add(self, spec, directory_layout=None, **kwargs):
+    def _add(
+            self,
+            spec,
+            directory_layout=None,
+            explicit=False,
+            installation_time=None
+    ):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``layout.path_for_spec(spec)``.
@@ -641,10 +647,7 @@ class Database(object):
                 "Specs added to DB must be concrete.")
 
         # Retrieve optional arguments
-        explicit = kwargs.get('explicit', False)
-        installation_time = kwargs.get(
-            'installation_time', _now()
-        )
+        installation_time = installation_time or _now()
 
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
@@ -923,8 +926,7 @@ class Database(object):
 
         """
         concrete_specs = self.query(
-            query_spec, known=known, installed=installed
-        )
+            query_spec, known=known, installed=installed)
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 
