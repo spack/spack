@@ -201,12 +201,17 @@ class TestConcretize(object):
         assert spec['cmake'].architecture == spec.architecture
 
     def test_architecture_deep_inheritance(self):
-        """test_architecture_deep_inheritance will fail on a regression of
-        f2cb582f10aaa5c78031ca5f2c20d7eed0db4208. If the dependency structure
-        in the mock repo changes such that a DAG traversal towards the root of
-        the spec from mpi reaches mpileaks before callpath, it will no longer
-        fail on that regression. This could be caused by either a change in
-        virtual traversal or alphanumeric sorting among parents nodes.
+        """Make sure that indirect dependencies receive architecture
+        information from the root even when partial architecture information
+        is provided by an intermediate dependency.
+
+        test_architecture_deep_inheritance will fail on a regression
+        of git commit f2cb582f10aaa5c78031ca5f2c20d7eed0db4208. If the
+        dependency structure in the mock repo changes such that a DAG
+        traversal towards the root of the spec from mpi reaches
+        mpileaks before callpath, it will no longer fail on that
+        regression. This could be caused by either a change in virtual
+        traversal or alphanumeric sorting among parents nodes.
         """
         spec = Spec('mpileaks %clang@3.3 os=CNL target=foo' +
                     ' ^callpath os=SuSE11 ^mpich os=be')
