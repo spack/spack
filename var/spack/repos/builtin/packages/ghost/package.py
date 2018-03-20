@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Ghost(CMakePackage):
+class Ghost(CMakePackage, CudaPackage):
     """GHOST: a General, Hybrid and Optimized Sparse Toolkit.
        This library provides highly optimized building blocks for implementing
        sparse iterative eigenvalue and linear solvers multi- and manycore
@@ -44,8 +44,6 @@ class Ghost(CMakePackage):
             description='Enables the build of shared libraries')
     variant('mpi', default=True,
             description='enable/disable MPI')
-    variant('cuda', default=False,
-            description='enable/disable CUDA')
     variant('scotch', default=False,
             description='enable/disable matrix reordering with PT-SCOTCH')
     variant('zoltan', default=False,
@@ -58,17 +56,14 @@ class Ghost(CMakePackage):
     depends_on('hwloc')
     depends_on('blas')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda@8:', when='+cuda')
     depends_on('scotch', when='+scotch')
     depends_on('zoltan', when='+zoltan')
 
     def cmake_args(self):
         spec = self.spec
-        cblas_include_dir = ''
-        if '^mkl' not in spec:
-            cblas_include_dir = '-DCBLAS_INCLUDE_DIR=' + \
-                spec['blas'].prefix.include
-
+        # note: we require the cblas_include_dir property from the blas
+        # provider, this is implemented at least for intel-mkl and
+        # netlib-lapack
         args = ['-DGHOST_ENABLE_MPI:BOOL=%s'
                 % ('ON' if '+mpi' in spec else 'OFF'),
                 '-DGHOST_USE_CUDA:BOOL=%s'
@@ -78,9 +73,12 @@ class Ghost(CMakePackage):
                 '-DGHOST_USE_ZOLTAN:BOOL=%s'
                 % ('ON' if '+zoltan' in spec else 'OFF'),
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
-                % ('ON' if '+shared' in spec else 'OFF'), cblas_include_dir
+                % ('ON' if '+shared' in spec else 'OFF'),
+                '-DCBLAS_INCLUDE_DIR:STRING=%s'
+                % format(spec['blas'].headers.directories[0]),
+                '-DBLAS_LIBRARIES=%s'
+                % spec['blas:c'].libs.joined(';')
                 ]
-
         return args
 
     def check(self):

@@ -48,7 +48,8 @@ class NetlibLapack(Package):
     version('3.4.0', '02d5706ec03ba885fc246e5fa10d8c70')
     version('3.3.1', 'd0d533ec9a5b74933c2a1e84eedc58b4')
 
-    variant('debug', default=False, description='Activates the Debug build type')
+    variant('debug', default=False,
+            description='Activates the Debug build type')
     variant('shared', default=True, description="Build shared library version")
     variant('external-blas', default=False,
             description='Build lapack with an external blas')
@@ -122,6 +123,13 @@ class NetlibLapack(Package):
         return find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
         )
+
+    @property
+    def headers(self):
+        include_dir = self.spec.prefix.include
+        cblas_h = join_path(include_dir, 'cblas.h')
+        lapacke_h = join_path(include_dir, 'lapacke.h')
+        return HeaderList([cblas_h, lapacke_h])
 
     def install_one(self, spec, prefix, shared):
         cmake_args = [
