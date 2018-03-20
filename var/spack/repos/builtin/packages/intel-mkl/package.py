@@ -79,3 +79,10 @@ class IntelMkl(IntelPackage):
     @property
     def file_to_source(self):
         return join_path(self.component_bin_dir(), 'mklvars.sh')
+
+    @property
+    def headers(self):
+        return find_headers(['mkl_cblas.h', 'mkl_lapacke.h'],
+                            root=self.component_include_dir(component='mkl'),
+                            recursive=False)
+
