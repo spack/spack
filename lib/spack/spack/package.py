@@ -33,10 +33,13 @@ Homebrew makes it very easy to create packages.  For a complete
 rundown on spack and how it differs from homebrew, look at the
 README.
 """
+import base64
 import contextlib
 import copy
 import functools
+import hashlib
 import inspect
+import itertools
 import os
 import re
 import shutil
@@ -73,6 +76,7 @@ from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
+from spack.util.package_hash import package_hash
 from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
@@ -562,6 +566,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
+
+    #: List of attributes which affect do not affect a package's content.
+    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
+                      'make_jobs']
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -1103,7 +1111,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for patch in patches:
+        for patch in self.patches_to_apply():
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
@@ -1146,6 +1154,37 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             touch(good_file)
         else:
             touch(no_patches_file)
+
+    def patches_to_apply(self):
+        """If the patch set does not change between two invocations of spack,
+           then all patches in the set will be applied in the same order"""
+        patchesToApply = itertools.chain.from_iterable(
+            patch_list
+            for spec, patch_list in self.patches.items()
+            if self.spec.satisfies(spec))
+        return sorted(patchesToApply, key=lambda p: p.path_or_url)
+
+    def content_hash(self, content=None):
+        """Create a hash based on the sources and logic used to build the
+        package. This includes the contents of all applied patches and the
+        contents of applicable functions in the package subclass."""
+        hashContent = list()
+        source_id = fs.for_package_version(self, self.version).source_id()
+        if not source_id:
+            # TODO? in cases where a digest or source_id isn't available,
+            # should this attempt to download the source and set one? This
+            # probably only happens for source repositories which are
+            # referenced by branch name rather than tag or commit ID.
+            message = 'Missing a source id for {s.name}@{s.version}'
+            tty.warn(message.format(s=self))
+            hashContent.append(''.encode('utf-8'))
+        else:
+            hashContent.append(source_id.encode('utf-8'))
+        hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
+                           for p in self.patches_to_apply())
+        hashContent.append(package_hash(self.spec, content))
+        return base64.b32encode(
+            hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()
 
     @property
     def namespace(self):

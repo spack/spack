@@ -58,19 +58,18 @@ class Pocl(CMakePackage):
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
     depends_on("libtool", type=("build", "link", "run"))
+    depends_on("pkgconfig", type="build")
+
     # We don't request LLVM's shared libraries because these are not
     # enabled by default, and also because they fail to build for us
     # (see #1616)
-    depends_on("llvm +clang")
-    depends_on("pkgconfig", type="build")
-
     # These are the supported LLVM versions
-    depends_on("llvm @3.7:3.9", when="@master")
-    depends_on("llvm @3.7:4.0", when="@0.14")
-    depends_on("llvm @3.7:3.8", when="@0.13")
-    depends_on("llvm @3.2:3.7", when="@0.12")
-    depends_on("llvm @3.2:3.6", when="@0.11")
-    depends_on("llvm @3.2:3.5", when="@0.10")
+    depends_on("llvm +clang @3.7:3.9", when="@master")
+    depends_on("llvm +clang @3.7:4.0", when="@0.14")
+    depends_on("llvm +clang @3.7:3.8", when="@0.13")
+    depends_on("llvm +clang @3.2:3.7", when="@0.12")
+    depends_on("llvm +clang @3.2:3.6", when="@0.11")
+    depends_on("llvm +clang @3.2:3.5", when="@0.10")
 
     variant("distro", default=False,
             description=("Support several CPU architectures, "

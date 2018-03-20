@@ -29,10 +29,11 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.29.tar.gz"
+    url      = "http://download.sourceforge.net/libpng/libpng-1.6.34.tar.gz"
     list_url = "https://sourceforge.net/projects/libpng/files/"
     list_depth = 2
 
+    version('1.6.34', '03fbc5134830240104e96d3cda648e71')
     version('1.6.29', '68553080685f812d1dd7a6b8215c37d8')
     version('1.6.27', '58698519e9f6126c1caeefc28dbcbd5f')
     # From http://www.libpng.org/pub/png/libpng.html (2017-01-04)
@@ -61,3 +62,8 @@ class Libpng(AutotoolsPackage):
             'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
         ]
         return args
+
+    def check(self):
+        # Libpng has both 'check' and 'test' targets that are aliases.
+        # Only need to run the tests once.
+        make('check')
