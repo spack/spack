@@ -49,6 +49,51 @@ library or Trilinos/Tpetra).
     version('1.4.3', 'af3300378d4282366d148e38c3a3199a',
             url='https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz')
 
+    variant(name='kernel_lib', default='builtin',
+            description='select the kernel library (backend) for phist',
+            values=['builtin',
+                    'epetra',
+                    'tpetra',
+                    'petsc',
+                    'eigen',
+                    'ghost'])
+    variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
+            description='verbosity. 0: errors 1: +warnings 2: +info '
+                        '3: +verbose 4: +extreme 5; +debug')
+
+    variant('shared',  default=True,
+            description='Enables the build of shared libraries')
+
+    variant('mpi', default=True,
+            description='enable/disable MPI (note that the kernel library may '
+            'not support this choice)')
+    variant('parmetis', default=False,
+            description='enable/disable ParMETIS partitioning (only actually '
+                        'used with kernel_lib=builtin)')
+    variant('trilinos', default=False,
+            description='enable/disable Trilinos third-party libraries. '
+                        'For all kernel_libs, we can use Belos and Anasazi '
+                        'iterative solvers. For the Trilinos backends '
+                        '(kernel_lib=epetra|tpetra) we can use preconditioner '
+                        'packages such as Ifpack, Ifpack2 and ML.')
+
+    # ###################### Dependencies ##########################
+
+    depends_on('cmake@3.8:')
+    depends_on('blas')
+    depends_on('lapack')
+    depends_on('mpi', when='+mpi')
+    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
+    depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
+    # Epetra backend also works with older Trilinos versions
+    depends_on('trilinos+epetra', when='kernel_lib=epetra')
+    depends_on('petsc', when='kernel_lib=petsc')
+    depends_on('eigen', when='kernel_lib=eigen')
+    depends_on('ghost', when='kernel_lib=ghost')
+
+    depends_on('trilinos', when='+trilinos')
+    depends_on('parmetis ^metis+int64', when='+parmetis')
+
     def cmake_args(self):
         spec = self.spec
 
@@ -88,49 +133,3 @@ library or Trilinos/Tpetra).
     def test_install(self):
         with working_dir(self.build_directory):
             make("test_install")
-
-    variant(name='kernel_lib', default='builtin',
-            description='select the kernel library (backend) for phist',
-            values=['builtin',
-                    'epetra',
-                    'tpetra',
-                    'petsc',
-                    'eigen',
-                    'ghost'])
-    variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
-            description='verbosity. 0: errors 1: +warnings 2: +info '
-                        '3: +verbose 4: +extreme 5; +debug')
-
-    variant('shared',  default=True,
-            description='Enables the build of shared libraries')
-
-    variant('mpi', default=True,
-            description='enable/disable MPI (note that the kernel library may '
-            'not support this choice)')
-    variant('parmetis', default=False,
-            description='enable/disable ParMETIS partitioning (only actually '
-                        'used with kernel_lib=builtin)')
-    variant('trilinos', default=False,
-            description='enable/disable Trilinos third-party libraries. '
-                        'For all kernel_libs, we can use Belos and Anasazi '
-                        'iterative solvers. For the Trilinos backends '
-                        '(kernel_lib=epetra|tpetra) we can use preconditioner '
-                        'packages such as Ifpack, Ifpack2 and ML.')
-
-    # ###################### Dependencies ##########################
-
-    # Everything should be compiled position independent (-fpic)
-    depends_on('cmake@3.8:')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('mpi', when='+mpi')
-    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
-    # Epetra backend also works with older Trilinos versions
-    depends_on('trilinos+epetra', when='kernel_lib=epetra')
-    depends_on('petsc', when='kernel_lib=petsc')
-    depends_on('eigen', when='kernel_lib=eigen')
-    depends_on('ghost', when='kernel_lib=ghost')
-
-    depends_on('trilinos', when='+trilinos')
-    depends_on('parmetis ^metis+int64', when='+parmetis')
