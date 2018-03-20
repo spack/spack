@@ -49,19 +49,6 @@ library or Trilinos/Tpetra).
     version('1.4.3', 'af3300378d4282366d148e38c3a3199a',
             url='https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz')
 
-    # note: there is no virtual package for lapacke (the C bindings for
-    # lapack), We look for a file like lapacke.h in the lapack prefix, if it
-    # is found we pass it to phist's cmake, otherwise we hope that phist finds
-    #  it itself.
-    def lapacke_include_dir(self):
-        prefix = self.spec['lapack'].prefix
-        include_dir = "NOTFOUND"
-        for root, dir, files in os.walk(prefix):
-            if fnmatch.filter(files, "*lapacke.h"):
-                include_dir = root
-                break
-        return include_dir
-
     def cmake_args(self):
         spec = self.spec
 
