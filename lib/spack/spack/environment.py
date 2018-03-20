@@ -357,8 +357,19 @@ class EnvironmentModifications(object):
             env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
                              for k, v in env_after.items())
 
-        # Other variables unrelated to sourcing a file
-        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+        # TODO: Factor out remaining part of this function into something like:
+        #   EnvironmentModifications.diff(from_dict, to_dict,
+        #       clean=..., blacklist=..., whitelist=...)
+        # (Should be a natural fit, given the class name.)
+
+        # Variables unrelated to sourcing a file, and those internal
+        # to an Environment Modules implementation.
+        # NB: "filename" could conceivably use "module" commands iteself.
+        # For that case, however, leave the neeed blacklisting to the user.
+        blacklist.extend(
+            'SHLVL _ PWD OLDPWD PS2 ENV LOADEDMODULES _LMFILES_'
+            ' BASH_FUNC_module()'       # accommodate env-mod 4.x-Tcl
+            ''.split())
 
         def set_intersection(fullset, *args):
             # A set intersection using string literals and regexs
