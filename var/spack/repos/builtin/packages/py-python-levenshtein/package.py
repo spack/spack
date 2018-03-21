@@ -30,7 +30,7 @@ class PyPythonLevenshtein(PythonPackage):
     similarities."""
 
     homepage = "https://github.com/ztane/python-Levenshtein"
-    url      = "https://pypi.python.org/packages/source/p/python-Levenshtein/python-Levenshtein-0.12.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-Levenshtein/python-Levenshtein-0.12.0.tar.gz"
 
     version('0.12.0', 'e8cde197d6d304bbdc3adae66fec99fb')
 
