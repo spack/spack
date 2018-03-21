@@ -29,7 +29,6 @@ from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
-from spack.concretize import UnavailableCompilerVersionError
 
 
 def check_spec(abstract, concrete):
