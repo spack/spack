@@ -75,7 +75,7 @@ class Zoltan(Package):
         ]
         config_cflags = [
             '-O0' if '+debug' in spec else '-O3',
-            '-g' if '+debug' in spec else '-g0',
+            '-g' if '+debug' in spec else '',
         ]
 
         if '+shared' in spec:
