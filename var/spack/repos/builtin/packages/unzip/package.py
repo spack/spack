@@ -33,12 +33,10 @@ class Unzip(MakefilePackage):
 
     version('6.0', '62b490407489521db863b523a7f86375')
 
+    conflicts('platform=cray', msg='Unzip does not currently build on Cray')
+
     make_args = ['-f', 'unix/Makefile']
     build_targets = make_args + ['generic']
-
-    def edit(self, spec, prefix):
-        if 'platform=cray' in self.spec:
-            raise InstallError('Unzip does not currently build on Cray')
 
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/unzip{0}.tar.gz'.format(version.joined)
