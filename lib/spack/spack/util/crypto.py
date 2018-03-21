@@ -25,17 +25,62 @@
 import sys
 import hashlib
 
+import llnl.util.tty as tty
+
+
 """Set of acceptable hashes that Spack will use."""
-hashes = dict((h, getattr(hashlib, h)) for h in [
+_hash_algorithms = [
     'md5',
     'sha1',
     'sha224',
     'sha256',
     'sha384',
-    'sha512'])
+    'sha512']
+
+
+_deprecated_hash_algorithms = ['md5']
+
+
+hashes = dict()
+
 
 """Index for looking up hasher for a digest."""
-_size_to_hash = dict((h().digest_size, h) for h in hashes.values())
+_size_to_hash = dict()
+
+
+class DeprecatedHash(object):
+    def __init__(self, hash_alg, alert_fn, disable_security_check):
+        self.hash_alg = hash_alg
+        self.alert_fn = alert_fn
+        self.disable_security_check = disable_security_check
+
+    def __call__(self, disable_alert=False):
+        if not disable_alert:
+            self.alert_fn("Deprecation warning: {0} checksums will not be"
+                          " supported in future Spack releases."
+                          .format(self.hash_alg))
+        if self.disable_security_check:
+            return hashlib.new(self.hash_alg, usedforsecurity=False)
+        else:
+            return hashlib.new(self.hash_alg)
+
+
+for h in _hash_algorithms:
+    try:
+        if h in _deprecated_hash_algorithms:
+            hash_gen = DeprecatedHash(
+                h, tty.debug, disable_security_check=False)
+            _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
+        else:
+            hash_gen = getattr(hashlib, h)
+            _size_to_hash[hash_gen().digest_size] = hash_gen
+        hashes[h] = hash_gen
+    except ValueError:
+        # Some systems may support the 'usedforsecurity' option so try with
+        # that (but display a warning when it is used)
+        hash_gen = DeprecatedHash(h, tty.warn, disable_security_check=True)
+        hashes[h] = hash_gen
+        _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
 
 
 def checksum(hashlib_algo, filename, **kwargs):
