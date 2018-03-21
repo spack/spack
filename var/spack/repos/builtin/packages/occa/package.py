@@ -22,9 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import shutil
-
 from spack import *
 
 
@@ -35,22 +32,21 @@ class Occa(MakefilePackage):
     For example: CPUs, GPUs, Intel's Xeon Phi, FPGAs.
     """
 
-    homepage = "http://libocca.org"
-    url      = "https://github.com/libocca/occa/archive/0.1.tar.gz"
+    homepage = "http://www.example.com"
+    url      = "https://github.com/libocca/occa/archive/v1.0.0-alpha.4.tar.gz"
 
-    version('0.1', 'bb042c251cdc4c68b897eaf6a43cdd26')
+    version('1.0.0-alpha.4', '74e5adeba977e850802855c5be34e41d')
 
     variant('openmp', default=False,
-            description="Enable OpenMP backend")
+            description='Enable OpenMP backend')
     variant('opencl', default=False,
-            description="Enable OpenCL backend")
-    variant('cuda'  , default=False,
-            description="Enable CUDA backend")
+            description='Enable OpenCL backend')
+    variant('cuda', default=False,
+            description='Enable CUDA backend')
 
-    depends_on('cuda'  , when='+cuda')
+    depends_on('cuda', when='+cuda')
     depends_on('opencl', when='+opencl')
 
     def install(self, spec, prefix):
         for path in ['bin', 'include', 'lib', 'scripts']:
-            shutil.copytree('{0}'.format(path),
-                            '{0}/{1}'.format(prefix, path))
+            install_tree(path, join_path(prefix, path))
