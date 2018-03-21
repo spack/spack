@@ -46,6 +46,7 @@ class Pumi(CMakePackage):
     variant('zoltan', default=False, description='Enable Zoltan Features')
 
     depends_on('mpi')
+    depends_on('cmake@3:', type='build')
     depends_on('zoltan', when='+zoltan')
 
     def cmake_args(self):
