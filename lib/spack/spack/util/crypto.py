@@ -68,7 +68,8 @@ class DeprecatedHash(object):
 for h in _hash_algorithms:
     try:
         if h in _deprecated_hash_algorithms:
-            hash_gen = DeprecatedHash(h, tty.debug, False)
+            hash_gen = DeprecatedHash(
+                h, tty.debug, disable_security_check=False)
             _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
         else:
             hash_gen = getattr(hashlib, h)
@@ -77,7 +78,7 @@ for h in _hash_algorithms:
     except ValueError:
         # Some systems may support the 'usedforsecurity' option so try with
         # that (but display a warning when it is used)
-        hash_gen = DeprecatedHash(h, tty.warn, True)
+        hash_gen = DeprecatedHash(h, tty.warn, disable_security_check=True)
         hashes[h] = hash_gen
         _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
 
