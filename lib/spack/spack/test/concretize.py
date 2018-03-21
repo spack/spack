@@ -29,7 +29,7 @@ from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
-
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 def check_spec(abstract, concrete):
     if abstract.versions.concrete:
@@ -206,20 +206,28 @@ class TestConcretize(object):
 
         test_architecture_deep_inheritance will fail on a regression
         of git commit f2cb582f10aaa5c78031ca5f2c20d7eed0db4208.
-
-        This test is slightly fragile. If DAG traversal changes such
-        that DAG traversal towards the root of the spec from mpi
-        reaches mpileaks before callpath, it will no longer fail on
-        that regression. This could be caused by either a change in
-        virtual traversal or alphanumeric sorting among parents nodes.
         """
+        saved_repo = spack.repo
 
-        spec = Spec('mpileaks %clang@3.3 os=CNL target=foo' +
-                    ' ^callpath os=SuSE11 ^mpich os=be')
-        spec.concretize()
+        default_dep = ('link', 'build')
 
-        for s in spec.traverse(root=False):
-            assert s.architecture.target == spec.architecture.target
+        bazpkg = MockPackage('bazpkg', [], [])
+        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
+        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
+        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+
+        spack.repo = mock_repo
+
+        try:
+            spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
+                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+            spec.concretize()
+
+            for s in spec.traverse(root=False):
+                assert s.architecture.target == spec.architecture.target
+
+        finally:
+            spack.repo = saved_repo
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
