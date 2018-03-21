@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,16 +25,11 @@
 from spack import *
 
 
-class Patch(AutotoolsPackage):
-    """Patch takes a patch file containing a difference listing produced by
-    the diff program and applies those differences to one or more
-    original files, producing patched versions.
-    """
+class Wcslib(AutotoolsPackage):
+    """WCSLIB a C implementation of the coordinate transformations
+    defined in the FITS WCS papers."""
 
-    homepage = "http://savannah.gnu.org/projects/patch/"
-    url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz"
+    homepage = "http://www.atnf.csiro.au/people/mcalabre/WCS/"
+    url      = "ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib.tar.bz2"
 
-    version('2.7.6', '78ad9937e4caadcba1526ef1853730d5')
-    version('2.7.5', 'e3da7940431633fb65a01b91d3b7a27a')
-
-    build_directory = 'spack-build'
+    version('5.18', '67a78354be74eca4f17d3e0853d5685f')
