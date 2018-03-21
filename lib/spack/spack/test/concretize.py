@@ -203,9 +203,6 @@ class TestConcretize(object):
         """Make sure that indirect dependencies receive architecture
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
-
-        test_architecture_deep_inheritance will fail on a regression
-        of git commit f2cb582f10aaa5c78031ca5f2c20d7eed0db4208.
         """
         saved_repo = spack.repo
 
