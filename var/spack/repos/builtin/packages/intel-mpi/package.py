@@ -29,16 +29,6 @@ from spack import *
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
-    # BTW:
-    # https://software.intel.com/en-us/articles/intel-mpi-library-release-notes-linux
-    #   Intel MPI Library 2018 Update 2
-    #   ...
-    #   Intel MPI Library is now available .. in YUM and APT repositories.
-    #   ...
-    # See also:
-    # https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-yum-repo
-    # https://software.intel.com/en-us/articles/installing-intel-parallel-studio-xe-on-aws-linux-instances
-
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
     version('2018.1.163', '437ce50224c5bbf98fd578a810c3e401',
