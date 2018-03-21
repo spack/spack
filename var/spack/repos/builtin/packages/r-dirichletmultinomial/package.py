@@ -25,25 +25,20 @@
 from spack import *
 
 
-class Pandaseq(AutotoolsPackage):
-    """PANDASEQ is a program to align Illumina reads, optionally with PCR
-    primers embedded in the sequence, and reconstruct an overlapping
-    sequence."""
+class RDirichletmultinomial(RPackage):
+    """Dirichlet-multinomial mixture models can be used to describe
+    variability in microbial metagenomic data.
 
-    homepage = "https://github.com/neufeld/pandaseq"
-    url      = "https://github.com/neufeld/pandaseq/archive/v2.11.tar.gz"
+    This package is an interface to code originally made available by
+    Holmes, Harris, and Quince, 2012, PLoS ONE 7(2): 1-15, as discussed
+    further in the man page for this package, ?DirichletMultinomial."""
 
-    version('2.11', 'a8ae0e938bac592fc07dfa668147d80b')
-    version('2.10', '5b5b04c9b693a999f10a9c9bd643f068')
+    homepage = "https://bioconductor.org/packages/DirichletMultinomial/"
+    url      = "https://git.bioconductor.org/packages/DirichletMultinomial"
 
-    depends_on('autoconf',    type='build')
-    depends_on('automake',    type='build')
-    depends_on('libtool',     type=('build', 'link'))
-    depends_on('m4',          type='build')
-    depends_on('zlib',        type='build')
-    depends_on('pkg-config',  type='build')
-    depends_on('bzip2',       type='link')
+    version('1.20.0', git='https://git.bioconductor.org/packages/DirichletMultinomial', commit='251529f301da1482551142240aeb6baf8dab2272')
 
-    def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('gsl')
+    depends_on('r@3.4.0:')

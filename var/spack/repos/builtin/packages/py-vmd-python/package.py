@@ -25,25 +25,16 @@
 from spack import *
 
 
-class Pandaseq(AutotoolsPackage):
-    """PANDASEQ is a program to align Illumina reads, optionally with PCR
-    primers embedded in the sequence, and reconstruct an overlapping
-    sequence."""
+class PyVmdPython(PythonPackage):
+    """Installable VMD as a python module"""
 
-    homepage = "https://github.com/neufeld/pandaseq"
-    url      = "https://github.com/neufeld/pandaseq/archive/v2.11.tar.gz"
+    homepage = "https://github.com/Eigenstate"
+    url      = "https://github.com/Eigenstate/vmd-python/archive/v2.0.10.tar.gz"
 
-    version('2.11', 'a8ae0e938bac592fc07dfa668147d80b')
-    version('2.10', '5b5b04c9b693a999f10a9c9bd643f068')
+    version('2.0.10', '8c746d961497a676053b66e3dd692794')
 
-    depends_on('autoconf',    type='build')
-    depends_on('automake',    type='build')
-    depends_on('libtool',     type=('build', 'link'))
-    depends_on('m4',          type='build')
-    depends_on('zlib',        type='build')
-    depends_on('pkg-config',  type='build')
-    depends_on('bzip2',       type='link')
-
-    def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+    depends_on('python@2.7:2.8')
+    depends_on('py-numpy')
+    depends_on('tcl')
+    depends_on('netcdf')
+    depends_on('expat')

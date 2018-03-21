@@ -30,7 +30,7 @@ class Phylip(Package):
        inferring phylogenies (evolutionary trees)."""
 
     homepage = "http://evolution.genetics.washington.edu/phylip/"
-    url      = "http://evolution.gs.washington.edu/phylip/download/phylip-3.696.tar.gz"
+    url      = "http://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
 
     version('3.697', '0e83d17fb4d668213603c86bc21d9012')
     version('3.696', 'dbe5abc26f6089ead3dba41c2db526ee')

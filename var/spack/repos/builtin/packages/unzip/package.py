@@ -25,25 +25,22 @@
 from spack import *
 
 
-class Pandaseq(AutotoolsPackage):
-    """PANDASEQ is a program to align Illumina reads, optionally with PCR
-    primers embedded in the sequence, and reconstruct an overlapping
-    sequence."""
+class Unzip(MakefilePackage):
+    """Unzip is a compression and file packaging/archive utility."""
 
-    homepage = "https://github.com/neufeld/pandaseq"
-    url      = "https://github.com/neufeld/pandaseq/archive/v2.11.tar.gz"
+    homepage = 'http://www.info-zip.org/Zip.html'
+    url      = 'http://downloads.sourceforge.net/infozip/unzip60.tar.gz'
 
-    version('2.11', 'a8ae0e938bac592fc07dfa668147d80b')
-    version('2.10', '5b5b04c9b693a999f10a9c9bd643f068')
+    version('6.0', '62b490407489521db863b523a7f86375')
 
-    depends_on('autoconf',    type='build')
-    depends_on('automake',    type='build')
-    depends_on('libtool',     type=('build', 'link'))
-    depends_on('m4',          type='build')
-    depends_on('zlib',        type='build')
-    depends_on('pkg-config',  type='build')
-    depends_on('bzip2',       type='link')
+    conflicts('platform=cray', msg='Unzip does not currently build on Cray')
 
-    def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+    make_args = ['-f', 'unix/Makefile']
+    build_targets = make_args + ['generic']
+
+    def url_for_version(self, version):
+        return 'http://downloads.sourceforge.net/infozip/unzip{0}.tar.gz'.format(version.joined)
+
+    @property
+    def install_targets(self):
+        return self.make_args + ['prefix={0}'.format(self.prefix), 'install']

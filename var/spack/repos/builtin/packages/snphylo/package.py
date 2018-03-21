@@ -23,27 +23,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import distutils.dir_util
 
 
-class Pandaseq(AutotoolsPackage):
-    """PANDASEQ is a program to align Illumina reads, optionally with PCR
-    primers embedded in the sequence, and reconstruct an overlapping
-    sequence."""
+class Snphylo(Package):
+    """A pipeline to generate a phylogenetic tree from huge SNP data"""
 
-    homepage = "https://github.com/neufeld/pandaseq"
-    url      = "https://github.com/neufeld/pandaseq/archive/v2.11.tar.gz"
+    homepage = "http://chibba.pgml.uga.edu/snphylo/"
+    url      = "http://chibba.pgml.uga.edu/snphylo/snphylo.tar.gz"
 
-    version('2.11', 'a8ae0e938bac592fc07dfa668147d80b')
-    version('2.10', '5b5b04c9b693a999f10a9c9bd643f068')
+    version('2016-02-04', '467660814965bc9bed6c020c05c0d3a6')
 
-    depends_on('autoconf',    type='build')
-    depends_on('automake',    type='build')
-    depends_on('libtool',     type=('build', 'link'))
-    depends_on('m4',          type='build')
-    depends_on('zlib',        type='build')
-    depends_on('pkg-config',  type='build')
-    depends_on('bzip2',       type='link')
+    depends_on('python', type=('build', 'run'))
+    depends_on('r', type=('build', 'run'))
+    depends_on('r-phangorn', type=('build', 'run'))
+    depends_on('r-gdsfmt', type=('build', 'run'))
+    depends_on('r-snprelate', type=('build', 'run'))
+    depends_on('r-getopt', type=('build', 'run'))
+    depends_on('muscle')
+    depends_on('phylip')
 
-    def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+    def install(self, spec, prefix):
+        install_answer = ['y', 'y', 'y', 'y']
+        install_answer_input = 'spack-config.in'
+        with open(install_answer_input, 'w') as f:
+            f.writelines(install_answer)
+        with open(install_answer_input, 'r') as f:
+            bash = which('bash')
+            bash('./setup.sh', input=f)
+            distutils.dir_util.copy_tree(".", prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.spec.prefix)
