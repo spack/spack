@@ -220,3 +220,20 @@ class Openblas(MakefilePackage):
             source_file, [include_flags], link_flags.split()
         )
         compare_output_file(output, blessed_file)
+
+    @property
+    def blas_libs(self):
+        shared = '+shared' in self.spec
+        prefix = self.prefix
+        search_paths = [[prefix.lib, False], [prefix.lib64, False],
+                        [prefix, True]]
+        for path, recursive in search_paths:
+            libs = find_libraries('libopenblas', root=path, shared=shared,
+                                  recursive=recursive)
+            if libs:
+                return libs
+        return None  # Raise error
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
