@@ -65,6 +65,8 @@ class IntelMkl(IntelPackage):
     provides('scalapack')
     provides('mkl')
 
+    file_to_source = 'mklvars.sh'
+
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
@@ -75,14 +77,3 @@ class IntelMkl(IntelPackage):
         # version 2017.2. Trying to specify the license will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
         return self.version < Version('2017.2')
-
-    @property
-    def file_to_source(self):
-        return join_path(self.component_bin_dir(), 'mklvars.sh')
-
-    @property
-    def headers(self):
-        return find_headers(['mkl_cblas', 'mkl_lapacke'],
-                            root=self.component_include_dir(component='mkl'),
-                            recursive=False)
-

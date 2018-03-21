@@ -47,14 +47,15 @@ from spack.environment import EnvironmentModifications
 # should really be defined elsewhere, unless deemed heretical.
 # (Or na"ive on my part).
 
-def debug_print(msg):
+def debug_print(msg, *args):
     '''Prints a message (usu. a variable) and the callers' names for a couple
     of stack frames.
     '''
     # https://docs.python.org/2/library/inspect.html#the-interpreter-stack
     stack = inspect.stack()
     _func_name = 3
-    tty.debug("%s.%s:\t%s" % (stack[2][_func_name], stack[1][_func_name], msg))
+    tty.debug("%s.%s:\t%s" % (stack[2][_func_name], stack[1][_func_name], msg),
+        *args)
 
 
 def raise_lib_error(*args):
@@ -324,9 +325,9 @@ class IntelPackage(PackageBase):
             #  intel-daal/          intel-mkl/          intel-parallel-studio
             #  intel-gpu-tools/     intel-mkl-dnn/      intel-tbb/
             #
-            if self._wants_personality('mkl'):
+            if self._is_personality('mkl'):
                 component = 'mkl'
-            elif self._wants_personality('mpi'):
+            elif self._is_personality('mpi'):
                 component = 'mpi'
                 # Note analysis of MPI dir in ./README-intel.rst :
                 # Since both I_MPI_ROOT and MANPATH need the 'mpi' dir, do NOT
@@ -348,7 +349,7 @@ class IntelPackage(PackageBase):
             # TODO: verify
             d = d.bin
         else:
-            if self._wants_personality('mpi', component):
+            if self._is_personality('mpi', component):
                 d = d.intel64.bin
             elif component == 'compiler' or 'parallel-studio' in self.name:
                 d = Prefix(ancestor(d)).bin.intel64
@@ -372,12 +373,12 @@ class IntelPackage(PackageBase):
         if sys.platform == 'darwin':
             d = d.lib
         else:
-            if self._wants_personality('mpi', component):
+            if self._is_personality('mpi', component):
                 d = d.intel64.lib
             else:
                 d = d.lib.intel64
 
-        if self._wants_personality('tbb', component):
+        if self._is_personality('tbb', component):
             # Must qualify further
             d = Prefix(join_path(d, self._tbb_abi))
 
@@ -391,7 +392,7 @@ class IntelPackage(PackageBase):
     def component_include_dir(self, component=None, relative=False):
         d = self.component_dir(component)
 
-        if self._wants_personality('mpi', component):
+        if self._is_personality('mpi', component):
             d = d.intel64
         d = d.include
 
@@ -404,13 +405,14 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # Utilities
     # ---------------------------------------------------------------------
-    def _wants_personality(self, nominal_component, client_component=None):
+    def _is_personality(self, nominal_component, component=None,
+        accept_variant=None):
         '''Provide the Intel component as explicitly requested in
-        ``client_component``, or, when called as virtual package, provide the
+        ``component``, or, when called as virtual package, provide the
         appropriate component.
         '''
         # This part acts as a mere macro for equality testing.
-        if nominal_component == client_component:
+        if nominal_component == component:
             return True
 
         # This part is both the fallback for the personality test and the
@@ -421,10 +423,37 @@ class IntelPackage(PackageBase):
             'tbb': r'intel-tbb|tbb',
         }
         try:
-            return bool(re.match(satisfies[nominal_component], self.name))
+            return (bool(re.match(satisfies[nominal_component], self.name)) or
+                    (accept_variant and accept_variant in self.spec))
         except KeyError:
             raise InstallError("Support for component '%s' not available." %
                                nominal_component)
+
+    def _locate_script(self, filename):
+        debug_print(filename)
+        if filename.startswith('/'):
+            return filename             # absolute path - no need to search
+
+        c = self.component_dir()
+        if not c or not os.path.isdir(c):       # does not exist during pre-install
+            debug_print("Cannot (yet) locate " + str(filename))
+            return
+
+        # Line up low-hanging fruit first:
+        try_dirs = [
+            join_path(c, 'bin'),
+            self.component_bin_dir(),   # not necessariliy the same as c/'bin'
+            c,
+        ]
+        # Add others:
+        try_dirs.extend(glob.glob(join_path(self.component_dir(), '*')))
+        # debug_print(try_dirs)
+
+        # Too bad we can't simply write: .. in [foo, bar, glob.glob(baz)]
+        for d in try_dirs:
+            f = join_path(d, filename)
+            if os.path.isfile(f):
+                return f
 
     def relative_path(self, file_or_dir, relative_to=''):
         if not relative_to:
@@ -626,8 +655,14 @@ class IntelPackage(PackageBase):
                             root=self.component_include_dir(component='mpi'),
                             recursive=False)
 
+    @property
+    def mkl_headers(self):
+        return find_headers(['mkl_cblas', 'mkl_lapacke'],
+                            root=self.component_include_dir(component='mkl'),
+                            recursive=False)
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if '+mkl' in self.spec or self._wants_personality('mkl'):
+        if self._is_personality('mkl', accept_variant='+mkl'):
             # BTW: The name and meaning of the 'root=' keyword arg of
             # find_libraries() entices us to feed it an "mkl_root" variable,
             # but that is a siren song that pulls us down and under from the
@@ -653,7 +688,7 @@ class IntelPackage(PackageBase):
         #   spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
 
     def setup_dependent_package(self, module, dep_spec):
-        if '+mpi' in self.spec or self._wants_personality('mpi'):
+        if self._is_personality('mpi', accept_variant='+mpi'):
             # Intel comes with 2 different flavors of MPI wrappers:
             #
             # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
@@ -681,6 +716,15 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # General support for child packages
     # ---------------------------------------------------------------------
+    def headers(self):
+        if self._is_personality('mpi', accept_variant='+mpi'):
+            return self.mpi_headers()
+        if self._is_personality('mkl', accept_variant='+mkl'):
+            return self.mkl_headers()
+
+    def libs(self):
+        if self._is_personality('mpi', accept_variant='+mpi'):
+            return self.mpi_libs()
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -700,9 +744,10 @@ class IntelPackage(PackageBase):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        f = self.file_to_source
-        debug_print(f)
-        if not os.path.isfile(f):
+
+        f = self._locate_script(self.file_to_source)
+        debug_print('sourcing ' + str(f))
+        if not f or not os.path.isfile(f):
             return
 
         if sys.platform == 'darwin':
