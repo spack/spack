@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import json
 
 
 class Nekcem(Package):
@@ -55,16 +56,13 @@ class Nekcem(Package):
 
     @run_after('install')
     def test_install(self):
-        currentDir = os.getcwd()
-        testDir = 'tests/2dboxpec'
-        os.chdir(testDir)
-
-        os.system(join_path(self.prefix.bin, 'makenek') + ' 2dboxpec')
-        #if not os.path.isfile(join_path(os.getcwd(), 'nekcem')):
-        #    msg = 'Cannot build example: tests/2dboxpec.' + os.getcwd()
-        #    raise RuntimeError(msg)
-
-        os.chdir(currentDir)
+        NekCEM_test = join_path(self.prefix.bin, 'NekCEM', 'tests', '2dboxpec')
+        with working_dir(NekCEM_test):
+            makenek = Executable(join_path(self.prefix.bin, 'makenek'))
+            makenek(os.path.basename(NekCEM_test))
+            if not os.path.isfile('nekcem') :
+                msg = 'Cannot build example: %s' % NekCEM_test
+                raise RuntimeError(msg)
 
     def install(self, spec, prefix):
         binDir = 'bin'
@@ -72,33 +70,60 @@ class Nekcem(Package):
         cNek = 'configurenek'
         mNek = 'makenek'
 
-        FC = self.compiler.fc
+        FC = self.compiler.f77
         CC = self.compiler.cc
+
+        fflags = spec.compiler_flags['fflags']
+        cflags = spec.compiler_flags['cflags']
+        ldflags = spec.compiler_flags['ldflags']
 
         if '+mpi' in spec:
             FC = spec['mpi'].mpif77
             CC = spec['mpi'].mpicc
 
         with working_dir(binDir):
-            filter_file(r'^FC\s*=.*', 'FC=\"' + FC + '\"', 'makenek')
-            filter_file(r'^CC\s*=.*', 'CC=\"' + CC + '\"', 'makenek')
-            filter_file(r'^NEK\s*=.*', 'NEK=\"' + prefix.bin.NekCEM +
-                        '\"', 'makenek')
+            fflags = ['-O3'] + fflags
+            cflags = ['-O3'] + cflags
+            fflags += ['-I.']
+            cflags += ['-I.', '-DGLOBAL_LONG_LONG']
 
+            if self.compiler.name == 'gcc' or self.compiler.name == 'clang':
+                # assuming 'clang' uses 'gfortran'
+                fflags += ['-fdefault-real-8', '-fdefault-double-8']
+                cflags += ['-DUNDERSCORE']
+            elif self.compiler.name == 'intel':
+                fflags += ['-r8']
+                cflags += ['-DUNDERSCORE']
+            elif self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
+                fflags += ['-qrealsize=8']
+                cflags += ['-DPREFIX=jl_', '-DIBM']
+            elif self.compiler.name == 'pgi':
+                fflags += ['-r8']
+                cflags += ['-DUNDERSCORE']
+
+            if '+mpi' in spec:
+                fflags += ['-DMPI', '-DMPIIO']
+                cflags += ['-DMPI', '-DMPIIO']
             blasLapack = spec['lapack'].libs + spec['blas'].libs
-            ldFlags = blasLapack.ld_flags
-            # Temporary workaround, we should use LDFLAGS when
-            # configurenek in Nekcem is fixed.
-            # See issue: https://github.com/NekCEM/NekCEM/issues/200
-            filter_file(r'^EXTRALDFLAGS\s*=.*', 'EXTRALDFLAGS=\"' + ldFlags +
-                        '\"', 'makenek')
+            ldflags += blasLapack.ld_flags.split()
+            all_arch = {
+                'spack-arch': {
+                    'FC': FC, 'FFLAGS': fflags,
+                    'CC': CC, 'CFLAGS': cflags,
+                    'LD': FC, 'LDFLAGS': ldflags
+                }
+            }
+            os.rename('arch.json', 'arch.json.orig')
+            with open('arch.json', 'w') as file:
+                file.write(json.dumps(all_arch))
+            filter_file(r'^ARCH=.*$', 'ARCH=spack-arch', 'makenek')
+            filter_file(r'^NEK=.*', 'NEK="%s"' % prefix.bin.NekCEM,
+                        'makenek')
 
         # Install NekCEM in prefix/bin
         install_tree('../NekCEM', prefix.bin.NekCEM)
         # Create symlinks to makenek, nek and configurenek scripts
-        os.symlink(os.path.join(prefix.bin.NekCEM, binDir, mNek),
-                   os.path.join(prefix.bin, mNek))
-        os.symlink(os.path.join(prefix.bin.NekCEM, binDir, cNek),
-                   os.path.join(prefix.bin, cNek))
-        os.symlink(os.path.join(prefix.bin.NekCEM, binDir, nek),
-                   os.path.join(prefix.bin, nek))
+        with working_dir(prefix.bin):
+            os.symlink(os.path.join('NekCEM', binDir, mNek), mNek)
+            os.symlink(os.path.join('NekCEM', binDir, cNek), cNek)
+            os.symlink(os.path.join('NekCEM', binDir, nek), nek)
