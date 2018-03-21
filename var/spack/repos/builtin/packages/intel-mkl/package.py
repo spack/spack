@@ -82,7 +82,7 @@ class IntelMkl(IntelPackage):
 
     @property
     def headers(self):
-        return find_headers(['mkl_cblas.h', 'mkl_lapacke.h'],
+        return find_headers(['mkl_cblas', 'mkl_lapacke'],
                             root=self.component_include_dir(component='mkl'),
                             recursive=False)
 
