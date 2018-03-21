@@ -33,3 +33,5 @@ class Apr(AutotoolsPackage):
 
     version('1.6.2', '8672e78514e3fcef2643127c524bf0f9')
     version('1.5.2', '98492e965963f852ab29f9e61b2ad700')
+
+    depends_on('zlib', type=('build', 'link'))
