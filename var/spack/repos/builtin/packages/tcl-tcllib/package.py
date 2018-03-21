@@ -45,7 +45,3 @@ class TclTcllib(AutotoolsPackage):
     version('1.14', '55bac9afce54c3328f368918cc2d7a4b')
 
     extends('tcl')
-
-    def url_for_version(self, version):
-        url = "https://sourceforge.net/projects/tcllib/files/tcllib/{0}/tcllib-{0}.tar.gz"
-        return url.format(version.up_to(2))
