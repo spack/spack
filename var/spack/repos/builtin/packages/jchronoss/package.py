@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Jchronoss(CMakePackage):
     """ JCHRONOSS aims to help HPC application testing process
      to scale as much as the application does. """
