@@ -31,6 +31,7 @@ from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
+
 def check_spec(abstract, concrete):
     if abstract.versions.concrete:
         assert abstract.versions == concrete.versions
