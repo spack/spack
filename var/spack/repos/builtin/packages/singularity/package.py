@@ -32,6 +32,7 @@ class Singularity(AutotoolsPackage):
     homepage = "http://singularity.lbl.gov/"
     url      = "https://github.com/singularityware/singularity/archive/2.4.tar.gz"
 
+    version('2.4.5', '1d46a29c902d98e176b778c03af133f0')
     version('2.4', 'd357ce68ef2f8149edd84155731531465dbe74148c37719f87f168fc39384377')
     version('2.3.1', '292ff7fe3db09c854b8accf42f763f62')
     version('develop', git='https://github.com/singularityware/singularity.git', branch='master')
