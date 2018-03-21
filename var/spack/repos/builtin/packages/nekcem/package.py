@@ -60,7 +60,7 @@ class Nekcem(Package):
         with working_dir(NekCEM_test):
             makenek = Executable(join_path(self.prefix.bin, 'makenek'))
             makenek(os.path.basename(NekCEM_test))
-            if not os.path.isfile('nekcem') :
+            if not os.path.isfile('nekcem'):
                 msg = 'Cannot build example: %s' % NekCEM_test
                 raise RuntimeError(msg)
 
