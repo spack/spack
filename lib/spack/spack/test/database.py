@@ -26,6 +26,7 @@
 These tests check the database is functioning properly,
 both in memory and in its file
 """
+import datetime
 import multiprocessing
 import os
 import pytest
@@ -292,6 +293,12 @@ def test_050_basic_query(database):
     assert len(install_db.query('mpileaks ^mpich')) == 1
     assert len(install_db.query('mpileaks ^mpich2')) == 1
     assert len(install_db.query('mpileaks ^zmpi')) == 1
+
+    # Query by date
+    assert len(install_db.query(start_date=datetime.datetime.min)) == 16
+    assert len(install_db.query(start_date=datetime.datetime.max)) == 0
+    assert len(install_db.query(end_date=datetime.datetime.min)) == 0
+    assert len(install_db.query(end_date=datetime.datetime.max)) == 16
 
 
 def test_060_remove_and_add_root_package(database):
