@@ -116,8 +116,7 @@ class Hypre(Package):
         in the same directory.
         Sample usage: spec['hypre'].headers.cpp_flags
         """
-        hdrs = HeaderList(find(self.prefix.include, 'HYPRE.h',
-                               recursive=False))
+        hdrs = find_headers('HYPRE', self.prefix.include, recursive=False)
         return hdrs or None
 
     @property
