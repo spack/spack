@@ -44,14 +44,19 @@ class Mpfr(AutotoolsPackage):
     depends_on('gmp@4.1:')  # 4.2.3 or higher is recommended
     depends_on('gmp@5.0:', when='@4.0.0:')  # http://www.mpfr.org/mpfr-4.0.0/
 
-    # Note: patches are frequently released and updated for old releases.
     # Check the Bugs section of old release pages for patches.
-    # http://www.mpfr.org/mpfr-X.Y.Z
-    patch('cumulative-3.1.6.patch', when='@3.1.6')
-    patch('cumulative-3.1.5.patch', when='@3.1.5')
-    patch('cumulative-3.1.4.patch', when='@3.1.4')
-    patch('cumulative-3.1.3.patch', when='@3.1.3')
-    patch('cumulative-3.1.2.patch', when='@3.1.2')
+    # http://www.mpfr.org/mpfr-X.Y.Z/#bugs
+    patches = {
+        '3.1.6': '66a5d58364113a21405fc53f4a48f4e8',
+        '3.1.5': '1dc5fe65feb5607b89fe0f410d53b627',
+        '3.1.4': 'd124381573404fe83654c7d5a79aeabf',
+        '3.1.3': 'ebd1d835e0ae2fd8a9339210ccd1d0a8',
+        '3.1.2': '9f96a5c7cac1d6cd983ed9cf7d997074',
+    }
+
+    for version, checksum in patches.items():
+        patch('http://www.mpfr.org/mpfr-{0}/allpatches'.format(version),
+              when='@' + version, sha256=checksum)
 
     def configure_args(self):
         args = [
