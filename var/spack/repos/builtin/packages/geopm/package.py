@@ -42,34 +42,34 @@ from spack import *
 
 class Geopm(Package):
 
-    """Global Extensible Open Power Manager (GEOPM) is an extensible power man-
-    agement framework targeting high performance computing. The library can be
-    extended to support new control algorithms and new hardware power manage-
-    ment features. The GEOPM package provides built in features ranging from
-    static management of power policy for each individual compute node, to dy-
-    namic coordination of power policy and performance across all of the com-
-    pute nodes hosting one MPI job on a portion of a distributed computing sys-
-    tem. The dynamic coordination is implemented as a hierarchical control sys-
-    tem for scalable communication and decentralized control. The hierarchical
-    control system can optimize for various objective functions including maxi-
-    mizing global application performance within a power bound. The root of the
-    control hierarchy tree can communicate through shared memory with the sys-
-    tem resource manage ment daemon to extend the hierarchy above the individu-
-    al MPI job level and enable management of system power resources for multi-
-    ple MPI jobs and multiple users by the system resource manager. The geopm
-    package provides the libgeopm library, the libgeopmpolicy library, the
-    geopmctl application and the geopmpolicy application. The libgeopm library
-    can be called within MPI applications to enable application feedback for
-    informing the control  decisions. If modification of the target application
-    is not desired then the geopmctl application can be run concurrently with
-    the target application. In this case, target application feedback is in-
-    ferred by querying the hardware through Model Specific Registers (MSRs).
-    With either method (libgeopm or geopmctl), the control hierarchy tree
-    writes processor power policy through MSRs to enact policy decisions. The
-    libgeopmpolicy library is used by a resource manager to set energy policy
-    control parameters for MPI jobs. Some features of libgeopmpolicy are avail-
-    able through the geopmpolicy application including support for static
-    control."""
+    """Global Extensible Open Power Manager (GEOPM) is an extensible power
+    management framework targeting high performance computing. The library can
+    be extended to support new control algorithms and new hardware power
+    management features. The GEOPM package provides built in features ranging
+    from static management of power policy for each individual compute node, to
+    dynamic coordination of power policy and performance across all of the
+    compute nodes hosting one MPI job on a portion of a distributed computing
+    system. The dynamic coordination is implemented as a hierarchical control
+    system for scalable communication and decentralized control. The
+    hierarchical control system can optimize for various objective functions
+    including maximizing global application performance within a power bound.
+    The root of the control hierarchy tree can communicate through shared
+    memory with the system resource manage ment daemon to extend the hierarchy
+    above the individual MPI job level and enable management of system power
+    resources for multiple MPI jobs and multiple users by the system resource
+    manager. The GEOPM package provides the libgeopm library, the
+    libgeopmpolicy library, the geopmctl application and the geopmpolicy
+    application. The libgeopm library can be called within MPI applications to
+    enable application feedback for informing the control  decisions. If
+    modification of the target application is not desired then the geopmctl
+    application can be run concurrently with the target application. In this
+    case, target application feedback is inferred by querying the hardware
+    through Model Specific Registers (MSRs). With either method (libgeopm or
+    geopmctl), the control hierarchy tree writes processor power policy through
+    MSRs to enact policy decisions. The libgeopmpolicy library is used by a
+    resource manager to set energy policy control parameters for MPI jobs. Some
+    features of libgeopmpolicy are available through the geopmpolicy
+    application including support for static control."""
 
     homepage = "https://geopm.github.io"
     url      = "https://github.com/geopm/geopm/releases/download/v0.4.0/geopm-0.4.0.tar.gz"
