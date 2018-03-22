@@ -31,8 +31,9 @@ class Eigen(CMakePackage):
     """
 
     homepage = 'http://eigen.tuxfamily.org/'
-    url      = 'https://bitbucket.org/eigen/eigen/get/3.3.3.tar.bz2'
+    url      = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
 
+    version('3.3.4', 'a7aab9f758249b86c93221ad417fbe18')
     version('3.3.3', 'b2ddade41040d9cf73b39b4b51e8775b')
     version('3.3.1', 'edb6799ef413b0868aace20d2403864c')
     version('3.2.10', 'a85bb68c82988648c3d53ba9768d7dcbcfe105f8')
@@ -58,3 +59,5 @@ class Eigen(CMakePackage):
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('mpfr@2.3.0:', when='+mpfr')
     depends_on('gmp', when='+mpfr')
+
+    patch('find-ptscotch.patch', when='@3.3.4')
