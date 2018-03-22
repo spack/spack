@@ -46,6 +46,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng

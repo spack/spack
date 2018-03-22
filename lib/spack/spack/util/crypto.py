@@ -38,6 +38,9 @@ _hash_algorithms = [
     'sha512']
 
 
+_deprecated_hash_algorithms = ['md5']
+
+
 hashes = dict()
 
 
@@ -53,8 +56,9 @@ class DeprecatedHash(object):
 
     def __call__(self, disable_alert=False):
         if not disable_alert:
-            self.alert_fn("Deprecation warning: {0} is not supported"
-                          " for security use".format(self.hash_alg))
+            self.alert_fn("Deprecation warning: {0} checksums will not be"
+                          " supported in future Spack releases."
+                          .format(self.hash_alg))
         if self.disable_security_check:
             return hashlib.new(self.hash_alg, usedforsecurity=False)
         else:
@@ -63,8 +67,9 @@ class DeprecatedHash(object):
 
 for h in _hash_algorithms:
     try:
-        if h in ['md5']:
-            hash_gen = DeprecatedHash(h, tty.debug, False)
+        if h in _deprecated_hash_algorithms:
+            hash_gen = DeprecatedHash(
+                h, tty.debug, disable_security_check=False)
             _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
         else:
             hash_gen = getattr(hashlib, h)
@@ -73,7 +78,7 @@ for h in _hash_algorithms:
     except ValueError:
         # Some systems may support the 'usedforsecurity' option so try with
         # that (but display a warning when it is used)
-        hash_gen = DeprecatedHash(h, tty.warn, True)
+        hash_gen = DeprecatedHash(h, tty.warn, disable_security_check=True)
         hashes[h] = hash_gen
         _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
 

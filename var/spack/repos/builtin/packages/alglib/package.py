@@ -25,6 +25,7 @@
 from spack import *
 import glob
 import os
+import sys
 import shutil
 
 
@@ -59,3 +60,9 @@ class Alglib(MakefilePackage):
             headers = glob.glob('*.h')
             for h in headers:
                 install(h, prefix.include)
+
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared libraries are not installed correctly on Darwin:
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.spec.prefix.lib)

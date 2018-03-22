@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,8 +32,9 @@ class Patch(AutotoolsPackage):
     """
 
     homepage = "http://savannah.gnu.org/projects/patch/"
-    url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.5.tar.xz"
+    url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz"
 
+    version('2.7.6', '78ad9937e4caadcba1526ef1853730d5')
     version('2.7.5', 'e3da7940431633fb65a01b91d3b7a27a')
 
     build_directory = 'spack-build'

@@ -50,6 +50,12 @@ class Elfutils(AutotoolsPackage):
 
     provides('elf@1')
 
+    # Elfutils uses nested functions in C code, which is implemented
+    # in gcc, but not in clang. C code compiled with gcc is
+    # binary-compatible with clang, so it should be possible to build
+    # elfutils with gcc, and then link it to clang-built libraries.
+    conflicts('%clang')
+
     def configure_args(self):
         # configure doesn't use LIBS correctly
         gettext_lib = self.spec['gettext'].prefix.lib,

@@ -90,6 +90,8 @@ class Mesa(AutotoolsPackage):
     depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+llvm')
     depends_on('llvm+link_dylib', when='+llvm')
     depends_on('libelf', when='+llvm')
+    depends_on('damageproto', when='+hwrender')
+    depends_on('fixesproto', when='+hwrender')
 
     def url_for_version(self, version):
         """Handle Mesa version-based custom URLs."""
