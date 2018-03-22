@@ -734,7 +734,7 @@ def _libs_default_handler(descriptor, spec, cls):
     # finally search all of prefix recursively. The search stops when the first
     # match is found.
     prefix = spec.prefix
-    search_paths = [[prefix.lib, False], [prefix.lib64, False], [prefix, True]]
+    search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
 
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
