@@ -49,7 +49,7 @@ class Papi(Package):
 
     variant('components',
             default='',
-            values=('', 'example', 'cuda', 'nvml', 'infiniband', 
+            values=('', 'example', 'cuda', 'nvml', 'infiniband',
                     'infiniband_umad', 'powercap', 'rapl', 'lmsensors'),
             multi=True,
             description='Include optional components')
