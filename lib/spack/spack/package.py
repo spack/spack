@@ -1162,7 +1162,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             patch_list
             for spec, patch_list in self.patches.items()
             if self.spec.satisfies(spec))
-        return sorted(patchesToApply, key=lambda p: p.path_or_url)
+        return list(patchesToApply)
 
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
