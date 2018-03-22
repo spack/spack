@@ -65,8 +65,6 @@ class IntelMkl(IntelPackage):
     provides('scalapack')
     provides('mkl')
 
-    file_to_source = 'mklvars.sh'
-
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
