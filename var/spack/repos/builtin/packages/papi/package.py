@@ -47,7 +47,37 @@ class Papi(Package):
     version('5.4.1', '9134a99219c79767a11463a76b0b01a2')
     version('5.3.0', '367961dd0ab426e5ae367c2713924ffb')
 
+    variant('components',
+            default='',
+            values=('', 'example', 'cuda', 'nvml','infiniband', 'infiniband_umad', 'powercap', 'rapl', 'lmsensors'),
+            multi=True,
+            description='Include optional components')
+    depends_on('cuda', when='components=cuda')
+    depends_on('cuda', when='components=nvml')
+
     def install(self, spec, prefix):
+        with working_dir("src/components/cuda"):
+            if 'components=cuda' in spec:
+                configure_args = [
+                    "--with-cuda-dir=%s" % spec['cuda'].prefix,
+                    "--with-cupti-dir=%s/extras/CUPTI" % spec['cuda'].prefix]
+                configure(*configure_args)
+        with working_dir("src/components/nvml"):
+            if 'components=nvml' in spec:
+                configure_args = [
+                    "--with-nvml-incdir=%s/include" % spec['cuda'].prefix,
+                    "--with-nvml-libdir=%s/lib64/stubs" % spec['cuda'].prefix,
+                    "--with-cuda-dir=%s" % spec['cuda'].prefix]
+                configure(*configure_args)
+        with working_dir("src/components/infiniband_umad"):
+            if 'components=infiniband_umad' in spec:
+                configure()
+        with working_dir("src/components/lmsensors"):
+            if 'components=lmsensors' in spec:
+                configure_args = [
+                    "--with-sensors_incdir=/usr/include/sensors",
+                    "--with-sensors_libdir=/usr/lib64"]
+                configure(*configure_args)
         with working_dir("src"):
 
             configure_args = ["--prefix=%s" % prefix]
@@ -56,6 +86,10 @@ class Papi(Package):
             # an MPI package, we ensure that all attempts to use MPI
             # fail, so that PAPI does not get confused
             configure_args.append('MPICC=:')
+
+            configure_args.append('--with-components={0}'.format(
+                ' '.join(spec.variants['components'].value))
+            )
 
             configure(*configure_args)
 
