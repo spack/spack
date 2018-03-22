@@ -22,54 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install geopm
-#
-# You can edit this file again by typing:
-#
-#     spack edit geopm
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
 class Geopm(Package):
 
-    """Global Extensible Open Power Manager (GEOPM) is an extensible power
-    management framework targeting high performance computing. The library can
-    be extended to support new control algorithms and new hardware power
-    management features. The GEOPM package provides built in features ranging
-    from static management of power policy for each individual compute node, to
-    dynamic coordination of power policy and performance across all of the
-    compute nodes hosting one MPI job on a portion of a distributed computing
-    system. The dynamic coordination is implemented as a hierarchical control
-    system for scalable communication and decentralized control. The
-    hierarchical control system can optimize for various objective functions
-    including maximizing global application performance within a power bound.
-    The root of the control hierarchy tree can communicate through shared
-    memory with the system resource manage ment daemon to extend the hierarchy
-    above the individual MPI job level and enable management of system power
-    resources for multiple MPI jobs and multiple users by the system resource
-    manager. The GEOPM package provides the libgeopm library, the
-    libgeopmpolicy library, the geopmctl application and the geopmpolicy
-    application. The libgeopm library can be called within MPI applications to
-    enable application feedback for informing the control  decisions. If
-    modification of the target application is not desired then the geopmctl
-    application can be run concurrently with the target application. In this
-    case, target application feedback is inferred by querying the hardware
-    through Model Specific Registers (MSRs). With either method (libgeopm or
-    geopmctl), the control hierarchy tree writes processor power policy through
-    MSRs to enact policy decisions. The libgeopmpolicy library is used by a
-    resource manager to set energy policy control parameters for MPI jobs. Some
-    features of libgeopmpolicy are available through the geopmpolicy
-    application including support for static control."""
+    """GEOPM is an extensible power management framework targeting HPC.
+    The GEOPM package provides libgeopm, libgeopmpolicy and applications
+    geopmctl and geopmpolicy. GEOPM is designed to be extended for new control
+    algorithms and new hardware power management features via its plugin
+    infrastructure.
+
+    Note: GEOPM interfaces with hardware using Model Specific Registers (MSRs).
+    For propper usage make sure MSRs are made available directly or via the
+    msr-safe kernel module by your administrator."""
 
     homepage = "https://geopm.github.io"
     url      = "https://github.com/geopm/geopm/releases/download/v0.4.0/geopm-0.4.0.tar.gz"
@@ -78,7 +44,20 @@ class Geopm(Package):
     version('0.4.0', 'd4cc8fffe521296dab379857d7e2064d')
     version('0.3.0', '568fd37234396fff134f8d57b60f2b83')
     version('master', git='https://github.com/geopm/geopm.git', branch='master')
-    version('dev', git='https://github.com/geopm/geopm.git', branch='dev')
+    version('develop', git='https://github.com/geopm/geopm.git', branch='dev')
+
+    # Variants reflecting most ./configure --help options
+    variant('debug', default=False, description='Enable debug.')
+    variant('coverage', default=False, description='Enable for test coverage support and enable debug.')
+    variant('procfs', default=True, description='Use procfs depending on operating systems.')
+    variant('mpi', default=True, description='To disable dependent MPI components.')
+    variant('fortran', default=True, description='Build fortran interface.')
+    variant('doc', default=True, description='Create man pages with ronn.')
+    variant('openmp', default=True, description='Build with OpenMP.')
+    variant('ompt', default=False, description='Use OpenMP Tool interface.')
+    variant('hwloc', default=True, description='Build with hwloc.')
+    variant('gnu-ld', default=False, description='Assume C uses gnu-ld.')
+    variant('python', default=False, description='Using this option python dependencies are build using spack. These are required for running. It is assumed they are installed on the system. Use this only if this is not the case. (Long build time).')
 
     # Added dependencies.
     depends_on('m4', type='build')
@@ -86,7 +65,7 @@ class Geopm(Package):
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
     depends_on('numactl', type='build')
-    depends_on('mpi', when='~disable-mpi', type=('build', 'run'))
+    depends_on('mpi', when='+mpi', type=('build', 'run'))
     depends_on('hwloc', type=('build', 'run'))
 
     # python dependcies for running:
@@ -94,20 +73,6 @@ class Geopm(Package):
     depends_on('py-numpy', type='run', when='+python')
     depends_on('py-natsort', type='run', when='+python')
     depends_on('py-matplotlib', type='run', when='+python')
-
-    # Variants reflecting most ./configure --help options
-    variant('enable-debug', default=False, description='Enable debug.')
-    variant('enable-coverage', default=False, description='Build with test coverage support and enable debug.')
-    variant('disable-procfs', default=False, description='Disable use of procfs for use on operating systems.')
-    variant('disable-mpi', default=False, description='Do not build components that require MPI.')
-    variant('disable-fortran', default=False, description='Do not build fortran interface.')
-    variant('disable-doc', default=False, description='Do not create man pages with ronn.')
-    variant('enable-dependency-tracking', default=False, description='Enable depenency-tracking and do not reject slow dependency extractors. Else speeds up one-time build.')
-    variant('disable-openmp', default=False, description='Disable usage of OpenMP.')
-    variant('enable-ompt', default=False, description='Use OpenMP Tool interface.')
-    variant('hwloc', default=True, description='Build with hwloc. (By Spack, default=True)')
-    variant('gnu-ld', default=False, description='Assume C uses gnu-ld. (Default=False)')
-    variant('python', default=False, description='Using this option python dependecies are build using spack. These are required for running. It is assumed they are installed on the system. Use this only if this is not the case. (Long build time).')
 
     parallel = False
 
@@ -117,19 +82,19 @@ class Geopm(Package):
 
         args.append('--prefix=%s' % prefix)
 
-        if '+enable-debug' in spec:
+        if '+debug' in spec:
             args.append('--enable-debug')
 
-        if '+enable-coverage' in spec:
+        if '+coverage' in spec:
             args.append('--enable-coverage')
 
-        if '+enable-overhead' in spec:
+        if '+overhead' in spec:
             args.append('--enable-overhead')
 
-        if '+disable-procfs' in spec:
+        if '~procfs' in spec:
             args.append('--disable-procfs')
 
-        if '+disable-mpi' in spec:
+        if '~mpi' in spec:
             args.append('--disable-mpi')
         else:
             args.extend([
@@ -140,21 +105,16 @@ class Geopm(Package):
                 '--with-mpif77={0}'.format(spec['mpi'].mpif77),
             ])
 
-        if '+disable-fortran' in spec:
+        if '~fortran' in spec:
             args.append('--disable-fortran')
 
-        if '+disable-doc' in spec:
+        if '~doc' in spec:
             args.append('--disable-doc')
 
-        if '+enable-dependency-tracking' in spec:
-            args.append('--enable-dependency-tracking')
-        else:
-            args.append('--disable-dependency-tracking')
-
-        if '+disable-openmp' in spec:
+        if '~openmp' in spec:
             args.append('--disable-openmp')
 
-        if '+enable-ompt' in spec:
+        if '+ompt' in spec:
             args.append('--enable-ompt')
 
         if '+gnu-ld' in spec:
