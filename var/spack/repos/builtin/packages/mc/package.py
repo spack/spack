@@ -52,5 +52,5 @@ class Mc(AutotoolsPackage):
             '--without-x',
             '--with-screen=ncurses',
             '--enable-vfs-sftp'
-            ]
+        ]
         return args
