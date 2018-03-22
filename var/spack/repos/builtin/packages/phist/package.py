@@ -23,31 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
-import fnmatch
 from spack import *
 
 
 class Phist(CMakePackage):
-    """ PHIST - a Pipelined, Hybrid-parallel Iterative Solver Toolkit.
-
-PHIST provides implementations of and interfaces to block iterative solvers
-for sparse linear and eigenvalue problems. In contrast to other libraries we
-support multiple backends (e.g. Trilinos, PETSc and our own optimized kernels),
-and interfaces in multiple languages such as C, C++, Fortran 2003 and Python.
-PHIST has a clear focus on portability and hardware performance: in particular
-we support row-major storage of block vectors and using GPUs (via the ghost
-library or Trilinos/Tpetra).
-"""
+    """The Pipelined, Hybrid-parallel Iterative Solver Toolkit provides
+    implementations of and interfaces to block iterative solvers for sparse
+    linear and eigenvalue problems. In contrast to other libraries we support
+    multiple backends (e.g. Trilinos, PETSc and our own optimized kernels),
+    and interfaces in multiple languages such as C, C++, Fortran 2003 and
+    Python. PHIST has a clear focus on portability and hardware performance:
+    in particular support row-major storage of block vectors and using GPUs
+    (via the ghost library or Trilinos/Tpetra).
+    """
 
     homepage = "https://bitbucket.org/essex/phist/"
+    url = 'https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz'
 
     version('develop',
             git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
     version('master',
             git='https://bitbucket.org/essex/phist/phist.git', branch='master')
-    version('1.4.3', 'af3300378d4282366d148e38c3a3199a',
-            url='https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz')
+    version('1.4.3', 'af3300378d4282366d148e38c3a3199a')
 
     variant(name='kernel_lib', default='builtin',
             description='select the kernel library (backend) for phist',
@@ -79,7 +76,7 @@ library or Trilinos/Tpetra).
 
     # ###################### Dependencies ##########################
 
-    depends_on('cmake@3.8:')
+    depends_on('cmake@3.8:', type='build')
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
@@ -102,7 +99,7 @@ library or Trilinos/Tpetra).
 
         lapacke_libs = \
             (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
-        lapacke_include_dir = format(spec['lapack:c'].headers.directories[0])
+        lapacke_include_dir = spec['lapack:c'].headers.directories[0]
 
         args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
                 '-DPHIST_OUTLEV=%s' % outlev,
