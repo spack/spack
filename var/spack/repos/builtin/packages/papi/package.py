@@ -49,7 +49,8 @@ class Papi(Package):
 
     variant('components',
             default='',
-            values=('', 'example', 'cuda', 'nvml','infiniband', 'infiniband_umad', 'powercap', 'rapl', 'lmsensors'),
+            values=('', 'example', 'cuda', 'nvml', 'infiniband', 
+                    'infiniband_umad', 'powercap', 'rapl', 'lmsensors'),
             multi=True,
             description='Include optional components')
     depends_on('cuda', when='components=cuda')
