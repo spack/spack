@@ -58,6 +58,9 @@ class Nek5000(Package):
     variant('profiling', default=True, description='Build with profiling data.')
     variant('visit',     default=False, description='Build with Visit.')
 
+    # TODO: add a variant 'blas' or 'external-blas' to enable the usage of
+    #       Spack installed/configured blas.
+
     # Variant for MAXNEL, we need to read this from user
     variant(
         'MAXNEL',
@@ -78,6 +81,8 @@ class Nek5000(Package):
 
     # Dependencies
     depends_on('mpi', when="+mpi")
+    depends_on('libx11', when="+prenek")
+    depends_on('libx11', when="+postnek")
     depends_on('visit', when="+visit")
 
     @run_before('install')
@@ -108,8 +113,21 @@ class Nek5000(Package):
         FC  = self.compiler.f77
         CC  = self.compiler.cc
 
-        fflags = ' '.join(spec.compiler_flags['fflags'])
-        cflags = ' '.join(spec.compiler_flags['cflags'])
+        fflags = spec.compiler_flags['fflags']
+        cflags = spec.compiler_flags['cflags']
+        if ('+prenek' in spec) or ('+postnek' in spec):
+            libx11_h = find_headers('Xlib', spec['libx11'].prefix.include,
+                                    recursive=True)
+            if not libx11_h:
+                raise RuntimeError('Xlib.h not found in %s' %
+                                   spec['libx11'].prefix.include)
+            cflags += ['-L%s' % os.path.dirname(libx11_h.directories[0])]
+        if self.compiler.name in ['xl', 'xl_r']:
+            # Use '-qextname' to add underscores.
+            # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
+            fflags += ['-qextname', '-WF,-qnotrigraph']
+        fflags = ' '.join(fflags)
+        cflags = ' '.join(cflags)
 
         # Build the tools, maketools copy them to Nek5000/bin by default.
         # We will then install Nek5000/bin under prefix after that.
@@ -124,6 +142,37 @@ class Nek5000(Package):
                 filter_file(r'^#CFLAGS=.*', 'CFLAGS="{0}"'.format(cflags),
                             'maketools')
 
+            if self.compiler.name in ['xl', 'xl_r']:
+                # Patch 'maketools' to use '-qextname' when checking for
+                # underscore becasue 'xl'/'xl_r' use this option to enable the
+                # addition of the underscore.
+                filter_file(r'^\$FC -c ', '$FC -qextname -c ', 'maketools')
+
+            libx11_lib = find_libraries('libX11', spec['libx11'].prefix.lib,
+                                        shared=True, recursive=True)
+            if not libx11_lib:
+                libx11_lib = \
+                    find_libraries('libX11', spec['libx11'].prefix.lib64,
+                                   shared=True, recursive=True)
+            if not libx11_lib:
+                raise RuntimeError('libX11 not found in %s/{lib,lib64}' %
+                                   spec['libx11'].prefix)
+            # There is no other way to set the X11 library path except brute
+            # force:
+            filter_file(r'-L\$\(X\)', libx11_lib.search_flags,
+                        join_path('prenek', 'makefile'))
+            filter_file(r'-L\$\(X\)', libx11_lib.search_flags,
+                        join_path('postnek', 'makefile'))
+
+            if self.compiler.name in ['xl', 'xl_r']:
+                # Use '-qextname' when compiling mxm.f
+                filter_file('\$\(OLAGS\)', '-qextname $(OLAGS)',
+                            join_path('postnek', 'makefile'))
+            # Define 'rename_' function that calls 'rename'
+            with open(join_path('postnek', 'xdriver.c'), 'a') as xdriver:
+                xdriver.write('\nvoid rename_(char *from, char *to)\n{\n'
+                              '   rename(from, to);\n}\n')
+
             maxnel = self.spec.variants['MAXNEL'].value
             filter_file(r'^#MAXNEL\s*=.*', 'MAXNEL=' + maxnel, 'maketools')
 
@@ -132,8 +181,9 @@ class Nek5000(Package):
             # Build the tools
             if '+genbox' in spec:
                 makeTools('genbox')
-            if '+int_tp' in spec and self.version == Version('17.0.0-beta2'):
-                makeTools('int_tp')
+            # "ERROR: int_tp does not exist!"
+            # if '+int_tp' in spec:
+            #     makeTools('int_tp')
             if '+n2to3' in spec:
                 makeTools('n2to3')
             if '+postnek' in spec:
@@ -164,17 +214,26 @@ class Nek5000(Package):
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
-            if self.version >= Version('17.0'):
-                filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'makenek')
-                filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'makenek')
-                filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
-                            prefix.bin.Nek5000 + '\"',  'makenek')
-                if fflags:
-                    filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
-                                'maketools')
-                if cflags:
-                    filter_file(r'^#CFLAGS=.*', 'CFLAGS="{0}"'.format(cflags),
-                                'maketools')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'makenek')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'makenek')
+            filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
+                        prefix.bin.Nek5000 + '\"',  'makenek')
+            if fflags:
+                filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
+                            'makenek')
+            if cflags:
+                filter_file(r'^#CFLAGS=.*', 'CFLAGS="{0}"'.format(cflags),
+                            'makenek')
+
+        with working_dir('core'):
+            if self.compiler.name in ['xl', 'xl_r']:
+                # Patch 'core/makenek.inc' and 'makefile.template' to use
+                # '-qextname' when checking for underscore becasue 'xl'/'xl_r'
+                # use this option to enable the addition of the underscore.
+                filter_file(r'^\$FCcomp -c ', '$FCcomp -qextname -c ',
+                            'makenek.inc')
+                filter_file(r'\$\(FC\) -c \$\(L0\)',
+                            '$(FC) -c -qextname $(L0)', 'makefile.template')
 
         # Install Nek5000/bin in prefix/bin
         install_tree(binDir, prefix.bin)
