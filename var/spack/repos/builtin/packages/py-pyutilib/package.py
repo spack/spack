@@ -41,9 +41,13 @@ from spack import *
 
 
 class PyPyutilib(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """The PyUtilib project supports a collection of Python utilities,
+    including a well-developed component architecture and extensions to the
+    PyUnit testing framework. PyUtilib has been developed to support several
+    Python-centric projects, especially Pyomo. PyUtilib is available under the
+    BSD License."""
 
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/PyUtilib/pyutilib"
     url      = "https://github.com/PyUtilib/pyutilib/archive/5.5.1.tar.gz"
 
     version('5.6.2', '60c6ea5083e512211984347ffeca19d2')
@@ -57,7 +61,5 @@ class PyPyutilib(PythonPackage):
     version('5.3.4', '4fe1a8387c027f64b62ca99424275368')
     version('5.3.3', '27a713ca8d49714244646e1ce38778b9')
 
-    #depends_on('py-setuptools', type='build')
     depends_on('py-nose', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-
