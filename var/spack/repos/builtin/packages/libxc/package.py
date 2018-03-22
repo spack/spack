@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxc(Package):
+class Libxc(AutotoolsPackage):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
 
@@ -52,7 +52,7 @@ class Libxc(Package):
         # Libxc installs both shared and static libraries.
         # If a client ask for static explicitly then return
         # the static libraries
-        shared = False if 'static' in query_parameters else True
+        shared = ('static' not in query_parameters)
 
         # Libxc has a fortran90 interface: give clients the
         # possibility to query for it
@@ -63,31 +63,43 @@ class Libxc(Package):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
-    def install(self, spec, prefix):
-        # Optimizations for the Intel compiler, suggested by CP2K
+    def setup_environment(self, spack_env, run_env):
         optflags = '-O2'
         if self.compiler.name == 'intel':
-            optflags += ' -xAVX -axCORE-AVX2 -ipo'
+            # Optimizations for the Intel compiler, suggested by CP2K
+            #
+            # Note that not every lowly login node has advanced CPUs:
+            #
+            #   $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
+            #   $ ./a.out
+            #   Please verify that both the operating system and the \
+            #   processor support Intel(R) AVX instructions.
+            #
+            # NB: The same flags are applied in:
+            #   - ../libint/package.py
+            #
+            # Related:
+            #   - ../fftw/package.py        variants: simd, fma
+            #   - ../c-blosc/package.py     variant:  avx2
+            #   - ../r-rcppblaze/package.py AVX* in "info" but not in code?
+            #   - ../openblas/package.py    variants: cpu_target!?!
+            #   - ../cp2k/package.py
+            #
+            # Documentation at:
+            # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-ax-qax
+            #
+            optflags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
             if which('xiar'):
-                env['AR'] = 'xiar'
+                spack_env.set('AR', 'xiar')
 
-        if 'CFLAGS' in env and env['CFLAGS']:
-            env['CFLAGS'] += ' ' + optflags
-        else:
-            env['CFLAGS'] = optflags
+        spack_env.append_flags('CFLAGS',  optflags)
+        spack_env.append_flags('FCFLAGS', optflags)
 
-        if 'FCFLAGS' in env and env['FCFLAGS']:
-            env['FCFLAGS'] += ' ' + optflags
-        else:
-            env['FCFLAGS'] = optflags
+    def configure_args(self):
+        args = ['--enable-shared']
+        return args
 
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-shared')
-
-        make()
-
+    def check(self):
         # libxc provides a testsuite, but many tests fail
         # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
-        # make('check')
-
-        make('install')
+        pass
