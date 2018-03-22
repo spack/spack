@@ -54,9 +54,9 @@ class Mpfr(AutotoolsPackage):
         '3.1.2': '9f96a5c7cac1d6cd983ed9cf7d997074',
     }
 
-    for version, checksum in patches.items():
-        patch('http://www.mpfr.org/mpfr-{0}/allpatches'.format(version),
-              when='@' + version, sha256=checksum)
+    for ver, checksum in patches.items():
+        patch('http://www.mpfr.org/mpfr-{0}/allpatches'.format(ver),
+              when='@' + ver, sha256=checksum)
 
     def configure_args(self):
         args = [
