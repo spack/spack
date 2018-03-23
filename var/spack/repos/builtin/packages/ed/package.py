@@ -25,17 +25,14 @@
 from spack import *
 
 
-class Bc(AutotoolsPackage):
-    """bc is an arbitrary precision numeric processing language. Syntax is
-    similar to C, but differs in many substantial areas. It supports
-    interactive execution of statements."""
+class Ed(AutotoolsPackage):
+    """GNU ed is a line-oriented text editor. It is used to create,
+       display, modify and otherwise manipulate text files, both
+       interactively and via shell scripts."""
 
-    homepage = "https://www.gnu.org/software/bc"
-    url = "https://ftp.gnu.org/gnu/bc/bc-1.07.tar.gz"
+    homepage = "https://www.gnu.org/software/ed"
+    url = "https://ftp.gnu.org/gnu/ed/ed-1.4.tar.gz"
 
-    version('1.07', 'e91638a947beadabf4d7770bdbb3d512')
-
-    depends_on('ed', type='build')
-    depends_on('texinfo', type='build')
+    version('1.4', 'da0ddc0e0b0bec2da4b13b0d0d1bce2b')
 
     parallel = False
