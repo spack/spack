@@ -208,6 +208,9 @@ class Openmpi(AutotoolsPackage):
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
+    if sys.platform != 'darwin':
+        depends_on('numactl') 
+
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -215,7 +218,6 @@ class Openmpi(AutotoolsPackage):
     # See #7483 for context.
     depends_on('hwloc@:1.999')
 
-    depends_on('numactl') 
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
