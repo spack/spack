@@ -201,6 +201,17 @@ class Openmpi(AutotoolsPackage):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('ucx', default=False, description='Enable UCX support')
     variant('pmi', default=False, description='Enable PMI support')
+    # Adding support to build a debug version of OpenMPI that activates
+    # Memchecker, as described here:
+    #
+    # https://www.open-mpi.org/faq/?category=debugging#memchecker_what
+    #
+    # This option degrades run-time support, and thus is disabled by default
+    variant(
+        'memchecker',
+        default=False,
+        description='Memchecker support for debugging [degrades performance]'
+    )
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -219,6 +230,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('ucx', when='+ucx')
     depends_on('zlib', when='@3.0.0:')
+    depends_on('valgrind~mpi', when='+memchecker')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -330,6 +342,13 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('schedulers'))
         # PMI
         config_args.extend(self.with_or_without('pmi'))
+
+        config_args.extend(self.enable_or_disable('memchecker'))
+        if spec.satisfies('+memchecker', strict=True):
+            config_args.extend([
+                '--enable-debug',
+                '--with-valgrind={0}'.format(spec['valgrind'].prefix),
+            ])
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
