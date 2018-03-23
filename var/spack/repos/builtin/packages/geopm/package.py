@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Geopm(Package):
+class Geopm(AutotoolsPackage):
 
     """GEOPM is an extensible power management framework targeting HPC.
     The GEOPM package provides libgeopm, libgeopmpolicy and applications
@@ -69,7 +69,8 @@ class Geopm(Package):
     depends_on('libtool', type='build')
     depends_on('numactl', type=('build', 'run'))
     depends_on('mpi', when='+mpi', type=('build', 'run'))
-    depends_on('hwloc', type=('build', 'run'))
+    # TODO: check if hwloc@specific-version still required with future openmpi
+    depends_on('hwloc@1.11.9', when='+hwloc', type=('build', 'run'))
     depends_on('py-pandas', type='run')
     depends_on('py-numpy', type='run')
     depends_on('py-natsort', type='run')
@@ -77,11 +78,9 @@ class Geopm(Package):
 
     parallel = False
 
-    def install(self, spec, prefix):
+    def configure_args(self):
         spec = self.spec
         args = []
-
-        args.append('--prefix=%s' % prefix)
 
         if '+debug' in spec:
             args.append('--enable-debug')
@@ -123,11 +122,7 @@ class Geopm(Package):
 
         if '+hwloc' in spec:
             args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-        # else:
-        #     args.append('--without-hwloc')
+        else:
+            args.append('--without-hwloc')
 
-        bash = which('bash')
-        bash('./autogen.sh')
-        configure(*args)
-        make()
-        make('install')
+        return args
