@@ -77,8 +77,7 @@ class Tcl(AutotoolsPackage):
         :returns: The tclsh command
         :rtype: Executable
         """
-        path = os.path.realpath(os.path.join(self.prefix.bin, 'tclsh'))
-        return Executable(path)
+        return Executable(os.path.realpath(self.prefix.bin.tclsh))
 
     @property
     def tcl_lib_dir(self):
