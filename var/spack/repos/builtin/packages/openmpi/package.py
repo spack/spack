@@ -218,6 +218,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('ucx', when='+ucx')
+    depends_on('zlib', when='@3.0.0:')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -319,6 +320,9 @@ class Openmpi(AutotoolsPackage):
         if self.spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
+
+        if spec.satisfies('@3.0.0:', strict=True):
+            config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
         # Fabrics
         config_args.extend(self.with_or_without('fabrics'))
