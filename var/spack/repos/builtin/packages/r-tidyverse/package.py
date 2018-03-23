@@ -29,8 +29,7 @@ class RTidyverse(RPackage):
     """The 'tidyverse' is a set of packages that work in harmony because they
        share common data representations and 'API' design. This package is
        designed to make it easy to install and load multiple 'tidyverse'
-       packages in a single step. Learn more about the 'tidyverse' at
-       <https://tidyverse.org>."""
+       packages in a single step."""
 
     homepage = "http://tidyverse.tidyverse.org/"
     url      = "https://cran.r-project.org/src/contrib/tidyverse_1.2.1.tar.gz"
