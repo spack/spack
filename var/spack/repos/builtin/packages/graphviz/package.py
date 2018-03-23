@@ -39,11 +39,6 @@ class Graphviz(AutotoolsPackage):
     version('2.40.0', '4ea6fd64603536406166600bcc296fc8')
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
-    
-    homepage = 'http://www.graphviz.org'
-
-
-
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
     variant('sharp', default=False,
