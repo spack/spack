@@ -33,6 +33,8 @@ class IntelIpp(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2018.2.199', 'f87276b485d2f6ec070c1b41ac1ed871',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12726/l_ipp_2018.2.199.tgz')
     version('2018.1.163', '183d4888f3d91f632b617fdd401f04ed',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_ipp_2018.1.163.tgz')
     version('2018.0.128', 'e64190bc9041b52d9eed7e8ee91bf1de',

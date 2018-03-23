@@ -33,6 +33,8 @@ class IntelDaal(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/daal"
 
+    version('2018.2.199', 'd015ff34a87a18922736b5fba0d0b0e0',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12727/l_daal_2018.2.199.tgz")
     version('2018.1.163', '12a9586734a03a956095440161fd741a',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_daal_2018.1.163.tgz")
     version('2018.0.128', '5779e670f67c33cc1c6cdcdca5e4636e',

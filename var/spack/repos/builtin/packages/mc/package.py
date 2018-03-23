@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,16 +25,32 @@
 from spack import *
 
 
-class Giflib(AutotoolsPackage):
-    """The GIFLIB project maintains the giflib service library, which has
-    been pulling images out of GIFs since 1989."""
+class Mc(AutotoolsPackage):
+    """The GNU Midnight Commander is a visual file manager."""
 
-    homepage = "http://giflib.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
+    homepage = "https://midnight-commander.org"
+    url      = "http://ftp.midnight-commander.org/mc-4.8.20.tar.bz2"
 
-    version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
+    version('4.8.20', 'dcfc7aa613c62291a0f71f6b698d8267')
 
-    patch('bsd-head.patch')
+    depends_on('ncurses')
+    depends_on('pkg-config', type='build')
+    depends_on('glib@2.14:')
+    depends_on('libssh2@1.2.5:')
 
-    def check(self):
-        make('check', parallel=False)
+    def setup_environment(self, spack_env, run_env):
+        # Fix compilation bug on macOS by pretending we don't have utimensat()
+        # https://github.com/MidnightCommander/mc/pull/130
+        if 'darwin' in self.spec.architecture:
+            env['ac_cv_func_utimensat'] = 'no'
+
+    def configure_args(self):
+        args = [
+            '--disable-debug',
+            '--disable-dependency-tracking',
+            '--disable-silent-rules',
+            '--without-x',
+            '--with-screen=ncurses',
+            '--enable-vfs-sftp'
+        ]
+        return args

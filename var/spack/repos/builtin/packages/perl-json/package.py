@@ -25,16 +25,10 @@
 from spack import *
 
 
-class Giflib(AutotoolsPackage):
-    """The GIFLIB project maintains the giflib service library, which has
-    been pulling images out of GIFs since 1989."""
+class PerlJson(PerlPackage):
+    """JSON (JavaScript Object Notation) encoder/decoder"""
 
-    homepage = "http://giflib.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
+    homepage = "http://search.cpan.org/~ishigaki/JSON/lib/JSON.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/I/IS/ISHIGAKI/JSON-2.97001.tar.gz"
 
-    version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
-
-    patch('bsd-head.patch')
-
-    def check(self):
-        make('check', parallel=False)
+    version('2.97001', '693d6ff167496362f8ec6c3c5b8ba5ee')
