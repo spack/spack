@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -31,6 +31,7 @@ from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
 def check_spec(abstract, concrete):
@@ -147,6 +148,18 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
+    def test_concretize_disable_compiler_existence_check(self):
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            check_concretize('dttop %gcc@100.100')
+
+        try:
+            spack.concretizer.disable_compiler_existence_check()
+            spec = check_concretize('dttop %gcc@100.100')
+            assert spec.satisfies('%gcc@100.100')
+            assert spec['dtlink3'].satisfies('%gcc@100.100')
+        finally:
+            spack.concretizer.enable_compiler_existence_check()
+
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
@@ -192,6 +205,42 @@ class TestConcretize(object):
         assert set(client.compiler_flags['fflags']) == set(['-O0'])
         assert not set(cmake.compiler_flags['fflags'])
 
+    def test_architecture_inheritance(self):
+        """test_architecture_inheritance is likely to fail with an
+        UnavailableCompilerVersionError if the architecture is concretized
+        incorrectly.
+        """
+        spec = Spec('cmake-client %gcc@4.7.2 os=fe ^ cmake')
+        spec.concretize()
+        assert spec['cmake'].architecture == spec.architecture
+
+    def test_architecture_deep_inheritance(self):
+        """Make sure that indirect dependencies receive architecture
+        information from the root even when partial architecture information
+        is provided by an intermediate dependency.
+        """
+        saved_repo = spack.repo
+
+        default_dep = ('link', 'build')
+
+        bazpkg = MockPackage('bazpkg', [], [])
+        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
+        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
+        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+
+        spack.repo = mock_repo
+
+        try:
+            spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
+                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+            spec.concretize()
+
+            for s in spec.traverse(root=False):
+                assert s.architecture.target == spec.architecture.target
+
+        finally:
+            spack.repo = saved_repo
+
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
         spec.concretize()
@@ -204,6 +253,7 @@ class TestConcretize(object):
         assert s['mpi'].version == ver('1.10.3')
 
     def test_concretize_two_virtuals(self):
+
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
 

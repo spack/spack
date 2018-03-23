@@ -38,6 +38,7 @@ class PyPygobject(AutotoolsPackage):
 
     extends('python')
 
+    depends_on('pkgconfig', type=('build'))
     depends_on("libffi")
     depends_on('glib')
     depends_on('py-py2cairo', type=('build', 'run'))

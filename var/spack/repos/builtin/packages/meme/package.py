@@ -37,19 +37,20 @@ class Meme(AutotoolsPackage):
     version('4.11.4', '371f513f82fa0888205748e333003897')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('image-magick', default=False, description='Enable image-magick for png output')
 
     depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
     depends_on('libgcrypt', type=('link'))
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
+    depends_on('image-magick', type=('build', 'run'), when='+image-magick')
+    depends_on('perl-xml-parser', type=('build', 'run'))
 
-    # disable mpi support
     def configure_args(self):
         spec = self.spec
-        args = []
+        # have meme build its own versions of libxml2/libxslt, see #6736
+        args = ['--enable-build-libxml2', '--enable-build-libxslt']
         if '~mpi' in spec:
             args += ['--enable-serial']
         return args

@@ -237,9 +237,15 @@ class PythonPackage(PackageBase):
         # Spack manages the package directory on its own by symlinking
         # extensions into the site-packages directory, so we don't really
         # need the .pth files or egg directories, anyway.
+        #
+        # We need to make sure this is only for build dependencies. A package
+        # such as py-basemap will not build properly with this flag since
+        # it does not use setuptools to build and those does not recognize
+        # the --single-version-externally-managed flag
         if ('py-setuptools' == spec.name or          # this is setuptools, or
-            'py-setuptools' in spec._dependencies):  # it's an immediate dep
-            args += ['--single-version-externally-managed', '--root=/']
+            'py-setuptools' in spec._dependencies and  # it's an immediate dep
+            'build' in spec._dependencies['py-setuptools'].deptypes):
+                args += ['--single-version-externally-managed', '--root=/']
 
         return args
 
