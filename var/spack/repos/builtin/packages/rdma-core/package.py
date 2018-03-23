@@ -39,7 +39,7 @@ class RdmaCore(CMakePackage):
 
     def cmake_args(self):
         cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
-                      join_path(self.spec.prefix, 'etc')]
+                      self.spec.prefix.etc]
         return cmake_args
 
     @run_before('cmake')
