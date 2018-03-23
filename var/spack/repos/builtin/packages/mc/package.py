@@ -26,7 +26,7 @@ from spack import *
 
 
 class Mc(AutotoolsPackage):
-    """GNU Midnight Commander is a visual file manager."""
+    """The GNU Midnight Commander is a visual file manager."""
 
     homepage = "https://midnight-commander.org"
     url      = "http://ftp.midnight-commander.org/mc-4.8.20.tar.bz2"
