@@ -34,14 +34,14 @@ class Beast1(Package):
 
     version('1.8.4', 'cb8752340c1f77a22d39ca4fe09687b0')
 
-    depends_on('java')
+    depends_on('java', type='run')
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('BEAST1', self.prefix)
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
-        install_tree('examples', join_path(self.prefix, 'examples'))
-        install_tree('images', join_path(self.prefix, 'images'))
+        install_tree('examples', prefix.examples)
+        install_tree('images', prefix.images)
         install_tree('lib', prefix.lib)
-        install_tree('doc', join_path(self.prefix, 'doc'))
+        install_tree('doc', prefix.doc)
