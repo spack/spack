@@ -26,7 +26,6 @@ from spack import *
 
 
 class Geopm(AutotoolsPackage):
-
     """GEOPM is an extensible power management framework targeting HPC.
     The GEOPM package provides libgeopm, libgeopmpolicy and applications
     geopmctl and geopmpolicy, as well as tools for postprocessing.
@@ -67,10 +66,10 @@ class Geopm(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
-    depends_on('numactl', type=('build', 'run'))
-    depends_on('mpi', when='+mpi', type=('build', 'run'))
+    depends_on('numactl', type=('build', 'link', 'run'))
+    depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
     # TODO: check if hwloc@specific-version still required with future openmpi
-    depends_on('hwloc@1.11.9', when='+hwloc', type=('build', 'run'))
+    depends_on('hwloc@1.11.9', when='+hwloc', type=('build', 'link', 'run'))
     depends_on('py-pandas', type='run')
     depends_on('py-numpy', type='run')
     depends_on('py-natsort', type='run')
