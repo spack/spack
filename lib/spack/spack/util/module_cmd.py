@@ -120,7 +120,7 @@ def unload_module(mod):
     not check whether conflicts arise from the unloaded module"""
     modulecmd = get_module_cmd()
     exec(compile(modulecmd('unload', mod, output=str, error=str), '<string>',
-        'exec'))
+                           'exec'))
 
 
 def load_module(mod):
