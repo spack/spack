@@ -29,9 +29,9 @@ class Geopm(Package):
 
     """GEOPM is an extensible power management framework targeting HPC.
     The GEOPM package provides libgeopm, libgeopmpolicy and applications
-    geopmctl and geopmpolicy. GEOPM is designed to be extended for new control
-    algorithms and new hardware power management features via its plugin
-    infrastructure.
+    geopmctl and geopmpolicy, as well as tools for postprocessing.
+    GEOPM is designed to be extended for new control algorithms and new
+    hardware power management features via its plugin infrastructure.
 
     Note: GEOPM interfaces with hardware using Model Specific Registers (MSRs).
     For propper usage make sure MSRs are made available directly or via the
@@ -48,31 +48,32 @@ class Geopm(Package):
 
     # Variants reflecting most ./configure --help options
     variant('debug', default=False, description='Enable debug.')
-    variant('coverage', default=False, description='Enable for test coverage support and enable debug.')
-    variant('procfs', default=True, description='Use procfs depending on operating systems.')
-    variant('mpi', default=True, description='To disable dependent MPI components.')
+    variant('coverage', default=False, description='Enable test coverage support, enables debug by default.')
+    variant('procfs', default=True, description='Enable procfs (disable for OSes not using procfs).')
+    variant('mpi', default=True, description='Enable MPI dependent components.')
     variant('fortran', default=True, description='Build fortran interface.')
-    variant('doc', default=True, description='Create man pages with ronn.')
+    # TODO: add explicit ruby-ronn dependency. For +doc.
+    # This is currently done by the install process and should be handled
+    # as configure option --with-ronn=/path/to/ronn.
+    # Changes are required in the GEOPM install! To be done in future version.
+    variant('doc', default=True, description='Create man pages with ruby-ronn.')
     variant('openmp', default=True, description='Build with OpenMP.')
-    variant('ompt', default=False, description='Use OpenMP Tool interface.')
+    variant('ompt', default=False, description='Use OpenMP Tools Interface.')
     variant('hwloc', default=True, description='Build with hwloc.')
-    variant('gnu-ld', default=False, description='Assume C uses gnu-ld.')
-    variant('python', default=False, description='Using this option python dependencies are build using spack. These are required for running. It is assumed they are installed on the system. Use this only if this is not the case. (Long build time).')
+    variant('gnu-ld', default=False, description='Assume C compiler uses gnu-ld.')
 
     # Added dependencies.
     depends_on('m4', type='build')
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
-    depends_on('numactl', type='build')
+    depends_on('numactl', type=('build', 'run'))
     depends_on('mpi', when='+mpi', type=('build', 'run'))
     depends_on('hwloc', type=('build', 'run'))
-
-    # python dependcies for running:
-    depends_on('py-pandas', type='run', when='+python')
-    depends_on('py-numpy', type='run', when='+python')
-    depends_on('py-natsort', type='run', when='+python')
-    depends_on('py-matplotlib', type='run', when='+python')
+    depends_on('py-pandas', type='run')
+    depends_on('py-numpy', type='run')
+    depends_on('py-natsort', type='run')
+    depends_on('py-matplotlib', type='run')
 
     parallel = False
 
