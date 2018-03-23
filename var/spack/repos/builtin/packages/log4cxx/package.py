@@ -45,8 +45,6 @@ class Log4cxx(AutotoolsPackage):
     patch('log4cxx-0.10.0-narrowing-fixes-from-upstream.patch')
 
     def configure_args(self):
-        args = [
-                '--disable-static',
-                ]
+        args = ['--disable-static']
 
         return args
