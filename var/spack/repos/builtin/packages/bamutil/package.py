@@ -36,6 +36,8 @@ class Bamutil(MakefilePackage):
 
     version('1.0.13', '08b7d0bb1d60be104a11f0e54ddf4a79')
 
+    depends_on('zlib', type=('build', 'link'))
+
     # Looks like this will be fixed in 1.0.14.
     # https://github.com/statgen/libStatGen/issues/9
     patch('libstatgen-issue-9.patch', when='@1.0.13:')

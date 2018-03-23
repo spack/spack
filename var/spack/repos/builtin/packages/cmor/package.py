@@ -34,6 +34,7 @@ class Cmor(AutotoolsPackage):
     homepage = "http://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.1.2.tar.gz"
 
+    version('3.3.0', 'cfdeeddab1aedb823e26ec38723bd67e')
     version('3.2.0', 'b48105105d4261012c19cd65e89ff7a6')
     version('3.1.2', '72f7227159c901e4bcf80d2c73a8ce77')
 
@@ -43,7 +44,7 @@ class Cmor(AutotoolsPackage):
     depends_on('uuid')
     depends_on('netcdf')
     depends_on('udunits2')
-    depends_on('hdf5@:1.8')
+    depends_on('hdf5@:1.8.19')
 
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')

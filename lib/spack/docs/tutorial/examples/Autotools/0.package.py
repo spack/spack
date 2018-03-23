@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mpileaks(AutoToolsPackage):
+class Mpileaks(AutotoolsPackage):
     """Tool to detect and report leaked MPI objects like MPI_Requests and
        MPI_Datatypes."""
 

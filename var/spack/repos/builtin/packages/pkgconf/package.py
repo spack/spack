@@ -40,6 +40,11 @@ class Pkgconf(AutotoolsPackage):
 
     provides('pkgconfig')
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Adds the ACLOCAL path for autotools."""
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))
+
     @run_after('install')
     def link_pkg_config(self):
         symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))

@@ -38,7 +38,7 @@ class Branson(CMakePackage):
     version('develop', git='https://github.com/lanl/branson', branch='develop')
     version('1.01', 'cf7095a887a8dd7d417267615bd0452a')
 
-    depends_on('mpi')
+    depends_on('mpi@2:')
     depends_on('boost')
     depends_on('metis')
     depends_on('parmetis')

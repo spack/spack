@@ -65,14 +65,16 @@ def _mxm_dir():
 
 
 class Openmpi(AutotoolsPackage):
-    """The Open MPI Project is an open source Message Passing Interface
-       implementation that is developed and maintained by a consortium
-       of academic, research, and industry partners. Open MPI is
-       therefore able to combine the expertise, technologies, and
-       resources from all across the High Performance Computing
-       community in order to build the best MPI library available.
-       Open MPI offers advantages for system and software vendors,
-       application developers and computer science researchers.
+    """An open source Message Passing Interface implementation.
+
+    The Open MPI Project is an open source Message Passing Interface
+    implementation that is developed and maintained by a consortium
+    of academic, research, and industry partners. Open MPI is
+    therefore able to combine the expertise, technologies, and
+    resources from all across the High Performance Computing
+    community in order to build the best MPI library available.
+    Open MPI offers advantages for system and software vendors,
+    application developers and computer science researchers.
     """
 
     homepage = "http://www.open-mpi.org"
@@ -83,6 +85,7 @@ class Openmpi(AutotoolsPackage):
     version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
 
     # Still supported
+    version('2.1.3', '46079b6f898a412240a0bf523e6cd24b')  # libmpi.so.20.10.2
     version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
     version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
     version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
@@ -204,6 +207,12 @@ class Openmpi(AutotoolsPackage):
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
+    # ompi@:3.0.0 doesn't support newer hwloc releases:
+    # "configure: error: OMPI does not currently support hwloc v2 API"
+    # Future ompi releases may support it, needs to be verified.
+    # See #7483 for context.
+    depends_on('hwloc@:1.999')
+
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
@@ -219,6 +228,13 @@ class Openmpi(AutotoolsPackage):
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
         return url.format(version.up_to(2), version)
+
+    @property
+    def headers(self):
+        hdrs = HeaderList(find(self.prefix.include, 'mpi.h', recursive=False))
+        if not hdrs:
+            hdrs = HeaderList(find(self.prefix, 'mpi.h', recursive=True))
+        return hdrs or None
 
     @property
     def libs(self):

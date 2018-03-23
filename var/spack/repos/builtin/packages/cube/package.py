@@ -44,6 +44,8 @@ class Cube(AutotoolsPackage):
 
     variant('gui', default=False, description='Build CUBE GUI')
 
+    patch('qt-version.patch', when='@4.3.0:4.3.999 +gui')
+
     depends_on('zlib')
 
     depends_on('qt@5:', when='@4.3.0:4.3.999 +gui')

@@ -41,6 +41,7 @@ class Picard(Package):
 
     # They started distributing a single jar file at v2.6.0, prior to
     # that it was a .zip file with multiple .jar and .so files
+    version('2.18.0', '20045ff141e4a67512365f0b6bbd8229', expand=False)
     version('2.17.0', '72cc527f1e4ca6a799ae0117af60b54e', expand=False)
     version('2.16.0', 'fed8928b03bb36e355656f349e579083', expand=False)
     version('2.15.0', '3f5751630b1a3449edda47a0712a64e4', expand=False)

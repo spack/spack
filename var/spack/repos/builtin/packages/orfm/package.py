@@ -35,3 +35,5 @@ class Orfm(AutotoolsPackage):
     url      = "https://github.com/wwood/OrfM/releases/download/v0.7.1/orfm-0.7.1.tar.gz"
 
     version('0.7.1', 'fcf18283a028cea2af90663a76a73a2a')
+
+    depends_on('zlib', type='link')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Relion(CMakePackage):
+class Relion(CMakePackage, CudaPackage):
     """RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on) is a
     stand-alone computer program that employs an empirical Bayesian approach to
     refinement of (multiple) 3D reconstructions or 2D class averages in
@@ -40,10 +40,6 @@ class Relion(CMakePackage):
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
-    variant('cuda_arch', default=None, description='CUDA architecture',
-           values=('20', '30', '32', '35', '50', '52', '53', '60', '61', '62'
-               '70'),
-           multi=True)
     variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
     variant('build_type', default='RelWithDebInfo',
@@ -68,15 +64,15 @@ class Relion(CMakePackage):
             '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
         ]
+
+        carch = self.spec.variants['cuda_arch'].value
+
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
             ]
-
-        carch = self.spec.variants['cuda_arch'].value
-
-        if carch is not None:
-            args += [
-                '-DCUDA_ARCH=%s' % (carch),
-            ]
+            if carch is not None:
+                args += [
+                    '-DCUDA_ARCH=%s' % (carch),
+                ]
         return args

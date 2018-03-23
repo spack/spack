@@ -201,7 +201,7 @@ class IntelParallelStudio(IntelPackage):
         mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
@@ -258,7 +258,7 @@ class IntelParallelStudio(IntelPackage):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recursive=True
         )
 
     @property
@@ -266,7 +266,7 @@ class IntelParallelStudio(IntelPackage):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
+        return find_headers('mpi', root=mpi_root, recursive=False)
 
     @property
     def components(self):
