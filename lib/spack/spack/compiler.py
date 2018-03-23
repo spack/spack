@@ -214,9 +214,6 @@ class Compiler(object):
             "If you think it should, please edit the compiler subclass and",
             "submit a pull request or issue.")
 
-    @property
-    def multiple_definition_flag(self):
-        return "-Wl,--allow-multiple-definition"
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.

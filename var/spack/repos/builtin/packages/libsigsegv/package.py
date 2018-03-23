@@ -37,12 +37,17 @@ class Libsigsegv(AutotoolsPackage):
     version('2.11', 'a812d9481f6097f705599b218eea349f')
     version('2.10', '7f96fb1f65b3b8cbc1582fb7be774f0f')
 
+    def flag_handler(self, name, flags):
+        if name == 'ldflags' and self.spec.satisfies('~shared platform=cray'):
+            # Cray compiler wrappers link -lc. Libsigsegv links -lpthreads.
+            # linking -lc -lpthreads statically errors on multiple definitions.
+            flags.append('-Wl,--allow-multiple-definition')
+        return(flags, None, None)
+
     def configure_args(self):
         args = []
         if "+shared" in self.spec:
             args.append("--enable-shared")
         else:
             args.append("--disable-shared")
-        if "platform=cray" in self.spec and "~shared" in self.spec:
-            args.append("LDFLAGS={0}".format(self.compiler.multiple_definition_flag))
         return args
