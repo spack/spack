@@ -109,6 +109,14 @@ class Python(AutotoolsPackage):
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
     patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
 
+    # For more information refer to this bug report:
+    # https://bugs.python.org/issue29712
+    conflicts(
+        '@:2.8 +shared',
+        when='+optimizations',
+        msg='+optimizations is incompatible with +shared in python@2.X'
+    )
+
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
