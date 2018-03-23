@@ -35,6 +35,8 @@ class Log4cxx(AutotoolsPackage):
 
     depends_on('libxml2')
     depends_on('apr-util')
+    depends_on('apr')
+    depends_on('zip')
 
     build_directory = 'spack-build'
 
@@ -43,8 +45,8 @@ class Log4cxx(AutotoolsPackage):
     patch('log4cxx-0.10.0-narrowing-fixes-from-upstream.patch')
 
     def configure_args(self):
-        args = ['--disable-static',
-                # 'apr''s 'bin' isn't pulled (via apr-util) into build env
-                '--with-apr={0}'.format(self.spec['apr'].prefix)]
+        args = [
+                '--disable-static',
+                ]
 
         return args
