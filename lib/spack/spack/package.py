@@ -820,11 +820,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def env_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.env')
+        if self.stage.source_path is None:
+            return None
+        else:
+            return os.path.join(self.stage.source_path, 'spack-build.env')
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.out')
+        if self.stage.source_path is None:
+            return None
+        else:
+            return os.path.join(self.stage.source_path, 'spack-build.out')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
