@@ -154,13 +154,15 @@ class Python(AutotoolsPackage):
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
 
-        if '@2.7.13:2.8,3.5.3:' in spec and '+optimizations' in spec:
+        if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
+                and '+optimizations' in spec:
             config_args.append('--enable-optimizations')
 
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
 
-        if '%intel' in spec and '@2.7.12:2.8,3.5.2:' in spec:
+        if spec.satisfies('%intel', strict=True) and \
+                spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
             config_args.append('--with-icc')
 
         if '+shared' in spec:
