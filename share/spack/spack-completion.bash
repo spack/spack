@@ -114,10 +114,9 @@ function _bash_completion_spack {
 function _spack {
     if $list_options
     then
-        compgen -W "-h --help --color --color=always --color=auto --color=never
-                    -d --debug -D --pdb -k --insecure -m --mock -p --profile -P
-                    --sorted-profile --lines -v --verbose -s --stacktrace -V
-                    --version" -- "$cur"
+        compgen -W "-h --help --color -d --debug -D --pdb -k --insecure
+                    -m --mock -p --profile -P --sorted-profile --lines
+                    -v --verbose -s --stacktrace -V --version" -- "$cur"
     else
         compgen -W "$(_subcommands)" -- "$cur"
     fi
@@ -241,8 +240,7 @@ function _spack_clone {
 function _spack_commands {
     if $list_options
     then
-        compgen -W "-h --help --format --format=subcommands --format=rst
-                    --format=names" -- "$cur"
+        compgen -W "-h --help --format" -- "$cur"
     fi
 }
 
@@ -555,8 +553,8 @@ function _spack_install {
         compgen -W "-h --help --only -j --jobs --overwrite --keep-prefix
                     --keep-stage --dont-restage --use-cache --show-log-on-error
                     --source -n --no-checksum -v --verbose --fake -f --file
-                    --clean --dirty --test --test=root --test=all --log-format
-                    --log-file -y --yes-to-all" -- "$cur"
+                    --clean --dirty --test --log-format --log-file
+                    -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
