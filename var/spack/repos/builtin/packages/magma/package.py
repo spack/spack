@@ -41,6 +41,7 @@ class Magma(CMakePackage):
     variant('fortran', default=True,
             description='Enable Fortran bindings support')
 
+    depends_on('blas')
     depends_on('lapack')
     depends_on('cuda')
 
@@ -49,6 +50,7 @@ class Magma(CMakePackage):
 
     patch('ibm-xl.patch', when='@2.2:%xl')
     patch('ibm-xl.patch', when='@2.2:%xl_r')
+    patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
 
     def cmake_args(self):
         spec = self.spec
@@ -57,8 +59,12 @@ class Magma(CMakePackage):
         options.extend([
             '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
             '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix,
-            '-DLAPACK_LIBRARIES=%s;%s' % (spec['blas'].libs,
-                                          spec['lapack'].libs)
+            '-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'),
+            # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
+            # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to
+            # explicitly add blas to LAPACK_LIBRARIES.
+            '-DLAPACK_LIBRARIES=%s' %
+            (spec['lapack'].libs + spec['blas'].libs).joined(';')
         ])
 
         if '+fortran' in spec:
