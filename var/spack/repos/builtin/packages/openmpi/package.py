@@ -215,6 +215,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
+              msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -280,20 +282,6 @@ class Openmpi(AutotoolsPackage):
         if (path is not None):
             line += '={0}'.format(path)
         return line
-
-    def with_or_without_slurm(self, activated):
-        # PMI and SLURM
-        # https://www.open-mpi.org/faq/?category=slurm
-        # https://slurm.schedmd.com/mpi_guide.html#open_mpi
-        # TODO: Add PMIx support for openmpi(>2.0.0)
-        spec = self.spec
-        if not activated:
-            return '--without-slurm'
-        elif spec.satisfies('@1.5.4:') and '+pmi' not in spec:
-            raise SpackError(
-                "+pmi is required for openmpi(>=1.5.5) to work with SLURM.")
-        else:
-            return '--with-slurm'
 
     @run_before('autoreconf')
     def die_without_fortran(self):
