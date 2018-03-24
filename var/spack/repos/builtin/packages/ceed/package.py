@@ -90,7 +90,7 @@ class Ceed(Package):
     depends_on('hpgmg@a0a5510+fe', when='@1.0.0+petsc')
 
     # MAGMA
-    depends_on('magma@2.2.0', when='@1.0.0+cuda')
+    depends_on('magma@2.3.0', when='@1.0.0+cuda')
 
     # PUMI
     depends_on('pumi@2.1.0', when='@1.0.0+pumi')
@@ -106,6 +106,9 @@ class Ceed(Package):
     # petsc explicitly requires 'hypre~internal-superlu' which for the
     # concretizer is a conflict.
     depends_on('hypre~internal-superlu', when='@1.0.0+mfem')
+
+    # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
+    depends_on('suite-sparse@:5.1.0', when='@1.0.0%gcc@:4.8+mfem+petsc')
 
     # Dummy install
     def install(self, spec, prefix):
