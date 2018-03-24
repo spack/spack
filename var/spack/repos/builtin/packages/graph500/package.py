@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Graph500(Package):
+class Graph500(MakefilePackage):
     """Graph500 reference implementations."""
 
     homepage = "https://graph500.org"
@@ -35,14 +35,14 @@ class Graph500(Package):
 
     depends_on('mpi@2.0:')
 
+    build_directory = 'src'
+
+    def eidt(self):
+        edit = FileFilter('src/Makefile')
+        edit.filter(r'^MPICC\s*=.*', 'MPICC={0}'.format(spec['mpi'].mpicc))
+
     def install(self, spec, prefix):
         with working_dir('src'):
-            # Patch
-            edit = FileFilter('Makefile')
-            edit.filter(r'^MPICC\s*=.*', 'MPICC={0}'.format(spec['mpi'].mpicc))
-            # BUild
-            make()
-            # Install
             mkdir(prefix.bin)
             install('graph500_reference_bfs', prefix.bin)
             install('graph500_reference_bfs_sssp', prefix.bin)
