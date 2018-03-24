@@ -49,4 +49,4 @@ class Seqan(CMakePackage):
 
     conflicts('%intel@:16.0.4')
     conflicts('%gcc@:4.9.4')
-    conflicts('%clang@:3.5.1')
+    conflicts('%llvm@:3.5.1')
