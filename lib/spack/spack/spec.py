@@ -729,31 +729,28 @@ def _libs_default_handler(descriptor, spec, cls):
     # unlikely).
     name = 'lib' + spec.name.replace('-', '?')
 
-    if '+shared' in spec:
-        libs = find_libraries(
-            name, root=spec.prefix, shared=True, recursive=True
-        )
-    elif '~shared' in spec:
-        libs = find_libraries(
-            name, root=spec.prefix, shared=False, recursive=True
-        )
-    else:
-        # Prefer shared
-        libs = find_libraries(
-            name, root=spec.prefix, shared=True, recursive=True
-        )
-        if libs:
-            return libs
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in prefix.lib then in prefix.lib64 and
+    # finally search all of prefix recursively. The search stops when the first
+    # match is found.
+    prefix = spec.prefix
+    search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
 
-        libs = find_libraries(
-            name, root=spec.prefix, shared=False, recursive=True
-        )
+    # If '+shared' search only for shared library; if '~shared' search only for
+    # static library; otherwise, first search for shared and then for static.
+    search_shared = [True] if ('+shared' in spec) else \
+        ([False] if ('~shared' in spec) else [True, False])
 
-    if libs:
-        return libs
-    else:
-        msg = 'Unable to recursively locate {0} libraries in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix))
+    for shared in search_shared:
+        for path, recursive in search_paths:
+            libs = find_libraries(
+                name, root=path, shared=shared, recursive=recursive
+            )
+            if libs:
+                return libs
+
+    msg = 'Unable to recursively locate {0} libraries in {1}'
+    raise RuntimeError(msg.format(spec.name, prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -1084,6 +1081,8 @@ class Spec(object):
         # Allow a spec to be constructed with an external path.
         self.external_path = kwargs.get('external_path', None)
         self.external_module = kwargs.get('external_module', None)
+
+        self._full_hash = kwargs.get('full_hash', None)
 
     @property
     def external(self):
@@ -1426,7 +1425,21 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return base32_prefix_bits(self.dag_hash(), bits)
 
-    def to_node_dict(self):
+    def full_hash(self, length=None):
+        if not self.concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
+        if not self._full_hash:
+            yaml_text = syaml.dump(
+                self.to_node_dict(hash_function=lambda s: s.full_hash()),
+                default_flow_style=True, width=maxint)
+            package_hash = self.package.content_hash()
+            sha = hashlib.sha256(yaml_text.encode('utf-8') + package_hash)
+            self._full_hash = base64.b32encode(sha.digest()).lower()
+
+        return self._full_hash[:length]
+
+    def to_node_dict(self, hash_function=None):
         d = syaml_dict()
 
         if self.versions:
@@ -1460,10 +1473,12 @@ class Spec(object):
         # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
         if deps:
+            if hash_function is None:
+                hash_function = lambda s: s.dag_hash()
             d['dependencies'] = syaml_dict([
                 (name,
                  syaml_dict([
-                     ('hash', dspec.spec.dag_hash()),
+                     ('hash', hash_function(dspec.spec)),
                      ('type', sorted(str(s) for s in dspec.deptypes))])
                  ) for name, dspec in sorted(deps.items())
             ])
@@ -1491,7 +1506,7 @@ class Spec(object):
         name = next(iter(node))
         node = node[name]
 
-        spec = Spec(name)
+        spec = Spec(name, full_hash=node.get('full_hash', None))
         spec.namespace = node.get('namespace', None)
         spec._hash = node.get('hash', None)
 
@@ -2653,11 +2668,13 @@ class Spec(object):
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
             self._concrete = other._concrete
+            self._full_hash = other._full_hash
         else:
             self._hash = None
             self._cmp_key_cache = None
             self._normal = False
             self._concrete = False
+            self._full_hash = None
 
         return changed
 
@@ -2888,6 +2905,9 @@ class Spec(object):
             ${COMPILERFLAGS} Compiler flags
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
+            ${PLATFORM}      Platform
+            ${OS}            Operating System
+            ${TARGET}        Target
             ${SHA1}          Dependencies 8-char sha1 prefix
             ${HASH:len}      DAG hash with optional length specifier
 
@@ -3045,12 +3065,22 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % token_transform(str(self.variants)), '+')
-                elif named_str == 'ARCHITECTURE':
+                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
-                        write(
-                            fmt % token_transform(str(self.architecture)),
-                            '='
-                        )
+                        if named_str == "ARCHITECTURE":
+                            write(
+                                fmt % token_transform(str(self.architecture)),
+                                '='
+                            )
+                        elif named_str == "PLATFORM":
+                            platform = str(self.architecture.platform)
+                            write(fmt % token_transform(platform), '=')
+                        elif named_str == "OS":
+                            operating_sys = str(self.architecture.platform_os)
+                            write(fmt % token_transform(operating_sys), '=')
+                        elif named_str == "TARGET":
+                            target = str(self.architecture.target)
+                            write(fmt % token_transform(target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))
@@ -3383,6 +3413,7 @@ class SpecParser(spack.parse.Parser):
         spec._package = None
         spec._normal = False
         spec._concrete = False
+        spec._full_hash = None
 
         # record this so that we know whether version is
         # unspecified or not.

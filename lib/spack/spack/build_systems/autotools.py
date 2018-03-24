@@ -99,10 +99,10 @@ class AutotoolsPackage(PackageBase):
         """Some packages ship with an older config.guess and need to have
         this updated when installed on a newer architecture. In particular,
         config.guess fails for PPC64LE for version prior to a 2013-06-10
-        build date (automake 1.13.4)."""
+        build date (automake 1.13.4) and for ARM (aarch64)."""
 
-        if not self.patch_config_guess or not self.spec.satisfies(
-                'target=ppc64le'
+        if not self.patch_config_guess or (not self.spec.satisfies(
+                'target=ppc64le') and not self.spec.satisfies('target=aarch64')
         ):
             return
         my_config_guess = None

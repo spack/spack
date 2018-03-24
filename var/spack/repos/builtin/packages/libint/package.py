@@ -64,11 +64,10 @@ class Libint(AutotoolsPackage):
     @property
     def optflags(self):
         flags = '-O2'
-
         # Optimizations for the Intel compiler, suggested by CP2K
+        # See ../libxc/package.py for rationale and doc.
         if '%intel' in self.spec:
-            # -xSSE2 will make it usable on old architecture
-            flags += ' -xSSE2 -xAVX -axCORE-AVX2 -ipo'
+            flags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
 
         return flags
 

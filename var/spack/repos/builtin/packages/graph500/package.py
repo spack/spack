@@ -37,12 +37,12 @@ class Graph500(MakefilePackage):
 
     build_directory = 'src'
 
-    def eidt(self):
-        edit = FileFilter('src/Makefile')
-        edit.filter(r'^MPICC\s*=.*', 'MPICC={0}'.format(spec['mpi'].mpicc))
+    def edit(self, spec, prefix):
+        makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
+        makefile.filter(r'^MPICC\s*=.*', 'MPICC={0}'.format(spec['mpi'].mpicc))
 
     def install(self, spec, prefix):
-        with working_dir('src'):
+        with working_dir(self.build_directory):
             mkdir(prefix.bin)
             install('graph500_reference_bfs', prefix.bin)
             install('graph500_reference_bfs_sssp', prefix.bin)
