@@ -26,7 +26,6 @@
 import os
 
 from spack import *
-from spack.error import SpackError
 
 
 def _verbs_dir():
