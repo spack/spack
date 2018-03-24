@@ -105,7 +105,8 @@ class Nekcem(Package):
                 fflags += ['-DMPI', '-DMPIIO']
                 cflags += ['-DMPI', '-DMPIIO']
             blasLapack = spec['lapack'].libs + spec['blas'].libs
-            ldflags += blasLapack.ld_flags.split()
+            pthread_lib = find_system_libraries('libpthread')
+            ldflags += (blasLapack + pthread_lib).ld_flags.split()
             all_arch = {
                 'spack-arch': {
                     'FC': FC, 'FFLAGS': fflags,
