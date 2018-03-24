@@ -33,7 +33,9 @@ class SofaC(MakefilePackage):
 
     version('20180130', '9d6903c7690e84a788b622fba6f10146')
 
-    build_directory = join_path('20180130', 'c', 'src')
+    @property
+    def build_directory(self):
+        return join_path(self.version, 'c', 'src')
 
     def edit(self, spec, prefix):
         makefile = FileFilter(join_path(self.build_directory, 'makefile'))
