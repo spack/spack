@@ -39,7 +39,6 @@ class Seqan(CMakePackage):
 
     version('2.4.0rc2', 'bd62772b3661bf07dad2bf8f69a1bdaf')
 
-    #depends on C++14 compiler: gcc >= 5, Clang/LLVM >= 3.6, Icc >= 17
     depends_on('cmake@3.4.0:', type='build')
     depends_on('python@2.7.0:', type='build')
     depends_on('py-nose')
@@ -47,3 +46,7 @@ class Seqan(CMakePackage):
     depends_on('boost')
     depends_on('zlib')
     depends_on('bzip2')
+
+    conflicts('%intel@:16.0.4')
+    conflicts('%gcc@:4.9.4')
+    conflicts('%clang@:3.5.1')
