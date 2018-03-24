@@ -37,15 +37,15 @@ class Seqan(CMakePackage):
     homepage = "https://www.seqan.de"
     url      = "https://github.com/seqan/seqan/archive/seqan-v2.4.0.tar.gz"
 
-    version('2.4.0rc2', 'bd62772b3661bf07dad2bf8f69a1bdaf')
+    version('2.4.0', 'bd62772b3661bf07dad2bf8f69a1bdaf')
 
     depends_on('cmake@3.4.0:', type='build')
     depends_on('python@2.7.0:', type='build')
-    depends_on('py-nose')
-    depends_on('py-sphinx')
-    depends_on('boost')
-    depends_on('zlib')
-    depends_on('bzip2')
+    depends_on('py-nose', type='build')
+    depends_on('py-sphinx', type='build')
+    depends_on('boost', type=('build', 'link'))
+    depends_on('zlib', type=('build', 'link'))
+    depends_on('bzip2', type=('build', 'link'))
 
     conflicts('%intel@:16.0.4')
     conflicts('%gcc@:4.9.4')
