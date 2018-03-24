@@ -33,11 +33,11 @@ class SofaC(MakefilePackage):
 
     version('20180130', '9d6903c7690e84a788b622fba6f10146')
 
-    build_directory = join_path(version, 'c', 'src')
+    build_directory = join_path('20180130', 'c', 'src')
 
-    def edit(self):
-        edit = FileFilter(join_path(self.build_directory, 'makefile'))
-        edit.filter('CCOMPC = gcc', 'CCOMPC = {0}'.format(spack_cc))
+    def edit(self, spec, prefix):
+        makefile = FileFilter(join_path(self.build_directory, 'makefile'))
+        makefile.filter('CCOMPC = gcc', 'CCOMPC = {0}'.format(spack_cc))
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
