@@ -25,7 +25,7 @@
 from spack import *
 
 
-class SofaC(Package):
+class SofaC(MakefilePackage):
     "Standards of Fundamental Astronomy (SOFA) library for ANSI C."
 
     homepage = "http://www.iausofa.org/current_C.html"
@@ -33,14 +33,14 @@ class SofaC(Package):
 
     version('20180130', '9d6903c7690e84a788b622fba6f10146')
 
+    build_directory = join_path(version, 'c', 'src')
+
+    def edit(self):
+        edit = FileFilter(join_path(self.build_directory, 'makefile'))
+        edit.filter('CCOMPC = gcc', 'CCOMPC = {0}'.format(spack_cc))
+
     def install(self, spec, prefix):
-        with working_dir(join_path(spec.version, 'c', 'src')):
-            # Patch
-            edit = FileFilter('makefile')
-            edit.filter('CCOMPC = gcc', 'CCOMPC = {0}'.format(spack_cc))
-            # Build
-            make()
-            # Install
+        with working_dir(self.build_directory):
             mkdir(prefix.include)
             install('sofa.h', prefix.include)
             install('sofam.h', prefix.include)
