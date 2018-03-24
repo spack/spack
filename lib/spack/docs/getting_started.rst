@@ -60,7 +60,6 @@ For a richer experience, use Spack's shell support:
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
-
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
@@ -68,6 +67,24 @@ command to be used to execute spack :ref:`commands <shell-support>` and
 If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
 installed and available, the ``spack`` command can also load and unload
 :ref:`modules <modules>`.
+
+The `setup-env.sh` script takes a while to execute and therefore it might be
+undesirable to run it every time a terminal is opened. To alleviate the
+problem, it is possible to overwrite the spack command by a bash function.
+The following code is sufficient to integrate spack fully with bash:
+
+.. code-block:: console
+
+   export SPACK_ROOT=/path/to/spack
+   function spack {
+     # overwrites spack command
+     # if not yet initialized, initialize spack's shell integration
+     if [ -z ${SPACK_SHELL+x} ] ; then
+         source $SPACK_ROOT/share/spack/setup-env.sh
+     fi
+     # run the real spack command with all passed parameters
+     $SPACK_ROOT/bin/spack "$@"
+   }
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -698,6 +715,8 @@ an OpenMPI installed in /opt/local, one would use:
             paths:
                 openmpi@1.10.1: /opt/local
             buildable: False
+
+Note that the specified path is ``/opt/local`` and not ``/opt/local/bin``.
 
 In general, Spack is easier to use and more reliable if it builds all of
 its own dependencies.  However, there are two packages for which one
