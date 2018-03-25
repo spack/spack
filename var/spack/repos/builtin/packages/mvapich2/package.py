@@ -48,13 +48,9 @@ class Mvapich2(AutotoolsPackage):
     version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e', preferred=True)
     version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
     version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
-    version('1.9', '5dc58ed08fd3142c260b70fe297e127c')
-
-    patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
     provides('mpi')
-    provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
-    provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
+    provides('mpi@:3.0')
 
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
@@ -117,13 +113,6 @@ class Mvapich2(AutotoolsPackage):
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
 
-    def url_for_version(self, version):
-        base_url = "http://mvapich.cse.ohio-state.edu/download"
-        if version < Version('2.0'):
-            return "%s/mvapich2/mv2/mvapich2-%s.tar.gz" % (base_url, version)
-        else:
-            return "%s/mvapich/mv2/mvapich2-%s.tar.gz"  % (base_url, version)
-
     @property
     def process_manager_options(self):
         spec = self.spec
@@ -136,16 +125,10 @@ class Mvapich2(AutotoolsPackage):
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
-            if self.version > Version('2.0'):
-                opts = [
-                    '--with-pmi=pmi2',
-                    '--with-pm=slurm'
-                ]
-            else:
-                opts = [
-                    '--with-pmi=slurm',
-                    '--with-pm=no'
-                ]
+            opts = [
+                '--with-pmi=pmi2',
+                '--with-pm=slurm'
+            ]
 
         return opts
 
@@ -171,7 +154,7 @@ class Mvapich2(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        if 'process_managers=slurm' in spec and spec.satisfies('@2.0:'):
+        if 'process_managers=slurm' in spec:
             run_env.set('SLURM_MPI_TYPE', 'pmi2')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
