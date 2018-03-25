@@ -41,7 +41,7 @@ class Mvapich2(AutotoolsPackage):
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
-    # Newer alpha release
+    version('2.3rc1', '386d79ae36b2136d203826465ad8b6cc')
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
 
     # Prefer the latest stable release
@@ -101,6 +101,12 @@ class Mvapich2(AutotoolsPackage):
             'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
             'nemesistcpib'
         )
+    )
+
+    variant(
+        'alloca',
+        default=False,
+        description='Use alloca to allocate temporary memory if available'
     )
 
     depends_on('bison', type='build')
@@ -206,11 +212,14 @@ class Mvapich2(AutotoolsPackage):
             '--enable-shared',
             '--enable-romio',
             '-disable-silent-rules',
+            '--disable-new-dtags',
             '--enable-fortran=all',
             "--enable-threads={0}".format(spec.variants['threads'].value),
             "--with-ch3-rank-bits={0}".format(
                 spec.variants['ch3_rank_bits'].value),
         ]
+
+        args.extend(self.enable_or_disable('alloca'))
 
         if '+debug' in self.spec:
             args.extend([
