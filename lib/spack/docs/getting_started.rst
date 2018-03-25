@@ -68,12 +68,14 @@ If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
 installed and available, the ``spack`` command can also load and unload
 :ref:`modules <modules>`.
 
-The `setup-env.sh` script takes a while to execute and therefore it might be
-undesirable to run it every time a terminal is opened. To alleviate the
-problem, it is possible to overwrite the spack command by a bash function.
-The following code is sufficient to integrate spack fully with bash:
+Note that on Mac OS X `.bashrc` does not exist and `.bash_profile` gets
+sourced by every new terminal window. Hence, the `setup-env.sh` script
+causes considerable delay. To alleviate the problem, it is possible to
+overwrite the spack command by a bash function. Adding the following
+code to `~/.bash_profile` is sufficient to integrate spack fully with
+bash on Mac OS X:
 
-.. code-block:: console
+.. code-block:: bash
 
    export SPACK_ROOT=/path/to/spack
    function spack {
@@ -85,6 +87,15 @@ The following code is sufficient to integrate spack fully with bash:
      # run the real spack command with all passed parameters
      $SPACK_ROOT/bin/spack "$@"
    }
+
+
+On Linux it is better to add the following code to `~/.bashrc`:
+
+.. code-block:: bash
+
+   export SPACK_ROOT=/path/to/spack
+   source $SPACK_ROOT/share/spack/setup-env.sh
+
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
