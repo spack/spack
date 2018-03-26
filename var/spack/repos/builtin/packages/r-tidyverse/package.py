@@ -62,4 +62,4 @@ class RTidyverse(RPackage):
     depends_on('r-tibble@1.3.4:', type=('build', 'run'))
     depends_on('r-tidyr@0.7.2:', type=('build', 'run'))
     depends_on('r-xml2@1.1.1:', type=('build', 'run'))
-    depensd_on('r-rlang@0.1.4:', type=('build', 'run'))
+    depends_on('r-rlang@0.1.4:', type=('build', 'run'))
