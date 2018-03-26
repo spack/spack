@@ -39,6 +39,42 @@ class Dislin(Package):
     depends_on('motif')
     depends_on('mesa')
 
+    provides('dislin_d')
+    provides('discpp')
+    provides('disjava')
+    provides('dislnc')
+    provides('dislnc_d')
+
+    @property
+    def dislin_d_libs(self):
+        return find_libraries(
+                'libdislin_d', root=self.prefix, shared=True, recursive=True
+                )
+
+    @property
+    def discpp_libs(self):
+        return find_libraries(
+                'libdiscpp', root=self.prefix, shared=True, recursive=True
+                )
+
+    @property
+    def disjava_libs(self):
+        return find_libraries(
+                'libdisjava', root=self.prefix, shared=True, recursive=True
+                )
+
+    @property
+    def dislnc_libs(self):
+        return find_libraries(
+                'libdislnc', root=self.prefix, shared=True, recursive=True
+                )
+
+    @property
+    def dislnc_d_libs(self):
+        return find_libraries(
+                'libdislnc_d', root=self.prefix, shared=True, recursive=True
+                )
+
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DISLIN', self.prefix)
         run_env.set('DISLIN', self.prefix)
@@ -46,6 +82,9 @@ class Dislin(Package):
         run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
         run_env.prepend_path('LD_LIBRARY_PATH', self.spec['motif'].prefix.lib)
         run_env.prepend_path('LD_LIBRARY_PATH', self.spec['mesa'].prefix.lib)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
 
     def install(self, spec, prefix):
         INSTALL = Executable('./INSTALL')
