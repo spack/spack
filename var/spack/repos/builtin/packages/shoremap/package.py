@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Shoremap(Package):
+class Shoremap(MakefilePackage):
     """SHOREmap is a computational tool implementing a method that enables
        simple and straightforward mapping-by-sequencing analysis.
 
@@ -42,19 +42,18 @@ class Shoremap(Package):
 
     depends_on('dislin')
 
-    def patch(self):
+    def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
-        makefile.filter(r'-L/usr/lib/ ',
-                        '-L' + self.spec['libxt'].prefix.lib + ' ')
-        makefile.filter(r'-L\./dislin.* -ldislin',
-                        '-L' + self.spec['dislin'].prefix + ' -ldislin')
+        makefile.filter(r'-L/usr/lib/',
+                        self.spec['libxt'].libs.search_flags)
+        makefile.filter(r'-L\./dislin.* -ldislin_d',
+                        self.spec['dislin'].libs.ld_flags)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+#    def setup_environment(self, spack_env, run_env):
+#        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
+#        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
+#        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
 
     def install(self, spec, prefix):
-        make()
         mkdirp(prefix.bin)
         install('SHOREmap', prefix.bin)
