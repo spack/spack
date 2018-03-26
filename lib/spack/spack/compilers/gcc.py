@@ -82,15 +82,19 @@ class Gcc(Compiler):
             tty.die("Only gcc 4.8 and above support c++14.")
         elif self.version < ver('4.9'):
             return "-std=c++1y"
-        else:
+        elif self.version < ver('6.0'):
             return "-std=c++14"
+        else:
+            return ""
 
     @property
     def cxx17_flag(self):
         if self.version < ver('5.0'):
             tty.die("Only gcc 5.0 and above support c++17.")
-        else:
+        elif self.version < ver('6.0'):
             return "-std=c++1z"
+        else:
+            return "-std=c++17"
 
     @property
     def pic_flag(self):

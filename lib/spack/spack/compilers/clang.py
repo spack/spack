@@ -117,8 +117,10 @@ class Clang(Compiler):
         else:
             if self.version < ver('3.5'):
                 tty.die("Only Clang 3.5 and above support c++17.")
-            else:
+            elif self.version < ver('5.0'):
                 return "-std=c++1z"
+            else:
+                return "-std=c++17"
 
     @property
     def pic_flag(self):
