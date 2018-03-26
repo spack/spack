@@ -51,10 +51,6 @@ class Geopm(AutotoolsPackage):
     variant('procfs', default=True, description='Enable procfs (disable for OSes not using procfs).')
     variant('mpi', default=True, description='Enable MPI dependent components.')
     variant('fortran', default=True, description='Build fortran interface.')
-    # TODO: add explicit ruby-ronn dependency. For +doc.
-    # This is currently done by the install process and should be handled
-    # as configure option --with-ronn=/path/to/ronn.
-    # Changes are required in the GEOPM install! To be done in future version.
     variant('doc', default=True, description='Create man pages with ruby-ronn.')
     variant('openmp', default=True, description='Build with OpenMP.')
     variant('ompt', default=False, description='Use OpenMP Tools Interface.')
@@ -66,6 +62,8 @@ class Geopm(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
+    depends_on('ruby-ronn', type='build', when='+doc')
+    depends_on('doxygen', type='build', when='+doc')
     depends_on('numactl')
     depends_on('mpi', when='+mpi')
     # TODO: check if hwloc@specific-version still required with future openmpi
