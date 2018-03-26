@@ -399,10 +399,4 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        # UCX support
-        if '+ucx' in spec:
-            config_args.append('--with-ucx={0}'.format(spec['ucx'].prefix))
-        else:
-            config_args.append('--without-ucx')
-
         return config_args
