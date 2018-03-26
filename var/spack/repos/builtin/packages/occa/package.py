@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Occa(MakefilePackage):
+class Occa(Package):
     """OCCA is an open-source library that facilitates programming
     in an environment containing different types of devices.
     We abstract devices and let the user pick at run-time.
@@ -48,5 +48,21 @@ class Occa(MakefilePackage):
     depends_on('opencl', when='+opencl')
 
     def install(self, spec, prefix):
+        include_path = []
+        library_path = []
+        if '+opencl' in spec:
+            include_path.append(spec['opencl'].prefix.include)
+            library_path.append(spec['opencl'].prefix.lib)
+        if '+cuda' in spec:
+            include_path.append(spec['cuda'].prefix.include)
+            library_path.append(spec['cuda'].prefix.lib)
+
+        import sys
+        sys.stderr.write('OCCA_INCLUDE_PATH=' + ':'.join(include_path))
+        sys.stderr.write('OCCA_LIBRARY_PATH=' + ':'.join(library_path))
+
+        make('all',
+             'OCCA_INCLUDE_PATH=' + ':'.join(include_path),
+             'OCCA_LIBRARY_PATH=' + ':'.join(library_path))
         for path in ['bin', 'include', 'lib', 'scripts']:
             install_tree(path, join_path(prefix, path))
