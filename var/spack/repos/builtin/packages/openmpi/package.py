@@ -178,7 +178,7 @@ class Openmpi(AutotoolsPackage):
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
-    fabrics = ('psm', 'psm2', 'pmi', 'verbs', 'mxm', 'ucx', 'libfabric')
+    fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
 
     variant(
         'fabrics',
