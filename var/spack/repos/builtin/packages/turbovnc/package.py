@@ -48,8 +48,8 @@ class Turbovnc(CMakePackage):
 
     depends_on("libx11", when='+x11deps')
     depends_on("libjpeg-turbo@1.3.1", when='@1.2.2')
-    depends_on("libjpeg-turbo@1.5.1", when='@2.1:')
-    depends_on("libjpeg-turbo@1.5.1+java", when='@2.1:+java',)
+    depends_on("libjpeg-turbo@1.5.1:", when='@2.1:')
+    depends_on("libjpeg-turbo@1.5.1:+java", when='@2.1:+java',)
     depends_on('jdk', when='+java')
     depends_on('openssl', when='@2.2:')
     depends_on('openssl@:1.0.999', when='@:2.1')
