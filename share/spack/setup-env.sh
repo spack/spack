@@ -201,7 +201,11 @@ export SPACK_ROOT=${_sp_prefix}
 #
 # Determine which shell is being used
 #
-export SPACK_SHELL=$(basename $SHELL)
+function _spack_determine_shell() {
+        ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+}
+: ${SPACK_SHELL=$(_spack_determine_shell)}
+export SPACK_SHELL
 
 #
 # Check whether a function of the given name is defined
