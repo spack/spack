@@ -205,6 +205,12 @@ _any_version = VersionList([':'])
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
+def no_fortran_compilers_available(spec):
+    """Returns true if the spec doesn't have Fortran compilers available."""
+    compiler = spec.package.compiler
+    return compiler.f77 is None or compiler.fc is None
+
+
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
        color_formats."""
@@ -1905,9 +1911,11 @@ class Spec(object):
         for x in self.traverse():
             for conflict_spec, when_list in x.package_class.conflicts.items():
                 if x.satisfies(conflict_spec, strict=True):
-                    for when_spec, msg in when_list:
-                        if x.satisfies(when_spec, strict=True):
-                            matches.append((x, conflict_spec, when_spec, msg))
+                    for is_constraint_met, description, msg in when_list:
+                        if is_constraint_met(x):
+                            matches.append(
+                                (x, conflict_spec, description, msg)
+                            )
         if matches:
             raise ConflictsInSpecError(self, matches)
 

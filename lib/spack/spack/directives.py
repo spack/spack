@@ -321,19 +321,39 @@ def conflicts(conflict_spec, when=None, msg=None):
 
         conflicts('%intel', when='+foo')
 
+    Conflict directives can also accept a predicate that receives a
+    concretized spec and returns true if the constraint that determines
+    the conflict is met::
+
+        def no_fortran_compilers_available(spec):
+            ...
+
+        conflicts('mpich', when=no_fortran_compilers_available)
+
+    In the case above the function is directly provided by Spack. In general,
+    the function name will appear in the conflict message, so it's better to
+    choose one that clearly conveys the cause of the conflict.
+
     Args:
         conflict_spec (Spec): constraint defining the known conflict
-        when (Spec): optional constraint that triggers the conflict
+        when (Spec or callable, optional): spec-like constraint or predicate
+            that takes a spec and returns true if the conflict condition is
+            met
         msg (str): optional user defined message
     """
     def _execute_conflicts(pkg):
         # If when is not specified the conflict always holds
-        condition = pkg.name if when is None else when
-        when_spec = parse_anonymous_spec(condition, pkg.name)
+        condition = when or pkg.name
+
+        is_constraint_met = condition
+        description = condition.__name__ if callable(condition) else condition
+        if not callable(condition):
+            when_spec = parse_anonymous_spec(condition, pkg.name)
+            is_constraint_met = lambda x: x.satisfies(when_spec, strict=True)
 
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
-        when_spec_list.append((when_spec, msg))
+        when_spec_list.append((is_constraint_met, description, msg))
     return _execute_conflicts
 
 

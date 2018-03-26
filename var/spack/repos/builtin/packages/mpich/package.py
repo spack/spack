@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
+
+from spack import *
+from spack.spec import no_fortran_compilers_available
 
 
 class Mpich(AutotoolsPackage):
@@ -90,6 +92,9 @@ spack package at this time.''',
     conflicts('netmod=mxm', when='@:3.1.3')
     conflicts('netmod=tcp', when='device=ch4')
 
+    conflicts('mpich', when=no_fortran_compilers_available,
+              msg='Mpich requires both C and Fortran compilers!')
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
         if 'platform=cray' in self.spec:
@@ -134,16 +139,6 @@ spack package at this time.''',
         # Else bootstrap with autotools
         bash = which('bash')
         bash('./autogen.sh')
-
-    @run_before('autoreconf')
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError(
-                'Mpich requires both C and Fortran compilers!'
-            )
 
     def configure_args(self):
         spec = self.spec

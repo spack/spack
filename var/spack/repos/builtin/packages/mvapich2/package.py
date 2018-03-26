@@ -26,6 +26,7 @@ import sys
 
 from spack import *
 from spack.error import SpackError
+from spack.spec import no_fortran_compilers_available
 
 
 def _process_manager_validator(values):
@@ -113,6 +114,9 @@ class Mvapich2(AutotoolsPackage):
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
 
+    conflicts('mvapich2', when=no_fortran_compilers_available,
+              msg='Mvapich2 requires both C and Fortran compilers!')
+
     @property
     def process_manager_options(self):
         spec = self.spec
@@ -178,16 +182,6 @@ class Mvapich2(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
-
-    @run_before('configure')
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError(
-                'Mvapich2 requires both C and Fortran compilers!'
-            )
 
     def configure_args(self):
         spec = self.spec

@@ -26,6 +26,7 @@
 import os
 
 from spack import *
+from spack.spec import no_fortran_compilers_available
 
 
 def _verbs_dir():
@@ -240,6 +241,9 @@ class Openmpi(AutotoolsPackage):
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
 
+    conflicts('openmpi', when=no_fortran_compilers_available,
+              msg='OpenMPI requires both C and Fortran compilers!')
+
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
     def url_for_version(self, version):
@@ -313,16 +317,6 @@ class Openmpi(AutotoolsPackage):
         if (path is not None):
             line += '={0}'.format(path)
         return line
-
-    @run_before('autoreconf')
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError(
-                'OpenMPI requires both C and Fortran compilers!'
-            )
 
     def configure_args(self):
         spec = self.spec
