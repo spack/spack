@@ -49,6 +49,9 @@ class Lz4(Package):
         else:
             return "{0}/r{1}.tar.gz".format(url, version.joined)
 
+    # This patch found to be necessary for Centos6
+    patch('lz4_lrt.patch', when='@1.8.1.2 platform=linux')
+
     def install(self, spec, prefix):
         make()
         if self.run_tests:
