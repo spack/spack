@@ -126,6 +126,11 @@ class Boost(Package):
         variant(lib, default=(lib not in default_noinstall_libs),
                 description="Compile with {0} library".format(lib))
 
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
     variant('debug', default=False,
             description='Switch to the debug version of Boost')
     variant('shared', default=True,
@@ -299,6 +304,25 @@ class Boost(Package):
                 'toolset=%s' % self.determine_toolset(spec)
             ])
 
+        cxxflags = []
+        if spec.variants['cxxstd'].value == '98':
+            cxxflags.append(self.compiler.cxx98_flag)
+        elif spec.variants['cxxstd'].value == '11':
+            cxxflags.append(self.compiler.cxx11_flag)
+        elif spec.variants['cxxstd'].value == '14':
+            cxxflags.append(self.compiler.cxx14_flag)
+        elif spec.variants['cxxstd'].value == '17':
+            cxxflags.append(self.compiler.cxx17_flag)
+        elif spec.variants['cxxstd'].value == 'default':
+            # Let the compiler do what it usually does.
+            pass
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die(
+                "INTERNAL ERROR: cannot accommodate unexpected variant ",
+                "cxxstd={0}".format(spec.variants['cxxstd'].value))
+
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
@@ -306,9 +330,12 @@ class Boost(Package):
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
+                cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
-                                'cxxflags="-stdlib=libc++"',
                                 'linkflags="-stdlib=libc++"'])
+
+        if cxxflags:
+            options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
 
         return threadingOpts
 
