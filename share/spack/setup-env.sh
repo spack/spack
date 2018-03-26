@@ -208,7 +208,7 @@ export SPACK_ROOT=${_sp_prefix}
 function _spack_determine_shell() {
         ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
 }
-: ${SPACK_SHELL:=$(_spack_determine_shell)}
+SPACK_SHELL=${SPACK_SHELL:-$(_spack_determine_shell)}
 export SPACK_SHELL
 
 #
