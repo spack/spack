@@ -48,32 +48,32 @@ class Dislin(Package):
     @property
     def dislin_d_libs(self):
         return find_libraries(
-                'libdislin_d', root=self.prefix, shared=True, recursive=True
-                )
+            'libdislin_d', root=self.prefix, shared=True, recursive=True
+        )
 
     @property
     def discpp_libs(self):
         return find_libraries(
-                'libdiscpp', root=self.prefix, shared=True, recursive=True
-                )
+            'libdiscpp', root=self.prefix, shared=True, recursive=True
+        )
 
     @property
     def disjava_libs(self):
         return find_libraries(
-                'libdisjava', root=self.prefix, shared=True, recursive=True
-                )
+            'libdisjava', root=self.prefix, shared=True, recursive=True
+        )
 
     @property
     def dislnc_libs(self):
         return find_libraries(
-                'libdislnc', root=self.prefix, shared=True, recursive=True
-                )
+            'libdislnc', root=self.prefix, shared=True, recursive=True
+        )
 
     @property
     def dislnc_d_libs(self):
         return find_libraries(
-                'libdislnc_d', root=self.prefix, shared=True, recursive=True
-                )
+            'libdislnc_d', root=self.prefix, shared=True, recursive=True
+        )
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DISLIN', self.prefix)

@@ -45,5 +45,5 @@ class Libxt(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-                'libXt', root=self.prefix, shared=True, recursive=True
-                )
+            'libXt', root=self.prefix, shared=True, recursive=True
+        )
