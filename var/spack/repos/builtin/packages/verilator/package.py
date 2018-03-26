@@ -78,3 +78,10 @@ class Verilator(AutotoolsPackage):
                     join_path(self.prefix.include, 'verilated.mk'))
         filter_file(r'^LINK\s*=.*', 'LINK = {0}'.format(self.compiler.cxx),
                     join_path(self.prefix.include, 'verilated.mk'))
+
+    @run_after('install')
+    def link_bin_to_share(self):
+        for fname in ['verilator', 'verilator_bin',
+                'verilator_bin_dbg', 'verilator_profcfunc']:
+            symlink(join_path(self.prefix.bin, fname),
+                    join_path(self.prefix.share, 'verilator/bin', fname))
