@@ -39,62 +39,83 @@ This will create a directory called ``spack``.
 Add Spack to the Shell
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-We'll assume that the full path to your downloaded Spack directory is
-in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
-to your path and you're ready to go:
+For the example we will assume that the full path to your cloned
+``spack`` directory is ``/path/to/spack``.
+
+Now you could for example run the following command to install ``libelf``:
 
 .. code-block:: console
 
-   $ export PATH=$SPACK_ROOT/bin:$PATH
-   $ spack install libelf
+   $ /path/to/spack/bin/spack install libelf
 
-For a richer experience, use Spack's shell support:
+It might be convenient to add ``/path/to/spack/bin`` to your shell's
+``PATH`` variable.
+
+For a even deeper integration with your shell you might want to source
+the ``setup-env`` script. The script adds Spack to your ``PATH`` and allows
+the ``spack`` command to be used to execute spack 
+:ref:`commands <shell-support>` and
+:ref:`useful packaging commands <packaging-shell-support>`.
+Further, if :ref:`environment-modules or dotkit <InstallEnvironmentModules>`
+is installed and available, the ``spack`` command can also load and unload
+:ref:`modules <modules>`.
+
+ .. tip::
+ 
+   On most Linux / Unix systems, you have a choice between either putting
+   your configuration inside the shell's *profile* startup script,
+   which is usually called ``~/.bash_profile``, or in your *run commands* file,
+   which is usually called ``~/.bashrc``. The *profile* script will only be
+   executed **once** when you log into your machine (either via a graphical
+   login, or via ``ssh``). On the other hand, the *run commands* script
+   will be executed every time you open a new terminal. Since the execution
+   of the ``setup-env`` script takes a while, it is more convenient to source
+   it in the *profile* script.
+
+   On Mac OS the situation is different: There only exists the notion of
+   a *run commands* script. For people used to the naming conventions as
+   described above, it might cause some confusion that his script is called
+   ``~/.bash_profile`` on Mac OS. A script called `~/.bashrc`` will be
+   ignored by default.
+
+For integrating ``spack`` with Linux / Unix (but excluding Mac OS)
+we suggest to add the following to your *profile*
+(usually ``~/.bash_profile``) script:
 
 .. code-block:: console
 
    # For bash/zsh users
    $ export SPACK_ROOT=/path/to/spack
-   $ . $SPACK_ROOT/share/spack/setup-env.sh
+   $ source $SPACK_ROOT/share/spack/setup-env.sh
 
-   # For tcsh or csh users (note you must set SPACK_ROOT)
+   # For tcsh or csh users
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
+   
 
-This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to be used to execute spack :ref:`commands <shell-support>` and
-:ref:`useful packaging commands <packaging-shell-support>`.
-
-If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
-installed and available, the ``spack`` command can also load and unload
-:ref:`modules <modules>`.
-
-Note that on Mac OS X `.bashrc` does not exist and `.bash_profile` gets
-sourced by every new terminal window. Hence, the `setup-env.sh` script
-causes considerable delay. To alleviate the problem, it is possible to
-overwrite the spack command by a bash function. Adding the following
-code to `~/.bash_profile` is sufficient to integrate spack fully with
-bash on Mac OS X:
+For integrating ``spack`` with ``bash`` on Mac OS we suggest to
+add the following to your *run commands* script called
+``~/.bash_profile``:
 
 .. code-block:: bash
 
-   export SPACK_ROOT=/path/to/spack
-   function spack {
-     # overwrites spack command
-     # if not yet initialized, initialize spack's shell integration
-     if [ -z ${SPACK_SHELL+x} ] ; then
-         source $SPACK_ROOT/share/spack/setup-env.sh
-     fi
-     # run the real spack command with all passed parameters
-     $SPACK_ROOT/bin/spack "$@"
-   }
-
-
-On Linux it is better to add the following code to `~/.bashrc`:
-
-.. code-block:: bash
-
-   export SPACK_ROOT=/path/to/spack
-   source $SPACK_ROOT/share/spack/setup-env.sh
+    export SPACK_ROOT=/path/to/spack
+    function spack {
+        # This function overwrites the spack command.
+        # If not yet initialized, initialize spack's shell integration:
+        if [ -z ${SPACK_SHELL+x} ] ; then
+            source $SPACK_ROOT/share/spack/setup-env.sh
+        fi
+        # Run the real spack command with all passed parameters:
+        $SPACK_ROOT/bin/spack "$@"
+    }
+    
+Since you will probably not use the ``spack`` command every time you
+open a new terminal window, this little "hack" defers the execution
+of the ``setup-env.sh`` script until you first use the command.
+After a first use, tab completion and loading / unloading of modules
+will work but no extra delay arisies whenever you open a new terminal
+window.
 
 
 ^^^^^^^^^^^^^^^^^
