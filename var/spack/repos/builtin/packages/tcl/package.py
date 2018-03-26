@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -70,6 +70,14 @@ class Tcl(AutotoolsPackage):
     # ========================================================================
     # Set up environment to make install easy for tcl extensions.
     # ========================================================================
+    @property
+    def command(self):
+        """Returns the tclsh command.
+
+        :returns: The tclsh command
+        :rtype: Executable
+        """
+        return Executable(os.path.realpath(self.prefix.bin.tclsh))
 
     @property
     def tcl_lib_dir(self):
@@ -94,7 +102,7 @@ class Tcl(AutotoolsPackage):
         # where a system provided tcl is run against the standard libraries
         # of a Spack built tcl. See issue #7128 that relates to python but
         # it boils down to the same situation we have here.
-        spack_env.prepend_path('PATH', os.path.dirname(self.prefix.bin))
+        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
 
         tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
 

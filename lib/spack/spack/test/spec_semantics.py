@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -720,3 +720,45 @@ class TestSpecSematics(object):
 
         with pytest.raises(ValueError):
             Spec('libelf foo')
+
+    def test_spec_formatting(self):
+        spec = Spec("libelf cflags=-O2")
+        spec.concretize()
+
+        # Since the default is the full spec see if the string rep of
+        # spec is the same as the output of spec.format()
+        # ignoring whitespace (though should we?)
+        assert str(spec) == spec.format().strip()
+
+        # Testing named strings ie ${STRING} and whether we get
+        # the correct component
+        package_segments = [("${PACKAGE}", "name"),
+                            ("${VERSION}", "versions"),
+                            ("${COMPILER}", "compiler"),
+                            ("${COMPILERFLAGS}", "compiler_flags"),
+                            ("${OPTIONS}", "variants"),
+                            ("${ARCHITECTURE}", "architecture")]
+
+        compiler_segments = [("${COMPILERNAME}", "name"),
+                             ("${COMPILERVER}", "versions")]
+
+        architecture_segments = [("${PLATFORM}", "platform"),
+                                 ("${OS}", "platform_os"),
+                                 ("${TARGET}", "target")]
+
+        for named_str, prop in package_segments:
+            expected = getattr(spec, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        compiler = spec.compiler
+        for named_str, prop in compiler_segments:
+            expected = getattr(compiler, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        arch = spec.architecture
+        for named_str, prop in architecture_segments:
+            expected = getattr(arch, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual

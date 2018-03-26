@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -89,6 +89,7 @@ class Llvm(CMakePackage):
     depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
     depends_on('libedit', when='+lldb')
+    depends_on('py-six', when='@5.0.0: +lldb +python')
 
     # gold support
     depends_on('binutils+gold', when='+gold')
@@ -441,6 +442,8 @@ class Llvm(CMakePackage):
                                '-DLLVM_POLLY_BUILD:Bool=OFF',
                                '-DLLVM_POLLY_LINK_INTO_TOOLS:Bool=OFF'])
 
+        if '+python' in spec and '+lldb' in spec and spec.satisfies('@5.0.0:'):
+            cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:

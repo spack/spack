@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -181,7 +181,7 @@ class Openmpi(AutotoolsPackage):
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
         description='List of fabrics that are enabled',
-        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm'),
+        values=('psm', 'psm2', 'verbs', 'mxm'),
         multi=True
     )
 
@@ -200,6 +200,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('ucx', default=False, description='Enable UCX support')
+    variant('pmi', default=False, description='Enable PMI support')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -220,8 +221,10 @@ class Openmpi(AutotoolsPackage):
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
-    conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
+    conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
+              msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
@@ -317,9 +320,12 @@ class Openmpi(AutotoolsPackage):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
 
-        # Fabrics and schedulers
+        # Fabrics
         config_args.extend(self.with_or_without('fabrics'))
+        # Schedulers
         config_args.extend(self.with_or_without('schedulers'))
+        # PMI
+        config_args.extend(self.with_or_without('pmi'))
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):

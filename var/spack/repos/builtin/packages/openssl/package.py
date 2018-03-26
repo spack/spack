@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,6 +26,8 @@ import llnl.util.tty as tty
 
 from spack import *
 import spack.architecture
+
+import os
 
 
 class Openssl(Package):
@@ -60,6 +62,8 @@ class Openssl(Package):
     version('1.0.1t', '9837746fcf8a6727d46d22ca35953da1')
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
+
+    variant('systemcerts', default=True, description='Use system certificates')
 
     depends_on('zlib')
 
@@ -111,3 +115,34 @@ class Openssl(Package):
         # if self.run_tests:
         #     make('test')            # 'VERBOSE=1'
         make('install')
+
+    @run_after('install')
+    def link_system_certs(self):
+        if '+systemcerts' not in self.spec:
+            return
+
+        system_dirs = [
+            # CentOS, Fedora, RHEL
+            '/etc/pki/tls',
+            # Ubuntu
+            '/usr/lib/ssl'
+        ]
+
+        pkg_dir = join_path(self.prefix, 'etc', 'openssl')
+
+        for directory in system_dirs:
+            sys_cert = join_path(directory, 'cert.pem')
+            pkg_cert = join_path(pkg_dir, 'cert.pem')
+            # If a bundle exists, use it. This is the preferred way on Fedora,
+            # where the certs directory does not work.
+            if os.path.exists(sys_cert) and not os.path.exists(pkg_cert):
+                os.symlink(sys_cert, pkg_cert)
+
+            sys_certs = join_path(directory, 'certs')
+            pkg_certs = join_path(pkg_dir, 'certs')
+            # If the certs directory exists, symlink it into the package.
+            # We symlink the whole directory instead of all files because
+            # the directory contents might change without Spack noticing.
+            if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
+                os.rmdir(pkg_certs)
+                os.symlink(sys_certs, pkg_certs)
