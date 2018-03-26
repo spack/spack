@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,21 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import sys
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class RdmaCore(CMakePackage):
+    """RDMA core userspace libraries and daemons"""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://github.com/linux-rdma/rdma-core"
+    url      = "https://github.com/linux-rdma/rdma-core/releases/download/v13/rdma-core-13.tar.gz"
 
-    # Current
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
+    version('13', '6b072b4307d1cfe45eba4373f68e2927')
 
-    # Still supported
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
+    depends_on('libnl')
 
-    depends_on('numactl')
-    depends_on('rdma-core')
+    def cmake_args(self):
+        cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
+                      self.spec.prefix.etc]
+        return cmake_args
+
+    @run_before('cmake')
+    def check_platform(self):
+        if not (sys.platform.startswith('freebsd') or
+                sys.platform.startswith('linux')):
+            raise InstallError("rdma-core requires FreeBSD or Linux")

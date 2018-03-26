@@ -32,6 +32,7 @@ class Libfabric(AutotoolsPackage):
     homepage = "https://libfabric.org/"
     url      = "https://github.com/ofiwg/libfabric/releases/download/v1.5.0/libfabric-1.5.0.tar.gz"
 
+    version('1.5.3', '1fe07e972fe487c6a3e44c0fb68b49a2')
     version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')
     version('1.4.2', '2009c8e0817060fb99606ddbf6c5ccf8')
 
@@ -40,9 +41,8 @@ class Libfabric(AutotoolsPackage):
                'sockets',
                'verbs',
                'usnic',
-               'mxm',
+               'mlx',
                'gni',
-               'xpmem',
                'udp',
                'rxm',
                'rxd')
@@ -55,9 +55,21 @@ class Libfabric(AutotoolsPackage):
        multi=True
     )
 
+    variant('spackfabrics', 
+            default=False,
+            description=("For any fabric in list of "
+                         "enabled fabrics, use spack "
+                         "dependencies instead of "
+                         "system libraries")
+    )
+
+    depends_on('rdma-core', when='+spackfabrics fabrics=verbs')
+    depends_on('opa-psm2', when='+spackfabrics fabrics=psm2')
+    depends_on('psm', when='+spackfabrics fabrics=psm')
+    depends_on('ucx', when='+spackfabrics fabrics=mlx')
+
     def configure_args(self):
         args = []
-
         args.extend(['--enable-%s=%s' %
                      (f, 'yes' if 'fabrics=%s' % f in self.spec else 'no')
                      for f in self.fabrics])
