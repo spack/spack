@@ -66,6 +66,11 @@ class Vim(AutotoolsPackage):
     # support for auto/no/gtk2/gnome2/gtk3/motif/athena/neXtaw/photon/carbon
     variant('gui', default=False, description="build with gui (gvim)")
     variant('x', default=False, description="use the X Window System")
+    depends_on('libx11', when="+x")
+    depends_on('libsm', when="+x")
+    depends_on('libxpm', when="+x")
+    depends_on('libxt', when="+x")
+    depends_on('libxtst', when="+x")
 
     depends_on('ncurses', when="@7.4:")
 
