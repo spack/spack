@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,20 +25,18 @@
 from spack import *
 
 
-class RLubridate(RPackage):
-    """Functions to work with date-times and timespans: fast and user friendly
-    parsing of date-time data, extraction and updating of components of a
-    date-time (years, months, days, hours, minutes, and seconds), algebraic
-    manipulation on date-time and timespan objects. The 'lubridate' package has
-    a consistent and memorable syntax that makes working with dates easy and
-    fun."""
+class RTidyselect(RPackage):
+    """A backend for the selecting functions of the 'tidyverse'. It makes it
+       easy to implement select-like functions in your own packages in a way
+       that is consistent with other 'tidyverse' interfaces for selection."""
 
-    homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lubridate_1.7.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
+    homepage = "https://cran.r-project.org/package=tidyselect"
+    url      = "https://cran.r-project.org/src/contrib/tidyselect_0.2.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/tidyselect"
 
-    version('1.7.1', '17dcb4c6a95189941bbdcffecf61b83b')
-    version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
+    version('0.2.3', 'c9dbd895ad7ce209bacfad6d19de91c9')
 
-    depends_on('r-rcpp@0.11:', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-glue', type=('build', 'run'))
+    depends_on('r-purrr', type=('build', 'run'))
+    depends_on('r-rlang@0.1:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.0:', type=('build', 'run'))
