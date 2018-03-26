@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -2905,6 +2905,9 @@ class Spec(object):
             ${COMPILERFLAGS} Compiler flags
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
+            ${PLATFORM}      Platform
+            ${OS}            Operating System
+            ${TARGET}        Target
             ${SHA1}          Dependencies 8-char sha1 prefix
             ${HASH:len}      DAG hash with optional length specifier
 
@@ -3062,12 +3065,22 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % token_transform(str(self.variants)), '+')
-                elif named_str == 'ARCHITECTURE':
+                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
-                        write(
-                            fmt % token_transform(str(self.architecture)),
-                            '='
-                        )
+                        if named_str == "ARCHITECTURE":
+                            write(
+                                fmt % token_transform(str(self.architecture)),
+                                '='
+                            )
+                        elif named_str == "PLATFORM":
+                            platform = str(self.architecture.platform)
+                            write(fmt % token_transform(platform), '=')
+                        elif named_str == "OS":
+                            operating_sys = str(self.architecture.platform_os)
+                            write(fmt % token_transform(operating_sys), '=')
+                        elif named_str == "TARGET":
+                            target = str(self.architecture.target)
+                            write(fmt % token_transform(target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))
