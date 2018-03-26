@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,8 @@ class Cdbfasta(MakefilePackage):
     url      = "https://github.com/gpertea/cdbfasta"
 
     version('2017-03-16', git='https://github.com/gpertea/cdbfasta.git', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
+
+    depends_on('zlib')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

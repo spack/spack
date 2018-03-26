@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,9 @@ class Libbson(AutotoolsPackage):
     homepage = "https://github.com/mongodb/libbson"
     url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
 
+    maintainers = ['michaelkuhn']
+
+    version('1.9.1', 'f91f59fc5a0cbba94d4d32dad1bd0cfd')
     version('1.8.1', '42601455cf7f450b46f62c4e6115c440')
     version('1.8.0', '8b3c64570eec721f951831958e707a5a')
     version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')

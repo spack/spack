@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.build_systems.cuda import CudaPackage
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -57,6 +56,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('gmsh',     default=False,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
@@ -120,13 +120,14 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
+    depends_on('gmsh',             when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
     depends_on('cuda@8:',          when='+cuda')
     depends_on('cmake@3.9:',       when='+cuda')
-    # currently deal.II does not build with Cmake 3.10, see
+    # older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99')
+    depends_on('cmake@:3.9.99',    when='@:8.99')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on('metis@5:+int64+real64',   when='+metis+int64')
@@ -149,7 +150,11 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
 
     # check that the combination of variants makes sense
+    conflicts('^openblas+ilp64', when='@:8.5.1')
+    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
+    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
     conflicts('+assimp', when='@:8.5.1')
+    conflicts('+gmsh', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
     conflicts('+scalapack', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
@@ -186,6 +191,11 @@ class Dealii(CMakePackage, CudaPackage):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
 
         if spec.satisfies('@:8.99'):
             options.extend([
@@ -266,8 +276,8 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp'):
-            if library in spec:
+                'sundials', 'nanoflann', 'assimp', 'gmsh'):
+            if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
                     '-DDEAL_II_WITH_%s:BOOL=ON' % library.upper()

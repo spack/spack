@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -69,7 +69,7 @@ def spec(parser, args):
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
         if args.yaml:
-            if spec.name in spack.repo:
+            if spec.name in spack.repo or spec.virtual:
                 spec.concretize()
             print(spec.to_yaml())
             continue

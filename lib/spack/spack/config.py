@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -60,7 +60,7 @@ import yaml
 import jsonschema
 from yaml.error import MarkedYAMLError
 from jsonschema import Draft4Validator, validators
-from ordereddict_backport import OrderedDict
+from spack.util.ordereddict import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -87,6 +87,10 @@ section_schemas = {
 #: OrderedDict of config scopes keyed by name.
 #: Later scopes will override earlier scopes.
 config_scopes = OrderedDict()
+
+#: metavar to use for commands that accept scopes
+#: this is shorter and more readable than listing all choices
+scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
 
 
 def validate_section_name(section):
@@ -236,7 +240,7 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
-    return config_scopes.values()[-1]
+    return list(config_scopes.values())[-1]
 
 
 def validate_scope(scope):
@@ -445,16 +449,8 @@ def update_config(section, update_data, scope=None):
     validate_section_name(section)  # validate section name
     scope = validate_scope(scope)  # get ConfigScope object from string.
 
-    # read in the config to ensure we've got current data
-    configuration = get_config(section)
-
-    if isinstance(update_data, list):
-        configuration = update_data
-    else:
-        configuration.update(update_data)
-
     # read only the requested section's data.
-    scope.sections[section] = {section: configuration}
+    scope.sections[section] = {section: update_data}
     scope.write_section(section)
 
 

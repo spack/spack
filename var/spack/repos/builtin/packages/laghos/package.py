@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -53,6 +53,7 @@ class Laghos(MakefilePackage):
                        'share/mfem/config.mk'))
         targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
                        'share/mfem/test.mk'))
+        targets.append('CXX=%s' % spec['mpi'].mpicxx)
 
         return targets
 

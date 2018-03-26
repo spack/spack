@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,6 +42,7 @@ class Libsplash(CMakePackage):
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
+    version('1.7.0', '22dea94734fe4f4c5f4e875ce70900d3')
     version('1.6.0', 'c05bce95abfe1ae4cd9d9817acf58d94')
     version('1.5.0', 'c1efec4c20334242c8a3b6bfdc0207e3')
     version('1.4.0', '2de37bcef6fafa1960391bf44b1b50e0')
@@ -51,6 +52,23 @@ class Libsplash(CMakePackage):
     variant('mpi', default=True,
             description='Enable parallel I/O (one-file aggregation) support')
 
-    depends_on('hdf5@1.8.6:')
-    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('cmake@3.10.0:', type='build', when='@1.7.0:')
+    depends_on('hdf5@1.8.6: ~mpi', when='~mpi')
+    depends_on('hdf5@1.8.6: +mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
+
+    patch('root_cmake_1.7.0.patch', when='@1.7.0')
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+
+        if spec.satisfies('@1.7.0:'):
+            args += [
+                '-DSplash_USE_MPI:BOOL={0}'.format(
+                    'ON' if '+mpi' in spec else 'OFF'),
+                '-DSplash_USE_PARALLEL:BOOL={0}'.format(
+                    'ON' if '+mpi' in spec else 'OFF')
+            ]
+
+        return args

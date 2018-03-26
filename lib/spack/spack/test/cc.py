@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -211,8 +211,12 @@ class CompilerWrapperTest(unittest.TestCase):
                       ' '.join(test_command) + ' ' +
                       '-lfoo')
 
-        os.environ['SPACK_LDFLAGS'] = ''
-        os.environ['SPACK_LDLIBS'] = ''
+        del os.environ['SPACK_CFLAGS']
+        del os.environ['SPACK_CXXFLAGS']
+        del os.environ['SPACK_FFLAGS']
+        del os.environ['SPACK_CPPFLAGS']
+        del os.environ['SPACK_LDFLAGS']
+        del os.environ['SPACK_LDLIBS']
 
     def test_dep_rpath(self):
         """Ensure RPATHs for root package are added."""

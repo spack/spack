@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,6 +26,8 @@
 
 import re
 
+import pytest
+
 import spack
 from spack.repository import RepoPath
 
@@ -36,6 +38,7 @@ def check_db():
         spack.repo.get(name)
 
 
+@pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
     check_db()

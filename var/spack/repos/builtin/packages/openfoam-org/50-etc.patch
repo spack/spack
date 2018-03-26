@@ -1,0 +1,24 @@
+--- OpenFOAM-5.x.org/etc/bashrc	2017-07-25 18:43:40.000000000 +0200
++++ OpenFOAM-5.x/etc/bashrc	2017-12-11 13:36:09.479818186 +0100
+@@ -42,15 +42,17 @@
+ #
+ # Please set to the appropriate path if the default is not correct.
+ #
+-[ ${BASH_SOURCE:-$0} ] && \
+-export FOAM_INST_DIR=$(cd $(dirname ${BASH_SOURCE:-$0})/../.. && pwd -P) || \
+-export FOAM_INST_DIR=$HOME/$WM_PROJECT
+-# export FOAM_INST_DIR=~$WM_PROJECT
++rc="${BASH_SOURCE:-${ZSH_NAME:+$0}}"
++[ -n "$rc" ] && FOAM_INST_DIR=$(\cd $(dirname $rc)/../.. && \pwd -P) || \
++FOAM_INST_DIR=$HOME/$WM_PROJECT
+ # export FOAM_INST_DIR=/opt/$WM_PROJECT
+ # export FOAM_INST_DIR=/usr/local/$WM_PROJECT
+ #
+ # END OF (NORMAL) USER EDITABLE PART
+ ################################################################################
++: # Extra safety - if the user commented out all fallback values
++export FOAM_INST_DIR
++unset rc
+ 
+ # The default environment variables below can be overridden in a prefs.sh file
+ # located in ~/.OpenFOAM/$WM_PROJECT_VERSION, ~/.OpenFOAM,

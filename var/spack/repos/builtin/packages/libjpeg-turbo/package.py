@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,8 +32,9 @@ class LibjpegTurbo(AutotoolsPackage):
        transcoding."""
 
     homepage = "http://libjpeg-turbo.virtualgl.org"
-    url      = "http://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-1.3.1.tar.gz"
+    url      = "https://sourceforge.net/projects/libjpeg-turbo/files/1.5.3/libjpeg-turbo-1.5.3.tar.gz"
 
+    version('1.5.3', '7c82f0f6a3130ec06b8a4d0b321cbca3')
     version('1.5.0', '3fc5d9b6a8bce96161659ae7a9939257')
     version('1.3.1', '2c3a68129dac443a72815ff5bb374b05')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -83,6 +83,7 @@ def test_url_with_no_version_fails():
         url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
 
 
+@pytest.mark.network
 def test_url_list():
     out = url('list')
     total_urls = len(out.split('\n'))
@@ -112,6 +113,7 @@ def test_url_list():
     assert 0 < correct_version_urls < total_urls
 
 
+@pytest.mark.network
 def test_url_summary():
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work

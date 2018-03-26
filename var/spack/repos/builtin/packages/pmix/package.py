@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -48,8 +48,11 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.github.io/pmix"
     url      = "https://github.com/pmix/pmix/releases/download/v2.0.1/pmix-2.0.1.tar.bz2"
 
+    version('2.1.0',    'fc97513b601d78fe7c6bb20c6a21df3c')
+    version('2.0.2',    'e3ed1deed87c84f9b43da2621c6ad689')
     version('2.0.1',    'ba3193b485843516e6b4e8641e443b1e')
     version('2.0.0',    '3e047c2ea0ba8ee9925ed92b205fd92e')
+    version('1.2.4',    '242a812e206e7c5948f1f5c9688eb2a7')
     version('1.2.3',    '102b1cc650018b62348b45d572b158e9')
     version('1.2.2',    'd85c8fd437bd88f984549425ad369e9f')
     version('1.2.1',    'f090f524681c52001ea2db3b0285596f')

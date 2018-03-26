@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,7 +36,8 @@ class Turbine(AutotoolsPackage):
 
     depends_on('adlbx')
     depends_on('tcl')
-    depends_on('zsh', type='run')
+    depends_on('zsh')
+    depends_on('swig')
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,

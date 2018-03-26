@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,6 +38,8 @@ class Cuda(Package):
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
 
+    version('9.1.85', '67a5c3933109507df6b68f80650b4b4a', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/9.1/Prod/local_installers/cuda_9.1.85_387.26_linux")
     version('9.0.176', '7a00187b2ce5c5e350e68882f42dd507', expand=False,
             url="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run")
     version('8.0.61', '33e1bd980e91af4e55f3ef835c103f9b', expand=False,
@@ -50,7 +52,7 @@ class Cuda(Package):
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
     def install(self, spec, prefix):
-        runfile = glob(join_path(self.stage.path, 'cuda*run'))[0]
+        runfile = glob(join_path(self.stage.path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)
@@ -59,6 +61,7 @@ class Cuda(Package):
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
         # older. See:
         # http://docs.nvidia.com/cuda/cuda-installation-guide-linux/#system-requirements
+        # https://gist.github.com/ax3l/9489132
         # for details.
 
         runfile(

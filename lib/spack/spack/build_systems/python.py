@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -75,7 +75,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python setup.py --no-user-cfg <phase>
+       $ python -s setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``
@@ -132,7 +132,7 @@ class PythonPackage(PackageBase):
         setup = self.setup_file()
 
         with working_dir(self.build_directory):
-            self.python(setup, '--no-user-cfg', *args, **kwargs)
+            self.python('-s', setup, '--no-user-cfg', *args, **kwargs)
 
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
@@ -152,7 +152,7 @@ class PythonPackage(PackageBase):
         python = inspect.getmodule(self).python
         setup = self.setup_file()
 
-        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        python('-s', setup, '--no-user-cfg', command, '--help', **kwargs)
         return python.returncode == 0
 
     # The following phases and their descriptions come from:
@@ -237,9 +237,15 @@ class PythonPackage(PackageBase):
         # Spack manages the package directory on its own by symlinking
         # extensions into the site-packages directory, so we don't really
         # need the .pth files or egg directories, anyway.
+        #
+        # We need to make sure this is only for build dependencies. A package
+        # such as py-basemap will not build properly with this flag since
+        # it does not use setuptools to build and those does not recognize
+        # the --single-version-externally-managed flag
         if ('py-setuptools' == spec.name or          # this is setuptools, or
-            'py-setuptools' in spec._dependencies):  # it's an immediate dep
-            args += ['--single-version-externally-managed', '--root=/']
+            'py-setuptools' in spec._dependencies and  # it's an immediate dep
+            'build' in spec._dependencies['py-setuptools'].deptypes):
+                args += ['--single-version-externally-managed', '--root=/']
 
         return args
 

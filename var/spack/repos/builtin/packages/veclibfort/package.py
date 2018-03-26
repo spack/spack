@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -48,7 +48,7 @@ class Veclibfort(Package):
     def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            'libvecLibFort', root=self.prefix, shared=shared, recurse=True
+            'libvecLibFort', root=self.prefix, shared=shared, recursive=True
         )
 
     def install(self, spec, prefix):

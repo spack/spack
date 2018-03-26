@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,9 @@ class Clhep(CMakePackage):
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    version('2.4.0.1', 'f06aa2924abbfee0afd5a9beaaa883cf')
+    version('2.4.0.0', '9af6644e4e04d6807f53956512b7396a')
+    version('2.3.4.5', '31b4785b40706ff7503bb9ffd412487a')
     version('2.3.4.4', '8b8a33d0d19213b60d6c22ce5fc93761')
     version('2.3.4.3', '6941279f70d69492fff1aa955f3f2562')
     version('2.3.4.2', '1e7a9046c9ad0b347d6812f8031191da')

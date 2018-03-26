@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ class Lftp(AutotoolsPackage):
 
     version('4.8.1', '419b27c016d968a0226b2e5df1454c22')
     version('4.7.7', 'ddc71b3b11a1af465e829075ae14b3ff')
+    version('4.6.4', 'f84ecfc368b7afcc56fe7d3da2457d12')
 
     depends_on('expat')
     depends_on('libiconv')

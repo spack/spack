@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -683,7 +683,7 @@ class Repo(object):
         self._instances = {}
 
         # Maps that goes from package name to corresponding file stat
-        self._fast_package_checker = FastPackageChecker(self.packages_path)
+        self._fast_package_checker = None
 
         # Index of virtual dependencies, computed lazily
         self._provider_index = None
@@ -819,7 +819,7 @@ class Repo(object):
                     % (self.config_file, self.root))
 
     @_autospec
-    def get(self, spec, new=False):
+    def get(self, spec):
         if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
@@ -828,18 +828,13 @@ class Repo(object):
                 "Repository %s does not contain package %s"
                 % (self.namespace, spec.fullname))
 
-        key = hash(spec)
-        if new or key not in self._instances:
-            package_class = self.get_pkg_class(spec.name)
-            try:
-                copy = spec.copy()  # defensive copy.  Package owns its spec.
-                self._instances[key] = package_class(copy)
-            except Exception:
-                if spack.debug:
-                    sys.excepthook(*sys.exc_info())
-                raise FailedConstructorError(spec.fullname, *sys.exc_info())
-
-        return self._instances[key]
+        package_class = self.get_pkg_class(spec.name)
+        try:
+            return package_class(spec)
+        except Exception:
+            if spack.debug:
+                sys.excepthook(*sys.exc_info())
+            raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
     @_autospec
     def dump_provenance(self, spec, path):
@@ -933,9 +928,15 @@ class Repo(object):
         pkg_dir = self.dirname_for_package_name(spec.name)
         return join_path(pkg_dir, package_file_name)
 
+    @property
+    def _pkg_checker(self):
+        if self._fast_package_checker is None:
+            self._fast_package_checker = FastPackageChecker(self.packages_path)
+        return self._fast_package_checker
+
     def all_package_names(self):
         """Returns a sorted list of all package names in the Repo."""
-        return sorted(self._fast_package_checker.keys())
+        return sorted(self._pkg_checker.keys())
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
@@ -957,7 +958,7 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        return pkg_name in self._fast_package_checker
+        return pkg_name in self._pkg_checker
 
     def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""

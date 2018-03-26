@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -116,12 +116,16 @@ def edit(parser, args):
     if args.path:
         path = args.path
         if name:
+            # convert command names to python module name
+            if path == spack.cmd.command_path:
+                name = spack.cmd.python_name(name)
+
             path = os.path.join(path, name)
             if not os.path.exists(path):
                 files = glob.glob(path + '*')
                 blacklist = ['.pyc', '~']  # blacklist binaries and backups
-                files = filter(lambda x: all(s not in x for s in blacklist),
-                               files)
+                files = list(filter(
+                    lambda x: all(s not in x for s in blacklist), files))
                 if len(files) > 1:
                     m = 'Multiple files exist with the name {0}.'.format(name)
                     m += ' Please specify a suffix. Files are:\n\n'

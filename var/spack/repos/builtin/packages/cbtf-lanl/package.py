@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -48,18 +48,26 @@ class CbtfLanl(CMakePackage):
        command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('1.8', branch='master',
+    version('1.9.1', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
+    variant('runtime', default=False,
+            description="build only the runtime libraries and collectors.")
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
 
     depends_on("cmake@3.0.2:", type='build')
     # Dependencies for cbtf-krell
     depends_on("mrnet@5.0.1:+lwthreads")
     depends_on("xerces-c@3.1.1:")
     depends_on("cbtf")
+    depends_on("cbtf+cti", when='+cti')
+    depends_on("cbtf+runtime", when='+runtime')
     depends_on("cbtf-krell")
+    depends_on("cbtf-krell+cti", when='+cti')
+    depends_on("cbtf-krell+runtime", when='+runtime')
 
     parallel = False
 

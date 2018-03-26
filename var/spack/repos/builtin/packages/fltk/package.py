@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,6 +41,8 @@ class Fltk(Package):
     url = 'http://fltk.org/pub/fltk/1.3.3/fltk-1.3.3-source.tar.gz'
 
     version('1.3.3', '9ccdb0d19dc104b87179bd9fd10822e3')
+
+    depends_on('libx11')
 
     patch('font.patch', when='@1.3.3')
 

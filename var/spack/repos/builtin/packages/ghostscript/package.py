@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,6 +43,7 @@ class Ghostscript(AutotoolsPackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('zlib')
+    depends_on('libxext')
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"

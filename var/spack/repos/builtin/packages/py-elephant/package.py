@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class PyElephant(PythonPackage):
     homepage = "http://neuralensemble.org/elephant"
     url      = "https://pypi.io/packages/source/e/elephant/elephant-0.3.0.tar.gz"
 
+    version('0.4.1', '0e6214c96cae6ce777e4b3cf29bbdaa9')
     version('0.3.0', '84e69e6628fd617af469780c30d2da6c')
 
     variant('doc', default=False, description='Build the documentation')

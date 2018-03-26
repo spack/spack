@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,8 @@ class Libiconv(AutotoolsPackage):
     # We cannot set up a warning for gets(), since gets() is not part
     # of C11 any more and thus might not exist.
     patch('gets.patch', when='@1.14')
+
+    conflicts('@1.14', when='%gcc@5:')
 
     def configure_args(self):
         args = ['--enable-extra-encodings']

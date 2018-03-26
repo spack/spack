@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,15 +34,17 @@ class Xtensor(CMakePackage):
 
     version('develop', branch='master',
             git='https://github.com/QuantStack/xtensor.git')
+    version('0.15.1', 'c24ecc406003bd1ac22291f1f7cac29a')
     version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
 
     variant('xsimd', default=True,
             description='Enable SIMD intrinsics')
 
     depends_on('xtl')
-    depends_on('xtl@0.3.4:', when='@develop')
-    depends_on('xtl@0.3.3:', when='@0.13.1')
-    depends_on('xsimd@3.1.0', when='+xsimd')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1:')
+    depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
+    depends_on('xsimd@4.0.0', when='@0.15.1 +xsimd')
+    depends_on('xsimd@3.1.0', when='@0.13.1 +xsimd')
 
     # C++14 support
     conflicts('%gcc@:4.8')

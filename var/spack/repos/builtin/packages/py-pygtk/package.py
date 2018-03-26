@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,11 +34,13 @@ class PyPygtk(AutotoolsPackage):
     version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
 
     extends('python')
+
+    depends_on('pkgconfig', type=('build'))
     depends_on("libffi")
     depends_on('cairo')
     depends_on('glib')
     # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus+X@2.24:2.99')
+    depends_on('gtkplus@2.24:2.99')
     depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
     depends_on('py-py2cairo', type=('build', 'run'))
 

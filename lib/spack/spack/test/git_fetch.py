@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -89,7 +89,7 @@ def test_fetch(type_of_test,
     # Construct the package under test
     spec = Spec('git-test')
     spec.concretize()
-    pkg = spack.repo.get(spec, new=True)
+    pkg = spack.repo.get(spec)
     pkg.versions[ver('git')] = t.args
 
     # Enter the stage directory and check some properties

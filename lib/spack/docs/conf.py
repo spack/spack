@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -68,26 +68,31 @@ os.environ['COLIFY_SIZE'] = '25x120'
 #
 # Generate package list using spack command
 #
-with open('package_list.rst', 'w') as plist_file:
+with open('package_list.html', 'w') as plist_file:
     subprocess.Popen(
-        [spack_root + '/bin/spack', 'list', '--format=rst'], stdout=plist_file)
+        [spack_root + '/bin/spack', 'list', '--format=html'],
+        stdout=plist_file)
 
 #
 # Find all the `cmd-spack-*` references and add them to a command index
 #
-command_names = []
+import spack
+command_names = spack.cmd.all_commands
+documented_commands = set()
 for filename in glob('*rst'):
     with open(filename) as f:
         for line in f:
-            match = re.match('.. _(cmd-spack-.*):', line)
+            match = re.match('.. _cmd-(spack-.*):', line)
             if match:
-                command_names.append(match.group(1).strip())
+                documented_commands.add(match.group(1).strip())
 
+os.environ['COLUMNS'] = '120'
 shutil.copy('command_index.in', 'command_index.rst')
 with open('command_index.rst', 'a') as index:
-    index.write('\n')
-    for cmd in sorted(command_names):
-        index.write('   * :ref:`%s`\n' % cmd)
+    subprocess.Popen(
+        [spack_root + '/bin/spack', 'commands', '--format=rst'] + list(
+            documented_commands),
+        stdout=index)
 
 #
 # Run sphinx-apidoc
@@ -114,7 +119,7 @@ sphinx_apidoc(apidoc_args + ['../llnl'])
 # This also avoids issues where some of these symbols shadow core spack
 # modules.  Sphinx will complain about duplicate docs when this happens.
 #
-import fileinput, spack
+import fileinput
 handling_spack = False
 for line in fileinput.input('spack.rst', inplace=1):
     if handling_spack:
@@ -180,7 +185,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spack'
-copyright = u'2013-2017, Lawrence Livermore National Laboratory.'
+copyright = u'2013-2018, Lawrence Livermore National Laboratory.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

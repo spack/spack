@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Libfabric(AutotoolsPackage):
     url      = "https://github.com/ofiwg/libfabric/releases/download/v1.5.0/libfabric-1.5.0.tar.gz"
 
     version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')
+    version('1.4.2', '2009c8e0817060fb99606ddbf6c5ccf8')
 
     fabrics = ('psm',
                'psm2',

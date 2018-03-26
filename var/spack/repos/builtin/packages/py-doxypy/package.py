@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,3 +32,5 @@ class PyDoxypy(PythonPackage):
     url      = "https://pypi.io/packages/source/d/doxypy/doxypy-0.3.tar.gz"
 
     version('0.3', '3b52289e0962d31b92af8be0eef8cbb2')
+
+    depends_on('python@:2.8')

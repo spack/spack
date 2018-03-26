@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -59,6 +59,7 @@ class ArpackNg(Package):
     version('3.5.0', '9762c9ae6d739a9e040f8201b1578874')
     version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
     version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
+    version('develop', git='https://github.com/opencollab/arpack-ng.git', branch='master')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -91,7 +92,7 @@ class ArpackNg(Package):
             libraries = ['libparpack'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=True, recurse=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     @when('@3.4.0:')
