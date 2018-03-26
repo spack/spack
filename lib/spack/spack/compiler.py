@@ -184,6 +184,12 @@ class Compiler(object):
             "submit a pull request or issue.")
 
     # This property should be overridden in the compiler subclass if
+    # C++98 is not the default standard for that compiler
+    @property
+    def cxx98_flag(self):
+        return ""
+
+    # This property should be overridden in the compiler subclass if
     # C++11 is supported by that compiler
     @property
     def cxx11_flag(self):
