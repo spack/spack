@@ -47,12 +47,7 @@ class Shoremap(MakefilePackage):
         makefile.filter(r'-L/usr/lib/',
                         self.spec['libxt'].libs.search_flags)
         makefile.filter(r'-L\./dislin.* -ldislin_d',
-                        self.spec['dislin'].libs.ld_flags)
-
-#    def setup_environment(self, spack_env, run_env):
-#        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
-#        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
-#        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+                        self.spec['dislin_d'].libs.ld_flags)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
