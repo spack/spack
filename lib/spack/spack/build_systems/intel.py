@@ -162,21 +162,8 @@ class IntelPackage(PackageBase):
         '''Check if called for an explicitly requested Intel ``component`` or
         in a role manifested by the current (possibly virtual) package name.
         '''
-        # This part acts as a mere macro for equality testing.
-        if component == personality_wanted:
-            return True
-
-        # This part is a rough inverse for "provides()" in client packages.
-        names_for = {
-            'mkl': r'intel-mkl|mkl|blas|lapack|scalapack',
-            'mpi': r'intel-mpi|mpi',
-            'tbb': r'intel-tbb|tbb',
-        }
-        try:
-            result = bool(re.match(names_for[personality_wanted], self.name))
-        except KeyError:
-            raise InstallError("Support for '%s' not available." %
-                               personality_wanted)
+        result = (personality_wanted == component or
+                  personality_wanted in [str(k) for k in self.provided])
         debug_print("%s -> %s" % (str((personality_wanted, component)),
                                   result))
         return result
@@ -666,7 +653,7 @@ class IntelPackage(PackageBase):
         else:
             m = re.match('intel-([^-]*).*', self.name)
             if m:
-                f = m.groups[0] + 'vars.sh'
+                f = m.group(1) + 'vars.sh'
         debug_print(f)
         return f
 
