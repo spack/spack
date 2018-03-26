@@ -199,7 +199,11 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 export SPACK_ROOT=${_sp_prefix}
 
 #
-# Determine which shell is being used
+# Try to determine which shell is being used if
+# SPACK_SHELL has not already been set by the user.
+# This variable is used for the environment-modules
+# 'module' function/command to envoke 'modulecmd' with
+# the correct shell.
 #
 function _spack_determine_shell() {
         ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
