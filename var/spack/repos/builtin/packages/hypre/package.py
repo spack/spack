@@ -163,8 +163,11 @@ class Hypre(Package):
                       '-DUSE_NVTX', '-DHYPRE_USE_GPU', '-DHYPRE_USE_MANAGED',
                       '-DHYPRE_USE_CUDA', '-DHAVE_CONFIG_H',
                       '--relocatable-device-code=true']
+            if 'essl' in spec:
+                cflags += ['-D_ESVCPTR']
             # Flags used for compiling .cu files
-            cuflags = ['-O2', '-I.', '-I..', '-I../utilities',
+            cuflags = ['-O2', '-ccbin=%s' % env['CXX'],
+                       '-I.', '-I..', '-I../utilities',
                        '-I%s' % spec['mpi'].prefix.include,
                        '-DUSE_NVTX', '-DHYPRE_USE_GPU',
                        '-DHYPRE_USE_MANAGED']
