@@ -27,12 +27,12 @@ import os
 
 
 class Ceed(Package):
-    """Ceed is a collection of benchmarks, miniapps, software libraries and APIs for
-       efficient high-order finite element and spectral element discretizations
-       for exascale applications developed in the Department of Energy (DOE) and
-       partially supported by the Exascale Computing Project (ECP). This is a
-       Spack bundle package that installs the CEED software components.
-    """
+    """Ceed is a collection of benchmarks, miniapps, software libraries and
+       APIs for efficient high-order finite element and spectral element
+       discretizations for exascale applications developed in the Department of
+       Energy (DOE) and partially supported by the Exascale Computing Project
+       (ECP). This is a Spack bundle package that installs the CEED software
+       components."""
 
     homepage = "https://ceed.exascaleproject.org"
 

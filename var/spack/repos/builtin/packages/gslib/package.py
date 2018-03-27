@@ -84,6 +84,6 @@ class Gslib(Package):
                 mkdir(prefix.lib)
                 install(libname, prefix.lib)
 
-        # Should only install the headers (this will be fixed in gslib on future
-        # releases).
+        # Should only install the headers (this will be fixed in gslib on
+        # future releases).
         install_tree(srcDir, prefix.include)
