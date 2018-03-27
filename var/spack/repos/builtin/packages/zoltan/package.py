@@ -33,7 +33,7 @@ class Zoltan(Package):
     """The Zoltan library is a toolkit of parallel combinatorial algorithms
        for parallel, unstructured, and/or adaptive scientific
        applications.  Zoltan's largest component is a suite of dynamic
-       load-balancing and paritioning algorithms that increase
+       load-balancing and partitioning algorithms that increase
        applications' parallel performance by reducing idle time.  Zoltan
        also has graph coloring and graph ordering algorithms, which are
        useful in task schedulers and parallel preconditioners.

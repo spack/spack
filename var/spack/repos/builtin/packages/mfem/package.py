@@ -46,7 +46,7 @@ class Mfem(Package):
     #     https://github.com/mfem/mfem/issues/53
     #
     # The following procedure should be used to verify security when a
-    # new verison is added:
+    # new version is added:
     #
     # 1. Verify that no checksums on old versions have changed.
     #

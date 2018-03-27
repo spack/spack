@@ -26,15 +26,14 @@ from spack import *
 
 
 class Hpgmg(Package):
-    """HPGMG implements full multigrid (FMG) algorithms using
-    finite-volume and finite-element methods.
-    Different algorithmic variants adjust the arithmetic intensity
-    and architectural properties that are tested. These FMG methods
-    converge up to discretization error in one F-cycle,
-    thus may be considered direct solvers. An F-cycle visits
-    the finest level a total of two times,
-    the first coarsening (8x smaller) 4 times,
-    the second coarsening 6 times, etc."""
+    """HPGMG implements full multigrid (FMG) algorithms using finite-volume and
+       finite-element methods.  Different algorithmic variants adjust the
+       arithmetic intensity and architectural properties that are tested. These
+       FMG methods converge up to discretization error in one F-cycle, thus may
+       be considered direct solvers. An F-cycle visits the finest level a total
+       of two times, the first coarsening (8x smaller) 4 times, the second
+       coarsening 6 times, etc.
+    """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
     url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"

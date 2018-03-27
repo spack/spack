@@ -27,9 +27,9 @@ from spack import *
 
 
 class Magma(CMakePackage):
-    """The MAGMA project aims to develop a dense linear algebra library
-    similar to LAPACK but for heterogeneous/hybrid architectures,
-    starting with current "Multicore+GPU" systems.
+    """The MAGMA project aims to develop a dense linear algebra library similar to
+       LAPACK but for heterogeneous/hybrid architectures, starting with current
+       "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"

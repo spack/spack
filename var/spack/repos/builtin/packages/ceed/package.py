@@ -27,12 +27,14 @@ import os
 
 
 class Ceed(Package):
-    """Ceed is a suite of Department of Energy (DOE) packages partially
-       supported by the Exascale Computing Project (ECP). This is a Spack
-       bundle package that installs the CEED packages
+    """Ceed is a collection of benchmarks, miniapps, software libraries and APIs for
+       efficient high-order finite element and spectral element discretizations
+       for exascale applications developed in the Department of Energy (DOE) and
+       partially supported by the Exascale Computing Project (ECP). This is a
+       Spack bundle package that installs the CEED software components.
     """
 
-    homepage = "https://ceed.exascaleproject.org/"
+    homepage = "https://ceed.exascaleproject.org"
 
     url  = 'file://' + os.path.dirname(__file__) + '/README.md'
     sha1 = 'b2eefd95c09ba573f663a761b84811a2d7e39788'
