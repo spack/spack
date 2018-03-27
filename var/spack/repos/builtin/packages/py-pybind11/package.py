@@ -51,7 +51,6 @@ class PyPybind11(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DCMAKE_SHARED_LINKER_FLAGS=-fno-lto')
         args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                     % self.spec['python'].command.path)
         return args
