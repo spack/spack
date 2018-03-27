@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -113,7 +113,7 @@ class Elemental(CMakePackage):
     def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            'libEl', root=self.prefix, shared=shared, recurse=True
+            'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
     @when('@0.87.6:')

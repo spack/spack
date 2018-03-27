@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,6 +44,7 @@ class Mosh(AutotoolsPackage):
     depends_on('zlib')
     depends_on('openssl')
 
+    depends_on('pkgconfig', type='build')
     depends_on('perl', type='run')
 
     build_directory = 'spack-build'

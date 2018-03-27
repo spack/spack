@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -113,4 +113,4 @@ class Ncurses(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ['libncurses', 'libncursesw'], root=self.prefix, recurse=True)
+            ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)

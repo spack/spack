@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,10 @@ level = "long"
 
 def setup_parser(subparser):
     # User can only choose one
-    subparser.add_argument('--scope', choices=spack.config.config_scopes,
-                           help="configuration scope to read/modify")
+    subparser.add_argument(
+        '--scope', choices=spack.config.config_scopes,
+        metavar=spack.config.scopes_metavar,
+        help="configuration scope to read/modify")
 
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 

@@ -163,7 +163,7 @@ compilers`` or ``spack compiler list``:
 Any of these compilers can be used to build Spack packages.  More on
 how this is done is in :ref:`sec-specs`.
 
-.. _spack-compiler-add:
+.. _cmd-spack-compiler-add:
 
 ^^^^^^^^^^^^^^^^^^^^^^
 ``spack compiler add``
@@ -171,7 +171,7 @@ how this is done is in :ref:`sec-specs`.
 
 An alias for ``spack compiler find``.
 
-.. _spack-compiler-find:
+.. _cmd-spack-compiler-find:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 ``spack compiler find``
@@ -202,7 +202,7 @@ installed, but you know that new compilers have been added to your
 This loads the environment module for gcc-4.9.0 to add it to
 ``PATH``, and then it adds the compiler to Spack.
 
-.. _spack-compiler-info:
+.. _cmd-spack-compiler-info:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 ``spack compiler info``

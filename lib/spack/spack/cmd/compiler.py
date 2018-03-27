@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -54,7 +54,8 @@ def setup_parser(subparser):
         help='search the system for compilers to add to Spack configuration')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # Remove
@@ -65,20 +66,23 @@ def setup_parser(subparser):
         help='remove ALL compilers that match spec')
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
     # Info
     info_parser = sp.add_parser('info', help='show compiler paths')
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
 

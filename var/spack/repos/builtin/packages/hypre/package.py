@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -109,3 +109,27 @@ class Hypre(Package):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
+
+    @property
+    def headers(self):
+        """Export the main hypre header, HYPRE.h; all other headers can be found
+        in the same directory.
+        Sample usage: spec['hypre'].headers.cpp_flags
+        """
+        hdrs = find_headers('HYPRE', self.prefix.include, recursive=False)
+        return hdrs or None
+
+    @property
+    def libs(self):
+        """Export the hypre library.
+        Sample usage: spec['hypre'].libs.ld_flags
+        """
+        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
+                        [self.prefix, True]]
+        is_shared = '+shared' in self.spec
+        for path, recursive in search_paths:
+            libs = find_libraries('libHYPRE', root=path,
+                                  shared=is_shared, recursive=recursive)
+            if libs:
+                return libs
+        return None

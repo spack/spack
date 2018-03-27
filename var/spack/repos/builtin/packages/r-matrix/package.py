@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,7 +32,9 @@ class RMatrix(RPackage):
     homepage = "http://matrix.r-forge.r-project.org/"
     url      = "https://cran.rstudio.com/src/contrib/Matrix_1.2-11.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Matrix"
-    version('1.2-11', 'a8c1a893f36d7ea918ddbf8cb8d10b43')
+
+    version('1.2-12', '0ade6e374716f08650cc8b8da99a313c')
+    version('1.2-11', 'b7d2a639aa52228dfde7c3c3ee68b38e')
     version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
 

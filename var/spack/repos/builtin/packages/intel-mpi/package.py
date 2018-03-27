@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,8 @@ class IntelMpi(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
+    version('2018.2.199', '6ffeab59c83a8842537484d53e180520',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12748/l_mpi_2018.2.199.tgz')
     version('2018.1.163', '437ce50224c5bbf98fd578a810c3e401',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_mpi_2018.1.163.tgz')
     version('2018.0.128', '15b46fc6a3014595de897aa48d3a658b',
@@ -70,7 +72,7 @@ class IntelMpi(IntelPackage):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recursive=True
         )
 
     @property
@@ -78,7 +80,7 @@ class IntelMpi(IntelPackage):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
+        return find_headers('mpi', root=mpi_root, recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)

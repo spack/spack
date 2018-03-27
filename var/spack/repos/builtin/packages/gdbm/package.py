@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -45,10 +45,12 @@ class Gdbm(AutotoolsPackage):
 
     depends_on("readline")
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CC', spack_cc)
+
     def configure_args(self):
         config_args = [
             '--enable-libgdbm-compat',
-            'CC=%s' % spack_cc
         ]
 
         return config_args

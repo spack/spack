@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ class Xtl(CMakePackage):
 
     version('develop', branch='master',
             git='https://github.com/QuantStack/xtl.git')
+    version('0.4.0', '48c76b63ab12e497a53fb147c41ae747')
     version('0.3.4', 'b76548a55f1e171a9c849e5ed543e8b3')
     version('0.3.3', '09b6d9611e460d9280bf1156bcca20f5')
 

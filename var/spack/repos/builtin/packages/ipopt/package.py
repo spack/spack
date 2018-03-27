@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -78,7 +78,7 @@ class Ipopt(AutotoolsPackage):
         lapack_lib = spec['lapack'].libs.ld_flags
 
         args = [
-            "--prefix=%s" % prefix,
+            "--prefix=%s" % self.prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
             "--enable-shared",

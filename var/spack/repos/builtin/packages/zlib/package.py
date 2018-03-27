@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -54,7 +54,7 @@ class Zlib(Package):
     def libs(self):
         shared = '+shared' in self.spec
         return find_libraries(
-            ['libz'], root=self.prefix, recurse=True, shared=shared
+            ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
     def setup_environment(self, spack_env, run_env):
