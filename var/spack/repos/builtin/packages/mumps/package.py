@@ -203,7 +203,10 @@ class Mumps(Package):
 
         if '+shared' in self.spec:
             # All Mumps libraries will be linked with 'inject_libs'.
-            inject_libs = []
+            # Usually, the rpaths will be injected by the Spack compiler
+            # wrapper, however some MPI wrappers may not call the Spack
+            # compiler wrapper.
+            inject_libs = [self.rpath_args]
             if '+mpi' in self.spec:
                 inject_libs += [self.spec['scalapack'].libs.ld_flags]
             if '+ptscotch' in self.spec or '+scotch' in self.spec:
