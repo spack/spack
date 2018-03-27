@@ -83,6 +83,9 @@ class Nek5000(Package):
     depends_on('mpi', when="+mpi")
     depends_on('libx11', when="+prenek")
     depends_on('libx11', when="+postnek")
+    # libxt is needed for X11/Intrinsic.h but not for linking
+    depends_on('libxt', when="+prenek")
+    depends_on('libxt', when="+postnek")
     depends_on('visit', when="+visit")
 
     @run_before('install')
@@ -121,7 +124,13 @@ class Nek5000(Package):
             if not libx11_h:
                 raise RuntimeError('Xlib.h not found in %s' %
                                    spec['libx11'].prefix.include)
-            cflags += ['-L%s' % os.path.dirname(libx11_h.directories[0])]
+            cflags += ['-I%s' % os.path.dirname(libx11_h.directories[0])]
+            libxt_h = find_headers('Intrinsic', spec['libxt'].prefix.include,
+                                   recursive=True)
+            if not libxt_h:
+                raise RuntimeError('X11/Intrinsic.h not found in %s' %
+                                   spec['libxt'].prefix.include)
+            cflags += ['-I%s' % os.path.dirname(libxt_h.directories[0])]
         if self.compiler.name in ['xl', 'xl_r']:
             # Use '-qextname' to add underscores.
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
