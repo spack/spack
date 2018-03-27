@@ -1,0 +1,2317 @@
+diff --git a/src/blas/dasum.c b/src/blas/dasum.c
+index 433a34324..e7e471d2b 100644
+--- a/src/blas/dasum.c
++++ b/src/blas/dasum.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ doublereal dasum_(integer *n, doublereal *dx, integer *incx)
+ {
+ 
+diff --git a/src/blas/daxpy.c b/src/blas/daxpy.c
+index 6ab0a5cca..6fed36c4b 100644
+--- a/src/blas/daxpy.c
++++ b/src/blas/daxpy.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer daxpy_(integer *n, doublereal *da, doublereal *dx, 
+ 	integer *incx, doublereal *dy, integer *incy)
+ {
+diff --git a/src/blas/dcopy.c b/src/blas/dcopy.c
+index f70b1e9e4..64901701b 100644
+--- a/src/blas/dcopy.c
++++ b/src/blas/dcopy.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dcopy_(integer* n, doublereal* dx,integer* incx,doublereal* dy,integer* incy)
+ {
+     /* System generated locals */
+diff --git a/src/blas/ddot.c b/src/blas/ddot.c
+index e6b2a71e9..9bc667f46 100644
+--- a/src/blas/ddot.c
++++ b/src/blas/ddot.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ doublereal ddot_(integer*n,doublereal* dx,integer* incx,doublereal* dy,integer* incy)
+ {
+     /* System generated locals */
+diff --git a/src/blas/dgemm.c b/src/blas/dgemm.c
+index afc3e3db5..d28296084 100644
+--- a/src/blas/dgemm.c
++++ b/src/blas/dgemm.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dgemm_(const char *transa,const char *transb, integer *m, integer *
+ 	n, integer *k, doublereal *alpha, doublereal *a, integer *lda, 
+ 	doublereal *b, integer *ldb, doublereal *beta, doublereal *c, integer 
+diff --git a/src/blas/dgemv.c b/src/blas/dgemv.c
+index b15476231..2228264dc 100644
+--- a/src/blas/dgemv.c
++++ b/src/blas/dgemv.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dgemv_(const char *trans, integer *m, integer *n, doublereal *
+ 	alpha, doublereal *a, integer *lda, doublereal *x, integer *incx, 
+ 	doublereal *beta, doublereal *y, integer *incy)
+diff --git a/src/blas/dger.c b/src/blas/dger.c
+index d6659ce0b..72e5d741d 100644
+--- a/src/blas/dger.c
++++ b/src/blas/dger.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dger_(integer *m, integer *n, doublereal *alpha, 
+ 	doublereal *x, integer *incx, doublereal *y, integer *incy, 
+ 	doublereal *a, integer *lda)
+diff --git a/src/blas/dnrm2.c b/src/blas/dnrm2.c
+index e6154a60b..0dcd13d7a 100644
+--- a/src/blas/dnrm2.c
++++ b/src/blas/dnrm2.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ doublereal dnrm2_(integer*n,doublereal* dx,integer* incx)
+ {
+     /* Initialized data */
+diff --git a/src/blas/drot.c b/src/blas/drot.c
+index ccf2a76f3..73d811f7e 100644
+--- a/src/blas/drot.c
++++ b/src/blas/drot.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer drot_(integer *n, doublereal *dx, integer *incx, 
+ 	doublereal *dy, integer *incy, doublereal *c, doublereal *s)
+ {
+diff --git a/src/blas/dscal.c b/src/blas/dscal.c
+index 380cc9b0a..f794f5305 100644
+--- a/src/blas/dscal.c
++++ b/src/blas/dscal.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dscal_(integer *n, doublereal *da, doublereal *dx, 
+ 	integer *incx)
+ {
+diff --git a/src/blas/dswap.c b/src/blas/dswap.c
+index b8ff66966..876cb6cf8 100644
+--- a/src/blas/dswap.c
++++ b/src/blas/dswap.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dswap_(integer *n, doublereal *dx, integer *incx, 
+ 	doublereal *dy, integer *incy)
+ {
+diff --git a/src/blas/dsymm.c b/src/blas/dsymm.c
+index f0d6378ab..3f99eab5d 100644
+--- a/src/blas/dsymm.c
++++ b/src/blas/dsymm.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dsymm_(const char *side,const char *uplo, integer *m, integer *n, 
+ 	doublereal *alpha, doublereal *a, integer *lda, doublereal *b, 
+ 	integer *ldb, doublereal *beta, doublereal *c__, integer *ldc)
+diff --git a/src/blas/dsymv.c b/src/blas/dsymv.c
+index 5451d2cd4..e36a10a2b 100644
+--- a/src/blas/dsymv.c
++++ b/src/blas/dsymv.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dsymv_(const char *uplo, integer *n, doublereal *alpha, 
+ 	doublereal *a, integer *lda, doublereal *x, integer *incx, doublereal 
+ 	*beta, doublereal *y, integer *incy)
+diff --git a/src/blas/dsyr2.c b/src/blas/dsyr2.c
+index 1ec0d999b..336893e4a 100644
+--- a/src/blas/dsyr2.c
++++ b/src/blas/dsyr2.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dsyr2_(const char *uplo, integer *n, doublereal *alpha, 
+ 	doublereal *x, integer *incx, doublereal *y, integer *incy, 
+ 	doublereal *a, integer *lda)
+diff --git a/src/blas/dsyr2k.c b/src/blas/dsyr2k.c
+index 0a1a08da3..cc6b2432c 100644
+--- a/src/blas/dsyr2k.c
++++ b/src/blas/dsyr2k.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dsyr2k_(const char *uplo,const char *trans, integer *n, integer *k, 
+ 	doublereal *alpha, doublereal *a, integer *lda, doublereal *b, 
+ 	integer *ldb, doublereal *beta, doublereal *c__, integer *ldc)
+diff --git a/src/blas/dsyrk.c b/src/blas/dsyrk.c
+index 7ea5f8bbf..57c1a17b7 100644
+--- a/src/blas/dsyrk.c
++++ b/src/blas/dsyrk.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dsyrk_(const char *uplo,const char *trans, integer *n, integer *k, 
+ 	doublereal *alpha, doublereal *a, integer *lda, doublereal *beta, 
+ 	doublereal *c, integer *ldc)
+diff --git a/src/blas/dtrmm.c b/src/blas/dtrmm.c
+index f75e32b43..2c431f621 100644
+--- a/src/blas/dtrmm.c
++++ b/src/blas/dtrmm.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dtrmm_(const char *side,const char *uplo,const char *transa,const char *diag, 
+ 	integer *m, integer *n, doublereal *alpha, doublereal *a, integer *
+ 	lda, doublereal *b, integer *ldb)
+diff --git a/src/blas/dtrmv.c b/src/blas/dtrmv.c
+index 2235d77a7..f53f078ca 100644
+--- a/src/blas/dtrmv.c
++++ b/src/blas/dtrmv.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dtrmv_(const char *uplo,const char *trans,const char *diag, integer *n, 
+ 	doublereal *a, integer *lda, doublereal *x, integer *incx)
+ {
+diff --git a/src/blas/dtrsm.c b/src/blas/dtrsm.c
+index df96106f6..4d6647e06 100644
+--- a/src/blas/dtrsm.c
++++ b/src/blas/dtrsm.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dtrsm_(const char *side,const char *uplo,const char *transa,const char *diag, 
+ 	integer *m, integer *n, doublereal *alpha, doublereal *a, integer *
+ 	lda, doublereal *b, integer *ldb)
+diff --git a/src/blas/dtrsv.c b/src/blas/dtrsv.c
+index 22049e1a2..56b527330 100644
+--- a/src/blas/dtrsv.c
++++ b/src/blas/dtrsv.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Subroutine */ integer dtrsv_(const char *uplo,const char *trans,const char *diag, integer *n, 
+ 	doublereal *a, integer *lda, doublereal *x, integer *incx)
+ {
+diff --git a/src/blas/f2c.c b/src/blas/f2c.c
+index 7bf6a3e77..d69ca4314 100644
+--- a/src/blas/f2c.c
++++ b/src/blas/f2c.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -6,9 +9,6 @@ extern "C" {
+  * Contains functions found in the f2c library to avoid needing -lf2c
+  *-----------------------------------------------------------------------------*/
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-	
+ /* compare two strings */
+ 
+ integer s_cmp(char *a0,const char *b0, ftnlen la, ftnlen lb)
+diff --git a/src/blas/idamax.c b/src/blas/idamax.c
+index 605c70ad7..20d796147 100644
+--- a/src/blas/idamax.c
++++ b/src/blas/idamax.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -7,9 +10,6 @@ extern "C" {
+ 	-lf2c -lm   (in that order)
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ integer idamax_(integer *n, doublereal *dx, integer *incx)
+ {
+ 
+diff --git a/src/blas/lsame.c b/src/blas/lsame.c
+index 67e90b94c..dcb5e114d 100644
+--- a/src/blas/lsame.c
++++ b/src/blas/lsame.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -14,9 +17,6 @@ extern "C" {
+ 		http://www.netlib.org/f2c/libf2c.zip
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ logical lsame_(const char *ca, const char *cb)
+ {
+     /* System generated locals */
+diff --git a/src/blas/xerbla.c b/src/blas/xerbla.c
+index d291a209c..e343de5c4 100644
+--- a/src/blas/xerbla.c
++++ b/src/blas/xerbla.c
+@@ -1,3 +1,6 @@
++#include "f2c.h"
++#include "hypre_blas.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -14,9 +17,6 @@ extern "C" {
+                 http://www.netlib.org/f2c/libf2c.zip
+ */
+ 
+-#include "f2c.h"
+-#include "hypre_blas.h"
+-
+ /* Table of constant values */
+ 
+ /*static integer c__1 = 1;*/
+diff --git a/src/lapack/dbdsqr.c b/src/lapack/dbdsqr.c
+index ca2e8567a..3bb939f6c 100644
+--- a/src/lapack/dbdsqr.c
++++ b/src/lapack/dbdsqr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /*  -- translated by f2c (version 19990503).
+    You must link the resulting object file with the libraries:
+ 	-lf2c -lm   (in that order)
+diff --git a/src/lapack/dgebd2.c b/src/lapack/dgebd2.c
+index c641fe83f..3219e93b4 100644
+--- a/src/lapack/dgebd2.c
++++ b/src/lapack/dgebd2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgebd2_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, doublereal *d__, doublereal *e, doublereal *tauq, doublereal *
+ 	taup, doublereal *work, integer *info)
+diff --git a/src/lapack/dgebrd.c b/src/lapack/dgebrd.c
+index ec5f2d02a..b65e276b8 100644
+--- a/src/lapack/dgebrd.c
++++ b/src/lapack/dgebrd.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgebrd_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, doublereal *d__, doublereal *e, doublereal *tauq, doublereal *
+ 	taup, doublereal *work, integer *lwork, integer *info)
+diff --git a/src/lapack/dgelq2.c b/src/lapack/dgelq2.c
+index 7877abc03..2c79d3943 100644
+--- a/src/lapack/dgelq2.c
++++ b/src/lapack/dgelq2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgelq2_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, doublereal *tau, doublereal *work, integer *info)
+ {
+diff --git a/src/lapack/dgelqf.c b/src/lapack/dgelqf.c
+index b57524263..d74f78571 100644
+--- a/src/lapack/dgelqf.c
++++ b/src/lapack/dgelqf.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgelqf_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, doublereal *tau, doublereal *work, integer *lwork, integer *info)
+ {
+diff --git a/src/lapack/dgels.c b/src/lapack/dgels.c
+index 84800a8d4..0b9cd8692 100644
+--- a/src/lapack/dgels.c
++++ b/src/lapack/dgels.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgels_(char *trans, integer *m, integer *n, integer *
+ 	nrhs, doublereal *a, integer *lda, doublereal *b, integer *ldb, 
+ 	doublereal *work, integer *lwork, integer *info)
+diff --git a/src/lapack/dgeqr2.c b/src/lapack/dgeqr2.c
+index cfc8baddf..25f1664a9 100644
+--- a/src/lapack/dgeqr2.c
++++ b/src/lapack/dgeqr2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgeqr2_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, doublereal *tau, doublereal *work, integer *info)
+ {
+diff --git a/src/lapack/dgeqrf.c b/src/lapack/dgeqrf.c
+index 6e97a40b0..857f06fa4 100644
+--- a/src/lapack/dgeqrf.c
++++ b/src/lapack/dgeqrf.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgeqrf_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, doublereal *tau, doublereal *work, integer *lwork, integer *info)
+ {
+diff --git a/src/lapack/dgesvd.c b/src/lapack/dgesvd.c
+index 636eab008..b5e9791ee 100644
+--- a/src/lapack/dgesvd.c
++++ b/src/lapack/dgesvd.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /*  -- translated by f2c (version 19990503).
+    You must link the resulting object file with the libraries:
+ 	-lf2c -lm   (in that order)
+diff --git a/src/lapack/dgetf2.c b/src/lapack/dgetf2.c
+index c4c6b9b21..1b65c15cc 100644
+--- a/src/lapack/dgetf2.c
++++ b/src/lapack/dgetf2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgetf2_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, integer *ipiv, integer *info)
+ {
+diff --git a/src/lapack/dgetrf.c b/src/lapack/dgetrf.c
+index 35e616498..c128ae7e0 100644
+--- a/src/lapack/dgetrf.c
++++ b/src/lapack/dgetrf.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgetrf_(integer *m, integer *n, doublereal *a, integer *
+ 	lda, integer *ipiv, integer *info)
+ {
+diff --git a/src/lapack/dgetrs.c b/src/lapack/dgetrs.c
+index 92768d546..2084d5074 100644
+--- a/src/lapack/dgetrs.c
++++ b/src/lapack/dgetrs.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dgetrs_(const char *trans, integer *n, integer *nrhs, 
+ 	doublereal *a, integer *lda, integer *ipiv, doublereal *b, integer *
+ 	ldb, integer *info)
+diff --git a/src/lapack/dlabad.c b/src/lapack/dlabad.c
+index b137c4206..5bf899d61 100644
+--- a/src/lapack/dlabad.c
++++ b/src/lapack/dlabad.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlabad_(doublereal *small, doublereal *large)
+ {
+ /*  -- LAPACK auxiliary routine (version 3.0) --   
+diff --git a/src/lapack/dlabrd.c b/src/lapack/dlabrd.c
+index 43e508780..3b4a5d161 100644
+--- a/src/lapack/dlabrd.c
++++ b/src/lapack/dlabrd.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlabrd_(integer *m, integer *n, integer *nb, doublereal *
+ 	a, integer *lda, doublereal *d__, doublereal *e, doublereal *tauq, 
+ 	doublereal *taup, doublereal *x, integer *ldx, doublereal *y, integer 
+diff --git a/src/lapack/dlacpy.c b/src/lapack/dlacpy.c
+index 05ee9f456..2e433bae6 100644
+--- a/src/lapack/dlacpy.c
++++ b/src/lapack/dlacpy.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlacpy_(const char *uplo, integer *m, integer *n, doublereal *
+ 	a, integer *lda, doublereal *b, integer *ldb)
+ {
+diff --git a/src/lapack/dlae2.c b/src/lapack/dlae2.c
+index 1fdead2f9..86050f80c 100644
+--- a/src/lapack/dlae2.c
++++ b/src/lapack/dlae2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlae2_(doublereal *a, doublereal *b, doublereal *c__, 
+ 	doublereal *rt1, doublereal *rt2)
+ {
+diff --git a/src/lapack/dlaev2.c b/src/lapack/dlaev2.c
+index abeb9bc75..f52a9232f 100644
+--- a/src/lapack/dlaev2.c
++++ b/src/lapack/dlaev2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlaev2_(doublereal *a, doublereal *b, doublereal *c__, 
+ 	doublereal *rt1, doublereal *rt2, doublereal *cs1, doublereal *sn1)
+ {
+diff --git a/src/lapack/dlamch.c b/src/lapack/dlamch.c
+index 2b5502b1e..8cdc82652 100644
+--- a/src/lapack/dlamch.c
++++ b/src/lapack/dlamch.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ doublereal dlamch_(const char *cmach)
+ {
+ /*  -- LAPACK auxiliary routine (version 3.0) --   
+diff --git a/src/lapack/dlange.c b/src/lapack/dlange.c
+index 592fc0dc1..a375b0736 100644
+--- a/src/lapack/dlange.c
++++ b/src/lapack/dlange.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ doublereal dlange_(const char *norm, integer *m, integer *n, doublereal *a, integer 
+ 	*lda, doublereal *work)
+ {
+diff --git a/src/lapack/dlanst.c b/src/lapack/dlanst.c
+index 1c7ce1a7f..90bc30dd9 100644
+--- a/src/lapack/dlanst.c
++++ b/src/lapack/dlanst.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ doublereal dlanst_(const char *norm, integer *n, doublereal *d__, doublereal *e)
+ {
+ /*  -- LAPACK auxiliary routine (version 3.0) --   
+diff --git a/src/lapack/dlansy.c b/src/lapack/dlansy.c
+index 4b73b6cf9..8bd28acf9 100644
+--- a/src/lapack/dlansy.c
++++ b/src/lapack/dlansy.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ doublereal dlansy_(const char *norm,const char *uplo, integer *n, doublereal *a, integer 
+ 	*lda, doublereal *work)
+ {
+diff --git a/src/lapack/dlapy2.c b/src/lapack/dlapy2.c
+index 2312e923d..7455cdc2d 100644
+--- a/src/lapack/dlapy2.c
++++ b/src/lapack/dlapy2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ doublereal dlapy2_(doublereal *x, doublereal *y)
+ {
+ /*  -- LAPACK auxiliary routine (version 3.0) --   
+diff --git a/src/lapack/dlarf.c b/src/lapack/dlarf.c
+index 8b48c9b1b..f9131c613 100644
+--- a/src/lapack/dlarf.c
++++ b/src/lapack/dlarf.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlarf_(const char *side, integer *m, integer *n, doublereal *v,
+ 	 integer *incv, doublereal *tau, doublereal *c__, integer *ldc, 
+ 	doublereal *work)
+diff --git a/src/lapack/dlarfb.c b/src/lapack/dlarfb.c
+index 5802d1aed..5fcfe2aed 100644
+--- a/src/lapack/dlarfb.c
++++ b/src/lapack/dlarfb.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlarfb_(const char *side,const char *trans,const char *direct,const char *
+ 	storev, integer *m, integer *n, integer *k, doublereal *v, integer *
+ 	ldv, doublereal *t, integer *ldt, doublereal *c__, integer *ldc, 
+diff --git a/src/lapack/dlarfg.c b/src/lapack/dlarfg.c
+index 7acee0269..6752db4db 100644
+--- a/src/lapack/dlarfg.c
++++ b/src/lapack/dlarfg.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlarfg_(integer *n, doublereal *alpha, doublereal *x, 
+ 	integer *incx, doublereal *tau)
+ {
+diff --git a/src/lapack/dlarft.c b/src/lapack/dlarft.c
+index 2aee75172..3b4fdcef5 100644
+--- a/src/lapack/dlarft.c
++++ b/src/lapack/dlarft.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlarft_(const char *direct,const char *storev, integer *n, integer *
+ 	k, doublereal *v, integer *ldv, doublereal *tau, doublereal *t, 
+ 	integer *ldt)
+diff --git a/src/lapack/dlartg.c b/src/lapack/dlartg.c
+index 01d3592fe..050784f3b 100644
+--- a/src/lapack/dlartg.c
++++ b/src/lapack/dlartg.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlartg_(doublereal *f, doublereal *g, doublereal *cs, 
+ 	doublereal *sn, doublereal *r__)
+ {
+diff --git a/src/lapack/dlas2.c b/src/lapack/dlas2.c
+index 18098672a..6882be9fc 100644
+--- a/src/lapack/dlas2.c
++++ b/src/lapack/dlas2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlas2_(doublereal *f, doublereal *g, doublereal *h__, 
+ 	doublereal *ssmin, doublereal *ssmax)
+ {
+diff --git a/src/lapack/dlascl.c b/src/lapack/dlascl.c
+index 59883e446..092e301ee 100644
+--- a/src/lapack/dlascl.c
++++ b/src/lapack/dlascl.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlascl_(const char *type__, integer *kl, integer *ku, 
+ 	doublereal *cfrom, doublereal *cto, integer *m, integer *n, 
+ 	doublereal *a, integer *lda, integer *info)
+diff --git a/src/lapack/dlaset.c b/src/lapack/dlaset.c
+index 75dc712cc..ea67480ba 100644
+--- a/src/lapack/dlaset.c
++++ b/src/lapack/dlaset.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlaset_(const char *uplo, integer *m, integer *n, doublereal *
+ 	alpha, doublereal *beta, doublereal *a, integer *lda)
+ {
+diff --git a/src/lapack/dlasq1.c b/src/lapack/dlasq1.c
+index 414e3b655..6d4dbbe76 100644
+--- a/src/lapack/dlasq1.c
++++ b/src/lapack/dlasq1.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /*  -- translated by f2c (version 19990503).
+    You must link the resulting object file with the libraries:
+ 	-lf2c -lm   (in that order)
+diff --git a/src/lapack/dlasq2.c b/src/lapack/dlasq2.c
+index 5c79dd843..0e2eb8687 100644
+--- a/src/lapack/dlasq2.c
++++ b/src/lapack/dlasq2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /*  -- translated by f2c (version 19990503).
+    You must link the resulting object file with the libraries:
+ 	-lf2c -lm   (in that order)
+diff --git a/src/lapack/dlasq3.c b/src/lapack/dlasq3.c
+index 8cb96f7ca..bd5c3364b 100644
+--- a/src/lapack/dlasq3.c
++++ b/src/lapack/dlasq3.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlasq3_(integer *i0, integer *n0, doublereal *z__, 
+ 	integer *pp, doublereal *dmin__, doublereal *sigma, doublereal *desig,
+ 	 doublereal *qmax, integer *nfail, integer *iter, integer *ndiv, 
+diff --git a/src/lapack/dlasq4.c b/src/lapack/dlasq4.c
+index 1e7b24823..bb51bc0fb 100644
+--- a/src/lapack/dlasq4.c
++++ b/src/lapack/dlasq4.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /*  -- translated by f2c (version 19990503).
+    You must link the resulting object file with the libraries:
+ 	-lf2c -lm   (in that order)
+diff --git a/src/lapack/dlasq5.c b/src/lapack/dlasq5.c
+index f0d4feb61..218535eff 100644
+--- a/src/lapack/dlasq5.c
++++ b/src/lapack/dlasq5.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlasq5_(integer *i0, integer *n0, doublereal *z__, 
+ 	integer *pp, doublereal *tau, doublereal *dmin__, doublereal *dmin1, 
+ 	doublereal *dmin2, doublereal *dn, doublereal *dnm1, doublereal *dnm2,
+diff --git a/src/lapack/dlasq6.c b/src/lapack/dlasq6.c
+index 94e2b8528..7e7f9a4f8 100644
+--- a/src/lapack/dlasq6.c
++++ b/src/lapack/dlasq6.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /*  -- translated by f2c (version 19990503).
+    You must link the resulting object file with the libraries:
+ 	-lf2c -lm   (in that order)
+diff --git a/src/lapack/dlasr.c b/src/lapack/dlasr.c
+index b3a4de06d..feb6f2268 100644
+--- a/src/lapack/dlasr.c
++++ b/src/lapack/dlasr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlasr_(const char *side,const char *pivot,const char *direct, integer *m,
+ 	 integer *n, doublereal *c__, doublereal *s, doublereal *a, integer *
+ 	lda)
+diff --git a/src/lapack/dlasrt.c b/src/lapack/dlasrt.c
+index ecef7fcbe..75f58a977 100644
+--- a/src/lapack/dlasrt.c
++++ b/src/lapack/dlasrt.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlasrt_(const char *id, integer *n, doublereal *d__, integer *
+ 	info)
+ {
+diff --git a/src/lapack/dlassq.c b/src/lapack/dlassq.c
+index dd24cf648..6eec2b14f 100644
+--- a/src/lapack/dlassq.c
++++ b/src/lapack/dlassq.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlassq_(integer *n, doublereal *x, integer *incx, 
+ 	doublereal *scale, doublereal *sumsq)
+ {
+diff --git a/src/lapack/dlasv2.c b/src/lapack/dlasv2.c
+index 6ba3d0a1a..0a93cc0e6 100644
+--- a/src/lapack/dlasv2.c
++++ b/src/lapack/dlasv2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlasv2_(doublereal *f, doublereal *g, doublereal *h__, 
+ 	doublereal *ssmin, doublereal *ssmax, doublereal *snr, doublereal *
+ 	csr, doublereal *snl, doublereal *csl)
+diff --git a/src/lapack/dlaswp.c b/src/lapack/dlaswp.c
+index 1b5fa448f..57f403681 100644
+--- a/src/lapack/dlaswp.c
++++ b/src/lapack/dlaswp.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlaswp_(integer *n, doublereal *a, integer *lda, integer 
+ 	*k1, integer *k2, integer *ipiv, integer *incx)
+ {
+diff --git a/src/lapack/dlatrd.c b/src/lapack/dlatrd.c
+index fece4a7cc..30f38f90f 100644
+--- a/src/lapack/dlatrd.c
++++ b/src/lapack/dlatrd.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dlatrd_(const char *uplo, integer *n, integer *nb, doublereal *
+ 	a, integer *lda, doublereal *e, doublereal *tau, doublereal *w, 
+ 	integer *ldw)
+diff --git a/src/lapack/dorg2l.c b/src/lapack/dorg2l.c
+index 7dfe4546e..dd204e818 100644
+--- a/src/lapack/dorg2l.c
++++ b/src/lapack/dorg2l.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorg2l_(integer *m, integer *n, integer *k, doublereal *
+ 	a, integer *lda, doublereal *tau, doublereal *work, integer *info)
+ {
+diff --git a/src/lapack/dorg2r.c b/src/lapack/dorg2r.c
+index 185458f04..53b22f6ad 100644
+--- a/src/lapack/dorg2r.c
++++ b/src/lapack/dorg2r.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorg2r_(integer *m, integer *n, integer *k, doublereal *
+ 	a, integer *lda, doublereal *tau, doublereal *work, integer *info)
+ {
+diff --git a/src/lapack/dorgbr.c b/src/lapack/dorgbr.c
+index 95dbc397b..d645922bd 100644
+--- a/src/lapack/dorgbr.c
++++ b/src/lapack/dorgbr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorgbr_(const char *vect, integer *m, integer *n, integer *k, 
+ 	doublereal *a, integer *lda, doublereal *tau, doublereal *work, 
+ 	integer *lwork, integer *info)
+diff --git a/src/lapack/dorgl2.c b/src/lapack/dorgl2.c
+index 763076b08..9a2d822ef 100644
+--- a/src/lapack/dorgl2.c
++++ b/src/lapack/dorgl2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorgl2_(integer *m, integer *n, integer *k, doublereal *
+ 	a, integer *lda, doublereal *tau, doublereal *work, integer *info)
+ {
+diff --git a/src/lapack/dorglq.c b/src/lapack/dorglq.c
+index 9745d2b89..2fe1b7870 100644
+--- a/src/lapack/dorglq.c
++++ b/src/lapack/dorglq.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorglq_(integer *m, integer *n, integer *k, doublereal *
+ 	a, integer *lda, doublereal *tau, doublereal *work, integer *lwork, 
+ 	integer *info)
+diff --git a/src/lapack/dorgql.c b/src/lapack/dorgql.c
+index 170da5dd1..892d8e580 100644
+--- a/src/lapack/dorgql.c
++++ b/src/lapack/dorgql.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorgql_(integer *m, integer *n, integer *k, doublereal *
+ 	a, integer *lda, doublereal *tau, doublereal *work, integer *lwork, 
+ 	integer *info)
+diff --git a/src/lapack/dorgqr.c b/src/lapack/dorgqr.c
+index 1c5236ebb..8f562e95a 100644
+--- a/src/lapack/dorgqr.c
++++ b/src/lapack/dorgqr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorgqr_(integer *m, integer *n, integer *k, doublereal *
+ 	a, integer *lda, doublereal *tau, doublereal *work, integer *lwork, 
+ 	integer *info)
+diff --git a/src/lapack/dorgtr.c b/src/lapack/dorgtr.c
+index d9986d1a2..c5b52c6bf 100644
+--- a/src/lapack/dorgtr.c
++++ b/src/lapack/dorgtr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorgtr_(const char *uplo, integer *n, doublereal *a, integer *
+ 	lda, doublereal *tau, doublereal *work, integer *lwork, integer *info)
+ {
+diff --git a/src/lapack/dorm2r.c b/src/lapack/dorm2r.c
+index a3c714f6b..bf33bb5c5 100644
+--- a/src/lapack/dorm2r.c
++++ b/src/lapack/dorm2r.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorm2r_(const char *side,const char *trans, integer *m, integer *n, 
+ 	integer *k, doublereal *a, integer *lda, doublereal *tau, doublereal *
+ 	c__, integer *ldc, doublereal *work, integer *info)
+diff --git a/src/lapack/dormbr.c b/src/lapack/dormbr.c
+index 664eb8c01..e7ac374bf 100644
+--- a/src/lapack/dormbr.c
++++ b/src/lapack/dormbr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dormbr_(const char *vect,const char *side,const char *trans, integer *m, 
+ 	integer *n, integer *k, doublereal *a, integer *lda, doublereal *tau, 
+ 	doublereal *c__, integer *ldc, doublereal *work, integer *lwork, 
+diff --git a/src/lapack/dorml2.c b/src/lapack/dorml2.c
+index 3db7ac47c..c267f7bc2 100644
+--- a/src/lapack/dorml2.c
++++ b/src/lapack/dorml2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dorml2_(const char *side,const char *trans, integer *m, integer *n, 
+ 	integer *k, doublereal *a, integer *lda, doublereal *tau, doublereal *
+ 	c__, integer *ldc, doublereal *work, integer *info)
+diff --git a/src/lapack/dormlq.c b/src/lapack/dormlq.c
+index 54c06d04a..f99a2a7db 100644
+--- a/src/lapack/dormlq.c
++++ b/src/lapack/dormlq.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dormlq_(const char *side,const char *trans, integer *m, integer *n, 
+ 	integer *k, doublereal *a, integer *lda, doublereal *tau, doublereal *
+ 	c__, integer *ldc, doublereal *work, integer *lwork, integer *info)
+diff --git a/src/lapack/dormqr.c b/src/lapack/dormqr.c
+index 52d2a2c7d..65ee45e26 100644
+--- a/src/lapack/dormqr.c
++++ b/src/lapack/dormqr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dormqr_(const char *side,const char *trans, integer *m, integer *n, 
+ 	integer *k, doublereal *a, integer *lda, doublereal *tau, doublereal *
+ 	c__, integer *ldc, doublereal *work, integer *lwork, integer *info)
+diff --git a/src/lapack/dpotf2.c b/src/lapack/dpotf2.c
+index b1dafe69b..ebd95969e 100644
+--- a/src/lapack/dpotf2.c
++++ b/src/lapack/dpotf2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dpotf2_(const char *uplo, integer *n, doublereal *a, integer *
+ 	lda, integer *info)
+ {
+diff --git a/src/lapack/dpotrf.c b/src/lapack/dpotrf.c
+index d55e74ff5..064a75fe9 100644
+--- a/src/lapack/dpotrf.c
++++ b/src/lapack/dpotrf.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dpotrf_(const char *uplo, integer *n, doublereal *a, integer *
+ 	lda, integer *info)
+ {
+diff --git a/src/lapack/dpotrs.c b/src/lapack/dpotrs.c
+index 1787f2f98..fbf7ecd0d 100644
+--- a/src/lapack/dpotrs.c
++++ b/src/lapack/dpotrs.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dpotrs_(char *uplo, integer *n, integer *nrhs, 
+ 	doublereal *a, integer *lda, doublereal *b, integer *ldb, integer *
+ 	info)
+diff --git a/src/lapack/dsteqr.c b/src/lapack/dsteqr.c
+index e43cb59ff..5e81f0b7e 100644
+--- a/src/lapack/dsteqr.c
++++ b/src/lapack/dsteqr.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsteqr_(const char *compz, integer *n, doublereal *d__, 
+ 	doublereal *e, doublereal *z__, integer *ldz, doublereal *work, 
+ 	integer *info)
+diff --git a/src/lapack/dsterf.c b/src/lapack/dsterf.c
+index f9d2f5d3f..f3bd8e593 100644
+--- a/src/lapack/dsterf.c
++++ b/src/lapack/dsterf.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsterf_(integer *n, doublereal *d__, doublereal *e, 
+ 	integer *info)
+ {
+diff --git a/src/lapack/dsyev.c b/src/lapack/dsyev.c
+index ef40a5d3c..ec4430d6b 100644
+--- a/src/lapack/dsyev.c
++++ b/src/lapack/dsyev.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsyev_(const char *jobz,const char *uplo, integer *n, doublereal *a,
+ 	 integer *lda, doublereal *w, doublereal *work, integer *lwork, 
+ 	integer *info)
+diff --git a/src/lapack/dsygs2.c b/src/lapack/dsygs2.c
+index 04e23fc46..e05840619 100644
+--- a/src/lapack/dsygs2.c
++++ b/src/lapack/dsygs2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsygs2_(integer *itype,const char *uplo, integer *n, 
+ 	doublereal *a, integer *lda, doublereal *b, integer *ldb, integer *
+ 	info)
+diff --git a/src/lapack/dsygst.c b/src/lapack/dsygst.c
+index 35d001d4c..4215520d6 100644
+--- a/src/lapack/dsygst.c
++++ b/src/lapack/dsygst.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsygst_(integer *itype,const char *uplo, integer *n, 
+ 	doublereal *a, integer *lda, doublereal *b, integer *ldb, integer *
+ 	info)
+diff --git a/src/lapack/dsygv.c b/src/lapack/dsygv.c
+index e72875cda..64ee14657 100644
+--- a/src/lapack/dsygv.c
++++ b/src/lapack/dsygv.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsygv_(integer *itype, char *jobz, char *uplo, integer *
+ 	n, doublereal *a, integer *lda, doublereal *b, integer *ldb, 
+ 	doublereal *w, doublereal *work, integer *lwork, integer *info)
+diff --git a/src/lapack/dsytd2.c b/src/lapack/dsytd2.c
+index 5c7d370f4..84c7e1a6b 100644
+--- a/src/lapack/dsytd2.c
++++ b/src/lapack/dsytd2.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsytd2_(const char *uplo, integer *n, doublereal *a, integer *
+ 	lda, doublereal *d__, doublereal *e, doublereal *tau, integer *info)
+ {
+diff --git a/src/lapack/dsytrd.c b/src/lapack/dsytrd.c
+index f3fe4a60f..ff0b47744 100644
+--- a/src/lapack/dsytrd.c
++++ b/src/lapack/dsytrd.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer dsytrd_(const char *uplo, integer *n, doublereal *a, integer *
+ 	lda, doublereal *d__, doublereal *e, doublereal *tau, doublereal *
+ 	work, integer *lwork, integer *info)
+diff --git a/src/lapack/ieeeck.c b/src/lapack/ieeeck.c
+index 18dfc3e32..9614fd5ee 100644
+--- a/src/lapack/ieeeck.c
++++ b/src/lapack/ieeeck.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ integer ieeeck_(integer *ispec, real *zero, real *one)
+ {
+ /*  -- LAPACK auxiliary routine (version 3.0) --   
+diff --git a/src/lapack/ilaenv.c b/src/lapack/ilaenv.c
+index c3cbdf02c..90024feb7 100644
+--- a/src/lapack/ilaenv.c
++++ b/src/lapack/ilaenv.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ integer ilaenv_(integer *ispec,const char *name__,const char *opts, integer *n1, 
+ 	integer *n2, integer *n3, integer *n4, ftnlen name_len, ftnlen 
+ 	opts_len)
+diff --git a/src/lapack/lsame.c b/src/lapack/lsame.c
+index b43a0fd65..c6aad734b 100644
+--- a/src/lapack/lsame.c
++++ b/src/lapack/lsame.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ logical lsame_(const char *ca,const char *cb)
+ {
+ /*  -- LAPACK auxiliary routine (version 3.0) --   
+diff --git a/src/lapack/xerbla.c b/src/lapack/xerbla.c
+index 2455ba43a..ece692c6e 100644
+--- a/src/lapack/xerbla.c
++++ b/src/lapack/xerbla.c
+@@ -1,10 +1,10 @@
++#include "f2c.h"
++#include "hypre_lapack.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-#include "f2c.h"
+-#include "hypre_lapack.h"
+-
+ /* Subroutine */ integer xerbla_(const char *srname, integer *info)
+ {
+ /*  -- LAPACK auxiliary routine (version 2.0) --   
+diff --git a/src/parcsr_ls/HYPRE_parcsr_ls.h b/src/parcsr_ls/HYPRE_parcsr_ls.h
+index 73c5e09a6..7e3fa7086 100644
+--- a/src/parcsr_ls/HYPRE_parcsr_ls.h
++++ b/src/parcsr_ls/HYPRE_parcsr_ls.h
+@@ -19,6 +19,9 @@
+ #include "HYPRE_parcsr_mv.h"
+ #include "HYPRE_IJ_mv.h"
+ 
++#include "interpreter.h"
++#include "HYPRE_MatvecFunctions.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -3613,10 +3616,6 @@ HYPRE_Int HYPRE_BoomerAMGSetISType(HYPRE_Solver solver,
+ /*--------------------------------------------------------------------------
+  *--------------------------------------------------------------------------*/
+ 
+-/* These includes shouldn't be here. (RDF) */
+-#include "interpreter.h"
+-#include "HYPRE_MatvecFunctions.h"
+-
+ /**
+  * @name ParCSR LOBPCG Eigensolver
+  *
+diff --git a/src/parcsr_ls/_hypre_parcsr_ls.h b/src/parcsr_ls/_hypre_parcsr_ls.h
+index 9dc5430e0..d7192afa6 100644
+--- a/src/parcsr_ls/_hypre_parcsr_ls.h
++++ b/src/parcsr_ls/_hypre_parcsr_ls.h
+@@ -29,6 +29,10 @@ extern "C" {
+ 
+ typedef struct { HYPRE_Int prev; HYPRE_Int next; } Link;
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ /*BHEADER**********************************************************************
+  * Copyright (c) 2008,  Lawrence Livermore National Security, LLC.
+  * Produced at the Lawrence Livermore National Laboratory.
+@@ -53,6 +57,10 @@ typedef struct { HYPRE_Int prev; HYPRE_Int next; } Link;
+ #include "par_csr_block_matrix.h"
+ 
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /*--------------------------------------------------------------------------
+  * hypre_ParAMGData
+  *--------------------------------------------------------------------------*/
+@@ -475,10 +483,19 @@ typedef struct
+ #define hypre_ParAMGDataCPointKeepMarkerArray(amg_data) ((amg_data)-> C_point_marker_array)
+ #define hypre_ParAMGDataCPointKeepLevel(amg_data) ((amg_data)-> C_point_keep_level)
+ #define hypre_ParAMGDataNumCPointKeep(amg_data) ((amg_data)-> num_C_point_marker)
++
++#ifdef __cplusplus
++}
+ #endif
+ 
++#endif /* #ifndef hypre_ParAMG_DATA_HEADER */
++
++
+ 
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
+ 
+ /* ads.c */
+ void *hypre_ADSCreate ( void );
+@@ -1659,5 +1676,5 @@ HYPRE_Int hypre_MGRGetFinalRelativeResidualNorm( void *mgr_vdata, HYPRE_Real *re
+ }
+ #endif
+ 
+-#endif
++#endif /* #ifndef hypre_PARCSR_LS_HEADER */
+ 
+diff --git a/src/seq_mv/gpukernels.cu b/src/seq_mv/gpukernels.cu
+index 33b75413c..3ebc08654 100644
+--- a/src/seq_mv/gpukernels.cu
++++ b/src/seq_mv/gpukernels.cu
+@@ -19,7 +19,12 @@ extern "C"{
+   void VecScaleKernelText(HYPRE_Complex *__restrict__ u, const HYPRE_Complex *__restrict__ v, const HYPRE_Complex *__restrict__ l1_norm, hypre_int num_rows){
+     hypre_int i = blockIdx.x * blockDim.x + threadIdx.x;
+     if (i<num_rows){
++#if (__CUDA_ARCH__ >= 320) || !defined(__CUDA_ARCH__)
++/* __ldg() requires compute capability >= 3.2 */
+       u[i]+=__ldg(v+i)/__ldg(l1_norm+i);
++#else
++      u[i]+=v[i]/l1_norm[i];
++#endif
+     }
+   }
+ }
+diff --git a/src/sstruct_ls/HYPRE_sstruct_ls.h b/src/sstruct_ls/HYPRE_sstruct_ls.h
+index d3b5497f6..b3b78a934 100644
+--- a/src/sstruct_ls/HYPRE_sstruct_ls.h
++++ b/src/sstruct_ls/HYPRE_sstruct_ls.h
+@@ -21,6 +21,10 @@
+ #include "HYPRE_struct_ls.h"
+ #include "HYPRE_parcsr_ls.h"
+ 
++#include "interpreter.h"
++#include "HYPRE_MatvecFunctions.h"
++#include "_hypre_sstruct_mv.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -1233,11 +1237,6 @@ HYPRE_SStructBiCGSTABGetResidual(HYPRE_SStructSolver   solver,
+ /*--------------------------------------------------------------------------
+  *--------------------------------------------------------------------------*/
+ 
+-/* These includes shouldn't be here. (RDF) */
+-#include "interpreter.h"
+-#include "HYPRE_MatvecFunctions.h"
+-#include "_hypre_sstruct_mv.h"
+-
+ /**
+  * @name SStruct LOBPCG Eigensolver
+  *
+diff --git a/src/struct_ls/HYPRE_struct_ls.h b/src/struct_ls/HYPRE_struct_ls.h
+index 44e538d8e..fcc6fc95a 100644
+--- a/src/struct_ls/HYPRE_struct_ls.h
++++ b/src/struct_ls/HYPRE_struct_ls.h
+@@ -17,6 +17,10 @@
+ #include "HYPRE_utilities.h"
+ #include "HYPRE_struct_mv.h"
+ 
++#include "interpreter.h"
++#include "HYPRE_MatvecFunctions.h"
++#include "_hypre_struct_mv.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -1066,11 +1070,6 @@ HYPRE_Int HYPRE_StructSparseMSGGetFinalRelativeResidualNorm(HYPRE_StructSolver
+ /*--------------------------------------------------------------------------
+  *--------------------------------------------------------------------------*/
+ 
+-/* These includes shouldn't be here. (RDF) */
+-#include "interpreter.h"
+-#include "HYPRE_MatvecFunctions.h"
+-#include "_hypre_struct_mv.h"
+-
+ /**
+  * @name Struct LOBPCG Eigensolver
+  *
+diff --git a/src/utilities/_hypre_utilities.h b/src/utilities/_hypre_utilities.h
+index 63dbf3331..fc99d90fd 100644
+--- a/src/utilities/_hypre_utilities.h
++++ b/src/utilities/_hypre_utilities.h
+@@ -11,10 +11,6 @@
+ #include <omp.h>
+ #endif
+ 
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-
+ /*BHEADER**********************************************************************
+  * Copyright (c) 2008,  Lawrence Livermore National Security, LLC.
+  * Produced at the Lawrence Livermore National Laboratory.
+@@ -36,6 +32,10 @@ extern "C" {
+ #ifndef hypre_GENERAL_HEADER
+ #define hypre_GENERAL_HEADER
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /* This allows us to consistently avoid 'int' throughout hypre */
+ typedef int               hypre_int;
+ typedef long int          hypre_longint;
+@@ -68,6 +68,10 @@ typedef double            hypre_double;
+ #define hypre_pow2(i)  ( 1 << (i) )
+ #endif
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ 
+ /*BHEADER**********************************************************************
+@@ -411,19 +415,16 @@ HYPRE_Int hypre_MPI_Op_create( hypre_MPI_User_function *function , hypre_int com
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-
+ #if defined(HYPRE_MEMORY_GPU) || defined(HYPRE_USE_MANAGED)
+-#ifdef __cplusplus
+-extern "C++" {
+-#endif
+ #include <cuda.h>
+ #include <cuda_runtime.h>
++#endif
++
+ #ifdef __cplusplus
+-}
++extern "C" {
+ #endif
++
++#if defined(HYPRE_MEMORY_GPU) || defined(HYPRE_USE_MANAGED)
+ #define HYPRE_CUDA_GLOBAL __host__ __device__
+   
+ #if defined(HYPRE_MEMORY_GPU)
+@@ -697,6 +698,10 @@ void hypre_FreeDML( char *ptr , char *file , HYPRE_Int line );
+ #ifndef hypre_THREADING_HEADER
+ #define hypre_THREADING_HEADER
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ #ifdef HYPRE_USING_OPENMP
+ 
+ HYPRE_Int hypre_NumThreads( void );
+@@ -713,6 +718,10 @@ HYPRE_Int hypre_GetThreadNum( void );
+ 
+ void hypre_GetSimpleThreadPartition( HYPRE_Int *begin, HYPRE_Int *end, HYPRE_Int n );
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ 
+ /*BHEADER**********************************************************************
+@@ -899,6 +908,10 @@ typedef hypre_ListElement  *hypre_LinkList;
+ #ifndef hypre_EXCHANGE_DATA_HEADER
+ #define hypre_EXCHANGE_DATA_HEADER
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ #define hypre_BinaryTreeParentId(tree)      (tree->parent_id)
+ #define hypre_BinaryTreeNumChild(tree)      (tree->num_child)
+ #define hypre_BinaryTreeChildIds(tree)      (tree->child_id)
+@@ -943,6 +956,10 @@ HYPRE_Int hypre_DataExchangeList(HYPRE_Int num_contacts,
+                      HYPRE_Int rnum, MPI_Comm comm,  void **p_response_recv_buf, 
+                      HYPRE_Int **p_response_recv_buf_starts);
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif /* end of header */
+ 
+ /*BHEADER**********************************************************************
+@@ -960,6 +977,10 @@ HYPRE_Int hypre_DataExchangeList(HYPRE_Int num_contacts,
+ #ifndef hypre_ERROR_HEADER
+ #define hypre_ERROR_HEADER
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /*--------------------------------------------------------------------------
+  * Global variable used in hypre error checking
+  *--------------------------------------------------------------------------*/
+@@ -981,6 +1002,10 @@ void hypre_error_handler(const char *filename, HYPRE_Int line, HYPRE_Int ierr, c
+ #define hypre_assert(EX) if (!(EX)) {hypre_fprintf(stderr,"hypre_assert failed: %s\n", #EX); hypre_error(1);}
+ #endif
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ 
+ /*BHEADER**********************************************************************
+@@ -1057,6 +1082,10 @@ void hypre_error_handler(const char *filename, HYPRE_Int line, HYPRE_Int ierr, c
+ #include "nvToolsExt.h"
+ #include "nvToolsExtCudaRt.h"
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ static const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
+ static const int num_colors = sizeof(colors)/sizeof(uint32_t);
+ 
+@@ -1106,6 +1135,11 @@ static const int num_colors = sizeof(colors)/sizeof(uint32_t);
+ #define POP_RANGE_DOMAIN(dId) {			\
+   nvtxDomainRangePop(getdomain(dId));		\
+   }
++
++#ifdef __cplusplus
++}
++#endif
++
+ #else
+ #define PUSH_RANGE(name,cid)
+ #define POP_RANGE
+@@ -1127,6 +1161,11 @@ static const int num_colors = sizeof(colors)/sizeof(uint32_t);
+ 
+ #ifdef HYPRE_USE_MANAGED
+ #include <cuda_runtime_api.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ #define CUDAMEMATTACHTYPE cudaMemAttachGlobal
+ #define MEM_PAD_LEN 1
+ #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+@@ -1148,6 +1187,11 @@ inline void gpuAssert(cudaError_t code, const char *file, int line)
+ void cudaSafeFree(void *ptr,int padding);
+ hypre_int PrintPointerAttributes(const void *ptr);
+ hypre_int PointerAttributes(const void *ptr);
++
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ 
+ #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED)
+@@ -1158,6 +1202,11 @@ hypre_int PointerAttributes(const void *ptr);
+ #include <stdio.h>
+ //#include <cuda_runtime_api.h>
+ #include <stdlib.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ inline const char *cusparseErrorCheck(cusparseStatus_t error)
+ {
+     switch (error)
+@@ -1263,6 +1312,11 @@ void cudaSafeFree(void *ptr,int padding);
+ //void PrintPointerAttributes(const void *ptr);
+ //size_t mempush(void* ptr, size_t size,int purge);
+ //int memloc(void *ptr, int device);
++
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ #endif
+ 
+@@ -1281,8 +1335,12 @@ void cudaSafeFree(void *ptr,int padding);
+ #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED)
+ #ifndef __GPUMEM_H__
+ #define  __GPUMEM_H__
+-#ifdef HYPRE_USE_GPU
+ #include <cuda_runtime_api.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ void hypre_GPUInit(hypre_int use_device);
+ void hypre_GPUFinalize();
+ int VecScaleScalar(double *u, const double alpha,  int num_rows,cudaStream_t s);
+@@ -1291,7 +1349,6 @@ void VecSet(double* tgt, int size, double value, cudaStream_t s);
+ void VecScale(double *u, double *v, double *l1_norm, int num_rows,cudaStream_t s);
+ void VecScaleSplit(double *u, double *v, double *l1_norm, int num_rows,cudaStream_t s);
+ void CudaCompileFlagCheck();
+-#endif
+ 
+ cudaStream_t getstreamOlde(hypre_int i);
+ nvtxDomainHandle_t getdomain(hypre_int i);
+@@ -1361,9 +1418,13 @@ extern struct hypre__global_struct hypre__global_handle ;
+ #define HYPRE_GPU_CMA hypre__global_handle.concurrent_managed_access
+ #define HYPRE_GPU_HWM hypre__global_handle.memoryHWM
+ 
++#ifdef __cplusplus
++}
+ #endif
+ 
+-#else
++#endif /* #ifndef __GPUMEM_H__ */
++
++#else /* #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED) */
+ 
+ #define hypre_GPUInit(use_device)
+ #define hypre_GPUFinalize()
+@@ -1382,6 +1443,10 @@ extern struct hypre__global_struct hypre__global_handle ;
+  * $Revision$
+  ***********************************************************************EHEADER*/
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /* amg_linklist.c */
+ void hypre_dispose_elt ( hypre_LinkList element_ptr );
+ void hypre_remove_point ( hypre_LinkList *LoL_head_ptr , hypre_LinkList *LoL_tail_ptr , HYPRE_Int measure , HYPRE_Int index , HYPRE_Int *lists , HYPRE_Int *where );
+@@ -1596,5 +1661,5 @@ void hypre_sort_and_create_inverse_map(
+ }
+ #endif
+ 
+-#endif
++#endif /* #ifndef hypre_UTILITIES_HEADER */
+ 
+diff --git a/src/utilities/gpuErrorCheck.h b/src/utilities/gpuErrorCheck.h
+index a721ad866..52409cac9 100644
+--- a/src/utilities/gpuErrorCheck.h
++++ b/src/utilities/gpuErrorCheck.h
+@@ -12,6 +12,11 @@
+ 
+ #ifdef HYPRE_USE_MANAGED
+ #include <cuda_runtime_api.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ #define CUDAMEMATTACHTYPE cudaMemAttachGlobal
+ #define MEM_PAD_LEN 1
+ #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+@@ -33,6 +38,11 @@ inline void gpuAssert(cudaError_t code, const char *file, int line)
+ void cudaSafeFree(void *ptr,int padding);
+ hypre_int PrintPointerAttributes(const void *ptr);
+ hypre_int PointerAttributes(const void *ptr);
++
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ 
+ #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED)
+@@ -43,6 +53,11 @@ hypre_int PointerAttributes(const void *ptr);
+ #include <stdio.h>
+ //#include <cuda_runtime_api.h>
+ #include <stdlib.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ inline const char *cusparseErrorCheck(cusparseStatus_t error)
+ {
+     switch (error)
+@@ -148,6 +163,11 @@ void cudaSafeFree(void *ptr,int padding);
+ //void PrintPointerAttributes(const void *ptr);
+ //size_t mempush(void* ptr, size_t size,int purge);
+ //int memloc(void *ptr, int device);
++
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ #endif
+ 
+diff --git a/src/utilities/gpuMem.c b/src/utilities/gpuMem.c
+index 1033f481a..c478db7a2 100644
+--- a/src/utilities/gpuMem.c
++++ b/src/utilities/gpuMem.c
+@@ -8,11 +8,25 @@
+ 
+ #include <sched.h>
+ #include <errno.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ hypre_int ggc(hypre_int id);
+ 
+ /* Global struct that holds device,library handles etc */
+-struct hypre__global_struct hypre__global_handle = { .initd=0, .device=0, .device_count=1,.memoryHWM=0};
+-
++struct hypre__global_struct hypre__global_handle;
++  /* = { .initd=0, .device=0, .device_count=1,.memoryHWM=0}; */
++
++__attribute__((constructor))
++static void hypre__global_handle__init()
++{
++   hypre__global_handle.initd = 0;
++   hypre__global_handle.device = 0;
++   hypre__global_handle.device_count = 1;
++   hypre__global_handle.memoryHWM = 0;
++}
+ 
+ /* Initialize GPU branch of Hypre AMG */
+ /* use_device =-1 */
+@@ -510,4 +524,9 @@ hypre_int pointerIsManaged(const void *ptr){
+   }
+   return ptr_att.isManaged;
+ }
++
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+diff --git a/src/utilities/gpuMem.h b/src/utilities/gpuMem.h
+index b4bf35a30..8dc7c4838 100644
+--- a/src/utilities/gpuMem.h
++++ b/src/utilities/gpuMem.h
+@@ -13,8 +13,12 @@
+ #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED)
+ #ifndef __GPUMEM_H__
+ #define  __GPUMEM_H__
+-#ifdef HYPRE_USE_GPU
+ #include <cuda_runtime_api.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ void hypre_GPUInit(hypre_int use_device);
+ void hypre_GPUFinalize();
+ int VecScaleScalar(double *u, const double alpha,  int num_rows,cudaStream_t s);
+@@ -23,7 +27,6 @@ void VecSet(double* tgt, int size, double value, cudaStream_t s);
+ void VecScale(double *u, double *v, double *l1_norm, int num_rows,cudaStream_t s);
+ void VecScaleSplit(double *u, double *v, double *l1_norm, int num_rows,cudaStream_t s);
+ void CudaCompileFlagCheck();
+-#endif
+ 
+ cudaStream_t getstreamOlde(hypre_int i);
+ nvtxDomainHandle_t getdomain(hypre_int i);
+@@ -93,12 +96,16 @@ extern struct hypre__global_struct hypre__global_handle ;
+ #define HYPRE_GPU_CMA hypre__global_handle.concurrent_managed_access
+ #define HYPRE_GPU_HWM hypre__global_handle.memoryHWM
+ 
++#ifdef __cplusplus
++}
+ #endif
+ 
+-#else
++#endif /* #ifndef __GPUMEM_H__ */
++
++#else /* #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED) */
+ 
+ #define hypre_GPUInit(use_device)
+ #define hypre_GPUFinalize()
+ 
+-#endif
++#endif /* #if defined(HYPRE_USE_GPU) && defined(HYPRE_USE_MANAGED) */
+ 
+diff --git a/src/utilities/hypre_memory.h b/src/utilities/hypre_memory.h
+index 6716c5a99..5ac9a182c 100644
+--- a/src/utilities/hypre_memory.h
++++ b/src/utilities/hypre_memory.h
+@@ -22,19 +22,16 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-
+ #if defined(HYPRE_MEMORY_GPU) || defined(HYPRE_USE_MANAGED)
+-#ifdef __cplusplus
+-extern "C++" {
+-#endif
+ #include <cuda.h>
+ #include <cuda_runtime.h>
++#endif
++
+ #ifdef __cplusplus
+-}
++extern "C" {
+ #endif
++
++#if defined(HYPRE_MEMORY_GPU) || defined(HYPRE_USE_MANAGED)
+ #define HYPRE_CUDA_GLOBAL __host__ __device__
+   
+ #if defined(HYPRE_MEMORY_GPU)
