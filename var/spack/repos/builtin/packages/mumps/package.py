@@ -232,10 +232,18 @@ class Mumps(Package):
             else:
                 makefile_conf.extend([
                     'LIBEXT=.so',
-                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) %s -o' %
+                    'AR=link_cmd() { $(FL) -shared -Wl,-soname '
+                    '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
                     (prefix.lib, inject_libs),
-                    'RANLIB=echo'
+                    'RANLIB=ls'
                 ])
+                # When building libpord, read AR from Makefile.inc instead of
+                # going through the make command line - this prevents various
+                # problems with the substring "$$@".
+                filter_file(' AR="\$\(AR\)"', '', 'Makefile')
+                filter_file('^(INCLUDES = -I../include)',
+                            '\\1\ninclude ../../Makefile.inc',
+                            join_path('PORD', 'lib', 'Makefile'))
 
                 if using_xl:
                     # The patches for xl + spectrum-mpi use SAR for linking
