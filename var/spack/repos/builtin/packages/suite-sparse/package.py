@@ -55,6 +55,8 @@ class SuiteSparse(Package):
 
     depends_on('cuda', when='+cuda')
 
+    conflicts('%gcc@:4.8', msg='gcc version must be at least 4.9')
+
     patch('tbb_453.patch', when='@4.5.3:+tbb')
 
     # This patch removes unsupported flags for pgi compiler
