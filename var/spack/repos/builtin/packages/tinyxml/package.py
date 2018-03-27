@@ -35,6 +35,8 @@ class Tinyxml(CMakePackage):
 
     version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764')
 
+    variant('fpic', default=False, description="Builds wit -fPIC")
+
     def url_for_version(self, version):
         url = "https://sourceforge.net/projects/tinyxml/files/tinyxml/{0}/tinyxml_{1}.tar.gz"
         return url.format(version.dotted, version.underscored)
@@ -42,3 +44,11 @@ class Tinyxml(CMakePackage):
     def patch(self):
         copyfile(join_path(os.path.dirname(__file__),
                            "CMakeLists.txt"), "CMakeLists.txt")
+
+    def cmake_args(self):
+        args = [
+            '-DTIXML_PIC:BOOL={0}'.format('ON' if '+fpic' in
+                                                          self.spec else 'OFF')
+        ]
+
+        return args
