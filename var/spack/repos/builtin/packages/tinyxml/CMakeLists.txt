@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 project(TinyXml)
-OPTION(TIXML_PIC "Use positiion independent code" OFF)
+OPTION(TIXML_PIC "Use position independent code" OFF)
 OPTION(TIXML_USE_STL "Use STL with TIXML" ON)
 if(TIXML_USE_STL)
 	add_definitions(-DTIXML_USE_STL)
