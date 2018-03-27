@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,7 +26,6 @@
 import os
 
 from spack import *
-from spack.error import SpackError
 
 
 def _verbs_dir():
@@ -224,10 +223,21 @@ class Openmpi(AutotoolsPackage):
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
+              msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+
+    filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
         return url.format(version.up_to(2), version)
+
+    @property
+    def headers(self):
+        hdrs = HeaderList(find(self.prefix.include, 'mpi.h', recursive=False))
+        if not hdrs:
+            hdrs = HeaderList(find(self.prefix, 'mpi.h', recursive=True))
+        return hdrs or None
 
     @property
     def libs(self):
@@ -238,7 +248,7 @@ class Openmpi(AutotoolsPackage):
             libraries = ['libmpi_cxx'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=True, recurse=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -289,20 +299,6 @@ class Openmpi(AutotoolsPackage):
         if (path is not None):
             line += '={0}'.format(path)
         return line
-
-    def with_or_without_slurm(self, activated):
-        # PMI and SLURM
-        # https://www.open-mpi.org/faq/?category=slurm
-        # https://slurm.schedmd.com/mpi_guide.html#open_mpi
-        # TODO: Add PMIx support for openmpi(>2.0.0)
-        spec = self.spec
-        if not activated:
-            return '--without-slurm'
-        elif spec.satisfies('@1.5.4:') and '+pmi' not in spec:
-            raise SpackError(
-                "+pmi is required for openmpi(>=1.5.5) to work with SLURM.")
-        else:
-            return '--with-slurm'
 
     @run_before('autoreconf')
     def die_without_fortran(self):
@@ -402,44 +398,3 @@ class Openmpi(AutotoolsPackage):
             config_args.append('--without-ucx')
 
         return config_args
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-        compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC, CXX and FC set
-        to Spack's generic cc, c++ and f90.  We want them to
-        be bound to whatever compiler they were built with.
-        """
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
-        wrapper_basepath = join_path(self.prefix, 'share', 'openmpi')
-
-        wrappers = [
-            ('mpicc-vt-wrapper-data.txt', self.compiler.cc),
-            ('mpicc-wrapper-data.txt', self.compiler.cc),
-            ('ortecc-wrapper-data.txt', self.compiler.cc),
-            ('shmemcc-wrapper-data.txt', self.compiler.cc),
-            ('mpic++-vt-wrapper-data.txt', self.compiler.cxx),
-            ('mpic++-wrapper-data.txt', self.compiler.cxx),
-            ('ortec++-wrapper-data.txt', self.compiler.cxx),
-            ('mpifort-vt-wrapper-data.txt', self.compiler.fc),
-            ('mpifort-wrapper-data.txt', self.compiler.fc),
-            ('shmemfort-wrapper-data.txt', self.compiler.fc),
-            ('mpif90-vt-wrapper-data.txt', self.compiler.fc),
-            ('mpif90-wrapper-data.txt', self.compiler.fc),
-            ('mpif77-vt-wrapper-data.txt',  self.compiler.f77),
-            ('mpif77-wrapper-data.txt',  self.compiler.f77)
-        ]
-
-        for wrapper_name, compiler in wrappers:
-            wrapper = join_path(wrapper_basepath, wrapper_name)
-            if not os.path.islink(wrapper):
-                # Substitute Spack compile wrappers for the real
-                # underlying compiler
-                match = 'compiler=.*'
-                substitute = 'compiler={compiler}'.format(compiler=compiler)
-                filter_file(match, substitute, wrapper, **kwargs)
-                # Remove this linking flag if present
-                # (it turns RPATH into RUNPATH)
-                filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)
