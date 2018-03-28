@@ -37,11 +37,12 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
-    maintainers = ['balay', 'barrysmith']
+    maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.4', 'd7767fe2919536aa393eb22841899306')
     version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
     version('3.8.2', '00666e1c4cbfa8dd6eebf91ff8180f79')
     version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
