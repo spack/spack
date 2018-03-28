@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,7 +39,9 @@ class Tk(AutotoolsPackage):
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
-    depends_on('tcl')
+    extends('tcl')
+
+    depends_on('tcl@8.6:')
     depends_on('libx11')
 
     configure_directory = 'unix'

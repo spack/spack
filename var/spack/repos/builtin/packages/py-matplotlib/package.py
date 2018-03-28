@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://pypi.python.org/pypi/matplotlib"
     url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-2.0.2.tar.gz"
 
+    version('2.2.2', 'dd1e49e041309a7fd4e32be8bf17c3b6')
     version('2.0.2', '061111784278bde89b5d4987014be4ca')
     version('2.0.0', '7aa54b06327f0e1c4f3877fc2f7d6b17')
     version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')

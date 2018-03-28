@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mpileaks(AutoToolsPackage):
+class Mpileaks(AutotoolsPackage):
     """Tool to detect and report leaked MPI objects like MPI_Requests and
        MPI_Datatypes."""
 

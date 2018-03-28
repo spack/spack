@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -60,6 +60,8 @@ class Adios2(CMakePackage):
     # language bindings
     variant('python', default=True,
             description='Enable the Python >= 2.7 bindings')
+    variant('fortran', default=True,
+            description='Enable the Fortran bindings')
 
     # requires mature C++11 implementations
     conflicts('%gcc@:4.7')
@@ -116,7 +118,9 @@ class Adios2(CMakePackage):
             '-DADIOS2_USE_ADIOS1={0}'.format(
                 'ON' if '+adios1' in spec else 'OFF'),
             '-DADIOS2_USE_Python={0}'.format(
-                'ON' if '+python' in spec else 'OFF')
+                'ON' if '+python' in spec else 'OFF'),
+            '-DADIOS2_USE_Fortran={0}'.format(
+                'ON' if '+fortran' in spec else 'OFF')
         ]
         if spec.satisfies('+python'):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'

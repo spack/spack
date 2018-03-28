@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -262,3 +262,11 @@ class Mumps(Package):
                 os.system('./dsimpletest < input_simpletest_real')
                 if '+complex' in spec:
                     os.system('./zsimpletest < input_simpletest_cmplx')
+
+    @property
+    def libs(self):
+        component_libs = ['*mumps*', 'pord']
+        return find_libraries(['lib' + comp for comp in component_libs],
+                              root=self.prefix.lib,
+                              shared=('+shared' in self.spec),
+                              recursive=False) or None
