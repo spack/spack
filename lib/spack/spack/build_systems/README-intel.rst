@@ -235,12 +235,6 @@ to components installed in sibling dirs::
 The only relevant regular files are ``*vars.*sh``, but those also just churn
 through the subordinate vars files of the components.
 
-
-
-*******************
-Installation stage
-*******************
-
 Installation model
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -390,6 +384,123 @@ for reference:
        trial license in Trusted Storage on your system.
     
     ...
+
+*******************
+vars files
+*******************
+
+Intel's product packages contain a number of shell initialization files let's call them vars files.
+
+There are three kinds:
+
+#. Component-specific vars files, such as `mklvars` or `tbbvars`.
+#. Toplevel vars files such as "psxevars". They will scan for all
+   component-specific vars files associated with the product, and source them
+   if found.
+#. Symbolic links to either of them. Links may appear under a different name
+   for backward compatibility.
+
+At present, IntelPackage class is only concerned with the toplevel vars files,
+generally found in the product's toplevel bin/ directory.
+
+For reference, here is an overview of the names and locations of the vars files
+in the 2018 product releases, as seen for Spack-native installation. NB: May be
+incomplete as some components may have been omitted during installation.
+
+Names of vars files seen::
+
+    $ cd opt/spack/linux-centos6-x86_64
+    $ find intel* -name \*vars.sh -printf '%f\n' | sort -u | nl
+     1	advixe-vars.sh
+     2	amplxe-vars.sh
+     3	apsvars.sh
+     4	compilervars.sh
+     5	daalvars.sh
+     6	debuggervars.sh
+     7	iccvars.sh
+     8	ifortvars.sh
+     9	inspxe-vars.sh
+    10	ippvars.sh
+    11	mklvars.sh
+    12	mpivars.sh
+    13	pstlvars.sh
+    14	psxevars.sh
+    15	sep_vars.sh
+    16	tbbvars.sh
+
+Names and locations of vars files, sorted by Spack package name::
+
+    $ cd opt/spack/linux-centos6-x86_64
+    $ find intel* -name \*vars.sh -printf '%y\t%-15f\t%h\n' \
+        | cut -d/ -f1,4- \
+        | sed '/iccvars\|ifortvars/d; s,/,\t\t,; s,\.sh,,; s,  */\(intel[/-]\),\1,' \
+        | sort -k3,3 -k2,2 \
+        | nl \
+        | awk '{printf "%6i %-2s %-16s %-24s %s\n", $1, $2, $3, $4, $5}'
+
+    --------------------------------------------------------------------------------------------------------
+    item no.
+       file or link
+          name of vars file
+                           Spack package name
+                                                    dir relative to Spack install dir
+    --------------------------------------------------------------------------------------------------------
+
+     1 f  mpivars          intel                    compilers_and_libraries_2018.1.163/linux/mpi/intel64/bin
+     2 f  mpivars          intel                    compilers_and_libraries_2018.1.163/linux/mpirt/bin/ia32_lin
+     3 f  tbbvars          intel                    compilers_and_libraries_2018.1.163/linux/tbb/bin
+     4 f  pstlvars         intel                    compilers_and_libraries_2018.1.163/linux/pstl/bin
+     5 f  compilervars     intel                    compilers_and_libraries_2018.1.163/linux/bin
+     6 f  compilervars     intel                    compilers_and_libraries_2018/linux/bin
+     7 l  compilervars     intel                    bin
+     8 f  daalvars         intel-daal               compilers_and_libraries_2018.2.199/linux/daal/bin
+     9 f  psxevars         intel-daal               parallel_studio_xe_2018.2.046/bin
+    10 l  psxevars         intel-daal               parallel_studio_xe_2018.2.046
+    11 f  compilervars     intel-daal               compilers_and_libraries_2018.2.199/linux/bin
+    12 f  compilervars     intel-daal               compilers_and_libraries_2018/linux/bin
+    13 l  compilervars     intel-daal               bin
+    14 f  ippvars          intel-ipp                compilers_and_libraries_2018.2.199/linux/ipp/bin
+    15 f  psxevars         intel-ipp                parallel_studio_xe_2018.2.046/bin
+    16 l  psxevars         intel-ipp                parallel_studio_xe_2018.2.046
+    17 f  compilervars     intel-ipp                compilers_and_libraries_2018.2.199/linux/bin
+    18 f  compilervars     intel-ipp                compilers_and_libraries_2018/linux/bin
+    19 l  compilervars     intel-ipp                bin
+    20 f  mklvars          intel-mkl                compilers_and_libraries_2018.2.199/linux/mkl/bin
+    21 f  psxevars         intel-mkl                parallel_studio_xe_2018.2.046/bin
+    22 l  psxevars         intel-mkl                parallel_studio_xe_2018.2.046
+    23 f  compilervars     intel-mkl                compilers_and_libraries_2018.2.199/linux/bin
+    24 f  compilervars     intel-mkl                compilers_and_libraries_2018/linux/bin
+    25 l  compilervars     intel-mkl                bin
+    26 f  mpivars          intel-mpi                compilers_and_libraries_2018.2.199/linux/mpi_2019/intel64/bin
+    27 f  mpivars          intel-mpi                compilers_and_libraries_2018.2.199/linux/mpi/intel64/bin
+    28 f  psxevars         intel-mpi                parallel_studio_xe_2018.2.046/bin
+    29 l  psxevars         intel-mpi                parallel_studio_xe_2018.2.046
+    30 f  compilervars     intel-mpi                compilers_and_libraries_2018.2.199/linux/bin
+    31 f  compilervars     intel-mpi                compilers_and_libraries_2018/linux/bin
+    32 l  compilervars     intel-mpi                bin
+    33 f  apsvars          intel-parallel-studio    vtune_amplifier_2018.1.0.535340
+    34 l  apsvars          intel-parallel-studio    performance_snapshots_2018.1.0.535340
+    35 f  ippvars          intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/ipp/bin
+    36 f  ippvars          intel-parallel-studio    composer_xe_2015.6.233/ipp/bin
+    37 f  mklvars          intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/mkl/bin
+    38 f  mklvars          intel-parallel-studio    composer_xe_2015.6.233/mkl/bin
+    39 f  mpivars          intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/mpi/intel64/bin
+    40 f  mpivars          intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/mpirt/bin/ia32_lin
+    41 f  tbbvars          intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/tbb/bin
+    42 f  tbbvars          intel-parallel-studio    composer_xe_2015.6.233/tbb/bin
+    43 f  daalvars         intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/daal/bin
+    44 f  pstlvars         intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/pstl/bin
+    45 f  psxevars         intel-parallel-studio    parallel_studio_xe_2018.1.038/bin
+    46 l  psxevars         intel-parallel-studio    parallel_studio_xe_2018.1.038
+    47 f  sep_vars         intel-parallel-studio    vtune_amplifier_2018.1.0.535340
+    48 f  sep_vars         intel-parallel-studio    vtune_amplifier_2018.1.0.535340/target/android_v4.1_x86_64
+    49 f  advixe-vars      intel-parallel-studio    advisor_2018.1.1.535164
+    50 f  amplxe-vars      intel-parallel-studio    vtune_amplifier_2018.1.0.535340
+    51 f  inspxe-vars      intel-parallel-studio    inspector_2018.1.1.535159
+    52 f  compilervars     intel-parallel-studio    compilers_and_libraries_2018.1.163/linux/bin
+    53 f  compilervars     intel-parallel-studio    compilers_and_libraries_2018/linux/bin
+    54 l  compilervars     intel-parallel-studio    bin
+    55 f  debuggervars     intel-parallel-studio    debugger_2018/bin
 
 
 ********************
