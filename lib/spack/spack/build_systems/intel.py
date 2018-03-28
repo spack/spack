@@ -162,40 +162,13 @@ class IntelPackage(PackageBase):
         '''Check if called for an explicitly requested Intel ``component`` or
         in a role manifested by the current (possibly virtual) package name.
         '''
-        result = (personality_wanted == component or
-                  personality_wanted in [str(k) for k in self.provided])
+        if component:
+            result = (personality_wanted == component)
+        else:
+            result = (personality_wanted in [str(k) for k in self.provided])
         debug_print("%s -> %s" % (str((personality_wanted, component)),
                                   result))
         return result
-
-    def _locate_script(self, filename):
-        if filename.startswith('/'):
-            return filename             # absolute path, no need to search
-
-        c = self.component_dir()
-        if not c or not os.path.isdir(c):
-            # This is expected behavior during pre-install.
-            debug_print("Directory does not (yet) exist: %s" % str(c))
-            return None
-
-        # an explicitly lazy list eval
-        f = join_path(c, 'bin', filename)
-        if os.path.isfile(f):
-            return f
-
-        f = join_path(c, filename)
-        if os.path.isfile(f):
-            return f
-
-        f = join_path(self.component_bin_dir(), filename)
-        # not necessarily same as c/bin
-        if os.path.isfile(f):
-            return f
-
-        for d in glob.glob(join_path(c, '*')):
-            f = join_path(d, filename)
-            if os.path.isfile(f):
-                return f
 
     def _make_relative(self, file_or_dir, relative_to=''):
         if not relative_to:
@@ -208,8 +181,34 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
     # ---------------------------------------------------------------------
-    def product_dir(self, product_dir_name, version_glob='_*.*.*',
-                    postfix_dir=''):
+    # For reference: Intel packages in Spack-0.11:
+    #
+    #  intel/               intel-ipp/          intel-mpi/
+    #  intel-daal/          intel-mkl/          intel-parallel-studio/
+    #
+    # Not IntelPackage:
+    #
+    #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
+    #
+
+    def _expand_path(self, relative_path):
+        '''Expand relative_path (which may contain replacement fields) under
+        self.prefix.
+        '''
+        # Python-native string formatting requires arg list count to match the
+        # replacement field count, handling optional fields would be tedious.
+        f = relative_path
+        f = re.sub('{version}', '', f)
+        f = re.sub('{platform}', 'linux', f)
+        f = re.sub('{arch}', 'intel64', f)
+        f = re.sub('{bits}', '64', f)
+        # f = re.sub('/', os.sep, f)    # TODO? win32?
+
+        (product_dir, component_path) = f.split(os.sep, 1)
+        product_dir = self.normalize_product_dir(product_dir)
+        return join_path(product_dir, component_path)
+
+    def normalize_product_dir(self, product_dir_name, version_glob='_*.*.*'):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and possibly auxiliary files from other
         products.
@@ -228,11 +227,6 @@ class IntelPackage(PackageBase):
         ``version_glob``
             A glob pattern that fully qualifies ``product_dir_name`` to a
             specific version within an actual directory (not a symlink).
-
-        ``postfix_dir``
-            Subdirectory below ``product_dir_name + version_glob``.
-            Example:
-                ``('compilers_and_libraries', postfix_dir='linux')``
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
@@ -313,19 +307,17 @@ class IntelPackage(PackageBase):
                 # Return a sensible value anyway.
                 d = Prefix(join_path(d, product_dir_name))
 
-            # Alright, now the final flight of stairs.
-            # NB: A Spack-external package should have this in prefix already,
-            # so it's only applied here, for Spack-internal requests.
-            d = Prefix(join_path(d, postfix_dir))
-
         debug_print(d)
         return d
 
     @property
     def compilers_dir(self):
         # TODO? accommodate other platforms(?)
-        platform = 'linux'
-        d = self.product_dir('compilers_and_libraries', postfix_dir=platform)
+        c = 'compilers_and_libraries'
+        if self.spec.satisfies('@:composer.2015'):
+            c = 'composer_xe'
+
+        d = self.normalize_product_dir(c)
 
         # On my system, when using a external MKL, self.prefix showed up as
         # ending with "/compiler". I think this is because I provided that MKL
@@ -338,9 +330,14 @@ class IntelPackage(PackageBase):
         # (kinda understandably so), and the syntax blows up on trying "..".
         #
         # NB: Targeting a platform, we can indulge in hardcoding the path sep.
+        platform = 'linux'
+
         platform_dir = '/' + platform
-        while platform_dir in d and not d.endswith(platform_dir):
-            d = Prefix(ancestor(d))
+        if platform_dir in d:
+            while not d.endswith(platform_dir):
+                d = Prefix(ancestor(d))
+        else:
+            d += platform_dir
 
         debug_print(d)
         return d
@@ -350,10 +347,10 @@ class IntelPackage(PackageBase):
         # The Parallel Studio dir as such holds mostly symlinks to other
         # components, so it's rarely needed, except for, ta-da, psxevars.sh.
 
-        d = self.product_dir('parallel_studio_xe', postfix_dir='')
+        d = self.normalize_product_dir('parallel_studio_xe')
         #  NODO: The sole 2015 "composer" version in the Spack repos (as of
         #  2018-02) would in fact need:
-        # d = self.product_dir('composer_xe', postfix_dir='')
+        # d = self.normalize_product_dir('composer_xe')
         #  But a site running Spack likely has the successors licensed, right?
 
         debug_print(d)
@@ -379,6 +376,8 @@ class IntelPackage(PackageBase):
                 # NODO: d = d.intel64
             # elif ...
             #     component = ...
+            elif self._is_personality('tbb'):
+                component = 'tbb'
             else:
                 component = 'compiler'
 
@@ -397,8 +396,6 @@ class IntelPackage(PackageBase):
                 d = d.intel64.bin
             elif component == 'compiler' or 'parallel-studio' in self.name:
                 d = Prefix(ancestor(d)).bin.intel64
-                # NB: psxevars.sh is wrested specially from studio_dir, in
-                # intel-parallel-studio/package.py:file_to_source
             else:
                 d = d.bin
 
@@ -501,6 +498,7 @@ class IntelPackage(PackageBase):
         debug_print(libs)
         return libs
 
+    @property
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
         # Match the available gcc (or clang?), as it's done in tbbvars.sh.
@@ -621,39 +619,24 @@ class IntelPackage(PackageBase):
     # General support for child packages
     # ---------------------------------------------------------------------
     @property
-    def _product_dirname(self):
-        # For reference: Intel packages in Spack-0.11:
-        #
-        #  intel/               intel-ipp/          intel-mpi/
-        #  intel-daal/          intel-mkl/          intel-parallel-studio
-        #  intel-gpu-tools/     intel-mkl-dnn/      intel-tbb/
-
-        d = 'compilers_and_libraries'
-        if self.name == 'intel-parallel-studio':
-            if self.spec.satisfies('@:composer.2015'):
-                d = 'composer_xe'
-            else:
-                d = 'parallel_studio_xe'
-
-        #   - TBD::
-        #       advisor_xe, composer_xe, inspector_xe, vtune_amplifier_xe,
-        #       performance_snapshots
-        #
-        # elif self.name == '':
-        #     d = ''
-        debug_print(d)
-        return d
-
-    @property
     def file_to_source(self):
-        if self._is_personality('mkl'):
-            f = 'mklvars.sh'
-        elif self._is_personality('mpi'):
-            f = 'mpivars.sh'
-        else:
-            m = re.match('intel-([^-]*).*', self.name)
-            if m:
-                f = m.group(1) + 'vars.sh'
+        c = 'compilers_and_libraries'
+        if sys.platform == 'linux':
+            c += '/linux'
+        vars_file_for = {
+            '@composer':             'composer_xe/bin/compilervars',
+            'intel-parallel-studio': 'parallel_studio_xe/bin/psxevars',
+            'intel':                 c + '/bin/compilervars',
+            'intel-daal':            c + '/daal/bin/daalvars',
+            'intel-ipp':             c + '/ipp/bin/ippvars',
+            'intel-mkl':             c + '/mkl/bin/mklvars',
+            'intel-mpi':             c + '/mpi/intel{bits}/bin/mpivars',
+        }
+        key = self.name
+        if self.spec.satisfies('@:composer.2015'):
+            key = '@composer'       # stand-in string for dict lookup
+        f = vars_file_for[key]
+        f += '.sh'  # TODO?  win32 - .bat(?), POSIX-ish, or skip?
         debug_print(f)
         return f
 
@@ -702,7 +685,7 @@ class IntelPackage(PackageBase):
         # setup_build_environment and setup_run_environment to get around
         # this problem.
 
-        f = self._locate_script(self.file_to_source)
+        f = self._expand_path(self.file_to_source)
         if not f or not os.path.isfile(f):
             return
 
@@ -832,8 +815,10 @@ class IntelPackage(PackageBase):
             'PSET_MODE':                            'install',
             'NONRPM_DB_DIR':                        prefix,
             'SIGNING_ENABLED':                      'no',
-            'ARCH_SELECTED':                        'ALL',
         }
+
+        if not self.spec.satisfies('@:composer.2015'):
+            config.update({'ARCH_SELECTED': 'ALL'})    # Not in early versions
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
