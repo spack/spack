@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,20 +25,16 @@
 from spack import *
 
 
-class RLubridate(RPackage):
-    """Functions to work with date-times and timespans: fast and user friendly
-    parsing of date-time data, extraction and updating of components of a
-    date-time (years, months, days, hours, minutes, and seconds), algebraic
-    manipulation on date-time and timespan objects. The 'lubridate' package has
-    a consistent and memorable syntax that makes working with dates easy and
-    fun."""
+class RSnowfall(RPackage):
+    """Usability wrapper around snow for easier development of parallel R
+       programs. This package offers e.g. extended error checks, and additional
+       functions. All functions work in sequential mode, too, if no cluster is
+       present or wished. Package is also designed as connector to the cluster
+       management tool sfCluster, but can also used without it."""
 
-    homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lubridate_1.7.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
+    homepage = "https://cran.r-project.org/web/packages/snowfall/index.html"
+    url      = "https://cran.r-project.org/src/contrib/snowfall_1.84-6.1.tar.gz"
 
-    version('1.7.1', '17dcb4c6a95189941bbdcffecf61b83b')
-    version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
+    version('1.84-6.1', '5ec38116aa9cac237d56f59ba5bd60e3')
 
-    depends_on('r-rcpp@0.11:', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-snow', type=('build', 'run'))
