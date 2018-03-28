@@ -33,9 +33,9 @@ class Libceed(Package):
 
     version('develop', git='https://github.com/CEED/libCEED.git',
             branch='master')
-    # FIXME: replace all '0.2*' versions with '0.2' when it is tagged.
-    version('0.2b', git='https://github.com/CEED/libCEED.git',
-            commit='37c58ae62292f5bf5da798432c6e8317ee76aee3')
+    # FIXME: replace all hash versions with '0.2' when it is tagged.
+    version('a820fbc', git='https://github.com/CEED/libCEED.git',
+            commit='a820fbcde076af5c5b50ef8dec742695f7fceea9')
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
     variant('occa', default=True, description='Enable OCCA backends')
@@ -43,7 +43,7 @@ class Libceed(Package):
     variant('debug', default=False, description='Enable debug build')
 
     # FIXME: replace the occa hash-version with a tagged version?
-    depends_on('occa@197e34d,develop', when='+occa')
+    depends_on('occa@2db622c,develop', when='+occa')
     depends_on('occa@develop', when='@develop+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     depends_on('occa~cuda', when='+occa~cuda')

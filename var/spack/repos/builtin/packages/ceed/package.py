@@ -57,20 +57,20 @@ class Ceed(Package):
     # TODO: Add 'int64' variant?
 
     # LibCEED
-    # FIXME: Replace the '0.2b2' version with '0.2' when it is tagged.
-    depends_on('libceed@0.2b~cuda', when='@1.0.0~cuda')
-    depends_on('libceed@0.2b+cuda', when='@1.0.0+cuda')
-    depends_on('libceed@0.2b+occa', when='@1.0.0+occa')
-    depends_on('libceed@0.2b~occa', when='@1.0.0~occa')
+    # FIXME: Replace the hash with '0.2' when it is tagged.
+    depends_on('libceed@a820fbc~cuda', when='@1.0.0~cuda')
+    depends_on('libceed@a820fbc+cuda', when='@1.0.0+cuda')
+    depends_on('libceed@a820fbc+occa', when='@1.0.0+occa')
+    depends_on('libceed@a820fbc~occa', when='@1.0.0~occa')
     # TODO:
     # depends_on('libceed@0.1+examples-mfem', when='@1.0.0+mfem')
     # depends_on('libceed@0.1+examples-nek', when='@1.0.0+nek')
     # depends_on('libceed@0.1+examples-petsc', when='@1.0.0+petsc')
 
     # OCCA
-    # FIXME: Replace the '197e34d' version with tagged version?
-    depends_on('occa@197e34d~cuda', when='@1.0.0+occa~cuda')
-    depends_on('occa@197e34d+cuda', when='@1.0.0+occa+cuda')
+    # FIXME: Replace the hash with a tagged version?
+    depends_on('occa@2db622c~cuda', when='@1.0.0+occa~cuda')
+    depends_on('occa@2db622c+cuda', when='@1.0.0+occa+cuda')
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     depends_on('nek5000@17.0', when='@1.0.0+nek')
