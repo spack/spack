@@ -22,10 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
 import spack.compilers.clang
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -70,7 +69,10 @@ class Gcc(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('4.3'):
-            tty.die("Only gcc 4.3 and above support c++11.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          " < 4.3")
         elif self.version < ver('4.7'):
             return "-std=c++0x"
         else:
@@ -79,7 +81,10 @@ class Gcc(Compiler):
     @property
     def cxx14_flag(self):
         if self.version < ver('4.8'):
-            tty.die("Only gcc 4.8 and above support c++14.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++14 standard",
+                                          "cxx14_flag",
+                                          "< 4.8")
         elif self.version < ver('4.9'):
             return "-std=c++1y"
         elif self.version < ver('6.0'):
@@ -90,7 +95,10 @@ class Gcc(Compiler):
     @property
     def cxx17_flag(self):
         if self.version < ver('5.0'):
-            tty.die("Only gcc 5.0 and above support c++17.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++17 standard",
+                                          "cxx17_flag",
+                                          "< 5.0")
         elif self.version < ver('6.0'):
             return "-std=c++1z"
         else:
