@@ -229,6 +229,9 @@ __all__ += ['all_deptypes']
 from spack.multimethod import when
 __all__ += ['when']
 
+from spack.build_environment import dso_suffix
+__all__ += ['dso_suffix']
+
 import llnl.util.filesystem
 from llnl.util.filesystem import *
 __all__ += llnl.util.filesystem.__all__
