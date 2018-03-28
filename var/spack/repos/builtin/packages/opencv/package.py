@@ -122,6 +122,7 @@ class Opencv(CMakePackage):
     depends_on('protobuf@3.1.0', when='@3.3.0: +dnn')
 
     depends_on('ffmpeg', when='+videoio')
+    depends_on('mpi', when='+videoio')
 
     extends('python', when='+python')
 
