@@ -57,10 +57,6 @@ class IntelMpi(IntelPackage):
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
         return self.version < Version('2017.2')
 
-    @property
-    def file_to_source(self):
-        return join_path(self.component_bin_dir(), 'mpivars.sh')
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # DUP in var/spack/repos/builtin/packages/intel-parallel-studio/*.py
         spack_env.set('I_MPI_CC', spack_cc)
