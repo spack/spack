@@ -139,7 +139,7 @@ class Opencv(CMakePackage):
                 'ON' if '+powerpc' in spec else 'OFF')),
             '-DENABLE_VSX={0}'.format((
                 'ON' if '+vsx' in spec else 'OFF')),
-            '-DENABLE_FAST_MATH={}'.format((
+            '-DENABLE_FAST_MATH={0}'.format((
                 'ON' if '+fast-math' in spec else 'OFF')),
         ]
 
