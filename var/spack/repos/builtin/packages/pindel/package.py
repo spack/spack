@@ -38,12 +38,11 @@
 # please first remove this boilerplate and all FIXME comments.
 #
 from spack import *
-from shutil import copytree,copyfile
-import glob
+from shutil import copytree, copyfile
 
 
 class Pindel(MakefilePackage):
-    """Pindel can detect breakpoints of large deletions, medium sized insertions, inversions, tandem duplications and other structural variants at single-based resolution from next-gen sequence data. It uses a pattern growth approach to identify the breakpoints of these variants from paired-end short reads."""
+    """Pindel can detect breakpoints from next-gen sequence data."""
 
     homepage = "http://gmt.genome.wustl.edu/packages/pindel/"
     url      = "https://github.com/genome/pindel/archive/v0.2.5.tar.gz"
@@ -59,15 +58,16 @@ class Pindel(MakefilePackage):
     depends_on('htslib@1.7:')
 
     def edit(self, spec, prefix):
- 
         makefile2 = join_path(self.build_directory, 'Makefile2')
-        copyfile(join_path(self.build_directory, 'Makefile'),makefile2)
-        myedit= FileFilter(makefile2)
-        myedit.filter('-include Makefile.local','#removed include')
-        myedit.filter('@false','#removed autofailure')
-  
+        copyfile(join_path(self.build_directory, 'Makefile'), makefile2)
+        myedit = FileFilter(makefile2)
+        myedit.filter('-include Makefile.local', '#removed include')
+        myedit.filter('@false', '#removed autofailure')
+
     def build(self, spec, prefix):
-        make("Makefile.local", "-f", "Makefile2", "HTSLIB=%s" % spec['htslib'].prefix)
+        make("Makefile.local", "-f",
+             "Makefile2",
+             "HTSLIB=%s" % spec['htslib'].prefix)
         make("HTSLIB=%s" % spec['htslib'].prefix)
 
     def install(self, spec, prefix):
@@ -81,4 +81,6 @@ class Pindel(MakefilePackage):
         #demos= glob.glob('demo/*')
         #for dafile in demos:
         #  install(dafile, prefix.doc)
-        copytree(join_path(self.build_directory, 'demo'), prefix.doc, symlinks=True)
+        copytree(join_path(self.build_directory, 'demo'),
+                 prefix.doc,
+                 symlinks=True)
