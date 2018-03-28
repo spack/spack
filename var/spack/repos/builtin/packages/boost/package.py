@@ -194,6 +194,10 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
+        # avoid "ambiguous key" error
+        if spec.satisfies('@:1.58'):
+            return ''
+
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
             spec['python'].command.path,
@@ -350,7 +354,7 @@ class Boost(Package):
             withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
-        env['BOOST_BUILD_PATH'] = './'
+        env['BOOST_BUILD_PATH'] = self.stage.source_path
 
         bootstrap = Executable('./bootstrap.sh')
 
@@ -367,7 +371,12 @@ class Boost(Package):
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
             jobs = 64
-        b2_options = ['-j', '%s' % jobs]
+
+        b2_options = [
+            '-j', '%s' % jobs,
+            '--user-config=%s' % os.path.join(
+                self.stage.source_path, 'user-config.jam')
+        ]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
