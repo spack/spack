@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,7 +44,7 @@ class Hpgmg(Package):
     version('develop', git='https://bitbucket.org/hpgmg/hpgmg.git', branch='master')
 
     variant(
-        'fe', default=True, description='Build finite element solver')
+        'fe', default=False, description='Build finite element solver')
     variant(
         'fv', default='mpi', values=('serial', 'mpi', 'none'),
         description='Build finite volume solver with or without MPI support')

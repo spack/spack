@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -49,18 +49,28 @@ class Augustus(MakefilePackage):
                             'bamtools'].prefix)
             makefile.filter('INCLUDES = *',
                             'INCLUDES = -I$(BAMTOOLS)/include/bamtools ')
-            makefile.filter('LIBS = -lbamtools -lz',
-                            'LIBS = $(BAMTOOLS)/lib64/'
-                            '/libbamtools.a -lz')
+            if 'bamtools@2.5:' in spec:
+                makefile.filter('LIBS = -lbamtools -lz',
+                                'LIBS = $(BAMTOOLS)/lib64/'
+                                '/libbamtools.a -lz')
+            if 'bamtools@:2.4' in spec:
+                makefile.filter('LIBS = -lbamtools -lz',
+                                'LIBS = $(BAMTOOLS)/lib/bamtools'
+                                '/libbamtools.a -lz')
         with working_dir(join_path('auxprogs', 'bam2hints')):
             makefile = FileFilter('Makefile')
             makefile.filter('# Variable definition',
                             'BAMTOOLS = %s' % self.spec['bamtools'].prefix)
             makefile.filter('INCLUDES = /usr/include/bamtools',
                             'INCLUDES = $(BAMTOOLS)/include/bamtools')
-            makefile.filter('LIBS = -lbamtools -lz',
-                            'LIBS = $(BAMTOOLS)/lib64/'
-                            '/libbamtools.a -lz')
+            if 'bamtools@2.5:' in spec:
+                makefile.filter('LIBS = -lbamtools -lz',
+                                'LIBS = $(BAMTOOLS)/lib64/'
+                                '/libbamtools.a -lz')
+            if 'bamtools@:2.4' in spec:
+                makefile.filter('LIBS = -lbamtools -lz',
+                                'LIBS = $(BAMTOOLS)/lib/bamtools'
+                                '/libbamtools.a -lz')
 
     def install(self, spec, prefix):
         install_tree('bin', join_path(self.spec.prefix, 'bin'))

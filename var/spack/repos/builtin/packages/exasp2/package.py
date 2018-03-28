@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Exasp2(MakefilePackage):
@@ -42,7 +43,9 @@ class Exasp2(MakefilePackage):
     tags = ['proxy-app']
 
     homepage = "https://github.com/ECP-copa/ExaSP2"
+    url      = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
 
+    version('1.0', 'dba545995acc73f2bd1101bcb377bff5')
     version('develop', git='https://github.com/ECP-copa/ExaSP2',
             branch='master')
 
@@ -86,9 +89,7 @@ class Exasp2(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
-        if '+mpi' in self.spec:
-            install('bin/ExaSP2-parallel', prefix.bin)
-        else:
-            install('bin/ExaSP2-serial', prefix.bin)
+        for files in glob.glob('bin/ExaSP2-*'):
+            install(files, prefix.bin)
         install('LICENSE.md', prefix.doc)
         install('README.md', prefix.doc)

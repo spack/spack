@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -56,6 +56,8 @@ class Libsplash(CMakePackage):
     depends_on('hdf5@1.8.6: ~mpi', when='~mpi')
     depends_on('hdf5@1.8.6: +mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
+
+    patch('root_cmake_1.7.0.patch', when='@1.7.0')
 
     def cmake_args(self):
         spec = self.spec

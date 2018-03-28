@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,6 +35,8 @@ class Bamutil(MakefilePackage):
     url      = "http://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
 
     version('1.0.13', '08b7d0bb1d60be104a11f0e54ddf4a79')
+
+    depends_on('zlib', type=('build', 'link'))
 
     # Looks like this will be fixed in 1.0.14.
     # https://github.com/statgen/libStatGen/issues/9

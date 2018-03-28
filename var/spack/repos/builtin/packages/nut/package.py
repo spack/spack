@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,6 +42,7 @@ class Nut(CMakePackage):
         'openmp', git='https://github.com/lanl/NuT.git',
         branch='openmp')
 
+    depends_on('cmake@3.0:')
     depends_on('random123')
 
     conflicts('%intel', when='@serial')

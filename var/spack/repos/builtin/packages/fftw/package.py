@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -118,7 +118,7 @@ class Fftw(AutotoolsPackage):
 
             libraries.append('libfftw3' + sfx)
 
-        return find_libraries(libraries, root=self.prefix, recurse=True)
+        return find_libraries(libraries, root=self.prefix, recursive=True)
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:

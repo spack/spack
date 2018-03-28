@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,8 +30,9 @@ class SuiteSparse(Package):
     SuiteSparse is a suite of sparse matrix algorithms
     """
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
-    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
+    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.2.0.tar.gz'
 
+    version('5.2.0', '8e625539dbeed061cc62fbdfed9be7cf')
     version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
     version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
     version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
@@ -45,6 +46,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
@@ -95,7 +97,7 @@ class SuiteSparse(Package):
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk,
             # even though this fix is ugly
             'BLAS=%s' % (spec['blas'].libs.ld_flags + (
-                '-lstdc++' if '@4.5.1' in spec else '')),
+                ' -lstdc++' if '@4.5.1' in spec else '')),
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
 
@@ -125,3 +127,22 @@ class SuiteSparse(Package):
             ]
 
         make('install', *make_args)
+
+    @property
+    def libs(self):
+        """Export the libraries of SuiteSparse.
+        Sample usage: spec['suite-sparse'].libs.ld_flags
+                      spec['suite-sparse:klu,btf'].libs.ld_flags
+        """
+        # Component libraries, ordered by dependency. Any missing components?
+        all_comps = ['klu', 'btf', 'umfpack', 'cholmod', 'colamd', 'amd',
+                     'camd', 'ccolamd', 'cxsparse', 'ldl', 'rbio', 'spqr',
+                     'suitesparseconfig']
+        query_parameters = self.spec.last_query.extra_parameters
+        comps = all_comps if not query_parameters else query_parameters
+        libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
+                              shared=True, recursive=False)
+        if not libs:
+            return None
+        libs += find_system_libraries('librt')
+        return libs

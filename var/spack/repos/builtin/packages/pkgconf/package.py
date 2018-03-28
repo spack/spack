@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,11 @@ class Pkgconf(AutotoolsPackage):
     version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
 
     provides('pkgconfig')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Adds the ACLOCAL path for autotools."""
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))
 
     @run_after('install')
     def link_pkg_config(self):

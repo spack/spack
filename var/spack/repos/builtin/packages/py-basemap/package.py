@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,7 +37,7 @@ class PyBasemap(PythonPackage):
     # Per Github issue #3813, setuptools is required at runtime in order
     # to make mpl_toolkits a namespace package that can span multiple
     # directories (i.e., matplotlib and basemap)
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools', type=('run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
