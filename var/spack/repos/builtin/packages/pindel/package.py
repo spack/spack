@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install pindel
-#
-# You can edit this file again by typing:
-#
-#     spack edit pindel
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 from shutil import copytree, copyfile
 
@@ -56,6 +41,14 @@ class Pindel(MakefilePackage):
     version('0.2.5',   'd4568cbb83ec25ef9f9f6f058b30053e')
 
     depends_on('htslib@1.7:')
+    #
+    # This Makefile2 stuff is due to the orignal installer,
+    # The author wants to run make twice, the first
+    # time generates a Makefile.local then returns "false"
+    # User is then suppose to run make again and the
+    # package will compile. This is an attempt to
+    # stay as close to the original installer as possible
+    #
 
     def edit(self, spec, prefix):
         makefile2 = join_path(self.build_directory, 'Makefile2')
