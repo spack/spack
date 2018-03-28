@@ -76,11 +76,6 @@ class Pindel(MakefilePackage):
         install('src/pindel2vcf', prefix.bin)
         install('src/sam2pindel', prefix.bin)
         install('src/pindel2vcf4tcga', prefix.bin)
-        #mkdirp(prefix.doc)
-        # syntax from alglib
-        #demos= glob.glob('demo/*')
-        #for dafile in demos:
-        #  install(dafile, prefix.doc)
         copytree(join_path(self.build_directory, 'demo'),
                  prefix.doc,
                  symlinks=True)
