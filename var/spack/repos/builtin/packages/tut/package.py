@@ -29,9 +29,9 @@ class Tut(WafPackage):
     """TUT is a small and portable unit test framework for C++."""
 
     homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/archive/2016-12-19.tar.gz"
+    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
 
-    version('2016-12-19', 'a6e58626e25dd3f38e36959b7f46d5b8')
+    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
 
     patch('python3-octal.patch', when='@2016-12-19')
 
