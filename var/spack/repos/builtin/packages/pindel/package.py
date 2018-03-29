@@ -42,7 +42,7 @@ class Pindel(MakefilePackage):
 
     depends_on('htslib@1.7:')
     #
-    # This Makefile2 stuff is due to the orignal installer,
+    # This Makefile2 stuff is due to the original installer,
     # The author wants to run make twice, the first
     # time generates a Makefile.local then returns "false"
     # User is then suppose to run make again and the
