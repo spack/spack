@@ -26,7 +26,10 @@ from spack import *
 from spack.concretize import NoBuildError
 from spack.util.module_cmd import load_module
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> Add cray-libsci package
 class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of
     numerical routines optimized for best performance on Cray systems."""
@@ -69,6 +72,7 @@ class CrayLibsci(Package):
 
         return find_libraries(lib, root=self.prefix.lib, shared=shared,
                               recursive=True)
+                recursive=True)
 
     @property
     def lapack_libs(self):
