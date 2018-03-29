@@ -1,4 +1,4 @@
-##############################################################################                           
+##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -26,9 +26,9 @@ from spack import *
 
 
 class Ltrace(AutotoolsPackage):
-    """Ltrace intercepts and records dynamic library calls which are
-    called by an executed process and the signals received by that process.
-    It can also intercept and print the system calls executed by the program."""
+    """Ltrace intercepts and records dynamic library calls which are called 
+    by an executed process and the signals received by that process. It 
+    can also intercept and print the system calls executed by the program."""
 
     homepage = "https://www.ltrace.org"
     url      = "https://www.ltrace.org/ltrace_0.7.3.orig.tar.bz2"
