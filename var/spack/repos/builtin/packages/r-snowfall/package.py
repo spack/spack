@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,16 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class RSnowfall(RPackage):
+    """Usability wrapper around snow for easier development of parallel R
+       programs. This package offers e.g. extended error checks, and additional
+       functions. All functions work in sequential mode, too, if no cluster is
+       present or wished. Package is also designed as connector to the cluster
+       management tool sfCluster, but can also used without it."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://cran.r-project.org/web/packages/snowfall/index.html"
+    url      = "https://cran.r-project.org/src/contrib/snowfall_1.84-6.1.tar.gz"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('1.84-6.1', '5ec38116aa9cac237d56f59ba5bd60e3')
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    depends_on('r-snow', type=('build', 'run'))

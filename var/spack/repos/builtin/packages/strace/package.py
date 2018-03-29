@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,15 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class Strace(AutotoolsPackage):
+    """Strace is a diagnostic, debugging and instructional userspace
+    utility for Linux. It is used to monitor and tamper with interactions
+    between processes and the Linux kernel, which include system calls,
+    signal deliveries, and changes of process state."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://strace.io"
+    url      = "https://strace.io/files/4.21/strace-4.21.tar.xz"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    conflicts('platform=darwin', msg='strace runs only on Linux.')
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    version('4.21', '785b679a75e9758ebeb66816f315b9fe')
