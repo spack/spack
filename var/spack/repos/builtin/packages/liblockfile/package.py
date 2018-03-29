@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,16 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class Liblockfile(AutotoolsPackage):
+    """NFS-safe locking library"""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://github.com/miquels/liblockfile"
+    url      = "https://github.com/miquels/liblockfile/archive/v1.14.tar.gz"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('1.14', '24ce9dbb34d7f508a52a91f762746ce3')
 
-    patch('python3-octal.patch', when='@2016-12-19')
+    patch('install_as_nonroot.patch')
 
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
+    def configure_args(self):
+        args = ['--enable-shared']
         return args
