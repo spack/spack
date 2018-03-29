@@ -31,14 +31,14 @@ class Gurobi(Package):
     """The Gurobi Optimizer was designed from the ground up to be the fastest,
     most powerful solver available for your LP, QP, QCP, and MIP (MILP, MIQP,
     and MIQCP) problems.
-    
+
     Note: Gurobi is licensed software. You will need to create an account on
-    the Gurobi homepage and download Gurobi Optimizer yourself. Spack will 
+    the Gurobi homepage and download Gurobi Optimizer yourself. Spack will
     search your current directory for the download file. Alternatively, add
     this file to a mirror so that Spack can find it. For instructions on how to
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html
-    
-    Please set the path to licence file with the following command (for bash shell)
+
+    Please set the path to licence file with the following command (for bash)
     export GRB_LICENSE_FILE=/path/to/gurobi/license/. See section 4 in
     $GUROBI_HOME/docs/quickstart_linux.pdf for more details."""
 
