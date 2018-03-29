@@ -26,8 +26,8 @@ from spack import *
 
 
 class Ltrace(AutotoolsPackage):
-    """Ltrace intercepts and records dynamic library calls which are called 
-    by an executed process and the signals received by that process. It 
+    """Ltrace intercepts and records dynamic library calls which are called
+    by an executed process and the signals received by that process. It
     can also intercept and print the system calls executed by the program."""
 
     homepage = "https://www.ltrace.org"
