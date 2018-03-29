@@ -58,10 +58,10 @@ class Ceed(Package):
 
     # LibCEED
     # FIXME: Replace the hash with '0.2' when it is tagged.
-    depends_on('libceed@a820fbc~cuda', when='@1.0.0~cuda')
-    depends_on('libceed@a820fbc+cuda', when='@1.0.0+cuda')
-    depends_on('libceed@a820fbc+occa', when='@1.0.0+occa')
-    depends_on('libceed@a820fbc~occa', when='@1.0.0~occa')
+    depends_on('libceed@50d6287~cuda', when='@1.0.0~cuda')
+    depends_on('libceed@50d6287+cuda', when='@1.0.0+cuda')
+    depends_on('libceed@50d6287+occa', when='@1.0.0+occa')
+    depends_on('libceed@50d6287~occa', when='@1.0.0~occa')
     # TODO:
     # depends_on('libceed@0.1+examples-mfem', when='@1.0.0+mfem')
     # depends_on('libceed@0.1+examples-nek', when='@1.0.0+nek')
