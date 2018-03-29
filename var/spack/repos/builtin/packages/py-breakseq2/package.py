@@ -34,11 +34,4 @@ class PyBreakseq2(PythonPackage):
     version('2.2', '6fd5a103c2781717b0b1d0efcbdc17e7')
 
     depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
     depends_on('py-biopython',        type=('build', 'run'))
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
