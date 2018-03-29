@@ -328,3 +328,14 @@ class Petsc(Package):
         # Set up PETSC_DIR for everyone using PETSc package
         spack_env.set('PETSC_DIR', self.prefix)
         spack_env.unset('PETSC_ARCH')
+
+    @property
+    def headers(self):
+        return find_headers('petsc', self.prefix.include, recursive=False) \
+            or None  # return None to indicate failure
+
+    @property
+    def libs(self):
+        return find_libraries('libpetsc', self.prefix.lib,
+                              shared=('+shared' in self.spec),
+                              recursive=False) or None
