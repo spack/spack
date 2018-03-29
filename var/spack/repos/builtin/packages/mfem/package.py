@@ -205,6 +205,21 @@ class Mfem(Package):
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'
 
+        # We need to add rpaths explicitly to allow proper export of link flags
+        # from within MFEM.
+
+        # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
+        def ld_flags_from_LibraryList(libs_list):
+            flags = ['-Wl,-rpath,%s' % dir for dir in libs_list.directories]
+            flags += [libs_list.ld_flags]
+            return ' '.join(flags)
+
+        def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
+            flags = ['-Wl,-rpath,%s' % dir for dir in pkg_dirs_list]
+            flags += ['-L%s' % dir for dir in pkg_dirs_list]
+            flags += ['-l%s' % lib for lib in pkg_libs_list]
+            return ' '.join(flags)
+
         metis5_str = 'NO'
         if ('+metis' in spec) and spec['metis'].satisfies('@5:'):
             metis5_str = 'YES'
@@ -253,18 +268,19 @@ class Mfem(Package):
                 hypre['blas'].libs
             options += [
                 'HYPRE_OPT=-I%s' % hypre.prefix.include,
-                'HYPRE_LIB=%s' % all_hypre_libs.ld_flags]
+                'HYPRE_LIB=%s' % ld_flags_from_LibraryList(all_hypre_libs)]
 
         if '+metis' in spec:
             options += [
                 'METIS_OPT=-I%s' % spec['metis'].prefix.include,
-                'METIS_LIB=-L%s -lmetis' % spec['metis'].prefix.lib]
+                'METIS_LIB=%s' %
+                ld_flags_from_dirs([spec['metis'].prefix.lib], ['metis'])]
 
         if '+lapack' in spec:
-            lapack_lib = (spec['lapack'].libs + spec['blas'].libs).ld_flags
+            lapack_blas = spec['lapack'].libs + spec['blas'].libs
             options += [
                 # LAPACK_OPT is not used
-                'LAPACK_LIB=%s' % lapack_lib]
+                'LAPACK_LIB=%s' % ld_flags_from_LibraryList(lapack_blas)]
 
         if '+superlu-dist' in spec:
             options += [
@@ -279,21 +295,28 @@ class Mfem(Package):
             ss_spec = 'suite-sparse:' + self.suitesparse_components
             options += [
                 'SUITESPARSE_OPT=-I%s' % spec[ss_spec].prefix.include,
-                'SUITESPARSE_LIB=%s' % spec[ss_spec].libs.ld_flags]
+                'SUITESPARSE_LIB=%s' %
+                ld_flags_from_LibraryList(spec[ss_spec].libs)]
 
         if '+sundials' in spec:
             sun_spec = 'sundials:' + self.sundials_components
             options += [
                 'SUNDIALS_OPT=%s' % spec[sun_spec].headers.cpp_flags,
-                'SUNDIALS_LIB=%s' % spec[sun_spec].libs.ld_flags]
+                'SUNDIALS_LIB=%s' %
+                ld_flags_from_LibraryList(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            options += ['PETSC_DIR=%s' % spec['petsc'].prefix]
+            # options += ['PETSC_DIR=%s' % spec['petsc'].prefix]
+            options += [
+                'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
+                'PETSC_LIB=%s' %
+                ld_flags_from_LibraryList(spec['petsc'].libs)]
 
         if '+netcdf' in spec:
             options += [
                 'NETCDF_OPT=-I%s' % spec['netcdf'].prefix.include,
-                'NETCDF_LIB=-L%s -lnetcdf' % spec['netcdf'].prefix.lib]
+                'NETCDF_LIB=%s' %
+                ld_flags_from_dirs([spec['netcdf'].prefix.lib], ['netcdf'])]
 
         if '+gzstream' in spec:
             if "@:3.3.2" in spec:
@@ -301,17 +324,20 @@ class Mfem(Package):
             else:
                 options += [
                     'ZLIB_OPT=-I%s' % spec['zlib'].prefix.include,
-                    'ZLIB_LIB=%s' % spec['zlib'].libs.ld_flags]
+                    'ZLIB_LIB=%s' %
+                    ld_flags_from_LibraryList(spec['zlib'].libs)]
 
         if '+mpfr' in spec:
             options += [
                 'MPFR_OPT=-I%s' % spec['mpfr'].prefix.include,
-                'MPFR_LIB=-L%s -lmpfr' % spec['mpfr'].prefix.lib]
+                'MPFR_LIB=%s' %
+                ld_flags_from_dirs([spec['mpfr'].prefix.lib], ['mpfr'])]
 
         if '+gnutls' in spec:
             options += [
                 'GNUTLS_OPT=-I%s' % spec['gnutls'].prefix.include,
-                'GNUTLS_LIB=-L%s -lgnutls' % spec['gnutls'].prefix.lib]
+                'GNUTLS_LIB=%s' %
+                ld_flags_from_dirs([spec['gnutls'].prefix.lib], ['gnutls'])]
 
         if '+libunwind' in spec:
             libunwind = spec['libunwind']
@@ -326,7 +352,7 @@ class Mfem(Package):
             libs += LibraryList(find_system_libraries('libdl'))
             options += [
                 'LIBUNWIND_OPT=%s' % headers.cpp_flags,
-                'LIBUNWIND_LIB=%s' % libs.ld_flags]
+                'LIBUNWIND_LIB=%s' % ld_flags_from_LibraryList(libs)]
 
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
@@ -351,7 +377,7 @@ class Mfem(Package):
                 libs += hdf5.libs
             options += [
                 'CONDUIT_OPT=%s' % headers.cpp_flags,
-                'CONDUIT_LIB=%s' % libs.ld_flags]
+                'CONDUIT_LIB=%s' % ld_flags_from_LibraryList(libs)]
 
         make('config', *options, parallel=False)
         make('info', parallel=False)
