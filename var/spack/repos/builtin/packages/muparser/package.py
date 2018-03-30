@@ -32,6 +32,11 @@ class Muparser(Package):
 
     version('2.2.5', '02dae671aa5ad955fdcbcd3fee313fb7')
 
+    # Replace std::auto_ptr by std::unique_ptr
+    # https://github.com/beltoforion/muparser/pull/46
+    patch('auto_ptr.patch',
+          when='@2.2.5')
+
     def install(self, spec, prefix):
         options = ['--disable-debug',
                    '--disable-dependency-tracking',

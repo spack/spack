@@ -95,12 +95,12 @@ class Dealii(CMakePackage, CudaPackage):
     # https://github.com/dealii/dealii/issues/5262
     # we take the patch from https://github.com/boostorg/serialization/pull/79
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
-    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams',
+    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
                patches=patch('boost_1.65.1_singleton.patch',
                        level=1,
                        when='@1.65.1'),
                when='~python')
-    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams+python',
+    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
                patches=patch('boost_1.65.1_singleton.patch',
                        level=1,
                        when='@1.65.1'),
