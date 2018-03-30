@@ -46,6 +46,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
     version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
     version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
