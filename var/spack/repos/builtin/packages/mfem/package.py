@@ -193,6 +193,10 @@ class Mfem(Package):
 
     phases = ['configure', 'build', 'install']
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.unset('MFEM_DIR')
+        spack_env.unset('MFEM_BUILD_DIR')
+
     #
     # Note: Although MFEM does support CMake configuration, MFEM
     # development team indicates that vanilla GNU Make is the
