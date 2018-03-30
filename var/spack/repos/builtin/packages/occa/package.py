@@ -39,25 +39,22 @@ class Occa(Package):
 
     homepage = "http://libocca.org"
     url      = 'https://github.com/libocca/occa'
+    git_url  = 'https://github.com/libocca/occa.git'
 
     version('develop', git='https://github.com/libocca/occa.git')
-    version('v1.0.0-alpha.4', git='https://github.com/libocca/occa.git',
-            tag='v1.0.0-alpha.4')
-    version('0.2', git='https://github.com/libocca/occa.git', tag='0.2')
-    version('0.2', git='https://github.com/libocca/occa.git', tag='0.2')
-    version('0.1', git='https://github.com/libocca/occa.git', tag='0.1')
-    version('0.0.0', git='https://github.com/libocca/occa.git',
-            commmit='381e886886dc87823769c5f20d0ecb29dd117afa')
+    version('v1.0.0-alpha.5', git=git_url, tag='v1.0.0-alpha.5')
+    version('v0.2.0', git=git_url, tag='v0.2.0')
+    version('v0.1.0', git=git_url, tag='v0.1.0')
 
-    variant('cuda',   default=True,
+    variant('cuda',
+            default=True,
             description='Activates support for CUDA')
-    variant('openmp',   default=True,
+    variant('openmp',
+            default=True,
             description='Activates support for OpenMP')
-    variant('opencl',   default=True,
+    variant('opencl',
+            default=True,
             description='Activates support for OpenCL')
-    variant('coi',   default=False,
-            description='Activates support for COI')
-    variant('debug', default=False, description='Enable debug build')
 
     depends_on('cuda', when='+cuda')
 
@@ -66,7 +63,6 @@ class Occa(Package):
 
     def install(self, spec, prefix):
         # The build environment is set by the 'setup_environment' method.
-
         # Copy the source to the installation directory and build OCCA there.
         for file in os.listdir('.'):
             dest = join_path(prefix, os.path.basename(file))
@@ -79,22 +75,21 @@ class Occa(Package):
         if self.run_tests:
             make('-C', prefix, 'test', parallel=False)
 
-    def _setup_rt_env(self, s_env):
+    def _setup_runtime_flags(self, s_env):
         spec = self.spec
         s_env.set('OCCA_DIR', self.prefix)
-        # Run-time compiler:
         s_env.set('OCCA_CXX', self.compiler.cxx)
+
         cxxflags = spec.compiler_flags['cxxflags']
         if cxxflags:
             # Run-time compiler flags:
             s_env.set('OCCA_CXXFLAGS', ' '.join(cxxflags))
+
         if '+cuda' in spec:
             cuda_dir = spec['cuda'].prefix
             # Run-time CUDA compiler:
             s_env.set('OCCA_CUDA_COMPILER',
                       join_path(cuda_dir, 'bin', 'nvcc'))
-            # Set OCCA_CUDA_COMPILER_FLAGS?
-        # TODO: export other OCCA_* variables.
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
@@ -119,35 +114,25 @@ class Occa(Package):
         if '+cuda' in spec:
             cuda_dir = spec['cuda'].prefix
             cuda_libs_list = ['libcuda', 'libcudart', 'libOpenCL']
-            cuda_libs = find_libraries(cuda_libs_list, cuda_dir, shared=True,
+            cuda_libs = find_libraries(cuda_libs_list,
+                                       cuda_dir,
+                                       shared=True,
                                        recursive=True)
             spack_env.set('OCCA_INCLUDE_PATH', cuda_dir.include)
             spack_env.set('OCCA_LIBRARY_PATH', ':'.join(cuda_libs.directories))
         else:
             spack_env.set('OCCA_CUDA_ENABLED', '0')
 
-        if '~openmp' in spec:
-            spack_env.set('OCCA_OPENMP_ENABLED', '0')
-        # If +openmp, how can we tell OCCA what the OpenMP flag is?
-        # We can get the flag from Spack as: self.compiler.openmp_flag.
-
         if '~opencl' in spec:
             spack_env.set('OCCA_OPENCL_ENABLED', '0')
-        # If +opencl, set OCCA_OPENCL_COMPILER_FLAGS?
-
-        # TODO: coi variant?
-
-        if '+debug' in spec:
-            spack_env.set('OCCA_DEVELOPER', '1')
-            spack_env.set('DEBUG', '1')
 
         # Setup run-time environment for testing.
         spack_env.set('OCCA_VERBOSE', '1')
-        self._setup_rt_env(spack_env)
+        self._setup_runtime_flags(spack_env)
         # The 'run_env' is included in the Spack generated module files.
-        self._setup_rt_env(run_env)
+        self._setup_runtime_flags(run_env)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # Export OCCA_* variables for everyone using this package from within
         # Spack.
-        self._setup_rt_env(spack_env)
+        self._setup_runtime_flags(spack_env)
