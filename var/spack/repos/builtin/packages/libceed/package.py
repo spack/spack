@@ -43,7 +43,7 @@ class Libceed(Package):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('debug', default=False, description='Enable debug build')
 
-    depends_on('occa@v1.0.0-alpha.4,develop', when='+occa')
+    depends_on('occa@v1.0.0-alpha.5,develop', when='+occa')
     depends_on('occa@develop', when='@develop+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     depends_on('occa~cuda', when='+occa~cuda')
