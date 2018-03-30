@@ -74,22 +74,6 @@ class Charm(Package):
         description="Set the backend to use"
     )
 
-    # Compilers (choose exactly one)
-    variant(
-        "compiler",
-        default="gcc",
-        values=("icc", "xlc", "gcc", "clang", "pgcc"),
-        description="Set the compiler"
-    )
-
-    # Fontran compilers (choose exactly one)
-    variant(
-        "fortran-compiler",
-        default="gfortran",
-        values=("gfortran", "flang", "xlf", "ifort", "pgf90"),
-        description="Set the fortran compiler"
-    )
-
     # Other options
     variant("papi", default=False, description="Enable PAPI integration")
     variant("syncft", default=False, description="Compile with Charm++ fault tolerance support")
@@ -106,14 +90,16 @@ class Charm(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
-    variant("incdir", description="Specify additional include path for compiler")
-    variant("libdir", description="Specify additional lib path for compiler")
-    variant("basedir", description="Shortcut for the above two - DIR/include and DIR/lib")
     variant("destination", description="Build charm++ inside DIR, by default the destination is <version>")
     variant("suffix", description="Append DIR to the destination directory of the Charm++ build")
 
-    depends_on('mpi', when='backend=mpi')
+    depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
+    depends_on("cuda", when="+cuda")
+
+    conflicts("~tracing", "+papi")
+
+    conflicts("backend=multicore", "+smp")
 
     def install(self, spec, prefix):
         target = spec.variants["build-target"].value
@@ -178,25 +164,11 @@ class Charm(Package):
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
         # here.
-        options = []
+        options = [
+            os.path.basename(self.compiler.cc),
+            os.path.basename(self.compiler.fc)
+        ]
 
-        compiler = spec.variants["compiler"].value
-
-        if compiler != "":
-            options.append("{0}".format(compiler))
-        fortran_compiler = spec.variants["fortran-compiler"].value
-        if fortran_compiler != "":
-            options.append("{0}".format(fortran_compiler))
-
-        incdir = spec.variants["incdir"].value
-        if incdir != "":
-            options.append("--incdir={0}".format(incdir))
-        libdir = spec.variants["libdir"].value
-        if libdir != "":
-            options.append("--libdir={0}".format(libdir))
-        basedir = spec.variants["basedir"].value
-        if basedir != "":
-            options.append("--basedir={0}".format(basedir))
         suffix = spec.variants["suffix"].value
         if suffix != "":
             options.append("--suffix={0}".format(suffix))
@@ -218,14 +190,8 @@ class Charm(Package):
                 for libdir in spec["mpi"].libs.directories
             ])
         if "+papi" in spec:
-            if "+tracing" not in spec:
-                raise InstallError("+papi variant requires +tracing variant.")
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
         if "+smp" in spec:
-            if 'backend=multicore' in spec:
-                # This is a Charm++ limitation; it would lead to a
-                # build error
-                raise InstallError("Cannot combine +smp with +multicore")
             options.append("smp")
         if "+tcp" in spec:
             if 'backend=netlrts' not in spec:
