@@ -30,6 +30,7 @@ class Libceed(Package):
     """
 
     homepage = "https://github.com/CEED/libCEED"
+    url      = 'https://github.com/CEED/libCEED'
 
     version('develop', git='https://github.com/CEED/libCEED.git',
             branch='master')
@@ -43,7 +44,7 @@ class Libceed(Package):
     variant('debug', default=False, description='Enable debug build')
 
     # FIXME: replace the occa hash-version with a tagged version?
-    depends_on('occa@2db622c,develop', when='+occa')
+    depends_on('occa@v1.0.0-alpha.4,develop', when='+occa')
     depends_on('occa@develop', when='@develop+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     depends_on('occa~cuda', when='+occa~cuda')

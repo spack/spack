@@ -38,11 +38,12 @@ class Occa(Package):
     """
 
     homepage = "http://libocca.org"
+    url      = 'https://github.com/libocca/occa'
 
     version('develop', git='https://github.com/libocca/occa.git')
-    # FIXME: Replace these hash-versions with tagged version?
-    version('2db622c', git='https://github.com/libocca/occa.git',
-            commit='2db622c480e439b4f60c9491260a1248261b0777')
+    version('v1.0.0-alpha.4', git='https://github.com/libocca/occa.git',
+            tag='v1.0.0-alpha.4')
+    version('0.2', git='https://github.com/libocca/occa.git', tag='0.2')
     version('0.2', git='https://github.com/libocca/occa.git', tag='0.2')
     version('0.1', git='https://github.com/libocca/occa.git', tag='0.1')
     version('0.0.0', git='https://github.com/libocca/occa.git',

@@ -69,8 +69,8 @@ class Ceed(Package):
 
     # OCCA
     # FIXME: Replace the hash with a tagged version?
-    depends_on('occa@2db622c~cuda', when='@1.0.0+occa~cuda')
-    depends_on('occa@2db622c+cuda', when='@1.0.0+occa+cuda')
+    depends_on('occa@v1.0.0-alpha.4~cuda', when='@1.0.0+occa~cuda')
+    depends_on('occa@v1.0.0-alpha.4+cuda', when='@1.0.0+occa+cuda')
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     depends_on('nek5000@17.0', when='@1.0.0+nek')
