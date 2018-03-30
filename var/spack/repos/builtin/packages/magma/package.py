@@ -94,4 +94,4 @@ class Magma(CMakePackage):
         install('magmablas/atomics.cuh', self.prefix.include)
         install('control/magma_threadsetting.h', self.prefix.include)
         install('control/pthread_barrier.h', self.prefix.include)
-        install('control/magma_internal.h', prefix.include)
+        install('control/magma_internal.h', self.prefix.include)
