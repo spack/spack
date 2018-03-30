@@ -40,6 +40,8 @@ class Magma(CMakePackage):
 
     variant('fortran', default=True,
             description='Enable Fortran bindings support')
+    variant('shared', default=True,
+            description='Enable shared library')
 
     depends_on('blas')
     depends_on('lapack')
@@ -67,6 +69,9 @@ class Magma(CMakePackage):
             (spec['lapack'].libs + spec['blas'].libs).joined(';')
         ])
 
+        options += ['-DBUILD_SHARED_LIBS=%s' %
+                    ('ON' if ('+shared' in spec) else 'OFF')]
+
         if '+fortran' in spec:
             options.extend([
                 '-DUSE_FORTRAN=yes'
@@ -83,3 +88,10 @@ class Magma(CMakePackage):
                 options.extend(['-DGPU_TARGET=sm_30'])
 
         return options
+
+    @run_after('install')
+    def post_install(self):
+        install('magmablas/atomics.cuh', self.prefix.include)
+        install('control/magma_threadsetting.h', self.prefix.include)
+        install('control/pthread_barrier.h', self.prefix.include)
+        install('control/magma_internal.h', prefix.include)
