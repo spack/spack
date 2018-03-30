@@ -68,7 +68,6 @@ class Ceed(Package):
     # depends_on('libceed@0.1+examples-petsc', when='@1.0.0+petsc')
 
     # OCCA
-    # FIXME: Replace the hash with a tagged version?
     depends_on('occa@v1.0.0-alpha.4~cuda', when='@1.0.0+occa~cuda')
     depends_on('occa@v1.0.0-alpha.4+cuda', when='@1.0.0+occa+cuda')
 
