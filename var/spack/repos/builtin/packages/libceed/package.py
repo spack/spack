@@ -56,8 +56,7 @@ class Libceed(Package):
         # Note: FC is overwritten in the Makefile, so we need to force set the
         # value on the command line.
         makeopts = ['FC=%s' % env['FC'], 'V=1']
-        if '~debug' in spec:
-            makeopts += ['NDEBUG=1']
+        makeopts += ['NDEBUG=%s' % ('' if '+debug' in spec else '1')]
         make(*makeopts)
 
         if self.run_tests:
