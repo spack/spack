@@ -334,8 +334,4 @@ class Petsc(Package):
         return find_headers('petsc', self.prefix.include, recursive=False) \
             or None  # return None to indicate failure
 
-    @property
-    def libs(self):
-        return find_libraries('libpetsc', self.prefix.lib,
-                              shared=('+shared' in self.spec),
-                              recursive=False) or None
+    # For the 'libs' property - use the default handler.
