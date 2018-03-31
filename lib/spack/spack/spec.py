@@ -730,7 +730,7 @@ def _libs_default_handler(descriptor, spec, cls):
     # unlikely).
     name = spec.name.replace('-', '?')
 
-    # Avoid double 'lib' for packages whose name already starts with lib
+    # Avoid double 'lib' for packages whose names already start with lib
     if not name.startswith('lib'):
         name = 'lib' + name
 

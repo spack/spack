@@ -154,6 +154,8 @@ def _mock_remove(spec):
 
 
 def test_default_queries(database):
+    # Testing a package whose name *doesn't* start with 'lib'
+    # to ensure the library has 'lib' prepended to the name
     install_db = database.mock.db
     rec = install_db.get_record('zmpi')
 
@@ -172,6 +174,8 @@ def test_default_queries(database):
     assert command.name == 'zmpi'
     assert os.path.exists(command.path)
 
+    # Testing a package whose name *does* start with 'lib'
+    # to ensure the library doesn't have a double 'lib' prefix
     install_db = database.mock.db
     rec = install_db.get_record('libelf')
 

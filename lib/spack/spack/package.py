@@ -1205,7 +1205,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         header = self.name
         library = self.name
 
-        # Avoid double 'lib' for packages whose name already starts with lib
+        # Avoid double 'lib' for packages whose names already start with lib
         if not self.name.startswith('lib'):
             library = 'lib' + library
 
