@@ -57,11 +57,10 @@ class Ceed(Package):
     # TODO: Add 'int64' variant?
 
     # LibCEED
-    # FIXME: Replace the hash with '0.2' when it is tagged.
-    depends_on('libceed@50d6287~cuda', when='@1.0.0~cuda')
-    depends_on('libceed@50d6287+cuda', when='@1.0.0+cuda')
-    depends_on('libceed@50d6287+occa', when='@1.0.0+occa')
-    depends_on('libceed@50d6287~occa', when='@1.0.0~occa')
+    depends_on('libceed@0.2~cuda', when='@1.0.0~cuda')
+    depends_on('libceed@0.2+cuda', when='@1.0.0+cuda')
+    depends_on('libceed@0.2+occa', when='@1.0.0+occa')
+    depends_on('libceed@0.2~occa', when='@1.0.0~occa')
 
     # OCCA
     depends_on('occa@v1.0.0-alpha.5~cuda', when='@1.0.0+occa~cuda')
