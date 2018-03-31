@@ -83,7 +83,7 @@ class Ceed(Package):
     # and +mumps:
     depends_on('petsc@3.8.3+mpi+hypre+suite-sparse+mumps+double~int64',
                when='@1.0.0+petsc+mfem')
-    depends_on('hpgmg@a0a5510+fe', when='@1.0.0+petsc')
+    depends_on('hpgmg@a0a5510df23b+fe', when='@1.0.0+petsc')
 
     # MAGMA
     depends_on('magma@2.3.0', when='@1.0.0+cuda')
