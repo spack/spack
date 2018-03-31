@@ -61,7 +61,7 @@ class Hpgmg(Package):
 
     def configure_args(self):
         args = []
-        if '+fe' in self.spec:
+        if '+fe' in self.spec and not '@0.3' in self.spec:
             args.append('--fe')
 
         if 'fv=serial' in self.spec:
