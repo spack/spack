@@ -295,4 +295,4 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 ])
 def test_find_with_globbing(root, search_list, kwargs, expected):
     matches = find(root, search_list, **kwargs)
-    assert matches == expected
+    assert sorted(matches) == sorted(expected)
