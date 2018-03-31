@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,14 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class Ltrace(AutotoolsPackage):
+    """Ltrace intercepts and records dynamic library calls which are called
+    by an executed process and the signals received by that process. It
+    can also intercept and print the system calls executed by the program."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://www.ltrace.org"
+    url      = "https://www.ltrace.org/ltrace_0.7.3.orig.tar.bz2"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('0.7.3', 'b3dd199af8f18637f7d4ef97fdfb9d14')
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    conflicts('platform=darwin', msg='ltrace runs only on Linux.')

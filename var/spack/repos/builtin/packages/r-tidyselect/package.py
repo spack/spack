@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,18 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class RTidyselect(RPackage):
+    """A backend for the selecting functions of the 'tidyverse'. It makes it
+       easy to implement select-like functions in your own packages in a way
+       that is consistent with other 'tidyverse' interfaces for selection."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://cran.r-project.org/package=tidyselect"
+    url      = "https://cran.r-project.org/src/contrib/tidyselect_0.2.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/tidyselect"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('0.2.3', 'c9dbd895ad7ce209bacfad6d19de91c9')
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    depends_on('r-glue', type=('build', 'run'))
+    depends_on('r-purrr', type=('build', 'run'))
+    depends_on('r-rlang@0.1:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.0:', type=('build', 'run'))
