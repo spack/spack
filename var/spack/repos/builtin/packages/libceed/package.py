@@ -46,6 +46,11 @@ class Libceed(Package):
     depends_on('occa+cuda', when='+occa+cuda')
     depends_on('occa~cuda', when='+occa~cuda')
 
+    # occa: do not occaFree kernels
+    # Repeated creation and freeing of kernels appears to expose a caching
+    # bug in Occa.
+    patch('occaFree-0.2.diff', when='@0.2')
+
     phases = ['build', 'install']
 
     def build(self, spec, prefix):
