@@ -40,6 +40,7 @@ class Muparser(Package):
     def install(self, spec, prefix):
         options = ['--disable-debug',
                    '--disable-dependency-tracking',
+                   'CXXFLAGS=-std=c++11',
                    '--prefix=%s' % prefix]
 
         configure(*options)
