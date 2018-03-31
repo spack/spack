@@ -85,13 +85,17 @@ class Hpgmg(Package):
 
         args.append('--CFLAGS=' + ' '.join(cflags))
 
+        # Explicitly specify the build directory to ensure that
+        # PETSC_ARCH is not used from the environment.
+        args.append('--arch=build')
+
         return args
 
     def configure(self, spec, prefix):
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
-        make()
+        make('-C', 'build')
 
     def install(self, spec, prefix):
         install_tree('build/bin', prefix.bin)
