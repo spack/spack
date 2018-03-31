@@ -62,10 +62,6 @@ class Ceed(Package):
     depends_on('libceed@50d6287+cuda', when='@1.0.0+cuda')
     depends_on('libceed@50d6287+occa', when='@1.0.0+occa')
     depends_on('libceed@50d6287~occa', when='@1.0.0~occa')
-    # TODO:
-    # depends_on('libceed@0.1+examples-mfem', when='@1.0.0+mfem')
-    # depends_on('libceed@0.1+examples-nek', when='@1.0.0+nek')
-    # depends_on('libceed@0.1+examples-petsc', when='@1.0.0+petsc')
 
     # OCCA
     depends_on('occa@v1.0.0-alpha.5~cuda', when='@1.0.0+occa~cuda')

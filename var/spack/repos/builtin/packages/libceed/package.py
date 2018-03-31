@@ -53,9 +53,7 @@ class Libceed(Package):
     def build(self, spec, prefix):
         # Note: The occa package exports OCCA_DIR in the environment
 
-        # Note: FC is overwritten in the Makefile, so we need to force set the
-        # value on the command line.
-        makeopts = ['FC=%s' % env['FC'], 'V=1']
+        makeopts = ['V=1']
         makeopts += ['NDEBUG=%s' % ('' if '+debug' in spec else '1')]
         make(*makeopts)
 
