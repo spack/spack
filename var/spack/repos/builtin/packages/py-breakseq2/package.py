@@ -34,6 +34,8 @@ class PyBreakseq2(PythonPackage):
     version('2.2', '6fd5a103c2781717b0b1d0efcbdc17e7')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-biopython@1.65', type='build')
+    depends_on('py-biopython@1.65', type=('build', 'run'))
     depends_on('py-cython', type='build')
     depends_on('py-pysam@0.7.7', type=('build', 'run'))
+    depends_on('bwa', type='run')
+    depends_on('samtools', type='run')
