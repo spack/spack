@@ -1,0 +1,1196 @@
+diff --git a/PARPACK/SRC/MPI/pcgetv0.f b/PARPACK/SRC/MPI/pcgetv0.f
+index 1c2ed08..c9afe60 100644
+--- a/PARPACK/SRC/MPI/pcgetv0.f
++++ b/PARPACK/SRC/MPI/pcgetv0.f
+@@ -252,7 +252,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/PARPACK/SRC/MPI/pcnaitr.f b/PARPACK/SRC/MPI/pcnaitr.f
+index a22c0fd..ef96a59 100644
+--- a/PARPACK/SRC/MPI/pcnaitr.f
++++ b/PARPACK/SRC/MPI/pcnaitr.f
+@@ -353,7 +353,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mcaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/PARPACK/SRC/MPI/pcnapps.f b/PARPACK/SRC/MPI/pcnapps.f
+index 408befa..2fec545 100644
+--- a/PARPACK/SRC/MPI/pcnapps.f
++++ b/PARPACK/SRC/MPI/pcnapps.f
+@@ -256,7 +256,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mcapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/PARPACK/SRC/MPI/pcnaup2.f b/PARPACK/SRC/MPI/pcnaup2.f
+index c1e14ff..0ba0362 100644
+--- a/PARPACK/SRC/MPI/pcnaup2.f
++++ b/PARPACK/SRC/MPI/pcnaup2.f
+@@ -276,7 +276,7 @@ c
+ c 
+          call arscnd (t0)
+ c 
+-         msglvl = mcaup2
++         msglvl = 0
+ c 
+          nev0   = nev
+          np0    = np
+diff --git a/PARPACK/SRC/MPI/pcnaupd.f b/PARPACK/SRC/MPI/pcnaupd.f
+index 038d9fa..b0803e1 100644
+--- a/PARPACK/SRC/MPI/pcnaupd.f
++++ b/PARPACK/SRC/MPI/pcnaupd.f
+@@ -477,7 +477,7 @@ c        %-------------------------------%
+ c
+          call cstatn
+          call arscnd (t0)
+-         msglvl = mcaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/PARPACK/SRC/MPI/pcneigh.f b/PARPACK/SRC/MPI/pcneigh.f
+index 4f8dfde..d7ee6a1 100644
+--- a/PARPACK/SRC/MPI/pcneigh.f
++++ b/PARPACK/SRC/MPI/pcneigh.f
+@@ -189,7 +189,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mceigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call pcmout (comm, logfil, n, n, h, ldh, ndigit, 
+diff --git a/PARPACK/SRC/MPI/pcneupd.f b/PARPACK/SRC/MPI/pcneupd.f
+index 5307897..ac6fa7a 100644
+--- a/PARPACK/SRC/MPI/pcneupd.f
++++ b/PARPACK/SRC/MPI/pcneupd.f
+@@ -357,7 +357,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mceupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/PARPACK/SRC/MPI/pcngets.f b/PARPACK/SRC/MPI/pcngets.f
+index e6290eb..bf98846 100644
+--- a/PARPACK/SRC/MPI/pcngets.f
++++ b/PARPACK/SRC/MPI/pcngets.f
+@@ -154,7 +154,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mcgets
++      msglvl = 0
+ c 
+       call csortc (which, .true., kev+np, ritz, bounds)
+ c     
+diff --git a/PARPACK/SRC/MPI/pdgetv0.f b/PARPACK/SRC/MPI/pdgetv0.f
+index 1b33190..a9acae1 100644
+--- a/PARPACK/SRC/MPI/pdgetv0.f
++++ b/PARPACK/SRC/MPI/pdgetv0.f
+@@ -238,7 +238,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/PARPACK/SRC/MPI/pdnaitr.f b/PARPACK/SRC/MPI/pdnaitr.f
+index 88e3668..c2e57b2 100644
+--- a/PARPACK/SRC/MPI/pdnaitr.f
++++ b/PARPACK/SRC/MPI/pdnaitr.f
+@@ -342,7 +342,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mnaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/PARPACK/SRC/MPI/pdnapps.f b/PARPACK/SRC/MPI/pdnapps.f
+index 1e9c117..fa5a7e6 100644
+--- a/PARPACK/SRC/MPI/pdnapps.f
++++ b/PARPACK/SRC/MPI/pdnapps.f
+@@ -247,7 +247,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mnapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/PARPACK/SRC/MPI/pdnaup2.f b/PARPACK/SRC/MPI/pdnaup2.f
+index a56dbfb..c5b26dc 100644
+--- a/PARPACK/SRC/MPI/pdnaup2.f
++++ b/PARPACK/SRC/MPI/pdnaup2.f
+@@ -279,7 +279,7 @@ c
+ c 
+          call arscnd (t0)
+ c 
+-         msglvl = mnaup2
++         msglvl = 0
+ c 
+ c        %-------------------------------------%
+ c        | Get the machine dependent constant. |
+diff --git a/PARPACK/SRC/MPI/pdnaupd.f b/PARPACK/SRC/MPI/pdnaupd.f
+index 370fc8d..09fed15 100644
+--- a/PARPACK/SRC/MPI/pdnaupd.f
++++ b/PARPACK/SRC/MPI/pdnaupd.f
+@@ -499,7 +499,7 @@ c        %-------------------------------%
+ c
+          call dstatn 
+          call arscnd (t0)
+-         msglvl = mnaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/PARPACK/SRC/MPI/pdneigh.f b/PARPACK/SRC/MPI/pdneigh.f
+index afaf45f..3b4a3e7 100644
+--- a/PARPACK/SRC/MPI/pdneigh.f
++++ b/PARPACK/SRC/MPI/pdneigh.f
+@@ -184,7 +184,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mneigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call pdmout (comm, logfil, n, n, h, ldh, ndigit, 
+diff --git a/PARPACK/SRC/MPI/pdneupd.f b/PARPACK/SRC/MPI/pdneupd.f
+index f065de7..89bc974 100644
+--- a/PARPACK/SRC/MPI/pdneupd.f
++++ b/PARPACK/SRC/MPI/pdneupd.f
+@@ -405,7 +405,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mneupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/PARPACK/SRC/MPI/pdngets.f b/PARPACK/SRC/MPI/pdngets.f
+index b23912a..e475469 100644
+--- a/PARPACK/SRC/MPI/pdngets.f
++++ b/PARPACK/SRC/MPI/pdngets.f
+@@ -167,7 +167,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mngets
++      msglvl = 0
+ c 
+ c     %----------------------------------------------------%
+ c     | LM, SM, LR, SR, LI, SI case.                       |
+diff --git a/PARPACK/SRC/MPI/pdsaitr.f b/PARPACK/SRC/MPI/pdsaitr.f
+index 79d27a1..e09179c 100644
+--- a/PARPACK/SRC/MPI/pdsaitr.f
++++ b/PARPACK/SRC/MPI/pdsaitr.f
+@@ -329,7 +329,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/PARPACK/SRC/MPI/pdsapps.f b/PARPACK/SRC/MPI/pdsapps.f
+index a9a6bdf..9cd79e7 100644
+--- a/PARPACK/SRC/MPI/pdsapps.f
++++ b/PARPACK/SRC/MPI/pdsapps.f
+@@ -225,7 +225,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/PARPACK/SRC/MPI/pdsaup2.f b/PARPACK/SRC/MPI/pdsaup2.f
+index 706a4f2..561c4ed 100644
+--- a/PARPACK/SRC/MPI/pdsaup2.f
++++ b/PARPACK/SRC/MPI/pdsaup2.f
+@@ -284,7 +284,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaup2
++         msglvl = 0
+ c
+ c        %---------------------------------%
+ c        | Set machine dependent constant. |
+diff --git a/PARPACK/SRC/MPI/pdsaupd.f b/PARPACK/SRC/MPI/pdsaupd.f
+index 6fc2639..a4475e7 100644
+--- a/PARPACK/SRC/MPI/pdsaupd.f
++++ b/PARPACK/SRC/MPI/pdsaupd.f
+@@ -503,7 +503,7 @@ c        %-------------------------------%
+ c
+          call dstats 
+          call arscnd (t0)
+-         msglvl = msaupd
++         msglvl = 0
+ c
+          ierr   = 0
+          ishift = iparam(1)
+diff --git a/PARPACK/SRC/MPI/pdseigt.f b/PARPACK/SRC/MPI/pdseigt.f
+index 7ba917a..ac25faa 100644
+--- a/PARPACK/SRC/MPI/pdseigt.f
++++ b/PARPACK/SRC/MPI/pdseigt.f
+@@ -159,7 +159,7 @@ c     | & message level for debugging |
+ c     %-------------------------------% 
+ c
+       call arscnd (t0)
+-      msglvl = mseigt
++      msglvl = 0
+ c
+       if (msglvl .gt. 0) then
+          call pdvout (comm, logfil, n, h(1,2), ndigit,
+diff --git a/PARPACK/SRC/MPI/pdseupd.f b/PARPACK/SRC/MPI/pdseupd.f
+index a3ab5e7..15c157d 100644
+--- a/PARPACK/SRC/MPI/pdseupd.f
++++ b/PARPACK/SRC/MPI/pdseupd.f
+@@ -312,7 +312,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mseupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/PARPACK/SRC/MPI/pdsgets.f b/PARPACK/SRC/MPI/pdsgets.f
+index 77bdc03..0661c90 100644
+--- a/PARPACK/SRC/MPI/pdsgets.f
++++ b/PARPACK/SRC/MPI/pdsgets.f
+@@ -163,7 +163,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msgets
++      msglvl = 0
+ c 
+       if (which .eq. 'BE') then
+ c
+diff --git a/PARPACK/SRC/MPI/psgetv0.f b/PARPACK/SRC/MPI/psgetv0.f
+index c9c6a80..5577d5a 100644
+--- a/PARPACK/SRC/MPI/psgetv0.f
++++ b/PARPACK/SRC/MPI/psgetv0.f
+@@ -238,7 +238,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/PARPACK/SRC/MPI/psnaitr.f b/PARPACK/SRC/MPI/psnaitr.f
+index 072e65c..a88b994 100644
+--- a/PARPACK/SRC/MPI/psnaitr.f
++++ b/PARPACK/SRC/MPI/psnaitr.f
+@@ -342,7 +342,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mnaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/PARPACK/SRC/MPI/psnapps.f b/PARPACK/SRC/MPI/psnapps.f
+index 78052e4..c20ec9a 100644
+--- a/PARPACK/SRC/MPI/psnapps.f
++++ b/PARPACK/SRC/MPI/psnapps.f
+@@ -247,7 +247,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mnapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/PARPACK/SRC/MPI/psnaup2.f b/PARPACK/SRC/MPI/psnaup2.f
+index cc2fae3..146320c 100644
+--- a/PARPACK/SRC/MPI/psnaup2.f
++++ b/PARPACK/SRC/MPI/psnaup2.f
+@@ -279,7 +279,7 @@ c
+ c 
+          call arscnd (t0)
+ c 
+-         msglvl = mnaup2
++         msglvl = 0
+ c 
+ c        %-------------------------------------%
+ c        | Get the machine dependent constant. |
+diff --git a/PARPACK/SRC/MPI/psnaupd.f b/PARPACK/SRC/MPI/psnaupd.f
+index 3bfb421..54cb38a 100644
+--- a/PARPACK/SRC/MPI/psnaupd.f
++++ b/PARPACK/SRC/MPI/psnaupd.f
+@@ -499,7 +499,7 @@ c        %-------------------------------%
+ c
+          call sstatn
+          call arscnd (t0)
+-         msglvl = mnaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/PARPACK/SRC/MPI/psneigh.f b/PARPACK/SRC/MPI/psneigh.f
+index 6afa297..94f19cd 100644
+--- a/PARPACK/SRC/MPI/psneigh.f
++++ b/PARPACK/SRC/MPI/psneigh.f
+@@ -184,7 +184,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mneigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call psmout (comm, logfil, n, n, h, ldh, ndigit, 
+diff --git a/PARPACK/SRC/MPI/psneupd.f b/PARPACK/SRC/MPI/psneupd.f
+index 634ba54..164e189 100644
+--- a/PARPACK/SRC/MPI/psneupd.f
++++ b/PARPACK/SRC/MPI/psneupd.f
+@@ -405,7 +405,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mneupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/PARPACK/SRC/MPI/psngets.f b/PARPACK/SRC/MPI/psngets.f
+index b9541f8..ace3cea 100644
+--- a/PARPACK/SRC/MPI/psngets.f
++++ b/PARPACK/SRC/MPI/psngets.f
+@@ -167,7 +167,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mngets
++      msglvl = 0
+ c 
+ c     %----------------------------------------------------%
+ c     | LM, SM, LR, SR, LI, SI case.                       |
+diff --git a/PARPACK/SRC/MPI/pssaitr.f b/PARPACK/SRC/MPI/pssaitr.f
+index 2264668..0c5549c 100644
+--- a/PARPACK/SRC/MPI/pssaitr.f
++++ b/PARPACK/SRC/MPI/pssaitr.f
+@@ -329,7 +329,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/PARPACK/SRC/MPI/pssapps.f b/PARPACK/SRC/MPI/pssapps.f
+index 385b125..10afeaf 100644
+--- a/PARPACK/SRC/MPI/pssapps.f
++++ b/PARPACK/SRC/MPI/pssapps.f
+@@ -224,7 +224,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/PARPACK/SRC/MPI/pssaup2.f b/PARPACK/SRC/MPI/pssaup2.f
+index f586d1c..7c4634e 100644
+--- a/PARPACK/SRC/MPI/pssaup2.f
++++ b/PARPACK/SRC/MPI/pssaup2.f
+@@ -284,7 +284,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaup2
++         msglvl = 0
+ c
+ c        %---------------------------------%
+ c        | Set machine dependent constant. |
+diff --git a/PARPACK/SRC/MPI/pssaupd.f b/PARPACK/SRC/MPI/pssaupd.f
+index 7631e7d..0b7b0a9 100644
+--- a/PARPACK/SRC/MPI/pssaupd.f
++++ b/PARPACK/SRC/MPI/pssaupd.f
+@@ -503,7 +503,7 @@ c        %-------------------------------%
+ c
+          call sstats
+          call arscnd (t0)
+-         msglvl = msaupd
++         msglvl = 0
+ c
+          ierr   = 0
+          ishift = iparam(1)
+diff --git a/PARPACK/SRC/MPI/psseigt.f b/PARPACK/SRC/MPI/psseigt.f
+index 1e387e9..1244a37 100644
+--- a/PARPACK/SRC/MPI/psseigt.f
++++ b/PARPACK/SRC/MPI/psseigt.f
+@@ -159,7 +159,7 @@ c     | & message level for debugging |
+ c     %-------------------------------% 
+ c
+       call arscnd (t0)
+-      msglvl = mseigt
++      msglvl = 0
+ c
+       if (msglvl .gt. 0) then
+          call psvout (comm, logfil, n, h(1,2), ndigit,
+diff --git a/PARPACK/SRC/MPI/psseupd.f b/PARPACK/SRC/MPI/psseupd.f
+index 6a7b8a2..99d29d6 100644
+--- a/PARPACK/SRC/MPI/psseupd.f
++++ b/PARPACK/SRC/MPI/psseupd.f
+@@ -312,7 +312,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mseupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/PARPACK/SRC/MPI/pssgets.f b/PARPACK/SRC/MPI/pssgets.f
+index c141524..accf7c5 100644
+--- a/PARPACK/SRC/MPI/pssgets.f
++++ b/PARPACK/SRC/MPI/pssgets.f
+@@ -163,7 +163,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msgets
++      msglvl = 0
+ c 
+       if (which .eq. 'BE') then
+ c
+diff --git a/PARPACK/SRC/MPI/pzgetv0.f b/PARPACK/SRC/MPI/pzgetv0.f
+index ad02573..7a049a8 100644
+--- a/PARPACK/SRC/MPI/pzgetv0.f
++++ b/PARPACK/SRC/MPI/pzgetv0.f
+@@ -252,7 +252,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/PARPACK/SRC/MPI/pznaitr.f b/PARPACK/SRC/MPI/pznaitr.f
+index 693e966..c957186 100644
+--- a/PARPACK/SRC/MPI/pznaitr.f
++++ b/PARPACK/SRC/MPI/pznaitr.f
+@@ -353,7 +353,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mcaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/PARPACK/SRC/MPI/pznapps.f b/PARPACK/SRC/MPI/pznapps.f
+index e1e75cb..59f0e43 100644
+--- a/PARPACK/SRC/MPI/pznapps.f
++++ b/PARPACK/SRC/MPI/pznapps.f
+@@ -256,7 +256,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mcapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/PARPACK/SRC/MPI/pznaup2.f b/PARPACK/SRC/MPI/pznaup2.f
+index 7fd822c..b8e07f0 100644
+--- a/PARPACK/SRC/MPI/pznaup2.f
++++ b/PARPACK/SRC/MPI/pznaup2.f
+@@ -276,7 +276,7 @@ c
+ c 
+          call arscnd (t0)
+ c 
+-         msglvl = mcaup2
++         msglvl = 0
+ c 
+          nev0   = nev
+          np0    = np
+diff --git a/PARPACK/SRC/MPI/pznaupd.f b/PARPACK/SRC/MPI/pznaupd.f
+index a9e6d19..0df4bcd 100644
+--- a/PARPACK/SRC/MPI/pznaupd.f
++++ b/PARPACK/SRC/MPI/pznaupd.f
+@@ -477,7 +477,7 @@ c        %-------------------------------%
+ c
+          call zstatn 
+          call arscnd (t0)
+-         msglvl = mcaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/PARPACK/SRC/MPI/pzneigh.f b/PARPACK/SRC/MPI/pzneigh.f
+index 31ce59a..633af00 100644
+--- a/PARPACK/SRC/MPI/pzneigh.f
++++ b/PARPACK/SRC/MPI/pzneigh.f
+@@ -189,7 +189,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mceigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call pzmout (comm, logfil, n, n, h, ldh, ndigit, 
+diff --git a/PARPACK/SRC/MPI/pzneupd.f b/PARPACK/SRC/MPI/pzneupd.f
+index a7ff35f..f9213ef 100644
+--- a/PARPACK/SRC/MPI/pzneupd.f
++++ b/PARPACK/SRC/MPI/pzneupd.f
+@@ -357,7 +357,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mceupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/PARPACK/SRC/MPI/pzngets.f b/PARPACK/SRC/MPI/pzngets.f
+index d97c8c6..427df81 100644
+--- a/PARPACK/SRC/MPI/pzngets.f
++++ b/PARPACK/SRC/MPI/pzngets.f
+@@ -154,7 +154,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mcgets
++      msglvl = 0
+ c 
+       call zsortc (which, .true., kev+np, ritz, bounds)
+ c     
+diff --git a/SRC/cgetv0.f b/SRC/cgetv0.f
+index 6312223..8650c29 100644
+--- a/SRC/cgetv0.f
++++ b/SRC/cgetv0.f
+@@ -212,7 +212,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/SRC/cnaitr.f b/SRC/cnaitr.f
+index ab06588..7bef790 100644
+--- a/SRC/cnaitr.f
++++ b/SRC/cnaitr.f
+@@ -327,7 +327,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mcaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/SRC/cnapps.f b/SRC/cnapps.f
+index e2b7679..c9112a3 100644
+--- a/SRC/cnapps.f
++++ b/SRC/cnapps.f
+@@ -241,7 +241,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mcapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/SRC/cnaup2.f b/SRC/cnaup2.f
+index 6779518..39e65d7 100644
+--- a/SRC/cnaup2.f
++++ b/SRC/cnaup2.f
+@@ -266,7 +266,7 @@ c
+ c 
+          call arscnd (t0)
+ c 
+-         msglvl = mcaup2
++         msglvl = 0
+ c 
+          nev0   = nev
+          np0    = np
+diff --git a/SRC/cnaupd.f b/SRC/cnaupd.f
+index 82756eb..8f669d7 100644
+--- a/SRC/cnaupd.f
++++ b/SRC/cnaupd.f
+@@ -452,7 +452,7 @@ c        %-------------------------------%
+ c
+          call cstatn
+          call arscnd (t0)
+-         msglvl = mcaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/SRC/cneigh.f b/SRC/cneigh.f
+index 76aa4ac..2cd3e56 100644
+--- a/SRC/cneigh.f
++++ b/SRC/cneigh.f
+@@ -172,7 +172,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mceigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call cmout (logfil, n, n, h, ldh, ndigit, 
+diff --git a/SRC/cneupd.f b/SRC/cneupd.f
+index 6ba6b9f..4e19afb 100644
+--- a/SRC/cneupd.f
++++ b/SRC/cneupd.f
+@@ -336,7 +336,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mceupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/SRC/cngets.f b/SRC/cngets.f
+index 3c3a008..bfb4a2c 100644
+--- a/SRC/cngets.f
++++ b/SRC/cngets.f
+@@ -138,7 +138,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mcgets
++      msglvl = 0
+ c 
+       call csortc (which, .true., kev+np, ritz, bounds)
+ c     
+diff --git a/SRC/dgetv0.f b/SRC/dgetv0.f
+index c12e406..709f978 100644
+--- a/SRC/dgetv0.f
++++ b/SRC/dgetv0.f
+@@ -215,7 +215,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/SRC/dnaitr.f b/SRC/dnaitr.f
+index e1f0a90..5645aa8 100644
+--- a/SRC/dnaitr.f
++++ b/SRC/dnaitr.f
+@@ -320,7 +320,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mnaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/SRC/dnapps.f b/SRC/dnapps.f
+index 2032da5..2d62ef7 100644
+--- a/SRC/dnapps.f
++++ b/SRC/dnapps.f
+@@ -238,7 +238,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mnapps
++      msglvl = 0
+       kplusp = kev + np 
+ c 
+ c     %--------------------------------------------%
+diff --git a/SRC/dnaup2.f b/SRC/dnaup2.f
+index 4c9948d..6b63658 100644
+--- a/SRC/dnaup2.f
++++ b/SRC/dnaup2.f
+@@ -260,7 +260,7 @@ c
+ c
+          call arscnd (t0)
+ c
+-         msglvl = mnaup2
++         msglvl = 0
+ c
+ c        %-------------------------------------%
+ c        | Get the machine dependent constant. |
+diff --git a/SRC/dnaupd.f b/SRC/dnaupd.f
+index 51d3018..6290ac1 100644
+--- a/SRC/dnaupd.f
++++ b/SRC/dnaupd.f
+@@ -477,7 +477,7 @@ c        %-------------------------------%
+ c
+          call dstatn
+          call arscnd (t0)
+-         msglvl = mnaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/SRC/dneigh.f b/SRC/dneigh.f
+index b5f71d1..1852d52 100644
+--- a/SRC/dneigh.f
++++ b/SRC/dneigh.f
+@@ -171,7 +171,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mneigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call dmout (logfil, n, n, h, ldh, ndigit, 
+diff --git a/SRC/dneupd.f b/SRC/dneupd.f
+index f1a094c..361881d 100644
+--- a/SRC/dneupd.f
++++ b/SRC/dneupd.f
+@@ -390,7 +390,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mneupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/SRC/dngets.f b/SRC/dngets.f
+index 4c93a6d..d0d05d7 100644
+--- a/SRC/dngets.f
++++ b/SRC/dngets.f
+@@ -153,7 +153,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mngets
++      msglvl = 0
+ c 
+ c     %----------------------------------------------------%
+ c     | LM, SM, LR, SR, LI, SI case.                       |
+diff --git a/SRC/dsaitr.f b/SRC/dsaitr.f
+index 35925d8..0efa8a3 100644
+--- a/SRC/dsaitr.f
++++ b/SRC/dsaitr.f
+@@ -301,7 +301,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/SRC/dsapps.f b/SRC/dsapps.f
+index b2114ad..57e67c2 100644
+--- a/SRC/dsapps.f
++++ b/SRC/dsapps.f
+@@ -214,7 +214,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/SRC/dsaup2.f b/SRC/dsaup2.f
+index 78652fb..53be06e 100644
+--- a/SRC/dsaup2.f
++++ b/SRC/dsaup2.f
+@@ -263,7 +263,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaup2
++         msglvl = 0
+ c
+ c        %---------------------------------%
+ c        | Set machine dependent constant. |
+diff --git a/SRC/dsaupd.f b/SRC/dsaupd.f
+index bd4afc2..ade6f5c 100644
+--- a/SRC/dsaupd.f
++++ b/SRC/dsaupd.f
+@@ -479,7 +479,7 @@ c        %-------------------------------%
+ c
+          call dstats
+          call arscnd (t0)
+-         msglvl = msaupd
++         msglvl = 0
+ c
+          ierr   = 0
+          ishift = iparam(1)
+diff --git a/SRC/dseigt.f b/SRC/dseigt.f
+index cb78a89..5de5b86 100644
+--- a/SRC/dseigt.f
++++ b/SRC/dseigt.f
+@@ -139,7 +139,7 @@ c     | & message level for debugging |
+ c     %-------------------------------% 
+ c
+       call arscnd (t0)
+-      msglvl = mseigt
++      msglvl = 0
+ c
+       if (msglvl .gt. 0) then
+          call dvout (logfil, n, h(1,2), ndigit,
+diff --git a/SRC/dseupd.f b/SRC/dseupd.f
+index 4f5c596..fc8beca 100644
+--- a/SRC/dseupd.f
++++ b/SRC/dseupd.f
+@@ -300,7 +300,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mseupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/SRC/dsgets.f b/SRC/dsgets.f
+index 61129f9..990a7e0 100644
+--- a/SRC/dsgets.f
++++ b/SRC/dsgets.f
+@@ -149,7 +149,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msgets
++      msglvl = 0
+ c 
+       if (which .eq. 'BE') then
+ c
+diff --git a/SRC/sgetv0.f b/SRC/sgetv0.f
+index 7c9503a..6ef5766 100644
+--- a/SRC/sgetv0.f
++++ b/SRC/sgetv0.f
+@@ -215,7 +215,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/SRC/snaitr.f b/SRC/snaitr.f
+index c498e5e..7071bc1 100644
+--- a/SRC/snaitr.f
++++ b/SRC/snaitr.f
+@@ -320,7 +320,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mnaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/SRC/snapps.f b/SRC/snapps.f
+index 1d48a98..a88c6f0 100644
+--- a/SRC/snapps.f
++++ b/SRC/snapps.f
+@@ -238,7 +238,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mnapps
++      msglvl = 0
+       kplusp = kev + np 
+ c 
+ c     %--------------------------------------------%
+diff --git a/SRC/snaup2.f b/SRC/snaup2.f
+index 53e3946..a2c073d 100644
+--- a/SRC/snaup2.f
++++ b/SRC/snaup2.f
+@@ -260,7 +260,7 @@ c
+ c
+          call arscnd (t0)
+ c
+-         msglvl = mnaup2
++         msglvl = 0
+ c
+ c        %-------------------------------------%
+ c        | Get the machine dependent constant. |
+diff --git a/SRC/snaupd.f b/SRC/snaupd.f
+index fc4ab94..511b028 100644
+--- a/SRC/snaupd.f
++++ b/SRC/snaupd.f
+@@ -477,7 +477,7 @@ c        %-------------------------------%
+ c
+          call sstatn
+          call arscnd (t0)
+-         msglvl = mnaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/SRC/sneigh.f b/SRC/sneigh.f
+index f0fb3c0..d43f6c0 100644
+--- a/SRC/sneigh.f
++++ b/SRC/sneigh.f
+@@ -171,7 +171,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mneigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call smout (logfil, n, n, h, ldh, ndigit, 
+diff --git a/SRC/sneupd.f b/SRC/sneupd.f
+index 630ed9d..5f18a01 100644
+--- a/SRC/sneupd.f
++++ b/SRC/sneupd.f
+@@ -390,7 +390,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mneupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/SRC/sngets.f b/SRC/sngets.f
+index a045224..cbde5ea 100644
+--- a/SRC/sngets.f
++++ b/SRC/sngets.f
+@@ -153,7 +153,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mngets
++      msglvl = 0
+ c 
+ c     %----------------------------------------------------%
+ c     | LM, SM, LR, SR, LI, SI case.                       |
+diff --git a/SRC/ssaitr.f b/SRC/ssaitr.f
+index 03b3f5a..abc644a 100644
+--- a/SRC/ssaitr.f
++++ b/SRC/ssaitr.f
+@@ -301,7 +301,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/SRC/ssapps.f b/SRC/ssapps.f
+index 5fccf7a..08b7d7a 100644
+--- a/SRC/ssapps.f
++++ b/SRC/ssapps.f
+@@ -214,7 +214,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/SRC/ssaup2.f b/SRC/ssaup2.f
+index 89d7f3b..336859f 100644
+--- a/SRC/ssaup2.f
++++ b/SRC/ssaup2.f
+@@ -263,7 +263,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = msaup2
++         msglvl = 0
+ c
+ c        %---------------------------------%
+ c        | Set machine dependent constant. |
+diff --git a/SRC/ssaupd.f b/SRC/ssaupd.f
+index d4cf386..630fcbe 100644
+--- a/SRC/ssaupd.f
++++ b/SRC/ssaupd.f
+@@ -479,7 +479,7 @@ c        %-------------------------------%
+ c
+          call sstats
+          call arscnd (t0)
+-         msglvl = msaupd
++         msglvl = 0
+ c
+          ierr   = 0
+          ishift = iparam(1)
+diff --git a/SRC/sseigt.f b/SRC/sseigt.f
+index b77a6ea..24f5d4c 100644
+--- a/SRC/sseigt.f
++++ b/SRC/sseigt.f
+@@ -139,7 +139,7 @@ c     | & message level for debugging |
+ c     %-------------------------------% 
+ c
+       call arscnd (t0)
+-      msglvl = mseigt
++      msglvl = 0
+ c
+       if (msglvl .gt. 0) then
+          call svout (logfil, n, h(1,2), ndigit,
+diff --git a/SRC/sseupd.f b/SRC/sseupd.f
+index 9349d11..b994927 100644
+--- a/SRC/sseupd.f
++++ b/SRC/sseupd.f
+@@ -300,7 +300,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mseupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/SRC/ssgets.f b/SRC/ssgets.f
+index 5591549..02bb589 100644
+--- a/SRC/ssgets.f
++++ b/SRC/ssgets.f
+@@ -149,7 +149,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = msgets
++      msglvl = 0
+ c 
+       if (which .eq. 'BE') then
+ c
+diff --git a/SRC/zgetv0.f b/SRC/zgetv0.f
+index 6468faa..17aa4c8 100644
+--- a/SRC/zgetv0.f
++++ b/SRC/zgetv0.f
+@@ -212,7 +212,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mgetv0
++         msglvl = 0
+ c 
+          ierr   = 0
+          iter   = 0
+diff --git a/SRC/znaitr.f b/SRC/znaitr.f
+index f989dec..d9eb501 100644
+--- a/SRC/znaitr.f
++++ b/SRC/znaitr.f
+@@ -327,7 +327,7 @@ c        | & message level for debugging |
+ c        %-------------------------------%
+ c
+          call arscnd (t0)
+-         msglvl = mcaitr
++         msglvl = 0
+ c 
+ c        %------------------------------%
+ c        | Initial call to this routine |
+diff --git a/SRC/znapps.f b/SRC/znapps.f
+index 58f3389..d230c11 100644
+--- a/SRC/znapps.f
++++ b/SRC/znapps.f
+@@ -241,7 +241,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mcapps
++      msglvl = 0
+ c 
+       kplusp = kev + np 
+ c 
+diff --git a/SRC/znaup2.f b/SRC/znaup2.f
+index 469aafb..a677362 100644
+--- a/SRC/znaup2.f
++++ b/SRC/znaup2.f
+@@ -266,7 +266,7 @@ c
+ c
+          call arscnd (t0)
+ c
+-         msglvl = mcaup2
++         msglvl = 0
+ c
+          nev0   = nev
+          np0    = np
+diff --git a/SRC/znaupd.f b/SRC/znaupd.f
+index 779eb2b..d4ea642 100644
+--- a/SRC/znaupd.f
++++ b/SRC/znaupd.f
+@@ -452,7 +452,7 @@ c        %-------------------------------%
+ c
+          call zstatn
+          call arscnd (t0)
+-         msglvl = mcaupd
++         msglvl = 0
+ c
+ c        %----------------%
+ c        | Error checking |
+diff --git a/SRC/zneigh.f b/SRC/zneigh.f
+index df30acb..e517fda 100644
+--- a/SRC/zneigh.f
++++ b/SRC/zneigh.f
+@@ -172,7 +172,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c
+       call arscnd (t0)
+-      msglvl = mceigh
++      msglvl = 0
+ c 
+       if (msglvl .gt. 2) then
+           call zmout (logfil, n, n, h, ldh, ndigit, 
+diff --git a/SRC/zneupd.f b/SRC/zneupd.f
+index 530fce5..f8404e8 100644
+--- a/SRC/zneupd.f
++++ b/SRC/zneupd.f
+@@ -336,7 +336,7 @@ c     %------------------------%
+ c     | Set default parameters |
+ c     %------------------------%
+ c
+-      msglvl = mceupd
++      msglvl = 0
+       mode = iparam(7)
+       nconv = iparam(5)
+       info = 0
+diff --git a/SRC/zngets.f b/SRC/zngets.f
+index 498848a..8fffe90 100644
+--- a/SRC/zngets.f
++++ b/SRC/zngets.f
+@@ -138,7 +138,7 @@ c     | & message level for debugging |
+ c     %-------------------------------%
+ c 
+       call arscnd (t0)
+-      msglvl = mcgets
++      msglvl = 0
+ c 
+       call zsortc (which, .true., kev+np, ritz, bounds)
+ c     

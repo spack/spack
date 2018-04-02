@@ -64,6 +64,7 @@ class ArpackNg(Package):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
+    variant('terminal_output', default=False, description='Keep terminal output via Fortran COMMON block variables')
 
     # The function pdlamch10 does not set the return variable.
     # This is fixed upstream
@@ -72,6 +73,8 @@ class ArpackNg(Package):
 
     patch('make_install.patch', when='@3.4.0')
     patch('parpack_cmake.patch', when='@3.4.0')
+
+    patch('no_terminal_output.patch', when='@3.5.0:~terminal_output')
 
     depends_on('blas')
     depends_on('lapack')
