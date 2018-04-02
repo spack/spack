@@ -26,7 +26,6 @@ from __future__ import print_function
 
 import os
 import re
-import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by

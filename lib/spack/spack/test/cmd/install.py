@@ -35,7 +35,7 @@ import spack.cmd.install
 import spack.package
 from spack.error import SpackError
 from spack.spec import Spec
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 install = SpackCommand('install')
 
