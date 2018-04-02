@@ -48,6 +48,7 @@ class Geopm(AutotoolsPackage):
     # Variants reflecting most ./configure --help options
     variant('debug', default=False, description='Enable debug.')
     variant('coverage', default=False, description='Enable test coverage support, enables debug by default.')
+    variant('overhead', default=False, description='Enable GEOPM to calculate and display time spent in GEOPM API calls.')
     variant('procfs', default=True, description='Enable procfs (disable for OSes not using procfs).')
     variant('mpi', default=True, description='Enable MPI dependent components.')
     variant('fortran', default=True, description='Build fortran interface.')
@@ -68,6 +69,7 @@ class Geopm(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     # TODO: check if hwloc@specific-version still required with future openmpi
     depends_on('hwloc@1.11.9', when='+hwloc')
+    depends_on('json-c')
     depends_on('py-pandas', type='run')
     depends_on('py-numpy', type='run')
     depends_on('py-natsort', type='run')
@@ -76,50 +78,17 @@ class Geopm(AutotoolsPackage):
     parallel = False
 
     def configure_args(self):
-        spec = self.spec
         args = []
-
-        if '+debug' in spec:
-            args.append('--enable-debug')
-
-        if '+coverage' in spec:
-            args.append('--enable-coverage')
-
-        if '+overhead' in spec:
-            args.append('--enable-overhead')
-
-        if '~procfs' in spec:
-            args.append('--disable-procfs')
-
-        if '~mpi' in spec:
-            args.append('--disable-mpi')
-        else:
-            args.extend([
-                '--with-mpi-bin={0}'.format(spec['mpi'].prefix.bin),
-                '--with-mpicc={0}'.format(spec['mpi'].mpicc),
-                '--with-mpicxx={0}'.format(spec['mpi'].mpicxx),
-                '--with-mpifc={0}'.format(spec['mpi'].mpifc),
-                '--with-mpif77={0}'.format(spec['mpi'].mpif77),
-            ])
-
-        if '~fortran' in spec:
-            args.append('--disable-fortran')
-
-        if '~doc' in spec:
-            args.append('--disable-doc')
-
-        if '~openmp' in spec:
-            args.append('--disable-openmp')
-
-        if '+ompt' in spec:
-            args.append('--enable-ompt')
-
-        if '+gnu-ld' in spec:
-            args.append('--with-gnu-ld')
-
-        if '+hwloc' in spec:
-            args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-        else:
-            args.append('--without-hwloc')
+        args.extend(self.enable_or_disable('debug'))
+        args.extend(self.enable_or_disable('coverage'))
+        args.extend(self.enable_or_disable('overhead'))
+        args.extend(self.enable_or_disable('procfs'))
+        args.extend(self.enable_or_disable('mpi'))
+        args.extend(self.enable_or_disable('fortran'))
+        args.extend(self.enable_or_disable('doc'))
+        args.extend(self.enable_or_disable('openmp'))
+        args.extend(self.enable_or_disable('ompt'))
+        args.extend(self.with_or_without('hwloc', activation_value='prefix'))
+        args.extend(self.with_or_without('gnu-ld'))
 
         return args
