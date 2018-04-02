@@ -223,6 +223,15 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
                 ('ON' if '+python' in spec else 'OFF')
             ])
+            if '+python' in spec:
+                python_exe = spec['python'].command.path
+                python_library = spec['python'].libs[0]
+                python_include = spec['python'].headers.directories[0]
+                options.extend([
+                    '-DPYTHON_EXECUTABLE=%s' % python_exe,
+                    '-DPYTHON_INCLUDE_DIR=%s' % python_include,
+                    '-DPYTHON_LIBRARY=%s' % python_library
+                ])
 
         # Set directory structure:
         if spec.satisfies('@:8.2.1'):
