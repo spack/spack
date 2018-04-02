@@ -77,7 +77,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
-    variant('python',   default=True,
+    variant('python',   default=False,
             description='Compile with Python bindings')
     variant('int64',    default=False,
             description='Compile with 64 bit indices support')
