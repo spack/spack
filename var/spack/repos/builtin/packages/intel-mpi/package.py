@@ -65,4 +65,4 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
         # Convenience variable.
-        spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
+        spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))

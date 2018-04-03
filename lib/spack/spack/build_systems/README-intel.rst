@@ -519,7 +519,7 @@ In the Spack code so far, the library selections for MPI are:
         if 'cxx' in self.spec.last_query.extra_parameters:
             libnames = ['libmpicxx'] + libnames
         return find_libraries(libnames,
-                              root=self.component_lib_dir(component='mpi'),
+                              root=self.component_lib_dir('mpi'),
                               shared=True, recursive=False)
 
 The problem is that there are multiple library versions under ``component_lib_dir``::

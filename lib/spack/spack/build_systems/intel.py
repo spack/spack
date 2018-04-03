@@ -158,16 +158,12 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # Utilities
     # ---------------------------------------------------------------------
-    def _is_personality(self, personality_wanted, component=''):
+    def _is_personality(self, personality_wanted):
         '''Check if called for an explicitly requested Intel ``component`` or
         in a role manifested by the current (possibly virtual) package name.
         '''
-        if component:
-            result = (personality_wanted == component)
-        else:
-            result = (personality_wanted in [str(k) for k in self.provided])
-        debug_print("%s -> %s" % (str((personality_wanted, component)),
-                                  result))
+        result = (personality_wanted in [str(k) for k in self.provided])
+        debug_print("%s -> %s" % (personality_wanted, result))
         return result
 
     def _make_relative(self, file_or_dir, relative_to=''):
@@ -190,25 +186,7 @@ class IntelPackage(PackageBase):
     #
     #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
     #
-
-    def _expand_path(self, relative_path):
-        '''Expand relative_path (which may contain replacement fields) under
-        self.prefix.
-        '''
-        # Python-native string formatting requires arg list count to match the
-        # replacement field count, handling optional fields would be tedious.
-        f = relative_path
-        f = re.sub('{version}', '', f)
-        f = re.sub('{platform}', 'linux', f)
-        f = re.sub('{arch}', 'intel64', f)
-        f = re.sub('{bits}', '64', f)
-        # f = re.sub('/', os.sep, f)    # TODO? win32?
-
-        (product_dir, component_path) = f.split(os.sep, 1)
-        product_dir = self.normalize_product_dir(product_dir)
-        return join_path(product_dir, component_path)
-
-    def normalize_product_dir(self, product_dir_name, version_glob='_*.*.*'):
+    def product_dir(self, product_dir_name, version_glob='_*.*.*'):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and possibly auxiliary files from other
         products.
@@ -310,91 +288,80 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    @property
-    def compilers_dir(self):
-        # TODO? accommodate other platforms(?)
-        c = 'compilers_and_libraries'
-        if self.spec.satisfies('@:composer.2015'):
-            c = 'composer_xe'
-
-        d = self.normalize_product_dir(c)
-
-        # On my system, when using a external MKL, self.prefix showed up as
-        # ending with "/compiler". I think this is because I provided that MKL
-        # by means of the side effect of loading an env. module for the Intel
-        # *compilers*, and Spack inspects $PATH(?) Well, I can live with that!
-        # It's just a jump to the left, and then a step to the right; let's do
-        # the time warp again:
-        #
-        # Ahem, apparently, the Prefix class lacks a native parent() method
-        # (kinda understandably so), and the syntax blows up on trying "..".
-        #
-        # NB: Targeting a platform, we can indulge in hardcoding the path sep.
-        platform = 'linux'
-
-        platform_dir = '/' + platform
-        if platform_dir in d:
-            while not d.endswith(platform_dir):
-                d = Prefix(ancestor(d))
-        else:
-            d += platform_dir
-
-        debug_print(d)
-        return d
-
-    @property
-    def studio_dir(self):
-        # The Parallel Studio dir as such holds mostly symlinks to other
-        # components, so it's rarely needed, except for, ta-da, psxevars.sh.
-
-        d = self.normalize_product_dir('parallel_studio_xe')
-        #  NODO: The sole 2015 "composer" version in the Spack repos (as of
-        #  2018-02) would in fact need:
-        # d = self.normalize_product_dir('composer_xe')
-        #  But a site running Spack likely has the successors licensed, right?
-
-        debug_print(d)
-        return d
-
-    def component_dir(self, component=None):
-        '''Returns the directory of a product component, appropriate for
-        presenting to users in environment variables like MKLROOT and
-        I_MPI_ROOT, or the product dir itself (when the component is not
-        evident from the package name and wasn't specified).
+    def _replace_tags(self, filename):
+        '''[Experimental] Expand replacement fields in filename.
         '''
-        # Assign early so advanced add-ons (VTune, Advisor, ...) can override.
-        d = self.compilers_dir
+        # Python-native string formatting requires arg list counts to match the
+        # replacement field count; optional fields are far easier with regexes.
+        f = filename
+        #f = re.sub('{platform}', sys.platform, f)  # linux2 vs. linux
+        f = re.sub('{arch}', 'intel64', f)
+        f = re.sub('{bits}', '64', f)
+        return f
 
-        if component is None:
-            if self._is_personality('mkl'):
-                component = 'mkl'
-            elif self._is_personality('mpi'):
-                component = 'mpi'
-                # Note analysis of MPI dir in ./README-intel.rst :
-                # Since both I_MPI_ROOT and MANPATH need the 'mpi' dir, do NOT
-                # qualify further.
-                # NODO: d = d.intel64
-            # elif ...
-            #     component = ...
-            elif self._is_personality('tbb'):
-                component = 'tbb'
+    @property
+    def file_to_source(self):
+        vars_file_for = {
+            'intel-parallel-studio': 'bin/psxevars',    # name test in path_to
+            'intel':                 'bin/compilervars',
+            'intel-daal':            'daal/bin/daalvars',
+            'intel-ipp':             'ipp/bin/ippvars',
+            'intel-mkl':             'mkl/bin/mklvars',
+            'intel-mpi':             'mpi/intel{bits}/bin/mpivars',
+        }
+        key = self.name
+        if self.spec.satisfies('@:composer.2015'):
+            key = 'intel'
+
+        f = self._replace_tags(vars_file_for[key]) + '.sh'
+        # TODO?? win32 would have to handle os.sep, '.bat' (unless POSIX??)
+
+        f = self.path_to(f)
+        debug_print(f)
+        return f
+
+    def path_to(self, component):
+        '''Returns the full path to a file or a product component.  For 'mkl'
+        and 'mpi', the results are suitable for use as environment variables
+        MKLROOT and I_MPI_ROOT.
+        '''
+        platform_dir = ''
+        if self.spec.satisfies('@:composer.2015'):
+            component_parent = 'composer_xe'
+        elif component == 'ism' or 'psxevars' in component:
+            component_parent = 'parallel_studio_xe'
+        else:
+            component_parent = 'compilers_and_libraries'
+            if 'linux' in sys.platform:
+                platform_dir = '/linux'     # used for no other Intel component
+
+        d = self.product_dir(component_parent)
+
+        if platform_dir:
+            if (platform_dir + os.sep in d and not d.endswith(component)):
+                # On my system, when using an external MKL, self.prefix showed
+                # up as ending with "/compiler". I think this is because I
+                # provided that MKL by means of the side effect of loading an
+                # env. module for the Intel *compilers*, and Spack inspects
+                # $PATH(?)
+                d = Prefix(ancestor(d))
             else:
-                component = 'compiler'
+                d += platform_dir
 
         d = Prefix(join_path(d, component))
         debug_print(d)
         return d
 
-    def component_bin_dir(self, component=None, relative=False):
-        d = self.component_dir(component)
+    def component_bin_dir(self, component, relative=False):
+        d = self.path_to(component)
 
         if sys.platform == 'darwin':
             # TODO: verify
             d = d.bin
         else:
-            if self._is_personality('mpi', component):
+            if component == 'mpi':
                 d = d.intel64.bin
-            elif component == 'compiler' or 'parallel-studio' in self.name:
+            elif component == 'compiler':
                 d = Prefix(ancestor(d)).bin.intel64
             else:
                 d = d.bin
@@ -405,21 +372,21 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    def component_lib_dir(self, component=None, relative=False):
+    def component_lib_dir(self, component, relative=False):
         '''Provide directory suitable for find_libraries() and
         SPACK_COMPILER_EXTRA_RPATHS.
         '''
-        d = self.component_dir(component)
+        d = self.path_to(component)
 
         if sys.platform == 'darwin':
             d = d.lib
         else:
-            if self._is_personality('mpi', component):
+            if component == 'mpi':
                 d = d.intel64.lib
             else:
                 d = d.lib.intel64
 
-        if self._is_personality('tbb', component):
+        if component == 'tbb':
             # Must qualify further
             d = Prefix(join_path(d, self._tbb_abi))
 
@@ -430,10 +397,10 @@ class IntelPackage(PackageBase):
         return d
 
     @property
-    def component_include_dir(self, component=None, relative=False):
-        d = self.component_dir(component)
+    def component_include_dir(self, component, relative=False):
+        d = self.path_to(component)
 
-        if self._is_personality('mpi', component):
+        if component == 'mpi':
             d = d.intel64
         d = d.include
 
@@ -458,7 +425,7 @@ class IntelPackage(PackageBase):
             omp_libnames = ['libiomp5']
             omp_libs = find_libraries(
                 omp_libnames,
-                root=self.component_lib_dir(component='compiler'),
+                root=self.component_lib_dir('compiler'),
                 shared=self._want_shared)
             # Note about search root here: For MKL, the directory
             # "$MKLROOT/../compiler" will be present even for an MKL-only
@@ -482,7 +449,7 @@ class IntelPackage(PackageBase):
         '''Supply LibraryList for linking TBB'''
 
         tbb_lib = find_libraries(
-            ['libtbb'], root=self.component_lib_dir(component='tbb'))
+            ['libtbb'], root=self.component_lib_dir('tbb'))
         # NB: shared=False is not and has never been supported for TBB:
         # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
         #
@@ -549,7 +516,7 @@ class IntelPackage(PackageBase):
         mkl_libnames = [mkl_integer, mkl_threading, 'libmkl_core']
         mkl_libs = find_libraries(
             mkl_libnames,
-            root=self.component_lib_dir(component='mkl'),
+            root=self.component_lib_dir('mkl'),
             shared=self._want_shared)
         debug_print(mkl_libs)
 
@@ -599,7 +566,7 @@ class IntelPackage(PackageBase):
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
-            root=self.component_lib_dir(component='mkl'),
+            root=self.component_lib_dir('mkl'),
             shared=self._want_shared)
         debug_print(sca_libs)
 
@@ -619,38 +586,16 @@ class IntelPackage(PackageBase):
     # General support for child packages
     # ---------------------------------------------------------------------
     @property
-    def file_to_source(self):
-        c = 'compilers_and_libraries'
-        if sys.platform == 'linux':
-            c += '/linux'
-        vars_file_for = {
-            '@composer':             'composer_xe/bin/compilervars',
-            'intel-parallel-studio': 'parallel_studio_xe/bin/psxevars',
-            'intel':                 c + '/bin/compilervars',
-            'intel-daal':            c + '/daal/bin/daalvars',
-            'intel-ipp':             c + '/ipp/bin/ippvars',
-            'intel-mkl':             c + '/mkl/bin/mklvars',
-            'intel-mpi':             c + '/mpi/intel{bits}/bin/mpivars',
-        }
-        key = self.name
-        if self.spec.satisfies('@:composer.2015'):
-            key = '@composer'       # stand-in string for dict lookup
-        f = vars_file_for[key]
-        f += '.sh'  # TODO?  win32 - .bat(?), POSIX-ish, or skip?
-        debug_print(f)
-        return f
-
-    @property
     def headers(self):
         if '+mpi' in self.spec or self._is_personality('mpi'):
             return find_headers(
                 ['mpi'],
-                root=self.component_include_dir(component='mpi'),
+                root=self.component_include_dir('mpi'),
                 recursive=False)
         if '+mkl' in self.spec or self._is_personality('mkl'):
             return find_headers(
                 ['mkl_cblas', 'mkl_lapacke'],
-                root=self.component_include_dir(component='mkl'),
+                root=self.component_include_dir('mkl'),
                 recursive=False)
 
     @property
@@ -663,7 +608,7 @@ class IntelPackage(PackageBase):
                 libnames = ['libmpicxx'] + libnames
             return find_libraries(
                 libnames,
-                root=self.component_lib_dir(component='mpi'),
+                root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True)
 
     def setup_environment(self, spack_env, run_env):
@@ -685,7 +630,7 @@ class IntelPackage(PackageBase):
         # setup_build_environment and setup_run_environment to get around
         # this problem.
 
-        f = self._expand_path(self.file_to_source)
+        f = self.file_to_source
         if not f or not os.path.isfile(f):
             return
 
@@ -699,9 +644,9 @@ class IntelPackage(PackageBase):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mkl' in self.spec or self._is_personality('mkl'):
-            spack_env.set('MKLROOT', self.component_dir(component='mkl'))
+            spack_env.set('MKLROOT', self.path_to('mkl'))
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                  self.component_lib_dir(component='mkl'))
+                                  self.component_lib_dir('mkl'))
 
         # Hmm, +mpi would be nice to handle here as well but unification from:
         #   var/spack/repos/builtin/packages/intel-mpi/package.py
@@ -730,7 +675,7 @@ class IntelPackage(PackageBase):
             # and friends are set to point to the Intel compilers, but in
             # practice, mpicc fails to compile some applications while
             # mpiicc works.
-            bindir = self.component_bin_dir(component='mpi')
+            bindir = self.component_bin_dir('mpi')
             if self.compiler.name == 'intel':
                 self.spec.mpicc  = bindir.mpiicc
                 self.spec.mpicxx = bindir.mpiicpc
@@ -853,7 +798,7 @@ class IntelPackage(PackageBase):
         #  "... you can also uninstall the Intel(R) Software Manager
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
-        f = join_path(self.studio_dir, 'ism', 'uninstall.sh')
+        f = join_path(self.path_to('ism'), 'uninstall.sh')
         if os.path.isfile(f):
             tty.warn('Uninstalling "Intel Software Improvement Program"'
                      'component')

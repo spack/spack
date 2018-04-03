@@ -231,7 +231,7 @@ class IntelParallelStudio(IntelPackage):
 
         directories = [
             'Licenses',
-            self.component_bin_dir(component='compiler', relative=True)
+            self.component_bin_dir('compiler', relative=True)
         ]
 
         if '+advisor' in spec:
@@ -291,8 +291,8 @@ class IntelParallelStudio(IntelPackage):
             return
 
         # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-using-configuration-files
-        compilers_bin_dir = self.component_bin_dir(component='compiler')
-        rpath_dir = self.component_lib_dir(component='compiler')
+        compilers_bin_dir = self.component_bin_dir('compiler')
+        rpath_dir = self.component_lib_dir('compiler')
 
         for compiler_name in 'icc icpc ifort'.split():
             f = os.path.join(compilers_bin_dir, compiler_name)
@@ -313,7 +313,7 @@ class IntelParallelStudio(IntelPackage):
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
         # Convenience variable.
-        spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
+        spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
 
     @run_after('install')
     def fix_psxevars(self):
