@@ -244,6 +244,15 @@ def test_install_conflicts(conflict_spec):
         install(conflict_spec)
 
 
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+)
+def test_install_invalid_spec(invalid_spec):
+    # Make sure that invalid specs raise a SpackError
+    with pytest.raises(SpackError, match='Unexpected token'):
+        install(invalid_spec)
+
+
 @pytest.mark.usefixtures('noop_install', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
