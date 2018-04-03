@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,17 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class Mindthegap(CMakePackage):
+    """MindTheGap is a software that performs integrated detection and
+       assembly of genomic insertion variants in NGS read datasets with
+       respect to a reference genome."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://gatb.inria.fr/software/mind-the-gap/"
+    url      = "https://github.com/GATB/MindTheGap.git"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('2.0.2',
+            tags='v2.0.2',
+            git='https://github.com/GATB/MindTheGap.git',
+            submodules=True)
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    depends_on('zlib')

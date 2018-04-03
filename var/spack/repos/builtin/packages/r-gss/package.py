@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,12 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class RGss(RPackage):
+    """A comprehensive package for structural multivariate function
+    estimation using smoothing splines."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://cran.r-project.org/package=gss"
+    url      = "https://cran.rstudio.com/src/contrib/gss_2.1-7.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/gss"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
-
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    version('2.1-7', '4a6bd96339d22b40c932895b64504fb2')

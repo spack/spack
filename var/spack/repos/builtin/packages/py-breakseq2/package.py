@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,17 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class PyBreakseq2(PythonPackage):
+    """nucleotide-resolution analysis of structural variants"""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "http://bioinform.github.io/breakseq2/"
+    url      = "https://github.com/bioinform/breakseq2/archive/2.2.tar.gz"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('2.2', '6fd5a103c2781717b0b1d0efcbdc17e7')
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    depends_on('py-setuptools', type='build')
+    depends_on('py-biopython@1.65', type=('build', 'run'))
+    depends_on('py-cython', type='build')
+    depends_on('py-pysam@0.7.7', type=('build', 'run'))
+    depends_on('bwa', type='run')
+    depends_on('samtools', type='run')

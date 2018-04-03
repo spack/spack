@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,20 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class RFlexclust(RPackage):
+    """The main function kcca implements a general framework for k-centroids
+    cluster analysis supporting arbitrary distance measures and centroid
+    computation. Further cluster methods include hard competitive learning,
+    neural gas, and QT clustering. There are numerous visualization methods for
+    cluster results (neighborhood graphs, convex cluster hulls, barcharts of
+    centroids, ...), and bootstrap methods for the analysis of cluster
+    stability."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://cran.r-project.org/package=flexclust"
+    url      = "https://cran.rstudio.com/src/contrib/flexclust_1.3-5.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/flexclust"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('1.3-5', '90226a0e3a4f256f392a278e9543f8f4')
 
-    patch('python3-octal.patch', when='@2016-12-19')
-
-    def build_args(self):
-        args = []
-
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
-
-        return args
+    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-modeltools', type=('build', 'run'))

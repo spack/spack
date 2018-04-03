@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,21 +25,23 @@
 from spack import *
 
 
-class Tut(WafPackage):
-    """TUT is a small and portable unit test framework for C++."""
+class Lsof(Package):
+    """Lsof displays information about files open to Unix processes."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
-    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
+    homepage = "https://people.freebsd.org/~abe/"
+    url      = "https://www.mirrorservice.org/sites/lsof.itap.purdue.edu/pub/tools/unix/lsof/lsof_4.89.tar.gz"
 
-    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+    version('4.89', '8afbaff3ee308edc130bdc5df0801c8f')
 
-    patch('python3-octal.patch', when='@2016-12-19')
+    def install(self, spec, prefix):
+        tar = which('tar')
+        tar('xf', 'lsof_{0}_src.tar'.format(self.version))
 
-    def build_args(self):
-        args = []
+        with working_dir('lsof_{0}_src'.format(self.version)):
+            configure = Executable('./Configure')
+            configure('-n', 'linux')
 
-        if self.run_tests:
-            # Run unit tests
-            args.append('--test')
+            make()
 
-        return args
+            mkdir(prefix.bin)
+            install('lsof', prefix.bin)
