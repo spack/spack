@@ -34,5 +34,3 @@ class RTruncnorm(RPackage):
     list_url = "https://cran.rstudio.com/src/contrib/Archive/truncnorm"
 
     version('1.0-8', 'c60cd6555be0dd2ea91e61757439282d')
-
-    depends_on('r-testthat', type=('build', 'run'))
