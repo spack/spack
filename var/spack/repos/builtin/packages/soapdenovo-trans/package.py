@@ -40,7 +40,8 @@ class SoapdenovoTrans(MakefilePackage):
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             makefile = FileFilter('Makefile')
-            makefile.filter('CFLAGS=         -O3 -fomit-frame-pointer -static', 'CFLAGS=         -O3 -fomit-frame-pointer')
+            makefile.filter('CFLAGS=         -O3 -fomit-frame-pointer -static',
+                            'CFLAGS=         -O3 -fomit-frame-pointer')
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
