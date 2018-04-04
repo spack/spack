@@ -32,6 +32,7 @@ class Octopus(Package):
     homepage = "http://www.tddft.org/programs/octopus/"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=6.0/octopus-6.0.tar.gz"
 
+    version('7.3', '87e51fa4a3a999706ea4ea5e9136996f')
     version('6.0', '5d1168c2a8d7fd9cb9492eaebaa7182e')
     version('5.0.1', '2b6392ab67b843f9d4ca7413fc07e822')
 
@@ -59,7 +60,7 @@ class Octopus(Package):
     depends_on('arpack-ng', when='+arpack')
 
     # optional dependencies:
-    # TODO: parmetis, etsf-io, sparskit,
+    # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft
 
     def install(self, spec, prefix):
