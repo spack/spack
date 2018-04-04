@@ -52,7 +52,7 @@ class Octopus(Package):
     depends_on('lapack')
     depends_on('libxc')
     depends_on('mpi')
-    depends_on('fftw+mpi')
+    depends_on('fftw+mpi+openmp')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
@@ -76,7 +76,7 @@ class Octopus(Package):
             'CC=%s' % spec['mpi'].mpicc,
             'FC=%s' % spec['mpi'].mpifc,
             '--enable-mpi',
-            '--with-fft-lib=-L%s -lfftw3' % spec['fftw'].prefix.lib,
+            '--with-fftw-prefix==%s' % spec['fftw'].prefix,
         ])
         if '+metis' in spec:
             args.extend([
