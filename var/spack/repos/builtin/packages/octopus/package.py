@@ -48,11 +48,11 @@ class Octopus(Package):
             description='Compile with ARPACK')
 
     depends_on('blas')
-    depends_on('gsl')
+    depends_on('gsl@1.9:')
     depends_on('lapack')
     depends_on('libxc')
     depends_on('mpi')
-    depends_on('fftw+mpi+openmp')
+    depends_on('fftw@3:+mpi+openmp')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
