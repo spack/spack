@@ -38,7 +38,7 @@ class Octopus(Package):
 
     variant('scalapack', default=False,
             description='Compile with Scalapack')
-    variant('metis', default=True,
+    variant('metis', default=False,
             description='Compile with METIS')
     variant('parmetis', default=False,
             description='Compile with ParMETIS')
