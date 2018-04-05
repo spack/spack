@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Glvis(Package):
+class Glvis(MakefilePackage):
     """GLVis: an OpenGL tool for visualization of FEM meshes and functions"""
 
     homepage = "http://glvis.org/"
@@ -50,6 +50,8 @@ class Glvis(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
+    version('develop', git='https://github.com/glvis/glvis', branch='master')
+
     version('3.3',
             '1201a76d1b0c38240186c06f6478de77',
             url='http://goo.gl/C0Oadw',
@@ -67,14 +69,15 @@ class Glvis(Package):
 
     variant('screenshots',
             default='png',
-            values=('none', 'png', 'tiff'),
-            description='Backend used for screenshots (none = disabled)')
+            values=('xwd', 'png', 'tiff'),
+            description='Backend used for screenshots')
     variant('fonts', default=True,
-            description='Build with font support via freetype & fontconfig')
+            description='Use antialiased fonts via freetype & fontconfig')
 
-    depends_on('mfem@3.1', when='@3.1')
-    depends_on('mfem@3.2', when='@3.2')
+    depends_on('mfem@develop', when='@develop')
     depends_on('mfem@3.3', when='@3.3')
+    depends_on('mfem@3.2', when='@3.2')
+    depends_on('mfem@3.1', when='@3.1')
 
     depends_on('gl')
     depends_on('glu')
@@ -85,55 +88,50 @@ class Glvis(Package):
     depends_on('freetype', when='+fonts')
     depends_on('fontconfig', when='+fonts')
 
-    def install(self, spec, prefix):
+    def edit(self, spec, prefix):
 
         def yes_no(s):
             return 'YES' if self.spec.satisfies(s) else 'NO'
 
-        mfem_prefix = self.spec['mfem'].prefix
-        config_mk_prefix = mfem_prefix
-        if spec.satisfies('^mfem@3.3.2', strict=True):
-            config_mk_prefix = join_path(config_mk_prefix, 'share', 'mfem')
+        mfem = spec['mfem']
+        config_mk = mfem.package.config_mk
 
-        args = ['PREFIX={0}'.format(prefix),
-                'MFEM_DIR={0}'.format(mfem_prefix),
-                'CONFIG_MK={0}'.format(
-                    join_path(config_mk_prefix, 'config.mk')),
-                'GL_OPTS=-I{0} -I{1}'.format(self.spec['gl'].prefix.include,
-                                             self.spec['glu'].prefix.include),
-                'GL_LIBS=-L{0} -lx11 -L{1} -lGL -L{2} -lGLU'.format(
-                    self.spec['libx11'].prefix.lib,
-                    self.spec['gl'].prefix.lib,
-                    self.spec['glu'].prefix.lib)]
+        args = ['PREFIX={0}'.format(prefix.bin),
+                'MFEM_DIR={0}'.format(mfem.prefix),
+                'CONFIG_MK={0}'.format(config_mk),
+                'GL_OPTS=-I{0} -I{1} -I{2}'.format(
+                    spec['libx11'].prefix.include,
+                    spec['gl'].prefix.include,
+                    spec['glu'].prefix.include),
+                'GL_LIBS=-L{0} -lX11 -L{1} -lGL -L{2} -lGLU'.format(
+                    spec['libx11'].prefix.lib,
+                    spec['gl'].prefix.lib,
+                    spec['glu'].prefix.lib)]
 
-        args.append('USE_LIBPNG={0}'.format(yes_no('screenshots=png')))
-        if self.spec.satisfies('+png'):
-            args.append('PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}'.format(
-                spec['libpng'].prefix.include))
-            args.append('PNG_LIBS={0}'.format(
-                spec['libpng'].libs.ld_flags))
-
-        args.append('USE_LIBTIFF={0}'.format(yes_no('screenshots=tiff')))
-        if self.spec.satisfies('+tiff'):
-            args.append('TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}'.format(
-                spec['libtiff'].prefix.include))
-            args.append('TIFF_LIBS={0}'.format(
-                spec['libtiff'].libs.ld_flags))
+        if 'screenshots=png' in spec:
+            args += [
+                'USE_LIBPNG=YES', 'USE_LIBTIFF=NO',
+                'PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}'.format(
+                    spec['libpng'].prefix.include),
+                'PNG_LIBS={0}'.format(spec['libpng'].libs.ld_flags)]
+        elif 'screenshots=tiff' in spec:
+            args += [
+                'USE_LIBPNG=NO', 'USE_LIBTIFF=YES',
+                'TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}'.format(
+                    spec['libtiff'].prefix.include),
+                'TIFF_LIBS={0}'.format(spec['libtiff'].libs.ld_flags)]
+        else:
+            args += ['USE_LIBPNG=NO', 'USE_LIBTIFF=NO']
 
         args.append('USE_FREETYPE={0}'.format(yes_no('+fonts')))
-        if self.spec.satisfies('+fonts'):
-            args.append('FT_OPTS=-DGLVIS_USE_FREETYPE -I{0} -I{1}'.format(
-                spec['freetype'].prefix.include.freetype2,
-                spec['fontconfig'].prefix.include))
-            args.append('FT_LIBS={0} {1}'.format(
-                spec['freetype'].libs.ld_flags,
-                spec['fontconfig'].libs.ld_flags))
-        make(*args)
-        make('install', *args)
+        if '+fonts' in spec:
+            args += [
+                'FT_OPTS=-DGLVIS_USE_FREETYPE -I{0} -I{1}'.format(
+                    spec['freetype'].prefix.include.freetype2,
+                    spec['fontconfig'].prefix.include),
+                'FT_LIBS={0} {1}'.format(
+                    spec['freetype'].libs.ld_flags,
+                    spec['fontconfig'].libs.ld_flags)]
 
-        # Before this line, glvis is installed in a bare directory, so make the
-        # install prefix tree look like the Filesystem Hierarchy Standard by
-        # moving prefix.glvis to prefix.bin.glvis.
-        mkdirp(prefix.bin)
-        mv = which('mv')
-        mv(prefix.glvis, prefix.bin.glvis)
+        self.build_targets = args
+        self.install_targets += args
