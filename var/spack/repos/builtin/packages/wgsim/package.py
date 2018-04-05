@@ -42,4 +42,4 @@ class Wgsim(Package):
         gcc = which('gcc')
         gcc('-g', '-O2', '-Wall', '-o', 'wgsim', 'wgsim.c', '-lz', '-lm')
 
-        install_tree(self.stage.source_path, prefix.bin) 
+        install_tree(self.stage.source_path, prefix.bin)
