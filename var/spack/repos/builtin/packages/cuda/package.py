@@ -71,3 +71,36 @@ class Cuda(Package):
             '--toolkit',        # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )
+
+    @property
+    def headers(self):
+        """Return the main CUDA header, 'cuda.h'. All other headers are in the
+        same directory.
+        """
+        headers = find_headers('cuda', self.prefix.include, recursive=False)
+        return headers or None
+
+    @property
+    def libs(self):
+        """Export the libraries of CUDA.
+        Sample usage: spec['cuda'].libs.ld_flags
+                      spec['cuda:cudart,cublas'].libs.ld_flags
+        """
+        spec = self.spec
+        query_parameters = spec.last_query.extra_parameters
+        lib_names = query_parameters or ['cudart']
+        lib_dirs = [join_path(spec.prefix, p) for p in ['lib64', 'lib']]
+        lib_dirs += [join_path(p, 'stubs') for p in lib_dirs]
+        cuda_libs = LibraryList([])
+        for lib_name in lib_names:
+            for dir in lib_dirs:
+                lib = find_libraries(['lib%s' % lib_name], dir,
+                                     shared=True, recursive=False)
+                if lib:
+                    break
+            # If 'lib_name' is not found in any directory, raise an error
+            if not lib:
+                return None
+            cuda_libs += lib
+
+        return cuda_libs
