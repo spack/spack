@@ -94,7 +94,6 @@ class Hypre(Package, CudaPackage):
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
 
-        # TODO: C++ is only needed when 'fei' is enabled?
         configure_args = [
             '--prefix=%s' % prefix,
             '--with-lapack-libs=%s' % ' '.join(lapack.names),
@@ -210,7 +209,9 @@ class Hypre(Package, CudaPackage):
                 'CXXFLAGS=%s $(CXX_COMPILE_FLAGS)' % cxxflags_joined,
                 'NVCCFLAGS=%s' % ' '.join(cuflags)]
 
-            ldflags += [self.hypre_cuda_libs.ld_flags]
+            cuda_lib_names = ['cusparse', 'cudart', 'cublas', 'nvToolsExt']
+            cuda = spec['cuda:' + ','.join(cuda_lib_names)]
+            ldflags += [cuda.libs.ld_flags]
 
             if '+shared' in spec:
                 # Additional options for linking a shared library
@@ -253,22 +254,6 @@ class Hypre(Package, CudaPackage):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install", *make_args)
-
-    @property
-    def hypre_cuda_libs(self):
-        cuda_lib_names = ['cusparse', 'cudart', 'cublas', 'nvToolsExt']
-        cuda_lib_dirs = [join_path(self.spec['cuda'].prefix, p)
-                         for p in ['lib64', 'lib']]
-        for dir in cuda_lib_dirs:
-            cuda_libs = find_libraries(
-                ['lib%s' % n for n in cuda_lib_names], dir,
-                shared=True, recursive=False)
-            if cuda_libs:
-                break
-        if not cuda_libs:
-            raise RuntimeError('CUDA libraries not found in %s' %
-                               cuda_lib_dirs)
-        return cuda_libs
 
     @property
     def headers(self):
