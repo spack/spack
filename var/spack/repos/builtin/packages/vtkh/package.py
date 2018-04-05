@@ -42,6 +42,8 @@ class Vtkh(Package):
 
     maintainers = ['cyrush']
 
+    variant("shared", default=True, description="Build vtk-h as shared libs")
+
     variant("mpi", default=True, description="build mpi support")
     variant("tbb", default=True, description="build tbb support")
     variant("cuda", default=False, description="build cuda support")
@@ -52,9 +54,10 @@ class Vtkh(Package):
     depends_on("tbb", when="+tbb")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtkm@master")
-    depends_on("vtkm@master+tbb", when="+tbb")
-    depends_on("vtkm@master+cuda", when="+cuda")
+    depends_on("vtkm@1.2.0")
+    depends_on("vtkm@1.2.0+tbb", when="+tbb")
+    depends_on("vtkm@1.2.0+cuda", when="+cuda")
+    depends_on("vtkm@1.2.0~shared", when="~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -62,6 +65,13 @@ class Vtkh(Package):
                           "-DVTKM_DIR={0}".format(spec["vtkm"].prefix),
                           "-DENABLE_TESTS=OFF",
                           "-DBUILD_TESTING=OFF"]
+            
+            # shared vs static libs
+            if "+shared" in spec:
+                cmake_args.append('-DBUILD_SHARED_LIBS=ON')
+            else:
+                cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
+            
             # mpi support
             if "+mpi" in spec:
                 mpicc = spec['mpi'].mpicc

@@ -36,7 +36,9 @@ class Vtkm(Package):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    url      = "https://gitlab.kitware.com/vtk/vtk-m/repository/v1.1.0/archive.tar.gz"
+    url      = "https://gitlab.kitware.com/vtk/vtk-m/repository/v1.2.0/archive.tar.gz"
+
+    version('1.2.0', "f77604c5a1c1747f2fb9b9bd96476875")
 
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
 
@@ -44,24 +46,33 @@ class Vtkm(Package):
             git='https://gitlab.kitware.com/vtk/vtk-m.git',
             branch='master')
 
+    variant("shared", default=True, description="Build vtk-m as shared libs")
+    
     variant("cuda", default=False, description="build cuda support")
     variant("tbb", default=True, description="build TBB support")
 
     depends_on("cmake")
     depends_on("tbb", when="+tbb")
+    depends_on("intel-tbb~shared", when="+tbb~shared")
     depends_on("cuda", when="+cuda")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake_args = ["../",
-                          "-DVTKm_ENABLE_TESTING=OFF",
+                          "-DVTKm_ENABLE_TESTINGb=OFF",
                           "-DVTKm_BUILD_RENDERING=ON",
                           "-DVTKm_USE_64BIT_IDS=OFF",
                           "-DVTKm_USE_DOUBLE_PRECISION=ON"]
+            # shared vs static libs
+            if "+shared" in spec:
+                cmake_args.append('-DBUILD_SHARED_LIBS=ON')
+            else:
+                cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
+
             # tbb support
             if "+tbb" in spec:
                 # vtk-m detectes tbb via TBB_ROOT env var
-                os.environ["TBB_ROOT"] = spec["tbb"].prefix
+                os.environ["TBB_ROOT"] = spec["intel-tbb"].prefix
                 cmake_args.append("-DVTKm_ENABLE_TBB=ON")
 
             # cuda support

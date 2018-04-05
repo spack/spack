@@ -47,20 +47,27 @@ class Ascent(Package):
     simulations."""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
-    url      = "https://github.com/Alpine-DAV/ascent"
 
     maintainers = ['cyrush']
+
+
+    version('0.3.0',
+            git='https://github.com/Alpine-DAV/ascent.git',
+            tag='v0.3.0', 
+            submodules=True)
 
     version('develop',
             git='https://github.com/Alpine-DAV/ascent.git',
             branch='develop',
             submodules=True)
 
+    
+
     ###########################################################################
     # package variants
     ###########################################################################
 
-    variant("shared", default=True, description="Build Conduit as shared libs")
+    variant("shared", default=True, description="Build Ascent as shared libs")
 
     variant("cmake", default=True,
             description="Build CMake (if off, attempt to use cmake from PATH)")
@@ -88,7 +95,8 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake", when="+cmake")
-    depends_on("conduit@master")
+    depends_on("conduit@0.3.1")
+    depends_on("conduit~shared@0.3.1", when="~shared")
 
     #######################
     # Python
@@ -110,7 +118,9 @@ class Ascent(Package):
     #############################
 
     depends_on("vtkh", when="+vtkh")
+    depends_on("vtkh~tbb", when="+vtkh~tbb")
     depends_on("vtkh+cuda", when="+vtkh+cuda")
+    depends_on("vtkh~shared", when="+vtkh~shared")
     depends_on("adios", when="+adios")
 
     #######################
@@ -120,7 +130,7 @@ class Ascent(Package):
 
     def install(self, spec, prefix):
         """
-        Build and install Conduit.
+        Build and install Ascent.
         """
         with working_dir('spack-build', create=True):
             py_site_pkgs_dir = None
@@ -237,6 +247,12 @@ class Ascent(Package):
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
+        # shared vs static libs
+        if "+shared" in spec:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+
         #######################################################################
         # Core Dependencies
         #######################################################################
@@ -319,15 +335,16 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
         #######################
-        # VTK-h
+        # VTK-h (and deps)
         #######################
 
         cfg.write("# vtk-h support \n")
 
-        if "+vtkh" in spec:
+        if "+tbb" in spec:
             cfg.write("# tbb from spack\n")
-            cfg.write(cmake_cache_entry("TBB_DIR", spec['tbb'].prefix))
+            cfg.write(cmake_cache_entry("TBB_DIR", spec['intel-tbb'].prefix))
 
+        if "+vtkh" in spec:
             cfg.write("# vtk-m from spack\n")
             cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
 
