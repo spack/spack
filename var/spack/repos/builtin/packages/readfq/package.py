@@ -26,8 +26,9 @@ from spack import *
 
 
 class Readfq(Package):
-    """Readfq is a collection of routines for parsing the FASTA/FASTQ format. It
-    seamlessly parses both FASTA and multi-line FASTQ with a simple interface."""
+    """Readfq is a collection of routines for parsing the FASTA/FASTQ format.
+    It seamlessly parses both FASTA and multi-line FASTQ with a simple
+    interface."""
 
     homepage = "https://github.com/lh3/readfq"
 
