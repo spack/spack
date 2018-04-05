@@ -253,8 +253,26 @@ def compilers_for_arch(arch_spec, scope=None):
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
+class StrongReference(object):
+    """This acts as a hashable reference to any object (regardless of whether
+       the object itself is hashable) and also prevents the object from being
+       garbage-collected (so if two StrongReference objects are equal, they
+       will refer to the same object, since it will not have been gc'ed since
+       the creation of the first StrongReference).
+    """
+    def __init__(self, val):
+        self.val = val
+        self.id = id(val)
+
+    def __hash__(self):
+        return self.id
+
+    def __eq__(self, other):
+        return isinstance(other, StrongReference) and self.id == other.id
+
+
 def compiler_from_config_entry(items):
-    config_id = id(items)
+    config_id = StrongReference(items)
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
@@ -287,7 +305,7 @@ def compiler_from_config_entry(items):
 
         compiler = cls(cspec, os, target, compiler_paths, mods, alias,
                        environment, extra_rpaths, **compiler_flags)
-        _compiler_cache[id(items)] = compiler
+        _compiler_cache[StrongReference(items)] = compiler
 
     return compiler
 
