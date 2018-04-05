@@ -26,7 +26,7 @@ from spack import *
 import sys
 
 
-class Hypre(Package):
+class Hypre(Package, CudaPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -57,35 +57,37 @@ class Hypre(Package):
             description="Use 64bit integers")
     variant('mpi', default=True, description='Enable MPI support')
     variant('fei', default=False, description='Use internal FEI routines')
-    variant('mli', default=False, description='Use MLI')
-    variant('cuda', default=False,
-            description='Use CUDA. Require cuda 8.0 or higher')
     variant('openmp', default=False, description='Use OpenMP')
     variant('complex', default=False, description='Use complex values')
-    # TODO: Add 'cuda_arch' variant
-    # TODO: When are external superlu and superlu-dist needed or used?
-    # TODO: Add 'superlu-dist' variant? Can be used as coarse-grid solver in
-    #       v2.14.0 and later.
+    variant('superlu', default=False,
+            description='Use external SuperLU library')
+    variant('superlu-dist', default=False,
+            description='Use external SuperLU_DIST library')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
     depends_on('cuda@8:', when='+cuda')
-    # Is SuperLU/SuperLU_DIST required for +fei?
-    depends_on('superlu', when='@2.13.0: ~mpi +fei')
-    depends_on('superlu-dist', when='@2.13.0: +mpi +fei')
+    depends_on('superlu', when='@2.13.0:+superlu')
+    depends_on('superlu-dist', when='@2.13.0:+superlu-dist')
 
     # GPU support was added in 2.13.0
     conflicts('+cuda', when='@:2.12.99')
     # The internal SuperLU was removed in 2.13.0
     conflicts('+internal-superlu', when='@2.13.0:')
-    # TODO: handle '+cuda' with v2.14.0
-    conflicts('+cuda', when='@2.14.0', msg='todo: building 2.14.0 with cuda')
+    # Use of external SuperLU and SuperLU_DIST was added in 2.13.0
+    conflicts('+superlu', when='@:2.12.99')
+    conflicts('+superlu-dist', when='@:2.12.99')
+    # The required minimum cuda_arch is sm_30.
+    conflicts('cuda_arch=,', when='+cuda', msg='cuda_arch must be set')
+    conflicts('cuda_arch=20', when='+cuda', msg='minimum cuda_arch is 30')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
     # Patch for building v2.13.0 with cuda
     patch('hypre-2.13.0-cuda.patch', when='@2.13.0+cuda')
+    # Patch for building v2.14.0 with cuda
+    patch('hypre-2.14.0-cuda.patch', when='@2.14.0+cuda')
 
     def install(self, spec, prefix):
         # Note: --with-(lapack|blas)-libs= needs space separated list of names
@@ -112,6 +114,7 @@ class Hypre(Package):
         cflags = spec.compiler_flags['cflags']
         cxxflags = spec.compiler_flags['cxxflags']
         fflags = spec.compiler_flags['fflags']
+        ldflags = spec.compiler_flags['ldflags']
 
         if cflags:
             configure_args += ['CFLAGS=%s' % ' '.join(cflags)]
@@ -132,27 +135,44 @@ class Hypre(Package):
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
 
-        if '@2.13.0:+fei' in spec:
-            if '~mpi' in spec:
-                print 'TODO: Set SuperLU config options'
-            else:
-                print 'TODO: Set SuperLU_DIST config options'
+        if '@2.13.0:+superlu' in self.spec:
+            superlu = spec['superlu']
+            configure_args += [
+                "--with-superlu",
+                "--with-superlu-include=%s" % superlu.prefix.include,
+                "--with-superlu-lib=%s" % superlu.libs.ld_flags]
+            if '+shared' in spec:
+                ldflags += [superlu.libs.ld_flags]
+
+        if '+superlu-dist' in self.spec:
+            superlu_dist = spec['superlu-dist']
+            parmetis = spec['parmetis']
+            metis = spec['metis']
+            superlu_dist_libs = superlu_dist.libs + parmetis.libs + metis.libs
+            configure_args += [
+                "--with-dsuperlu",
+                "--with-dsuperlu-include=%s %s" %
+                (superlu_dist.prefix.include, parmetis.prefix.include),
+                "--with-dsuperlu-lib=%s" % superlu_dist_libs.ld_flags]
+            if '+shared' in spec:
+                ldflags += [superlu_dist_libs.ld_flags]
+
         configure_args.append(
             '--with%s-fei' % ('' if '+fei' in spec else 'out'))
-        configure_args.append(
-            '--with%s-mli' % ('' if '+mli' in spec else 'out'))
 
         configure_args.append(
             '--with%s-openmp' % ('' if '+openmp' in spec else 'out'))
+
         configure_args.append(
             '--%s-complex' % ('enable' if '+complex' in spec else 'disable'))
 
-        if '@2.13.0+cuda' in spec:
-            # TODO: Use the 'cuda_arch' variant value.
-            # The required minimum is sm_30.
-            cuda_arch_flags = ['-arch', 'sm_30']
-            configure_args += ['--with-cuda', '--enable-unified-memory',
-                               '--with-nvcc']
+        if '@2.13.0,2.14.0+cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            cuda_arch = tuple(ca for ca in cuda_arch if ca != '')
+            cuda_arch_flags = self.cuda_flags(cuda_arch)
+            configure_args += ['--with-cuda', '--enable-unified-memory']
+            if spec.version == Version('2.13.0'):
+                configure_args += ['--with-nvcc']
             # The nvcc compiler will be used for compiling all files
             nvcc = str(spec['cuda'].prefix.bin.nvcc)
             # Flags used for compiling mixed CUDA and C/C++ files with file
@@ -161,8 +181,8 @@ class Hypre(Package):
             cflags = ['-O2', '--x cu', '-ccbin=%s' % env['CXX'],
                       '--std=c++11', '-expt-extended-lambda',
                       '-DUSE_NVTX', '-DHYPRE_USE_GPU', '-DHYPRE_USE_MANAGED',
-                      '-DHYPRE_USE_CUDA', '-DHAVE_CONFIG_H',
-                      '--relocatable-device-code=true']
+                      '-DHYPRE_USE_CUDA', '-DHYPRE_MEMORY_GPU',
+                      '-DHAVE_CONFIG_H', '--relocatable-device-code=true']
             if 'essl' in spec:
                 cflags += ['-D_ESVCPTR']
             # Flags used for compiling .cu files
@@ -170,7 +190,7 @@ class Hypre(Package):
                        '-I.', '-I..', '-I../utilities',
                        '-I%s' % spec['mpi'].prefix.include,
                        '-DUSE_NVTX', '-DHYPRE_USE_GPU',
-                       '-DHYPRE_USE_MANAGED']
+                       '-DHYPRE_USE_MANAGED', '-DHYPRE_MEMORY_GPU']
             # Flags common for cflags and cuflags
             common_flags = list(cuda_arch_flags)
             if '+shared' in spec:
@@ -190,21 +210,7 @@ class Hypre(Package):
                 'CXXFLAGS=%s $(CXX_COMPILE_FLAGS)' % cxxflags_joined,
                 'NVCCFLAGS=%s' % ' '.join(cuflags)]
 
-            # Set LDFLAGS - used for linking the shared library and for linking
-            # the tests.
-            cuda_lib_names = ['cusparse', 'cudart', 'cublas', 'nvToolsExt']
-            cuda_lib_dirs = [join_path(spec['cuda'].prefix, p)
-                             for p in ['lib64', 'lib']]
-            for dir in cuda_lib_dirs:
-                cuda_libs = find_libraries(
-                    ['lib%s' % n for n in cuda_lib_names], dir,
-                    shared=True, recursive=False)
-                if cuda_libs:
-                    break
-            if not cuda_libs:
-                raise RuntimeError('CUDA libraries not found in %s' %
-                                   cuda_lib_dirs)
-            make_args += ['LDFLAGS=%s' % cuda_libs.ld_flags]
+            ldflags += [self.hypre_cuda_libs.ld_flags]
 
             if '+shared' in spec:
                 # Additional options for linking a shared library
@@ -228,6 +234,10 @@ class Hypre(Package):
                                 '\\1 ../parcsr_ls/par_relax.o',
                                 'Makefile')
 
+        # Set LDFLAGS - used for linking the shared library and for linking
+        # the tests.
+        make_args += ['LDFLAGS=%s' % ' '.join(ldflags)]
+
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
         with working_dir("src"):
@@ -243,6 +253,22 @@ class Hypre(Package):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install", *make_args)
+
+    @property
+    def hypre_cuda_libs(self):
+        cuda_lib_names = ['cusparse', 'cudart', 'cublas', 'nvToolsExt']
+        cuda_lib_dirs = [join_path(self.spec['cuda'].prefix, p)
+                         for p in ['lib64', 'lib']]
+        for dir in cuda_lib_dirs:
+            cuda_libs = find_libraries(
+                ['lib%s' % n for n in cuda_lib_names], dir,
+                shared=True, recursive=False)
+            if cuda_libs:
+                break
+        if not cuda_libs:
+            raise RuntimeError('CUDA libraries not found in %s' %
+                               cuda_lib_dirs)
+        return cuda_libs
 
     @property
     def headers(self):

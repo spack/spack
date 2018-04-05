@@ -1,0 +1,40 @@
+diff --git a/src/seq_mv/gpukernels.cu b/src/seq_mv/gpukernels.cu
+index a7a1fd5db..6c5dd28de 100644
+--- a/src/seq_mv/gpukernels.cu
++++ b/src/seq_mv/gpukernels.cu
+@@ -9,7 +9,12 @@ extern "C"{
+   void VecScaleKernelText(HYPRE_Complex *__restrict__ u, const HYPRE_Complex *__restrict__ v, const HYPRE_Complex *__restrict__ l1_norm, hypre_int num_rows){
+     hypre_int i = blockIdx.x * blockDim.x + threadIdx.x;
+     if (i<num_rows){
++#if (__CUDA_ARCH__ >= 320) || !defined(__CUDA_ARCH__)
++/* __ldg() requires compute capability >= 3.2 */
+       u[i]+=__ldg(v+i)/__ldg(l1_norm+i);
++#else
++      u[i]+=v[i]/l1_norm[i];
++#endif
+     }
+   }
+ }
+diff --git a/src/utilities/gpuMem.c b/src/utilities/gpuMem.c
+index 94b517787..871d0b78d 100644
+--- a/src/utilities/gpuMem.c
++++ b/src/utilities/gpuMem.c
+@@ -26,7 +26,17 @@ size_t memsize(const void *ptr){
+ hypre_int ggc(hypre_int id);
+ 
+ /* Global struct that holds device,library handles etc */
+-struct hypre__global_struct hypre__global_handle = { .initd=0, .device=0, .device_count=1,.memoryHWM=0};
++struct hypre__global_struct hypre__global_handle;
++  /* = { .initd=0, .device=0, .device_count=1,.memoryHWM=0}; */
++
++__attribute__((constructor))
++static void hypre__global_handle__init()
++{
++   hypre__global_handle.initd = 0;
++   hypre__global_handle.device = 0;
++   hypre__global_handle.device_count = 1;
++   hypre__global_handle.memoryHWM = 0;
++}
+ 
+ 
+ /* Initialize GPU branch of Hypre AMG */
