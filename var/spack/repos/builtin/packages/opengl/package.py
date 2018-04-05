@@ -31,7 +31,6 @@ class Opengl(Package):
     homepage = "https://www.opengl.org/"
     url      = "https://www.opengl.org/"
 
-
     # A second argument (usually the hash) must be supplied to the
     # version directive, but 'n/a' is used here because this package
     # is a placeholder for a system/vendor installation of OpenGL
