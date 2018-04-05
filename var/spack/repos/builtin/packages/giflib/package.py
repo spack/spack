@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,3 +33,8 @@ class Giflib(AutotoolsPackage):
     url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
 
     version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
+
+    patch('bsd-head.patch')
+
+    def check(self):
+        make('check', parallel=False)

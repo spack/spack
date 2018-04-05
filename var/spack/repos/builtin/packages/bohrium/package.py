@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,6 +41,7 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     version("develop", git="https://github.com/bh107/bohrium.git",
             branch="master")
+    version('0.9.0', checksum="6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93")
 
     #
     # Variants
@@ -54,7 +55,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
     variant('node', default=True,
             description="Build the node vector engine manager")
-    variant('proxy', default=True,
+    variant('proxy', default=False,
             description="Build the proxy vector engine manager")
     variant('python', default=True,
             description="Build the numpy-like bridge "

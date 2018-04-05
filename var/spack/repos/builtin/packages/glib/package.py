@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -81,9 +81,10 @@ class Glib(AutotoolsPackage):
     def configure_args(self):
         args = []
         args.extend(self.enable_or_disable('libmount'))
-        args.append('--with-python={0}'.format(
-            os.path.basename(self.spec['python'].command.path))
-        )
+        if self.spec.satisfies('@2.53.4:'):
+            args.append('--with-python={0}'.format(
+                os.path.basename(self.spec['python'].command.path))
+            )
         args.extend(self.enable_or_disable('tracing'))
         return args
 

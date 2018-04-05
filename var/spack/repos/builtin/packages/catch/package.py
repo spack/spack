@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,10 @@ class Catch(Package):
     homepage = "https://github.com/catchorg/Catch2"
     url = "https://github.com/catchorg/Catch2/archive/v1.3.0.tar.gz"
 
+    version('2.2.1', '54e56803c84890636bd7fe6c3856b104')
     version('2.1.0', '70b44068976d46d48f3cd8796f675691d3bc726b')
     version('2.0.1', '5c191a031edebd0525640ed2f38cbf64bacb1803')
+    version('1.12.1', '7d89cffd9d61f4fdcbdb373b70cc92d1')
     version('1.12.0', '8fb0a64144a2c1572dd930254c7bbdf504ecbe2d')
     version('1.11.0', '3c03a022d8ba8dbbc931e1ce9fb28faec4890b8d')
     version('1.10.0', 'c2033ca00b616e7e703623c68220cf5a8e12bba4')

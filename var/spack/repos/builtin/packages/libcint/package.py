@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,7 +35,12 @@ class Libcint(CMakePackage):
     #
     # Versions
     #
-    version('3.0.4', '55607a61313225ef4434d3e96624a008')
+    version('3.0.10', 'b368e257dba99febf1cdd1391f2e58a3')
+    version('3.0.8',  '61f415ad9c7854963136c6bba7a661eb')
+    version('3.0.7',  'f0f3c971c0d5bb5565ac9ab5e271aa79')
+    version('3.0.6',  '1aafd91107e2418f794ce02b9d88ea8b')
+    version('3.0.5',  'facb1ddabd9497e99d22176a9b9a895f')
+    version('3.0.4',  '55607a61313225ef4434d3e96624a008')
 
     #
     # Variants

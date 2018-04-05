@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -159,7 +159,7 @@ class Scotch(Package):
         if self.compiler.name == 'gcc':
             cflags.append('-Drestrict=__restrict')
         elif self.compiler.name == 'intel':
-            cflags.append('-restrict')
+            cflags.append('-Drestrict=')
 
         mpicc_path = self.spec['mpi'].mpicc if '+mpi' in self.spec else 'mpicc'
         makefile_inc.append('CCS       = $(CC)')
