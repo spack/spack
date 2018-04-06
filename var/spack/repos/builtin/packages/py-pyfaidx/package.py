@@ -29,7 +29,7 @@ class PyPyfaidx(PythonPackage):
     """pyfaidx: efficient pythonic random access to fasta subsequences"""
 
     homepage = "https://pypi.python.org/pypi/pyfaidx"
-    url      = "https://pypi.python.org/packages/e2/ce/311179c6c49ad29943a8de5e78705ef88eb8ba7620b78431f84a92ef6902/pyfaidx-0.5.3.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyfaidx/pyfaidx-0.5.3.1.tar.gz"
 
     version('0.5.3.1', '128074c48fdef23d41e47af73b45f040')
 
