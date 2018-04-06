@@ -26,8 +26,8 @@ from spack import *
 
 
 class Hapdip(Package):
-    """This project started as a set of companion scripts used in my
-    review (or preprint)."""
+    """The CHM1-NA12878 benchmark for single-sample SNP/INDEL calling from
+    WGS Illumina data."""
 
     homepage = "https://github.com/lh3/hapdip"
 
