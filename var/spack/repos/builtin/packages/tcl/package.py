@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 
+from spack.util.environment import is_system_path
 from spack import *
 
 
@@ -102,7 +103,9 @@ class Tcl(AutotoolsPackage):
         # where a system provided tcl is run against the standard libraries
         # of a Spack built tcl. See issue #7128 that relates to python but
         # it boils down to the same situation we have here.
-        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
+        path = os.path.dirname(self.command.path)
+        if not is_system_path(path):
+            spack_env.prepend_path('PATH', path)
 
         tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
 

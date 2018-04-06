@@ -22,25 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
+import os
 from spack import *
 
 
-class XercesC(AutotoolsPackage):
-    """Xerces-C++ is a validating XML parser written in a portable subset of
-    C++. Xerces-C++ makes it easy to give your application the ability to read
-    and write XML data. A shared library is provided for parsing, generating,
-    manipulating, and validating XML documents using the DOM, SAX, and SAX2
-    APIs."""
+class K8(Package):
+    """K8 is a Javascript shell based on Google's V8 Javascript engine."""
 
-    homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+    homepage = "https://github.com/attractivechaos/k8"
+    url      = "https://github.com/attractivechaos/k8/releases/download/v0.2.4/k8-0.2.4.tar.bz2"
 
-    version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
+    version('0.2.4', 'edc5579ff18842a2a59aa92ce8bab8b4')
 
-    depends_on('libiconv')
+    depends_on('zlib', type='run')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('LDFLAGS', self.spec['libiconv'].libs.ld_flags)
+    def install(self, spec, prefix):
+        if (sys.platform == 'darwin'):
+            os.rename('k8-Darwin', 'k8')
 
-    def configure_args(self):
-        return ['--disable-network']
+        if (sys.platform != 'darwin'):
+            os.rename('k8-Linux', 'k8')
+        install_tree('.', prefix.bin)

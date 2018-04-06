@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,22 +25,10 @@
 from spack import *
 
 
-class XercesC(AutotoolsPackage):
-    """Xerces-C++ is a validating XML parser written in a portable subset of
-    C++. Xerces-C++ makes it easy to give your application the ability to read
-    and write XML data. A shared library is provided for parsing, generating,
-    manipulating, and validating XML documents using the DOM, SAX, and SAX2
-    APIs."""
+class PyDiscover(PythonPackage):
+    """Test discovery for unittest."""
 
-    homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+    homepage = "https://pypi.python.org/pypi/discover"
+    url      = "https://pypi.io/packages/source/d/discover/discover-0.4.0.tar.gz"
 
-    version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
-
-    depends_on('libiconv')
-
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('LDFLAGS', self.spec['libiconv'].libs.ld_flags)
-
-    def configure_args(self):
-        return ['--disable-network']
+    version('0.4.0', '30bb643af4f5ea47fff572b5c346207d')

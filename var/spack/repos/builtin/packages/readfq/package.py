@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,22 +25,14 @@
 from spack import *
 
 
-class XercesC(AutotoolsPackage):
-    """Xerces-C++ is a validating XML parser written in a portable subset of
-    C++. Xerces-C++ makes it easy to give your application the ability to read
-    and write XML data. A shared library is provided for parsing, generating,
-    manipulating, and validating XML documents using the DOM, SAX, and SAX2
-    APIs."""
+class Readfq(Package):
+    """Readfq is a collection of routines for parsing the FASTA/FASTQ format.
+    It seamlessly parses both FASTA and multi-line FASTQ with a simple
+    interface."""
 
-    homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+    homepage = "https://github.com/lh3/readfq"
 
-    version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
+    version('2013.04.10', git='https://github.com/lh3/readfq.git', commit='4fb766095d8f459e0f8025be70f9173673905d12')
 
-    depends_on('libiconv')
-
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('LDFLAGS', self.spec['libiconv'].libs.ld_flags)
-
-    def configure_args(self):
-        return ['--disable-network']
+    def install(self, spec, prefix):
+        install_tree('.', prefix.bin)
