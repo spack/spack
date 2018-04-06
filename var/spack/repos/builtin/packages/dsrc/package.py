@@ -23,27 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
 from spack import *
+import os
 
 
 class Dsrc(Package):
-    """FIXME: Put a proper description of your package here."""
+    """DNA Sequence Reads Compression is an application designed for
+    compression of data files containing reads from DNA sequencing in
+    FASTQ format."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "http://sun.aei.polsl.pl/dsrc"
     url      = "https://github.com/refresh-bio/DSRC/archive/v2.0.2.tar.gz"
 
     version('2.0.2',     '0a75deb6db948f9179df0756c259b870')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
         make(parallel=False)
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
         install_tree('examples', prefix.examples)
-#        install_tree(self.stage.source_path.bin, prefix.bin)
