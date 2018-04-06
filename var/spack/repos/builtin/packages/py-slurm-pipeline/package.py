@@ -38,5 +38,6 @@ class PySlurmPipeline(PythonPackage):
     depends_on('py-discover@0.4.0:',   type=('build', 'run'))
     depends_on('py-mock@1.3.0:',   type=('build', 'run'))
     depends_on('py-six@1.10.0:',   type=('build', 'run'))
-    # six only required for python 2, uncomment when ^-dependencies work #2793
+    # six only required for python 2, change when ^-dependencies work, cf #2793
     # depends_on('py-six@1.10.0',   type=('build', 'run'), when='^python@:2.8')
+    depends_on('py-six@1.10.0',   type=('build', 'run'))
