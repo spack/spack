@@ -44,8 +44,14 @@ class Tmux(AutotoolsPackage):
     version('2.1', '74a2855695bccb51b6e301383ad4818c')
     version('1.9a', 'b07601711f96f1d260b390513b509a2d')
 
+    variant('static', default=False, description='Build static binary')
+
     depends_on('libevent')
     depends_on('ncurses')
 
     def configure_args(self):
-        return ['LIBTINFO_LIBS=-lncurses']
+        args = ['LIBTINFO_LIBS=-lncurses']
+        if self.spec.variants['static'].value:
+            args.append('--enable-static')
+            args.append('LDFLAGS=-static')
+        return args
