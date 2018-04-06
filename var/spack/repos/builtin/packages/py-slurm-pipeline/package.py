@@ -40,4 +40,3 @@ class PySlurmPipeline(PythonPackage):
     depends_on('py-six@1.10.0:',   type=('build', 'run'))
     # six only required for python 2, change when ^-dependencies work, cf #2793
     # depends_on('py-six@1.10.0',   type=('build', 'run'), when='^python@:2.8')
-    depends_on('py-six@1.10.0',   type=('build', 'run'))
