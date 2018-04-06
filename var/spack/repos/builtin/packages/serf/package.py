@@ -54,6 +54,19 @@ class Serf(SConsPackage):
             'ZLIB={0}'.format(spec['zlib'].prefix),
         ]
 
+        # ZLIB variable is ignored on non-Windows platforms before and
+        # including the version 1.3.9:
+        # https://www.mail-archive.com/dev@serf.apache.org/msg01359.html
+        # The issue is fixed in the trunk. Hopefully, the next stable version
+        # will work properly.
+        if '@:1.3.9' in self.spec:
+            zlib_spec = self.spec['zlib']
+            link_flags = [zlib_spec.libs.search_flags]
+            link_flags.extend([self.compiler.cc_rpath_arg + d
+                               for d in zlib_spec.libs.directories])
+            args.append('LINKFLAGS=' + ' '.join(link_flags))
+            args.append('CPPFLAGS=' + zlib_spec.headers.cpp_flags)
+
         if '+debug' in spec:
             args.append('DEBUG=yes')
         else:
