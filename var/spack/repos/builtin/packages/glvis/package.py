@@ -99,14 +99,14 @@ class Glvis(MakefilePackage):
         pkgs_libs = [('glu', 'libGLU'), ('gl', 'libGL'), ('libx11', 'libX11')]
         search_dirs = ['lib64', 'lib']
         gl_libs = LibraryList([])
-        for pkg, lib in pkgs_libs:
+        for pkg, lib_ in pkgs_libs:
             for dir in search_dirs:
-                lib = find_libraries([lib], join_path(spec[pkg].prefix, dir),
+                lib = find_libraries([lib_], join_path(spec[pkg].prefix, dir),
                                      shared=True, recursive=False)
                 if lib:
                     break
             if not lib:
-                raise InstallError('Library \'%s\' not found' % lib)
+                raise InstallError('Library \'%s\' not found' % lib_)
             gl_libs += lib
 
         args = ['CC={0}'.format(env['CC']),
