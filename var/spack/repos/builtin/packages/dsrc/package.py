@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Dsrc(Package):
+class Dsrc(MakefilePackage):
     """DNA Sequence Reads Compression is an application designed for
     compression of data files containing reads from DNA sequencing in
     FASTQ format."""
@@ -36,8 +36,10 @@ class Dsrc(Package):
 
     version('2.0.2',     '0a75deb6db948f9179df0756c259b870')
 
+    parallel = False
+
     def install(self, spec, prefix):
-        make(parallel=False)
+        make()
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
