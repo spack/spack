@@ -94,6 +94,14 @@ def test_error_cases(log_env):
     assert 'only one spec' in out
 
 
-def test_log(log_env):
+def test_log_show(log_env):
     # Just call the command, check it does not fail
     log('show', 'libaec@1.0.1')
+
+
+def test_log_parse(log_env):
+    # Parse a simple spec
+    log('parse', '-s', 'libaec@1.0.1')
+
+    # Parse a simple spec for warnings
+    log('parse', '-s', 'libaec@1.0.1', '--show=warnings')
