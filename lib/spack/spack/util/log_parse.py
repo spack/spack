@@ -92,6 +92,9 @@ def make_log_context(log_events, width=None):
 
     Events are sorted by line number before they are displayed.
     """
+    if not log_events:
+        return ''
+
     error_lines = set(e.line_no for e in log_events)
     log_events = sorted(log_events, key=lambda e: e.line_no)
 

@@ -31,11 +31,11 @@ import spack.main
 import llnl.util.filesystem as fs
 import spack.directory_layout as directory_layout
 
-logs = spack.main.SpackCommand('logs')
+log = spack.main.SpackCommand('log')
 
 
 @pytest.fixture(scope='function')
-def logs_env(tmpdir_factory, monkeypatch, config):
+def log_env(tmpdir_factory, monkeypatch, config):
     install_path = tmpdir_factory.mktemp('install_for_database')
     install_layout = directory_layout.YamlDirectoryLayout(str(install_path))
 
@@ -72,23 +72,23 @@ def logs_env(tmpdir_factory, monkeypatch, config):
         pkg.do_uninstall()
 
 
-def test_error_cases(logs_env):
+def test_error_cases(log_env):
 
     # Error cases are gathered together for performance reasons,
     # as building a mock DB takes some seconds
 
-    out = logs('foo', fail_on_error=False)
-    assert logs.returncode == 1
+    out = log('show', 'foo', fail_on_error=False)
+    assert log.returncode == 1
     assert ' matches no installed packages' in out
 
-    out = logs('libaec', fail_on_error=False)
-    assert logs.returncode == 1
+    out = log('show', 'libaec', fail_on_error=False)
+    assert log.returncode == 1
     assert 'matches multiple packages' in out
 
-    out = logs('libaec@1.0.0', fail_on_error=False)
+    out = log('show', 'libaec@1.0.0', fail_on_error=False)
     assert 'log file does not exist!' in out
 
 
-def test_logs(logs_env):
+def test_log(log_env):
     # Just call the command, check it does not fail
-    logs('libaec@1.0.1')
+    log('show', 'libaec@1.0.1')
