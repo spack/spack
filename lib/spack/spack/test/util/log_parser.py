@@ -24,6 +24,8 @@
 ##############################################################################
 from ctest_log_parser import CTestLogParser
 
+import spack.util.log_parse as log_parse
+
 
 def test_log_parser(tmpdir):
     log_file = tmpdir.join('log.txt')
@@ -51,3 +53,7 @@ configure: error: cannot run C compiled programs.                           E
 
     assert len(warnings) == 1
     assert all(w.text.endswith('W') for w in warnings)
+
+
+def test_empty_event_list_does_not_error():
+    assert log_parse.make_log_context([]) == ''

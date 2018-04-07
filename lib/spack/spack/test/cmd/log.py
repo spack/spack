@@ -86,7 +86,12 @@ def test_error_cases(log_env):
     assert 'matches multiple packages' in out
 
     out = log('show', 'libaec@1.0.0', fail_on_error=False)
+    assert log.returncode == 1
     assert 'log file does not exist!' in out
+
+    out = log('show', 'libaec@1.0.0 ', 'foo', fail_on_error=False)
+    assert log.returncode == 1
+    assert 'only one spec' in out
 
 
 def test_log(log_env):
