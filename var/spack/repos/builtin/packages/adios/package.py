@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.spec import no_fortran_compilers_available
 
 
 class Adios(AutotoolsPackage):
@@ -120,18 +121,11 @@ class Adios(AutotoolsPackage):
     #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
 
-    def validate(self, spec):
-        """Checks if incompatible variants have been activated at the same time
-
-        Args:
-            spec: spec of the package
-
-        Raises:
-            RuntimeError: in case of inconsistencies
-        """
-        if '+fortran' in spec and not self.compiler.fc:
-            msg = 'cannot build a fortran variant without a fortran compiler'
-            raise RuntimeError(msg)
+    conflicts(
+        '+fortran',
+        when=no_fortran_compilers_available,
+        msg='+fortran needs a Fortran compiler available'
+    )
 
     def with_or_without_hdf5(self, activated):
 

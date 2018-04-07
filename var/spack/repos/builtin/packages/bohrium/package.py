@@ -29,6 +29,12 @@ import llnl.util.tty as tty
 import os
 
 
+def has_cuda_arch_variant_set(spec):
+    # Sanity check
+    cuda_arch = spec.variants['cuda_arch'].value
+    return "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]
+
+
 class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
@@ -112,6 +118,12 @@ class Bohrium(CMakePackage, CudaPackage):
 
     depends_on('zlib', when="+proxy")
 
+    conflicts(
+        'bohrium',
+        when=has_cuda_arch_variant_set,
+        msg="Bohrium does not support setting the CUDA architecture yet."
+    )
+
     @property
     def config_file(self):
         """Return the path of the Bohrium system-wide configuration file"""
@@ -122,15 +134,6 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     def cmake_args(self):
         spec = self.spec
-
-        # Sanity check
-        cuda_arch = spec.variants['cuda_arch'].value
-        if "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]:
-            # TODO Add cuda_arch support to Bohrium once the basic setup
-            #      via Spack works.
-            raise InstallError(
-                "Bohrium does not support setting the CUDA architecture yet."
-            )
 
         args = [
             # Choose a particular python version
