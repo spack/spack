@@ -77,7 +77,7 @@ class Adios2(CMakePackage):
     # depends_on('googletest')
     # depends_on('pugixml')
     # depends_on('kwsys')
-    # depends_on('nlohmannjson')
+    # depends_on('nlohmann-json')
     # depends_on('pybind11@2.1.1:', when='+python')
 
     depends_on('mpi', when='+mpi')
