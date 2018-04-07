@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Dsrc(MakefilePackage):
     """DNA Sequence Reads Compression is an application designed for
     compression of data files containing reads from DNA sequencing in
