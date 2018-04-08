@@ -39,6 +39,7 @@ from functools_backport import reverse_order
 from six import iteritems
 
 import spack
+import spack.abi
 import spack.spec
 import spack.compilers
 import spack.architecture
@@ -47,7 +48,11 @@ from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
-class DefaultConcretizer(object):
+#: impements rudimentary logic for ABI compatibility
+abi = spack.abi.ABI()
+
+
+class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
@@ -132,8 +137,8 @@ class DefaultConcretizer(object):
         return sorted(candidates,
                       reverse=True,
                       key=lambda spec: (
-                          spack.abi.compatible(spec, abi_exemplar, loose=True),
-                          spack.abi.compatible(spec, abi_exemplar)))
+                          abi.compatible(spec, abi_exemplar, loose=True),
+                          abi.compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take

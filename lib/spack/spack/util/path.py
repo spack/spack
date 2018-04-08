@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Utilities for managing paths in Spack.
+
+TODO: this is really part of spack.config. Consolidate it.
 """
 import os
 import re
