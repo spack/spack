@@ -60,15 +60,16 @@ import yaml
 import jsonschema
 from yaml.error import MarkedYAMLError
 from jsonschema import Draft4Validator, validators
-from spack.util.ordereddict import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack
 import spack.architecture
-from spack.error import SpackError
 import spack.schema
+from spack.error import SpackError
+from spack.util.ordereddict import OrderedDict
+
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml

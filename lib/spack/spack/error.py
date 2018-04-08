@@ -25,10 +25,11 @@
 from __future__ import print_function
 
 import sys
+import inspect
 
 import llnl.util.tty as tty
+
 import spack
-import inspect
 
 
 class SpackError(Exception):
