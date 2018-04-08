@@ -26,9 +26,9 @@ import os
 import shutil
 
 from llnl.util.filesystem import mkdirp
-from llnl.util.lock import Lock, ReadTransaction, WriteTransaction
 
 from spack.error import SpackError
+from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 
 class FileCache(object):
