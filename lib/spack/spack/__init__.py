@@ -207,25 +207,6 @@ import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
-
-# Set up the user's editor
-# $EDITOR environment variable has the highest precedence
-editor = os.environ.get('EDITOR')
-
-# if editor is not set, use some sensible defaults
-if editor is not None:
-    editor = Executable(editor)
-else:
-    editor = which('vim', 'vi', 'emacs', 'nano')
-
-# If there is no editor, only raise an error if we actually try to use it.
-if not editor:
-    def editor_not_found(*args, **kwargs):
-        raise EnvironmentError(
-            'No text editor found! Please set the EDITOR environment variable '
-            'to your preferred text editor.')
-    editor = editor_not_found
-
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
     DependencyConflictError, InstallError, ExternalPackageError

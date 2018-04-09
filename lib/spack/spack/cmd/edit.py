@@ -31,6 +31,7 @@ import spack.cmd
 import spack.paths
 from spack.spec import Spec
 from spack.repository import Repo
+from spack.util.editor import editor
 
 description = "open package files in $EDITOR"
 section = "packaging"
@@ -64,7 +65,7 @@ def edit_package(name, repo_path, namespace):
         tty.die("No package for '{0}' was found.".format(spec.name),
                 "  Use `spack create` to create a new package")
 
-    spack.editor(path)
+    editor(path)
 
 
 def setup_parser(subparser):
@@ -137,9 +138,9 @@ def edit(parser, args):
                                                                         path))
                 path = files[0]  # already confirmed only one entry in files
 
-        spack.editor(path)
+        editor(path)
     elif name:
         edit_package(name, args.repo, args.namespace)
     else:
         # By default open the directory where packages live
-        spack.editor(path)
+        editor(path)
