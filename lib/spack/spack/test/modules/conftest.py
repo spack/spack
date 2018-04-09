@@ -22,16 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+import os.path
 import collections
 import contextlib
 import inspect
-import os.path
-import yaml
 
-from six import StringIO
+import yaml
 import pytest
-import spack
+from six import StringIO
+
+import spack.paths
+import spack.spec
 import spack.modules.common
 import spack.util.path
 
@@ -110,7 +111,7 @@ def patch_configuration(monkeypatch, request):
     writer_key = str(writer_mod.__name__).split('.')[-1]
     # Root folder for configuration
     root_for_conf = os.path.join(
-        spack.test_path, 'data', 'modules', writer_key
+        spack.paths.test_path, 'data', 'modules', writer_key
     )
 
     def _impl(filename):

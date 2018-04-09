@@ -31,6 +31,7 @@ import pytest
 from llnl.util.filesystem import join_path
 
 import spack
+import spack.paths
 from spack.directory_layout import YamlDirectoryLayout
 from spack.directory_layout import InvalidDirectoryLayoutParametersError
 from spack.repository import RepoPath
@@ -186,7 +187,7 @@ def test_handle_unknown_package(
     or query them again if the package goes away.
     """
     layout, _ = layout_and_dir
-    mock_db = RepoPath(spack.mock_packages_path)
+    mock_db = RepoPath(spack.paths.mock_packages_path)
 
     not_in_mock = set.difference(
         set(spack.repo.all_package_names()),

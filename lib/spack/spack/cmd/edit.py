@@ -27,8 +27,8 @@ import glob
 
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.paths
 from spack.spec import Spec
 from spack.repository import Repo
 
@@ -74,23 +74,23 @@ def setup_parser(subparser):
     # Edits package files by default
     excl_args.add_argument(
         '-b', '--build-system', dest='path', action='store_const',
-        const=spack.build_systems_path,
+        const=spack.paths.build_systems_path,
         help="Edit the build system with the supplied name.")
     excl_args.add_argument(
         '-c', '--command', dest='path', action='store_const',
-        const=spack.cmd.command_path,
+        const=spack.paths.command_path,
         help="edit the command with the supplied name")
     excl_args.add_argument(
         '-d', '--docs', dest='path', action='store_const',
-        const=os.path.join(spack.lib_path, 'docs'),
+        const=os.path.join(spack.paths.lib_path, 'docs'),
         help="edit the docs with the supplied name")
     excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
-        const=spack.test_path,
+        const=spack.paths.test_path,
         help="edit the test with the supplied name")
     excl_args.add_argument(
         '-m', '--module', dest='path', action='store_const',
-        const=spack.module_path,
+        const=spack.paths.module_path,
         help="edit the main spack module with the supplied name")
 
     # Options for editing packages
@@ -110,14 +110,14 @@ def edit(parser, args):
     name = args.name
 
     # By default, edit package files
-    path = spack.packages_path
+    path = spack.paths.packages_path
 
     # If `--command`, `--test`, or `--module` is chosen, edit those instead
     if args.path:
         path = args.path
         if name:
             # convert command names to python module name
-            if path == spack.cmd.command_path:
+            if path == spack.paths.command_path:
                 name = spack.cmd.python_name(name)
 
             path = os.path.join(path, name)

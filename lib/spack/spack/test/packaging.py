@@ -39,6 +39,7 @@ import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
+from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
@@ -201,7 +202,7 @@ echo $PATH"""
     buildcache.buildcache(parser, args)
 
     # Copy a key to the mirror to have something to download
-    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+    shutil.copyfile(mock_gpg_keys_path + '/external.key',
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])

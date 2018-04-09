@@ -27,51 +27,7 @@ import os
 import sys
 import multiprocessing
 
-from llnl.util.filesystem import ancestor
-
-#-----------------------------------------------------------------------------
-# Variables describing how Spack is laid out in its prefix.
-#-----------------------------------------------------------------------------
-# This file lives in $prefix/lib/spack/spack/__file__
-spack_root = ancestor(__file__, 4)
-
-# The spack script itself
-spack_file = os.path.join(spack_root, "bin", "spack")
-
-# spack directory hierarchy
-lib_path              = os.path.join(spack_root, "lib", "spack")
-external_path         = os.path.join(lib_path, "external")
-build_env_path        = os.path.join(lib_path, "env")
-module_path           = os.path.join(lib_path, "spack")
-platform_path         = os.path.join(module_path, 'platforms')
-compilers_path        = os.path.join(module_path, "compilers")
-build_systems_path    = os.path.join(module_path, 'build_systems')
-operating_system_path = os.path.join(module_path, 'operating_systems')
-test_path             = os.path.join(module_path, "test")
-hooks_path            = os.path.join(module_path, "hooks")
-var_path              = os.path.join(spack_root, "var", "spack")
-stage_path            = os.path.join(var_path, "stage")
-repos_path            = os.path.join(var_path, "repos")
-share_path            = os.path.join(spack_root, "share", "spack")
-
-# Paths to built-in Spack repositories.
-packages_path      = os.path.join(repos_path, "builtin")
-mock_packages_path = os.path.join(repos_path, "builtin.mock")
-
-# User configuration location
-user_config_path = os.path.expanduser('~/.spack')
-
-prefix = spack_root
-opt_path        = os.path.join(prefix, "opt")
-etc_path        = os.path.join(prefix, "etc")
-system_etc_path = '/etc'
-
-# GPG paths.
-gpg_keys_path      = os.path.join(var_path, "gpg")
-mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
-mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-gpg_path           = os.path.join(opt_path, "spack", "gpg")
-
+from spack.paths import var_path, user_config_path
 
 #-----------------------------------------------------------------------------
 # Below code imports spack packages.
@@ -280,4 +236,3 @@ __all__ += [
 # Add default values for attributes that would otherwise be modified from
 # Spack main script
 debug = False
-spack_working_dir = None

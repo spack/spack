@@ -22,10 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
 import pytest
 
 from llnl.util.filesystem import join_path
+
+import spack
+from spack.paths import mock_packages_path
 from spack.repository import Repo
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
@@ -42,20 +44,20 @@ class TestPackage(object):
         assert pkg.name == 'mpich'
 
     def test_package_filename(self):
-        repo = Repo(spack.mock_packages_path)
+        repo = Repo(mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
         assert filename == join_path(
-            spack.mock_packages_path,
+            mock_packages_path,
             'packages',
             'mpich',
             'package.py'
         )
 
     def test_nonexisting_package_filename(self):
-        repo = Repo(spack.mock_packages_path)
+        repo = Repo(mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
         assert filename == join_path(
-            spack.mock_packages_path,
+            mock_packages_path,
             'packages',
             'some-nonexisting-package',
             'package.py'

@@ -31,7 +31,7 @@ import unittest
 import tempfile
 import shutil
 
-import spack
+from spack.paths import build_env_path
 from llnl.util.filesystem import mkdirp, join_path
 from spack.util.executable import Executable
 
@@ -54,11 +54,11 @@ test_command = [
 class CompilerWrapperTest(unittest.TestCase):
 
     def setUp(self):
-        self.cc = Executable(join_path(spack.build_env_path, "cc"))
-        self.ld = Executable(join_path(spack.build_env_path, "ld"))
-        self.cpp = Executable(join_path(spack.build_env_path, "cpp"))
-        self.cxx = Executable(join_path(spack.build_env_path, "c++"))
-        self.fc = Executable(join_path(spack.build_env_path, "fc"))
+        self.cc = Executable(join_path(build_env_path, "cc"))
+        self.ld = Executable(join_path(build_env_path, "ld"))
+        self.cpp = Executable(join_path(build_env_path, "cpp"))
+        self.cxx = Executable(join_path(build_env_path, "c++"))
+        self.fc = Executable(join_path(build_env_path, "fc"))
 
         self.realcc = "/bin/mycc"
         self.prefix = "/spack-test-prefix"

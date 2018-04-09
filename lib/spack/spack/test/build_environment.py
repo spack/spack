@@ -25,7 +25,7 @@
 import os
 import pytest
 
-import spack
+from spack.paths import build_env_path
 from llnl.util.filesystem import join_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
 from spack.util.executable import Executable
@@ -33,9 +33,9 @@ from spack.util.executable import Executable
 
 @pytest.fixture
 def build_environment():
-    cc = Executable(join_path(spack.build_env_path, "cc"))
-    cxx = Executable(join_path(spack.build_env_path, "c++"))
-    fc = Executable(join_path(spack.build_env_path, "fc"))
+    cc = Executable(join_path(build_env_path, "cc"))
+    cxx = Executable(join_path(build_env_path, "c++"))
+    fc = Executable(join_path(build_env_path, "fc"))
 
     realcc = "/bin/mycc"
     prefix = "/spack-test-prefix"

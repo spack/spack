@@ -43,7 +43,7 @@ configuration.
 
 """
 import os
-import spack
+import spack.paths
 import spack.config
 from spack.util.path import canonicalize_path
 from spack.database import Database
@@ -62,7 +62,7 @@ config = spack.config.get_config("config")
 # Set up the install path
 #
 root = canonicalize_path(
-    config.get('install_tree', os.path.join(spack.opt_path, 'spack')))
+    config.get('install_tree', os.path.join(spack.paths.opt_path, 'spack')))
 
 #
 # Set up the installed packages database
