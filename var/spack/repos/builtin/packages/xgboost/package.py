@@ -55,7 +55,7 @@ class Xgboost(Package):
     depends_on('cmake', type='build')
     depends_on('maven', type='build', when='+jvm-packages')
     depends_on('jdk', type='build', when='+jvm-packages')
-    depends_on('cuda', type='build', when='+gpu')
+    depends_on('cuda', type=('build', 'link')), when='+gpu')
 
     conflicts('%gcc@:4.7.4')
 
