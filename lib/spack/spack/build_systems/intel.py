@@ -224,6 +224,7 @@ class IntelPackage(PackageBase):
         # Distinguish between product installations that were done external to
         # Spack (integrated via packages.yaml) and Spack-internal ones. The
         # resulting prefixes may differ in directory depth and specificity.
+        dir_to_expand = ''
         if product_dir_name in d:
             # If e.g. MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
@@ -231,7 +232,8 @@ class IntelPackage(PackageBase):
             # cousin directories.  In such cases, the prefix given to Spack
             # will inevitably be a highly product-specific and preferably fully
             # version-specific directory.  This is what we want and need, and
-            # nothing more specific than that.
+            # nothing more specific than that, i.e., if needed, convert:
+            #   .../compilers_and_libraries*/* -> .../compilers_and_libraries*
             d = re.sub('(%s%s.*?)%s.*'
                 % (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
 
@@ -243,18 +245,17 @@ class IntelPackage(PackageBase):
             # builds of dependent packages may be affected. (Though Intel has
             # been remarkably good at backward compatibility.)
             # I'm not sure if Spack's package hashing includes link targets.
-            if os.path.islink(d):
+            if d.endswith(product_dir_name):
                 # NB: This could get tiresome without a seen++ test.
                 # tty.warn('Intel product found in a version-neutral directory'
                 #          ' - future builds may not be reproducible.')
                 #
-                # Simply doing realpath() would not be enough:
-                # compilers_and_libraries -> compilers_and_libraries_2018
-                # That's mostly a staging directory for symlinks.
-                # Let's not worry about such esoterics for now.
-                pass
+                # Simply doing realpath() would not be enough, because:
+                #   compilers_and_libraries -> compilers_and_libraries_2018
+                # which is mostly a staging directory for symlinks (see next).
+                dir_to_expand = d
         else:
-            # By contrast, a Spack-born MKL installation will inherit its
+            # By contrast, a Spack-internal MKL installation will inherit its
             # prefix from install.sh of Intel's package distribution, where it
             # means the high-level installation directory that is specific to
             # the *vendor* (think of the default "/opt/intel"). We must now
@@ -285,19 +286,21 @@ class IntelPackage(PackageBase):
             #  So, we can't have it quite as easy as:
             # d = Prefix(d.append('compilers_and_libraries_' + self.version))
             #  Alright, let's see what we can find instead:
-            matching_dirs = glob.glob(
-                join_path(d, product_dir_name + version_glob))
+            dir_to_expand = join_path(d, product_dir_name)
 
+        if dir_to_expand:
+            matching_dirs = glob.glob(dir_to_expand + version_glob)
             if matching_dirs:
                 # Take the highest and thus presumably newest match, which
                 # better be the sole one anyway.
-                d = Prefix(matching_dirs[-1])
+                d = matching_dirs[-1]
             else:
-                # No match -- this *will* happen during pre-build
+                # No match -- this *will* happen during pre-build call to
                 # setup_environment() when the destination dir is still empty.
                 # Return a sensible value anyway.
-                d = Prefix(join_path(d, product_dir_name))
+                d = dir_to_expand
 
+        d = Prefix(d)
         debug_print(d)
         return d
 
