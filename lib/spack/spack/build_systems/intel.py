@@ -186,21 +186,29 @@ class IntelPackage(PackageBase):
     #
     #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
     #
-    def product_dir(self, product_dir_name, version_glob='_*.*.*'):
-        '''Returns the version-specific directory of an Intel product release,
-        holding the main product and possibly auxiliary files from other
-        products.
+    def normalize_suite_dir(self, product_dir_name, version_glob='_*.*.*'):
+        '''Returns the version-specific and absolute path to the directory of
+        an Intel product or a suite of product components.
 
         Parameters:
 
         ``product_dir_name``
-            Name of the main product directory, without a numeric version.
+            Name of the product directory, without numeric version.
 
-            - Supported::
-                compilers_and_libraries, parallel_studio_xe
-            - TBD::
-                advisor_xe, composer_xe, inspector_xe, vtune_amplifier_xe,
-                performance_snapshots
+            - Examples::
+
+                composer_xe, parallel_studio_xe, compilers_and_libraries
+
+            The following will work as well, even though they are not directly
+            targets for Spack installation::
+
+                advisor_xe, inspector_xe, vtune_amplifier_xe,
+                performance_snapshots (new name for vtune)
+
+            These are single-component products without subordinate components
+            and are normally made available to users by a toplevel psxevars.sh
+            or equivalent file to source (and thus by the modulefiles that
+            Spack produces).
 
         ``version_glob``
             A glob pattern that fully qualifies ``product_dir_name`` to a
@@ -216,15 +224,17 @@ class IntelPackage(PackageBase):
         # Distinguish between product installations that were done external to
         # Spack (integrated via packages.yaml) and Spack-internal ones. The
         # resulting prefixes may differ in directory depth and specificity.
-        if ('%s_' % product_dir_name) in d and '.' in d:
+        if product_dir_name in d:
             # If e.g. MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
             # products and their releases that were installed in sibling or
             # cousin directories.  In such cases, the prefix given to Spack
             # will inevitably be a highly product-specific and preferably fully
-            # version-specific directory.  This is what we want and need.
-            pass
-        elif product_dir_name in d:
+            # version-specific directory.  This is what we want and need, and
+            # nothing more specific than that.
+            d = re.sub('(%s%s.*?)%s.*'
+                % (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
+
             # The Intel installer scripts try hard to place compatibility links
             # named like this in the install dir to convey upgrade benefits to
             # traditional client apps. But such a generic name can be trouble
@@ -233,13 +243,16 @@ class IntelPackage(PackageBase):
             # builds of dependent packages may be affected. (Though Intel has
             # been remarkably good at backward compatibility.)
             # I'm not sure if Spack's package hashing includes link targets.
-            #
-            # NB: Code may never be reached if self.prefix is abspath()'ed!?
-            # NB2: Warning could get tiresome without a seen++ test.
-            #
-            # tty.warn('Intel product found in a version-neutral directory - '
-            #          'future builds may not be reproducible.')
-            pass
+            if os.path.islink(d):
+                # NB: This could get tiresome without a seen++ test.
+                # tty.warn('Intel product found in a version-neutral directory'
+                #          ' - future builds may not be reproducible.')
+                #
+                # Simply doing realpath() would not be enough:
+                # compilers_and_libraries -> compilers_and_libraries_2018
+                # That's mostly a staging directory for symlinks.
+                # Let's not worry about such esoterics for now.
+                pass
         else:
             # By contrast, a Spack-born MKL installation will inherit its
             # prefix from install.sh of Intel's package distribution, where it
@@ -302,72 +315,92 @@ class IntelPackage(PackageBase):
     @property
     def file_to_source(self):
         vars_file_for = {
-            'intel-parallel-studio': 'bin/psxevars',    # name test in path_to
-            'intel':                 'bin/compilervars',
-            'intel-daal':            'daal/bin/daalvars',
-            'intel-ipp':             'ipp/bin/ippvars',
-            'intel-mkl':             'mkl/bin/mklvars',
-            'intel-mpi':             'mpi/intel{bits}/bin/mpivars',
+            # key (usu. package name) -> [component_suite_dir, rel_path]
+            '@composer':             [None, 'bin/compilervars'],
+            'intel-parallel-studio': ['parallel_studio_xe', 'bin/psxevars'],
+            'intel':                 [None, 'bin/compilervars'],
+            'intel-daal':            [None, 'daal/bin/daalvars'],
+            'intel-ipp':             [None, 'ipp/bin/ippvars'],
+            'intel-mkl':             [None, 'mkl/bin/mklvars'],
+            'intel-mpi':             [None, 'mpi/intel{bits}/bin/mpivars'],
         }
         key = self.name
-        if self.spec.satisfies('@:composer.2015'):
-            key = 'intel'
+        if self.spec.satisfies('intel-parallel-studio@:composer.2015'):
+            # Same as 'intel' but component_suite_dir will resolve differently;
+            # listed explicitly as example and to avoid refactoring pitfalls.
+            key = '@composer'
 
-        f = self._replace_tags(vars_file_for[key]) + '.sh'
+        component_suite_dir, f = vars_file_for[key]
+        f = self._replace_tags(f) + '.sh'
         # TODO?? win32 would have to handle os.sep, '.bat' (unless POSIX??)
 
-        f = self.path_to(f)
+        f = self.normalize_path(f, component_suite_dir)
         debug_print(f)
         return f
 
-    def path_to(self, component):
-        '''Returns the full path to a file or a product component.  For 'mkl'
-        and 'mpi', the results are suitable for use as environment variables
-        MKLROOT and I_MPI_ROOT.
+    def normalize_path(self, component_path, component_suite_dir=None,
+        relative=False):
+        '''Returns the path to a component or file under a component suite
+        directory.
+
+        Parameters::
+
+        ``component_path``
+            A component name like 'mkl', or 'mpi', or a deeper relative path.
+
+        ``component_suite_dir``
+            _Unversioned_ name of the parent directory for `component_path`.
+            When absent or `None` a default will be used.
+
+            A present but empty string `""` requests that `component_path` refer
+            to `self.prefix`, but then this function would not be needed.
+
+        ``relative``
+            When `True`, return path relative to self.prefix, otherwise, return
+            an absolute path (the default).
         '''
-        platform_dir = ''
-        if self.spec.satisfies('@:composer.2015'):
-            component_parent = 'composer_xe'
-        elif component == 'ism' or 'psxevars' in component:
-            component_parent = 'parallel_studio_xe'
-        else:
-            component_parent = 'compilers_and_libraries'
-            if 'linux' in sys.platform:
-                platform_dir = '/linux'     # used for no other Intel component
+        # Design note: Choosing the default for `component_suite_dir` was
+        # tricky, since there should be a sensible means to specify direct
+        # parentage under "self.prefix" (but you wouldn't need a function for
+        # that).  I chose "" to represent the latter, and "None" or absence of
+        # the kwarg to indicate the most relevant case for the time of writing.
 
-        d = self.product_dir(component_parent)
-
-        if platform_dir:
-            if (platform_dir + os.sep in d and not d.endswith(component)):
-                # On my system, when using an external MKL, self.prefix showed
-                # up as ending with "/compiler". I think this is because I
-                # provided that MKL by means of the side effect of loading an
-                # env. module for the Intel *compilers*, and Spack inspects
-                # $PATH(?)
-                d = Prefix(ancestor(d))
+        if component_suite_dir is None:
+            if self.spec.satisfies('@:composer.2015'):
+                component_suite_dir = 'composer_xe'     # The only one present.
+            elif component_path.startswith('ism'):
+                component_suite_dir = 'parallel_studio_xe'
             else:
-                d += platform_dir
+                component_suite_dir = 'compilers_and_libraries' # most popular
 
-        d = Prefix(join_path(d, component))
+        d = self.normalize_suite_dir(component_suite_dir)   # chops if needed
+        parent_dir = ancestor(os.path.realpath(d))      # normally, self.prefix
+
+        if (component_suite_dir == 'compilers_and_libraries' and
+            'linux' in sys.platform):
+            d += '/linux'     # No other component suite uses this.
+
+        d = join_path(d, component_path)
+
+        if relative:
+            d = os.path.relpath(os.path.realpath(d), parent_dir)
+
         debug_print(d)
         return d
 
     def component_bin_dir(self, component, relative=False):
-        d = self.path_to(component)
+        d = self.normalize_path(component, relative)
 
         if sys.platform == 'darwin':
             # TODO: verify
-            d = d.bin
+            d = join_path(d, 'bin')
         else:
             if component == 'mpi':
-                d = d.intel64.bin
+                d = join_path(d, 'intel64', 'bin')
             elif component == 'compiler':
-                d = Prefix(ancestor(d)).bin.intel64
+                d = join_path(ancestor(d), 'bin', 'intel64')
             else:
-                d = d.bin
-
-        if relative:
-            d = self._make_relative(d)
+                d = join_path(d, 'bin')
 
         debug_print(d)
         return d
@@ -376,7 +409,7 @@ class IntelPackage(PackageBase):
         '''Provide directory suitable for find_libraries() and
         SPACK_COMPILER_EXTRA_RPATHS.
         '''
-        d = self.path_to(component)
+        d = self.normalize_path(component, relative)
 
         if sys.platform == 'darwin':
             d = d.lib
@@ -388,24 +421,18 @@ class IntelPackage(PackageBase):
 
         if component == 'tbb':
             # Must qualify further
-            d = Prefix(join_path(d, self._tbb_abi))
-
-        if relative:
-            d = self._make_relative(d)
+            d = join_path(d, self._tbb_abi)
 
         debug_print(d)
         return d
 
     @property
     def component_include_dir(self, component, relative=False):
-        d = self.path_to(component)
+        d = self.normalize_path(component, relative)
 
         if component == 'mpi':
             d = d.intel64
         d = d.include
-
-        if relative:
-            d = self._make_relative(d)
 
         debug_print(d)
         return d
@@ -644,7 +671,7 @@ class IntelPackage(PackageBase):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mkl' in self.spec or self._is_personality('mkl'):
-            spack_env.set('MKLROOT', self.path_to('mkl'))
+            spack_env.set('MKLROOT', self.normalize_path('mkl'))
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir('mkl'))
 
@@ -798,7 +825,7 @@ class IntelPackage(PackageBase):
         #  "... you can also uninstall the Intel(R) Software Manager
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
-        f = join_path(self.path_to('ism'), 'uninstall.sh')
+        f = join_path(self.normalize_path('ism'), 'uninstall.sh')
         if os.path.isfile(f):
             tty.warn('Uninstalling "Intel Software Improvement Program"'
                      'component')
