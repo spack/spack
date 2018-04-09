@@ -244,13 +244,13 @@ class IntelPackage(PackageBase):
         d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
-            return d
+            return Prefix(d)
 
         # Distinguish between product installations that were done external to
         # Spack (integrated via packages.yaml) and Spack-internal ones. The
         # resulting prefixes may differ in directory depth and specificity.
         dir_to_expand = ''
-        if product_dir_name in d:
+        if product_dir_name and product_dir_name in d:
             # If e.g. MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
             # products and their releases that were installed in sibling or
@@ -325,51 +325,13 @@ class IntelPackage(PackageBase):
                 # Return a sensible value anyway.
                 d = dir_to_expand
 
-        d = Prefix(d)
-        debug_print(d)
-        return d
-
-    @property
-    def file_to_source(self):
-        '''Full path of file to source for initializing an Intel package.
-
-        If a client package would wish to override, follow this example::
-
-        @property
-        def file_to_source(self):
-            return self.normalize_path("apsvars.sh", "vtune_amplifier")
-
-        '''
-        vars_file_info_for = {
-            # key (usu. spack package name) -> [rel_path, component_suite_dir]
-            '@composer':             ['bin/compilervars',       None],
-            'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
-            'intel':                 ['bin/compilervars',       None],
-            'intel-daal':            ['daal/bin/daalvars',      None],
-            'intel-ipp':             ['ipp/bin/ippvars',        None],
-            'intel-mkl':             ['mkl/bin/mklvars',        None],
-            'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
-        }
-        key = self.name
-        if self.spec.satisfies('@:composer.2015'):
-            # Same as 'intel' but 'None' for component_suite_dir will resolve
-            # differently. I listed it as a separate entry to serve as
-            # example and to avoid pitfalls upon possible refactoring.
-            key = '@composer'
-
-        f, component_suite_dir = vars_file_info_for[key]
-        f = _expand_fields(f) + '.sh'
-        # TODO?? win32 would have to handle os.sep, '.bat' (unless POSIX??)
-
-        f = self.normalize_path(f, component_suite_dir)
-        debug_print(f)
-        return f
+        debug_print(str((self.prefix, product_dir_name)) + " --> " + d)
+        return Prefix(d)
 
     def normalize_path(self, component_path, component_suite_dir=None,
                        relative=False):
-
-        '''Returns the path to a component or file under a component suite
-        directory.
+        '''Returns the absolute or relative path to a component or file under a
+        component suite directory.
 
         Parameters::
 
@@ -380,8 +342,7 @@ class IntelPackage(PackageBase):
             _Unversioned_ name of the parent directory for `component_path`.
 
             When absent or `None`, a default will be used.  A present but empty
-            string `""` requests that `component_path` refer to `self.prefix`,
-            but then this function should not be needed.
+            string `""` requests that `component_path` refer to `self.prefix`.
 
         ``relative``
             When `True`, return path relative to self.prefix, otherwise, return
@@ -430,8 +391,6 @@ class IntelPackage(PackageBase):
                 d = join_path(ancestor(d), 'bin', _expand_fields('{arch}'))
             else:
                 d = join_path(d, 'bin')
-
-        debug_print(d)
         return d
 
     def component_lib_dir(self, component, relative=False):
@@ -441,7 +400,7 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, relative)
 
         if sys.platform == 'darwin':
-            d = d.lib
+            d = join_path(d, 'lib')
         else:
             if component == 'mpi':
                 d = join_path(d, self._expand_fields('{arch}'), 'lib')
@@ -452,19 +411,50 @@ class IntelPackage(PackageBase):
             # Must qualify further
             d = join_path(d, self._tbb_abi)
 
-        debug_print(d)
         return d
 
-    @property
     def component_include_dir(self, component, relative=False):
         d = self.normalize_path(component, relative)
 
         if component == 'mpi':
             d = join_path(d, self._expand_fields('{arch}'))
-        d = d.include
-
-        debug_print(d)
+        d = join_path(d, 'include')
         return d
+
+    @property
+    def file_to_source(self):
+        '''Full path of file to source for initializing an Intel package.
+
+        If a client package would wish to override, follow this example::
+
+        @property
+        def file_to_source(self):
+            return self.normalize_path("apsvars.sh", "vtune_amplifier")
+
+        '''
+        vars_file_info_for = {
+            # key (usu. spack package name) -> [rel_path, component_suite_dir]
+            '@composer':             ['bin/compilervars',       None],
+            'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
+            'intel':                 ['bin/compilervars',       None],
+            'intel-daal':            ['daal/bin/daalvars',      None],
+            'intel-ipp':             ['ipp/bin/ippvars',        None],
+            'intel-mkl':             ['mkl/bin/mklvars',        None],
+            'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
+        }
+        key = self.name
+        if self.spec.satisfies('@:composer.2015'):
+            # Same as 'intel' but 'None' for component_suite_dir will resolve
+            # differently. I listed it as a separate entry to serve as
+            # example and to avoid pitfalls upon possible refactoring.
+            key = '@composer'
+
+        f, component_suite_dir = vars_file_info_for[key]
+        f = _expand_fields(f) + '.sh'
+        # TODO?? win32 would have to handle os.sep, '.bat' (unless POSIX??)
+
+        f = self.normalize_path(f, component_suite_dir)
+        return f
 
     # ---------------------------------------------------------------------
     # Threading, including (WIP) support for virtual 'tbb'
