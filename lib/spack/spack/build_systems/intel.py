@@ -260,7 +260,7 @@ class IntelPackage(PackageBase):
             # nothing more specific than that, i.e., if needed, convert:
             #   .../compilers_and_libraries*/* -> .../compilers_and_libraries*
             d = re.sub('(%s%s.*?)%s.*' %
-                (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
+                       (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
 
             # The Intel installer scripts try hard to place compatibility links
             # named like this in the install dir to convey upgrade benefits to
