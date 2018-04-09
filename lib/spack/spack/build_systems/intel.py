@@ -76,6 +76,31 @@ def _valid_components():
         yield component.text
 
 
+def _expand_fields(s):
+    '''Expand arch-related fields in a string, typically a filename.
+
+    Supported fields and their typical expansions are::
+
+        {platform}  linux
+        {arch}      intel64
+        {bits}      64
+
+    '''
+    # Python-native string formatting requires arg list counts to match the
+    # replacement field count; optional fields are far easier with regexes.
+
+    if 'linux' in sys.platform:            # NB: linux2 vs. linux
+        s = re.sub('{platform}', 'linux', s)
+    #elif 'darwin' in sys.platform:         # TBD
+    #    s = re.sub('{platform}', '', s)    # typically not used (right?)
+    #elif 'win' in sys.platform:            # TBD
+    #    s = re.sub('{platform}', 'windows', s)
+
+    s = re.sub('{arch}', 'intel64', s)      # TBD: ia32
+    s = re.sub('{bits}', '64', s)
+    return s
+
+
 class IntelPackage(PackageBase):
     """Specialized class for licensed Intel software.
 
@@ -234,8 +259,8 @@ class IntelPackage(PackageBase):
             # version-specific directory.  This is what we want and need, and
             # nothing more specific than that, i.e., if needed, convert:
             #   .../compilers_and_libraries*/* -> .../compilers_and_libraries*
-            d = re.sub('(%s%s.*?)%s.*'
-                % (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
+            d = re.sub('(%s%s.*?)%s.*' %
+                (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
 
             # The Intel installer scripts try hard to place compatibility links
             # named like this in the install dir to convey upgrade benefits to
@@ -304,37 +329,36 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    def _replace_tags(self, filename):
-        '''[Experimental] Expand replacement fields in filename.
-        '''
-        # Python-native string formatting requires arg list counts to match the
-        # replacement field count; optional fields are far easier with regexes.
-        f = filename
-        #f = re.sub('{platform}', sys.platform, f)  # linux2 vs. linux
-        f = re.sub('{arch}', 'intel64', f)
-        f = re.sub('{bits}', '64', f)
-        return f
-
     @property
     def file_to_source(self):
-        vars_file_for = {
-            # key (usu. package name) -> [component_suite_dir, rel_path]
-            '@composer':             [None, 'bin/compilervars'],
-            'intel-parallel-studio': ['parallel_studio_xe', 'bin/psxevars'],
-            'intel':                 [None, 'bin/compilervars'],
-            'intel-daal':            [None, 'daal/bin/daalvars'],
-            'intel-ipp':             [None, 'ipp/bin/ippvars'],
-            'intel-mkl':             [None, 'mkl/bin/mklvars'],
-            'intel-mpi':             [None, 'mpi/intel{bits}/bin/mpivars'],
+        '''Full path of file to source for initializing an Intel package.
+
+        If a client package would wish to override, follow this example::
+
+        @property
+        def file_to_source(self):
+            return self.normalize_path("apsvars.sh", "vtune_amplifier")
+
+        '''
+        vars_file_info_for = {
+            # key (usu. spack package name) -> [rel_path, component_suite_dir]
+            '@composer':             ['bin/compilervars',       None],
+            'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
+            'intel':                 ['bin/compilervars',       None],
+            'intel-daal':            ['daal/bin/daalvars',      None],
+            'intel-ipp':             ['ipp/bin/ippvars',        None],
+            'intel-mkl':             ['mkl/bin/mklvars',        None],
+            'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
         }
         key = self.name
-        if self.spec.satisfies('intel-parallel-studio@:composer.2015'):
-            # Same as 'intel' but component_suite_dir will resolve differently;
-            # listed explicitly as example and to avoid refactoring pitfalls.
+        if self.spec.satisfies('@:composer.2015'):
+            # Same as 'intel' but 'None' for component_suite_dir will resolve
+            # differently. I listed it as a separate entry to serve as
+            # example and to avoid pitfalls upon possible refactoring.
             key = '@composer'
 
-        component_suite_dir, f = vars_file_for[key]
-        f = self._replace_tags(f) + '.sh'
+        f, component_suite_dir = vars_file_info_for[key]
+        f = _expand_fields(f) + '.sh'
         # TODO?? win32 would have to handle os.sep, '.bat' (unless POSIX??)
 
         f = self.normalize_path(f, component_suite_dir)
@@ -342,7 +366,8 @@ class IntelPackage(PackageBase):
         return f
 
     def normalize_path(self, component_path, component_suite_dir=None,
-        relative=False):
+                       relative=False):
+
         '''Returns the path to a component or file under a component suite
         directory.
 
@@ -353,20 +378,21 @@ class IntelPackage(PackageBase):
 
         ``component_suite_dir``
             _Unversioned_ name of the parent directory for `component_path`.
-            When absent or `None` a default will be used.
 
-            A present but empty string `""` requests that `component_path` refer
-            to `self.prefix`, but then this function would not be needed.
+            When absent or `None`, a default will be used.  A present but empty
+            string `""` requests that `component_path` refer to `self.prefix`,
+            but then this function should not be needed.
 
         ``relative``
             When `True`, return path relative to self.prefix, otherwise, return
             an absolute path (the default).
         '''
-        # Design note: Choosing the default for `component_suite_dir` was
-        # tricky, since there should be a sensible means to specify direct
-        # parentage under "self.prefix" (but you wouldn't need a function for
-        # that).  I chose "" to represent the latter, and "None" or absence of
-        # the kwarg to indicate the most relevant case for the time of writing.
+        # Design note: Choosing the default for `component_suite_dir` was a bit
+        # tricky since there better be a sensible means to specify direct
+        # parentage under self.prefix (even though you normally shouldn't need
+        # a function for that).  I chose "" to allow that case be represented,
+        # and 'None' or the absence of the kwarg to represent the most relevant
+        # case for the time of writing.
 
         if component_suite_dir is None:
             if self.spec.satisfies('@:composer.2015'):
@@ -374,14 +400,14 @@ class IntelPackage(PackageBase):
             elif component_path.startswith('ism'):
                 component_suite_dir = 'parallel_studio_xe'
             else:
-                component_suite_dir = 'compilers_and_libraries' # most popular
+                component_suite_dir = 'compilers_and_libraries'  # most popular
 
-        d = self.normalize_suite_dir(component_suite_dir)   # chops if needed
-        parent_dir = ancestor(os.path.realpath(d))      # normally, self.prefix
+        d = self.normalize_suite_dir(component_suite_dir)
+        parent_dir = ancestor(os.path.realpath(d))   # usu. same as self.prefix
 
-        if (component_suite_dir == 'compilers_and_libraries' and
-            'linux' in sys.platform):
-            d += '/linux'     # No other component suite uses this.
+        if component_suite_dir == 'compilers_and_libraries':    # passed or set
+            if 'linux' in sys.platform:
+                d += '/linux'          # Not used in any other component suite.
 
         d = join_path(d, component_path)
 
@@ -399,9 +425,9 @@ class IntelPackage(PackageBase):
             d = join_path(d, 'bin')
         else:
             if component == 'mpi':
-                d = join_path(d, 'intel64', 'bin')
+                d = join_path(d, _expand_fields('{arch}'), 'bin')
             elif component == 'compiler':
-                d = join_path(ancestor(d), 'bin', 'intel64')
+                d = join_path(ancestor(d), 'bin', _expand_fields('{arch}'))
             else:
                 d = join_path(d, 'bin')
 
@@ -418,9 +444,9 @@ class IntelPackage(PackageBase):
             d = d.lib
         else:
             if component == 'mpi':
-                d = d.intel64.lib
+                d = join_path(d, self._expand_fields('{arch}'), 'lib')
             else:
-                d = d.lib.intel64
+                d = join_path(d, 'lib', self._expand_fields('{arch}'))
 
         if component == 'tbb':
             # Must qualify further
@@ -434,7 +460,7 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, relative)
 
         if component == 'mpi':
-            d = d.intel64
+            d = join_path(d, self._expand_fields('{arch}'))
         d = d.include
 
         debug_print(d)
@@ -665,12 +691,15 @@ class IntelPackage(PackageBase):
             return
 
         tty.debug("sourcing " + f)
+
         if sys.platform == 'darwin':
-            run_env.extend(
-                EnvironmentModifications.from_sourcing_file(f))
+            args = ()
         else:
-            run_env.extend(
-                EnvironmentModifications.from_sourcing_file(f, 'intel64'))
+            # All Intel packages expect at least the architecture as argument.
+            # Some accept more args, but those are not (yet?) handled here.
+            args = (_expand_fields('{arch}'),)
+
+        run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mkl' in self.spec or self._is_personality('mkl'):
@@ -793,7 +822,7 @@ class IntelPackage(PackageBase):
         }
 
         if not self.spec.satisfies('@:composer.2015'):
-            config.update({'ARCH_SELECTED': 'ALL'})    # Not in early versions
+            config.update({'ARCH_SELECTED': 'ALL'})    # in late versions only
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
