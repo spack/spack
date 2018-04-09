@@ -347,11 +347,11 @@ class Mfem(Package):
             libunwind = spec['libunwind']
             headers = find_headers('libunwind', libunwind.prefix.include)
             headers.add_macro('-g')
-            libs = find_libraries('libunwind', libunwind.prefix.lib,
-                                  shared=True, recursive=True)
+            libs = find_libraries('libunwind', libunwind.prefix.lib64,
+                                  shared=True, recursive=False)
             if not libs:
                 libs = find_libraries('libunwind', libunwind.prefix.lib,
-                                      shared=False, recursive=True)
+                                      shared=False, recursive=False)
             # When mfem uses libunwind, it also needs 'libdl'.
             libs += LibraryList(find_system_libraries('libdl'))
             options += [
@@ -382,6 +382,12 @@ class Mfem(Package):
             options += [
                 'CONDUIT_OPT=%s' % headers.cpp_flags,
                 'CONDUIT_LIB=%s' % ld_flags_from_LibraryList(libs)]
+
+        batch_sys = detect_batch_system(self, make_jobs)
+        options += [
+            'MFEM_MPIEXEC=%s' % batch_sys['mpiexec'],
+            'MFEM_MPIEXEC_NP=%s' % batch_sys['mpiexec_numproc_flag'],
+            'MFEM_MPI_NP=%d' % min(4, batch_sys['num_cpus'])]
 
         make('config', *options, parallel=False)
         make('info', parallel=False)

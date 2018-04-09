@@ -241,6 +241,9 @@ import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
+from llnl.util.batchsystem import detect_batch_system
+__all__ += ['detect_batch_system']
+
 
 # Set up the user's editor
 # $EDITOR environment variable has the highest precedence
