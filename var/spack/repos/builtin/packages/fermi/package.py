@@ -34,7 +34,7 @@ class Fermi(MakefilePackage):
     version('1.1', 'd5f006315652b6f18070b31474ca5ebb')
 
     depends_on('zlib')
-    depends_on('perl')
+    depends_on('perl', type='run')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
