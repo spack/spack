@@ -33,8 +33,9 @@ import llnl.util.filesystem as fs
 import spack
 import spack.cmd.install
 import spack.package
+from spack.error import SpackError
 from spack.spec import Spec
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 install = SpackCommand('install')
 
@@ -238,11 +239,18 @@ def test_install_overwrite(
     'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
 )
 def test_install_conflicts(conflict_spec):
-    # Make sure that spec with conflicts exit with 1
-    with pytest.raises(SpackCommandError):
+    # Make sure that spec with conflicts raises a SpackError
+    with pytest.raises(SpackError):
         install(conflict_spec)
 
-    assert install.returncode == 1
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+)
+def test_install_invalid_spec(invalid_spec):
+    # Make sure that invalid specs raise a SpackError
+    with pytest.raises(SpackError, match='Unexpected token'):
+        install(invalid_spec)
 
 
 @pytest.mark.usefixtures('noop_install', 'config')

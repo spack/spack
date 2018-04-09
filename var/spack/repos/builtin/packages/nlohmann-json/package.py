@@ -25,30 +25,36 @@
 from spack import *
 
 
-class DarshanUtil(Package):
-    """Darshan (util) is collection of tools for parsing and summarizing log
-    files produced by Darshan (runtime) instrumentation. This package is
-    typically installed on systems (front-end) where you intend to analyze
-    log files produced by Darshan (runtime)."""
+class NlohmannJson(CMakePackage):
+    """JSON for Modern C++"""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://nlohmann.github.io/json/"
+    url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
+    maintainers = ['ax3l']
 
-    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
-    version('3.1.0', '439d717323e6265b2612ed127886ae52')
-    version('3.0.0', '732577fe94238936268d74d7d74ebd08')
+    version('3.1.2', '557651b017c36ad596ba3b577ba1b539')
 
-    variant('bzip2', default=False, description="Enable bzip2 compression")
-    depends_on('zlib')
-    depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    variant('single_header', default=True,
+        description='Use amalgamated single-header')
+    variant('test', default=True,
+        description='Build the tests')
 
-    def install(self, spec, prefix):
+    depends_on('cmake@3.8:', type='build')
 
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
+    # requires mature C++11 implementations
+    conflicts('%gcc@:4.8')
+    conflicts('%gcc@:3.3')
+    conflicts('%intel@:16')
+    conflicts('%pgi@:14')
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DJSON_MultipleHeaders:BOOL={0}'.format(
+                'ON' if '~single_header' in spec else 'OFF'),
+            '-DBUILD_TESTING:BOOL={0}'.format(
+                'ON' if '+test' in spec else 'OFF')
+        ]
+
+        return args

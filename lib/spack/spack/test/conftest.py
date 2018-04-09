@@ -709,3 +709,14 @@ def conflict_spec(request):
     directive in the "conflict" package.
     """
     return request.param
+
+
+@pytest.fixture(
+    params=[
+        'conflict%~'
+    ]
+)
+def invalid_spec(request):
+    """Specs that do not parse cleanly due to invalid formatting.
+    """
+    return request.param

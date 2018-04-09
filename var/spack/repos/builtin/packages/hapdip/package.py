@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,30 +25,15 @@
 from spack import *
 
 
-class DarshanUtil(Package):
-    """Darshan (util) is collection of tools for parsing and summarizing log
-    files produced by Darshan (runtime) instrumentation. This package is
-    typically installed on systems (front-end) where you intend to analyze
-    log files produced by Darshan (runtime)."""
+class Hapdip(Package):
+    """The CHM1-NA12878 benchmark for single-sample SNP/INDEL calling from
+    WGS Illumina data."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://github.com/lh3/hapdip"
 
-    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
-    version('3.1.0', '439d717323e6265b2612ed127886ae52')
-    version('3.0.0', '732577fe94238936268d74d7d74ebd08')
+    version('2018.02.20', git='https://github.com/lh3/hapdip.git', commit='7c12f684471999a543fdacce972c9c86349758a3')
 
-    variant('bzip2', default=False, description="Enable bzip2 compression")
-    depends_on('zlib')
-    depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    depends_on('k8', type='run')
 
     def install(self, spec, prefix):
-
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
-
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        install_tree('.', prefix.bin)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,33 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class DarshanUtil(Package):
-    """Darshan (util) is collection of tools for parsing and summarizing log
-    files produced by Darshan (runtime) instrumentation. This package is
-    typically installed on systems (front-end) where you intend to analyze
-    log files produced by Darshan (runtime)."""
+class Dsrc(MakefilePackage):
+    """DNA Sequence Reads Compression is an application designed for
+    compression of data files containing reads from DNA sequencing in
+    FASTQ format."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "http://sun.aei.polsl.pl/dsrc"
+    url      = "https://github.com/refresh-bio/DSRC/archive/v2.0.2.tar.gz"
 
-    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
-    version('3.1.0', '439d717323e6265b2612ed127886ae52')
-    version('3.0.0', '732577fe94238936268d74d7d74ebd08')
+    version('2.0.2', '0a75deb6db948f9179df0756c259b870')
 
-    variant('bzip2', default=False, description="Enable bzip2 compression")
-    depends_on('zlib')
-    depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    parallel = False
 
     def install(self, spec, prefix):
-
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
-
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        install_tree('bin', prefix.bin)
+        install_tree('lib', prefix.lib)
+        install_tree('include', prefix.include)
+        install_tree('examples', prefix.examples)

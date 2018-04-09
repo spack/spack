@@ -22,33 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
+import os
 from spack import *
 
 
-class DarshanUtil(Package):
-    """Darshan (util) is collection of tools for parsing and summarizing log
-    files produced by Darshan (runtime) instrumentation. This package is
-    typically installed on systems (front-end) where you intend to analyze
-    log files produced by Darshan (runtime)."""
+class K8(Package):
+    """K8 is a Javascript shell based on Google's V8 Javascript engine."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://github.com/attractivechaos/k8"
+    url      = "https://github.com/attractivechaos/k8/releases/download/v0.2.4/k8-0.2.4.tar.bz2"
 
-    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
-    version('3.1.0', '439d717323e6265b2612ed127886ae52')
-    version('3.0.0', '732577fe94238936268d74d7d74ebd08')
+    version('0.2.4', 'edc5579ff18842a2a59aa92ce8bab8b4')
 
-    variant('bzip2', default=False, description="Enable bzip2 compression")
-    depends_on('zlib')
-    depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    depends_on('zlib', type='run')
 
     def install(self, spec, prefix):
+        if (sys.platform == 'darwin'):
+            os.rename('k8-Darwin', 'k8')
 
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
-
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        if (sys.platform != 'darwin'):
+            os.rename('k8-Linux', 'k8')
+        install_tree('.', prefix.bin)
