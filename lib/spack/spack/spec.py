@@ -115,6 +115,7 @@ from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack
+
 import spack.architecture
 import spack.compilers as compilers
 import spack.error
@@ -3090,7 +3091,7 @@ class Spec(object):
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))
                 elif named_str == 'SPACK_ROOT':
-                    out.write(fmt % token_transform(spack.prefix))
+                    out.write(fmt % token_transform(spack.paths.prefix))
                 elif named_str == 'SPACK_INSTALL':
                     out.write(fmt % token_transform(spack.store.root))
                 elif named_str == 'PREFIX':

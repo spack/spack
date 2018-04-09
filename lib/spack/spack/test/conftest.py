@@ -36,6 +36,7 @@ import pytest
 from llnl.util.filesystem import remove_linked_tree
 
 import spack
+import spack.paths
 import spack.architecture
 import spack.database
 import spack.directory_layout
@@ -77,11 +78,11 @@ def no_chdir():
 @pytest.fixture(scope='session', autouse=True)
 def mock_stage(tmpdir_factory):
     """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.stage_path
+    stage_path = spack.paths.stage_path
     new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.stage_path = new_stage
+    spack.paths.stage_path = new_stage
     yield new_stage
-    spack.stage_path = stage_path
+    spack.paths.stage_path = stage_path
 
 
 @pytest.fixture(scope='session')
@@ -118,14 +119,14 @@ def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
     yield
 
     files_in_stage = set()
-    if os.path.exists(spack.stage_path):
+    if os.path.exists(spack.paths.stage_path):
         files_in_stage = set(
-            os.listdir(spack.stage_path)) - _ignore_stage_files
+            os.listdir(spack.paths.stage_path)) - _ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(spack.stage_path, f)
+            path = os.path.join(spack.paths.stage_path, f)
             remove_whatever_it_is(path)
     else:
         _ignore_stage_files |= files_in_stage
@@ -134,7 +135,7 @@ def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
 
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.fetch_cache with a mock object that does nothing
+    """Substitutes spack.paths.fetch_cache with a mock object that does nothing
     and raises on fetch.
     """
     class MockCache(object):
@@ -171,7 +172,7 @@ spack.architecture.platform = lambda: spack.platforms.test.Test()
 @pytest.fixture(scope='session')
 def repo_path():
     """Session scoped RepoPath object pointing to the mock repository"""
-    return spack.repository.RepoPath(spack.mock_packages_path)
+    return spack.repository.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture(scope='module')
@@ -216,7 +217,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     """
     tmpdir = tmpdir_factory.mktemp('configurations')
     # Name of the yaml files in the test/data folder
-    test_path = py.path.local(spack.test_path)
+    test_path = py.path.local(spack.paths.test_path)
     compilers_yaml = test_path.join('data', 'compilers.yaml')
     packages_yaml = test_path.join('data', 'packages.yaml')
     config_yaml = test_path.join('data', 'config.yaml')

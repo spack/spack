@@ -52,7 +52,9 @@ from six import string_types
 from six import with_metaclass
 
 import llnl.util.tty as tty
+
 import spack
+import spack.paths
 import spack.store
 import spack.compilers
 import spack.directives
@@ -67,7 +69,7 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import mkdirp, join_path, touch
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
@@ -688,8 +690,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def global_license_dir(self):
         """Returns the directory where global license files for all
            packages are stored."""
-        spack_root = ancestor(__file__, 4)
-        return join_path(spack_root, 'etc', 'spack', 'licenses')
+        return os.path.join(spack.paths.prefix, 'etc', 'spack', 'licenses')
 
     @property
     def global_license_file(self):
@@ -697,8 +698,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            particular package should be stored."""
         if not self.license_files:
             return
-        return join_path(self.global_license_dir, self.name,
-                         os.path.basename(self.license_files[0]))
+        return os.path.join(self.global_license_dir, self.name,
+                            os.path.basename(self.license_files[0]))
 
     @property
     def version(self):
@@ -1107,9 +1108,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
-        good_file = join_path(archive_dir, '.spack_patched')
-        no_patches_file = join_path(archive_dir, '.spack_no_patches')
-        bad_file = join_path(archive_dir, '.spack_patch_failed')
+        good_file = os.path.join(archive_dir, '.spack_patched')
+        no_patches_file = os.path.join(archive_dir, '.spack_no_patches')
+        bad_file = os.path.join(archive_dir, '.spack_patch_failed')
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
@@ -1619,7 +1620,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     partial = True
 
         stage_is_managed_in_spack = self.stage.path.startswith(
-            spack.stage_path)
+            spack.paths.stage_path)
         if restage and stage_is_managed_in_spack:
             self.stage.destroy()
             self.stage.create()

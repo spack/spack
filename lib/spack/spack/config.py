@@ -64,7 +64,7 @@ from jsonschema import Draft4Validator, validators
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.paths
 import spack.architecture
 import spack.schema
 from spack.error import SpackError
@@ -218,24 +218,24 @@ _platform = spack.architecture.platform().name
 
 #: Default configuration scope is the lowest-level scope. These are
 #: versioned with Spack and can be overridden by systems, sites or users.
-_defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
+_defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
 ConfigScope('defaults', _defaults_path)
 ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
 
 #: System configuration is per machine.
 #: No system-level configs should be checked into spack by default
-_system_path = os.path.join(spack.system_etc_path, 'spack')
+_system_path = os.path.join(spack.paths.system_etc_path, 'spack')
 ConfigScope('system', _system_path)
 ConfigScope('system/%s' % _platform, os.path.join(_system_path, _platform))
 
 #: Site configuration is per spack instance, for sites or projects.
 #: No site-level configs should be checked into spack by default.
-_site_path = os.path.join(spack.etc_path, 'spack')
+_site_path = os.path.join(spack.paths.etc_path, 'spack')
 ConfigScope('site', _site_path)
 ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 
 #: User configuration can override both spack defaults and site config.
-_user_path = spack.user_config_path
+_user_path = spack.paths.user_config_path
 ConfigScope('user', _user_path)
 ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 

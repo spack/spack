@@ -30,11 +30,13 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-from spack import *
 import os
 from contextlib import contextmanager
-import spack
+
 from llnl.util.lang import match_predicate
+
+import spack.store
+from spack import *
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package

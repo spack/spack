@@ -41,28 +41,29 @@ import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
 
 import spack
+import spack.paths
 from spack.error import SpackError
 
 
-# names of profile statistics
+#: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
 
-# help levels in order of detail (i.e., number of commands shown)
+#: help levels in order of detail (i.e., number of commands shown)
 levels = ['short', 'long']
 
-# intro text for help at different levels
+#: intro text for help at different levels
 intro_by_level = {
     'short': 'These are common spack commands:',
     'long':  'Complete list of spack commands:',
 }
 
-# control top-level spack options shown in basic vs. advanced help
+#: control top-level spack options shown in basic vs. advanced help
 options_by_level = {
     'short': ['h', 'k', 'V', 'color'],
     'long': 'all'
 }
 
-# Longer text for each section, to show in help
+#: Longer text for each section, to show in help
 section_descriptions = {
     'admin':       'administration',
     'basic':       'query packages',
@@ -76,8 +77,8 @@ section_descriptions = {
     'system':      'system',
 }
 
-# preferential command order for some sections (e.g., build pipeline is
-# in execution order, not alphabetical)
+#: preferential command order for some sections (e.g., build pipeline is
+#: in execution order, not alphabetical)
 section_order = {
     'basic': ['list', 'info', 'find'],
     'build': ['fetch', 'stage', 'patch', 'configure', 'build', 'restage',
@@ -85,17 +86,21 @@ section_order = {
     'packaging': ['create', 'edit']
 }
 
-# Properties that commands are required to set.
+#: Properties that commands are required to set.
 required_command_properties = ['level', 'section', 'description']
+
+#: Recorded directory where spack command was originally invoked
+spack_working_dir = None
 
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
+    global spack_working_dir
     try:
-        spack.spack_working_dir = os.getcwd()
+        spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(spack.spack_prefix)
-        spack.spack_working_dir = spack.spack_prefix
+        os.chdir(spack.paths.prefix)
+        spack_working_dir = spack.paths.prefix
 
 
 def add_all_commands(parser):
@@ -347,7 +352,7 @@ def setup_main_options(args):
 
     if args.mock:
         from spack.repository import RepoPath
-        spack.repo.swap(RepoPath(spack.mock_packages_path))
+        spack.repo.swap(RepoPath(spack.paths.mock_packages_path))
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

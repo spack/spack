@@ -22,17 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import collections
 import getpass
-import os
 import tempfile
 
-import spack.util.ordereddict
 import pytest
-import spack
-import spack.config
 import yaml
+
+import spack.paths
+import spack.config
 from spack.util.path import canonicalize_path
+from spack.util.ordereddict import OrderedDict
 
 # Some sample compiler config data
 a_comps = {
@@ -242,7 +243,7 @@ def config(tmpdir):
     """Mocks the configuration scope."""
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
-    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
+    spack.config.config_scopes = OrderedDict()
     for priority in ['low', 'high']:
         spack.config.ConfigScope(priority, str(tmpdir.join(priority)))
     Config = collections.namedtuple('Config', ['real', 'mock'])
@@ -336,14 +337,14 @@ class TestConfig(object):
                          expected + path)
 
     def test_substitute_config_variables(self):
-        prefix = spack.prefix.lstrip('/')
+        prefix = spack.paths.prefix.lstrip('/')
 
         assert os.path.join(
             '/foo/bar/baz', prefix
         ) == canonicalize_path('/foo/bar/baz/$spack')
 
         assert os.path.join(
-            spack.prefix, 'foo/bar/baz'
+            spack.paths.prefix, 'foo/bar/baz'
         ) == canonicalize_path('$spack/foo/bar/baz/')
 
         assert os.path.join(
@@ -355,7 +356,7 @@ class TestConfig(object):
         ) == canonicalize_path('/foo/bar/baz/${spack}')
 
         assert os.path.join(
-            spack.prefix, 'foo/bar/baz'
+            spack.paths.prefix, 'foo/bar/baz'
         ) == canonicalize_path('${spack}/foo/bar/baz/')
 
         assert os.path.join(
@@ -432,7 +433,7 @@ def test_keys_are_ordered():
 
     config_scope = spack.config.ConfigScope(
         'modules',
-        os.path.join(spack.test_path, 'data', 'config')
+        os.path.join(spack.paths.test_path, 'data', 'config')
     )
 
     data = config_scope.get_section('modules')

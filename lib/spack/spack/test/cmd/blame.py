@@ -26,7 +26,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir
 
-import spack
+import spack.paths
 import spack.cmd
 from spack.main import SpackCommand
 from spack.util.executable import which
@@ -56,7 +56,7 @@ def test_blame_by_percent(builtin_mock):
 
 def test_blame_file(builtin_mock):
     """Sanity check the blame command to make sure it works."""
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         out = blame('bin/spack')
     assert 'LAST_COMMIT' in out
     assert 'AUTHOR' in out

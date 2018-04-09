@@ -27,7 +27,7 @@ from __future__ import print_function
 import argparse
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
 import spack.cmd
 
 description = "print out locations of various directories used by Spack"
@@ -73,16 +73,16 @@ def setup_parser(subparser):
 
 def location(parser, args):
     if args.module_dir:
-        print(spack.module_path)
+        print(spack.paths.module_path)
 
     elif args.spack_root:
-        print(spack.prefix)
+        print(spack.paths.prefix)
 
     elif args.packages:
         print(spack.repo.first_repo().root)
 
     elif args.stages:
-        print(spack.stage_path)
+        print(spack.paths.stage_path)
 
     else:
         specs = spack.cmd.parse_specs(args.spec)

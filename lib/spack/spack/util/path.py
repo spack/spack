@@ -28,9 +28,11 @@ TODO: this is really part of spack.config. Consolidate it.
 """
 import os
 import re
-import spack
 import getpass
 import tempfile
+
+import spack.paths
+
 
 __all__ = [
     'substitute_config_variables',
@@ -38,7 +40,7 @@ __all__ = [
 
 # Substitutions to perform
 replacements = {
-    'spack': spack.prefix,
+    'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
 }

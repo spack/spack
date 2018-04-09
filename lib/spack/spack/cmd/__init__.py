@@ -33,8 +33,8 @@ from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
-import spack
 import spack.config
+import spack.paths
 import spack.spec
 import spack.store
 from spack.error import SpackError
@@ -58,8 +58,6 @@ ignore_files = r'^\.|^__init__.py$|^#'
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
 
-command_path = os.path.join(spack.lib_path, "spack", "cmd")
-
 #: Names of all commands
 all_commands = []
 
@@ -74,7 +72,7 @@ def cmd_name(python_name):
     return python_name.replace('_', '-')
 
 
-for file in os.listdir(command_path):
+for file in os.listdir(spack.paths.command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
         all_commands.append(cmd_name(cmd))
@@ -320,5 +318,5 @@ def display_specs(specs, args=None, **kwargs):
 
 def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')

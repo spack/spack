@@ -30,7 +30,7 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -137,7 +137,7 @@ def default_log_file(spec):
     """
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
-    dirname = fs.join_path(spack.var_path, 'junit-report')
+    dirname = fs.join_path(spack.paths.var_path, 'junit-report')
     fs.mkdirp(dirname)
     return fs.join_path(dirname, basename)
 

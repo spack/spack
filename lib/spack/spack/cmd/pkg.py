@@ -31,7 +31,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
 
-import spack
+import spack.paths
 from spack.util.executable import which
 from spack.cmd import spack_is_git_repo
 
@@ -78,11 +78,11 @@ def setup_parser(subparser):
 
 
 def list_packages(rev):
-    pkgpath = os.path.join(spack.packages_path, 'packages')
-    relpath = pkgpath[len(spack.prefix + os.path.sep):] + os.path.sep
+    pkgpath = os.path.join(spack.paths.packages_path, 'packages')
+    relpath = pkgpath[len(spack.paths.prefix + os.path.sep):] + os.path.sep
 
     git = which('git', required=True)
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
                      output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
@@ -96,8 +96,8 @@ def pkg_add(args):
                     pkg_name, filename)
 
         git = which('git', required=True)
-        with working_dir(spack.prefix):
-            git('-C', spack.packages_path, 'add', filename)
+        with working_dir(spack.paths.prefix):
+            git('-C', spack.paths.packages_path, 'add', filename)
 
 
 def pkg_list(args):

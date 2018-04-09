@@ -25,7 +25,7 @@
 import os
 import re
 import llnl.util.tty as tty
-from spack import build_env_path
+from spack.paths import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.cray_frontend import CrayFrontend

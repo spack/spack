@@ -56,7 +56,8 @@ import re
 import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-import spack
+
+import spack.paths
 import spack.build_environment as build_environment
 import spack.environment
 import spack.tengine as tengine
@@ -229,7 +230,7 @@ def root_path(name):
     Returns:
         root folder for module file installation
     """
-    path = roots.get(name, os.path.join(spack.share_path, name))
+    path = roots.get(name, os.path.join(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
 

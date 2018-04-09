@@ -42,7 +42,6 @@
 
 from spack import *
 
-import spack
 import spack.store
 
 import os

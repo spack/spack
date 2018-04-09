@@ -23,13 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Test that the Stage class works correctly."""
-import collections
 import os
+import collections
+
+import pytest
 
 from llnl.util.filesystem import join_path, working_dir
 
-import pytest
-import spack
+import spack.paths
 import spack.stage
 import spack.util.executable
 from spack.stage import Stage
@@ -101,18 +102,18 @@ def get_stage_path(stage, stage_name):
     """
     if stage_name is not None:
         # If it is a named stage, we know where the stage should be
-        return join_path(spack.stage_path, stage_name)
+        return os.path.join(spack.paths.stage_path, stage_name)
     else:
         # If it's unnamed, ensure that we ran mkdtemp in the right spot.
         assert stage.path is not None
-        assert stage.path.startswith(spack.stage_path)
+        assert stage.path.startswith(spack.paths.stage_path)
         return stage.path
 
 
 @pytest.fixture()
 def tmpdir_for_stage(mock_archive):
     """Uses a temporary directory for staging"""
-    current = spack.stage_path
+    current = spack.paths.stage_path
     spack.config.update_config(
         'config',
         {'build_stage': [str(mock_archive.test_tmp_dir)]},

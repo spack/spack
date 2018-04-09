@@ -83,12 +83,12 @@ from llnl.util.lang import memoized, list_modules, key_ordering
 from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
+import spack.error as serr
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
 from spack.util.spack_yaml import syaml_dict
-import spack.error as serr
 
 
 class NoPlatformError(serr.SpackError):
@@ -463,7 +463,7 @@ def arch_for_spec(arch_spec):
 @memoized
 def all_platforms():
     classes = []
-    mod_path = spack.platform_path
+    mod_path = spack.paths.platform_path
     parent_module = "spack.platforms"
 
     for name in list_modules(mod_path):

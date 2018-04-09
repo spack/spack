@@ -22,9 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-
 import pytest
+
+import spack.repository
+import spack.paths
 
 
 # Unlike the repo_path fixture defined in conftest, this has a test-level
@@ -32,7 +33,7 @@ import pytest
 # given RepoPath
 @pytest.fixture()
 def repo_for_test():
-    return spack.repository.RepoPath(spack.mock_packages_path)
+    return spack.repository.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture()

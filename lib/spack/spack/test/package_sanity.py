@@ -23,12 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """This test does sanity checks on Spack's builtin package database."""
-
 import re
 
 import pytest
 
 import spack
+from spack.paths import mock_packages_path
 from spack.repository import RepoPath
 
 
@@ -46,7 +46,7 @@ def test_get_all_packages():
 
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
-    db = RepoPath(spack.mock_packages_path)
+    db = RepoPath(mock_packages_path)
     spack.repo.swap(db)
     check_db()
     spack.repo.swap(db)

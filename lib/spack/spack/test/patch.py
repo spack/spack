@@ -29,7 +29,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir, mkdirp
 
-import spack
+import spack.paths
 import spack.util.compression
 from spack.stage import Stage
 from spack.spec import Spec
@@ -39,11 +39,11 @@ from spack.spec import Spec
 def mock_stage(tmpdir, monkeypatch):
     # don't disrupt the spack install directory with tests.
     mock_path = str(tmpdir)
-    monkeypatch.setattr(spack, 'stage_path', mock_path)
+    monkeypatch.setattr(spack.paths, 'stage_path', mock_path)
     return mock_path
 
 
-data_path = os.path.join(spack.test_path, 'data', 'patch')
+data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
 
 
 @pytest.mark.parametrize('filename, sha256, archive_sha256', [

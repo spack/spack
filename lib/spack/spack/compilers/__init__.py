@@ -25,12 +25,12 @@
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
+import os
 import imp
 
 from llnl.util.lang import list_modules
-from llnl.util.filesystem import join_path
 
-import spack
+import spack.paths
 import spack.error
 import spack.spec
 import spack.config
@@ -204,7 +204,8 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(name for name in list_modules(spack.compilers_path))
+    return sorted(
+        name for name in list_modules(spack.paths.compilers_path))
 
 
 @_auto_compiler_spec
@@ -357,7 +358,7 @@ def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
 
-    file_path = join_path(spack.compilers_path, compiler_name + ".py")
+    file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
     compiler_mod = imp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 

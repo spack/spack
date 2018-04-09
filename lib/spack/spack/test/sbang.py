@@ -34,7 +34,7 @@ import filecmp
 
 from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.paths
 from spack.hooks.sbang import shebang_too_long, filter_shebangs_in_directory
 from spack.util.executable import which
 
@@ -47,7 +47,7 @@ lua_line_patched  = "--!/this/" + ('x' * 200) + "/is/lua\n"
 node_line         = "#!/this/" + ('x' * 200) + "/is/node\n"
 node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 node_line_patched = "//!/this/" + ('x' * 200) + "/is/node\n"
-sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
 last_line         = "last!\n"
 
 
