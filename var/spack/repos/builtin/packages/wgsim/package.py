@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,30 +25,23 @@
 from spack import *
 
 
-class DarshanUtil(Package):
-    """Darshan (util) is collection of tools for parsing and summarizing log
-    files produced by Darshan (runtime) instrumentation. This package is
-    typically installed on systems (front-end) where you intend to analyze
-    log files produced by Darshan (runtime)."""
+class Wgsim(Package):
+    """Wgsim is a small tool for simulating sequence reads from a reference
+    genome.
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    It is able to simulate diploid genomes with SNPs and insertion/deletion
+    (INDEL) polymorphisms, and simulate reads with uniform substitution
+    sequencing errors. It does not generate INDEL sequencing errors, but this
+    can be partly compensated by simulating INDEL polymorphisms."""
 
-    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
-    version('3.1.0', '439d717323e6265b2612ed127886ae52')
-    version('3.0.0', '732577fe94238936268d74d7d74ebd08')
+    homepage = "https://github.com/lh3/wgsim"
 
-    variant('bzip2', default=False, description="Enable bzip2 compression")
+    version('2011.10.17', git='https://github.com/lh3/wgsim.git', commit='a12da3375ff3b51a5594d4b6fa35591173ecc229')
+
     depends_on('zlib')
-    depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
 
     def install(self, spec, prefix):
+        cc = Executable(spack_cc)
+        cc('-g', '-O2', '-Wall', '-o', 'wgsim', 'wgsim.c', '-lz', '-lm')
 
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
-
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        install_tree(self.stage.source_path, prefix.bin)
