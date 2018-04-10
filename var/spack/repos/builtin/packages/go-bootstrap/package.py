@@ -46,12 +46,14 @@ class GoBootstrap(Package):
     # See: https://golang.org/doc/install/source#go14 and
     # https://github.com/golang/go/issues/17545 and
     # https://github.com/golang/go/issues/16352
+    version('1.4-bootstrap-20171003', 'dbf727a4b0e365bf88d97cbfde590016',
+            url='https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz')
     version('1.4-bootstrap-20170531', 'd2cc61cb9f829b3510ee39c0c5568014',
             url='https://storage.googleapis.com/golang/go1.4-bootstrap-20170531.tar.gz')
     version('1.4-bootstrap-20161024', '76e42c8152e8560ded880a6d1d1f53cb',
             url='https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz')
 
-    provides('golang@:1.4-bootstrap-20170531')
+    provides('golang@:1.4-bootstrap-20171003')
 
     depends_on('git', type=('build', 'link', 'run'))
 
