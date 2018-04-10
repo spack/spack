@@ -33,9 +33,11 @@ class PyPythonSocketio(PythonPackage):
 
     version('1.8.4', '9de73990f6c32c701278c01b0fa1a0c3')
 
-    variant('eventlet', default=True)
+    variant('eventlet', default=True,
+            description="Pulls in optional eventlet dependency, required"
+                        " for using the zmq implementation.")
 
     depends_on('py-setuptools',      type='build')
     depends_on('py-six@1.9.0:',      type=("build", "run"))
     depends_on('py-python-engineio', type="run")
-    depends_on('py-eventlet', when='+eventlet')
+    depends_on('py-eventlet', when='+eventlet', type="run")
