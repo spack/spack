@@ -58,6 +58,7 @@ class IntelParallelStudio(IntelPackage):
     version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
     version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
     version('cluster.2015.6',      'd460f362c30017b60f85da2e51ad25bf', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+    version('cluster.2015.1',      '542b78c86beff9d7b01076a7be9c6ddc', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Professional Edition (middle; excluded: MPI/TAC/Cluster Checker)
     version('professional.2018.1', '91669ff7afbfd07868a429a122c90357', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
@@ -71,6 +72,7 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
     version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
     version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+    version('professional.2015.1', '542b78c86beff9d7b01076a7be9c6ddc', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer version (basic; excluded: MPI/..., Advisor/Inspector/Vtune)
     version('composer.2018.1',     '28cb807126d713350f4aa6f9f167448a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
@@ -85,6 +87,7 @@ class IntelParallelStudio(IntelPackage):
     version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
     # Grandfathered release; different directory structure.
     version('composer.2015.6',     'da9f8600c18d43d58fba0488844f79c9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
+    version('composer.2015.1',     '85beae681ae56411a8e791a7c44a5c0a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4933/l_compxe_2015.1.133.tgz')
 
     # Generic Variants
     variant('rpath',    default=True,
@@ -146,7 +149,13 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+clck',      when='@composer.0:composer.9999')
     conflicts('+inspector', when='@composer.0:composer.9999')
     conflicts('+itac',      when='@composer.0:composer.9999')
+    conflicts('+mpi',       when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
+
+    # The following components are not available before 2016
+    conflicts('+daal',      when='@professional.0:professional.2015.7')
+    conflicts('+daal',      when='@cluster.0:cluster.2015.7')
+    conflicts('+daal',      when='@composer.0:composer.2015.7')
 
     @property
     def components(self):
@@ -178,6 +187,8 @@ class IntelParallelStudio(IntelPackage):
             components.extend([
                 'intel-compxe', 'intel-ccompxe', 'intel-fcompxe'
             ])
+            if self.version < Version('2016'):
+                components.extend(['intel-compilerpro'])
 
         # Intel(R) Data Analytics Acceleration Library
         if '+daal' in spec:
@@ -232,7 +243,7 @@ class IntelParallelStudio(IntelPackage):
 
         directories = [
             'Licenses',
-            self.component_bin_dir('compiler', relative=True)
+            self.component_bin_dir('compiler')
         ]
 
         if '+advisor' in spec:

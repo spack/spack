@@ -379,7 +379,7 @@ class IntelPackage(PackageBase):
         return d
 
     def component_bin_dir(self, component, relative=False):
-        d = self.normalize_path(component, relative)
+        d = self.normalize_path(component, relative=relative)
 
         if sys.platform == 'darwin':
             # TODO: verify
@@ -397,15 +397,15 @@ class IntelPackage(PackageBase):
         '''Provide directory suitable for find_libraries() and
         SPACK_COMPILER_EXTRA_RPATHS.
         '''
-        d = self.normalize_path(component, relative)
+        d = self.normalize_path(component, relative=relative)
 
         if sys.platform == 'darwin':
             d = join_path(d, 'lib')
         else:
             if component == 'mpi':
-                d = join_path(d, self._expand_fields('{arch}'), 'lib')
+                d = join_path(d, _expand_fields('{arch}'), 'lib')
             else:
-                d = join_path(d, 'lib', self._expand_fields('{arch}'))
+                d = join_path(d, 'lib', _expand_fields('{arch}'))
 
         if component == 'tbb':
             # Must qualify further
@@ -414,10 +414,10 @@ class IntelPackage(PackageBase):
         return d
 
     def component_include_dir(self, component, relative=False):
-        d = self.normalize_path(component, relative)
+        d = self.normalize_path(component, relative=relative)
 
         if component == 'mpi':
-            d = join_path(d, self._expand_fields('{arch}'))
+            d = join_path(d, _expand_fields('{arch}'))
         d = join_path(d, 'include')
         return d
 
