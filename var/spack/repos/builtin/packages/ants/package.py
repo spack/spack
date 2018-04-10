@@ -40,8 +40,6 @@ class Ants(CMakePackage):
 
     version('2.2.0', '5661b949268100ac0f7baf6d2702b4dd')
 
-    depends_on('cmake', type='build')
-
     def install(self, spec, prefix):
         with working_dir(join_path('spack-build', 'ANTS-build'), create=False):
             make("install")
