@@ -31,7 +31,3 @@ class PyGreenlet(PythonPackage):
     url      = "https://pypi.io/packages/source/g/greenlet/greenlet-0.4.13.tar.gz"
 
     version('0.4.13', '6e0b9dd5385f81d478451ec8ed1d62b3')
-
-    # Although setup.py tries to import it and only falls back to distutils
-    # setup.py does not recognize --single-version-externally-managed
-    # depends_on('py-setuptools', type='build')
