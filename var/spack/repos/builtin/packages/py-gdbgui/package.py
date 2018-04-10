@@ -33,10 +33,10 @@ class PyGdbgui(PythonPackage):
 
     version('0.11.2.1', 'c15dd3f60fe372b2e93f705c7ee75f51')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-flask@0.12.2:', type=('build', 'run'))
-    depends_on('py-flask-compress@1.4.0:', type=('build', 'run'))
-    depends_on('py-flask-socketio@2.9.3:', type=('build', 'run'))
-    depends_on('py-gevent@1.2.2:', type=('build', 'run'))
-    depends_on('py-pygdbmi@0.8.2.0:', type=('build', 'run'))
-    depends_on('py-pygments@2.2.0:', type=('build', 'run'))
+    depends_on('py-setuptools',             type='build')
+    depends_on('py-flask@0.12.2:',          type=('build', 'run'))
+    depends_on('py-flask-compress@1.4.0:',  type=('build', 'run'))
+    depends_on('py-flask-socketio@2.9.3:',  type=('build', 'run'))
+    depends_on('py-gevent@1.2.2:',          type=('build', 'run'))
+    depends_on('py-pygdbmi@0.8.2.0:',       type=('build', 'run'))
+    depends_on('py-pygments@2.2.0:',        type=('build', 'run'))
