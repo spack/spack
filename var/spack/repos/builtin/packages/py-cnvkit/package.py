@@ -34,6 +34,7 @@ class PyCnvkit(PythonPackage):
 
     version('0.9.2', '16612c4dcc9570f6ef9fecc42caf1745')
 
+    depends_on('py-setuptools',        type='build')
     depends_on('py-biopython@1.62:',   type=('build', 'run'))
     depends_on('py-future@0.15.2:',    type=('build', 'run'))
     depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
