@@ -25,8 +25,7 @@
 
 from spack import *
 import os
-import shutil
-import subprocess
+from shutil import copyfile
 import glob
 
 
@@ -52,12 +51,14 @@ class Xgboost(Package):
     variant('cuda', default=False,
             description='compiled with cuda support')
 
-    depends_on('cmake', type='build')
+    # cuda requires cmake v3.2+
+    depends_on('cmake@3.2:', type='build')
     depends_on('maven', type='build', when='+jvm-packages')
     depends_on('jdk', type='build', when='+jvm-packages')
     depends_on('cuda', when='+cuda')
 
     conflicts('%gcc@:4.7.4')
+    conflicts('%gcc@6.4:', when='+cuda')
 
     def install(self, spec, prefix):
         if '+cuda' in spec:
@@ -75,11 +76,12 @@ class Xgboost(Package):
             with working_dir('jvm-packages'):
                 # custom repo location.
                 # Default is ~/.m2, and directory structure goes
-                # like ~/.m2/repository/ml/dmlc/...  as opposed to m2/ml/dmlc/...
+                # like ~/.m2/repository/ml/dmlc/...
+                # as opposed to m2/ml/dmlc/...
                 mvn_repo = str(self.stage.source_path) + '/jvm-packages/m2'
                 drepo = '-Dmaven.repo.local=' + mvn_repo
                 # compile with maven
-                which('mvn')
+                mvn = which('mvn')
                 if self.run_tests:
                     mvn(drepo, 'install')
                 else:
@@ -91,5 +93,5 @@ class Xgboost(Package):
                 ujars = glob.glob(mvn_repo + '/ml/dmlc/xgboost4j' + xgtype +
                                   '/' + ver + '/*.jar')
                 for jar in ujars:
-                    shutil.copyfile(jar, str(spec.prefix) + '/' +
-                                    os.path.basename(jar))
+                    copyfile(jar, str(spec.prefix) + '/' +
+                             os.path.basename(jar))
