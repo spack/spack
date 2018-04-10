@@ -26,7 +26,8 @@ from spack import *
 
 
 class PyFlaskCompress(PythonPackage):
-    """Flask-Compress allows you to easily compress your Flask application's responses with gzip."""
+    """Flask-Compress allows you to easily compress your Flask application's
+    responses with gzip."""
 
     homepage = "https://github.com/libwilliam/flask-compress"
     url      = "https://pypi.io/packages/source/F/Flask-Compress/Flask-Compress-1.4.0.tar.gz"
