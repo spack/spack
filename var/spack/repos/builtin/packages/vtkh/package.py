@@ -24,8 +24,19 @@
 ##############################################################################
 
 from spack import *
+
+import socket
 import os
 
+import llnl.util.tty as tty
+from os import environ as env
+
+def cmake_cache_entry(name, value):
+    """
+    Helper that creates CMake cache entry strings used in
+    'host-config' files.
+    """
+    return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
 
 class Vtkh(Package):
     """VTK-h is a toolkit of scientific visualization algorithms for emerging
@@ -54,11 +65,12 @@ class Vtkh(Package):
     depends_on("tbb", when="+tbb")
     depends_on("cuda", when="+cuda")
 
+    #raise ValueError('A very specific bad thing happened.')
     depends_on("vtkm@1.2.0")
     depends_on("vtkm@1.2.0+tbb", when="+tbb")
     depends_on("vtkm@1.2.0+cuda", when="+cuda")
     depends_on("vtkm@1.2.0~shared", when="~shared")
-
+  
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake_args = ["../src",
@@ -108,3 +120,138 @@ class Vtkh(Package):
             else:
                 make()
             make("install")
+
+    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
+        """
+        This method creates a 'host-config' file that specifies
+        all of the options used to configure and build vtkh.
+        """
+
+        #######################
+        # Compiler Info
+        #######################
+        c_compiler = env["SPACK_CC"]
+        cpp_compiler = env["SPACK_CXX"]
+        f_compiler = None
+
+        if self.compiler.fc:
+            # even if this is set, it may not exist so do one more sanity check
+            if os.path.isfile(env["SPACK_FC"]):
+                f_compiler = env["SPACK_FC"]
+
+        #######################################################################
+        # By directly fetching the names of the actual compilers we appear
+        # to doing something evil here, but this is necessary to create a
+        # 'host config' file that works outside of the spack install env.
+        #######################################################################
+
+        sys_type = spec.architecture
+        # if on llnl systems, we can use the SYS_TYPE
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+
+        ##############################################
+        # Find and record what CMake is used
+        ##############################################
+
+        #cmake_exe = spec['cmake'].command.path
+
+        host_cfg_fname = "%s-%s-%s-vtkh.cmake" % (socket.gethostname(),
+                                                    sys_type,
+                                                    spec.compiler)
+
+        cfg = open(host_cfg_fname, "w")
+        cfg.write("##################################\n")
+        cfg.write("# spack generated host-config\n")
+        cfg.write("##################################\n")
+        cfg.write("# {0}-{1}\n".format(sys_type, spec.compiler))
+        cfg.write("##################################\n\n")
+
+        # Include path to cmake for reference
+        cfg.write("# cmake from spack \n")
+        #cfg.write("# cmake executable path: %s\n\n" % cmake_exe)
+
+        #######################
+        # Compiler Settings
+        #######################
+
+        cfg.write("#######\n")
+        cfg.write("# using %s compiler spec\n" % spec.compiler)
+        cfg.write("#######\n\n")
+        cfg.write("# c compiler used by spack\n")
+        cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
+        cfg.write("# cpp compiler used by spack\n")
+        cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
+
+        # shared vs static libs
+        if "+shared" in spec:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+
+        #######################################################################
+        # Core Dependencies
+        #######################################################################
+
+        #######################
+        # VTK-h (and deps)
+        #######################
+
+        cfg.write("# vtk-m support \n")
+
+        if "+tbb" in spec:
+            cfg.write("# tbb from spack\n")
+            cfg.write(cmake_cache_entry("TBB_DIR", spec['intel-tbb'].prefix))
+
+        cfg.write("# vtk-m from spack\n")
+        cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
+
+        #######################################################################
+        # Optional Dependencies
+        #######################################################################
+
+        #######################
+        # MPI
+        #######################
+
+        cfg.write("# MPI Support\n")
+
+        if "+mpi" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
+                                        spec['mpi'].mpicxx))
+            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
+                                        spec['mpi'].mpifc))
+            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            if os.path.isfile(mpiexe_bin):
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
+
+        #######################
+        # CUDA
+        #######################
+
+        cfg.write("# CUDA Support\n")
+
+        if "+cuda" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
+
+        cfg.write("##################################\n")
+        cfg.write("# end spack generated host-config\n")
+        cfg.write("##################################\n")
+        cfg.close()
+
+        host_cfg_fname = os.path.abspath(host_cfg_fname)
+        tty.info("spack generated conduit host-config file: " + host_cfg_fname)
+        return host_cfg_fname
