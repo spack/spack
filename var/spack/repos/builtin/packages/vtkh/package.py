@@ -59,7 +59,7 @@ class Vtkh(Package):
     variant("tbb", default=True, description="build tbb support")
     variant("cuda", default=False, description="build cuda support")
 
-    depends_on("cmake")
+    depends_on("cmake@3.8.2:3.9.999", when="+cmake")
 
     depends_on("mpi", when="+mpi")
     depends_on("tbb", when="+tbb")
