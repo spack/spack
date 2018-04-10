@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 from distutils.dir_util import copy_tree
+import os
 
 
 class Supernova(Package):
@@ -37,7 +37,7 @@ class Supernova(Package):
     distances. Almost all other methods instead merge homologous chromosomes
     into single incorrect 'consensus' sequences. Supernova is the only
     practical method for creating diploid assemblies of large genomes.
-    
+
     To install this package, you will need to go to the supernova download
     page of supernova, register with your email address and download
     supernova yourself. Spack will search your current directory for the
@@ -59,4 +59,8 @@ class Supernova(Package):
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
-            copy_tree('.', prefix)
+            rm = which('rm')
+            # remove the broken symlinks
+            rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
+               'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
+            copy_tree('.', prefix, preserve_symlinks=1)
