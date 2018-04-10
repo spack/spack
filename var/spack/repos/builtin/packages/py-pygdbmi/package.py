@@ -33,4 +33,4 @@ class PyPygdbmi(PythonPackage):
 
     version('0.8.2.0', 'e74d3d02fa5eef1223b5dedb13f9bbad')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
