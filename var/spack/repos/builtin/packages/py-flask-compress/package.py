@@ -34,4 +34,4 @@ class PyFlaskCompress(PythonPackage):
     version('1.4.0', 'd997f73e4ed5793ec526c135aa765e15')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-flask@0.9:',        type=('build', 'run'))
+    depends_on('py-flask@0.9:', type=('build', 'run'))
