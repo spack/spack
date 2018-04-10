@@ -27,7 +27,8 @@ from spack import *
 
 class PyPythonEngineio(PythonPackage):
     """Engine.IO is the implementation of transport-based
-    cross-browser/cross-device bi-directional communication layer for Socket.IO."""
+    cross-browser/cross-device bi-directional communication
+    layer for Socket.IO."""
 
     homepage = "http://python-engineio.readthedocs.io/en/latest/"
     url      = "https://github.com/miguelgrinberg/python-engineio/archive/v2.0.2.tar.gz"
