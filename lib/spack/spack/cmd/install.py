@@ -191,6 +191,10 @@ def install(parser, args, **kwargs):
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
+    reporter = spack.report.collect_info(args.log_format)
+    if args.log_file:
+        reporter.filename = args.log_file
+
     specs = spack.cmd.parse_specs(args.package)
     if args.test == 'all' or args.run_tests:
         spack.package_testing.test_all()
@@ -216,8 +220,10 @@ def install(parser, args, **kwargs):
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
 
-    filename = args.log_file or default_log_file(specs[0])
-    with spack.report.collect_info(specs, args.log_format, filename):
+    if not args.log_file:
+        reporter.filename = default_log_file(specs[0])
+    reporter.specs = specs
+    with reporter:
         if args.overwrite:
             # If we asked to overwrite an existing spec we must ensure that:
             # 1. We have only one spec

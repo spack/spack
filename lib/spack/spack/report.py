@@ -249,20 +249,17 @@ class collect_info(object):
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, specs, format_name, filename):
-        self.specs = specs
+    def __init__(self, format_name):
         self.format_name = format_name
 
         # Check that the format is valid
         if format_name not in itertools.chain(valid_formats, [None]):
             raise ValueError('invalid report type: {0}'.format(format_name))
 
-        self.filename = filename
-        self.collector = InfoCollector(specs) if self.format_name else None
-
     def __enter__(self):
         if self.format_name:
             # Start the collector and patch PackageBase.do_install
+            self.collector = InfoCollector(self.specs)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
