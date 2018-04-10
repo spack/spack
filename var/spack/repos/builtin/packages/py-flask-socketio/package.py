@@ -41,3 +41,4 @@ class PyFlaskSocketio(PythonPackage):
     depends_on('py-setuptools',             type='build')
     depends_on('py-flask@0.9:',             type=('build', 'run'))
     depends_on('py-python-socketio@1.6.1:', type=('build', 'run'))
+    depends_on('py-werkzeug',               type=('build', 'run'))
