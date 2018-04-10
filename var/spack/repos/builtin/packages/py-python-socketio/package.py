@@ -35,7 +35,7 @@ class PyPythonSocketio(PythonPackage):
 
     variant('eventlet', default=True)
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.9.0:', type=("build", "run"))
+    depends_on('py-setuptools',      type='build')
+    depends_on('py-six@1.9.0:',      type=("build", "run"))
     depends_on('py-python-engineio', type="run")
     depends_on('py-eventlet', when='+eventlet')
