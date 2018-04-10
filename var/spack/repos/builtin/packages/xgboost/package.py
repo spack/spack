@@ -49,45 +49,43 @@ class Xgboost(Package):
     variant('jvm-packages', default=False,
             description='jvm-packages are compiled')
 
-    variant('gpu', default=False,
-            description='compiled with GPU support')
+    variant('cuda', default=False,
+            description='compiled with cuda support')
 
     depends_on('cmake', type='build')
     depends_on('maven', type='build', when='+jvm-packages')
     depends_on('jdk', type='build', when='+jvm-packages')
-    depends_on('cuda', type=('build', 'link')), when='+gpu')
+    depends_on('cuda', when='+cuda')
 
     conflicts('%gcc@:4.7.4')
 
     def install(self, spec, prefix):
-        if '+gpu' in spec:
+        if '+cuda' in spec:
             cmake('-DUSE_CUDA=ON')
             # get back to xgboost dir to make
             os.chdir(str(self.stage.source_path))
         make()
 
-        # no bin directory under xgboost, so create one
-        os.mkdir('bin')
-        # move what seems to be the only executable under bin
-        shutil.copy('xgboost', 'bin/xgboost')
+        mkdir(prefix.bin)
+        install('xgboost', prefix.bin)
         install_tree('lib', prefix.lib)
-        install_tree('bin', prefix.bin)
 
         # make jvm-packages
         if '+jvm-packages' in spec:
-            os.chdir('jvm-packages')
-            # custom repo location.
-            # Default is ~/.m2, and directory structure goes
-            # like ~/.m2/repository/ml/dmlc/...  as opposed to m2/ml/dmlc/...
-            mvn_repo = str(self.stage.source_path) + '/jvm-packages/m2'
-            drepo = '-Dmaven.repo.local=' + mvn_repo
-            # compile with maven
-            subprocess.call(['mvn', drepo, 'install', '-DskipTests'])
-            # a more strict option to skip tests is '-Dmaven.test.skip=true'
-            # To unskip tests, do:
-            # subprocess.call(['mvn', drepo, 'install'])
+            with working_dir('jvm-packages'):
+                # custom repo location.
+                # Default is ~/.m2, and directory structure goes
+                # like ~/.m2/repository/ml/dmlc/...  as opposed to m2/ml/dmlc/...
+                mvn_repo = str(self.stage.source_path) + '/jvm-packages/m2'
+                drepo = '-Dmaven.repo.local=' + mvn_repo
+                # compile with maven
+                which('mvn')
+                if self.run_tests:
+                    mvn(drepo, 'install')
+                else:
+                    mvn(drepo, 'install', '-DskipTests')
 
-            # put usefull xgboost jars under package prefix
+            # save xgboost jars under package prefix
             ver = str(self.spec.version)
             for xgtype in ['', '-spark', '-flink', '-example']:
                 ujars = glob.glob(mvn_repo + '/ml/dmlc/xgboost4j' + xgtype +
