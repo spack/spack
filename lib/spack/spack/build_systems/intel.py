@@ -65,19 +65,9 @@ def raise_lib_error(*args):
     raise InstallError("\n\t".join(str(i) for i in args))
 
 
-def _valid_components():
-    """A generator that yields valid components."""
-
-    tree = ET.parse('pset/mediaconfig.xml')
-    root = tree.getroot()
-
-    components = root.findall('.//Abbr')
-    for component in components:
-        yield component.text
-
-
 def _expand_fields(s):
-    '''Expand arch-related fields in a string, typically a filename.
+    '''[Experimental] Expand arch-related fields in a string, typically a
+    filename.
 
     Supported fields and their typical expansions are::
 
@@ -120,15 +110,15 @@ class IntelPackage(PackageBase):
     #: system base class
     build_system_class = 'IntelPackage'
 
-    #: By default, we assume that all Intel software requires a license.
-    #: This can be overridden for packages that do not require a license.
-    license_required = True
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify one anyway will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        return self._has_compilers or self.version < Version('2017.2')
 
     #: Comment symbol used in the ``license.lic`` file
     license_comment = '#'
-
-    #: Location where Intel searches for a license file
-    license_files = ['Licenses/license.lic']
 
     #: Environment variables that Intel searches for a license file
     license_vars = ['INTEL_LICENSE_FILE']
@@ -136,31 +126,115 @@ class IntelPackage(PackageBase):
     #: URL providing information on how to acquire a license key
     license_url = 'https://software.intel.com/en-us/articles/intel-license-manager-faq'
 
-    #: Components of the package to install.
-    #: By default, install 'ALL' components.
-    components = ['ALL']
+    #: Location where Intel searches for a license file
+    @property
+    def license_files(self):
+        dirs = ['Licenses']
 
+        if self._has_compilers:
+            dirs.append(self.component_bin_dir('compiler', relative=True))
+
+            addons_by_variant = {
+                '+advisor':    'advisor',
+                '+inspector':  'inspector',
+                '+itac':       'itac',
+                '+vtune':      'vtune_amplifier',
+            }
+
+            # 'intel-parallel-studio' is versioned as edition.YYYY.update_num,
+            # 'intel' is versioned as YY.minor_num.update_num
+            for variant, dir_name in addons_by_variant.items():
+                if variant not in self.spec:
+                    continue
+                if self._year_approx < 2018 and dir_name != 'itac':
+                    dir_name += '_xe'
+                dirs.append(self.normalize_path(
+                    'licenses', dir_name, relative=True))
+
+        return [os.path.join(d, 'license.lic') for d in dirs]
+
+    #: Components to install (list of name patterns from pset/mediaconfig.xml)
+    # NB: Renamed from plain components() for coding and maintainability.
+    @property
+    def pset_components(self):
+        # Do not detail the more single-purpose client packages.
+        if not self._has_compilers:
+            #return ['DEFAULTS']
+            return ['ALL']
+
+        # For all other packages, start with the compiler-related components,
+        # incl. "Documentation and Samples"
+        c = ' intel-icc     intel-ifort' \
+            ' intel-ccomp   intel-fcomp   intel-comp-' \
+            ' intel-psxe intel-openmp'
+
+        if self._is_early_composer:
+            c += ' intel-compilerproc intel-compilerprof intel-compilerpro-'
+
+        if self._edition == 'composer':
+            c += ' intel-compxe'
+                 # Do we really also need: ' intel-ccompxe intel-fcompxe'?
+        elif self._edition == 'cluster':
+            c += ' intel-icsxe'
+        elif self._edition == 'professional':
+            c += ' intel-ips-'
+
+        addons_by_variant = {
+            '+daal':        'intel-daal',   # Data Analytics Acceleration Lib
+            '+gdb':         'intel-gdb',    # Integrated Performance Primitives
+            '+ipp':         'intel-ipp intel-crypto-ipp',
+            '+mkl':         'intel-mkl',    # Math Kernel Library
+            '+mpi':         'intel-mpi intel-mpirt intel-imb',
+            '+tbb':         'intel-tbb',    # Threading Building Blocks
+            '+advisor':     'intel-advisor',
+            '+clck':        'intel_clck',   # Cluster Checker
+            '+inspector':   'intel-inspector',
+            '+itac':        'intel-itac intel-ta intel-tc'
+                            'intel-trace-analyzer intel-trace-collector',
+                            # Trace Analyzer and Collector
+            '+vtune':       'intel-vtune-amplifier',    # VTune
+        }
+
+        for variant, components_to_add in addons_by_variant.items():
+            if variant in self.spec:
+                c += ' ' + components_to_add
+
+        debug_print(c)
+        return c.split()
+
+    # ---------------------------------------------------------------------
+    # Utilities
+    # ---------------------------------------------------------------------
     @property
     def _filtered_components(self):
-        """Returns a list or set of valid components that match
-        the requested components from ``components``."""
-
-        # Don't filter 'ALL'
-        if self.components == ['ALL']:
-            return self.components
+        '''Expands the list of desired component patterns to the exact names
+        present in the given download.
+        '''
+        c = self.pset_components
+        if 'ALL' in c or 'DEFAULTS' in c:    # No filter needed
+            return c
 
         # mediaconfig.xml is known to contain duplicate components.
         # If more than one copy of the same component is used, you
         # will get an error message about invalid components.
-        # Use a set to store components to prevent duplicates.
-        matches = set()
+        # Use sets to prevent duplicates and for efficient traversal.
+        requested = set(c)
+        confirmed = set()
 
-        for valid in _valid_components():
-            for requested in self.components:
-                if valid.startswith(requested):
-                    matches.add(valid)
+        # NB: To get a reasonable overview in pretty much the documented way:
+        #
+        #   grep -E '<Product|<Abbr|<Name>..[a-z]'  pset/mediaconfig.xml
+        #
+        # https://software.intel.com/en-us/articles/configuration-file-format
+        #
+        xmltree = ET.parse('pset/mediaconfig.xml')
+        for entry in xmltree.getroot().findall('.//Abbr'):  # XPath expression
+            name_present = entry.text
+            for name_requested in requested:
+                if name_present.startswith(name_requested):
+                    confirmed.add(name_present)
 
-        return matches
+        return confirmed
 
     @property
     def _want_shared(self):
@@ -180,9 +254,42 @@ class IntelPackage(PackageBase):
         else:
             return 'lp64'
 
-    # ---------------------------------------------------------------------
-    # Utilities
-    # ---------------------------------------------------------------------
+    @property
+    def _has_compilers(self):
+        return self.name in ['intel', 'intel-parallel-studio']
+
+    @property
+    def _edition(self):
+        if self.name == 'intel-parallel-studio':
+            return self.version[0]
+        elif self.name == 'intel':
+            return 'composer'
+        else:
+            return ''
+
+    @property
+    def _year_approx(self):
+        if self.name == 'intel-parallel-studio':
+            return self.version[1]
+
+        # Exceptions, deemed acceptable:
+        #   MKL 11.x pre-2017
+        #   MPI  5.x pre-2016
+        #   IPP  9.x pre-2016
+        #   TBB  4.x pre-2016
+        y = self.version[0]
+        if y < 2000:
+            y += 2000
+
+    @property
+    def _is_early_composer(self):
+        # Product releases prior to "Parallel Studio XE" (debut in 2016) were
+        # called "Composer XE" and have some differences in directory layout.
+        result = (self.spec.satisfies('@composer.0:composer.2015') or
+                  self.spec.satisfies('intel@0:15'))
+        debug_print(result)
+        return result
+
     def _is_personality(self, personality_wanted):
         '''Check if called for an explicitly requested Intel ``component`` or
         in a role manifested by the current (possibly virtual) package name.
@@ -191,24 +298,15 @@ class IntelPackage(PackageBase):
         debug_print("%s -> %s" % (personality_wanted, result))
         return result
 
-    def _make_relative(self, file_or_dir, relative_to=''):
-        if not relative_to:
-            relative_to = self.prefix
-        file_or_dir = os.path.realpath(file_or_dir)
-        relative_to = os.path.realpath(relative_to)
-        p = os.path.relpath(file_or_dir, relative_to)
-        return p
-
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
     # ---------------------------------------------------------------------
-    # For reference: Intel packages in Spack-0.11:
+    # For reference: classes using IntelPackage, as of Spack-0.11:
     #
     #  intel/               intel-ipp/          intel-mpi/
     #  intel-daal/          intel-mkl/          intel-parallel-studio/
     #
-    # Not IntelPackage:
-    #
+    # Not using class IntelPackage:
     #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
     #
     def normalize_suite_dir(self, product_dir_name, version_glob='_*.*.*'):
@@ -228,7 +326,7 @@ class IntelPackage(PackageBase):
             targets for Spack installation::
 
                 advisor_xe, inspector_xe, vtune_amplifier_xe,
-                performance_snapshots (new name for vtune)
+                performance_snapshots (new name for vtune as of 2018)
 
             These are single-component products without subordinate components
             and are normally made available to users by a toplevel psxevars.sh
@@ -325,7 +423,7 @@ class IntelPackage(PackageBase):
                 # Return a sensible value anyway.
                 d = dir_to_expand
 
-        debug_print(str((self.prefix, product_dir_name)) + " --> " + d)
+        debug_print(d)
         return Prefix(d)
 
     def normalize_path(self, component_path, component_suite_dir=None,
@@ -339,10 +437,12 @@ class IntelPackage(PackageBase):
             A component name like 'mkl', or 'mpi', or a deeper relative path.
 
         ``component_suite_dir``
-            _Unversioned_ name of the parent directory for `component_path`.
+            _Unversioned_ name of the expected parent directory of
+            `component_path`.
 
-            When absent or `None`, a default will be used.  A present but empty
-            string `""` requests that `component_path` refer to `self.prefix`.
+            When absent or `None`, the default `compilers_and_libraries` will
+            be used.  A present but empty string `""` requests that
+            `component_path` refer to `self.prefix` directly.
 
         ``relative``
             When `True`, return path relative to self.prefix, otherwise, return
@@ -356,12 +456,12 @@ class IntelPackage(PackageBase):
         # case for the time of writing.
 
         if component_suite_dir is None:
-            if self.spec.satisfies('@:composer.2015'):
+            if self._is_early_composer:
                 component_suite_dir = 'composer_xe'     # The only one present.
             elif component_path.startswith('ism'):
                 component_suite_dir = 'parallel_studio_xe'
             else:
-                component_suite_dir = 'compilers_and_libraries'  # most popular
+                component_suite_dir = 'compilers_and_libraries'  # most comps.
 
         d = self.normalize_suite_dir(component_suite_dir)
         parent_dir = ancestor(os.path.realpath(d))   # usu. same as self.prefix
@@ -378,8 +478,8 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    def component_bin_dir(self, component, relative=False):
-        d = self.normalize_path(component, relative)
+    def component_bin_dir(self, component, **kwargs):
+        d = self.normalize_path(component, **kwargs)
 
         if sys.platform == 'darwin':
             # TODO: verify
@@ -389,52 +489,54 @@ class IntelPackage(PackageBase):
                 d = join_path(d, _expand_fields('{arch}'), 'bin')
             elif component == 'compiler':
                 d = join_path(ancestor(d), 'bin', _expand_fields('{arch}'))
+                # works fine even with relative=True, e.g.:
+                #   composer_xe/compiler -> composer_xe/bin/intel64
             else:
                 d = join_path(d, 'bin')
+        debug_print(d)
         return d
 
-    def component_lib_dir(self, component, relative=False):
+    def component_lib_dir(self, component, **kwargs):
         '''Provide directory suitable for find_libraries() and
         SPACK_COMPILER_EXTRA_RPATHS.
         '''
-        d = self.normalize_path(component, relative)
+        d = self.normalize_path(component, **kwargs)
 
         if sys.platform == 'darwin':
             d = join_path(d, 'lib')
         else:
             if component == 'mpi':
-                d = join_path(d, self._expand_fields('{arch}'), 'lib')
+                d = join_path(d, _expand_fields('{arch}'), 'lib')
             else:
-                d = join_path(d, 'lib', self._expand_fields('{arch}'))
+                d = join_path(d, 'lib', _expand_fields('{arch}'))
 
         if component == 'tbb':
             # Must qualify further
             d = join_path(d, self._tbb_abi)
 
+        debug_print(d)
         return d
 
-    def component_include_dir(self, component, relative=False):
-        d = self.normalize_path(component, relative)
+    def component_include_dir(self, component, **kwargs):
+        d = self.normalize_path(component, **kwargs)
 
         if component == 'mpi':
-            d = join_path(d, self._expand_fields('{arch}'))
+            d = join_path(d, _expand_fields('{arch}'))
         d = join_path(d, 'include')
+        debug_print(d)
         return d
 
     @property
     def file_to_source(self):
         '''Full path of file to source for initializing an Intel package.
-
-        If a client package would wish to override, follow this example::
-
-        @property
-        def file_to_source(self):
-            return self.normalize_path("apsvars.sh", "vtune_amplifier")
-
+        A client package could override as follows:
+        `    @property`
+        `    def file_to_source(self):`
+        `        return self.normalize_path("apsvars.sh", "vtune_amplifier")`
         '''
         vars_file_info_for = {
             # key (usu. spack package name) -> [rel_path, component_suite_dir]
-            '@composer':             ['bin/compilervars',       None],
+            '@early_composer':       ['bin/compilervars',       None],
             'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
             'intel':                 ['bin/compilervars',       None],
             'intel-daal':            ['daal/bin/daalvars',      None],
@@ -443,11 +545,11 @@ class IntelPackage(PackageBase):
             'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
         }
         key = self.name
-        if self.spec.satisfies('@:composer.2015'):
-            # Same as 'intel' but 'None' for component_suite_dir will resolve
-            # differently. I listed it as a separate entry to serve as
+        if self._is_early_composer:
+            # Same file as 'intel' but 'None' for component_suite_dir will
+            # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
-            key = '@composer'
+            key = '@early_composer'
 
         f, component_suite_dir = vars_file_info_for[key]
         f = _expand_fields(f) + '.sh'
@@ -800,6 +902,8 @@ class IntelPackage(PackageBase):
         # snpat       - the serial number pattern (ABCD-01234567)
 
         components_joined = ';'.join(self._filtered_components)
+        debug_print(components_joined)
+
         config = {
             'ACCEPT_EULA':                          'accept',
             'CONTINUE_WITH_OPTIONAL_ERROR':         'yes',
@@ -811,8 +915,8 @@ class IntelPackage(PackageBase):
             'SIGNING_ENABLED':                      'no',
         }
 
-        if not self.spec.satisfies('@:composer.2015'):
-            config.update({'ARCH_SELECTED': 'ALL'})    # in late versions only
+        if not self._is_early_composer:
+            config.update({'ARCH_SELECTED': 'INTEL64'})   # later versions only
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
@@ -832,7 +936,26 @@ class IntelPackage(PackageBase):
         install_script('--silent', 'silent.cfg')
 
     @run_after('install')
-    def save_silent_cfg(self):
+    def configure_rpath(self):
+        if '+rpath' not in self.spec:
+            return
+
+        # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-using-configuration-files
+        compilers_bin_dir = self.component_bin_dir('compiler')
+        compilers_lib_dir = self.component_lib_dir('compiler')
+
+        for compiler_name in 'icc icpc ifort'.split():
+            f = os.path.join(compilers_bin_dir, compiler_name)
+            if not os.path.isfile(f):
+                raise InstallError(
+                    'Cannot find compiler command to configure rpath:\n\t' + f)
+
+            compiler_cfg = os.path.abspath(f + '.cfg')
+            with open(compiler_cfg, 'w') as fh:
+                fh.write('-Xlinker -rpath={0}\n'.format(compilers_lib_dir))
+
+    @run_after('install')
+    def preserve_cfg(self):
         """Copies the silent.cfg configuration file to ``<prefix>/.spack``."""
         install('silent.cfg', join_path(self.prefix, '.spack'))
 
