@@ -422,7 +422,7 @@ Next you should regenerate all the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type tcl
+  root@module-file-tutorial:/# spack tcl refresh
   ==> You are about to regenerate tcl module files for:
 
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
@@ -484,7 +484,7 @@ and regenerate the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type tcl --delete-tree
+  root@module-file-tutorial:/# spack tcl refresh --delete-tree
   ==> You are about to regenerate tcl module files for:
 
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
@@ -538,7 +538,7 @@ exceptions to the blacklist rules you can use ``whitelist``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type tcl -y
+  root@module-file-tutorial:/# spack tcl refresh -y
   ==> Regenerating tcl module files
 
 
@@ -584,7 +584,7 @@ If you try to regenerate the module files now you will get an error:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type tcl --delete-tree -y
+  root@module-file-tutorial:/# spack tcl refresh --delete-tree -y
   ==> Error: Name clashes detected in module files:
 
   file: /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/netlib-scalapack-2.0.2-gcc-7.2.0
@@ -631,7 +631,7 @@ Regenerating module files now we obtain:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type tcl --delete-tree -y
+  root@module-file-tutorial:/# spack tcl refresh --delete-tree -y
   ==> Regenerating tcl module files
 
   root@module-file-tutorial:/# module avail
@@ -677,7 +677,7 @@ The final result should look like:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type tcl --delete-tree -y
+  root@module-file-tutorial:/# spack tcl refresh --delete-tree -y
   ==> Regenerating tcl module files
   root@module-file-tutorial:/# module avail
 
@@ -748,7 +748,7 @@ Regenerating the module files results in something like:
 .. code-block:: console
   :emphasize-lines: 15
 
-  root@module-file-tutorial:/# spack module refresh -y --module-type tcl
+  root@module-file-tutorial:/# spack tcl refresh -y
   ==> Regenerating tcl module files
 
   root@module-file-tutorial:/# module show gcc
@@ -819,10 +819,10 @@ This time we will be more selective and regenerate only the ``gcc`` and
 
 .. code-block:: console
 
-  root@module-file-tutorial:/#  spack module refresh -y --module-type tcl gcc
+  root@module-file-tutorial:/#  spack tcl refresh -y gcc
   ==> Regenerating tcl module files
 
-  root@module-file-tutorial:/# spack module refresh -y --module-type tcl openmpi
+  root@module-file-tutorial:/# spack tcl refresh -y openmpi
   ==> Regenerating tcl module files
 
   root@module-file-tutorial:/# module show gcc
@@ -926,7 +926,7 @@ and regenerating the module files for every package that depends on ``python``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh -y --module-type tcl ^python
+  root@module-file-tutorial:/# spack tcl refresh -y ^python
   ==> Regenerating tcl module files
 
 Now the ``py-scipy`` module will be:
@@ -1102,7 +1102,7 @@ If we now regenerate the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module refresh --module-type lmod --delete-tree -y
+  root@module-file-tutorial:/# spack lmod refresh --delete-tree -y
   ==> Regenerating lmod module files
 
 and update ``MODULEPATH`` to point to the ``Core``:
@@ -1293,7 +1293,7 @@ After module files have been regenerated as usual:
 
   root@module-file-tutorial:/# module purge
 
-  root@module-file-tutorial:/# spack module refresh --delete-tree -y -m lmod
+  root@module-file-tutorial:/# spack lmod refresh --delete-tree -y
   ==> Regenerating lmod module files
 
 we can see that now we have additional components in the hierarchy:
