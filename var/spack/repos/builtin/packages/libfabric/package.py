@@ -33,6 +33,7 @@ class Libfabric(AutotoolsPackage):
     url      = "https://github.com/ofiwg/libfabric/releases/download/v1.6.0/libfabric-1.6.0.tar.gz"
 
     version('1.6.0', '91d63ab3c0b9724a4db660019f928cab')
+    version('1.5.3', '1fe07e972fe487c6a3e44c0fb68b49a2')
     version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')
     version('1.4.2', '2009c8e0817060fb99606ddbf6c5ccf8')
 
