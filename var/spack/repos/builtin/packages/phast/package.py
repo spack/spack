@@ -34,14 +34,15 @@ class Phast(MakefilePackage):
 
     version('1.4', '2bc0412ba58ea1f08ba5e12fad43b4c7')
 
-    depends_on('lapack')
-    depends_on('blas')
+    depends_on('netlib-lapack+lapacke')
 
     build_directory = 'src'
+
+    @property
+    def build_targets(self):
+        targets = ['CLAPACKPATH={0}'.format(self.spec['netlib-lapack'].prefix)]
+        return targets
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
-
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('CLAPACKPATH', self.spec['lapack'].prefix)
