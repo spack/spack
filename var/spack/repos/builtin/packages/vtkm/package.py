@@ -59,7 +59,7 @@ class Vtkm(Package):
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake_args = ["../",
-                          "-DVTKm_ENABLE_TESTINGb=OFF",
+                          "-DVTKm_ENABLE_TESTING=OFF",
                           "-DVTKm_BUILD_RENDERING=ON",
                           "-DVTKm_USE_64BIT_IDS=OFF",
                           "-DVTKm_USE_DOUBLE_PRECISION=ON"]
