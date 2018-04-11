@@ -29,7 +29,7 @@ class PyPythonSocketio(PythonPackage):
     """Python implementation of the Socket.IO realtime server."""
 
     homepage = "https://github.com/miguelgrinberg/python-socketio"
-    url      = "https://files.pythonhosted.org/packages/source/p/python-socketio/python-socketio-1.8.4.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-socketio/python-socketio-1.8.4.tar.gz"
 
     version('1.8.4', '9de73990f6c32c701278c01b0fa1a0c3')
 
