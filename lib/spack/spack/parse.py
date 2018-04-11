@@ -175,6 +175,7 @@ class ParseError(spack.error.SpackError):
     """Raised when we don't hit an error while parsing."""
 
     def __init__(self, message, string, pos):
+        message = "{0} in {1}".format(message, string)
         super(ParseError, self).__init__(message)
         self.string = string
         self.pos = pos
