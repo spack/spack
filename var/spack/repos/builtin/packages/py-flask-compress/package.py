@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,18 +25,14 @@
 from spack import *
 
 
-class PyFlask(PythonPackage):
-    """A microframework based on Werkzeug, Jinja2 and good intentions"""
+class PyFlaskCompress(PythonPackage):
+    """Flask-Compress allows you to easily compress your Flask application's
+    responses with gzip."""
 
-    homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
+    homepage = "https://github.com/libwilliam/flask-compress"
+    url      = "https://pypi.io/packages/source/F/Flask-Compress/Flask-Compress-1.4.0.tar.gz"
 
-    version('0.12.2', '97278dfdafda98ba7902e890b0289177')
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
+    version('1.4.0', 'd997f73e4ed5793ec526c135aa765e15')
 
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
-    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
-    depends_on('py-click@2.0:',         type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-flask@0.9:', type=('build', 'run'))

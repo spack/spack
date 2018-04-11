@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,18 +25,19 @@
 from spack import *
 
 
-class PyFlask(PythonPackage):
-    """A microframework based on Werkzeug, Jinja2 and good intentions"""
+class PyPythonSocketio(PythonPackage):
+    """Python implementation of the Socket.IO realtime server."""
 
-    homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
+    homepage = "https://github.com/miguelgrinberg/python-socketio"
+    url      = "https://pypi.io/packages/source/p/python-socketio/python-socketio-1.8.4.tar.gz"
 
-    version('0.12.2', '97278dfdafda98ba7902e890b0289177')
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
+    version('1.8.4', '9de73990f6c32c701278c01b0fa1a0c3')
 
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
-    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
-    depends_on('py-click@2.0:',         type=('build', 'run'))
+    variant('eventlet', default=True,
+            description="Pulls in optional eventlet dependency, required"
+                        " for using the zmq implementation.")
+
+    depends_on('py-setuptools',                 type='build')
+    depends_on('py-six@1.9.0:',                 type=("build", "run"))
+    depends_on('py-python-engineio@1.2.1:',     type=("build", "run"))
+    depends_on('py-eventlet', when='+eventlet', type=("build", "run"))

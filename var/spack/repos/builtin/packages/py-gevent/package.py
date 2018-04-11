@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,18 +25,16 @@
 from spack import *
 
 
-class PyFlask(PythonPackage):
-    """A microframework based on Werkzeug, Jinja2 and good intentions"""
+class PyGevent(PythonPackage):
+    """gevent is a coroutine-based Python networking library."""
 
-    homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
+    homepage = "http://www.gevent.org"
+    url      = "https://pypi.io/packages/source/g/gevent/gevent-1.3a2.tar.gz"
 
-    version('0.12.2', '97278dfdafda98ba7902e890b0289177')
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
+    version('1.3a2', '8d73a7b0ceb0ca791b22e6f7b7061e9e')
 
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
-    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
-    depends_on('py-click@2.0:',         type=('build', 'run'))
+    depends_on('py-setuptools@24.2:',   type='build')
+    depends_on('py-cython@0.27:',       type='build')
+    depends_on('py-cffi@1.4.0:',        type=('build', 'run'))
+    depends_on('py-greenlet@0.4.13:',   type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:',   type=('build', 'run'))
