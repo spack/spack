@@ -50,13 +50,6 @@ class IntelMpi(IntelPackage):
 
     provides('mpi')
 
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See:
-        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self.version < Version('2017.2')
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # DUP in var/spack/repos/builtin/packages/intel-parallel-studio/*.py
         spack_env.set('I_MPI_CC', spack_cc)
