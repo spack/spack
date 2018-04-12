@@ -22,10 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
-from spack.environment import EnvironmentModifications
 
 
 class IntelDaal(IntelPackage):
@@ -55,36 +52,3 @@ class IntelDaal(IntelPackage):
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8687/l_daal_2016.2.181.tgz")
 
     provides('daal')
-
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See:
-        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        if self.version >= Version('2017.2'):
-            return False
-        else:
-            return True
-
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
-
-        These environment variables come from running:
-
-        .. code-block:: console
-
-           $ source daal/bin/daalvars.sh intel64
-        """
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment variables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
-        daalvars = os.path.join(self.prefix.daal.bin, 'daalvars.sh')
-
-        if os.path.isfile(daalvars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                daalvars, 'intel64'))

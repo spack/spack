@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -21,22 +21,17 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
 from spack import *
 
 
-class PyFlask(PythonPackage):
-    """A microframework based on Werkzeug, Jinja2 and good intentions"""
+class PyEventlet(PythonPackage):
+    """Concurrent networking library for Python"""
 
-    homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
+    homepage = "https://github.com/eventlet/eventlet"
+    url      = "https://github.com/eventlet/eventlet/releases/download/v0.22.0/eventlet-0.22.0.tar.gz"
 
-    version('0.12.2', '97278dfdafda98ba7902e890b0289177')
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
+    version('0.22.0', 'a1199cecd44d7ce2ea624ac6c21db877')
 
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
-    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
-    depends_on('py-click@2.0:',         type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-greenlet@0.3:')
+    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')

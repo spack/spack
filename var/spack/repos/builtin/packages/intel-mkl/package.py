@@ -70,10 +70,3 @@ class IntelMkl(IntelPackage):
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
-
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See:
-        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self.version < Version('2017.2')
