@@ -33,6 +33,7 @@ import re
 import ordereddict_backport
 import py
 import pytest
+import yaml
 
 from llnl.util.filesystem import remove_linked_tree
 
@@ -407,9 +408,9 @@ def mock_fetch(mock_archive):
 
 
 @pytest.fixture()
-def patch_configuration(monkeypatch, request):
-    """Reads a configuration file from the mock ones prepared for tests
-    and monkeypatches the right classes to hook it in.
+def module_configuration(monkeypatch, request):
+    """Reads the module configuration file from the mock ones prepared
+    for tests and monkeypatches the right classes to hook it in.
     """
     # Class of the module file writer
     writer_cls = getattr(request.module, 'writer_cls')
@@ -419,7 +420,7 @@ def patch_configuration(monkeypatch, request):
     writer_key = str(writer_mod.__name__).split('.')[-1]
     # Root folder for configuration
     root_for_conf = os.path.join(
-        spack.test_path, 'data', 'modules', writer_key
+        spack.paths.test_path, 'data', 'modules', writer_key
     )
 
     def _impl(filename):
