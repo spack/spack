@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
 
 
@@ -42,6 +40,7 @@ class IntelParallelStudio(IntelPackage):
     version('cluster.2018.1',      '9c007011e0e3fc72747b58756fbf01cd', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12374/parallel_studio_xe_2018_update1_cluster_edition.tgz')
     version('cluster.2018.0',      'fa9baeb83dd2e8e4a464e3db38f28d0f', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12058/parallel_studio_xe_2018_cluster_edition.tgz')
     #
+    version('cluster.2017.6',      'b0bbddeec3e78a84b967c9ca70dade77', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12534/parallel_studio_xe_2017_update6.tgz')
     version('cluster.2017.5',      'baeb8e584317fcdf1f60b8208bd4eab5', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
     version('cluster.2017.4',      '27398416078e1e4005afced3e9a6df7e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
     version('cluster.2017.3',      '691874735458d3e88fe0bcca4438b2a9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
@@ -60,9 +59,11 @@ class IntelParallelStudio(IntelPackage):
     # NB: Pre-2018 download packages for Professional are the same as for
     # Cluster; differences manifest only in the tokens present in the license
     # file delivered as part of the purchase.
+    version('professional.2018.2', '91ed14aeb6157d60a0ec39929d0bc778', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12718/parallel_studio_xe_2018_update2_professional_edition.tgz')
     version('professional.2018.1', '91669ff7afbfd07868a429a122c90357', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
     version('professional.2018.0', '9a233854e9218937bc5f46f02b3c7542', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12062/parallel_studio_xe_2018_professional_edition.tgz')
     #
+    version('professional.2017.6', 'b0bbddeec3e78a84b967c9ca70dade77', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12534/parallel_studio_xe_2017_update6.tgz')
     version('professional.2017.5', 'baeb8e584317fcdf1f60b8208bd4eab5', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
     version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
     version('professional.2017.3', '691874735458d3e88fe0bcca4438b2a9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
@@ -77,9 +78,12 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2018.2',     '76f820f53de4c1ff998229c983cf4f53', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12722/parallel_studio_xe_2018_update2_composer_edition.tgz')
     version('composer.2018.1',     '28cb807126d713350f4aa6f9f167448a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
     version('composer.2018.0',     '31ba768fba6e7322957b03feaa3add28', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
     #
+    version('composer.2017.6',     'd96cce0c3feef20091efde458f581a9f', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12538/parallel_studio_xe_2017_update6_composer_edition.tgz')
+    # version('composer.2017.5',   '00000000000000000000000000000000', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/_____/parallel_studio_xe_2017_update5_composer_edition.tgz')
     version('composer.2017.4',     'd03d351809e182c481dc65e07376d9a2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('composer.2017.3',     '52344df122c17ddff3687f84ceb21623', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('composer.2017.2',     '2891ab1ece43eb61b6ab892f07c47f01', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
@@ -152,36 +156,17 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+itac',      when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
 
-    @run_after('install')
-    def filter_compiler_wrappers(self):
-        spec = self.spec
-
-        if '+mpi' in spec:
-            if '~newdtags' in spec:
-                wrappers = [
-                    'mpif77', 'mpif90', 'mpigcc', 'mpigxx',
-                    'mpiicc', 'mpiicpc', 'mpiifort'
-                ]
-                wrapper_paths = []
-                for root, dirs, files in os.walk(spec.prefix):
-                    for name in files:
-                        if name in wrappers:
-                            wrapper_paths.append(os.path.join(spec.prefix,
-                                                              root, name))
-                for wrapper in wrapper_paths:
-                    filter_file('-Xlinker --enable-new-dtags', ' ',
-                                wrapper, string=True)
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # DUP code in var/spack/repos/builtin/packages/intel-mpi/package.py
+        # DUP code in ../intel-mpi/package.py
         # Should be in parent class, but spack_cc & friends are undef'd there!?
         spack_env.set('I_MPI_CC', spack_cc)
         spack_env.set('I_MPI_CXX', spack_cxx)
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
-        # Convenience variable.
-        spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
+        # TODO: Verify that this is in fact done by the modulefile:
+        # # Convenience variable.
+        # spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
 
     @run_after('install')
     def fix_psxevars(self):
