@@ -28,7 +28,7 @@ from spack import *
 class PerlContextualReturn(PerlPackage):
     """Create context-sensitive return values"""
 
-    homepage = "search.cpan.org/~dconway/Contextual-Return/lib/Contextual/Return.pm"
+    homepage = "http://search.cpan.org/~dconway/Contextual-Return/lib/Contextual/Return.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DC/DCONWAY/Contextual-Return-0.004008.tar.gz"
 
     version('0.004014', '5cb31f1637c17af6a8e5b852d820af79')
