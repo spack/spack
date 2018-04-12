@@ -141,12 +141,11 @@ class IntelPackage(PackageBase):
                 '+vtune':      'vtune_amplifier',
             }
 
-            # 'intel-parallel-studio' is versioned as edition.YYYY.update_num,
-            # 'intel' is versioned as YY.minor_num.update_num
             for variant, dir_name in addons_by_variant.items():
                 if variant not in self.spec:
                     continue
-                if self._year_approx < 2018 and dir_name != 'itac':
+                if (self._version_yearlike < Version('2018') and
+                        dir_name != 'itac'):
                     dir_name += '_xe'
                 dirs.append(self.normalize_path(
                     'licenses', dir_name, relative=True))
@@ -263,26 +262,48 @@ class IntelPackage(PackageBase):
     @property
     def _edition(self):
         if self.name == 'intel-parallel-studio':
-            return self.version[0]
+            return self.version[0]      # clearer than .up_to(1), I think.
         elif self.name == 'intel':
             return 'composer'
         else:
             return ''
 
     @property
-    def _year_approx(self):
-        if self.name == 'intel-parallel-studio':
-            return self.version[1]
+    def _version_yearlike(self):
+        '''Return the version in a unified style, suitable for Version class
+        conditionals.
+        '''
+        # Versioning styles:
+        # - 'intel-parallel-studio' :   <edition>.YYYY.Nupdate
+        # - 'intel':                    YY.0.Nupdate (some assigned ad-hoc)
+        # - Recent lib packages:        YYYY.Nupdate.Buildseq
+        # - Early lib packages:         Major.Minor.Patch.Buildseq
+        try:
+            if self.name == 'intel':
+                # Has a "Minor" version element, but it was always 0. To be
+                # useful for comparisons, drop that to get YYYY.Nupdate.
+                v_tail = self.version[2:]   # coerced just fine via __getitem__
+            else:
+                v_tail = self.version[1:]
+        except IndexError:
+            # Hmm - this happens on "spack install intel-mkl@11".
+            # I thought concretization picks an actual version??
+            return self.version     # give up
 
-        # Exceptions, deemed acceptable:
+        if self.name == 'intel-parallel-studio':
+            return v_tail
+
+        v_year = self.version[0]
+        # Exceptions for early lib packages:
         #   MKL 11.x pre-2017
         #   MPI  5.x pre-2016
         #   IPP  9.x pre-2016
         #   TBB  4.x pre-2016
-        y = self.version[0]
-        if y < 2000:
-            y += 2000
-        return y
+        # For now, adopt their Major in lieu of the actual release year.
+        # This function is usually called for the more modern releases only.
+        if v_year < 2000:
+            v_year += 2000
+        return Version('%s.%s' % (v_year, v_tail))
 
     @property
     def _is_early_composer(self):
@@ -772,7 +793,6 @@ class IntelPackage(PackageBase):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-
         f = self.file_to_source
         if not f or not os.path.isfile(f):
             return
@@ -912,16 +932,34 @@ class IntelPackage(PackageBase):
             'SIGNING_ENABLED':                      'no',
         }
 
-        if not self._is_early_composer:
-            # drop 32 bit from recent versions
-            config.update({'ARCH_SELECTED': 'INTEL64'})
+        # Get the validation script so we can preempt its objections.  Rather
+        # than running it on a trial file and dissect its pronouncements,
+        # brazenly skim it for supported tokens - we can do this because they
+        # are quite long and specific.
+        validation_code = open('pset/check.awk', 'r').read()
+
+        token = 'ARCH_SELECTED'
+        if token in validation_code:
+            # Ignore ia32; most recent products don't even provide it.
+            config.update({'ARCH_SELECTED': 'INTEL64'})   # was: 'ALL'
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
-        # Ditto for PHONEHOME_SEND_USAGE_DATA.
-        if self.license_required:
+        token = 'ACTIVATION_TYPE'
+        if token in validation_code:
             config.update(self._determine_license_type)
-            config.update({'PHONEHOME_SEND_USAGE_DATA': 'no'})
+
+        # Ditto for the following, which refers to the 'ism' component.
+        token = 'PHONEHOME_SEND_USAGE_DATA'
+        if token in validation_code:
+            config.update({token: 'no'})
+
+        # Ah, as of 2018.2, the somewhat loaded term above got replaced by one
+        # in business-speak. We continue to prefer withholding consent, both
+        # out of general principles and for technical reasons like overhead and
+        # non-routed compute nodes.
+        if 'INTEL_SW_IMPROVEMENT_PROGRAM_CONSENT' in validation_code:
+            config.update({'INTEL_SW_IMPROVEMENT_PROGRAM_CONSENT': 'no'})
 
         with open('silent.cfg', 'w') as cfg:
             for key in config:
