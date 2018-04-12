@@ -29,12 +29,6 @@ packages:
       version: [system]
       buildable: False
 
-  ncurses:
-      paths:
-          ncurses@system: /usr
-      version: [system]
-      buildable: False
-
   vim:
     variants: +lua +perl +python +ruby +huge
 

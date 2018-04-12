@@ -34,12 +34,6 @@ packages:
         version: [system]
         buildable: False
 
-    ncurses:
-        paths:
-            ncurses@system: /usr
-        version: [system]
-        buildable: False
-
     intel-parallel-studio:
         paths:
             intel-parallel-studio@cluster.2016.4%intel@16.0.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ybjjq75tqpzgzjc4drolyijzm45g5qul

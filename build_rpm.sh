@@ -9,7 +9,7 @@ if len(sys.argv) > 1:
 else:
           PLATFORM = sandybridge
 
-COMPILERS = ["gcc@5.4.0", "intel@17.0.5"]
+COMPILERS = ["gcc@5.4.0", "intel@18.0.1"]
 
 # Register exernal packages
 for pkg in ["jdk@8u141-b15%gcc@4.8.5",
@@ -20,13 +20,11 @@ for pkg in ["jdk@8u141-b15%gcc@4.8.5",
             "sbt@0.13.12%gcc@4.8.5",
             "cmake@3.10.0%gcc@4.8.5",
             "environment-modules@3.2.10",
-            "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune  %intel@17.0.5 threads=openmp"]:
+            "intel-parallel-studio@cluster.2018.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune  %intel@18.0.1 threads=openmp"]:
           os.system("spack install {}".format(pkg))
 
 # Build non-MPI packages
-nonmpipkgs = {"python@2.7.14": [""],
-              "python@3.6.3": [""],
-              "miniconda2@4.3.30": [""],
+nonmpipkgs = {"miniconda2@4.3.30": [""],
               "miniconda3@4.3.30": [""],
               "openblas@0.2.20 threads=openmp": [""],
               "perl@5.24.1": [""],
@@ -79,7 +77,7 @@ MPIS = {"openmpi@2.0.4+pmi~vt~cuda fabrics={} ~java schedulers=slurm".format(OMP
         "mvapich2@2.2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
         # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
         # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
-       "intel-parallel-studio@cluster.2017.5+mpi": ""
+       "intel-parallel-studio@cluster.2018.1+mpi": ""
 }
 for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
