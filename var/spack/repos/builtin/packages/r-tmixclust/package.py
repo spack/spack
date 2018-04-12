@@ -25,15 +25,25 @@
 from spack import *
 
 
-class RCluster(RPackage):
-    """Methods for Cluster analysis. Much extended the original from Peter
-    Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw
-    (1990) "Finding Groups in Data"."""
+class RTmixclust(RPackage):
+    """Implementation of a clustering method for time series gene expression
+    data based on mixed-effects models with Gaussian variables and
+    non-parametric cubic splines estimation. The method can robustly account
+    for the high levels of noise present in typical gene expression time
+    series datasets."""
 
-    homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
+    homepage = "https://bioconductor.org/packages/TMixClust/"
+    url      = "https://git.bioconductor.org/packages/TMixClust"
 
-    version('2.0.7-1', 'a37add21b91d3e4f3883d005331e0d45')
-    version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
-    version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
+    version('1.0.1', git='https://git.bioconductor.org/packages/TMixClust',
+            commit='0ac800210e3eb9da911767a80fb5582ab33c0cad')
+
+    depends_on('r-gss', type=('build', 'run'))
+    depends_on('r-mvtnorm', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r-flexclust', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-spem', type=('build', 'run'))
+    depends_on('r@3.4.3:3.4.9', when='@1.0.1')
