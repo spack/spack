@@ -38,10 +38,16 @@ level = "long"
 
 
 def setup_parser(subparser):
+    subparser.epilog = "To run a command with the emulated environment" \
+                       " insert a '--' between the spec and the " \
+                       "command to be executed."
+
     arguments.add_common_arguments(subparser, ['clean', 'dirty'])
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs of package environment to emulate")
+        'spec',
+        nargs=argparse.REMAINDER,
+        help='spec for which we want to emulate the environment.'
+    )
 
 
 def env(parser, args):
@@ -50,16 +56,12 @@ def env(parser, args):
 
     # Specs may have spaces in them, so if they do, require that the
     # caller put a '--' between the spec and the command to be
-    # executed.  If there is no '--', assume that the spec is the
-    # first argument.
-    sep = '--'
-    if sep in args.spec:
-        s = args.spec.index(sep)
-        spec = args.spec[:s]
-        cmd = args.spec[s + 1:]
-    else:
-        spec = args.spec[0]
-        cmd = args.spec[1:]
+    # executed.  If there is no '--', assume that there is no command
+    try:
+        s = args.spec.index('--')
+        spec, cmd = args.spec[:s], args.spec[s + 1:]
+    except ValueError:
+        spec, cmd = args.spec, None
 
     specs = spack.cmd.parse_specs(spec, concretize=True)
     if len(specs) > 1:

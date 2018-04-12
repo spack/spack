@@ -31,7 +31,8 @@ info = SpackCommand('env')
 
 @pytest.mark.parametrize('pkg', [
     ('zlib',),
-    ('zlib', '--')
+    ('zlib', ' %gcc'),
+    ('zlib', '--'),
 ])
 @pytest.mark.usefixtures('config')
 def test_it_just_runs(pkg):
