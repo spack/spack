@@ -22,23 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os.path
+
 import pytest
 
 import spack.main
-import spack.modules as modules
+import spack.modules
 
 lmod = spack.main.SpackCommand('lmod')
 
-
-def _get_module_files(args):
-
-    files = []
-    specs = args.specs()
-
-    for module_type in args.module_type:
-        writer_cls = modules.module_types[module_type]
-        files.extend([writer_cls(spec).layout.filename for spec in specs])
-    return files
+# Needed to make the fixture work
+writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 
 @pytest.fixture(
@@ -61,3 +55,49 @@ def failure_args(request):
 def test_exit_with_failure(database, failure_args):
     with pytest.raises(spack.main.SpackCommandError):
         lmod(*failure_args)
+
+
+def test_setdefault_command(refresh_db_on_exit, database, patch_configuration):
+
+    patch_configuration('autoload_direct')
+
+    # Install two different versions of a package
+    other_spec, preferred = 'a@1.0', 'a@2.0'
+    database.install(preferred)
+    database.install(other_spec)
+
+    writer_cls = spack.modules.module_types['lmod']
+    writers = {
+        preferred: writer_cls(spack.spec.Spec(preferred).concretized()),
+        other_spec: writer_cls(spack.spec.Spec(other_spec).concretized())
+    }
+
+    # Create two module files for the same software
+    lmod('refresh', '-y', '--delete-tree', preferred, other_spec)
+
+    # Assert initial directory state: no link and all module files present
+    link_name = os.path.join(
+        os.path.dirname(writers[preferred].layout.filename),
+        'default'
+    )
+    for k in preferred, other_spec:
+        assert os.path.exists(writers[k].layout.filename)
+    assert not os.path.exists(link_name)
+
+    # Set the default to be the other spec
+    lmod('setdefault', other_spec)
+
+    # Check that a link named default exists, and points to the right file
+    for k in preferred, other_spec:
+        assert os.path.exists(writers[k].layout.filename)
+    assert os.path.exists(link_name) and os.path.islink(link_name)
+    assert os.path.realpath(link_name) == writers[other_spec].layout.filename
+
+    # Reset the default to be the preferred spec
+    lmod('setdefault', preferred)
+
+    # Check that a link named default exists, and points to the right file
+    for k in preferred, other_spec:
+        assert os.path.exists(writers[k].layout.filename)
+    assert os.path.exists(link_name) and os.path.islink(link_name)
+    assert os.path.realpath(link_name) == writers[preferred].layout.filename

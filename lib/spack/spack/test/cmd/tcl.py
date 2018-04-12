@@ -70,7 +70,7 @@ def test_exit_with_failure(database, failure_args):
 
 
 def test_remove_and_add_tcl(database, parser):
-    """Tests adding and removing a dotkit module file."""
+    """Tests adding and removing a tcl module file."""
 
     rm_cli_args = ['rm', '-y', 'mpileaks']
     module_files = _get_module_files(parser.parse_args(rm_cli_args))
