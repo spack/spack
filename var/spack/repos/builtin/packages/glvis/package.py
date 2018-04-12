@@ -96,19 +96,7 @@ class Glvis(MakefilePackage):
         mfem = spec['mfem']
         config_mk = mfem.package.config_mk
 
-        pkgs_libs = [('glu', 'libGLU'), ('gl', 'libGL'), ('libx11', 'libX11')]
-        search_dirs = ['lib64', 'lib']
-        gl_libs = LibraryList([])
-        for pkg, lib_ in pkgs_libs:
-            for dir in search_dirs:
-                lib = find_libraries([lib_], join_path(spec[pkg].prefix, dir),
-                                     shared=True, recursive=False)
-                if lib:
-                    break
-            if not lib:
-                raise InstallError('Library \'%s\' not found' % lib_)
-            gl_libs += lib
-
+        gl_libs = spec['glu'].libs + spec['gl'].libs + spec['libx11'].libs
         args = ['CC={0}'.format(env['CC']),
                 'PREFIX={0}'.format(prefix.bin),
                 'MFEM_DIR={0}'.format(mfem.prefix),
