@@ -58,9 +58,8 @@ class Supernova(Package):
         run_env.prepend_path('PATH', self.prefix)
 
     def install(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            rm = which('rm')
-            # remove the broken symlinks
-            rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
-               'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
-            copy_tree('.', prefix, preserve_symlinks=1)
+        rm = which('rm')
+        # remove the broken symlinks
+        rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
+            'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
+        copy_tree('.', prefix, preserve_symlinks=1)
