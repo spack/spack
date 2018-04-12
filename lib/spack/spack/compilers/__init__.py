@@ -304,6 +304,12 @@ def compiler_from_dict(items):
 
 
 def _compiler_from_config_entry(items):
+    """Note this is intended for internal use only. To avoid re-parsing
+       the same config dictionary this keeps track of its location in
+       memory. If you provide the same dictionary twice it will return
+       the same Compiler object (regardless of whether the dictionary
+       entries have changed).
+    """
     config_id = StrongReference(items)
     compiler = _compiler_cache.get(config_id, None)
 
