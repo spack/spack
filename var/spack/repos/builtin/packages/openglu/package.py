@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,65 +25,61 @@
 from spack import *
 
 
-class Opengl(Package):
-    """Placeholder for external OpenGL libraries from hardware vendors"""
+class Openglu(Package):
+    """Placeholder for external OpenGL utility library (GLU) from hardware
+       vendors"""
 
-    homepage = "https://www.opengl.org/"
-    url      = "https://www.opengl.org/"
+    homepage = "https://www.opengl.org/resources/libraries"
+    url      = "https://www.opengl.org/resources/libraries"
 
-    # A second argument (usually the hash) must be supplied to the
+    # A second argument (usually the has) must be supplied to the
     # version directive, but 'n/a' is used here because this package
     # is a placeholder for a system/vendor installation of OpenGL
-    version('3.2', 'n/a')
+    version('1.3', 'n/a')
 
-    provides('gl@:4.5', when='@4.5:')
-    provides('gl@:4.4', when='@4.4:')
-    provides('gl@:4.3', when='@4.3:')
-    provides('gl@:4.2', when='@4.2:')
-    provides('gl@:4.1', when='@4.1:')
-    provides('gl@:3.3', when='@3.3:')
+    provides('glu@:1.3', when='@1.3:')
+    provides('glu@:1.2', when='@1.2:')
+    provides('glu@:1.1', when='@1.1:')
+    provides('glu@:1.0', when='@1.0:')
 
     # Override the fetcher method to throw a useful error message;
-    # fixes GitHub issue (#7061) in which this package threw a
-    # generic, uninformative error during the `fetch` step,
+    # fixes an issue similar to Github issue (#7061), in which the
+    # opengl package threw a generic, uninformative error message
+    # during the `fetch` step
     @property
     def fetcher(self):
         msg = """This package is intended to be a placeholder for
-        system-provided OpenGL libraries from hardware vendors.  Please
-        download and install OpenGL drivers/libraries for your graphics
-        hardware separately, and then set that up as an external package.
-        An example of a working packages.yaml:
+        system-provided OpenGL utility (GLU) libraries from hardware vendors.
+        Please download and install the GLU drivers/libraries for your
+        graphics hardware separately, and then set that up as an external
+        package.  An example of a working packages.yaml:
 
         packages:
-          opengl:
+          openglu:
             paths:
-              opengl@4.5.0: /opt/opengl
+              openglu@1.3: /opt/opengl
             buildable: False
 
         In that case, /opt/opengl/ should contain these two folders:
 
-        include/GL/       (opengl headers, including "gl.h")
-        lib               (opengl libraries, including "libGL.so")
+        include/GL/       (opengl headers, including "glu.h")
+        lib               (opengl libraries, including "libGLU.so")
 
-        On Apple Darwin (e.g., OS X, macOS) systems, this package is
+        On Apple Darwin (OS X, macOS) systems, this package is
         normally installed as part of the XCode Command Line Tools in
         /usr/X11R6, so a working packages.yaml would be
 
         packages:
-          opengl:
+          openglu:
             paths:
-              opengl@4.1: /usr/X11R6
+              openglu@1.3: /usr/X11R6
             buildable: False
 
         In that case, /usr/X11R6 should contain
 
-        include/GL/      (OpenGL headers, including "gl.h")
-        lib              (OpenGL libraries, including "libGL.dylib")
+        include/GL       (GLU headers, including "glu.h")
+        lib              (GLU libraries, including "libGLU.dylib")"""
 
-        On OS X/macOS, note that the version of OpenGL provided
-        depends on your hardware. Look at
-        https://support.apple.com/en-us/HT202823 to see what version
-        of OpenGL your Mac uses."""
         raise InstallError(msg)
 
     def install(self, spec, prefix):
