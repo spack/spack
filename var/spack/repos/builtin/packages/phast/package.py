@@ -36,12 +36,19 @@ class Phast(MakefilePackage):
 
     depends_on('netlib-lapack+lapacke')
 
-    build_directory = 'src'
+    @property
+    def build_directory(self):
+        return join_path(self.stage.source_path, 'src')
 
     @property
     def build_targets(self):
         targets = ['CLAPACKPATH={0}'.format(self.spec['netlib-lapack'].prefix)]
         return targets
+
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            filter_file(r'\$\{PWD\}', self.build_directory, 'make-include.mk')
+            filter_file(r'\$\{PWD\}', self.build_directory, 'Makefile')
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
