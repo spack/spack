@@ -50,6 +50,7 @@ class Intel(IntelPackage):
     #
     # Grandfathered release; different directory structure.
     version('15.0.6',              'da9f8600c18d43d58fba0488844f79c9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
+    version('15.0.1',              '85beae681ae56411a8e791a7c44a5c0a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4933/l_compxe_2015.1.133.tgz')
 
     variant('rpath', default=True, description='Add rpath to .cfg files')
 
