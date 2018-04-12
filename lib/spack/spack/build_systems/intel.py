@@ -32,7 +32,7 @@ import xml.etree.ElementTree as ET
 import llnl.util.tty as tty
 
 from llnl.util.filesystem import \
-    install, join_path, ancestor, \
+    install, join_path, ancestor, filter_file, \
     LibraryList, find_headers, find_libraries, find_system_libraries
 
 from spack.version import Version
@@ -81,10 +81,10 @@ def _expand_fields(s):
 
     if 'linux' in sys.platform:            # NB: linux2 vs. linux
         s = re.sub('{platform}', 'linux', s)
-    #elif 'darwin' in sys.platform:         # TBD
-    #    s = re.sub('{platform}', '', s)    # typically not used (right?)
-    #elif 'win' in sys.platform:            # TBD
-    #    s = re.sub('{platform}', 'windows', s)
+    # elif 'darwin' in sys.platform:         # TBD
+    #     s = re.sub('{platform}', '', s)    # typically not used (right?)
+    # elif 'win' in sys.platform:            # TBD
+    #     s = re.sub('{platform}', 'windows', s)
 
     s = re.sub('{arch}', 'intel64', s)      # TBD: ia32
     s = re.sub('{bits}', '64', s)
@@ -157,29 +157,33 @@ class IntelPackage(PackageBase):
     # NB: Renamed from plain components() for coding and maintainability.
     @property
     def pset_components(self):
-        # Do not detail the more single-purpose client packages.
+        # Do not detail single-purpose client packages.
         if not self._has_compilers:
-            #return ['DEFAULTS']
             return ['ALL']
 
-        # For all other packages, start with the compiler-related components,
-        # incl. "Documentation and Samples"
+        if self._is_early_composer:
+            return ['DEFAULTS']
+
+        # The only Spack packages left to handle are the compiler packages from
+        # 2016 onward, which differ by "edition".  Handle the compiler-related
+        # components first to cover Spack package 'intel', which is just a
+        # compiler-only subset of 'intel-parallel-studio@composer' (having no
+        # variants involving components).
         c = ' intel-icc     intel-ifort' \
             ' intel-ccomp   intel-fcomp   intel-comp-' \
             ' intel-psxe intel-openmp'
 
-        if self._is_early_composer:
-            c += ' intel-compilerproc intel-compilerprof intel-compilerpro-'
+        # if self._is_early_composer:
+        #     c += ' intel-compilerproc intel-compilerprof intel-compilerpro-'
 
         if self._edition == 'composer':
             c += ' intel-compxe'
-                 # Do we really also need: ' intel-ccompxe intel-fcompxe'?
         elif self._edition == 'cluster':
             c += ' intel-icsxe'
         elif self._edition == 'professional':
             c += ' intel-ips-'
 
-        addons_by_variant = {
+        for variant, components_to_add in {
             '+daal':        'intel-daal',   # Data Analytics Acceleration Lib
             '+gdb':         'intel-gdb',    # Integrated Performance Primitives
             '+ipp':         'intel-ipp intel-crypto-ipp',
@@ -193,9 +197,7 @@ class IntelPackage(PackageBase):
                             'intel-trace-analyzer intel-trace-collector',
                             # Trace Analyzer and Collector
             '+vtune':       'intel-vtune-amplifier',    # VTune
-        }
-
-        for variant, components_to_add in addons_by_variant.items():
+        }.items():
             if variant in self.spec:
                 c += ' ' + components_to_add
 
@@ -234,7 +236,7 @@ class IntelPackage(PackageBase):
                 if name_present.startswith(name_requested):
                     confirmed.add(name_present)
 
-        return confirmed
+        return list(confirmed)
 
     @property
     def _want_shared(self):
@@ -292,7 +294,7 @@ class IntelPackage(PackageBase):
 
     def _is_personality(self, personality_wanted):
         '''Check if called for an explicitly requested Intel ``component`` or
-        in a role manifested by the current (possibly virtual) package name.
+        in a role manifested by the current package name.
         '''
         result = (personality_wanted in [str(k) for k in self.provided])
         debug_print("%s -> %s" % (personality_wanted, result))
@@ -313,7 +315,7 @@ class IntelPackage(PackageBase):
         '''Returns the version-specific and absolute path to the directory of
         an Intel product or a suite of product components.
 
-        Parameters:
+        Parameters::
 
         ``product_dir_name``
             Name of the product directory, without numeric version.
@@ -901,8 +903,10 @@ class IntelPackage(PackageBase):
         # lspat       - the license server address pattern (0123@hostname)
         # snpat       - the serial number pattern (ABCD-01234567)
 
-        components_joined = ';'.join(self._filtered_components)
-        debug_print(components_joined)
+        # .cfg files generated with the "--duplicate filename" option have the
+        # COMPONENTS string begin with a separator. Do the same.
+        components_joined = ';'.join([''] + self._filtered_components)
+        nonrpm_db_dir = join_path(prefix, 'nonrpm-db')
 
         config = {
             'ACCEPT_EULA':                          'accept',
@@ -911,12 +915,13 @@ class IntelPackage(PackageBase):
             'CONTINUE_WITH_INSTALLDIR_OVERWRITE':   'yes',
             'COMPONENTS':                           components_joined,
             'PSET_MODE':                            'install',
-            'NONRPM_DB_DIR':                        prefix,
+            'NONRPM_DB_DIR':                        nonrpm_db_dir,
             'SIGNING_ENABLED':                      'no',
         }
 
         if not self._is_early_composer:
-            config.update({'ARCH_SELECTED': 'INTEL64'})   # later versions only
+            # drop 32 bit from recent versions
+            config.update({'ARCH_SELECTED': 'INTEL64'})
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
@@ -953,6 +958,16 @@ class IntelPackage(PackageBase):
             compiler_cfg = os.path.abspath(f + '.cfg')
             with open(compiler_cfg, 'w') as fh:
                 fh.write('-Xlinker -rpath={0}\n'.format(compilers_lib_dir))
+
+    @run_after('install')
+    def filter_compiler_wrappers(self):
+        if (('+mpi' in self.spec or self._is_personality('mpi')) and
+                '~newdtags' in self.spec):
+            bin_dir = self.component_bin_dir('mpi')
+            for f in 'mpif77 mpif90 mpigcc mpigxx mpiicc mpiicpc ' \
+                     'mpiifort'.split():
+                f = os.path.join(bin_dir, f)
+                filter_file('-Xlinker --enable-new-dtags', ' ', f, string=True)
 
     @run_after('install')
     def preserve_cfg(self):
