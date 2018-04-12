@@ -293,14 +293,6 @@ class IntelPackage(PackageBase):
         debug_print(result)
         return result
 
-    def _is_personality(self, personality_wanted):
-        '''Check if called for an explicitly requested Intel ``component`` or
-        in a role manifested by the current package name and variant.
-        '''
-        result = self.provides(personality_wanted)
-        debug_print("%s -> %s" % (personality_wanted, result))
-        return result
-
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
     # ---------------------------------------------------------------------
@@ -738,12 +730,12 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     @property
     def headers(self):
-        if '+mpi' in self.spec or self._is_personality('mpi'):
+        if '+mpi' in self.spec or self.provides('mpi'):
             return find_headers(
                 ['mpi'],
                 root=self.component_include_dir('mpi'),
                 recursive=False)
-        if '+mkl' in self.spec or self._is_personality('mkl'):
+        if '+mkl' in self.spec or self.provides('mkl'):
             return find_headers(
                 ['mkl_cblas', 'mkl_lapacke'],
                 root=self.component_include_dir('mkl'),
@@ -751,7 +743,7 @@ class IntelPackage(PackageBase):
 
     @property
     def libs(self):
-        if '+mpi' in self.spec or self._is_personality('mpi'):
+        if '+mpi' in self.spec or self.provides('mpi'):
             # If prefix is too general, recursive searches may get files from
             # supported but inappropriate sub-architectures like 'mic'.
             libnames = ['libmpifort', 'libmpi']
@@ -797,7 +789,7 @@ class IntelPackage(PackageBase):
         run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if '+mkl' in self.spec or self._is_personality('mkl'):
+        if '+mkl' in self.spec or self.provides('mkl'):
             spack_env.set('MKLROOT', self.normalize_path('mkl'))
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir('mkl'))
@@ -808,7 +800,7 @@ class IntelPackage(PackageBase):
         # fails because spack_cc & friends are only defined in
         # lib/spack/spack/build_environment.py:set_module_variables_for_package
         #
-        # if '+mpi' in self.spec or self._is_personality('mpi'):
+        # if '+mpi' in self.spec or self.provides('mpi'):
         #   spack_env.set('I_MPI_CC', spack_cc)
         #   spack_env.set('I_MPI_CXX', spack_cxx)
         #   spack_env.set('I_MPI_F77', spack_fc)
@@ -816,7 +808,7 @@ class IntelPackage(PackageBase):
         #   spack_env.set('I_MPI_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        if '+mpi' in self.spec or self._is_personality('mpi'):
+        if '+mpi' in self.spec or self.provides('mpi'):
             # Intel comes with 2 different flavors of MPI wrappers:
             #
             # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
@@ -962,7 +954,7 @@ class IntelPackage(PackageBase):
 
     @run_after('install')
     def filter_compiler_wrappers(self):
-        if (('+mpi' in self.spec or self._is_personality('mpi')) and
+        if (('+mpi' in self.spec or self.provides('mpi')) and
                 '~newdtags' in self.spec):
             bin_dir = self.component_bin_dir('mpi')
             for f in 'mpif77 mpif90 mpigcc mpigxx mpiicc mpiicpc ' \
