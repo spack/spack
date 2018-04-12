@@ -282,6 +282,7 @@ class IntelPackage(PackageBase):
         y = self.version[0]
         if y < 2000:
             y += 2000
+        return y
 
     @property
     def _is_early_composer(self):
