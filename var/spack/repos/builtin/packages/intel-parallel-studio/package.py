@@ -130,17 +130,6 @@ class IntelParallelStudio(IntelPackage):
     variant('tbb',  default=True,
             description='Install the Intel TBB libraries')
 
-    provides('daal',        when='+daal')
-    provides('ipp',         when='+ipp')
-
-    provides('mkl',         when='+mkl')
-    provides('blas',        when='+mkl')
-    provides('lapack',      when='+mkl')
-    provides('scalapack',   when='+mkl')
-
-    provides('mpi',         when='+mpi')
-    provides('tbb',         when='+tbb')
-
     # Components only available in the Professional and Cluster Editions
     variant('advisor',   default=False,
             description='Install the Intel Advisor')
@@ -152,6 +141,17 @@ class IntelParallelStudio(IntelPackage):
             description='Install the Intel Trace Analyzer and Collector')
     variant('vtune',     default=False,
             description='Install the Intel VTune Amplifier XE')
+
+    provides('daal',        when='+daal')
+    provides('ipp',         when='+ipp')
+
+    provides('mkl',         when='+mkl')
+    provides('blas',        when='+mkl')
+    provides('lapack',      when='+mkl')
+    provides('scalapack',   when='+mkl')
+
+    provides('mpi',         when='+mpi')
+    provides('tbb',         when='+tbb')
 
     conflicts('+advisor',   when='@composer.0:composer.9999')
     conflicts('+clck',      when='@composer.0:composer.9999')
