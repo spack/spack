@@ -37,5 +37,10 @@ class XercesC(AutotoolsPackage):
 
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 
+    depends_on('libiconv')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.append_flags('LDFLAGS', self.spec['libiconv'].libs.ld_flags)
+
     def configure_args(self):
         return ['--disable-network']

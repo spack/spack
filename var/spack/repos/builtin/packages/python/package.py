@@ -34,6 +34,7 @@ from llnl.util.filesystem import force_remove
 
 import spack
 from spack import *
+from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 import spack.util.spack_json as sjson
 
@@ -543,7 +544,10 @@ class Python(AutotoolsPackage):
         # where a system provided python is run against the standard libraries
         # of a Spack built python. See issue #7128
         spack_env.set('PYTHONHOME', self.home)
-        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
+
+        path = os.path.dirname(self.command.path)
+        if not is_system_path(path):
+            spack_env.prepend_path('PATH', path)
 
         python_paths = []
         for d in dependent_spec.traverse(
