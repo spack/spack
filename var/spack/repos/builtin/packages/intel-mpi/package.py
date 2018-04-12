@@ -51,11 +51,12 @@ class IntelMpi(IntelPackage):
     provides('mpi')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # DUP in var/spack/repos/builtin/packages/intel-parallel-studio/*.py
+        # DUP code in ../intel-parallel-studio/package.py
         spack_env.set('I_MPI_CC', spack_cc)
         spack_env.set('I_MPI_CXX', spack_cxx)
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
-        # Convenience variable.
-        spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
+        # TODO: Verify that this is in fact done by the modulefile:
+        # # Convenience variable.
+        # spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
