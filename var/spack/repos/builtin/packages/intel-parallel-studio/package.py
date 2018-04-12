@@ -102,6 +102,12 @@ class IntelParallelStudio(IntelPackage):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
     version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
+    version('professional.2015.1', '542b78c86beff9d7b01076a7be9c6ddc',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
+    version('cluster.2015.1',      '542b78c86beff9d7b01076a7be9c6ddc',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
+    version('composer.2015.1',      '85beae681ae56411a8e791a7c44a5c0a',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4933/l_compxe_2015.1.133.tgz')
 
     # Generic Variants
     variant('rpath',    default=True,
@@ -163,7 +169,12 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+clck',      when='@composer.0:composer.9999')
     conflicts('+inspector', when='@composer.0:composer.9999')
     conflicts('+itac',      when='@composer.0:composer.9999')
+    conflicts('+mpi',       when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
+    # The following components are not available before 2016
+    conflicts('+daal',      when='@professional.0:professional.2015.7')
+    conflicts('+daal',      when='@cluster.0:cluster.2015.7')
+    conflicts('+daal',      when='@composer.0:composer.2015.7')
 
     @property
     def blas_libs(self):
@@ -278,6 +289,8 @@ class IntelParallelStudio(IntelPackage):
             # Common files
             'intel-comp-',
             'intel-openmp',
+            'intel-compxe',
+            'intel-compilerpro',
 
             # C/C++
             'intel-icc',
@@ -403,6 +416,16 @@ class IntelParallelStudio(IntelPackage):
             directories.append(vtune_dir)
 
         return [os.path.join(dir, 'license.lic') for dir in directories]
+
+    @property
+    def arch_required(self):
+        # version 2015 doesn't support specifying an architecture
+        if self.spec.satisfies('@professional.0:professional.2015.7') or \
+           self.spec.satisfies('@cluster.0:cluster.2015.7') or \
+           self.spec.satisfies('@composer.0:composer.2015.7'):
+            return False
+        else:
+            return True
 
     @run_after('install')
     def filter_compiler_wrappers(self):

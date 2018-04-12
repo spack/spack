@@ -61,6 +61,11 @@ class IntelPackage(PackageBase):
     #: system base class
     build_system_class = 'IntelPackage'
 
+    #: By default, we assume that all Intel software can have a desired
+    #: architecture specified. This can be overridden for packages that do
+    #: not support multiple architectures.
+    arch_required = True
+
     #: By default, we assume that all Intel software requires a license.
     #: This can be overridden for packages that do not require a license.
     license_required = True
@@ -150,11 +155,16 @@ class IntelPackage(PackageBase):
             # Perform validation of digital signatures of RPM files,
             # valid values are: {yes, no}
             'SIGNING_ENABLED': 'no',
-
-            # Select target architecture of your applications,
-            # valid values are: {IA32, INTEL64, ALL}
-            'ARCH_SELECTED': 'ALL',
         }
+
+        # Not all Intel software supports multiple architectures. Trying to
+        # specify one anyway will cause the installation to fail.
+        if self.arch_required:
+            config.update({
+                # Select target architecture of your applications,
+                # valid values are: {IA32, INTEL64, ALL}
+                'ARCH_SELECTED': 'ALL',
+            })
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.

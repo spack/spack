@@ -53,6 +53,10 @@ class Intel(IntelPackage):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
     version('16.0.2', '1133fb831312eb519f7da897fec223fa',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
+    version('15.0.6', 'da9f8600c18d43d58fba0488844f79c9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
+    version('15.0.1', '85beae681ae56411a8e791a7c44a5c0a',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4933/l_compxe_2015.1.133.tgz')
 
     variant('rpath', default=True, description='Add rpath to .cfg files')
 
@@ -60,6 +64,8 @@ class Intel(IntelPackage):
         # Common files
         'intel-comp-',
         'intel-openmp',
+        'intel-compxe',
+        'intel-compilerpro',
 
         # C/C++
         'intel-icc',
@@ -70,19 +76,41 @@ class Intel(IntelPackage):
 
     @property
     def license_files(self):
-        return [
-            'Licenses/license.lic',
-            join_path('compilers_and_libraries', 'linux', 'bin',
-                      'intel64', 'license.lic')
-        ]
+        if self.spec.satisfies('@composer.0:composer.2015.7'):
+            icc_path = os.path.realpath(join_path(self.prefix, 'bin', 'icc'))
+            directories = [
+                join_path(os.path.dirname(icc_path), '..', '..', 'Licenses')
+            ]
+        else:
+            directories = [
+                'Licenses',
+                join_path('compilers_and_libraries', 'linux', 'bin',
+                          'intel64')
+            ]
+
+        return [os.path.join(dir, 'license.lic') for dir in directories]
+
+    @property
+    def arch_required(self):
+        # Composer 2015 doesn't support specifying an architecture
+        if self.spec.satisfies('@composer.0:composer.2015.7'):
+            return False
+        else:
+            return True
 
     @run_after('install')
     def rpath_configuration(self):
         if '+rpath' in self.spec:
-            bin_dir = join_path(self.prefix, 'compilers_and_libraries',
-                                'linux', 'bin', 'intel64')
-            lib_dir = join_path(self.prefix, 'compilers_and_libraries',
-                                'linux', 'compiler', 'lib', 'intel64_lin')
+            if self.spec.satisfies('@composer.0:composer.2015.7'):
+                icc_path = os.path.realpath(join_path(self.prefix, 'bin',
+                                                      'icc'))
+                bin_dir = os.path.dirname(icc_path)
+                lib_dir = join_path(self.prefix, 'lib', 'intel64')
+            else:
+                bin_dir = join_path(self.prefix, 'compilers_and_libraries',
+                                    'linux', 'bin', 'intel64')
+                lib_dir = join_path(self.prefix, 'compilers_and_libraries',
+                                    'linux', 'compiler', 'lib', 'intel64_lin')
             for compiler in ['icc', 'icpc', 'ifort']:
                 cfgfilename = join_path(bin_dir, '{0}.cfg'.format(compiler))
                 with open(cfgfilename, 'w') as f:
