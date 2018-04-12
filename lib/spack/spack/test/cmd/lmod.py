@@ -28,11 +28,14 @@ import pytest
 
 import spack.main
 import spack.modules
+import spack.spec
 
 lmod = spack.main.SpackCommand('lmod')
 
 # Needed to make the fixture work
 writer_cls = spack.modules.lmod.LmodModulefileWriter
+
+# TODO : add tests for loads and find to check the prompt format
 
 
 @pytest.fixture(
@@ -47,26 +50,23 @@ def failure_args(request):
     return request.param
 
 
-# TODO : test the --delete-tree option
-# TODO : this requires having a separate directory for test modules
-# TODO : add tests for loads and find to check the prompt format
-
-
 def test_exit_with_failure(database, failure_args):
     with pytest.raises(spack.main.SpackCommandError):
         lmod(*failure_args)
 
 
-def test_setdefault_command(refresh_db_on_exit, database, patch_configuration):
+def test_setdefault_command(
+        mutable_database, module_configuration
+):
 
-    patch_configuration('autoload_direct')
+    module_configuration('autoload_direct')
 
     # Install two different versions of a package
     other_spec, preferred = 'a@1.0', 'a@2.0'
-    database.install(preferred)
-    database.install(other_spec)
 
-    writer_cls = spack.modules.module_types['lmod']
+    spack.spec.Spec(other_spec).concretized().package.do_install(fake=True)
+    spack.spec.Spec(preferred).concretized().package.do_install(fake=True)
+
     writers = {
         preferred: writer_cls(spack.spec.Spec(preferred).concretized()),
         other_spec: writer_cls(spack.spec.Spec(other_spec).concretized())
@@ -87,7 +87,7 @@ def test_setdefault_command(refresh_db_on_exit, database, patch_configuration):
     # Set the default to be the other spec
     lmod('setdefault', other_spec)
 
-    # Check that a link named default exists, and points to the right file
+    # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
@@ -96,7 +96,7 @@ def test_setdefault_command(refresh_db_on_exit, database, patch_configuration):
     # Reset the default to be the preferred spec
     lmod('setdefault', preferred)
 
-    # Check that a link named default exists, and points to the right file
+    # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
