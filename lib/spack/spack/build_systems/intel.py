@@ -132,7 +132,7 @@ class IntelPackage(PackageBase):
         dirs = ['Licenses']
 
         if self._has_compilers:
-            dirs.append(self.component_bin_dir('compiler', relative=True))
+            dirs.append(self.component_bin_dir('compiler'))
 
             addons_by_variant = {
                 '+advisor':    'advisor',
@@ -294,9 +294,9 @@ class IntelPackage(PackageBase):
 
     def _is_personality(self, personality_wanted):
         '''Check if called for an explicitly requested Intel ``component`` or
-        in a role manifested by the current package name.
+        in a role manifested by the current package name and variant.
         '''
-        result = (personality_wanted in [str(k) for k in self.provided])
+        result = self.provides(personality_wanted)
         debug_print("%s -> %s" % (personality_wanted, result))
         return result
 
