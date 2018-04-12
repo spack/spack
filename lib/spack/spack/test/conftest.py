@@ -24,7 +24,9 @@
 ##############################################################################
 import collections
 import copy
+import inspect
 import os
+import os.path
 import shutil
 import re
 
@@ -403,6 +405,45 @@ def mock_fetch(mock_archive):
     yield
     PackageBase.fetcher = orig_fn
 
+
+@pytest.fixture()
+def patch_configuration(monkeypatch, request):
+    """Reads a configuration file from the mock ones prepared for tests
+    and monkeypatches the right classes to hook it in.
+    """
+    # Class of the module file writer
+    writer_cls = getattr(request.module, 'writer_cls')
+    # Module where the module file writer is defined
+    writer_mod = inspect.getmodule(writer_cls)
+    # Key for specific settings relative to this module type
+    writer_key = str(writer_mod.__name__).split('.')[-1]
+    # Root folder for configuration
+    root_for_conf = os.path.join(
+        spack.test_path, 'data', 'modules', writer_key
+    )
+
+    def _impl(filename):
+
+        file = os.path.join(root_for_conf, filename + '.yaml')
+        with open(file) as f:
+            configuration = yaml.load(f)
+
+        monkeypatch.setattr(
+            spack.modules.common,
+            'configuration',
+            configuration
+        )
+        monkeypatch.setattr(
+            writer_mod,
+            'configuration',
+            configuration[writer_key]
+        )
+        monkeypatch.setattr(
+            writer_mod,
+            'configuration_registry',
+            {}
+        )
+    return _impl
 
 ##########
 # Fake archives and repositories
