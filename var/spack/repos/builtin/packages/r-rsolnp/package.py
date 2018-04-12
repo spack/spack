@@ -25,15 +25,14 @@
 from spack import *
 
 
-class RCluster(RPackage):
-    """Methods for Cluster analysis. Much extended the original from Peter
-    Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw
-    (1990) "Finding Groups in Data"."""
+class RRsolnp(RPackage):
+    """General Non-linear Optimization Using Augmented Lagrange Multiplier
+    Method."""
 
-    homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
+    homepage = "https://cran.r-project.org/package=Rsolnp"
+    url      = "https://cran.rstudio.com/src/contrib/Rsolnp_1.16.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/Rsolnp"
 
-    version('2.0.7-1', 'a37add21b91d3e4f3883d005331e0d45')
-    version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
-    version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
+    version('1.16', '507e1e1a64f5f1d32b7e4e12ed19599f')
+
+    depends_on('r-truncnorm', type=('build', 'run'))

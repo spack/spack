@@ -25,15 +25,16 @@
 from spack import *
 
 
-class RCluster(RPackage):
-    """Methods for Cluster analysis. Much extended the original from Peter
-    Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw
-    (1990) "Finding Groups in Data"."""
+class RSpem(RPackage):
+    """This package can optimize the parameter in S-system models given time
+    series data"""
 
-    homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
+    homepage = "https://bioconductor.org/packages/SPEM/"
+    url      = "https://git.bioconductor.org/packages/SPEM"
 
-    version('2.0.7-1', 'a37add21b91d3e4f3883d005331e0d45')
-    version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
-    version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
+    version('1.18.0', git='https://git.bioconductor.org/packages/SPEM',
+            commit='3ab425dd9889885eac328d26b73366a875cd250b')
+
+    depends_on('r-rsolnp', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r@3.4.3:3.4.9', when='@1.18.0')
