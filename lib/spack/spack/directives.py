@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -381,7 +381,7 @@ def extends(spec, **kwargs):
         #     msg = 'Packages can extend at most one other package.'
         #     raise DirectiveError(directive, msg)
 
-        when = kwargs.pop('when', pkg.name)
+        when = kwargs.get('when', pkg.name)
         _depends_on(pkg, spec, when=when)
         pkg.extendees[spec] = (Spec(spec), kwargs)
     return _execute_extends

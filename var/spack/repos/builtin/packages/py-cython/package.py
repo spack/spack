@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,8 +30,8 @@ class PyCython(PythonPackage):
     homepage = "https://pypi.python.org/pypi/cython"
     url      = "https://pypi.io/packages/source/c/cython/Cython-0.25.2.tar.gz"
 
+    version('0.28.1', 'c549effadb52d90bdcb1affc1e5dbb97')
     version('0.25.2', '642c81285e1bb833b14ab3f439964086')
-
     version('0.23.5', '66b62989a67c55af016c916da36e7514')
     version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
 

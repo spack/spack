@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -154,6 +154,8 @@ def _mock_remove(spec):
 
 
 def test_default_queries(database):
+    # Testing a package whose name *doesn't* start with 'lib'
+    # to ensure the library has 'lib' prepended to the name
     install_db = database.mock.db
     rec = install_db.get_record('zmpi')
 
@@ -161,13 +163,35 @@ def test_default_queries(database):
 
     libraries = spec['zmpi'].libs
     assert len(libraries) == 1
+    assert libraries.names[0] == 'zmpi'
 
     headers = spec['zmpi'].headers
     assert len(headers) == 1
+    assert headers.names[0] == 'zmpi'
 
     command = spec['zmpi'].command
     assert isinstance(command, Executable)
     assert command.name == 'zmpi'
+    assert os.path.exists(command.path)
+
+    # Testing a package whose name *does* start with 'lib'
+    # to ensure the library doesn't have a double 'lib' prefix
+    install_db = database.mock.db
+    rec = install_db.get_record('libelf')
+
+    spec = rec.spec
+
+    libraries = spec['libelf'].libs
+    assert len(libraries) == 1
+    assert libraries.names[0] == 'elf'
+
+    headers = spec['libelf'].headers
+    assert len(headers) == 1
+    assert headers.names[0] == 'libelf'
+
+    command = spec['libelf'].command
+    assert isinstance(command, Executable)
+    assert command.name == 'libelf'
     assert os.path.exists(command.path)
 
 
