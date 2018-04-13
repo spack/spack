@@ -22,7 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import six
 import sys
+
+import llnl.util.tty.colify as colify
 
 import spack
 import spack.cmd
@@ -44,8 +47,13 @@ def setup_parser(subparser):
 
 def providers(parser, args):
     valid_virtuals = sorted(spack.repo.provider_index.providers.keys())
-    valid_virtuals_str = 'Virtual packages:\n\t' if sys.stdout.isatty() else ''
-    valid_virtuals_str += ', '.join(valid_virtuals)
+
+    buffer = six.StringIO()
+    isatty = sys.stdout.isatty()
+    if isatty:
+        buffer.write('Virtual packages:\n')
+    colify.colify(valid_virtuals, output=buffer, tty=isatty, indent=4)
+    valid_virtuals_str = buffer.getvalue()
 
     # If called without arguments, list all the virtual packages
     if not args.virtual_package:
