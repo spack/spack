@@ -67,7 +67,7 @@ def setup_parser(subparser):
         const=1, default=0,
         help="only fetch one 'preferred' version per spec, not all known")
 
-    scopes = spack.config.config_scopes
+    scopes = spack.config.get_configuration().scopes
 
     # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
@@ -76,7 +76,7 @@ def setup_parser(subparser):
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -85,14 +85,14 @@ def setup_parser(subparser):
     remove_parser.add_argument('name')
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_list_scope,
+        default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
 

@@ -39,15 +39,27 @@ import spack.spec
 import spack.store
 from spack.error import SpackError
 
+
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify configuration by default modify the *highest*
-# priority scope.
-default_modify_scope = spack.config.highest_precedence_scope().name
+def default_modify_scope():
+    """Return the config scope that commands should modify by default.
 
-# Commands that list configuration list *all* scopes by default.
-default_list_scope = None
+    Commands that modify configuration by default modify the *highest*
+    priority scope.
+    """
+    config = spack.config.get_configuration()
+    return config.highest_precedence_scope().name
+
+
+def default_list_scope():
+    """Return the config scope that is listed by default.
+
+    Commands that list configuration list *all* scopes (merged) by default.
+    """
+    return None
+
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list

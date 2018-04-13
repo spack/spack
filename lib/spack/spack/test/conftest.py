@@ -216,17 +216,21 @@ def configuration_dir(tmpdir_factory, linux_os):
     directory path.
     """
     tmpdir = tmpdir_factory.mktemp('configurations')
+
     # Name of the yaml files in the test/data folder
     test_path = py.path.local(spack.paths.test_path)
     compilers_yaml = test_path.join('data', 'compilers.yaml')
     packages_yaml = test_path.join('data', 'packages.yaml')
     config_yaml = test_path.join('data', 'config.yaml')
+
     # Create temporary 'site' and 'user' folders
     tmpdir.ensure('site', dir=True)
     tmpdir.ensure('user', dir=True)
+
     # Copy the configurations that don't need further work
     packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
     config_yaml.copy(tmpdir.join('site', 'config.yaml'))
+
     # Write the one that needs modifications
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
@@ -239,18 +243,20 @@ def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
     spack.package_prefs.PackagePrefs.clear_caches()
-    spack.config.clear_config_caches()
-    real_scope = spack.config.config_scopes
-    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
-    spack.config.ConfigScope('site', str(configuration_dir.join('site')))
-    spack.config.ConfigScope('system', str(configuration_dir.join('system')))
-    spack.config.ConfigScope('user', str(configuration_dir.join('user')))
-    Config = collections.namedtuple('Config', ['real', 'mock'])
 
-    yield Config(real=real_scope, mock=spack.config.config_scopes)
+    real_configuration = spack.config._configuration
 
-    spack.config.config_scopes = real_scope
-    spack.config.clear_config_caches()
+    print real_configuration
+
+    scopes = [
+        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+        for name in ['site', 'system', 'user']]
+    config = spack.config.Configuration(*scopes)
+    spack.config._configuration = config
+
+    yield config
+
+    spack.config._configuration = real_configuration
     spack.package_prefs.PackagePrefs.clear_caches()
 
 

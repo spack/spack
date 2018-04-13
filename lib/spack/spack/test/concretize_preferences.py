@@ -24,26 +24,23 @@
 ##############################################################################
 import pytest
 
-import spack
-import spack.util.spack_yaml as syaml
-from spack.spec import Spec
 import spack.package_prefs
+import spack.util.spack_yaml as syaml
+from spack.config import ConfigScope
+from spack.spec import Spec
 
 
 @pytest.fixture()
 def concretize_scope(config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir('concretize')
-    spack.config.ConfigScope(
-        'concretize', str(tmpdir.join('concretize'))
-    )
-    yield
-    # This is kind of weird, but that's how config scopes are
-    # set in ConfigScope.__init__
-    spack.config.config_scopes.pop('concretize')
-    spack.package_prefs.PackagePrefs.clear_caches()
+    config.push_scope(
+        ConfigScope('concretize', str(tmpdir.join('concretize'))))
 
-    # reset provider index each time, too
+    yield
+
+    config.pop_scope()
+    spack.package_prefs.PackagePrefs.clear_caches()
     spack.repo._provider_index = None
 
 

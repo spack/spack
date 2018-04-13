@@ -116,11 +116,11 @@ def get_compiler_config(scope=None, init_config=True):
 
 def compiler_config_files():
     config_files = list()
-    for scope in spack.config.config_scopes:
-        config = spack.config.get_config('compilers', scope=scope)
-        if config:
-            config_files.append(spack.config.config_scopes[scope]
-                                .get_section_filename('compilers'))
+    config = spack.config.get_configuration()
+    for scope in config.scopes:
+        compiler_config = config.get_config('compilers', scope=scope)
+        if compiler_config:
+            config_files.append(config.get_config_filename(scope, 'compilers'))
     return config_files
 
 
@@ -338,17 +338,18 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
 @_auto_compiler_spec
 def get_compiler_duplicates(compiler_spec, arch_spec):
-    config_scopes = spack.config.config_scopes
-    scope_to_compilers = dict()
-    for scope in config_scopes:
+    config = spack.config.get_configuration()
+
+    scope_to_compilers = {}
+    for scope in config.scopes:
         compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec,
                                        scope=scope, use_cache=False)
         if compilers:
             scope_to_compilers[scope] = compilers
 
-    cfg_file_to_duplicates = dict()
+    cfg_file_to_duplicates = {}
     for scope, compilers in scope_to_compilers.items():
-        config_file = config_scopes[scope].get_section_filename('compilers')
+        config_file = config.get_config_filename(scope, 'compilers')
         cfg_file_to_duplicates[config_file] = compilers
 
     return cfg_file_to_duplicates

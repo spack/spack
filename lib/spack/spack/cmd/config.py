@@ -32,7 +32,7 @@ level = "long"
 def setup_parser(subparser):
     # User can only choose one
     subparser.add_argument(
-        '--scope', choices=spack.config.config_scopes,
+        '--scope', choices=spack.config.get_configuration().scopes,
         metavar=spack.config.scopes_metavar,
         help="configuration scope to read/modify")
 
@@ -54,18 +54,21 @@ def setup_parser(subparser):
 
 
 def config_get(args):
-    spack.config.print_section(args.section)
+    config = spack.config.get_configuration()
+    config.print_section(args.section)
 
 
 def config_edit(args):
     if not args.scope:
         if args.section == 'compilers':
-            args.scope = spack.cmd.default_modify_scope
+            args.scope = spack.cmd.default_modify_scope()
         else:
             args.scope = 'user'
     if not args.section:
         args.section = None
-    config_file = spack.config.get_config_filename(args.scope, args.section)
+
+    config = spack.config.get_configuration()
+    config_file = config.get_config_filename(args.scope, args.section)
     spack.editor(config_file)
 
 
