@@ -1208,7 +1208,7 @@ via module load.
 .. note::
 
     For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:`` 
-    in ``packages.yaml``, because the Cray Proramming Environment heavily relies on
+    in ``packages.yaml``, because the Cray Programming Environment heavily relies on
     modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the 
     compiler wrapper link line).
 
