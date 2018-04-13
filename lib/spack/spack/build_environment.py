@@ -208,9 +208,10 @@ def collect_installation_prefixes(deps):
         if dep.prefix:
             prefixes.append(dep.prefix)
         else:
-            assert(spec.external)
-            if not spec.external_module:
-                tty.debug("{0} does not have a prefix or associated module.")
+            assert(dep.external)
+            if not dep.external_module:
+                tty.debug("{0} does not have a prefix or associated module."
+                          .format(dep.format()))
 
     # Filter out system paths: ['/', '/usr', '/usr/local']
     # These paths can be introduced into the build when an external package
