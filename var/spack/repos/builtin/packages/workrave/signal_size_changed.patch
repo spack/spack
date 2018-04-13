@@ -1,0 +1,13 @@
+diff --git a/frontend/gtkmm/src/StatusIcon.cc b/frontend/gtkmm/src/StatusIcon.cc
+index 377aafa..fc99fa4 100644
+--- a/frontend/gtkmm/src/StatusIcon.cc
++++ b/frontend/gtkmm/src/StatusIcon.cc
+@@ -106,7 +106,7 @@ StatusIcon::insert_icon()
+   set_operation_mode(mode);
+ #else
+   status_icon = Gtk::StatusIcon::create(mode_icons[mode]);
+-  status_icon->property_embedded().signal_changed().connect(sigc::mem_fun(*this, &StatusIcon::on_embedded_changed));
++  //status_icon->property_embedded().signal_changed().connect(sigc::mem_fun(*this, &StatusIcon::on_embedded_changed));
+ #endif
+ 
+ #ifdef HAVE_STATUSICON_SIGNAL
