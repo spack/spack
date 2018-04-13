@@ -1203,10 +1203,14 @@ Here's an example of an external configuration for cray modules:
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
 environment variables, libraries, etc, that are brought into the environment
-via module load.  Note, it is best to use `modules:` instead of `paths:` in 
-`packages.yaml` as the Cray Proramming Environment heavily relies on modules 
-(e.g., loading the cray-mpich module adds MPI libraries to the compiler wrapper 
-link line).
+via module load.  
+
+.. note::
+
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:`` 
+    in ``packages.yaml``, because the Cray Proramming Environment heavily relies on
+    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the 
+    compiler wrapper link line).
 
 You can set the default compiler that Spack can use for each compiler type.
 If you want to use the Cray defaults, then set them under ``all:`` in packages.yaml.
