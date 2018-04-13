@@ -160,8 +160,9 @@ class IntelPackage(PackageBase):
         if not self._has_compilers:
             return ['ALL']
 
-        if self._is_early_composer:
-            return ['DEFAULTS']
+        # This would include MKL and IPP which are 2 GB each; may be unwanted.
+        # if self._is_early_composer:
+        #     return ['DEFAULTS']
 
         # The only Spack packages left to handle are the compiler packages from
         # 2016 onward, which differ by "edition".  Handle the compiler-related
@@ -172,8 +173,8 @@ class IntelPackage(PackageBase):
             ' intel-ccomp   intel-fcomp   intel-comp-' \
             ' intel-psxe intel-openmp'
 
-        # if self._is_early_composer:
-        #     c += ' intel-compilerproc intel-compilerprof intel-compilerpro-'
+        if self._is_early_composer:
+            c += ' intel-compilerproc intel-compilerprof intel-compilerpro-'
 
         if self._edition == 'composer':
             c += ' intel-compxe'
