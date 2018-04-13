@@ -22,35 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.cmd
 
-description = "list packages that provide a particular virtual package"
-section = "basic"
-level = "long"
+import pytest
 
+from spack.main import SpackCommand
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        'virtual_package',
-        nargs='+',
-        help='find packages that provide this virtual package'
-    )
+dependencies = SpackCommand('providers')
 
 
-def providers(parser, args):
-    # Parse the specs from command line
-    specs = spack.cmd.parse_specs(args.virtual_package)
+@pytest.mark.parametrize('pkg', [
+    ('mpi',),
+    ('mpi', 'lapack'),
+    ('',)  # argparse seems to print an error message, but doesn't raise
+])
+def test_it_just_runs(pkg):
+    dependencies(*pkg)
 
-    # Check prerequisites
-    non_virtual = [str(s) for s in specs if not s.virtual]
-    if non_virtual:
-        msg = 'non-virtual specs cannot be part of the query '
-        msg += '[{0}]'.format(', '.join(non_virtual))
-        raise ValueError(msg)
 
-    # Display providers
-    for spec in specs:
-        print("{0}:".format(spec))
-        spack.cmd.display_specs(sorted(spack.repo.providers_for(spec)))
-        print('')
+@pytest.mark.parametrize('pkg,error_cls', [
+    ('zlib', ValueError),
+])
+def test_it_just_fails(pkg, error_cls):
+    with pytest.raises(error_cls):
+        dependencies(pkg)

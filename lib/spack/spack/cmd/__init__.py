@@ -265,7 +265,8 @@ def display_specs(specs, args=None, **kwargs):
         header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
                                       architecture, spack.spec.compiler_color,
                                       compiler)
-        tty.hline(colorize(header), char='-')
+        if architecture is not None or compiler is not None:
+            tty.hline(colorize(header), char='-')
 
         specs = index[(architecture, compiler)]
         specs.sort()
