@@ -32,8 +32,9 @@ dependencies = SpackCommand('providers')
 
 @pytest.mark.parametrize('pkg', [
     ('mpi',),
+    ('mpi@2',),
     ('mpi', 'lapack'),
-    ('',)  # argparse seems to print an error message, but doesn't raise
+    ('',)  # Lists all the available virtual packages
 ])
 def test_it_just_runs(pkg):
     dependencies(*pkg)
@@ -41,6 +42,7 @@ def test_it_just_runs(pkg):
 
 @pytest.mark.parametrize('pkg,error_cls', [
     ('zlib', ValueError),
+    ('foo', ValueError)  # Trying to call with a package that does not exist
 ])
 def test_it_just_fails(pkg, error_cls):
     with pytest.raises(error_cls):

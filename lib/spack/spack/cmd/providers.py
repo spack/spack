@@ -31,22 +31,35 @@ level = "long"
 
 
 def setup_parser(subparser):
+    subparser.epilog = 'If called without argument returns ' \
+                       'the list of all valid virtual packages'
     subparser.add_argument(
         'virtual_package',
-        nargs='+',
+        nargs='*',
         help='find packages that provide this virtual package'
     )
 
 
 def providers(parser, args):
-    # Parse the specs from command line
+    valid_virtuals = sorted(spack.repo.provider_index.providers.keys())
+    valid_virtuals_str = 'Virtual packages:\n\t' + ', '.join(valid_virtuals)
+
+    # If called without arguments, list all the virtual packages
+    if not args.virtual_package:
+        print(valid_virtuals_str)
+        return
+
+    # Otherwise, parse the specs from command line
     specs = spack.cmd.parse_specs(args.virtual_package)
 
     # Check prerequisites
-    non_virtual = [str(s) for s in specs if not s.virtual]
+    non_virtual = [
+        str(s) for s in specs if not s.virtual or s.name not in valid_virtuals
+    ]
     if non_virtual:
         msg = 'non-virtual specs cannot be part of the query '
-        msg += '[{0}]'.format(', '.join(non_virtual))
+        msg += '[{0}]\n'.format(', '.join(non_virtual))
+        msg += valid_virtuals_str
         raise ValueError(msg)
 
     # Display providers
