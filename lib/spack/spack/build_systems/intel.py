@@ -160,10 +160,6 @@ class IntelPackage(PackageBase):
         if not self._has_compilers:
             return ['ALL']
 
-        # if self._is_early_composer:
-        #     return ['DEFAULTS']
-        #     # Includes MKL and IPP, at 2 GB each - may be unwanted.
-
         # Always include compilers and closely related components.
         # Pre-2016 compiler components have different names - throw in all.
         # Later releases have overlapping minor parts that differ by "edition".
@@ -294,23 +290,24 @@ class IntelPackage(PackageBase):
             return v_tail
 
         v_year = self.version[0]
-        # Exceptions for early lib packages:
-        #   MKL 11.x pre-2017
-        #   MPI  5.x pre-2016
-        #   IPP  9.x pre-2016
-        #   TBB  4.x pre-2016
-        # For now, adopt their Major in lieu of the actual release year.
-        # This function is usually called for the more modern releases only.
         if v_year < 2000:
+            # Exceptions for early lib packages:
+            #   MKL 11.3 *is* 2016
+            #   MKL 11.2 is 2015 (is not in Spack as of 2018-04)
+            #   MPI  5.x pre-2016
+            #   IPP  9.x pre-2016
+            #   TBB  4.x pre-2016
+            # For now, adopt their Major in lieu of the actual release year.
             v_year += 2000
         return Version('%s.%s' % (v_year, v_tail))
 
     @property
-    def _is_early_composer(self):
+    def _is_early_compiler(self):
         # Product releases prior to "Parallel Studio XE" (debut in 2016) were
         # called "Composer XE" and have some differences in directory layout.
-        result = (self.spec.satisfies('@composer.0:composer.2015') or
-                  self.spec.satisfies('intel@0:15'))
+        # This includes (if ever needed) MKL-11.2.x.
+        result = (self._version_yearlike < Version('2016') and
+                  self._has_compilers)
         debug_print(result)
         return result
 
@@ -472,7 +469,7 @@ class IntelPackage(PackageBase):
         # case for the time of writing.
 
         if component_suite_dir is None:
-            if self._is_early_composer:
+            if self._is_early_compiler:
                 component_suite_dir = 'composer_xe'     # The only one present.
             elif component_path.startswith('ism'):
                 component_suite_dir = 'parallel_studio_xe'
@@ -552,7 +549,7 @@ class IntelPackage(PackageBase):
         '''
         vars_file_info_for = {
             # key (usu. spack package name) -> [rel_path, component_suite_dir]
-            '@early_composer':       ['bin/compilervars',       None],
+            '@early_compiler':       ['bin/compilervars',       None],
             'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
             'intel':                 ['bin/compilervars',       None],
             'intel-daal':            ['daal/bin/daalvars',      None],
@@ -561,11 +558,11 @@ class IntelPackage(PackageBase):
             'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
         }
         key = self.name
-        if self._is_early_composer:
+        if self._is_early_compiler:
             # Same file as 'intel' but 'None' for component_suite_dir will
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
-            key = '@early_composer'
+            key = '@early_compiler'
 
         f, component_suite_dir = vars_file_info_for[key]
         f = _expand_fields(f) + '.sh'
