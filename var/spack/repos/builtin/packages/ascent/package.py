@@ -50,11 +50,6 @@ class Ascent(Package):
 
     maintainers = ['cyrush']
 
-    version('0.3.1',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            branch='develop', 
-            #tag='v0.3.1', 
-            submodules=True)
 
     version('0.3.0',
             git='https://github.com/Alpine-DAV/ascent.git',
@@ -100,7 +95,7 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake", when="+cmake")
-    depends_on("conduit@0.3.1")
+    depends_on("conduit+python@0.3.1")
     depends_on("conduit~shared@0.3.1", when="~shared")
 
     #######################
@@ -116,7 +111,8 @@ class Ascent(Package):
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py", when="+python+mpi")
+    # use old version of mpi4py to avoid build issues with cython
+    depends_on("py-mpi4py@2.0.0:2.9.999", when="+mpi+python")
 
     #############################
     # TPLs for Runtime Features
@@ -126,12 +122,6 @@ class Ascent(Package):
     depends_on("vtkh~tbb", when="+vtkh~tbb")
     depends_on("vtkh+cuda", when="+vtkh+cuda")
     depends_on("vtkh~shared", when="+vtkh~shared")
-
-    #depends_on("vtkh@master", when="+vtkh")
-    #depends_on("vtkh~tbb@master", when="+vtkh~tbb")
-    #depends_on("vtkh+cuda@master", when="+vtkh+cuda")
-    #depends_on("vtkh~shared@master", when="+vtkh~shared")
-
     depends_on("adios", when="+adios")
 
     #######################
