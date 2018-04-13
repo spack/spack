@@ -69,9 +69,6 @@ class Ascent(Package):
 
     variant("shared", default=True, description="Build Ascent as shared libs")
 
-    variant("cmake", default=True,
-            description="Build CMake (if off, attempt to use cmake from PATH)")
-
     variant("mpi", default=True, description="Build Ascent MPI Support")
 
     # variants for python support
@@ -94,7 +91,7 @@ class Ascent(Package):
     # package dependencies
     ###########################################################################
 
-    depends_on("cmake", when="+cmake")
+    depends_on("cmake@3.8.2:3.9.999")
     depends_on("conduit+python@0.3.1")
     depends_on("conduit~shared@0.3.1", when="~shared")
 

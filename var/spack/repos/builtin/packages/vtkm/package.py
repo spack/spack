@@ -51,7 +51,7 @@ class Vtkm(Package):
     variant("cuda", default=False, description="build cuda support")
     variant("tbb", default=True, description="build TBB support")
 
-    depends_on("cmake")
+    depends_on("cmake@3.8.2:3.9.999")
     depends_on("tbb", when="+tbb")
     depends_on("intel-tbb~shared", when="+tbb~shared")
     depends_on("cuda", when="+cuda")
