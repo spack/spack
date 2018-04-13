@@ -499,6 +499,8 @@ class IntelPackage(PackageBase):
             d = join_path(d, 'bin')
         else:
             if component == 'mpi':
+                if self._is_early_compiler:
+                    d = self.normalize_suite_dir('impi', version_glob='/*.*.*')
                 d = join_path(d, _expand_fields('{arch}'), 'bin')
             elif component == 'compiler':
                 d = join_path(ancestor(d), 'bin', _expand_fields('{arch}'))
