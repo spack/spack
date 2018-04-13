@@ -35,9 +35,9 @@ class PyIlluminaUtils(PythonPackage):
     version('2.3', 'c0af71723e52ab2b14660d2138620e39')
     version('2.2', '9e19cf112ccc38a903fc41f431804d21')
 
-    depends_on('python@3:')
+    depends_on('python@3:', type=('build', 'run'))
+    depends_on('py-pip', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pip', type=('build', 'run'))
     depends_on('py-python-levenshtein', type=('build', 'run'))
