@@ -34,7 +34,7 @@ class Glibmm(AutotoolsPackage):
     version('2.19.3', 'b50180bb93f501172a2ac4c54e83e88a')
     version('2.16.0', '24390d2da1734205f1e572f24d4942f0')
     version('2.4.8', 'fa8b2889cd845752446c6ce15a94bb32')
-    
+
     depends_on('libsigcpp')
     depends_on('glib')
 
@@ -48,5 +48,6 @@ class Glibmm(AutotoolsPackage):
 
     def configure_args(self):
         specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib for s in specs if not s.external]
+        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
+                       for s in specs if not s.external]
         return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]

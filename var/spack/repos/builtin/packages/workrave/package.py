@@ -25,11 +25,12 @@
 from spack import *
 from shutil import copyfile
 
+
 class Workrave(AutotoolsPackage):
-    """Workrave is a program that assists in the recovery and prevention of Repetitive 
-       Strain Injury (RSI). The program frequently alerts you to take micro-pauses, 
-       rest breaks and restricts you to your daily limit. The program runs on GNU/Linux
-       and Microsoft Windows.
+    """Workrave is a program that assists in the recovery and prevention of
+       Repetitive Strain Injury (RSI). The program frequently alerts you to
+       take micro-pauses, rest breaks and restricts you to your daily limit.
+       The program runs on GNU/Linux and Microsoft Windows.
     """
 
     homepage = "http://www.workrave.org/"
@@ -75,14 +76,16 @@ class Workrave(AutotoolsPackage):
 
     @run_before('autoreconf')
     def extra_m4(self):
-        # add a couple m4 macros used during autoreconf 
+        # add a couple m4 macros used during autoreconf
         # https://github.com/rcaelers/workrave/issues/95
-        for fname in ['ax_cxx_compile_stdcxx_11.m4', 'ax_cxx_compile_stdcxx.m4']:
+        m4files = ['ax_cxx_compile_stdcxx_11.m4', 'ax_cxx_compile_stdcxx.m4']
+        for fname in m4files:
             src = '%s/%s' % (self.package_dir, fname)
             dest = '%s/m4/%s' % (self.stage.source_path, fname)
             copyfile(src, dest)
 
     def configure_args(self):
         specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib for s in specs if not s.external]
+        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
+                       for s in specs if not s.external]
         return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]
