@@ -39,7 +39,7 @@ level = "long"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
-    scopes = spack.config.config_scopes
+    scopes = spack.config.get_configuration().scopes
 
     # Create
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
@@ -53,7 +53,7 @@ def setup_parser(subparser):
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
     list_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_list_scope,
+        default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
     # Add
@@ -62,7 +62,7 @@ def setup_parser(subparser):
         'path', help="path to a Spack package repository directory")
     add_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -73,7 +73,7 @@ def setup_parser(subparser):
         help="path or namespace of a Spack package repository")
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
 

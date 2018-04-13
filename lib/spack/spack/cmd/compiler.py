@@ -46,7 +46,7 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='compiler_command')
 
-    scopes = spack.config.config_scopes
+    scopes = spack.config.get_configuration().scopes
 
     # Find
     find_parser = sp.add_parser(
@@ -55,7 +55,7 @@ def setup_parser(subparser):
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -67,14 +67,14 @@ def setup_parser(subparser):
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_list_scope,
+        default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
     # Info
@@ -82,7 +82,7 @@ def setup_parser(subparser):
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
         '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_list_scope,
+        default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
 
@@ -113,7 +113,9 @@ def compiler_find(args):
                                                 init_config=False)
         n = len(new_compilers)
         s = 's' if n > 1 else ''
-        filename = spack.config.get_config_filename(args.scope, 'compilers')
+
+        config = spack.config.get_configuration()
+        filename = config.get_config_filename(args.scope, 'compilers')
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
