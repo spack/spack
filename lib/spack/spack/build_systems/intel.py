@@ -160,46 +160,45 @@ class IntelPackage(PackageBase):
         if not self._has_compilers:
             return ['ALL']
 
-        # This would include MKL and IPP which are 2 GB each; may be unwanted.
         # if self._is_early_composer:
         #     return ['DEFAULTS']
+        #     # Includes MKL and IPP, at 2 GB each - may be unwanted.
 
-        # The only Spack packages left to handle are the compiler packages from
-        # 2016 onward, which differ by "edition".  Handle the compiler-related
-        # components first to cover Spack package 'intel', which is just a
-        # compiler-only subset of 'intel-parallel-studio@composer' (having no
-        # variants involving components).
-        c = ' intel-icc     intel-ifort' \
-            ' intel-ccomp   intel-fcomp   intel-comp-' \
+        # Always include compilers and closely related components.
+        # Pre-2016 compiler components have different names - throw in all.
+        # Later releases have overlapping minor parts that differ by "edition".
+        # NB: The spack package 'intel' is a subset of
+        # 'intel-parallel-studio@composer' without the lib variants.
+        c = ' intel-icc          intel-ifort' \
+            ' intel-ccomp        intel-fcomp        intel-comp-' \
+            ' intel-compilerproc intel-compilerprof intel-compilerpro-' \
             ' intel-psxe intel-openmp'
 
-        if self._is_early_composer:
-            c += ' intel-compilerproc intel-compilerprof intel-compilerpro-'
-
-        if self._edition == 'composer':
-            c += ' intel-compxe'
-        elif self._edition == 'cluster':
-            c += ' intel-icsxe'
-        elif self._edition == 'professional':
-            c += ' intel-ips-'
+        additions_for = {
+            'cluster':      ' intel-icsxe',
+            'professional': ' intel-ips-',
+            'composer':     ' intel-compxe',
+        }
+        if self._edition in additions_for:
+            c += additions_for[self._edition]
 
         for variant, components_to_add in {
-            '+daal':        'intel-daal',   # Data Analytics Acceleration Lib
-            '+gdb':         'intel-gdb',    # Integrated Performance Primitives
-            '+ipp':         'intel-ipp intel-crypto-ipp',
-            '+mkl':         'intel-mkl',    # Math Kernel Library
-            '+mpi':         'intel-mpi intel-mpirt intel-imb',
-            '+tbb':         'intel-tbb',    # Threading Building Blocks
-            '+advisor':     'intel-advisor',
-            '+clck':        'intel_clck',   # Cluster Checker
-            '+inspector':   'intel-inspector',
-            '+itac':        'intel-itac intel-ta intel-tc'
-                            'intel-trace-analyzer intel-trace-collector',
-                            # Trace Analyzer and Collector
-            '+vtune':       'intel-vtune-amplifier',    # VTune
+            '+daal':      ' intel-daal',   # Data Analytics Acceleration Lib
+            '+gdb':       ' intel-gdb',    # Integrated Performance Primitives
+            '+ipp':       ' intel-ipp intel-crypto-ipp',
+            '+mkl':       ' intel-mkl',    # Math Kernel Library
+            '+mpi':       ' intel-mpi intel-mpirt intel-imb',
+            '+tbb':       ' intel-tbb',    # Threading Building Blocks
+            '+advisor':   ' intel-advisor',
+            '+clck':      ' intel_clck',   # Cluster Checker
+            '+inspector': ' intel-inspector',
+            '+itac':      ' intel-itac intel-ta intel-tc'
+                          ' intel-trace-analyzer intel-trace-collector',
+                          # Trace Analyzer and Collector
+            '+vtune':     ' intel-vtune-amplifier',    # VTune
         }.items():
             if variant in self.spec:
-                c += ' ' + components_to_add
+                c += components_to_add
 
         debug_print(c)
         return c.split()
