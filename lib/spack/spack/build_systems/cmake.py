@@ -73,6 +73,9 @@ class CMakePackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
+    #: Files to archive for packages based on CMake
+    archive_files = [os.path.join('spack-build', 'CMakeCache.txt')]
+
     #: The build system generator to use.
     #:
     #: See ``cmake --help`` for a list of valid generators.

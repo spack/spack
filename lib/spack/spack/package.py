@@ -37,6 +37,7 @@ import base64
 import contextlib
 import copy
 import functools
+import glob
 import hashlib
 import inspect
 import itertools
@@ -528,6 +529,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
     sanity_check_is_dir = []
+
+    #: List of glob expressions relative to the package source path.
+    #: Matching artifacts found at the end of the build process will
+    #: be copied in the same directory as build.env and build.out.
+    archive_files = []
 
     #
     # Set default licensing information
@@ -1647,8 +1653,31 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # FIXME : this potentially catches too many things...
             pass
 
+        # Archive the whole stdout + stderr for the package
         install(self.log_path, log_install_path)
+        # Archive the environment used for the build
         install(self.env_path, env_install_path)
+        # Finally, archive files that are specific to each package
+        with working_dir(self.stage.source_path):
+            for glob_expr in self.archive_files:
+                files = glob.glob(glob_expr)
+                for file in files:
+                    try:
+                        target = os.path.join(
+                            spack.store.layout.metadata_path(self.spec),
+                            'archived-files',
+                            file
+                        )
+                        # We must ensure that the directory exists before
+                        # copying a file in
+                        mkdirp(os.path.dirname(target))
+                        install(file, target)
+                    except Exception:
+                        # Here try to be conservative, and avoid discarding
+                        # the whole install procedure because of copying a
+                        # single file failed
+                        tty.warn("FAILED ARCHIVE: {0}".format(file))
+
         dump_packages(self.spec, packages_dir)
 
     def sanity_check_prefix(self):
