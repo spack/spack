@@ -35,8 +35,10 @@ except KeyError:
 
 def _for_each_enabled(spec, method_name):
     """Calls a method for each enabled module"""
-    if spec.external:
-        tty.debug("Skip module generation for external: " + spec.format())
+    if not spec.prefix:
+        assert(spec.external)
+        tty.debug("Skip module generation for external with no path: " +
+                  spec.format())
         return
     for name in enabled:
         generator = spack.modules.module_types[name](spec)
