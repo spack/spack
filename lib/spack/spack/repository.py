@@ -48,6 +48,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, join_path, install
 
 import spack
+import spack.caches
 import spack.error
 import spack.spec
 from spack.provider_index import ProviderIndex
@@ -252,7 +253,8 @@ def make_provider_index_cache(packages_path, namespace):
     cache_filename = 'providers/{0}-index.yaml'.format(namespace)
 
     # Compute which packages needs to be updated in the cache
-    index_mtime = spack.misc_cache.mtime(cache_filename)
+    misc_cache = spack.caches.misc_cache()
+    index_mtime = misc_cache.mtime(cache_filename)
 
     needs_update = [
         x for x, sinfo in fast_package_checker.items()
@@ -260,19 +262,19 @@ def make_provider_index_cache(packages_path, namespace):
     ]
 
     # Read the old ProviderIndex, or make a new one.
-    index_existed = spack.misc_cache.init_entry(cache_filename)
+    index_existed = misc_cache.init_entry(cache_filename)
 
     if index_existed and not needs_update:
 
         # If the provider index exists and doesn't need an update
         # just read from it
-        with spack.misc_cache.read_transaction(cache_filename) as f:
+        with misc_cache.read_transaction(cache_filename) as f:
             index = ProviderIndex.from_yaml(f)
 
     else:
 
         # Otherwise we need a write transaction to update it
-        with spack.misc_cache.write_transaction(cache_filename) as (old, new):
+        with misc_cache.write_transaction(cache_filename) as (old, new):
 
             index = ProviderIndex.from_yaml(old) if old else ProviderIndex()
 
@@ -305,7 +307,8 @@ def make_tag_index_cache(packages_path, namespace):
     cache_filename = 'tags/{0}-index.json'.format(namespace)
 
     # Compute which packages needs to be updated in the cache
-    index_mtime = spack.misc_cache.mtime(cache_filename)
+    misc_cache = spack.caches.misc_cache()
+    index_mtime = misc_cache.mtime(cache_filename)
 
     needs_update = [
         x for x, sinfo in fast_package_checker.items()
@@ -313,19 +316,19 @@ def make_tag_index_cache(packages_path, namespace):
     ]
 
     # Read the old ProviderIndex, or make a new one.
-    index_existed = spack.misc_cache.init_entry(cache_filename)
+    index_existed = misc_cache.init_entry(cache_filename)
 
     if index_existed and not needs_update:
 
         # If the provider index exists and doesn't need an update
         # just read from it
-        with spack.misc_cache.read_transaction(cache_filename) as f:
+        with misc_cache.read_transaction(cache_filename) as f:
             index = TagIndex.from_json(f)
 
     else:
 
         # Otherwise we need a write transaction to update it
-        with spack.misc_cache.write_transaction(cache_filename) as (old, new):
+        with misc_cache.write_transaction(cache_filename) as (old, new):
 
             index = TagIndex.from_json(old) if old else TagIndex()
 

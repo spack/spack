@@ -23,11 +23,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 import sys
 import multiprocessing
-
-from spack.paths import var_path, user_config_path
 
 #-----------------------------------------------------------------------------
 # Below code imports spack packages.
@@ -44,19 +41,7 @@ import spack.config
 from spack.util.path import canonicalize_path
 
 
-# handle basic configuration first
 _config = spack.config.get_config('config')
-
-
-# Path where downloaded source code is cached
-cache_path = canonicalize_path(
-    _config.get('source_cache', os.path.join(var_path, "cache")))
-
-
-# cache for miscellaneous stuff.
-misc_cache_path = canonicalize_path(
-    _config.get('misc_cache', os.path.join(user_config_path, 'cache')))
-
 
 # TODO: get this out of __init__.py
 binary_cache_retrieved_specs = set()
@@ -100,13 +85,6 @@ build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 # Version information
 from spack.version import Version
 spack_version = Version("0.11.2")
-
-
-# set up the caches after getting all config options
-import spack.fetch_strategy
-from spack.file_cache import FileCache
-misc_cache = FileCache(misc_cache_path)
-fetch_cache = spack.fetch_strategy.FsCache(cache_path)
 
 
 # Set up the default packages database.

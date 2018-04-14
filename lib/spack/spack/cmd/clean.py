@@ -27,6 +27,7 @@ import argparse
 import llnl.util.tty as tty
 
 import spack
+import spack.caches
 import spack.cmd
 
 description = "remove temporary build files and/or downloaded archives"
@@ -81,8 +82,8 @@ def clean(parser, args):
 
     if args.downloads:
         tty.msg('Removing cached downloads')
-        spack.fetch_cache.destroy()
+        spack.caches.fetch_cache().destroy()
 
     if args.misc_cache:
         tty.msg('Removing cached information on repositories')
-        spack.misc_cache.destroy()
+        spack.caches.misc_cache().destroy()

@@ -36,10 +36,11 @@ import pytest
 from llnl.util.filesystem import remove_linked_tree
 
 import spack
-import spack.paths
 import spack.architecture
+import spack.caches
 import spack.database
 import spack.directory_layout
+import spack.paths
 import spack.platforms.test
 import spack.repository
 import spack.stage
@@ -155,7 +156,7 @@ def mock_fetch_cache(monkeypatch):
         def __str__(self):
             return "[mock fetch cache]"
 
-    monkeypatch.setattr(spack, 'fetch_cache', MockCache())
+    monkeypatch.setattr(spack.caches, '_fetch_cache', MockCache())
 
 
 # FIXME: The lines below should better be added to a fixture with
