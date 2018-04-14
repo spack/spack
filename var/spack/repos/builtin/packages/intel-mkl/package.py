@@ -48,8 +48,10 @@ class IntelMkl(IntelPackage):
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11024/l_mkl_2017.1.132.tgz")
     version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9662/l_mkl_2017.0.098.tgz")
+    # built from parallel_studio_xe_2016.3.x
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9068/l_mkl_11.3.3.210.tgz")
+    # built from parallel_studio_xe_2016.2.062
     version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8711/l_mkl_11.3.2.181.tgz")
 

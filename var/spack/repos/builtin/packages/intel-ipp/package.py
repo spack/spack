@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
@@ -44,6 +45,7 @@ class IntelIpp(IntelPackage):
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11031/l_ipp_2017.1.132.tgz")
     version('2017.0.098', 'e7be757ebe351d9f9beed7efdc7b7118',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9663/l_ipp_2017.0.098.tgz")
+    # built from parallel_studio_xe_2016.3.067
     version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9067/l_ipp_9.0.3.210.tgz")
 

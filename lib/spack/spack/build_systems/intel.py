@@ -276,8 +276,8 @@ class IntelPackage(PackageBase):
         # - Early lib packages:         Major.Minor.Patch.Buildseq
         try:
             if self.name == 'intel':
-                # Has a "Minor" version element, but it was always 0. To be
-                # useful for comparisons, drop that to get YYYY.Nupdate.
+                # Has a "Minor" version element, but it is always set as 0. To
+                # be useful for comparisons, drop it and get YYYY.Nupdate.
                 v_tail = self.version[2:]   # coerced just fine via __getitem__
             else:
                 v_tail = self.version[1:]
@@ -291,23 +291,37 @@ class IntelPackage(PackageBase):
 
         v_year = self.version[0]
         if v_year < 2000:
-            # Exceptions for early lib packages:
-            #   MKL 11.3 *is* 2016
-            #   MKL 11.2 is 2015 (is not in Spack as of 2018-04)
-            #   MPI  5.x pre-2016
-            #   IPP  9.x pre-2016
-            #   TBB  4.x pre-2016
-            # For now, adopt their Major in lieu of the actual release year.
+            # Shoehorn Major into release year until we know better.
             v_year += 2000
+            for spec, year in {
+                # intel-daal is versioned 2016 and later, no divining needed.
+                'intel-ipp@9.0:9.99':         2016,
+                'intel-mkl@11.3.0:11.3.999':  2016,
+                'intel-mpi@5.1:5.99':         2016,
+            }.items():
+                if self.spec.satisfies(spec):
+                    v_year = year
+                    break
+
         return Version('%s.%s' % (v_year, v_tail))
 
     @property
-    def _is_early_compiler(self):
-        # Product releases prior to "Parallel Studio XE" (debut in 2016) were
-        # called "Composer XE" and have some differences in directory layout.
-        # This includes (if ever needed) MKL-11.2.x.
-        result = (self._version_yearlike < Version('2016') and
-                  self._has_compilers)
+    def _uses_early_dir_layout(self):
+        # Intel's nomenclature and scope for product names changed over the
+        # years.  In 2015, "Parallel Studio" simply was the higher-tier
+        # product. In Spack, we justifiably retconned this as "cluster
+        # edition".  "Composer" in 2015 simply was the lower-tier product,
+        # later retconned as "composer edition".  Both products used the
+        # "composer_xe" dir layout.
+        #
+        # The *virtual* library packages derived from those 2015 products
+        # *also* use the older layout(!).
+        #
+        # The *standalone* "intel-foo" library packages in Spack as of 2018-04
+        # are all 2016 and later releases. All are versioned by year only from
+        # 2017 onwards [except DAAL], and *all* use "compilers_and_libraries".
+
+        result = self._version_yearlike < Version('2016')
         debug_print(result)
         return result
 
@@ -469,7 +483,7 @@ class IntelPackage(PackageBase):
         # case for the time of writing.
 
         if component_suite_dir is None:
-            if self._is_early_compiler:
+            if self._uses_early_dir_layout:
                 component_suite_dir = 'composer_xe'     # The only one present.
             elif component_path.startswith('ism'):
                 component_suite_dir = 'parallel_studio_xe'
@@ -482,6 +496,18 @@ class IntelPackage(PackageBase):
         if component_suite_dir == 'compilers_and_libraries':    # passed or set
             if 'linux' in sys.platform:
                 d += '/linux'          # Not used in any other component suite.
+
+        if self._uses_early_dir_layout:
+            if component_path.startswith('mpi'):
+                # Need to rejigger and re-parent the component dir.
+                dirs = glob.glob(join_path(parent_dir, 'impi', '[45].*.*'))
+                debug_print('dirs: %s' % dirs)
+                # Brazenly assume last match is the most recent version;
+                # convert back to relative of parent_dir, and re-assemble.
+                rel_dir = dirs[-1].split(parent_dir + os.sep, 1)[-1]
+                component_path = component_path.replace('mpi', rel_dir, 1)
+                d = parent_dir
+            # Ignore imb = MPI Benchmarks; mkl OK under component_suite_dir.
 
         d = join_path(d, component_path)
 
@@ -499,8 +525,6 @@ class IntelPackage(PackageBase):
             d = join_path(d, 'bin')
         else:
             if component == 'mpi':
-                if self._is_early_compiler:
-                    d = self.normalize_suite_dir('impi', version_glob='/*.*.*')
                 d = join_path(d, _expand_fields('{arch}'), 'bin')
             elif component == 'compiler':
                 d = join_path(ancestor(d), 'bin', _expand_fields('{arch}'))
@@ -560,7 +584,7 @@ class IntelPackage(PackageBase):
             'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
         }
         key = self.name
-        if self._is_early_compiler:
+        if self._uses_early_dir_layout:
             # Same file as 'intel' but 'None' for component_suite_dir will
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.

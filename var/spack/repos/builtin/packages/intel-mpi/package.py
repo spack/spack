@@ -45,6 +45,7 @@ class IntelMpi(IntelPackage):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11334/l_mpi_2017.2.174.tgz')
     version('2017.1.132', 'd5e941ac2bcf7c5576f85f6bcfee4c18',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11014/l_mpi_2017.1.132.tgz')
+    # built from parallel_studio_xe_2016.3.068
     version('5.1.3.223',  '4316e78533a932081b1a86368e890800',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9278/l_mpi_p_5.1.3.223.tgz')
 
