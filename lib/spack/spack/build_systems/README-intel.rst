@@ -622,6 +622,23 @@ For reference, here's the wrapper's builtin help output::
     ----------------------------------------------------------------------------
 
 
+Some version divergence
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The package `intel-parallel-studio@cluster.2015.6` contains both a full MPI
+development version in `$prefix/impi` and an MPI Runtime under the
+`composer_xe*` suite directory. Curiously, these have *different versions*,
+with a release date nearly 1 year apart::
+
+    $ $SPACK_ROOT/...uaxaw7/impi/5.0.3.049/intel64/bin/mpiexec --version
+    Intel(R) MPI Library for Linux* OS, Version 5.0 Update 3 Build 20150804 (build id: 12452)
+    Copyright (C) 2003-2015, Intel Corporation. All rights reserved.
+
+    $ $SPACK_ROOT/...uaxaw7/composer_xe_2015.6.233/mpirt/bin/intel64/mpiexec --version
+    Intel(R) MPI Library for Linux* OS, Version 5.0 Update 1 Build 20140709
+    Copyright (C) 2003-2014, Intel Corporation. All rights reserved.
+
+
 **************
 macOS support
 **************
