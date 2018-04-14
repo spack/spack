@@ -39,6 +39,7 @@ from llnl.util.filesystem import mkdirp, join_path, can_access
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack.paths
+import spack.caches
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
@@ -408,7 +409,7 @@ class Stage(object):
                         url, digest, expand=expand, extension=extension))
             if self.default_fetcher.cachable:
                 fetchers.insert(
-                    0, spack.fetch_cache.fetcher(
+                    0, spack.caches.fetch_cache().fetcher(
                         self.mirror_path, digest, expand=expand,
                         extension=extension))
 
@@ -455,7 +456,7 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.fetch_cache.store(self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache().store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
