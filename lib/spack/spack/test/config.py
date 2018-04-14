@@ -64,9 +64,10 @@ def config(tmpdir):
     real_configuration = spack.config._configuration
     scopes = [spack.config.ConfigScope(name, str(tmpdir.join(name)))
               for name in ['low', 'high']]
-    spack.config._configuration = spack.config.Configuration(*scopes)
+    config = spack.config.Configuration(*scopes)
+    spack.config._configuration = config
 
-    yield
+    yield config
 
     spack.config._configuration = real_configuration
 
@@ -418,6 +419,35 @@ def test_read_config_override_list(config, write_config_file):
         'install_tree': 'install_tree_path',
         'build_stage': ['patha', 'pathb']
     }
+
+
+def test_internal_config_update(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+
+    before = config.get_config('config')
+    assert before['install_tree'] == 'install_tree_path'
+
+    # add an internal configuration scope
+    scope = spack.config.InternalConfigScope('commands')
+    assert 'InternalConfigScope' in repr(scope)
+
+    config.push_scope(scope)
+
+    command_config = config.get_config('config', scope='commands')
+    command_config['install_tree'] = 'foo/bar'
+
+    config.update_config('config', command_config, scope='commands')
+
+    after = config.get_config('config')
+    assert after['install_tree'] == 'foo/bar'
+
+
+def test_internal_config_filename(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    config.push_scope(spack.config.InternalConfigScope('commands'))
+
+    with pytest.raises(NotImplementedError):
+        config.get_config_filename('commands', 'config')
 
 
 def test_keys_are_ordered():

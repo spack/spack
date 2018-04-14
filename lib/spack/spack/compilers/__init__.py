@@ -117,10 +117,11 @@ def get_compiler_config(scope=None, init_config=True):
 def compiler_config_files():
     config_files = list()
     config = spack.config.get_configuration()
-    for scope in config.scopes:
-        compiler_config = config.get_config('compilers', scope=scope)
+    for scope in config.file_scopes:
+        name = scope.name
+        compiler_config = config.get_config('compilers', scope=name)
         if compiler_config:
-            config_files.append(config.get_config_filename(scope, 'compilers'))
+            config_files.append(config.get_config_filename(name, 'compilers'))
     return config_files
 
 

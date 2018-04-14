@@ -109,6 +109,10 @@ configuration_paths = (
 scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
 
 
+#: config scopes only used by Spack internally
+internal_scopes = ['commands']
+
+
 def _extend_with_default(validator_class):
     """Add support for the 'default' attr for properties and patternProperties.
 
@@ -199,6 +203,37 @@ class ConfigScope(object):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
 
 
+class InternalConfigScope(ConfigScope):
+    """An internal configuration scope that is not persisted to a file.
+
+    This is for spack internal use so that command-line options and
+    config file settings are accessed the same way, and Spack can easily
+    override settings from files.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.sections = syaml.syaml_dict()
+
+    def get_section_filename(self, section):
+        raise NotImplementedError(
+            "Cannot get filename for InternalConfigScope.")
+
+    def get_section(self, section):
+        """Just reads from an internal dictionary."""
+        if section not in self.sections:
+            self.sections[section] = None
+        return self.sections[section]
+
+    def write_section(self, section):
+        """This only validates, as the data is already in memory."""
+        data = self.get_section(section)
+        if data is not None:
+            _validate_section(data, section_schemas[section])
+
+    def __repr__(self):
+        return '<InternalConfigScope: %s>' % self.name
+
+
 class Configuration(object):
     """A full Spack configuration, from a hierarchy of config files.
 
@@ -226,10 +261,15 @@ class Configuration(object):
         name, scope = self.scopes.popitem(last=True)
         return scope
 
+    @property
+    def file_scopes(self):
+        """List of scopes with an associated file (non-internal scopes)."""
+        return [s for s in self.scopes.values()
+                if not isinstance(s, InternalConfigScope)]
+
     def highest_precedence_scope(self):
-        """Get the scope with highest precedence (prefs will override others).
-        """
-        return list(self.scopes.values())[-1]
+        """Non-internal scope with highest precedence."""
+        return next(reversed(self.file_scopes), None)
 
     def _validate_scope(self, scope):
         """Ensure that scope is valid in this configuration.
@@ -371,17 +411,19 @@ def get_configuration():
         # configuration directory.
         platform = spack.architecture.platform().name
 
-        scopes = []
+        _configuration = Configuration()
         for name, path in configuration_paths:
             # add the regular scope
-            scopes.append(ConfigScope(name, path))
+            _configuration.push_scope(ConfigScope(name, path))
 
             # add platform-specific scope
             plat_name = '%s/%s' % (name, platform)
             plat_path = os.path.join(path, platform)
-            scopes.append(ConfigScope(plat_name, plat_path))
+            _configuration.push_scope(ConfigScope(plat_name, plat_path))
 
-        _configuration = Configuration(*scopes)
+        # we make a special scope for spack commands so that they can
+        # override configuration options.
+        _configuration.push_scope(InternalConfigScope('commands'))
 
     return _configuration
 

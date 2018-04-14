@@ -52,6 +52,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir, mkdirp, join_path
 
 import spack
+import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
