@@ -338,16 +338,18 @@ class Ascent(Package):
 
         cfg.write("# vtk-h support \n")
 
-        if "+tbb" in spec:
-            cfg.write("# tbb from spack\n")
-            cfg.write(cmake_cache_entry("TBB_DIR", spec['intel-tbb'].prefix))
 
         if "+vtkh" in spec:
             cfg.write("# vtk-m from spack\n")
             cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
 
             cfg.write("# vtk-h from spack\n")
-            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
+            # we only depend on tbb when we are using vtkh, so 
+            # conditionally add 
+            if "+tbb" in spec:
+                cfg.write("# tbb from spack\n")
+                cfg.write(cmake_cache_entry("TBB_DIR", spec['intel-tbb'].prefix))
+                cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
         else:
             cfg.write("# vtk-h not built by spack \n")
 
