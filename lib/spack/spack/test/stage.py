@@ -114,15 +114,12 @@ def get_stage_path(stage, stage_name):
 def tmpdir_for_stage(mock_archive):
     """Uses a temporary directory for staging"""
     current = spack.paths.stage_path
-    spack.config.update_config(
+    spack.config.set(
         'config',
         {'build_stage': [str(mock_archive.test_tmp_dir)]},
-        scope='user'
-    )
+        scope='user')
     yield
-    spack.config.update_config(
-        'config', {'build_stage': [current]}, scope='user'
-    )
+    spack.config.set('config', {'build_stage': [current]}, scope='user')
 
 
 @pytest.fixture()
@@ -138,9 +135,8 @@ def mock_archive(tmpdir, monkeypatch):
     #
     test_tmp_path = tmpdir.join('tmp')
     # set _test_tmp_path as the default test directory to use for stages.
-    spack.config.update_config(
-        'config', {'build_stage': [str(test_tmp_path)]}, scope='user'
-    )
+    spack.config.set(
+        'config', {'build_stage': [str(test_tmp_path)]}, scope='user')
 
     archive_dir = tmpdir.join('test-files')
     archive_name = 'test-files.tar.gz'

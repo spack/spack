@@ -84,8 +84,7 @@ def get_tmp_root():
         return None
 
     if _tmp_root is None:
-        config = spack.config.get_config('config')
-        candidates = config['build_stage']
+        candidates = spack.config.get('config:build_stage')
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
@@ -378,7 +377,7 @@ class Stage(object):
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
-            mirrors = spack.config.get_config('mirrors')
+            mirrors = spack.config.get('mirrors')
 
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
@@ -652,7 +651,7 @@ class DIYStage(object):
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_config('mirrors')
+    config = spack.config.get('mirrors')
     return [val for name, val in iteritems(config)]
 
 

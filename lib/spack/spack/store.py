@@ -54,15 +54,10 @@ __author__ = "Benedikt Hegner (CERN)"
 __all__ = ['db', 'extensions', 'layout', 'root']
 
 #
-# Read in the config
-#
-config = spack.config.get_config("config")
-
-#
 # Set up the install path
 #
-root = canonicalize_path(
-    config.get('install_tree', os.path.join(spack.paths.opt_path, 'spack')))
+root = canonicalize_path(spack.config.get(
+    'config:install_tree', os.path.join(spack.paths.opt_path, 'spack')))
 
 #
 # Set up the installed packages database
@@ -73,8 +68,9 @@ db = Database(root)
 # This controls how spack lays out install prefixes and
 # stage directories.
 #
-layout = YamlDirectoryLayout(root,
-                             hash_len=config.get('install_hash_length'),
-                             path_scheme=config.get('install_path_scheme'))
+layout = YamlDirectoryLayout(
+    root,
+    hash_len=spack.config.get('config:install_hash_length'),
+    path_scheme=spack.config.get('config:install_path_scheme'))
 
 extensions = YamlExtensionsLayout(root, layout)

@@ -93,7 +93,7 @@ def modulefile_content(filename_dict, request):
 @pytest.fixture()
 def update_template_dirs(config, monkeypatch):
     """Mocks the template directories for tests"""
-    dirs = spack.config.get_config('config')['template_dirs']
+    dirs = spack.config.get('config:template_dirs')
     dirs = [spack.util.path.canonicalize_path(x) for x in dirs]
     monkeypatch.setattr(spack, 'template_dirs', dirs)
 

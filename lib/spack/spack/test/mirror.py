@@ -69,7 +69,7 @@ def check_mirror():
         mirror_root = join_path(stage.path, 'test-mirror')
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
-        spack.config.update_config('mirrors', mirrors)
+        spack.config.set('mirrors', mirrors)
         spack.mirror.create(mirror_root, repos, no_checksum=True)
 
         # Stage directory exists

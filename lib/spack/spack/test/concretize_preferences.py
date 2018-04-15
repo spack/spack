@@ -51,7 +51,7 @@ def concretize(abstract_spec):
 def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
-    spack.config.update_config('packages', conf, 'concretize')
+    spack.config.set('packages', conf, scope='concretize')
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
@@ -133,7 +133,7 @@ mpi:
     paths:
       mpi-with-lapack@2.1: /path/to/lapack
 """)
-        spack.config.update_config('packages', conf, 'concretize')
+        spack.config.set('packages', conf, scope='concretize')
 
         # now when we get the packages.yaml config, there should be an error
         with pytest.raises(spack.package_prefs.VirtualInPackagesYAMLError):
@@ -145,7 +145,7 @@ mpi:
 all:
         variants: [+mpi]
 """)
-        spack.config.update_config('packages', conf, 'concretize')
+        spack.config.set('packages', conf, scope='concretize')
 
         # should be no error for 'all':
         spack.package_prefs.PackagePrefs.clear_caches()
@@ -167,7 +167,7 @@ mpich:
     paths:
         mpich@3.0.4: /dummy/path
 """)
-        spack.config.update_config('packages', conf, 'concretize')
+        spack.config.set('packages', conf, scope='concretize')
 
         # ensure that once config is in place, external is used
         spec = Spec('mpi')

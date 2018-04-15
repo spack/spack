@@ -64,7 +64,7 @@ def test_all_versions_are_lowercase():
 
 def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
-    defaults = spack.config.get_config('packages', scope='defaults')
+    defaults = spack.config.get('packages', scope='defaults')
     default_providers = defaults['all']['providers']
     providers = spack.repo.provider_index.providers
 

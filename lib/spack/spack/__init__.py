@@ -41,35 +41,33 @@ import spack.config
 from spack.util.path import canonicalize_path
 
 
-_config = spack.config.get_config('config')
-
 # TODO: get this out of __init__.py
 binary_cache_retrieved_specs = set()
 
 
 #: Directories where to search for templates
-template_dirs = spack.config.get_config('config')['template_dirs']
+template_dirs = spack.config.get('config:template_dirs')
 template_dirs = [canonicalize_path(x) for x in template_dirs]
 
 
 #: If this is enabled, tools that use SSL should not verify
 #: certifiates. e.g., curl should use the -k option.
-insecure = not _config.get('verify_ssl', True)
+insecure = not spack.config.get('config:verify_ssl', True)
 
 
 #: Whether spack should allow installation of unsafe versions of software.
 #: "Unsafe" versions are ones it doesn't have a checksum for.
-do_checksum = _config.get('checksum', True)
+do_checksum = spack.config.get('config:checksum', True)
 
 
 # If this is True, spack will not clean the environment to remove
 # potentially harmful variables before builds.
-dirty = _config.get('dirty', False)
+dirty = spack.config.get('config:dirty', False)
 
 
 #: The number of jobs to use when building in parallel.
 #: By default, use all cores on the machine.
-build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
+build_jobs = spack.config.get('config:build_jobs', multiprocessing.cpu_count())
 
 
 #-----------------------------------------------------------------------------

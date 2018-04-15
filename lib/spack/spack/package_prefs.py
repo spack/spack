@@ -44,7 +44,7 @@ def _spec_type(component):
 
 def get_packages_config():
     """Wrapper around get_packages_config() to validate semantics."""
-    config = spack.config.get_config('packages')
+    config = spack.config.get('packages')
 
     # Get a list of virtuals from packages.yaml.  Note that because we
     # check spack.repo, this collects virtuals that are actually provided

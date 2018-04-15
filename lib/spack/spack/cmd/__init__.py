@@ -49,8 +49,7 @@ def default_modify_scope():
     Commands that modify configuration by default modify the *highest*
     priority scope.
     """
-    config = spack.config.get_configuration()
-    return config.highest_precedence_scope().name
+    return spack.config.config().highest_precedence_scope().name
 
 
 def default_list_scope():

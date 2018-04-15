@@ -67,7 +67,9 @@ def setup_parser(subparser):
         const=1, default=0,
         help="only fetch one 'preferred' version per spec, not all known")
 
-    scopes = spack.config.get_configuration().scopes
+    # used to construct scope arguments below
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
 
     # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
@@ -75,7 +77,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
@@ -84,14 +86,14 @@ def setup_parser(subparser):
                                   help=mirror_remove.__doc__)
     remove_parser.add_argument('name')
     remove_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
@@ -102,7 +104,7 @@ def mirror_add(args):
     if url.startswith('/'):
         url = 'file://' + url
 
-    mirrors = spack.config.get_config('mirrors', scope=args.scope)
+    mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()
 
@@ -116,14 +118,14 @@ def mirror_add(args):
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (args.name, url))
     mirrors = syaml_dict(items)
-    spack.config.update_config('mirrors', mirrors, scope=args.scope)
+    spack.config.set('mirrors', mirrors, scope=args.scope)
 
 
 def mirror_remove(args):
     """Remove a mirror by name."""
     name = args.name
 
-    mirrors = spack.config.get_config('mirrors', scope=args.scope)
+    mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()
 
@@ -131,13 +133,13 @@ def mirror_remove(args):
         tty.die("No mirror with name %s" % name)
 
     old_value = mirrors.pop(name)
-    spack.config.update_config('mirrors', mirrors, scope=args.scope)
+    spack.config.set('mirrors', mirrors, scope=args.scope)
     tty.msg("Removed mirror %s with url %s" % (name, old_value))
 
 
 def mirror_list(args):
     """Print out available mirrors to the console."""
-    mirrors = spack.config.get_config('mirrors', scope=args.scope)
+    mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
         tty.msg("No mirrors configured.")
         return

@@ -46,7 +46,8 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='compiler_command')
 
-    scopes = spack.config.get_configuration().scopes
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
 
     # Find
     find_parser = sp.add_parser(
@@ -54,7 +55,7 @@ def setup_parser(subparser):
         help='search the system for compilers to add to Spack configuration')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
@@ -66,14 +67,14 @@ def setup_parser(subparser):
         help='remove ALL compilers that match spec')
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
@@ -81,7 +82,7 @@ def setup_parser(subparser):
     info_parser = sp.add_parser('info', help='show compiler paths')
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
 
@@ -114,7 +115,7 @@ def compiler_find(args):
         n = len(new_compilers)
         s = 's' if n > 1 else ''
 
-        config = spack.config.get_configuration()
+        config = spack.config.config()
         filename = config.get_config_filename(args.scope, 'compilers')
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
