@@ -51,6 +51,11 @@ class Vtkh(Package):
             branch='master',
             submodules=True)
 
+    version('develop',
+            git='https://github.com/Alpine-DAV/vtk-h.git',
+            branch='develop',
+            submodules=True)
+
     maintainers = ['cyrush']
 
     variant("shared", default=True, description="Build vtk-h as shared libs")
@@ -65,10 +70,16 @@ class Vtkh(Package):
     depends_on("tbb", when="+tbb")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtkm@1.2.0")
-    depends_on("vtkm@1.2.0+tbb", when="+tbb")
-    depends_on("vtkm@1.2.0+cuda", when="+cuda")
-    depends_on("vtkm@1.2.0~shared", when="~shared")
+    #raise ValueError('A very specific bad thing happened.')
+    depends_on("vtkm@1.2.0", when="@master")
+    depends_on("vtkm@1.2.0+tbb", when="@master+tbb")
+    depends_on("vtkm@1.2.0+cuda", when="@master+cuda")
+    depends_on("vtkm@1.2.0~shared", when="@master~shared")
+  
+    depends_on("vtkm@master", when="@develp")
+    depends_on("vtkm@master+tbb", when="@develop+tbb")
+    depends_on("vtkm@master+cuda", when="@develop+cuda")
+    depends_on("vtkm@master~shared", when="@develop~shared")
   
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
