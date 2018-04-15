@@ -46,9 +46,9 @@ class Vtkh(Package):
     homepage = "https://github.com/Alpine-DAV/vtk-h"
     url      = "https://github.com/Alpine-DAV/vtk-h"
 
-    version('master',
+    version('0.1.0',
             git='https://github.com/Alpine-DAV/vtk-h.git',
-            branch='master',
+            tag='v0.1.0',
             submodules=True)
 
     version('develop',
