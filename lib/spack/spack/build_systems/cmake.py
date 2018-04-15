@@ -73,9 +73,6 @@ class CMakePackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
-    #: Files to archive for packages based on CMake
-    archive_files = [os.path.join('spack-build', 'CMakeCache.txt')]
-
     #: The build system generator to use.
     #:
     #: See ``cmake --help`` for a list of valid generators.
@@ -92,6 +89,11 @@ class CMakePackage(PackageBase):
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
+
+    @property
+    def archive_files(self):
+        """Files to archive for packages based on CMake"""
+        return [os.path.join(self.build_directory, 'CMakeCache.txt')]
 
     @property
     def root_cmakelists_dir(self):

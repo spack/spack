@@ -94,8 +94,10 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
-    #: Files to archive for packages based on autotools
-    archive_files = ['config.log']
+    @property
+    def archive_files(self):
+        """Files to archive for packages based on autotools"""
+        return [os.path.join(self.build_directory, 'config.log')]
 
     @run_after('autoreconf')
     def _do_patch_config_guess(self):
