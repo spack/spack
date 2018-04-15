@@ -25,8 +25,11 @@
 import os
 
 import pytest
-import spack
+
 from llnl.util.filesystem import join_path, touch, working_dir
+
+import spack
+import spack.config
 from spack.spec import Spec
 from spack.version import ver
 from spack.util.executable import which
@@ -66,11 +69,8 @@ def test_fetch(
 
     # Enter the stage directory and check some properties
     with pkg.stage:
-        try:
-            spack.insecure = secure
+        with spack.config.override('config:verify_ssl', secure):
             pkg.do_stage()
-        finally:
-            spack.insecure = False
 
         with working_dir(pkg.stage.source_path):
             assert h() == t.revision

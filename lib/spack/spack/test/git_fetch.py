@@ -25,8 +25,11 @@
 import os
 
 import pytest
-import spack
+
 from llnl.util.filesystem import working_dir, join_path, touch
+
+import spack
+import spack.config
 from spack.spec import Spec
 from spack.version import ver
 from spack.fetch_strategy import GitFetchStrategy
@@ -94,11 +97,8 @@ def test_fetch(type_of_test,
 
     # Enter the stage directory and check some properties
     with pkg.stage:
-        try:
-            spack.insecure = secure
+        with spack.config.override('config:verify_ssl', secure):
             pkg.do_stage()
-        finally:
-            spack.insecure = False
 
         with working_dir(pkg.stage.source_path):
             assert h('HEAD') == h(t.revision)

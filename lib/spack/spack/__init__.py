@@ -50,11 +50,6 @@ template_dirs = spack.config.get('config:template_dirs')
 template_dirs = [canonicalize_path(x) for x in template_dirs]
 
 
-#: If this is enabled, tools that use SSL should not verify
-#: certifiates. e.g., curl should use the -k option.
-insecure = not spack.config.get('config:verify_ssl', True)
-
-
 #: Whether spack should allow installation of unsafe versions of software.
 #: "Unsafe" versions are ones it doesn't have a checksum for.
 do_checksum = spack.config.get('config:checksum', True)

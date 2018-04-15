@@ -53,6 +53,8 @@ import copy
 import os
 import re
 import sys
+import multiprocessing
+from contextlib import contextmanager
 from six import string_types
 from six import iteritems
 
@@ -103,6 +105,17 @@ configuration_paths = (
     ('user', spack.paths.user_config_path)
 )
 
+#: Hard-coded default values for some key configuration options.
+#: This ensures that Spack will still work even if config.yaml in
+#: the defaults scope is removed.
+config_defaults = {
+    'config': {
+        'verify_ssl': True,
+        'checksum': True,
+        'dirty': False,
+        'build_jobs': multiprocessing.cpu_count(),
+    }
+}
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
@@ -206,9 +219,14 @@ class InternalConfigScope(ConfigScope):
     config file settings are accessed the same way, and Spack can easily
     override settings from files.
     """
-    def __init__(self, name):
+    def __init__(self, name, data=None):
         self.name = name
         self.sections = syaml.syaml_dict()
+        if data:
+            for section in data:
+                dsec = data[section]
+                _validate_section({section: dsec}, section_schemas[section])
+                self.sections[section] = syaml.syaml_dict({section: dsec})
 
     def get_section_filename(self, section):
         raise NotImplementedError(
@@ -363,7 +381,6 @@ class Configuration(object):
                 continue
 
             if section not in data:
-                tty.warn("Skipping bad configuration file: '%s'" % scope.path)
                 continue
 
             merged_section = _merge_yaml(merged_section, data)
@@ -438,6 +455,21 @@ class Configuration(object):
             raise ConfigError("Error reading configuration: %s" % section)
 
 
+@contextmanager
+def override(path, value):
+    """Simple way to override config settings within a context."""
+    overrides = InternalConfigScope('overrides')
+
+    cfg = config()
+    cfg.push_scope(overrides)
+    cfg.set(path, value, scope='overrides')
+
+    yield cfg
+
+    scope = cfg.pop_scope()
+    assert scope is overrides
+
+
 def config():
     """Singleton Configuration instance.
 
@@ -451,16 +483,19 @@ def config():
     """
     global _configuration
     if not _configuration:
-        # Each scope can have per-platfom overrides in subdirectories of the
-        # configuration directory.
+        _configuration = Configuration()
+
+        # first do the builtin, hardcoded defaults
+        defaults = InternalConfigScope('_builtin', config_defaults)
+        _configuration.push_scope(defaults)
+
+        # Each scope can have per-platfom overrides in subdirectories
         platform = spack.architecture.platform().name
 
-        _configuration = Configuration()
+        # add each scope and its platform-specific directory
         for name, path in configuration_paths:
-            # add the regular scope
             _configuration.push_scope(ConfigScope(name, path))
 
-            # add platform-specific scope
             plat_name = '%s/%s' % (name, platform)
             plat_path = os.path.join(path, platform)
             _configuration.push_scope(ConfigScope(plat_name, plat_path))
