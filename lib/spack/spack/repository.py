@@ -363,7 +363,7 @@ class RepoPath(object):
         # If repo_dirs is empty, just use the configuration
         if not repo_dirs:
             import spack.config
-            repo_dirs = spack.config.get_config('repos')
+            repo_dirs = spack.config.get('repos')
             if not repo_dirs:
                 raise NoRepoConfiguredError(
                     "Spack configuration contains no package repositories.")

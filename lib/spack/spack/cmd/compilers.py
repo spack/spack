@@ -31,9 +31,11 @@ level = "short"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.get_configuration().scopes
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
     subparser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         help="configuration scope to read/modify")
 
 

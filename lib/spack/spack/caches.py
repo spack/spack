@@ -44,8 +44,7 @@ def misc_cache():
     global _misc_cache
 
     if _misc_cache is None:
-        config = spack.config.get_config('config')
-        path = config.get('misc_cache')
+        path = spack.config.get('config:misc_cache')
         if not path:
             path = os.path.join(spack.paths.user_config_path, 'cache')
         path = canonicalize_path(path)
@@ -63,8 +62,7 @@ def fetch_cache():
     global _fetch_cache
 
     if _fetch_cache is None:
-        config = spack.config.get_config('config')
-        path = config.get('source_cache')
+        path = spack.config.get('config:source_cache')
         if not path:
             path = os.path.join(spack.paths.var_path, "cache")
         path = canonicalize_path(path)

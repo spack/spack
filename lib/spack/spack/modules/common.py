@@ -65,14 +65,14 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 
-#: Root folders where the various module files should be written
-roots = spack.config.get_config('config').get('module_roots', {})
+#: config section for this file
+configuration = spack.config.get('modules')
 
-#: Merged modules.yaml as a dictionary
-configuration = spack.config.get_config('modules')
+#: Root folders where the various module files should be written
+roots = spack.config.get('config:module_roots', {})
 
 #: Inspections that needs to be done on spec prefixes
-prefix_inspections = configuration.get('prefix_inspections', {})
+prefix_inspections = spack.config.get('modules:prefix_inspections', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (

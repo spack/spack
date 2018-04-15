@@ -88,9 +88,9 @@ def get_compiler_config(scope=None, init_config=True):
         compilers_dict = []
         for compiler in compilers:
             compilers_dict.append(_to_dict(compiler))
-        spack.config.update_config('compilers', compilers_dict, scope=scope)
+        spack.config.set('compilers', compilers_dict, scope=scope)
 
-    config = spack.config.get_config('compilers', scope=scope)
+    config = spack.config.get('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
@@ -98,15 +98,15 @@ def get_compiler_config(scope=None, init_config=True):
         if scope is None:
             # We know no compilers were configured in any scope.
             init_compiler_config()
-            config = spack.config.get_config('compilers', scope=scope)
+            config = spack.config.get('compilers', scope=scope)
         elif scope == 'user':
             # Check the site config and update the user config if
             # nothing is configured at the site level.
-            site_config = spack.config.get_config('compilers', scope='site')
-            sys_config = spack.config.get_config('compilers', scope='system')
+            site_config = spack.config.get('compilers', scope='site')
+            sys_config = spack.config.get('compilers', scope='system')
             if not site_config and not sys_config:
                 init_compiler_config()
-                config = spack.config.get_config('compilers', scope=scope)
+                config = spack.config.get('compilers', scope=scope)
         return config
     elif config:
         return config
@@ -116,10 +116,10 @@ def get_compiler_config(scope=None, init_config=True):
 
 def compiler_config_files():
     config_files = list()
-    config = spack.config.get_configuration()
+    config = spack.config.config()
     for scope in config.file_scopes:
         name = scope.name
-        compiler_config = config.get_config('compilers', scope=name)
+        compiler_config = config.get('compilers', scope=name)
         if compiler_config:
             config_files.append(config.get_config_filename(name, 'compilers'))
     return config_files
@@ -137,7 +137,7 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
         compiler_config.append(_to_dict(compiler))
     global _cache_config_file
     _cache_config_file = compiler_config
-    spack.config.update_config('compilers', compiler_config, scope)
+    spack.config.set('compilers', compiler_config, scope=scope)
 
 
 @_auto_compiler_spec
@@ -162,7 +162,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     _cache_config_file = filtered_compiler_config
     if len(filtered_compiler_config) == config_length:  # No items removed
         CompilerSpecInsufficientlySpecificError(compiler_spec)
-    spack.config.update_config('compilers', filtered_compiler_config, scope)
+    spack.config.set('compilers', filtered_compiler_config, scope=scope)
 
 
 def all_compilers_config(scope=None, init_config=True):
@@ -339,7 +339,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
 @_auto_compiler_spec
 def get_compiler_duplicates(compiler_spec, arch_spec):
-    config = spack.config.get_configuration()
+    config = spack.config.config()
 
     scope_to_compilers = {}
     for scope in config.scopes:

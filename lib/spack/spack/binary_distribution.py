@@ -364,7 +364,7 @@ def download_tarball(spec):
     Download binary tarball for given package into stage area
     Return True if successful
     """
-    mirrors = spack.config.get_config('mirrors')
+    mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
@@ -538,7 +538,7 @@ def get_specs(force=False):
         previously_retrieved = spack.binary_cache_retrieved_specs
         return previously_retrieved
 
-    mirrors = spack.config.get_config('mirrors')
+    mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
         tty.warn("No Spack mirrors are currently configured")
         return {}
@@ -588,7 +588,7 @@ def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
     """
-    mirrors = spack.config.get_config('mirrors')
+    mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")

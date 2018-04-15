@@ -85,7 +85,7 @@ def write_config_file(tmpdir):
 
 def check_compiler_config(comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
-    config = spack.config.get_config('compilers')
+    config = spack.config.get('compilers')
     compiler_list = ['cc', 'cxx', 'f77', 'fc']
     flag_list = ['cflags', 'cxxflags', 'fflags', 'cppflags',
                  'ldflags', 'ldlibs']
@@ -228,12 +228,8 @@ def compiler_specs():
 
 def test_write_key_in_memory(config, compiler_specs):
     # Write b_comps "on top of" a_comps.
-    spack.config.update_config(
-        'compilers', a_comps['compilers'], scope='low'
-    )
-    spack.config.update_config(
-        'compilers', b_comps['compilers'], scope='high'
-    )
+    spack.config.set('compilers', a_comps['compilers'], scope='low')
+    spack.config.set('compilers', b_comps['compilers'], scope='high')
 
     # Make sure the config looks how we expect.
     check_compiler_config(a_comps['compilers'], *compiler_specs.a)
@@ -242,15 +238,11 @@ def test_write_key_in_memory(config, compiler_specs):
 
 def test_write_key_to_disk(config, compiler_specs):
     # Write b_comps "on top of" a_comps.
-    spack.config.update_config(
-        'compilers', a_comps['compilers'], scope='low'
-    )
-    spack.config.update_config(
-        'compilers', b_comps['compilers'], scope='high'
-    )
+    spack.config.set('compilers', a_comps['compilers'], scope='low')
+    spack.config.set('compilers', b_comps['compilers'], scope='high')
 
     # Clear caches so we're forced to read from disk.
-    spack.config.get_configuration().clear_caches()
+    spack.config.config().clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps['compilers'], *compiler_specs.a)
@@ -259,15 +251,11 @@ def test_write_key_to_disk(config, compiler_specs):
 
 def test_write_to_same_priority_file(config, compiler_specs):
     # Write b_comps in the same file as a_comps.
-    spack.config.update_config(
-        'compilers', a_comps['compilers'], scope='low'
-    )
-    spack.config.update_config(
-        'compilers', b_comps['compilers'], scope='low'
-    )
+    spack.config.set('compilers', a_comps['compilers'], scope='low')
+    spack.config.set('compilers', b_comps['compilers'], scope='low')
 
     # Clear caches so we're forced to read from disk.
-    spack.config.get_configuration().clear_caches()
+    spack.config.config().clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps['compilers'], *compiler_specs.a)
@@ -283,10 +271,10 @@ repos_high = {'repos': ["/some/other/path"]}
 
 # repos
 def test_write_list_in_memory(config):
-    spack.config.update_config('repos', repos_low['repos'], scope='low')
-    spack.config.update_config('repos', repos_high['repos'], scope='high')
+    spack.config.set('repos', repos_low['repos'], scope='low')
+    spack.config.set('repos', repos_high['repos'], scope='high')
 
-    config = spack.config.get_config('repos')
+    config = spack.config.get('repos')
     assert config == repos_high['repos'] + repos_low['repos']
 
 
@@ -359,7 +347,7 @@ def test_merge_with_defaults(config, write_config_file):
     """
     write_config_file('packages', packages_merge_low, 'low')
     write_config_file('packages', packages_merge_high, 'high')
-    cfg = spack.config.get_config('packages')
+    cfg = spack.config.get('packages')
 
     assert cfg['foo']['version'] == ['a']
     assert cfg['bar']['version'] == ['b']
@@ -383,13 +371,13 @@ def test_substitute_tempdir(config):
 
 def test_read_config(config, write_config_file):
     write_config_file('config', config_low, 'low')
-    assert spack.config.get_config('config') == config_low['config']
+    assert spack.config.get('config') == config_low['config']
 
 
 def test_read_config_override_all(config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_all, 'high')
-    assert spack.config.get_config('config') == {
+    assert spack.config.get('config') == {
         'install_tree': 'override_all'
     }
 
@@ -397,7 +385,7 @@ def test_read_config_override_all(config, write_config_file):
 def test_read_config_override_key(config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
-    assert spack.config.get_config('config') == {
+    assert spack.config.get('config') == {
         'install_tree': 'override_key',
         'build_stage': ['path1', 'path2', 'path3']
     }
@@ -406,7 +394,7 @@ def test_read_config_override_key(config, write_config_file):
 def test_read_config_merge_list(config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_merge_list, 'high')
-    assert spack.config.get_config('config') == {
+    assert spack.config.get('config') == {
         'install_tree': 'install_tree_path',
         'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
     }
@@ -415,7 +403,7 @@ def test_read_config_merge_list(config, write_config_file):
 def test_read_config_override_list(config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_list, 'high')
-    assert spack.config.get_config('config') == {
+    assert spack.config.get('config') == {
         'install_tree': 'install_tree_path',
         'build_stage': ['patha', 'pathb']
     }
@@ -424,30 +412,30 @@ def test_read_config_override_list(config, write_config_file):
 def test_internal_config_update(config, write_config_file):
     write_config_file('config', config_low, 'low')
 
-    before = config.get_config('config')
+    before = config.get('config')
     assert before['install_tree'] == 'install_tree_path'
 
     # add an internal configuration scope
-    scope = spack.config.InternalConfigScope('commands')
+    scope = spack.config.InternalConfigScope('command_line')
     assert 'InternalConfigScope' in repr(scope)
 
     config.push_scope(scope)
 
-    command_config = config.get_config('config', scope='commands')
+    command_config = config.get('config', scope='command_line')
     command_config['install_tree'] = 'foo/bar'
 
-    config.update_config('config', command_config, scope='commands')
+    config.set('config', command_config, scope='command_line')
 
-    after = config.get_config('config')
+    after = config.get('config')
     assert after['install_tree'] == 'foo/bar'
 
 
 def test_internal_config_filename(config, write_config_file):
     write_config_file('config', config_low, 'low')
-    config.push_scope(spack.config.InternalConfigScope('commands'))
+    config.push_scope(spack.config.InternalConfigScope('command_line'))
 
     with pytest.raises(NotImplementedError):
-        config.get_config_filename('commands', 'config')
+        config.get_config_filename('command_line', 'config')
 
 
 def test_keys_are_ordered():
