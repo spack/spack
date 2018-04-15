@@ -265,6 +265,9 @@ def display_specs(specs, args=None, **kwargs):
         header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
                                       architecture, spack.spec.compiler_color,
                                       compiler)
+        # Sometimes we want to display specs that are not yet concretized.
+        # If they don't have a compiler / architecture attached to them,
+        # then skip the header
         if architecture is not None or compiler is not None:
             tty.hline(colorize(header), char='-')
 

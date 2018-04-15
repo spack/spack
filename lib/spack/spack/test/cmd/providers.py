@@ -27,7 +27,7 @@ import pytest
 
 from spack.main import SpackCommand
 
-dependencies = SpackCommand('providers')
+providers = SpackCommand('providers')
 
 
 @pytest.mark.parametrize('pkg', [
@@ -37,7 +37,27 @@ dependencies = SpackCommand('providers')
     ('',)  # Lists all the available virtual packages
 ])
 def test_it_just_runs(pkg):
-    dependencies(*pkg)
+    providers(*pkg)
+
+
+@pytest.mark.parametrize('vpkg,provider_list', [
+    (('mpi',), ['intel-mpi',
+                'intel-parallel-studio',
+                'mpich',
+                'mpich@1:',
+                'mpich@3:',
+                'mvapich2',
+                'openmpi',
+                'openmpi@1.6.5',
+                'openmpi@1.7.5:',
+                'openmpi@2.0.0:',
+                'spectrum-mpi']),
+    (('D', 'awk'), ['ldc', 'gawk', 'mawk'])  # Call 2 virtual packages at once
+])
+def test_provider_lists(vpkg, provider_list):
+    output = providers(*vpkg)
+    for item in provider_list:
+        assert item in output
 
 
 @pytest.mark.parametrize('pkg,error_cls', [
@@ -46,4 +66,4 @@ def test_it_just_runs(pkg):
 ])
 def test_it_just_fails(pkg, error_cls):
     with pytest.raises(error_cls):
-        dependencies(pkg)
+        providers(pkg)
