@@ -41,6 +41,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
 
 import spack
+import spack.config
 import spack.paths
 from spack.error import SpackError
 
@@ -357,7 +358,7 @@ def setup_main_options(args):
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
-        spack.insecure = True
+        spack.config.set('config:verify_ssl', False, scope='command_line')
 
     # when to use color (takes always, auto, or never)
     tty.color.set_color_when(args.color)

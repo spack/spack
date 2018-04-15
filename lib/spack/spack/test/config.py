@@ -438,6 +438,45 @@ def test_internal_config_filename(config, write_config_file):
         config.get_config_filename('command_line', 'config')
 
 
+def test_internal_config_from_data():
+    config = spack.config.Configuration()
+
+    # add an internal config initialized from an inline dict
+    config.push_scope(spack.config.InternalConfigScope('_builtin', {
+        'config': {
+            'verify_ssl': False,
+            'build_jobs': 6,
+        }
+    }))
+
+    assert config.get('config:verify_ssl', scope='_builtin') is False
+    assert config.get('config:build_jobs', scope='_builtin') == 6
+
+    assert config.get('config:verify_ssl') is False
+    assert config.get('config:build_jobs') == 6
+
+    # push one on top and see what happens.
+    config.push_scope(spack.config.InternalConfigScope('higher', {
+        'config': {
+            'checksum': True,
+            'verify_ssl': True,
+        }
+    }))
+
+    assert config.get('config:verify_ssl', scope='_builtin') is False
+    assert config.get('config:build_jobs', scope='_builtin') == 6
+
+    assert config.get('config:verify_ssl', scope='higher') is True
+    assert config.get('config:build_jobs', scope='higher') is None
+
+    assert config.get('config:verify_ssl') is True
+    assert config.get('config:build_jobs') == 6
+    assert config.get('config:checksum') is True
+
+    assert config.get('config:checksum', scope='_builtin') is None
+    assert config.get('config:checksum', scope='higher') is True
+
+
 def test_keys_are_ordered():
 
     expected_order = (

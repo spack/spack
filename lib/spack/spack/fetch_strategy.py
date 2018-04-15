@@ -244,7 +244,7 @@ class URLFetchStrategy(FetchStrategy):
             self.url,
         ]
 
-        if spack.insecure:
+        if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
 
         if sys.stdout.isatty():
@@ -610,7 +610,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # If the user asked for insecure fetching, make that work
             # with git as well.
-            if spack.insecure:
+            if not spack.config.get('config:verify_ssl'):
                 self._git.add_default_env('GIT_SSL_NO_VERIFY', 'true')
 
         return self._git
@@ -899,7 +899,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
         args = ['clone']
 
-        if spack.insecure:
+        if not spack.config.get('config:verify_ssl'):
             args.append('--insecure')
 
         args.append(self.url)

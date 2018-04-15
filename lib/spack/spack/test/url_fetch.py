@@ -28,6 +28,7 @@ import pytest
 from llnl.util.filesystem import working_dir, is_exe
 
 import spack
+import spack.config
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
 from spack.version import ver
@@ -67,11 +68,8 @@ def test_fetch(
 
     # Enter the stage directory and check some properties
     with pkg.stage:
-        try:
-            spack.insecure = secure
+        with spack.config.override('config:verify_ssl', secure):
             pkg.do_stage()
-        finally:
-            spack.insecure = False
 
         with working_dir(pkg.stage.source_path):
             assert os.path.exists('configure')
