@@ -44,11 +44,6 @@ import spack.config
 binary_cache_retrieved_specs = set()
 
 
-# If this is True, spack will not clean the environment to remove
-# potentially harmful variables before builds.
-dirty = spack.config.get('config:dirty', False)
-
-
 #: The number of jobs to use when building in parallel.
 #: By default, use all cores on the machine.
 build_jobs = spack.config.get('config:build_jobs', multiprocessing.cpu_count())

@@ -31,8 +31,9 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack
-import spack.cmd.install
+import spack.config
 import spack.package
+import spack.cmd.install
 from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
@@ -125,7 +126,7 @@ def test_install_package_already_installed(
 
 
 @pytest.mark.parametrize('arguments,expected', [
-    ([], spack.dirty),  # The default read from configuration file
+    ([], spack.config.get('config:dirty')),  # default from config file
     (['--clean'], False),
     (['--dirty'], True),
 ])
