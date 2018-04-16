@@ -123,16 +123,14 @@ _arguments['clean'] = Args(
     dest='dirty',
     help='sanitize the environment from variables that can affect how ' +
          ' packages find libraries or headers',
-    nargs=0
-)
+    nargs=0)
 
 _arguments['dirty'] = Args(
     '--dirty',
     action=CleanOrDirtyAction,
     dest='dirty',
     help='maintain the current environment without trying to sanitize it',
-    nargs=0
-)
+    nargs=0)
 
 _arguments['long'] = Args(
     '-l', '--long', action='store_true',
@@ -149,3 +147,7 @@ _arguments['jobs'] = Args(
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')
+
+_arguments['no_checksum'] = Args(
+    '-n', '--no-checksum', action='store_true', default=False,
+    help="do not use checksums to verify downloadeded files (unsafe)")

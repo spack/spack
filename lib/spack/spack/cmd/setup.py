@@ -47,6 +47,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="do not try to install dependencies of requested packages")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
@@ -147,17 +148,16 @@ def setup(self, args):
         if not isinstance(package, spack.CMakePackage):
             tty.die(
                 'Support for {0} derived packages not yet implemented'.format(
-                    package.build_system_class
-                )
-            )
+                    package.build_system_class))
 
         # It's OK if the package is already installed.
 
         # Forces the build to run out of the current directory.
         package.stage = DIYStage(os.getcwd())
 
-        # TODO: make this an argument, not a global.
-        spack.do_checksum = False
+        # disable checksumming if requested
+        if args.no_checksum:
+            spack.config.set('config:checksum', False, scope='command_line')
 
         # Install dependencies if requested to do so
         if not args.ignore_deps:
@@ -169,12 +169,14 @@ def setup(self, args):
                 namespace=inst_args
             )
             install.install(parser, inst_args)
+
         # Generate spconfig.py
         tty.msg(
             'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
         )
         dirty = args.dirty
         write_spconfig(package, dirty)
+
         # Install this package to register it in the DB and permit
         # module file regeneration
         inst_args = copy.deepcopy(args)

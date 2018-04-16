@@ -50,11 +50,6 @@ template_dirs = spack.config.get('config:template_dirs')
 template_dirs = [canonicalize_path(x) for x in template_dirs]
 
 
-#: Whether spack should allow installation of unsafe versions of software.
-#: "Unsafe" versions are ones it doesn't have a checksum for.
-do_checksum = spack.config.get('config:checksum', True)
-
-
 # If this is True, spack will not clean the environment to remove
 # potentially harmful variables before builds.
 dirty = spack.config.get('config:dirty', False)

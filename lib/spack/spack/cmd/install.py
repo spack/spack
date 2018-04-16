@@ -77,9 +77,7 @@ the dependencies"""
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true',
-        help="do not check packages against checksum")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
@@ -176,7 +174,7 @@ def install(parser, args, **kwargs):
             tty.die("The -j option must be a positive integer!")
 
     if args.no_checksum:
-        spack.do_checksum = False  # TODO: remove this global.
+        spack.config.set('config:checksum', False, scope='command_line')
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API

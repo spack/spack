@@ -88,29 +88,28 @@ def check_mirror():
                 spec = Spec(name).concretized()
                 pkg = spec.package
 
-                saved_checksum_setting = spack.do_checksum
-                with pkg.stage:
-                    # Stage the archive from the mirror and cd to it.
-                    spack.do_checksum = False
-                    pkg.do_stage(mirror_only=True)
+                with spack.config.override('config:checksum', False):
+                    with pkg.stage:
+                        pkg.do_stage(mirror_only=True)
 
-                    # Compare the original repo with the expanded archive
-                    original_path = mock_repo.path
-                    if 'svn' in name:
-                        # have to check out the svn repo to compare.
-                        original_path = join_path(
-                            mock_repo.path, 'checked_out')
+                        # Compare the original repo with the expanded archive
+                        original_path = mock_repo.path
+                        if 'svn' in name:
+                            # have to check out the svn repo to compare.
+                            original_path = join_path(
+                                mock_repo.path, 'checked_out')
 
-                        svn = which('svn', required=True)
-                        svn('checkout', mock_repo.url, original_path)
+                            svn = which('svn', required=True)
+                            svn('checkout', mock_repo.url, original_path)
 
-                    dcmp = filecmp.dircmp(original_path, pkg.stage.source_path)
-                    # make sure there are no new files in the expanded
-                    # tarball
-                    assert not dcmp.right_only
-                    # and that all original files are present.
-                    assert all(l in exclude for l in dcmp.left_only)
-                    spack.do_checksum = saved_checksum_setting
+                        dcmp = filecmp.dircmp(
+                            original_path, pkg.stage.source_path)
+
+                        # make sure there are no new files in the expanded
+                        # tarball
+                        assert not dcmp.right_only
+                        # and that all original files are present.
+                        assert all(l in exclude for l in dcmp.left_only)
 
 
 @pytest.mark.usefixtures('config', 'refresh_builtin_mock')

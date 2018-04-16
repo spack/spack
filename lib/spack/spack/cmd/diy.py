@@ -29,6 +29,7 @@ import argparse
 import llnl.util.tty as tty
 
 import spack
+import spack.config
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 from spack.stage import DIYStage
@@ -46,6 +47,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
@@ -101,8 +103,9 @@ def diy(self, args):
     # Forces the build to run out of the current directory.
     package.stage = DIYStage(source_path)
 
-    # TODO: make this an argument, not a global.
-    spack.do_checksum = False
+    # disable checksumming if requested
+    if args.no_checksum:
+        spack.config.set('config:checksum', False, scope='command_line')
 
     package.do_install(
         make_jobs=args.jobs,
