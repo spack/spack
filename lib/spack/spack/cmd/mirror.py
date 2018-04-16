@@ -33,6 +33,7 @@ import spack
 import spack.cmd
 import spack.config
 import spack.mirror
+import spack.cmd.common.arguments as arguments
 from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
@@ -43,9 +44,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="do not check fetched packages against checksum")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
 
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')

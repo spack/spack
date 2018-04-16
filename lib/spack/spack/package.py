@@ -1014,7 +1014,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only fetch concrete packages.")
 
         start_time = time.time()
-        if spack.do_checksum and self.version not in self.versions:
+        checksum = spack.config.get('config:checksum')
+        if checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
                      self.spec.cformat('$_$@'))
 
@@ -1036,7 +1037,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.fetch(mirror_only)
         self._fetch_time = time.time() - start_time
 
-        if spack.do_checksum and self.version in self.versions:
+        if checksum and self.version in self.versions:
             self.stage.check()
 
         self.stage.cache_local()

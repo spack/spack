@@ -28,8 +28,6 @@ import os
 import shutil
 import re
 
-import spack.util.ordereddict
-
 import py
 import pytest
 
@@ -37,6 +35,7 @@ from llnl.util.filesystem import remove_linked_tree
 
 import spack
 import spack.architecture
+import spack.config
 import spack.caches
 import spack.database
 import spack.directory_layout
@@ -44,6 +43,7 @@ import spack.paths
 import spack.platforms.test
 import spack.repository
 import spack.stage
+import spack.util.ordereddict
 import spack.util.executable
 import spack.util.pattern
 from spack.dependency import Dependency
@@ -380,11 +380,10 @@ def install_mockery(tmpdir, config, builtin_mock):
         new_opt, spack.store.layout)
     spack.store.db = spack.database.Database(new_opt)
 
-    # We use a fake package, so skip the checksum.
-    spack.do_checksum = False
-    yield
-    # Turn checksumming back on
-    spack.do_checksum = True
+    # We use a fake package, so temporarily disable checksumming
+    with spack.config.override('config:checksum', False):
+        yield
+
     # Restore Spack's layout.
     spack.store.layout = layout
     spack.store.extensions = extensions
