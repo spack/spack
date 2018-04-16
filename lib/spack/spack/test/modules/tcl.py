@@ -241,7 +241,6 @@ class TestTcl(object):
             [x for x in content if 'setenv FOOBAR "callpath"' in x]
         ) == 1
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_package(
             self, modulefile_content, patch_configuration
     ):
@@ -252,7 +251,6 @@ class TestTcl(object):
 
         assert 'Override successful!' in content
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_modules_yaml(
             self, modulefile_content, patch_configuration
     ):
@@ -265,7 +263,6 @@ class TestTcl(object):
         content = modulefile_content('mpileaks arch=x86-linux')
         assert 'Override even better!' in content
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_extend_context(
             self, modulefile_content, patch_configuration
     ):

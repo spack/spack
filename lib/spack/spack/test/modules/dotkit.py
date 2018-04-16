@@ -45,7 +45,6 @@ class TestDotkit(object):
         assert '#d mpileaks @2.3' in content
         assert len([x for x in content if 'dk_op' in x]) == 2
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_package(
             self, modulefile_content, patch_configuration
     ):
@@ -56,7 +55,6 @@ class TestDotkit(object):
 
         assert 'Override successful!' in content
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_modules_yaml(
             self, modulefile_content, patch_configuration
     ):

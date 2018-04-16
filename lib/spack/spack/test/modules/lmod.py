@@ -213,7 +213,6 @@ class TestLmod(object):
         with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
             module.write()
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_package(
             self, modulefile_content, patch_configuration
     ):
@@ -224,7 +223,6 @@ class TestLmod(object):
 
         assert 'Override successful!' in content
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_modules_yaml(
             self, modulefile_content, patch_configuration
     ):

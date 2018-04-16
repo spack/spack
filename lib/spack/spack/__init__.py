@@ -38,16 +38,10 @@ import multiprocessing
 # TODO: Below code should not import modules other than spack.config
 #-----------------------------------------------------------------------------
 import spack.config
-from spack.util.path import canonicalize_path
 
 
 # TODO: get this out of __init__.py
 binary_cache_retrieved_specs = set()
-
-
-#: Directories where to search for templates
-template_dirs = spack.config.get('config:template_dirs')
-template_dirs = [canonicalize_path(x) for x in template_dirs]
 
 
 # If this is True, spack will not clean the environment to remove
