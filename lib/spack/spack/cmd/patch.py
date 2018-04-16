@@ -31,7 +31,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 
 
-
 description = "patch expanded archive sources in preparation for install"
 section = "build"
 level = "long"
