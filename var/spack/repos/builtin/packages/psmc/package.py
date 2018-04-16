@@ -31,7 +31,7 @@ class Psmc(MakefilePackage):
 
     homepage = "https://github.com/lh3/psmc"
 
-    version('01-21-2016', git='https://github.com/lh3/psmc.git', commit='e5f7df5d00bb75ec603ae0beff62c0d7e37640b9')
+    version('2016-1-21', git='https://github.com/lh3/psmc.git', commit='e5f7df5d00bb75ec603ae0beff62c0d7e37640b9')
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', prefix.bin.utils)
