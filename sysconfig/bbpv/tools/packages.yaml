@@ -107,10 +107,6 @@ packages:
         paths:
             py-pygtk@2.24.0: /usr
         version: [2.24.0]
-    readline:
-        paths:
-            readline@6.2.10: /usr
-        version: [6.2.10]
     slurm:
         paths:
             slurm@17.02: /usr
