@@ -71,10 +71,10 @@ class Vtkh(Package):
     depends_on("cuda", when="+cuda")
 
     #raise ValueError('A very specific bad thing happened.')
-    depends_on("vtkm@1.2.0", when="@master")
-    depends_on("vtkm@1.2.0+tbb", when="@master+tbb")
-    depends_on("vtkm@1.2.0+cuda", when="@master+cuda")
-    depends_on("vtkm@1.2.0~shared", when="@master~shared")
+    depends_on("vtkm@1.2.0", when="@0.1.0")
+    depends_on("vtkm@1.2.0+tbb", when="@0.1.0+tbb")
+    depends_on("vtkm@1.2.0+cuda", when="@0.1.0+cuda")
+    depends_on("vtkm@1.2.0~shared", when="@0.1.0~shared")
   
     depends_on("vtkm@master", when="@develp")
     depends_on("vtkm@master+tbb", when="@develop+tbb")
