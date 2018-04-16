@@ -35,9 +35,10 @@ class RHtmltable(RPackage):
     compatible with HTML/'LaTeX'."""
 
     homepage = "https://CRAN.R-project.org/package=htmlTable"
-    url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.9.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.11.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/htmlTable"
 
+    version('1.11.2', '473e6d486e7714f8dd7f16a31480c896')
     version('1.9', '08c62c19e1ffe570e7d8fa57db5094b9')
 
     depends_on('r-stringr', type=('build', 'run'))
@@ -45,3 +46,4 @@ class RHtmltable(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-rstudioapi', type=('build', 'run'), when="@1.11.2:")
