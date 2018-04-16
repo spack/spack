@@ -46,4 +46,4 @@ class RHtmltable(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
-    depends_on('r-rstudioapi', type=('build', 'run'), when="@1.11.2:")
+    depends_on('r-rstudioapi@0.6:', type=('build', 'run'), when="@1.11.2:")
