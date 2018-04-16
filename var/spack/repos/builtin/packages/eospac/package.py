@@ -42,4 +42,13 @@ class Eospac(Package):
 
     def install(self, spec, prefix):
         with working_dir('Source'):
-            make('prefix=%s' % self.spec.prefix, 'install')
+            make('install',
+                 'CC={0}'.format(spack_cc),
+                 'CXX={0}'.format(spack_cxx),
+                 'F77={0}'.format(spack_f77),
+                 'F90={0}'.format(spack_fc),
+                 'prefix={0}'.format(prefix),
+                 'INSTALLED_LIBRARY_DIR={0}'.format(prefix.lib),
+                 'INSTALLED_INCLUDE_DIR={0}'.format(prefix.include),
+                 'INSTALLED_EXAMPLE_DIR={0}'.format(prefix.example),
+                 'INSTALLED_BIN_DIR={0}'.format(prefix.bin))
