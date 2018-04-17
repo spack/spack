@@ -44,6 +44,8 @@ class RIranges(RPackage):
     version('2.12.0', git='https://git.bioconductor.org/packages/IRanges', commit='1b1748655a8529ba87ad0f223f035ef0c08e7fcd')
     version('2.10.5', git='https://git.bioconductor.org/packages/IRanges', commit='b00d1d5025e3c480d17c13100f0da5a0132b1614')
 
+    depends_on('r-biocgenerics@0.21.1:', type=('build', 'run'), when='@2.10.5')
     depends_on('r-biocgenerics@0.23.3:', type=('build', 'run'), when='@2.12.0')
+    depends_on('r-s4vectors@0.13.17:', type=('build', 'run'), when='@2.10.5')
     depends_on('r-s4vectors@0.15.5:', type=('build', 'run'), when='@2.12.0')
     depends_on('r@3.4.0:3.4.9', when='@2.10.5:')
