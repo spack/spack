@@ -25,6 +25,7 @@
 from spack import *
 import os
 import shutil
+import glob
 import llnl.util.tty as tty
 
 
@@ -94,11 +95,7 @@ class Bcl2fastq2(Package):
                 else:
                     tty.msg("Unpacking bcl2fastq2 tarball")
                     tty.msg("cwd sez: {0}".format(os.getcwd()))
-                    ver = '{0}'.format(self.version.dotted)
-                    if ver == '2.20.0.422':
-                        tarball = 'bcl2fastq2-v{0}-Source.tar.gz'.format(ver)
-                    else:
-                        tarball = 'bcl2fastq2-v{0}.tar.gz'.format(ver)
+                    tarball = glob.glob('bcl2fastq2*.tar.gz')[0]
                     shutil.move(join_path('spack-expanded-archive', tarball),
                                 '.')
                     os.rmdir('spack-expanded-archive')
