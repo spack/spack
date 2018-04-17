@@ -195,14 +195,14 @@ def print_text_info(pkg):
         preferred = sorted(pkg.versions, key=key_fn).pop()
 
         f = fs.for_package_version(pkg, preferred)
-        line = version('    {0}'.format(pad(preferred))) + str(f)
+        line = version('    {0}'.format(pad(preferred))) + color.cescape(f)
         color.cprint(line)
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + str(f)
+            line = version('    {0}'.format(pad(v))) + color.cescape(f)
             color.cprint(line)
 
     color.cprint('')
