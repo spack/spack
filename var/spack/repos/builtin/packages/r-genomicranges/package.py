@@ -41,11 +41,12 @@ class RGenomicranges(RPackage):
     url      = "https://git.bioconductor.org/packages/GenomicRanges"
     list_url = homepage
 
+    version('1.30.3', git='https://git.bioconductor.org/packages/GenomicRanges', commit='e99979054bc50ed8c0109bc54563036c1b368997')
     version('1.28.6', git='https://git.bioconductor.org/packages/GenomicRanges', commit='197472d618f3ed04c795dc6ed435500c29619563')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r-iranges@2.11.16:', type=('build', 'run'), when='@1.30.3')
+    depends_on('r-genomeinfodb@1.13.1:', type=('build', 'run'), when='@1.30.3')
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.28.6')
+    depends_on('r@3.4.0:3.4.9', when='@1.28.6:')
