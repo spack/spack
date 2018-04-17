@@ -35,9 +35,9 @@ class Bismark(Package):
     version('0.19.0', 'f403654aded77bf0d1dac1203867ded1')
     version('0.18.2', '42334b7e3ed53ba246f30f1f846b4af8')
 
-    depends_on('bowtie2')
-    depends_on('perl')
-    depends_on('samtools')
+    depends_on('bowtie2', type='run')
+    depends_on('perl', type='run')
+    depends_on('samtools', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
