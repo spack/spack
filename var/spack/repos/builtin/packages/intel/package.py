@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
@@ -37,7 +38,7 @@ class Intel(IntelPackage):
     version('18.0.0',              '31ba768fba6e7322957b03feaa3add28', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
     #
     version('17.0.6',              'd96cce0c3feef20091efde458f581a9f', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12538/parallel_studio_xe_2017_update6_composer_edition.tgz')
-    #version('17.0.5',             '00000000000000000000000000000000', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/_____/parallel_studio_xe_2017_update5_composer_edition.tgz')
+    # version('17.0.5',            '00000000000000000000000000000000', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/_____/parallel_studio_xe_2017_update5_composer_edition.tgz')
     version('17.0.4',              'd03d351809e182c481dc65e07376d9a2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('17.0.3',              '52344df122c17ddff3687f84ceb21623', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('17.0.2',              '2891ab1ece43eb61b6ab892f07c47f01', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')

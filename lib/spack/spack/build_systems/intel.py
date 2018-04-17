@@ -100,7 +100,7 @@ class IntelPackage(PackageBase):
     2. :py:meth:`~.IntelPackage.install`
 
     They both have sensible defaults and for many packages the
-    only thing necessary will be to override ``setup_environment``
+    only thing necessary will be to override setup_environment
     to set the appropriate environment variables.
     """
     #: Phases of an Intel package
@@ -117,7 +117,7 @@ class IntelPackage(PackageBase):
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
         return self._has_compilers or self.version < Version('2017.2')
 
-    #: Comment symbol used in the ``license.lic`` file
+    #: Comment symbol used in the license.lic file
     license_comment = '#'
 
     #: Environment variables that Intel searches for a license file
@@ -340,29 +340,29 @@ class IntelPackage(PackageBase):
         '''Returns the version-specific and absolute path to the directory of
         an Intel product or a suite of product components.
 
-        Parameters::
+        Parameters:
 
-        ``product_dir_name``
-            Name of the product directory, without numeric version.
+            product_dir_name (str):
+                Name of the product directory, without numeric version.
 
-            - Examples::
+                - Examples::
 
-                composer_xe, parallel_studio_xe, compilers_and_libraries
+                    composer_xe, parallel_studio_xe, compilers_and_libraries
 
-            The following will work as well, even though they are not directly
-            targets for Spack installation::
+                The following will work as well, even though they are not
+                directly targets for Spack installation::
 
-                advisor_xe, inspector_xe, vtune_amplifier_xe,
-                performance_snapshots (new name for vtune as of 2018)
+                    advisor_xe, inspector_xe, vtune_amplifier_xe,
+                    performance_snapshots (new name for vtune as of 2018)
 
-            These are single-component products without subordinate components
-            and are normally made available to users by a toplevel psxevars.sh
-            or equivalent file to source (and thus by the modulefiles that
-            Spack produces).
+                These are single-component products without subordinate
+                components and are normally made available to users by a
+                toplevel psxevars.sh or equivalent file to source (and thus by
+                the modulefiles that Spack produces).
 
-        ``version_glob``
-            A glob pattern that fully qualifies ``product_dir_name`` to a
-            specific version within an actual directory (not a symlink).
+            version_glob (str): A glob pattern that fully qualifies
+                product_dir_name to a specific version within an actual
+                directory (not a symlink).
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
@@ -458,22 +458,19 @@ class IntelPackage(PackageBase):
         '''Returns the absolute or relative path to a component or file under a
         component suite directory.
 
-        Parameters::
+        Parameters:
 
-        ``component_path``
-            A component name like 'mkl', or 'mpi', or a deeper relative path.
+            component_path (str): a component name like 'mkl', or 'mpi', or a
+                deeper relative path.
 
-        ``component_suite_dir``
-            _Unversioned_ name of the expected parent directory of
-            `component_path`.
+            component_suite_dir (str): _Unversioned_ name of the expected
+                parent directory of component_path.  When absent or None,
+                the default compilers_and_libraries will be used.  A present
+                but empty string "" requests that component_path refer to
+                self.prefix directly.
 
-            When absent or `None`, the default `compilers_and_libraries` will
-            be used.  A present but empty string `""` requests that
-            `component_path` refer to `self.prefix` directly.
-
-        ``relative``
-            When `True`, return path relative to self.prefix, otherwise, return
-            an absolute path (the default).
+            relative (bool): When True, return path relative to self.prefix,
+                otherwise, return an absolute path (the default).
         '''
         # Design note: Choosing the default for `component_suite_dir` was a bit
         # tricky since there better be a sensible means to specify direct
@@ -890,7 +887,7 @@ class IntelPackage(PackageBase):
 
     @property
     def _determine_license_type(self):
-        '''Provide license-related tokens for ``silent.cfg``.'''
+        '''Provide license-related tokens for silent.cfg.'''
         # For license-related tokens, the following patters are relevant:
         #
         # anythingpat - any string
@@ -935,7 +932,7 @@ class IntelPackage(PackageBase):
         return license_type
 
     def configure(self, spec, prefix):
-        '''Generates the ``silent.cfg`` file to pass to ``installer.sh``.
+        '''Generates the silent.cfg file to pass to installer.sh.
 
         See https://software.intel.com/en-us/articles/configuration-file-format
         '''
@@ -1002,7 +999,7 @@ class IntelPackage(PackageBase):
         f.close()
 
     def install(self, spec, prefix):
-        """Runs the ``install.sh`` installation script."""
+        """Runs the install.sh installation script."""
 
         install_script = Executable('./install.sh')
         install_script('--silent', 'silent.cfg')
@@ -1038,7 +1035,7 @@ class IntelPackage(PackageBase):
 
     @run_after('install')
     def preserve_cfg(self):
-        """Copies the silent.cfg configuration file to ``<prefix>/.spack``."""
+        """Copies the silent.cfg configuration file to <prefix>/.spack."""
         install('silent.cfg', join_path(self.prefix, '.spack'))
 
     @run_after('install')
