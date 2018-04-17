@@ -864,7 +864,7 @@ class IntelPackage(PackageBase):
             # and friends are set to point to the Intel compilers, but in
             # practice, mpicc fails to compile some applications while
             # mpiicc works.
-            bindir = self.component_bin_dir('mpi')
+            bindir = Prefix(self.component_bin_dir('mpi'))
             if self.compiler.name == 'intel':
                 self.spec.mpicc  = bindir.mpiicc
                 self.spec.mpicxx = bindir.mpiicpc
