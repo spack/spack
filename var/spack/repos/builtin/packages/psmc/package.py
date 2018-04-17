@@ -36,8 +36,10 @@ class Psmc(MakefilePackage):
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', prefix.bin.utils)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make()
         with working_dir('utils'):
             make()
+
+    def install(self, spec, prefix):
         install_tree(self.build_directory, prefix.bin)
