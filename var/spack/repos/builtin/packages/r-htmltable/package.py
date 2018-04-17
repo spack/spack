@@ -42,8 +42,8 @@ class RHtmltable(RPackage):
     version('1.9', '08c62c19e1ffe570e7d8fa57db5094b9')
 
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-knitr@1.6:', type=('build', 'run'), when="@1.11.2:")
-    depends_on('r-magrittr@1.5:', type=('build', 'run'), when="@1.11.2:")
+    depends_on('r-knitr@1.6:', type=('build', 'run'))
+    depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
-    depends_on('r-rstudioapi@0.6:', type=('build', 'run'), when="@1.11.2:")
+    depends_on('r-rstudioapi@0.6:', type=('build', 'run'), when="@1.11.0:")
