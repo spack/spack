@@ -1,5 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -21,24 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class VotcaCtp(CMakePackage):
-    """Versatile Object-oriented Toolkit for Coarse-graining
-       Applications (VOTCA) is a package intended to reduce the amount of
-       routine work when doing systematic coarse-graining of various
-       systems. The core is written in C++.
+class PerlStatisticsPca(PerlPackage):
+    """A simple Perl implementation of Principal Component Analysis."""
 
-       This package contains the VOTCA charge transport engine.
-    """
-    homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/ctp/tarball/v1.4"
+    homepage = "http://search.cpan.org/~dsth/Statistics-PCA/lib/Statistics/PCA.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/D/DS/DSTH/Statistics-PCA-0.0.1.tar.gz"
 
-    version('develop', git='https://github.com/votca/ctp', branch='master')
+    version('0.0.1', '6e0e05fe13f6becea525b973a0c29001')
 
-    depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-csg@develop", when='@develop')
+    depends_on('perl-module-build', type='build')
+    depends_on('perl-contextual-return', type=('build', 'run'))
+    depends_on('perl-text-simpletable', type=('build', 'run'))
+    depends_on('perl-math-matrixreal', type=('build', 'run'))

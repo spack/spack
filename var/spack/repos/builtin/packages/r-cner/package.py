@@ -29,7 +29,7 @@ class RCner(RPackage):
     """"Large-scale identification and advanced visualization of sets of
         conserved noncoding elements."""
 
-    homepage = "http://www.example.co://bioconductor.org/packages/CNEr/"
+    homepage = "https://bioconductor.org/packages/CNEr/"
     url      = "https://git.bioconductor.org/packages/CNEr"
 
     version('1.14.0', git='https://git.bioconductor.org/packages/CNEr', commit='b8634d65c51728c815127e22b45eba7c9b9db897')

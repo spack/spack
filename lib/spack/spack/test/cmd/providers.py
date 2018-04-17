@@ -22,17 +22,48 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+
+import pytest
+
+from spack.main import SpackCommand
+
+providers = SpackCommand('providers')
 
 
-class Diamond(CMakePackage):
-    """DIAMOND is a sequence aligner for protein and translated DNA searches,
-    designed for high performance analysis of big sequence data."""
+@pytest.mark.parametrize('pkg', [
+    ('mpi',),
+    ('mpi@2',),
+    ('mpi', 'lapack'),
+    ('',)  # Lists all the available virtual packages
+])
+def test_it_just_runs(pkg):
+    providers(*pkg)
 
-    homepage = "https://ab.inf.uni-tuebingen.de/software/diamond"
-    url      = "https://github.com/bbuchfink/diamond/archive/v0.9.14.tar.gz"
 
-    version('0.9.19', '8565d2d3bfe407ee778eeabe7c6a7fde')
-    version('0.9.14', 'b9e1d0bc57f07afa05dbfbb53c31aae2')
-    version('0.8.38', 'd4719c8a7947ba9f743446ac95cfe644')
-    version('0.8.26', '0d86305ab25cc9b3bb3564188d30fff2')
+@pytest.mark.parametrize('vpkg,provider_list', [
+    (('mpi',), ['intel-mpi',
+                'intel-parallel-studio',
+                'mpich',
+                'mpich@1:',
+                'mpich@3:',
+                'mvapich2',
+                'openmpi',
+                'openmpi@1.6.5',
+                'openmpi@1.7.5:',
+                'openmpi@2.0.0:',
+                'spectrum-mpi']),
+    (('D', 'awk'), ['ldc', 'gawk', 'mawk'])  # Call 2 virtual packages at once
+])
+def test_provider_lists(vpkg, provider_list):
+    output = providers(*vpkg)
+    for item in provider_list:
+        assert item in output
+
+
+@pytest.mark.parametrize('pkg,error_cls', [
+    ('zlib', ValueError),
+    ('foo', ValueError)  # Trying to call with a package that does not exist
+])
+def test_it_just_fails(pkg, error_cls):
+    with pytest.raises(error_cls):
+        providers(pkg)

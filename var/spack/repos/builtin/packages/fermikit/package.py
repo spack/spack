@@ -1,5 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -21,24 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class VotcaCtp(CMakePackage):
-    """Versatile Object-oriented Toolkit for Coarse-graining
-       Applications (VOTCA) is a package intended to reduce the amount of
-       routine work when doing systematic coarse-graining of various
-       systems. The core is written in C++.
+class Fermikit(MakefilePackage):
+    """De novo assembly based variant calling pipeline for Illumina short
+    reads"""
 
-       This package contains the VOTCA charge transport engine.
-    """
-    homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/ctp/tarball/v1.4"
+    homepage = "https://github.com/lh3/fermikit"
 
-    version('develop', git='https://github.com/votca/ctp', branch='master')
+    version('2017-11-7', git='https://github.com/lh3/fermikit.git', commit='bf9c7112221577ba110665bddca8f1987250bdc7', submodules=True)
 
-    depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-csg@develop", when='@develop')
+    depends_on('zlib')
+
+    def install(self, spec, prefix):
+        install_tree('fermi.kit', prefix.bin)
