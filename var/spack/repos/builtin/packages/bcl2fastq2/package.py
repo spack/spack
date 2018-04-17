@@ -36,7 +36,7 @@ class Bcl2fastq2(Package):
        call (BCL) files from a sequencing run into FASTQ
        files."""
 
-    homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html"
+    homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-20.html"
 
     version('2.20.0.422', '4dc99f1af208498b7279b66556329488')
     version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
