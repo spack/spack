@@ -156,7 +156,7 @@ def print_text_info(pkg):
     color.cprint('')
     color.cprint(section_title('Description:'))
     if pkg.__doc__:
-        color.cprint(pkg.format_doc(indent=4))
+        color.cprint(color.cescape(pkg.format_doc(indent=4)))
     else:
         color.cprint("    None")
 
