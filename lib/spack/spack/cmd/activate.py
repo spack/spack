@@ -59,7 +59,8 @@ def activate(parser, args):
         layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
 
     if spec.package.is_activated(extensions_layout=layout):
-        tty.die("Package %s is already activated." % specs[0].short_spec)
+        tty.msg("Package %s is already activated." % specs[0].short_spec)
+        return
 
     spec.package.do_activate(extensions_layout=layout,
                              with_dependencies=not args.force)
