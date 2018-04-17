@@ -174,9 +174,7 @@ class IntelParallelStudio(IntelPackage):
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
-        # TODO: Verify that this is in fact done by the modulefile:
-        # # Convenience variable.
-        # spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
+        # NB: I_MPI_ROOT is set via the modulefile.
 
     @run_after('install')
     def fix_psxevars(self):

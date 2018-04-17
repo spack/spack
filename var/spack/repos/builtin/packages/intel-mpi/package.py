@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -58,6 +57,4 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
-        # TODO: Verify that this is in fact done by the modulefile:
-        # # Convenience variable.
-        # spack_env.set('I_MPI_ROOT', self.component_dir('mpi'))
+        # NB: I_MPI_ROOT is set via the modulefile.
