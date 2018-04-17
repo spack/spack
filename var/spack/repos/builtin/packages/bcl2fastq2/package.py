@@ -38,6 +38,7 @@ class Bcl2fastq2(Package):
 
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html"
 
+    version('2.20.0.422', '4dc99f1af208498b7279b66556329488')
     version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
     version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
     # 2.17.1.14 is no longer distributed.  If you have a copy of the
@@ -65,7 +66,9 @@ class Bcl2fastq2(Package):
     # v2.19.1.403 is only available via ftp.
     # who knows what the future will hold.
     def url_for_version(self, version):
-        if version.string == '2.19.1.403':
+        if version.string == '2.20.0.422':
+            return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2-20-0-tar.zip"
+        elif version.string == '2.19.1.403':
             return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2.19.1-tar.zip"
         else:
             url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
@@ -91,8 +94,11 @@ class Bcl2fastq2(Package):
                 else:
                     tty.msg("Unpacking bcl2fastq2 tarball")
                     tty.msg("cwd sez: {0}".format(os.getcwd()))
-                    tarball = 'bcl2fastq2-v{0}.tar.gz'.format(
-                        self.version.dotted)
+                    ver = '{0}'.format(self.version.dotted)
+                    if ver == '2.20.0.422':
+                        tarball = 'bcl2fastq2-v{0}-Source.tar.gz'.format(ver)
+                    else:
+                        tarball = 'bcl2fastq2-v{0}.tar.gz'.format(ver)
                     shutil.move(join_path('spack-expanded-archive', tarball),
                                 '.')
                     os.rmdir('spack-expanded-archive')
