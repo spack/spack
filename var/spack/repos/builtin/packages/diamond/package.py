@@ -36,3 +36,5 @@ class Diamond(CMakePackage):
     version('0.9.14', 'b9e1d0bc57f07afa05dbfbb53c31aae2')
     version('0.8.38', 'd4719c8a7947ba9f743446ac95cfe644')
     version('0.8.26', '0d86305ab25cc9b3bb3564188d30fff2')
+
+    depends_on('zlib')
