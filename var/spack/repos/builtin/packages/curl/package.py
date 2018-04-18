@@ -57,9 +57,9 @@ class Curl(AutotoolsPackage):
     conflicts('+libssh', when='@:7.57.99')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
-    # unless the libssh are installed externally (e.g. via homebrew), even though
-    # spack isn't supposed to know about such a libssh installation. For more information
-    # see https://github.com/spack/spack/issues/7777
+    # unless the libssh are installed externally (e.g. via homebrew), even
+    # though spack isn't supposed to know about such a libssh installation.
+    # C.f. https://github.com/spack/spack/issues/7777
     conflicts('platform=darwin', when='+libssh2')
     conflicts('platform=darwin', when='+libssh')
     conflicts('platform=linux', when='+darwinssl')
