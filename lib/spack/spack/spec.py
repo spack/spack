@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -702,7 +702,8 @@ def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
-    ``spec.prefix``.
+    ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
+    ``{spec.name}`` instead.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -727,33 +728,34 @@ def _libs_default_handler(descriptor, spec, cls):
     # depending on which one exists (there is a possibility, of course, to
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
-    name = 'lib' + spec.name.replace('-', '?')
+    name = spec.name.replace('-', '?')
 
-    if '+shared' in spec:
-        libs = find_libraries(
-            name, root=spec.prefix, shared=True, recursive=True
-        )
-    elif '~shared' in spec:
-        libs = find_libraries(
-            name, root=spec.prefix, shared=False, recursive=True
-        )
-    else:
-        # Prefer shared
-        libs = find_libraries(
-            name, root=spec.prefix, shared=True, recursive=True
-        )
-        if libs:
-            return libs
+    # Avoid double 'lib' for packages whose names already start with lib
+    if not name.startswith('lib'):
+        name = 'lib' + name
 
-        libs = find_libraries(
-            name, root=spec.prefix, shared=False, recursive=True
-        )
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in prefix.lib then in prefix.lib64 and
+    # finally search all of prefix recursively. The search stops when the first
+    # match is found.
+    prefix = spec.prefix
+    search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
 
-    if libs:
-        return libs
-    else:
-        msg = 'Unable to recursively locate {0} libraries in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix))
+    # If '+shared' search only for shared library; if '~shared' search only for
+    # static library; otherwise, first search for shared and then for static.
+    search_shared = [True] if ('+shared' in spec) else \
+        ([False] if ('~shared' in spec) else [True, False])
+
+    for shared in search_shared:
+        for path, recursive in search_paths:
+            libs = find_libraries(
+                name, root=path, shared=shared, recursive=recursive
+            )
+            if libs:
+                return libs
+
+    msg = 'Unable to recursively locate {0} libraries in {1}'
+    raise RuntimeError(msg.format(spec.name, prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -2908,6 +2910,9 @@ class Spec(object):
             ${COMPILERFLAGS} Compiler flags
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
+            ${PLATFORM}      Platform
+            ${OS}            Operating System
+            ${TARGET}        Target
             ${SHA1}          Dependencies 8-char sha1 prefix
             ${HASH:len}      DAG hash with optional length specifier
 
@@ -3065,12 +3070,22 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % token_transform(str(self.variants)), '+')
-                elif named_str == 'ARCHITECTURE':
+                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
-                        write(
-                            fmt % token_transform(str(self.architecture)),
-                            '='
-                        )
+                        if named_str == "ARCHITECTURE":
+                            write(
+                                fmt % token_transform(str(self.architecture)),
+                                '='
+                            )
+                        elif named_str == "PLATFORM":
+                            platform = str(self.architecture.platform)
+                            write(fmt % token_transform(platform), '=')
+                        elif named_str == "OS":
+                            operating_sys = str(self.architecture.platform_os)
+                            write(fmt % token_transform(operating_sys), '=')
+                        elif named_str == "TARGET":
+                            target = str(self.architecture.target)
+                            write(fmt % token_transform(target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,7 +36,7 @@ class Flux(AutotoolsPackage):
     version('master', branch='master',
             git='https://github.com/flux-framework/flux-core')
 
-    variant('doc', default=True, description='Build flux manpages')
+    variant('doc', default=False, description='Build flux manpages')
 
     depends_on("zeromq@4.0.4:")
     depends_on("czmq@2.2:")

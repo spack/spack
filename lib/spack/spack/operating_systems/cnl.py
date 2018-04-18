@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,12 +42,20 @@ class Cnl(OperatingSystem):
     """
 
     def __init__(self):
-        name = 'CNL'
-        version = '10'
+        name = 'cnl'
+        version = self._detect_crayos_version()
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
-        return self.name
+        return self.name + str(self.version)
+
+    def _detect_crayos_version(self):
+        modulecmd = get_module_cmd()
+        output = modulecmd("avail", "PrgEnv-", output=str, error=str)
+        matches = re.findall(r'PrgEnv-\w+/(\d+).\d+.\d+', output)
+        major_versions = set(matches)
+        latest_version = max(major_versions)
+        return latest_version
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()

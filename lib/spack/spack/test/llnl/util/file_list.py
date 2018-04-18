@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -295,4 +295,4 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 ])
 def test_find_with_globbing(root, search_list, kwargs, expected):
     matches = find(root, search_list, **kwargs)
-    assert matches == expected
+    assert sorted(matches) == sorted(expected)

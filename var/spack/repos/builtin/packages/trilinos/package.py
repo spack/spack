@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -610,7 +610,8 @@ class Trilinos(CMakePackage):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
-            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' % prefix.lib)
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' %
+                           self.prefix.lib)
 
         if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
             # Panzer uses some std:chrono that is not recognized by Intel

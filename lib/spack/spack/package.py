@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -820,11 +820,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def env_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.env')
+        if self.stage.source_path is None:
+            return None
+        else:
+            return os.path.join(self.stage.source_path, 'spack-build.env')
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.out')
+        if self.stage.source_path is None:
+            return None
+        else:
+            return os.path.join(self.stage.source_path, 'spack-build.out')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -943,7 +949,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         True if this package provides a virtual package with the specified name
         """
-        return any(s.name == vpkg_name for s in self.provided)
+        return any(
+            any(self.spec.satisfies(c) for c in constraints)
+            for s, constraints in self.provided.items() if s.name == vpkg_name
+        )
 
     @property
     def installed(self):
@@ -1162,7 +1171,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             patch_list
             for spec, patch_list in self.patches.items()
             if self.spec.satisfies(spec))
-        return sorted(patchesToApply, key=lambda p: p.path_or_url)
+        return list(patchesToApply)
 
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
@@ -1195,22 +1204,32 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Make a fake install directory containing fake executables,
         headers, and libraries."""
 
-        name = self.name
-        library_name = 'lib' + self.name
+        command = self.name
+        header = self.name
+        library = self.name
+
+        # Avoid double 'lib' for packages whose names already start with lib
+        if not self.name.startswith('lib'):
+            library = 'lib' + library
+
         dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
         chmod = which('chmod')
 
+        # Install fake command
         mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, name))
-        chmod('+x', join_path(self.prefix.bin, name))
+        touch(join_path(self.prefix.bin, command))
+        chmod('+x', join_path(self.prefix.bin, command))
 
+        # Install fake header file
         mkdirp(self.prefix.include)
-        touch(join_path(self.prefix.include, name + '.h'))
+        touch(join_path(self.prefix.include, header + '.h'))
 
+        # Install fake shared and static libraries
         mkdirp(self.prefix.lib)
-        touch(join_path(self.prefix.lib, library_name + dso_suffix))
-        touch(join_path(self.prefix.lib, library_name + '.a'))
+        for suffix in [dso_suffix, '.a']:
+            touch(join_path(self.prefix.lib, library + suffix))
 
+        # Install fake man page
         mkdirp(self.prefix.man.man1)
 
         packages_dir = spack.store.layout.build_packages_path(self.spec)

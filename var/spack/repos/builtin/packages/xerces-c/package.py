@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,6 +36,11 @@ class XercesC(AutotoolsPackage):
     url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
 
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
+
+    depends_on('libiconv')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.append_flags('LDFLAGS', self.spec['libiconv'].libs.ld_flags)
 
     def configure_args(self):
         return ['--disable-network']
