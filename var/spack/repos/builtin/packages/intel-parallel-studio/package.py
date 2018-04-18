@@ -153,6 +153,10 @@ class IntelParallelStudio(IntelPackage):
     provides('mpi',         when='+mpi')
     provides('tbb',         when='+tbb')
 
+    # For TBB, static linkage is not and has never been supported by Intel:
+    # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
+    conflicts('+tbb',       when='~shared')
+
     conflicts('+advisor',   when='@composer.0:composer.9999')
     conflicts('+clck',      when='@composer.0:composer.9999')
     conflicts('+inspector', when='@composer.0:composer.9999')

@@ -234,10 +234,6 @@ class IntelPackage(PackageBase):
         return list(confirmed)
 
     @property
-    def _want_shared(self):
-        return ('+shared' in self.spec)
-
-    @property
     def intel64_int_suffix(self):
         '''Provide the suffix for Intel library names to match a client
         application's desired int size, conveyed by the active spec variant.
@@ -518,7 +514,6 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if sys.platform == 'darwin':
-            # TODO: verify
             d = join_path(d, 'bin')
         else:
             if component == 'mpi':
@@ -546,9 +541,8 @@ class IntelPackage(PackageBase):
             else:
                 d = join_path(d, 'lib', _expand_fields('{arch}'))
 
-        if component == 'tbb':
-            # Must qualify further
-            d = join_path(d, self._tbb_abi)
+            if component == 'tbb':      # must further qualify for abi
+                d = join_path(d, self._tbb_abi)
 
         debug_print(d)
         return d
@@ -610,7 +604,7 @@ class IntelPackage(PackageBase):
             omp_libs = find_libraries(
                 omp_libnames,
                 root=self.component_lib_dir('compiler'),
-                shared=self._want_shared)
+                shared=('+shared' in self.spec))
             # Note about search root here: For MKL, the directory
             # "$MKLROOT/../compiler" will be present even for an MKL-only
             # product installation (as opposed to one being ghosted via
@@ -633,11 +627,8 @@ class IntelPackage(PackageBase):
         '''Supply LibraryList for linking TBB'''
 
         tbb_lib = find_libraries(
-            ['libtbb'], root=self.component_lib_dir('tbb'))
-        # NB: shared=False is not and has never been supported for TBB:
-        # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
-        #
-        # NB2: Like icc with -qopenmp, so does icpc steer us towards using an
+            ['libtbb', 'libtbbmalloc'], root=self.component_lib_dir('tbb'))
+        # NB: Like icc with -qopenmp, so does icpc steer us towards using an
         # option: "icpc -tbb"
 
         # TODO: clang
@@ -652,20 +643,21 @@ class IntelPackage(PackageBase):
     @property
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
-        # Match the available gcc (or clang?), as it's done in tbbvars.sh.
-
-        # TODO: clang
+        # Match the available gcc, as it's done in tbbvars.sh.
         gcc = Executable('gcc')
-        matches = re.search(r'gcc.* ([0-9]+\.[0-9]+\.[0-9]+).*',
-                            gcc('--version', output=str))
+        matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
+                            gcc('--version', output=str), re.I | re.M)
         if matches:
-            gcc_version = Version(matches.groups()[0])
+            # TODO: Confirm that this covers clang (needed on Linux only)
+            gcc_version = Version(matches.groups()[1])
             if gcc_version >= Version('4.7'):
                 abi = 'gcc4.7'
             elif gcc_version >= Version('4.4'):
                 abi = 'gcc4.4'
+            else:
+                abi = 'gcc4.1'     # unlikely, one hopes.
         else:
-            abi = 'gcc4.1'     # unlikely, one hopes.
+            abi = ''
 
         # Alrighty then ...
         debug_print(abi)
@@ -701,7 +693,7 @@ class IntelPackage(PackageBase):
         mkl_libs = find_libraries(
             mkl_libnames,
             root=self.component_lib_dir('mkl'),
-            shared=self._want_shared)
+            shared=('+shared' in self.spec))
         debug_print(mkl_libs)
 
         if len(mkl_libs) < 3:
@@ -710,7 +702,7 @@ class IntelPackage(PackageBase):
         # The Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
             'libpthread libm libdl'.split(),
-            shared=self._want_shared)
+            shared=('+shared' in self.spec))
         debug_print(system_libs)
 
         return mkl_libs + threading_engine_libs + system_libs
@@ -751,7 +743,7 @@ class IntelPackage(PackageBase):
         sca_libs = find_libraries(
             scalapack_libnames,
             root=self.component_lib_dir('mkl'),
-            shared=self._want_shared)
+            shared=('+shared' in self.spec))
         debug_print(sca_libs)
 
         if len(sca_libs) < 2:
