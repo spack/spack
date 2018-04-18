@@ -626,12 +626,13 @@ class IntelPackage(PackageBase):
     def tbb_libs(self):
         '''Supply LibraryList for linking TBB'''
 
+        # TODO: When is 'libtbbmalloc' needed?
         tbb_lib = find_libraries(
-            ['libtbb', 'libtbbmalloc'], root=self.component_lib_dir('tbb'))
+            ['libtbb'], root=self.component_lib_dir('tbb'))
         # NB: Like icc with -qopenmp, so does icpc steer us towards using an
         # option: "icpc -tbb"
 
-        # TODO: clang
+        # TODO: clang(?)
         gcc = Executable('gcc')     # must be gcc, not self.compiler.cc
         cxx_lib_path = gcc(
             '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
@@ -680,7 +681,7 @@ class IntelPackage(PackageBase):
             elif '%gcc' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
             threading_engine_libs = self.openmp_libs()
-        elif self.spec.satisfies('threads=tbb'):    # TODO: allow in MKL
+        elif self.spec.satisfies('threads=tbb'):
             mkl_threading = 'libmkl_tbb_thread'
             threading_engine_libs = self.tbb_libs()
         elif self.spec.satisfies('threads=none'):

@@ -60,7 +60,7 @@ class IntelMkl(IntelPackage):
     variant(
         'threads', default='none',
         description='Multithreading support',
-        values=('openmp', 'none'),
+        values=('openmp', 'tbb', 'none'),
         multi=False
     )
 
