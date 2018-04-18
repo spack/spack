@@ -145,3 +145,7 @@ _arguments['very_long'] = Args(
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')
+
+_arguments['jobs'] = Args(
+    '-j', '--jobs', action='store', type=int, dest="jobs",
+    help="explicitly set number of make jobs, default is #cpus.")
