@@ -51,7 +51,7 @@ class Curl(AutotoolsPackage):
 
     variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
     variant('libssh2',    default=False, description='enable libssh2 support')
-    variant('libssh',     default=False, description='enable libssh support') #, when='7.58:')
+    variant('libssh',     default=False, description='enable libssh support')  #, when='7.58:')
     variant('darwinssl',  default=False, description="use Apple's SSL/TLS implementation")
 
     conflicts('+libssh', when='@:7.57.99')
