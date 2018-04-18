@@ -41,11 +41,6 @@ class Bcl2fastq2(Package):
 
     version('2.20.0.422', '4dc99f1af208498b7279b66556329488')
     version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
-    version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
-    # 2.17.1.14 is no longer distributed.  If you have a copy of the
-    # source tarball, you can drop it into a local mirror w/ the name
-    # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
-    version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
 
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
@@ -67,14 +62,11 @@ class Bcl2fastq2(Package):
     # v2.19.1.403 is only available via ftp.
     # who knows what the future will hold.
     def url_for_version(self, version):
-        if version.string == '2.20.0.422':
-            return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2-20-0-tar.zip"
-        elif version.string == '2.19.1.403':
-            return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2.19.1-tar.zip"
+        url = "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
+        if version.string == '2.19.1.403':
+            return url.format(version.up_to(3).dotted)
         else:
-            url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
-            # - required to change the version from dots to dashes.
-            return url.format(version.dashed)
+            return url.format(version.up_to(3).dashed)
 
     # Illumina tucks the source inside a gzipped tarball inside a zip
     # file.  We let the normal Spack expansion bit unzip the zip file,
@@ -95,11 +87,12 @@ class Bcl2fastq2(Package):
                 else:
                     tty.msg("Unpacking bcl2fastq2 tarball")
                     tty.msg("cwd sez: {0}".format(os.getcwd()))
-                    tarball = glob.glob('bcl2fastq2*.tar.gz')[0]
-                    shutil.move(join_path('spack-expanded-archive', tarball),
-                                '.')
+                    tarball = glob.glob(join_path('spack-expanded-archive',
+                                        'bcl2fastq2*.tar.gz'))[0]
+                    shutil.move(tarball, '.')
                     os.rmdir('spack-expanded-archive')
                     tar = which('tar')
+                    tarball = os.path.basename(tarball)
                     tar('-xf', tarball)
                     tty.msg("Finished unpacking bcl2fastq2 tarball")
         return wrap
