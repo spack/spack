@@ -39,6 +39,7 @@ class Tcl(AutotoolsPackage):
     homepage = "http://www.tcl.tk"
     url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
 
+    version('8.6.8', '81656d3367af032e0ae6157eff134f89')
     version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
     version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')

@@ -1,5 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -21,24 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class VotcaCtp(CMakePackage):
-    """Versatile Object-oriented Toolkit for Coarse-graining
-       Applications (VOTCA) is a package intended to reduce the amount of
-       routine work when doing systematic coarse-graining of various
-       systems. The core is written in C++.
+class RubyRonn(Package):
+    """Ronn builds manuals. It converts simple, human readable textfiles to
+    roff for terminal display, and also to HTML for the web."""
 
-       This package contains the VOTCA charge transport engine.
-    """
-    homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/ctp/tarball/v1.4"
+    homepage = "https://rubygems.org/gems/ronn"
+    url      = "https://github.com/rtomayko/ronn/archive/0.7.3.tar.gz"
 
-    version('develop', git='https://github.com/votca/ctp', branch='master')
+    version('0.7.3', '90cdedb42920c8c2a74e2d177e9535b6')
+    version('0.7.0', '34ad78510a75e46904629631f5335e06')
 
-    depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-csg@develop", when='@develop')
+    extends('ruby')
+
+    def install(self, spec, prefix):
+        gem('build', 'ronn.gemspec')
+        gem('install', 'ronn-{0}.gem'.format(self.version))

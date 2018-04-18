@@ -1,5 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -21,24 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class VotcaCtp(CMakePackage):
-    """Versatile Object-oriented Toolkit for Coarse-graining
-       Applications (VOTCA) is a package intended to reduce the amount of
-       routine work when doing systematic coarse-graining of various
-       systems. The core is written in C++.
+class Psmc(MakefilePackage):
+    """mplementation of the Pairwise Sequentially Markovian Coalescent
+    (PSMC) model"""
 
-       This package contains the VOTCA charge transport engine.
-    """
-    homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/ctp/tarball/v1.4"
+    homepage = "https://github.com/lh3/psmc"
 
-    version('develop', git='https://github.com/votca/ctp', branch='master')
+    version('2016-1-21', git='https://github.com/lh3/psmc.git', commit='e5f7df5d00bb75ec603ae0beff62c0d7e37640b9')
 
-    depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-csg@develop", when='@develop')
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', prefix.bin.utils)
+
+    def build(self, spec, prefix):
+        make()
+        with working_dir('utils'):
+            make()
+
+    def install(self, spec, prefix):
+        install_tree(self.build_directory, prefix.bin)
