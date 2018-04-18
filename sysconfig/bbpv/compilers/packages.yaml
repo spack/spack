@@ -2,7 +2,7 @@ packages:
     autoconf:
         paths:
             autoconf@2.69: /usr
-        version: [2.63]
+        version: [2.69]
     automake:
         paths:
             automake@1.13.4: /usr
