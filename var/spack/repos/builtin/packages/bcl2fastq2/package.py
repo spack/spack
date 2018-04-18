@@ -41,6 +41,11 @@ class Bcl2fastq2(Package):
 
     version('2.20.0.422', '4dc99f1af208498b7279b66556329488')
     version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
+    version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
+    # 2.17.1.14 is no longer distributed.  If you have a copy of the
+    # source tarball, you can drop it into a local mirror w/ the name
+    # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
+    version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
 
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
