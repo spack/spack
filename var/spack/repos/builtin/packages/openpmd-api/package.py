@@ -55,10 +55,13 @@ class OpenpmdApi(CMakePackage):
     depends_on('mpark-variant@1.3.0:')
     depends_on('catch@2.2.1: ~single_header', when='+test', type='build')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
+    depends_on('hdf5@1.8.6:', when='+hdf5')
     depends_on('hdf5@1.8.6: ~mpi', when='~mpi +hdf5')
     depends_on('hdf5@1.8.6: +mpi', when='+mpi +hdf5')
+    depends_on('adios@1.10.0:', when='+adios1')
     depends_on('adios@1.10.0: ~mpi', when='~mpi +adios1')
     depends_on('adios@1.10.0: +mpi', when='+mpi +adios1')
+    depends_on('adios2@2.1.0:', when='+adios2')
     depends_on('adios2@2.1.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.1.0: +mpi', when='+mpi +adios2')
     # ideally we want 2.3.0+ for full C++11 CT function signature support
