@@ -75,6 +75,8 @@ from llnl.util.tty.color import colorize
 from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
+from spack.stage import DIYStage
+from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -1347,17 +1349,23 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 
+    def write_spconfig(self):
+        tty.die('`spack install --setup` is not supported '
+                'for packages of type {0}'.format(self.build_system_class))
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
                    install_source=False,
-                   install_deps=True,
+                   install_dependenciess=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
                    fake=False,
                    explicit=False,
                    dirty=None,
+                   setup=set(),
+                   spconfig_fname_fn=None,    # Must be set
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1372,7 +1380,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 even with exceptions.
             install_source (bool): By default, source is not installed, but
                 for debugging it might be useful to keep it around.
-            install_deps (bool): Install dependencies before installing this
+            install_dependencies (bool): Install dependencies before installing this
                 package
             skip_patch (bool): Skip patch stage of build if True.
             verbose (bool): Display verbose build output (by default,
@@ -1397,28 +1405,34 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
-        # Ensure package is not already installed
-        layout = spack.store.layout
-        with spack.store.db.prefix_read_lock(self.spec):
-            if partial:
-                tty.msg(
-                    "Continuing from partial install of %s" % self.name)
-            elif layout.check_installed(self.spec):
-                msg = '{0.name} is already installed in {0.prefix}'
-                tty.msg(msg.format(self))
-                rec = spack.store.db.get_record(self.spec)
-                # In case the stage directory has already been created,
-                # this ensures it's removed after we checked that the spec
-                # is installed
-                if keep_stage is False:
-                    self.stage.destroy()
+        if self.name not in setup:
+            # Ensure package is not already installed
+            layout = spack.store.layout
+            with spack.store.db.prefix_read_lock(self.spec):
+                if partial:
+                    tty.msg(
+                        "Continuing from partial install of %s" % self.name)
+                elif layout.check_installed(self.spec):
+                    msg = '{0.name} is already installed in {0.prefix}'
+                    tty.msg(msg.format(self))
+                    rec = spack.store.db.get_record(self.spec)
+                    # In case the stage directory has already been created,
+                    # this ensures it's removed after we checked that the spec
+                    # is installed
+                    if keep_stage is False:
+                        self.stage.destroy()
+
+                    return self._update_explicit_entry_in_db(rec, explicit)
+                
+
+        # Dirty argument takes precedence over dirty config setting.
 
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
 
         # First, install dependencies recursively.
-        if install_deps:
+        if install_dependencies:
             tty.debug('Installing {0} dependencies'.format(self.name))
             for dep in self.spec.traverse(order='post', root=False):
                 dep.package.do_install(
@@ -1427,25 +1441,42 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
                     install_source=install_source,
+                    install_dependencies=install_dependencies,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
                     dirty=dirty,
-                    **kwargs)
+                    setup=setup,
+                    spconfig_fname_fn=spconfig_fname_fn,
+                    **kwargs
 
-        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
+        this_fake = fake
+        if self.name in setup:
+            this_fake = True
+            explicit = True
+            self.stage = DIYStage(os.getcwd())    # Force build in cwd
 
-        if kwargs.get('use_cache', False):
-            if self.try_install_from_binary_cache(explicit):
-                tty.msg('Successfully installed %s from binary cache'
-                        % self.name)
-                print_pkg(self.prefix)
-                spack.hooks.post_install(self.spec)
-                return
+            # --- Generate spconfig.py
+            spconfig_fname = spconfig_fname_fn(self)
+            tty.msg(
+                'Generating config file {0} [{1}]'.format(
+                    spconfig_fname, self.spec.cshort_spec))
 
-            tty.msg('No binary for %s found: installing from source'
-                    % self.name)
+            self.write_spconfig(spconfig_fname)
+        else:
+	        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
+
+	        if kwargs.get('use_cache', False):
+    	        if self.try_install_from_binary_cache(explicit):
+        	        tty.msg('Successfully installed %s from binary cache'
+            	            % self.name)
+                	print_pkg(self.prefix)
+	                spack.hooks.post_install(self.spec)
+    	            return
+
+        	    tty.msg('No binary for %s found: installing from source'
+            	        % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = spack.package_testing.check(self.name)
@@ -1464,7 +1495,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             """
 
             start_time = time.time()
-            if not fake:
+            if not this_fake:
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -1483,8 +1514,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
-                spack.hooks.pre_install(self.spec)
-                if fake:
+                spack.hooks.pre_install(self)
+                if self.name in setup:
+                    pass    # Don't write any files in the install...
+                elif this_fake:
                     self.do_fake_install()
                 else:
                     source_path = self.stage.source_path
@@ -1523,15 +1556,31 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
-            tty.msg("Successfully installed %s" % self.name,
-                    "Fetch: %s.  Build: %s.  Total: %s." %
-                    (_hms(self._fetch_time), _hms(build_time),
-                     _hms(self._total_time)))
+            if self.name in setup:
+                tty.msg("Successfully setup %s" % self.name,
+                        "Config file is %s" % spconfig_fname)
+            else:
+                tty.msg("Successfully installed %s" % self.name,
+                        "Fetch: %s.  Build: %s.  Total: %s." %
+                        (_hms(self._fetch_time), _hms(build_time),
+                         _hms(self._total_time)))
+    
             print_pkg(self.prefix)
+        # --------------------- end of def build_process
 
             # preserve verbosity across runs
             return echo
 
+        try:
+            spack.store.layout.create_install_directory(self.spec)
+        except directory_layout.InstallDirectoryAlreadyExistsError:
+            # Abort install if install directory exists.
+            # But do NOT remove it (you'd be overwriting someone else's stuff)
+            tty.warn("Keeping existing install prefix in place.")
+            if self.name in setup:
+                keep_prefix = True
+            else:
+                raise
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):

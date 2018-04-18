@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+import contextlib
 import argparse
 import os
 import shutil
@@ -43,20 +45,18 @@ section = "build"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_common_parser(subparser):
     subparser.add_argument(
         '--only',
         default='package,dependencies',
-        dest='things_to_install',
+        dest='only_str',
         choices=['package', 'dependencies'],
         help="""select the mode of installation.
 the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -91,6 +91,9 @@ the dependencies"""
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
+    subparser.add_argument(
+        '--install-status', '-I', action='store_true', dest='install_status',
+        help="Show spec before installing.")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -125,6 +128,15 @@ packages. If neither are chosen, don't run tests for any packages."""
         help="filename for the log file. if not passed a default will be used"
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
+
+
+def setup_parser(subparser):
+    setup_common_parser(subparser)
+    subparser.add_argument(
+        '-s', '--setup', dest='setup', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, ' \
+        'instead of building and installing them for real")
+
 
 
 def default_log_file(spec):
@@ -163,6 +175,22 @@ def install_spec(cli_args, kwargs, spec):
         raise
 
 
+
+def get_spconfig_fname(package):
+    return package.name + '-config.py'
+
+def show_spec(spec, args):
+    """Print the concretized spec for the user before installing."""
+    if args.install_status:
+        print(spec.tree(
+            color=True,
+            cover='nodes',
+            format='$_' + '$@$%@+$+$=',
+            hashes=True,
+            hashlen=7,
+            install_status=True))
+
+
 def install(parser, args, **kwargs):
     if not args.package and not args.specfiles:
         tty.die("install requires at least one package argument or yaml file")
@@ -174,20 +202,25 @@ def install(parser, args, **kwargs):
     if args.no_checksum:
         spack.do_checksum = False  # TODO: remove this global.
 
+    only = set([x.strip() for x in args.only_str.split(',')])
+
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
-        'restage': not args.dont_restage,
+        'restage': args.restage,
         'install_source': args.install_source,
-        'install_deps': 'dependencies' in args.things_to_install,
+        'install_dependencies': ('dependencies' in only),
+        'install_package': ('package' in only),
         'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
-        'dirty': args.dirty,
+        'dirty': args.dirty
         'use_cache': args.use_cache
     })
+    if hasattr(kwargs, 'setup'):
+        kwargs['setup'] = set(args.setup)
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
@@ -247,11 +280,18 @@ def install(parser, args, **kwargs):
             if not answer:
                 tty.die('Reinstallation aborted.')
 
+        # Show use what we're installing
+        show_spec(specs[0], args)
+                
         with fs.replace_directory_transaction(specs[0].prefix):
             install_spec(args, kwargs, specs[0])
 
     else:
+        # Show use what we're installing
+        for spec in specs:
+            show_spec(spec, args)
 
+    
         filename = args.log_file or default_log_file(specs[0])
         with spack.report.collect_info(specs, args.log_format, filename):
             for spec in specs:
