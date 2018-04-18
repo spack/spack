@@ -39,40 +39,23 @@ class Dislin(Package):
     depends_on('motif')
     depends_on('mesa')
 
-    provides('dislin_d')
-    provides('discpp')
-    provides('disjava')
-    provides('dislnc')
-    provides('dislnc_d')
-
     @property
-    def dislin_d_libs(self):
-        return find_libraries(
-            'libdislin_d', root=self.prefix, shared=True, recursive=True
-        )
+    def libs(self):
+        query_parameters =self.spec.last_query.extra_parameters
+        query2libraries = {
+            tuple(): ['libdislin'],
+            ('d',): ['libdislin_d'],
+            ('c', ): ['libdislnc'],
+            ('cd',): ['libdislnc_d'],
+            ('cxx',): ['libdiscpp'],
+            ('java',): ['libdisjava']
+        }
 
-    @property
-    def discpp_libs(self):
-        return find_libraries(
-            'libdiscpp', root=self.prefix, shared=True, recursive=True
-        )
+        key = tuple(query_parameters)
+        libraries = query2libraries[key]
 
-    @property
-    def disjava_libs(self):
         return find_libraries(
-            'libdisjava', root=self.prefix, shared=True, recursive=True
-        )
-
-    @property
-    def dislnc_libs(self):
-        return find_libraries(
-            'libdislnc', root=self.prefix, shared=True, recursive=True
-        )
-
-    @property
-    def dislnc_d_libs(self):
-        return find_libraries(
-            'libdislnc_d', root=self.prefix, shared=True, recursive=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     def setup_environment(self, spack_env, run_env):
