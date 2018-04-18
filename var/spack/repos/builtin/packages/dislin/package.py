@@ -41,7 +41,7 @@ class Dislin(Package):
 
     @property
     def libs(self):
-        query_parameters =self.spec.last_query.extra_parameters
+        query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ['libdislin'],
             ('d',): ['libdislin_d'],

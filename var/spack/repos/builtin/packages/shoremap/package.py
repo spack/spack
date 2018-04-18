@@ -47,7 +47,7 @@ class Shoremap(MakefilePackage):
         makefile.filter(r'-L/usr/lib/',
                         self.spec['libxt'].libs.search_flags)
         makefile.filter(r'-L\./dislin.* -ldislin_d',
-                self.spec['dislin:d'].libs.ld_flags)
+                        self.spec['dislin:d'].libs.ld_flags)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
