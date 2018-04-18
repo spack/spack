@@ -62,5 +62,4 @@ class Libxml2(AutotoolsPackage):
         return args
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('CPATH',
-                               join_path(self.prefix, 'include', 'libxml2'))
+        spack_env.prepend_path('CPATH', self.prefix.include.libxml2)
