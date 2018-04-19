@@ -360,6 +360,24 @@ class collect_info(object):
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
 
+    def concretization_report(self, msg):
+        if not self.format_name == 'cdash':
+            return
+
+        report_data = {}
+        report_data['starttime'] = self.starttime
+        report_data['endtime'] = self.starttime
+        self.cdash_initialize_report(report_data)
+
+        report_data['msg'] = msg
+        env = spack.tengine.make_environment()
+        update_template = os.path.join(templates[self.format_name],
+                                       'Update.xml')
+        t = env.get_template(update_template)
+        output_filename = os.path.join(self.filename, 'Update.xml')
+        with open(output_filename, 'w') as f:
+            f.write(t.render(report_data))
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
             # Close the collector and restore the

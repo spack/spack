@@ -36,6 +36,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy
 import spack.report
+from spack.error import SpackError
 
 
 description = "build and install packages"
@@ -203,7 +204,11 @@ def install(parser, args, **kwargs):
         for spec in specs:
             spack.package_testing.test(spec.name)
 
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    try:
+        specs = spack.cmd.parse_specs(args.package, concretize=True)
+    except SpackError as e:
+        reporter.concretization_report(e.message)
+        raise
 
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
