@@ -422,7 +422,7 @@ class CTestLogParser(object):
             context (int): lines of context to extract around each log event
 
         Returns:
-            (tuple): two lists containig ``BuildError`` and
+            (tuple): two lists containing ``BuildError`` and
                 ``BuildWarning`` objects.
         """
         if isinstance(stream, string_types):
