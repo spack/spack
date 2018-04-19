@@ -27,13 +27,19 @@ import collections
 import functools
 import itertools
 import os.path
+import platform
+import re
+import socket
 import time
 import traceback
+import xml.sax.saxutils
 
 import llnl.util.lang
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
+from spack.util.log_parse import parse_log_events
+
 
 templates = {
     'junit': os.path.join('reports', 'junit.xml'),
@@ -51,7 +57,7 @@ __all__ = [
 
 def fetch_package_log(pkg):
     try:
-        with open(pkg.build_log_path, 'r') as f:
+        with codecs.open(pkg.build_log_path, 'r', 'utf-8') as f:
             return ''.join(f.readlines())
     except Exception:
         return 'Cannot open build log for {0}'.format(
@@ -250,8 +256,17 @@ class collect_info(object):
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, format_name):
+    def __init__(self, format_name, install_command):
         self.format_name = format_name
+        # Consider setting these properties in a more CDash specific place.
+        self.install_command = install_command
+        self.hostname = socket.gethostname()
+        self.osname = platform.system()
+        self.starttime = int(time.time())
+        # TODO: remove hardcoded use of Experimental here.
+        #       Make the submission model configurable.
+        self.buildstamp = time.strftime("%Y%m%d-%H%M-Experimental",
+                                        time.localtime(self.starttime))
 
         # Check that the format is valid
         if format_name not in itertools.chain(valid_formats, [None]):
@@ -263,14 +278,102 @@ class collect_info(object):
             self.collector = InfoCollector(self.specs)
             self.collector.__enter__()
 
+    def cdash_initialize_report(self, report_data):
+        if not os.path.exists(self.filename):
+            os.mkdir(self.filename)
+        report_data['install_command'] = self.install_command
+        report_data['buildstamp'] = self.buildstamp
+        report_data['hostname'] = self.hostname
+        report_data['osname'] = self.osname
+
+    def cdash_build_report(self, report_data):
+        self.cdash_initialize_report(report_data)
+
+        # Mapping Spack phases to the corresponding CTest/CDash phase.
+        map_phases_to_cdash = {
+            'autoreconf': 'configure',
+            'cmake':      'configure',
+            'configure':  'configure',
+            'edit':       'configure'
+        }
+
+        # Initialize data structures common to each phase's report.
+        cdash_phases = set(map_phases_to_cdash.values())
+        for phase in cdash_phases:
+            report_data[phase] = {}
+            report_data[phase]['log'] = ""
+            report_data[phase]['status'] = 0
+            report_data[phase]['starttime'] = self.starttime
+            report_data[phase]['endtime'] = self.starttime
+
+        # Track the phases we perform so we know what reports to create.
+        phases_encountered = []
+
+        # Parse output phase-by-phase.
+        phase_regexp = re.compile(r"Executing phase: '(.*)'")
+        for spec in self.collector.specs:
+            for package in spec['packages']:
+                if 'stdout' in package:
+                    current_phase = ''
+                    for line in package['stdout'].splitlines():
+                        match = phase_regexp.search(line)
+                        if match:
+                            current_phase = match.group(1)
+                            if current_phase not in map_phases_to_cdash:
+                                current_phase = ''
+                                continue
+                            beginning_of_phase = True
+                        else:
+                            if beginning_of_phase:
+                                cdash_phase = \
+                                    map_phases_to_cdash[current_phase]
+                                if cdash_phase not in phases_encountered:
+                                    phases_encountered.append(cdash_phase)
+                                report_data[cdash_phase]['log'] += \
+                                    text_type("{0} output for {1}:\n".format(
+                                        cdash_phase, package['name']))
+                                beginning_of_phase = False
+                            report_data[cdash_phase]['log'] += \
+                                xml.sax.saxutils.escape(line) + "\n"
+
+        for phase in phases_encountered:
+            errors, warnings = parse_log_events(
+                report_data[phase]['log'].splitlines())
+            nerrors = len(errors)
+
+            if phase == 'configure' and nerrors > 0:
+                report_data[phase]['status'] = 1
+
+            # Write the report.
+            report_name = phase.capitalize() + ".xml"
+            phase_report = os.path.join(self.filename, report_name)
+
+            with open(phase_report, 'w') as f:
+                env = spack.tengine.make_environment()
+                site_template = os.path.join(templates[self.format_name],
+                                             'Site.xml')
+                t = env.get_template(site_template)
+                f.write(t.render(report_data))
+
+                phase_template = os.path.join(templates[self.format_name],
+                                              report_name)
+                t = env.get_template(phase_template)
+                f.write(t.render(report_data))
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
             # Close the collector and restore the
             # original PackageBase.do_install
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
-            # Write the report
-            with open(self.filename, 'w') as f:
-                env = spack.tengine.make_environment()
-                t = env.get_template(templates[self.format_name])
-                f.write(t.render({'specs': self.collector.specs}))
+            report_data = {'specs': self.collector.specs}
+
+            if self.format_name == 'cdash':
+                # CDash reporting results are split across multiple files.
+                self.cdash_build_report(report_data)
+            else:
+                # Write the report
+                with open(self.filename, 'w') as f:
+                    env = spack.tengine.make_environment()
+                    t = env.get_template(templates[self.format_name])
+                    f.write(t.render(report_data))

@@ -191,7 +191,8 @@ def install(parser, args, **kwargs):
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    reporter = spack.report.collect_info(args.log_format)
+    reporter = spack.report.collect_info(args.log_format,
+                                         ' '.join(args.package))
     if args.log_file:
         reporter.filename = args.log_file
 
