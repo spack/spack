@@ -170,18 +170,6 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+daal',      when='@cluster.0:cluster.2015.7')
     conflicts('+daal',      when='@composer.0:composer.2015.7')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # DUP code in ../intel-mpi/package.py
-        super(IntelMpi, self).setup_dependent_environment(
-            spack_env, run_env, dependent_spec)
-        # Should be in parent class, but spack_cc & friends are undef'd there!?
-        spack_env.set('I_MPI_CC', spack_cc)
-        spack_env.set('I_MPI_CXX', spack_cxx)
-        spack_env.set('I_MPI_F77', spack_fc)
-        spack_env.set('I_MPI_F90', spack_f77)
-        spack_env.set('I_MPI_FC', spack_fc)
-        # NB: I_MPI_ROOT is set via the modulefile.
-
     @run_after('install')
     def fix_psxevars(self):
         """Newer versions (>2016) of Intel Parallel Studio have a bug in the
@@ -209,3 +197,40 @@ class IntelParallelStudio(IntelPackage):
                         'SCRIPTPATH={0}'.format(self.prefix),
                         f)
         # Don't bother with the csh version.
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # CAUTION - DUP code in:
+        #   ../intel-mpi/package.py
+        #   ../intel-parallel-studio/package.py
+        #
+        # Related: setup_dependent_package() in parent class:
+        #   ../../../../../../lib/spack/spack/build_systems/intel.py
+        #
+        if '+mpi' in self.spec or self.provides('mpi'):
+            # See note at compiler_wrappers_mpi() in parent class.
+            spack_env.set('I_MPI_CC', spack_cc)
+            spack_env.set('I_MPI_CXX', spack_cxx)
+            spack_env.set('I_MPI_F77', spack_f77)
+            spack_env.set('I_MPI_F90', spack_fc)
+            spack_env.set('I_MPI_FC', spack_fc)
+            # NB: Normally set by the modulefile, but that is not active here:
+            spack_env.set('I_MPI_ROOT', self.normalize_path('mpi'))
+
+            # CAUTION - SIMILAR code in:
+            #   ../mpich/package.py
+            #   ../openmpi/package.py
+            #   ../mvapich2/package.py
+            #
+            # On Cray, the regular compiler wrappers *are* the MPI wrappers.
+            if 'platform=cray' in self.spec:
+                # TODO: Confirm
+                spack_env.set('MPICC',  spack_cc)
+                spack_env.set('MPICXX', spack_cxx)
+                spack_env.set('MPIF77', spack_fc)
+                spack_env.set('MPIF90', spack_fc)
+            else:
+                w = self.compiler_wrappers_mpi    # names vary by compiler.name
+                spack_env.set('MPICC',  w['MPICC'])
+                spack_env.set('MPICXX', w['MPICXX'])
+                spack_env.set('MPIF77', w['MPIF77'])
+                spack_env.set('MPIF90', w['MPIF90'])

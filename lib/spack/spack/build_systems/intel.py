@@ -760,6 +760,43 @@ class IntelPackage(PackageBase):
         return sca_libs
 
     # ---------------------------------------------------------------------
+    # Support for virtual 'mpi'
+    # ---------------------------------------------------------------------
+    @property
+    def compiler_wrappers_mpi(self):
+        '''Return paths to compiler wrappers as dict by env-like names'''
+        # Intel comes with 2 different flavors of MPI wrappers:
+        #
+        # * mpiicc, mpiicpc, and mpiifort are hardcoded to wrap around
+        #   the Intel compilers.
+        # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
+        #   compilers to wrap using I_MPI_CC and friends. By default,
+        #   wraps around the GCC compilers.
+        #
+        # In theory, these should be equivalent as long as I_MPI_CC
+        # and friends are set to point to the Intel compilers, but in
+        # practice, mpicc fails to compile some applications while
+        # mpiicc works.
+        bindir = self.component_bin_dir('mpi')
+        if self.compiler.name == 'intel':
+            return {
+                # eschew Prefix notation to emphasize command strings.
+                'MPICC':  os.path.join(bindir, 'mpiicc'),
+                'MPICXX': os.path.join(bindir, 'mpiicpc'),
+                'MPIF77': os.path.join(bindir, 'mpiifort'),
+                'MPIF90': os.path.join(bindir, 'mpiifort'),
+                'MPIFC':  os.path.join(bindir, 'mpiifort'),
+            }
+        else:
+            return {
+                'MPICC':  os.path.join(bindir, 'mpicc'),
+                'MPICXX': os.path.join(bindir, 'mpicxx'),
+                'MPIF77': os.path.join(bindir, 'mpif77'),
+                'MPIF90': os.path.join(bindir, 'mpif90'),
+                'MPIFC':  os.path.join(bindir, 'mpif90'),
+            }
+
+    # ---------------------------------------------------------------------
     # General support for child packages
     # ---------------------------------------------------------------------
     @property
@@ -822,63 +859,26 @@ class IntelPackage(PackageBase):
         run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # See also:
-        #   var/spack/repos/builtin/packages/mpich/package.py
-        #   var/spack/repos/builtin/packages/openmpi/package.py
-
-        # It appears that for Intel's quite complex packages we need the
-        # 'file_to_source' environment not just for creating the modulefile
-        # (run_env) but also WITHIN Spack (spack_env) when being called by
-        # dependent packages. E.g., package fftw+mpi does not find mpicc unless
-        # it is in PATH.  Thus, call the following with arg2 = spack_env:
-        self.setup_environment(spack_env, spack_env)    # not a typo
-
         if '+mkl' in self.spec or self.provides('mkl'):
-            # The following should not be needed since it is done by
-            # file_to_source (mklvars.sh in this case):
-            # spack_env.set('MKLROOT', self.normalize_path('mkl'))
-
+            # Spack's env philosophy demands that we replicate some of the
+            # settings normally handled by file_to_source ...
+            spack_env.set('MKLROOT', self.normalize_path('mkl'))
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir('mkl'))
 
-        # Hmm, +mpi would be nice to handle here as well but unification from:
+        # NB: The 'mpi' providers must have their own (and unfortunately
+        # dupliate) implementation of setup_dependent_environment() since they
+        # need `spack_cc`, `spack_fc` etc., apparently inaccessible here:
         #   var/spack/repos/builtin/packages/intel-mpi/package.py
         #   var/spack/repos/builtin/packages/intel-parallel-studio/package.py
-        # fails because spack_cc & friends are only defined in
-        # lib/spack/spack/build_environment.py:set_module_variables_for_package
-        #
-        # if '+mpi' in self.spec or self.provides('mpi'):
-        #   spack_env.set('I_MPI_CC', spack_cc)
-        #   spack_env.set('I_MPI_CXX', spack_cxx)
-        #   spack_env.set('I_MPI_F77', spack_fc)
-        #   spack_env.set('I_MPI_F90', spack_f77)
-        #   spack_env.set('I_MPI_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec or self.provides('mpi'):
-            # Intel comes with 2 different flavors of MPI wrappers:
-            #
-            # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
-            #   the Intel compilers.
-            # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
-            #   compilers to wrap using I_MPI_CC and friends. By default,
-            #   wraps around the GCC compilers.
-            #
-            # In theory, these should be equivalent as long as I_MPI_CC
-            # and friends are set to point to the Intel compilers, but in
-            # practice, mpicc fails to compile some applications while
-            # mpiicc works.
-            bindir = Prefix(self.component_bin_dir('mpi'))
-            if self.compiler.name == 'intel':
-                self.spec.mpicc  = bindir.mpiicc
-                self.spec.mpicxx = bindir.mpiicpc
-                self.spec.mpifc  = bindir.mpiifort
-                self.spec.mpif77 = bindir.mpiifort
-            else:
-                self.spec.mpicc  = bindir.mpicc
-                self.spec.mpicxx = bindir.mpicxx
-                self.spec.mpifc  = bindir.mpif90
-                self.spec.mpif77 = bindir.mpif77
+            w = self.compiler_wrappers_mpi
+            self.spec.mpicc  = w['MPICC']
+            self.spec.mpicxx = w['MPICXX']
+            self.spec.mpif77 = w['MPIF77']
+            self.spec.mpifc  = w['MPIFC']
 
     # ---------------------------------------------------------------------
     # Specifics for installation phase
