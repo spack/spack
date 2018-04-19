@@ -123,6 +123,11 @@ packages. If neither are chosen, don't run tests for any packages."""
         default=None,
         help="filename for the log file. if not passed a default will be used"
     )
+    subparser.add_argument(
+        '--cdash-upload-url',
+        default=None,
+        help="CDash URL where reports will be uploaded"
+    )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
@@ -193,7 +198,8 @@ def install(parser, args, **kwargs):
 
     # 1. Abstract specs from cli
     reporter = spack.report.collect_info(args.log_format,
-                                         ' '.join(args.package))
+                                         ' '.join(args.package),
+                                         args.cdash_upload_url)
     if args.log_file:
         reporter.filename = args.log_file
 
