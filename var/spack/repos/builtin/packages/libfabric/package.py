@@ -42,12 +42,12 @@ class Libfabric(AutotoolsPackage):
                'sockets',
                'verbs',
                'usnic',
-               'mxm',
                'gni',
                'xpmem',
                'udp',
                'rxm',
-               'rxd')
+               'rxd',
+               'mlx')
 
     variant(
        'fabrics',
