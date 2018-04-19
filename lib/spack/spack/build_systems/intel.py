@@ -963,9 +963,9 @@ class IntelPackage(PackageBase):
         # Let's go a little further and distill the tokens (plus some noise).
         tokenlike_words = set(re.findall(r'[A-Z_]{4,}', validator_code))
 
-        # .cfg files generated with the "--duplicate filename" option have the
-        # COMPONENTS string begin with a separator. Do the same.
-        components_joined = ';'.join([''] + self._filtered_components)
+        # NB: .cfg files generated with the "--duplicate filename" option have
+        # the COMPONENTS string begin with a separator - do not worry about it.
+        components_joined = ';'.join(self._filtered_components)
         nonrpm_db_dir = join_path(prefix, 'nonrpm-db')
 
         config_draft = {
