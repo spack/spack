@@ -1,9 +1,9 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at IBM.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Created by Serban Maerean, serban@ibm.com, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
@@ -25,42 +25,59 @@
 from spack import *
 
 
-class Globalarrays(CMakePackage):
-    """The Global Arrays (GA) toolkit provides a shared memory style
-    programming environment in the context of distributed array data
-    structures.
-    """
+class Ga(AutotoolsPackage):
+    """Global Arrays (GA) is a Partitioned Global Address Space (PGAS)
+    programming model. It provides primitives for one-sided communication
+    (Get, Put, Accumulate) and Atomic Operations (read increment).
+    It supports blocking and non-blocking primtives, and supports location
+    consistency."""
 
     homepage = "http://hpc.pnl.gov/globalarrays/"
-    url = "https://github.com/GlobalArrays/ga"
+    url = "https://github.com/GlobalArrays/ga/releases/download/v5.7/ga-5.7.tar.gz"
 
-    version('master', git='https://github.com/GlobalArrays/ga', branch='master')
+    version('5.7',   'bb9a441a6b4fbb8b52b58c2d3f4cd07f')
+    version('5.6.5', '90da628dc72048deeda3f0cd095cb5b3')
+    version('5.6.4', '051901b316c9766b8ba54306bff7f6b3')
+    version('5.6.3', 'df3cf6cc8288d9f202b7fd0ea82f5491')
+    version('5.6.2', '901e4612203bac45059be524fc1abfb7')
+    version('5.6.1', '674c0ea9bf413840b1ff1e669de73fca')
+    version('5.6',   '49d7e997daed094eeb9565423879ba36')
 
-    variant('i8', default=False, description='Build with 8 byte integers')
+    variant('bytes', values=('4', '8'), default='8', 
+        description='Number of bytes for Integer type')
+    variant('blas', default=False, description='Enable BLAS')
+    variant('lapack', default=False, description='Enable LAPACK')
+    variant('scalapack', default=False, description='Enable SCALAPACK')
+    variant('armci', values=('mpi-ts', 'mpi-pr', 'mpi3', 'openib', 'ofi'), 
+        default='mpi-ts', description='ARMCI runtime')
 
-    depends_on('blas')
-    depends_on('lapack')
     depends_on('mpi')
+    depends_on('blas', when='+blas')
+    depends_on('lapack', when='+lapack')
+    depends_on('scalapack', when='+scalapack')
 
-    patch('ibm-xl.patch', when='%xl')
-    patch('ibm-xl.patch', when='%xl_r')
+    def configure_args(self):
+        args = ['--with-mpi']
 
-    def cmake_args(self):
-        options = []
+        numbytes = int(self.spec.variants['bytes'].value)
 
-        options.extend([
-            '-DENABLE_FORTRAN=ON',
-            '-DENABLE_BLAS=ON',
-        ])
+        if '+blas' in self.spec:
+            if numbytes == 8:
+                args.extend(['--with-blas8'])
+            elif numbytes == 4:
+                args.extend(['--with-blas4'])
+            else:
+                args.extend(['--with-blas'])
 
-        if self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
-            # use F77 compiler if IBM XL
-            options.extend([
-                '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
-                '-DCMAKE_Fortran_FLAGS=-qzerosize'
-            ])
+        if '+lapack' in self.spec:
+            args.extend(['--with-lapack'])
 
-        if "+i8" in self.spec:
-            options.extend(['-DENABLE_I8=ON'])
+        if '+scalapack' in self.spec:
+            if numbytes == 8:
+                args.extend(['--with-scalapack8'])
+            else:
+                args.extend(['--with-scalapack'])
 
-        return options
+        args.extend(['--with-' + self.spec.variants['armci'].value])
+
+        return args
