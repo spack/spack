@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ga(AutotoolsPackage):
+class Globalarrays(AutotoolsPackage):
     """Global Arrays (GA) is a Partitioned Global Address Space (PGAS)
     programming model. It provides primitives for one-sided communication
     (Get, Put, Accumulate) and Atomic Operations (read increment).
