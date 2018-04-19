@@ -36,7 +36,8 @@ import spack.fetch_strategy
 import spack.package
 
 templates = {
-    'junit': os.path.join('reports', 'junit.xml')
+    'junit': os.path.join('reports', 'junit.xml'),
+    'cdash': os.path.join('reports', 'cdash')
 }
 
 #: Allowed report formats
