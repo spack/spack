@@ -24,6 +24,7 @@
 ##############################################################################
 
 import os
+import sys
 
 from spack import *
 
@@ -178,11 +179,13 @@ class Openmpi(AutotoolsPackage):
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
+    fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
-        description='List of fabrics that are enabled',
-        values=('psm', 'psm2', 'verbs', 'mxm'),
+        description=("List of fabrics that are enabled"),
+        values=fabrics,
         multi=True
     )
 
@@ -200,7 +203,6 @@ class Openmpi(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
-    variant('ucx', default=False, description='Enable UCX support')
     variant('pmi', default=False, description='Enable PMI support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
@@ -219,6 +221,9 @@ class Openmpi(AutotoolsPackage):
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
+    if sys.platform != 'darwin':
+        depends_on('numactl')
+
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -229,9 +234,10 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
-    depends_on('ucx', when='+ucx')
     depends_on('zlib', when='@3.0.0:')
     depends_on('valgrind~mpi', when='+memchecker')
+    depends_on('ucx', when='fabrics=ucx')
+    depends_on('libfabric', when='fabrics=libfabric')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -241,6 +247,8 @@ class Openmpi(AutotoolsPackage):
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
+    conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
+    # It may be worth considering making libfabric an exclusive fabrics choice
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -330,7 +338,7 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
             '--enable-static'
         ]
-        if self.spec.satisfies('@2.0:'):
+        if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
 
@@ -414,12 +422,6 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
-
-        # UCX support
-        if '+ucx' in spec:
-            config_args.append('--with-ucx={0}'.format(spec['ucx'].prefix))
-        else:
-            config_args.append('--without-ucx')
 
         return config_args
 
