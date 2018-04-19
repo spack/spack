@@ -47,3 +47,4 @@ class Freetype(AutotoolsPackage):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path('CPATH', self.prefix.include.freetype2)
+        run_env.prepend_path('CPATH', self.prefix.include.freetype2)
