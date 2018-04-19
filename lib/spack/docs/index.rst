@@ -64,6 +64,7 @@ or refer to the full manual below.
    module_file_support
    repositories
    binary_caches
+   environments
    command_index
    package_list
 
