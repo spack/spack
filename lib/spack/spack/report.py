@@ -26,6 +26,7 @@
 import codecs
 import collections
 import functools
+import hashlib
 import itertools
 import os.path
 import platform
@@ -35,11 +36,13 @@ import time
 import traceback
 import xml.sax.saxutils
 from six import text_type
+from six.moves.urllib.request import build_opener, HTTPHandler, Request
 
 import llnl.util.lang
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
+from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
 
 
@@ -250,18 +253,18 @@ class collect_info(object):
                 Spec('zlib').concretized().do_install()
 
     Args:
-        specs (list of Spec): specs to be installed
         format_name (str or None): one of the supported formats
-        filename (str or None): name of the file where the report wil
-            be eventually written
+        install_command (str): the command line passed to spack
+        cdash_upload_url (str or None): where to upload the report
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, format_name, install_command):
+    def __init__(self, format_name, install_command, cdash_upload_url):
         self.format_name = format_name
-        # Consider setting these properties in a more CDash specific place.
+        self.filename = None
         self.install_command = install_command
+        self.cdash_upload_url = cdash_upload_url
         self.hostname = socket.gethostname()
         self.osname = platform.system()
         self.starttime = int(time.time())
@@ -390,6 +393,7 @@ class collect_info(object):
                                               report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
+            self.upload_to_cdash(phase_report)
 
     def concretization_report(self, msg):
         if not self.format_name == 'cdash':
@@ -408,6 +412,25 @@ class collect_info(object):
         output_filename = os.path.join(self.filename, 'Update.xml')
         with open(output_filename, 'w') as f:
             f.write(t.render(report_data))
+        self.upload_to_cdash(output_filename)
+
+    def upload_to_cdash(self, filename):
+        if not self.cdash_upload_url:
+            return
+
+        # Compute md5 checksum for the contents of this file.
+        md5sum = checksum(hashlib.md5, filename, block_size=8192)
+
+        opener = build_opener(HTTPHandler)
+        with open(filename, 'rb') as f:
+            url = "{0}&MD5={1}".format(self.cdash_upload_url, md5sum)
+            request = Request(url, data=f)
+            request.add_header('Content-Type', 'text/xml')
+            request.add_header('Content-Length', os.path.getsize(filename))
+            # By default, urllib2 only support GET and POST.
+            # CDash needs expects this file to be uploaded via PUT.
+            request.get_method = lambda: 'PUT'
+            url = opener.open(request)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
