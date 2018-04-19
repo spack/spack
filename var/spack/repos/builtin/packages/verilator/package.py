@@ -82,6 +82,6 @@ class Verilator(AutotoolsPackage):
     @run_after('install')
     def link_bin_to_share(self):
         for fname in ['verilator', 'verilator_bin',
-                'verilator_bin_dbg', 'verilator_profcfunc']:
+                      'verilator_bin_dbg', 'verilator_profcfunc']:
             symlink(join_path(self.prefix.bin, fname),
                     join_path(self.prefix.share, 'verilator/bin', fname))
