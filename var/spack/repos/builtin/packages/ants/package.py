@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ants(CMakePackage):
+class ANTs(CMakePackage):
     """ANTs extracts information from complex datasets that include imaging.
        Paired with ANTsR (answer), ANTs is useful for managing, interpreting
        and visualizing multidimensional data. ANTs is popularly considered a
