@@ -57,6 +57,11 @@ class Libfabric(AutotoolsPackage):
        multi=True
     )
 
+    depends_on('rdma-core', when='fabrics=verbs')
+    depends_on('opa-psm2', when='fabrics=psm2')
+    depends_on('psm', when='fabrics=psm')
+    depends_on('ucx', when='fabrics=mlx')
+
     def configure_args(self):
         args = []
 
