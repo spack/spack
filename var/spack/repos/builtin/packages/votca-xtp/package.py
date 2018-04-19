@@ -45,4 +45,3 @@ class VotcaXtp(CMakePackage):
     depends_on("votca-csg@develop", when='@develop')
     depends_on("votca-csg@1.4:1.4.999", when='@1.4:1.4.999')
     depends_on("votca-ctp@develop", when='@develop')
-    depends_on("votca-moo@develop", when='@develop')

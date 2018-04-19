@@ -33,7 +33,7 @@ class RYarn(RPackage):
        and statistical techniques to account for the large heterogeneity and
        sparsity found in very large RNA-seq experiments."""
 
-    homepage = "http://www.example.co://www.bioconductor.org/packages/yarn/"
+    homepage = "https://bioconductor.org/packages/yarn/"
     url      = "https://git.bioconductor.org/packages/yarn"
     list_url = homepage
 

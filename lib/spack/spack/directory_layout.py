@@ -492,7 +492,7 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
 
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
-            "Install path %s already exists!")
+            "Install path %s already exists!" % path)
 
 
 class SpecReadError(DirectoryLayoutError):
