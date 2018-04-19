@@ -1349,7 +1349,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 
-    def write_spconfig(self):
+    def write_spconfig(self, spconfig_fname, dirty):
+        """Execute all environment setup routines (dummy virtual function).
+        dirty (bool): If True, do NOT clean the environment before
+            building.
+        """
         tty.die('`spack install --setup` is not supported '
                 'for packages of type {0}'.format(self.build_system_class))
 
@@ -1357,7 +1361,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    keep_prefix=False,
                    keep_stage=False,
                    install_source=False,
-                   install_dependenciess=True,
+                   install_deps=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1365,7 +1369,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    explicit=False,
                    dirty=None,
                    setup=set(),
-                   spconfig_fname_fn=None,    # Must be set
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1380,7 +1383,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 even with exceptions.
             install_source (bool): By default, source is not installed, but
                 for debugging it might be useful to keep it around.
-            install_dependencies (bool): Install dependencies before installing this
+            install_deps (bool): Install dependencies before installing this
                 package
             skip_patch (bool): Skip patch stage of build if True.
             verbose (bool): Display verbose build output (by default,
@@ -1423,16 +1426,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                         self.stage.destroy()
 
                     return self._update_explicit_entry_in_db(rec, explicit)
-                
-
-        # Dirty argument takes precedence over dirty config setting.
-
-                return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
 
         # First, install dependencies recursively.
-        if install_dependencies:
+        if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
             for dep in self.spec.traverse(order='post', root=False):
                 dep.package.do_install(
@@ -1441,15 +1439,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
                     install_source=install_source,
-                    install_dependencies=install_dependencies,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
                     dirty=dirty,
                     setup=setup,
-                    spconfig_fname_fn=spconfig_fname_fn,
-                    **kwargs
+                    **kwargs)
 
         this_fake = fake
         if self.name in setup:
@@ -1458,22 +1454,24 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self.stage = DIYStage(os.getcwd())    # Force build in cwd
 
             # --- Generate spconfig.py
-            spconfig_fname = spconfig_fname_fn(self)
+            spconfig_fname = self.name + '-config.py'
             tty.msg(
                 'Generating config file {0} [{1}]'.format(
                     spconfig_fname, self.spec.cshort_spec))
 
-            self.write_spconfig(spconfig_fname)
+            # Calls virtual function of subclass
+            # (eg: CMakePackage, MakefilePackage, etc.)
+            self.write_spconfig(spconfig_fname, dirty)
         else:
 	        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
 	        if kwargs.get('use_cache', False):
-    	        if self.try_install_from_binary_cache(explicit):
+    	            if self.try_install_from_binary_cache(explicit):
         	        tty.msg('Successfully installed %s from binary cache'
             	            % self.name)
                 	print_pkg(self.prefix)
 	                spack.hooks.post_install(self.spec)
-    	            return
+    	                return
 
         	    tty.msg('No binary for %s found: installing from source'
             	        % self.name)
@@ -1514,7 +1512,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
-                spack.hooks.pre_install(self)
+                spack.hooks.pre_install(self.spec)
                 if self.name in setup:
                     pass    # Don't write any files in the install...
                 elif this_fake:

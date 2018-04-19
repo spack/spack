@@ -269,10 +269,15 @@ class CMakePackage(PackageBase):
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
 
-    def write_spconfig(self, spconfig_fname):
-        """Writes the spconfig.py (CMake setup file) to a file."""
-        print('BEGIN write_spconfig')
-        spack.build_environment.setup_package(self)
+    def write_spconfig(self, spconfig_fname, dirty):
+        """Writes the spconfig.py (CMake setup file) to a file.
+        dirty (bool): If True, do NOT clean the environment before
+            building.
+        """
+
+        # Execute all environment setup routines.
+        spack.build_environment.setup_package(self, dirty)
+
         with open(spconfig_fname, 'w') as fout:
             self._write_spconfig(fout)
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\n'
@@ -317,8 +322,10 @@ import subprocess
 
 def cmdlist(str):
     return list(x.strip().replace("'",'') for x in str.split('\n') if x)
-env = dict(os.environ)
 """ % (sys.executable, ' '.join(sys.argv)))
+
+        if dirty:
+            fout.write("env = dict(os.environ)\n")
 
         env_vars = sorted(list(env.keys()))
         for name in env_vars:

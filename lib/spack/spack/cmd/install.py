@@ -45,11 +45,11 @@ section = "build"
 level = "short"
 
 
-def setup_common_parser(subparser):
+def setup_parser(subparser):
     subparser.add_argument(
         '--only',
         default='package,dependencies',
-        dest='only_str',
+        dest='things_to_install',
         choices=['package', 'dependencies'],
         help="""select the mode of installation.
 the default is to install the package along with all its dependencies.
@@ -129,13 +129,10 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
-
-def setup_parser(subparser):
-    setup_common_parser(subparser)
     subparser.add_argument(
         '-s', '--setup', dest='setup', action='append', default=[],
-        help="Generate <projectname>-setup.py for the given projects, ' \
-        'instead of building and installing them for real")
+        help="Generate <projectname>-setup.py for the given projects, "
+        "instead of building and installing them for real")
 
 
 
@@ -202,25 +199,28 @@ def install(parser, args, **kwargs):
     if args.no_checksum:
         spack.do_checksum = False  # TODO: remove this global.
 
-    only = set([x.strip() for x in args.only_str.split(',')])
-
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
-        'restage': args.restage,
+        'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'install_dependencies': ('dependencies' in only),
-        'install_package': ('package' in only),
+        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_package': ('package' in args.things_to_install),
         'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
         'use_cache': args.use_cache
     })
-    if hasattr(kwargs, 'setup'):
-        kwargs['setup'] = set(args.setup)
+    if hasattr(args, 'setup'):
+        setups = set()
+        for arglist_s in args.setup:
+            for arg in [x.strip() for x in arglist_s.split(',')]:
+                setups.add(arg)
+        kwargs['setup'] = setups
+        tty.msg('Setup={}'.format(kwargs['setup']))
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
@@ -280,14 +280,14 @@ def install(parser, args, **kwargs):
             if not answer:
                 tty.die('Reinstallation aborted.')
 
-        # Show use what we're installing
+        # Show user what we're installing
         show_spec(specs[0], args)
                 
         with fs.replace_directory_transaction(specs[0].prefix):
             install_spec(args, kwargs, specs[0])
 
     else:
-        # Show use what we're installing
+        # Show user what we're installing
         for spec in specs:
             show_spec(spec, args)
 
