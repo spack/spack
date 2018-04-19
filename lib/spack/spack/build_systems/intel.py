@@ -823,10 +823,21 @@ class IntelPackage(PackageBase):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # See also:
-        #   ../../../../var/spack/repos/builtin/packages/mpich/package.py
-        #   ../../../../var/spack/repos/builtin/packages/openmpi/package.py
+        #   var/spack/repos/builtin/packages/mpich/package.py
+        #   var/spack/repos/builtin/packages/openmpi/package.py
+
+        # It appears that for Intel's quite complex packages we need the
+        # 'file_to_source' environment not just for creating the modulefile
+        # (run_env) but also WITHIN Spack (spack_env) when being called by
+        # dependent packages. E.g., package fftw+mpi does not find mpicc unless
+        # it is in PATH.  Thus, call the following with arg2 = spack_env:
+        self.setup_environment(spack_env, spack_env)    # not a typo
+
         if '+mkl' in self.spec or self.provides('mkl'):
-            spack_env.set('MKLROOT', self.normalize_path('mkl'))
+            # The following should not be needed since it is done by
+            # file_to_source (mklvars.sh in this case):
+            # spack_env.set('MKLROOT', self.normalize_path('mkl'))
+
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir('mkl'))
 

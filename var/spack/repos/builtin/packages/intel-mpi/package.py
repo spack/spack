@@ -52,6 +52,9 @@ class IntelMpi(IntelPackage):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # DUP code in ../intel-parallel-studio/package.py
+        super(IntelMpi, self).setup_dependent_environment(
+            spack_env, run_env, dependent_spec)
+        # Should be in parent class, but spack_cc & friends are undef'd there!?
         spack_env.set('I_MPI_CC', spack_cc)
         spack_env.set('I_MPI_CXX', spack_cxx)
         spack_env.set('I_MPI_F77', spack_fc)
