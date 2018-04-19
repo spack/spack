@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Curl(AutotoolsPackage):
@@ -49,21 +50,37 @@ class Curl(AutotoolsPackage):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
-    variant('nghttp2', default=False, description='build nghttp2 library (requires C++11)')
-    variant('libssh2', default=False, description='enable libssh2 support')
+    variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
+    variant('libssh2',    default=False, description='enable libssh2 support')
+    variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
+    variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
 
-    depends_on('openssl')
+    conflicts('+libssh', when='@:7.57.99')
+    # on OSX and --with-ssh the configure steps fails with
+    # one or more libs available at link-time are not available run-time
+    # unless the libssh are installed externally (e.g. via homebrew), even
+    # though spack isn't supposed to know about such a libssh installation.
+    # C.f. https://github.com/spack/spack/issues/7777
+    conflicts('platform=darwin', when='+libssh2')
+    conflicts('platform=darwin', when='+libssh')
+    conflicts('platform=linux', when='+darwinssl')
+
+    depends_on('openssl', when='~darwinssl')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
+    depends_on('libssh', when='+libssh')
 
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            '--with-zlib={0}'.format(spec['zlib'].prefix),
-            '--with-ssl={0}'.format(spec['openssl'].prefix)
-        ]
+        args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
+        if self.satisfies('+darwinssl'):
+            args.append('--with-darwinssl')
+        else:
+            args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
+
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')
+        args += self.with_or_without('libssh')
         return args
