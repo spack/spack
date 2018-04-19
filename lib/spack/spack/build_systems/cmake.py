@@ -279,14 +279,14 @@ class CMakePackage(PackageBase):
         spack.build_environment.setup_package(self, dirty)
 
         with open(spconfig_fname, 'w') as fout:
-            self._write_spconfig(fout)
+            self._write_spconfig(fout, dirty)
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\n'
                        'proc.wait()\n')
 
         set_executable(spconfig_fname)
         return spconfig_fname
 
-    def _write_spconfig(self, fout):
+    def _write_spconfig(self, fout, dirty):
         """Writes the spconfig.py file to a stream."""
 
         # Set-up the environment
@@ -322,6 +322,7 @@ import subprocess
 
 def cmdlist(str):
     return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+env = dict(os.environ)
 """ % (sys.executable, ' '.join(sys.argv)))
 
         if dirty:

@@ -1397,6 +1397,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             force (bool): Install again, even if already installed.
         """
         if not self.spec.concrete:
+            tty.msg(self.spec._concrete)
             raise ValueError("Can only install concrete packages: %s."
                              % self.spec.name)
 

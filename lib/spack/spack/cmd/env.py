@@ -64,19 +64,19 @@ class Environment(object):
             module_factory or
             (lambda spec: spack.modules.lmod.LmodModulefileWriter(spec)))
 
-    def add(self, user_spec):
+    def add(self, user_spec, setup):
         query_spec = Spec(user_spec)
-        existing = set(x for x in self.user_specs
-                       if Spec(x).name == query_spec.name)
+        existing = set(x[0] for x in self.user_specs
+                       if Spec(x[0]).name == query_spec.name)
         if existing:
             tty.die("Package {0} was already added to {1}"
                     .format(query_spec.name, self.name))
-        self.user_specs.append(user_spec)
+        self.user_specs.append((user_spec,setup))
 
     def remove(self, query_spec):
         query_spec = Spec(query_spec)
         match_index = -1
-        for i, spec in enumerate(self.user_specs):
+        for i, (spec,_) in enumerate(self.user_specs):
             if Spec(spec).name == query_spec.name:
                 match_index = i
                 break
@@ -93,7 +93,7 @@ class Environment(object):
     def concretize(self):
         num_concretized = len(self.concretized_order)
         new_specs = list()
-        for user_spec in self.user_specs[num_concretized:]:
+        for user_spec,_ in self.user_specs[num_concretized:]:
             spec = Spec(user_spec)
             spec.concretize()
             new_specs.append(spec)
@@ -107,10 +107,13 @@ class Environment(object):
             spec.package.do_install()
 
     def list(self, stream, include_deps=False):
-        for user_spec, concretized_hash in zip_longest(
+        for (user_spec,setup), concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
 
-            stream.write('{0}\n'.format(user_spec))
+            stream.write('{0}'.format(user_spec))
+            if len(setup) > 0:
+                stream.write(' --setup {0}'.format(','.join(sorted(list(setup)))))
+            stream.write('\n')
 
             if concretized_hash:
                 concretized_spec = self.specs_by_hash[concretized_hash]
@@ -205,8 +208,12 @@ class Environment(object):
             for s in spec.traverse():
                 if s.dag_hash() not in concrete_specs:
                     concrete_specs[s.dag_hash()] = s.to_node_dict()
+
+#        tty.msg('concrete specs: {}'.format(concrete_specs))
+
+
         format = {
-            'user_specs': self.user_specs,
+            'user_specs': [(spec,list(setup)) for spec,setup in self.user_specs],
             'concretized_order': concretized_order,
             'concrete_specs': concrete_specs,
         }
@@ -215,10 +222,20 @@ class Environment(object):
     @staticmethod
     def from_dict(name, d):
         c = Environment(name)
-        c.user_specs = list(d['user_specs'])
+
+        # Backwards compatibility for yaml files without setup
+        c.user_specs = list()
+        for x in d['user_specs']:
+            if type(x) == list:
+                c.user_specs.append((x[0], set(x[1])))
+            else:
+                c.user_specs.append((x, set()))
+
         c.concretized_order = list(d['concretized_order'])
         specs_dict = d['concrete_specs']
         c.specs_by_hash = reconstitute(specs_dict, set(c.concretized_order))
+        for spec in c.specs_by_hash.values():
+            tty.msg('{} concretized: {}'.format(spec.name, spec._concrete))
         return c
 
     def path(self):
@@ -375,12 +392,12 @@ def _environment_create(name, init_config=None):
         config_sections = {}
         for key, val in init_config.items():
             if key == 'user_specs':
-                user_specs.extend(val)
+                user_specs.extend((val,set()))
             else:
                 config_sections[key] = val
 
-        for user_spec in user_specs:
-            environment.add(user_spec)
+        for user_spec,setup in user_specs:
+            environment.add(user_spec,setup)
         if config_sections:
             import tempfile
             tmp_cfg_dir = tempfile.mkdtemp()
@@ -406,7 +423,7 @@ def environment_update_config(args):
 def environment_add(args):
     environment = read(args.environment)
     for spec in spack.cmd.parse_specs(args.package):
-        environment.add(spec.format())
+        environment.add(spec.format(), args.setup)
     write(environment)
 
 
@@ -529,6 +546,10 @@ def setup_parser(subparser):
 
     add_parser = sp.add_parser('add', help='Add a spec to an environment')
     add_common_args(add_parser)
+    add_parser.add_argument(
+        '-s', '--setup', dest='setup', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, "
+        "instead of building and installing them for real")
     add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
