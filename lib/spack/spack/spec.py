@@ -1469,6 +1469,13 @@ class Spec(object):
                 'module': bool(self.external_module)
             }
 
+        d['concrete'] = self._concrete
+
+        if 'patches' in self.variants:
+            d['patches'] = self.variants['patches']._patches_in_order_of_appearance
+        else:
+            d['patches'] = []
+
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
         if all_deps:
@@ -1559,6 +1566,19 @@ class Spec(object):
         else:
             spec.external_path = None
             spec.external_module = None
+
+        if 'concrete' in node:
+            spec._concrete = node['concrete']
+
+        if 'patches' in node:
+            patches = node['patches']
+            mvar = spec.variants.setdefault(
+                'patches', MultiValuedVariant('patches', ())
+            )
+            mvar.value = patches
+            # FIXME: Monkey patches mvar to store patches order
+            mvar._patches_in_order_of_appearance = patches
+
 
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.
