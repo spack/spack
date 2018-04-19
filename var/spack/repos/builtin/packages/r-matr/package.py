@@ -38,6 +38,5 @@ class RMatr(RPackage):
 
     version('0.9', 'e2be8734009f5c5b9c1f6b677a77220a')
 
-    depends_on('r-devtools', type=('build', 'run'))
     depends_on('r-mgraster', type=('build', 'run'))
     depends_on('r-biom-utils', type=('build', 'run'))

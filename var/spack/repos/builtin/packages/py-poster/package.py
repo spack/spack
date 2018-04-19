@@ -34,4 +34,3 @@ class PyPoster(PythonPackage):
     version('0.8.1', '2db12704538781fbaa7e63f1505d6fc8')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.7.0:2.7.14', type=('build', 'run'))

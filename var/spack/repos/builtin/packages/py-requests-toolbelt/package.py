@@ -35,3 +35,4 @@ class PyRequestsToolbelt(PythonPackage):
     version('0.8.0', 'de9bf7fbcc6ae341a5c4fd9f8912bcac')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-requests@2.0.1:3.0.0', type=('build', 'run'))
