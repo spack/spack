@@ -75,7 +75,7 @@ class Curl(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
-        if self.satisfies('+darwinssl'):
+        if spec.satisfies('+darwinssl'):
             args.append('--with-darwinssl')
         else:
             args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
