@@ -509,26 +509,23 @@ def environment_upgrade_dependency(args):
         write(environment, repo)
 
 
-def add_common_args(parser):
-    parser.add_argument(
+def setup_parser(subparser):
+    subparser.add_argument(
         'environment',
         help="The environment you are working with"
     )
 
-
-def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='environment_command')
 
+
     create_parser = sp.add_parser('create', help='Make an environment')
-    add_common_args(create_parser)
     create_parser.add_argument(
         '--init-file', dest='init_file',
         help='File with user specs to add and configuration yaml to use'
     )
 
     add_parser = sp.add_parser('add', help='Add a spec to an environment')
-    add_common_args(add_parser)
     add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
@@ -537,7 +534,6 @@ def setup_parser(subparser):
 
     remove_parser = sp.add_parser(
         'remove', help='Remove a spec from this environment')
-    add_common_args(remove_parser)
     remove_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
@@ -546,12 +542,10 @@ def setup_parser(subparser):
 
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')
-    add_common_args(concretize_parser)
 
     relocate_parser = sp.add_parser(
         'relocate',
         help='Reconcretize environment with new OS and/or compiler')
-    add_common_args(relocate_parser)
     relocate_parser.add_argument(
         '--compiler',
         help="Compiler spec to use"
@@ -561,18 +555,15 @@ def setup_parser(subparser):
     list_parser.add_argument(
         '--include-deps', action='store_true',
         dest='include_deps', help='Show dependencies of requested packages')
-    add_common_args(list_parser)
 
     modules_parser = sp.add_parser(
         'list-modules',
         help='Show modules for for packages installed in an environment')
-    add_common_args(modules_parser)
 
     upgrade_parser = sp.add_parser(
         'upgrade',
         help='''Upgrade a dependency package in an environment to the latest
 version''')
-    add_common_args(upgrade_parser)
     upgrade_parser.add_argument(
         'dep_name', help='Dependency package to upgrade')
     upgrade_parser.add_argument(
@@ -582,12 +573,10 @@ version''')
     stage_parser = sp.add_parser(
         'stage',
         help='Download all source files for all packages in an environment')
-    add_common_args(stage_parser)
 
     config_update_parser = sp.add_parser(
         'update-config',
         help='Add config yaml file to environment')
-    add_common_args(config_update_parser)
     config_update_parser.add_argument(
         'config_files',
         nargs=argparse.REMAINDER,
@@ -597,7 +586,6 @@ version''')
     install_parser = sp.add_parser(
         'install',
         help='Install all concretized specs in an environment')
-    add_common_args(install_parser)
 
 
 def env(parser, args, **kwargs):
