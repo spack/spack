@@ -28,6 +28,8 @@ import llnl.util.filesystem as fs
 import spack.modules
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.cmd.install
+import spack.cmd.common.arguments as arguments
 from spack.config import ConfigScope
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repository import Repo
@@ -106,7 +108,7 @@ class Environment(object):
             spec = self.specs_by_hash[concretized_hash]
             spec.package.do_install()
 
-    def list(self, stream, include_deps=False):
+    def list(self, stream, recurse_dependencies=False):
         for user_spec, concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
 
@@ -114,7 +116,7 @@ class Environment(object):
 
             if concretized_hash:
                 concretized_spec = self.specs_by_hash[concretized_hash]
-                if include_deps:
+                if recurse_dependencies:
                     stream.write(concretized_spec.tree())
                 else:
                     stream.write(concretized_spec.format() + '\n')
@@ -483,7 +485,7 @@ def environment_list(args):
     # TODO? option to list packages w/ multiple instances?
     environment = read(args.environment)
     import sys
-    environment.list(sys.stdout, args.include_deps)
+    environment.list(sys.stdout, args.recurse_dependencies)
 
 
 def environment_stage(args):
@@ -552,9 +554,7 @@ def setup_parser(subparser):
     )
 
     list_parser = sp.add_parser('list', help='List specs in an environment')
-    list_parser.add_argument(
-        '--include-deps', action='store_true',
-        dest='include_deps', help='Show dependencies of requested packages')
+    arguments.add_common_arguments(list_parser, ['recurse_dependencies'])
 
     modules_parser = sp.add_parser(
         'list-modules',
