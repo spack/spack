@@ -110,6 +110,22 @@ class IntelPackage(PackageBase):
     #: system base class
     build_system_class = 'IntelPackage'
 
+    #: A dict that maps Spack version specs to release years, needed to infer
+    #: the installation directory layout for pre-2016 versions in the family of
+    #: Intel packages.
+    #
+    # Like any property, it can be overridden in client packages, should older
+    # versions ever be added there.  The initial dict here contains the
+    # packages defined in Spack as of 2018-04.  Keys could conceivably overlap
+    # but preferably should not - only the first key in hash traversal order
+    # that satisfies self.spec will be used.
+    version_years = {
+        # intel-daal is versioned 2016 and later, no divining is needed
+        'intel-ipp@9.0:9.99':         2016,
+        'intel-mkl@11.3.0:11.3.999':  2016,
+        'intel-mpi@5.1:5.99':         2016,
+    }
+
     @property
     def license_required(self):
         # The Intel libraries are provided without requiring a license as of
@@ -289,12 +305,7 @@ class IntelPackage(PackageBase):
         if v_year < 2000:
             # Shoehorn Major into release year until we know better.
             v_year += 2000
-            for spec, year in {
-                # intel-daal is versioned 2016 and later, no divining needed.
-                'intel-ipp@9.0:9.99':         2016,
-                'intel-mkl@11.3.0:11.3.999':  2016,
-                'intel-mpi@5.1:5.99':         2016,
-            }.items():
+            for spec, year in self.version_years.items():
                 if self.spec.satisfies(spec):
                     v_year = year
                     break
