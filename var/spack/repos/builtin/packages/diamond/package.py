@@ -32,6 +32,7 @@ class Diamond(CMakePackage):
     homepage = "https://ab.inf.uni-tuebingen.de/software/diamond"
     url      = "https://github.com/bbuchfink/diamond/archive/v0.9.14.tar.gz"
 
+    version('0.9.20', 'd73f4955909d16456d83b30d9c294b2b')
     version('0.9.19', '8565d2d3bfe407ee778eeabe7c6a7fde')
     version('0.9.14', 'b9e1d0bc57f07afa05dbfbb53c31aae2')
     version('0.8.38', 'd4719c8a7947ba9f743446ac95cfe644')
