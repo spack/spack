@@ -774,8 +774,9 @@ class IntelPackage(PackageBase):
     # Support for virtual 'mpi'
     # ---------------------------------------------------------------------
     @property
-    def compiler_wrappers_mpi(self):
-        '''Return paths to compiler wrappers as dict by env-like names'''
+    def mpi_compiler_wrappers(self):
+        '''Return paths to compiler wrappers as a dict of env-like names
+        '''
         # Intel comes with 2 different flavors of MPI wrappers:
         #
         # * mpiicc, mpiicpc, and mpiifort are hardcoded to wrap around
@@ -791,7 +792,7 @@ class IntelPackage(PackageBase):
         bindir = self.component_bin_dir('mpi')
         if self.compiler.name == 'intel':
             return {
-                # eschew Prefix notation to emphasize command strings.
+                # eschew Prefix objects -- emphasize the command strings.
                 'MPICC':  os.path.join(bindir, 'mpiicc'),
                 'MPICXX': os.path.join(bindir, 'mpiicpc'),
                 'MPIF77': os.path.join(bindir, 'mpiifort'),
@@ -806,6 +807,49 @@ class IntelPackage(PackageBase):
                 'MPIF90': os.path.join(bindir, 'mpif90'),
                 'MPIFC':  os.path.join(bindir, 'mpif90'),
             }
+
+    def mpi_setup_dependent_environment(
+            self, spack_env, run_env, dependent_spec, compilers_of_client={}):
+        '''Unified back-end for setup_dependent_environment() of Intel packages
+        that provide 'mpi'.
+
+        Parameters:
+
+            spack_env, run_env, dependent_spec: same as in
+                setup_dependent_environment().
+
+            compilers_of_client (dict): Conveys spack_cc, spack_cxx, etc.,
+                from the scope of dependent packages; constructed in caller.
+        '''
+        # See also: setup_dependent_package()
+
+        spack_env.set('I_MPI_CC',  compilers_of_client['CC'])
+        spack_env.set('I_MPI_CXX', compilers_of_client['CXX'])
+        spack_env.set('I_MPI_F77', compilers_of_client['F77'])
+        spack_env.set('I_MPI_F90', compilers_of_client['F90'])
+        spack_env.set('I_MPI_FC',  compilers_of_client['FC'])
+
+        # NB: Normally set by the modulefile, but that is not active here:
+        spack_env.set('I_MPI_ROOT', self.normalize_path('mpi'))
+
+        # CAUTION - SIMILAR code in:
+        #   var/spack/repos/builtin/packages/mpich/package.py
+        #   var/spack/repos/builtin/packages/openmpi/package.py
+        #   var/spack/repos/builtin/packages/mvapich2/package.py
+        #
+        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
+        if 'platform=cray' in self.spec:
+            # TODO: Confirm
+            spack_env.set('MPICC',  compilers_of_client['CC'])
+            spack_env.set('MPICXX', compilers_of_client['CXX'])
+            spack_env.set('MPIF77', compilers_of_client['F77'])
+            spack_env.set('MPIF90', compilers_of_client['F90'])
+        else:
+            compiler_wrapper_commands = self.mpi_compiler_wrappers
+            spack_env.set('MPICC',  compiler_wrapper_commands['MPICC'])
+            spack_env.set('MPICXX', compiler_wrapper_commands['MPICXX'])
+            spack_env.set('MPIF77', compiler_wrapper_commands['MPIF77'])
+            spack_env.set('MPIF90', compiler_wrapper_commands['MPIF90'])
 
     # ---------------------------------------------------------------------
     # General support for child packages
@@ -876,20 +920,15 @@ class IntelPackage(PackageBase):
             spack_env.set('MKLROOT', self.normalize_path('mkl'))
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir('mkl'))
-
-        # NB: The 'mpi' providers must have their own (and unfortunately
-        # dupliate) implementation of setup_dependent_environment() since they
-        # need `spack_cc`, `spack_fc` etc., apparently inaccessible here:
-        #   var/spack/repos/builtin/packages/intel-mpi/package.py
-        #   var/spack/repos/builtin/packages/intel-parallel-studio/package.py
+        # For mpi, see mpi_setup_dependent_environment()
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec or self.provides('mpi'):
-            w = self.compiler_wrappers_mpi
-            self.spec.mpicc  = w['MPICC']
-            self.spec.mpicxx = w['MPICXX']
-            self.spec.mpif77 = w['MPIF77']
-            self.spec.mpifc  = w['MPIFC']
+            compiler_wrapper_commands = self.mpi_compiler_wrappers
+            self.spec.mpicc  = compiler_wrapper_commands['MPICC']
+            self.spec.mpicxx = compiler_wrapper_commands['MPICXX']
+            self.spec.mpif77 = compiler_wrapper_commands['MPIF77']
+            self.spec.mpifc  = compiler_wrapper_commands['MPIFC']
 
     # ---------------------------------------------------------------------
     # Specifics for installation phase

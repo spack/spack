@@ -198,39 +198,16 @@ class IntelParallelStudio(IntelPackage):
                         f)
         # Don't bother with the csh version.
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_environment(self, *args):
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py
         #   ../intel-parallel-studio/package.py
-        #
-        # Related: setup_dependent_package() in parent class:
-        #   ../../../../../../lib/spack/spack/build_systems/intel.py
-        #
-        if '+mpi' in self.spec or self.provides('mpi'):
-            # See note at compiler_wrappers_mpi() in parent class.
-            spack_env.set('I_MPI_CC', spack_cc)
-            spack_env.set('I_MPI_CXX', spack_cxx)
-            spack_env.set('I_MPI_F77', spack_f77)
-            spack_env.set('I_MPI_F90', spack_fc)
-            spack_env.set('I_MPI_FC', spack_fc)
-            # NB: Normally set by the modulefile, but that is not active here:
-            spack_env.set('I_MPI_ROOT', self.normalize_path('mpi'))
-
-            # CAUTION - SIMILAR code in:
-            #   ../mpich/package.py
-            #   ../openmpi/package.py
-            #   ../mvapich2/package.py
-            #
-            # On Cray, the regular compiler wrappers *are* the MPI wrappers.
-            if 'platform=cray' in self.spec:
-                # TODO: Confirm
-                spack_env.set('MPICC',  spack_cc)
-                spack_env.set('MPICXX', spack_cxx)
-                spack_env.set('MPIF77', spack_fc)
-                spack_env.set('MPIF90', spack_fc)
-            else:
-                w = self.compiler_wrappers_mpi    # names vary by compiler.name
-                spack_env.set('MPICC',  w['MPICC'])
-                spack_env.set('MPICXX', w['MPICXX'])
-                spack_env.set('MPIF77', w['MPIF77'])
-                spack_env.set('MPIF90', w['MPIF90'])
+        # Tail-call the actual implementation, conveying client's compilers.
+        return self.mpi_setup_dependent_environment(
+            *args, compilers_of_client={
+                'CC':   spack_cc,
+                'CXX':  spack_cxx,
+                'F77':  spack_f77,
+                'F90':  spack_fc,
+                'FC':   spack_fc,
+            })
