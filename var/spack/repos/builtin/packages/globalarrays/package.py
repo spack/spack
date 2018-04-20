@@ -43,13 +43,12 @@ class Globalarrays(AutotoolsPackage):
     version('5.6.1', '674c0ea9bf413840b1ff1e669de73fca')
     version('5.6',   '49d7e997daed094eeb9565423879ba36')
 
-    variant('bytes', values=('4', '8'), default='8', 
-        description='Number of bytes for Integer type')
-    variant('blas', default=False, description='Enable BLAS')
-    variant('lapack', default=False, description='Enable LAPACK')
-    variant('scalapack', default=False, description='Enable SCALAPACK')
+    variant('int64', default=True, description='Compile with 64 bit indices support')
+    variant('blas', default=False, description='Enable external BLAS')
+    variant('lapack', default=False, description='Enable external LAPACK')
+    variant('scalapack', default=False, description='Enable external SCALAPACK')
     variant('armci', values=('mpi-ts', 'mpi-pr', 'mpi3', 'openib', 'ofi'), 
-        default='mpi-ts', description='ARMCI runtime')
+        default='mpi-ts', description='ARMCI external runtime')
 
     depends_on('mpi')
     depends_on('blas', when='+blas')
@@ -59,13 +58,9 @@ class Globalarrays(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-mpi']
 
-        numbytes = int(self.spec.variants['bytes'].value)
-
         if '+blas' in self.spec:
-            if numbytes == 8:
+            if '+int64' in self.spec:
                 args.extend(['--with-blas8'])
-            elif numbytes == 4:
-                args.extend(['--with-blas4'])
             else:
                 args.extend(['--with-blas'])
 
@@ -73,7 +68,7 @@ class Globalarrays(AutotoolsPackage):
             args.extend(['--with-lapack'])
 
         if '+scalapack' in self.spec:
-            if numbytes == 8:
+            if '+int64' in self.spec:
                 args.extend(['--with-scalapack8'])
             else:
                 args.extend(['--with-scalapack'])
