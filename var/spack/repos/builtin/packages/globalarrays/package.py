@@ -43,7 +43,7 @@ class Globalarrays(AutotoolsPackage):
     version('5.6.1', '674c0ea9bf413840b1ff1e669de73fca')
     version('5.6',   '49d7e997daed094eeb9565423879ba36')
 
-    variant('int64', default=True, description='Compile with 64 bit indices support')
+    variant('int64', default=False, description='Compile with 64 bit indices support')
     variant('blas', default=False, description='Enable external BLAS')
     variant('lapack', default=False, description='Enable external LAPACK')
     variant('scalapack', default=False, description='Enable external SCALAPACK')
