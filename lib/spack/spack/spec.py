@@ -1472,9 +1472,9 @@ class Spec(object):
         d['concrete'] = self._concrete
 
         if 'patches' in self.variants:
-            d['patches'] = self.variants['patches']._patches_in_order_of_appearance
-        else:
-            d['patches'] = []
+            variant = self.variants['patches']
+            if hasattr(variant, '_patches_in_order_of_appearance'):
+                d['patches'] = variant._patches_in_order_of_appearance
 
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
@@ -1572,12 +1572,13 @@ class Spec(object):
 
         if 'patches' in node:
             patches = node['patches']
-            mvar = spec.variants.setdefault(
-                'patches', MultiValuedVariant('patches', ())
-            )
-            mvar.value = patches
-            # FIXME: Monkey patches mvar to store patches order
-            mvar._patches_in_order_of_appearance = patches
+            if len(patches) > 0:
+                mvar = spec.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = patches
+                # FIXME: Monkey patches mvar to store patches order
+                mvar._patches_in_order_of_appearance = patches
 
 
         # Don't read dependencies here; from_node_dict() is used by
