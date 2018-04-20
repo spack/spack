@@ -42,21 +42,8 @@ description = "build and install packages"
 section = "build"
 level = "short"
 
-
-def setup_parser(subparser):
-    subparser.add_argument(
-        '--only',
-        default='package,dependencies',
-        dest='things_to_install',
-        choices=['package', 'dependencies'],
-        help="""select the mode of installation.
-the default is to install the package along with all its dependencies.
-alternatively one can decide to install only the package or only
-the dependencies"""
-    )
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+def add_common_arguments(subparser):
+    arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -87,6 +74,21 @@ the dependencies"""
     subparser.add_argument(
         '--fake', action='store_true',
         help="fake install for debug purposes.")
+
+
+
+def setup_parser(subparser):
+    add_common_arguments(subparser)
+    subparser.add_argument(
+        '--only',
+        default='package,dependencies',
+        dest='things_to_install',
+        choices=['package', 'dependencies'],
+        help="""select the mode of installation.
+the default is to install the package along with all its dependencies.
+alternatively one can decide to install only the package or only
+the dependencies"""
+    )
     subparser.add_argument(
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
@@ -251,7 +253,6 @@ def install(parser, args, **kwargs):
             install_spec(args, kwargs, specs[0])
 
     else:
-
         filename = args.log_file or default_log_file(specs[0])
         with spack.report.collect_info(specs, args.log_format, filename):
             for spec in specs:
