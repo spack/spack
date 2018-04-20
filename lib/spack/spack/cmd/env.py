@@ -113,18 +113,15 @@ class Environment(object):
             spack.cmd.install.update_kwargs_from_args(args,kwargs)
             spec.package.do_install(*kwargs)
 
-    def list(self, stream, recurse_dependencies=False):
+    def list(self, stream, **kwargs):
         for user_spec, concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
 
-            stream.write('{0}\n'.format(user_spec))
+            stream.write('========= {0}\n'.format(user_spec))
 
             if concretized_hash:
                 concretized_spec = self.specs_by_hash[concretized_hash]
-                if recurse_dependencies:
-                    stream.write(concretized_spec.tree())
-                else:
-                    stream.write(concretized_spec.format() + '\n')
+                stream.write(concretized_spec.tree(**kwargs))
 
     def upgrade_dependency(self, dep_name, dry_run=False):
         """
@@ -490,8 +487,11 @@ def environment_list(args):
     # TODO? option to list packages w/ multiple instances?
     environment = read(args.environment)
     import sys
-    environment.list(sys.stdout, args.recurse_dependencies)
-
+    environment.list(sys.stdout,
+        recurse_dependencies=args.recurse_dependencies,
+        hashes=args.long or args.very_long,
+        hashlen=None if args.very_long else 7,
+        install_status=args.install_status)
 
 def environment_stage(args):
     environment = read(args.environment)
@@ -559,7 +559,8 @@ def setup_parser(subparser):
     )
 
     list_parser = sp.add_parser('list', help='List specs in an environment')
-    arguments.add_common_arguments(list_parser, ['recurse_dependencies'])
+    arguments.add_common_arguments(list_parser,
+        ['recurse_dependencies', 'long', 'very_long', 'install_status'])
 
     modules_parser = sp.add_parser(
         'list-modules',
