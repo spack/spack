@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-
+import spack.architecture
 
 class Pmix(AutotoolsPackage):
     """The Process Management Interface (PMI) has been used for quite some time
@@ -61,6 +61,7 @@ class Pmix(AutotoolsPackage):
     depends_on('libevent')
 
     def configure_args(self):
+
         spec = self.spec
         config_args = [
             '--enable-shared',
@@ -70,5 +71,12 @@ class Pmix(AutotoolsPackage):
         # external libevent support (needed to keep Open MPI happy)
         config_args.append(
             '--with-libevent={0}'.format(spec['libevent'].prefix))
+
+        # Versions < 2.1.1 have a bug in the test code that *sometimes*
+        # causes problems on strict alignment architectures such as
+        # aarch64.  Work-around is to just not build the test code.
+        if 'aarch64' in spack.architecture.sys_type() and \
+           self.spec.version < Version('2.1.1'):
+            config_args.append( '--without-tests-examples')
 
         return config_args
