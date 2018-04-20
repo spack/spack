@@ -117,6 +117,11 @@ _arguments['recurse_dependencies'] = Args(
     '-r', '--dependencies', action='store_true', dest='recurse_dependencies',
     help='recursively traverse spec dependencies')
 
+_arguments['recurse_dependents'] = Args(
+        '-R', '--dependents', action='store_true', dest='dependents',
+        help='also uninstall any packages that depend on the ones given '
+             'via command line')
+
 _arguments['clean'] = Args(
     '--clean',
     action=CleanOrDirtyAction,
@@ -149,3 +154,9 @@ _arguments['tags'] = Args(
 _arguments['jobs'] = Args(
     '-j', '--jobs', action='store', type=int, dest="jobs",
     help="explicitly set number of make jobs, default is #cpus.")
+
+_arguments['install_status'] = Args(
+    '-I', '--install-status', action='store_true', default=False,
+    help='show install status of packages. packages can be: '
+         'installed [+], missing and needed by an installed package [-], '
+         'or not installed (no annotation)')
