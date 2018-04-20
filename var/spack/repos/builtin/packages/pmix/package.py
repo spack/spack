@@ -26,6 +26,7 @@
 from spack import *
 import spack.architecture
 
+
 class Pmix(AutotoolsPackage):
     """The Process Management Interface (PMI) has been used for quite some time
        as a means of exchanging wireup information needed for interprocess
@@ -77,6 +78,6 @@ class Pmix(AutotoolsPackage):
         # aarch64.  Work-around is to just not build the test code.
         if 'aarch64' in spack.architecture.sys_type() and \
            self.spec.version < Version('2.1.1'):
-            config_args.append( '--without-tests-examples')
+            config_args.append('--without-tests-examples')
 
         return config_args
