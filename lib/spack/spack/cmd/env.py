@@ -591,6 +591,7 @@ version''')
     install_parser = sp.add_parser(
         'install',
         help='Install all concretized specs in an environment')
+    spack.cmd.install.add_common_arguments(install_parser)
 
 
 def env(parser, args, **kwargs):
