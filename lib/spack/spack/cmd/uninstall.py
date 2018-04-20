@@ -30,6 +30,7 @@ import spack
 import spack.cmd
 import spack.store
 import spack.repository
+import spack.cmd.common.arguments as arguments
 
 from llnl.util import tty
 
@@ -62,15 +63,8 @@ def setup_parser(subparser):
              " ALL versions of `libelf` are uninstalled. if no spec is "
              "supplied all installed software will be uninstalled. this "
              "is both useful and dangerous, like rm -r")
-
-    subparser.add_argument(
-        '-R', '--dependents', action='store_true', dest='dependents',
-        help='also uninstall any packages that depend on the ones given '
-             'via command line')
-
-    subparser.add_argument(
-        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='assume "yes" is the answer to every confirmation requested')
+    
+    arguments.add_common_arguments(subparser, ['recurse_dependents', 'yes_to_all'])
 
     subparser.add_argument(
         'packages',
