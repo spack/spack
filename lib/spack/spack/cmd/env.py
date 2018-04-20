@@ -209,9 +209,6 @@ class Environment(object):
                 if s.dag_hash() not in concrete_specs:
                     concrete_specs[s.dag_hash()] = s.to_node_dict()
 
-#        tty.msg('concrete specs: {}'.format(concrete_specs))
-
-
         format = {
             'user_specs': [(spec,list(setup)) for spec,setup in self.user_specs],
             'concretized_order': concretized_order,
@@ -234,8 +231,6 @@ class Environment(object):
         c.concretized_order = list(d['concretized_order'])
         specs_dict = d['concrete_specs']
         c.specs_by_hash = reconstitute(specs_dict, set(c.concretized_order))
-        for spec in c.specs_by_hash.values():
-            tty.msg('{} concretized: {}'.format(spec.name, spec._concrete))
         return c
 
     def path(self):
