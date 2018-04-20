@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+import contextlib
 import argparse
 import os
 import shutil
@@ -74,6 +76,10 @@ def add_common_arguments(subparser):
     subparser.add_argument(
         '--fake', action='store_true',
         help="fake install for debug purposes.")
+    subparser.add_argument(
+        '-s', '--setup', dest='setup', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, "
+        "instead of building and installing them for real")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])

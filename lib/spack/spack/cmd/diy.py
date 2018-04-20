@@ -39,6 +39,10 @@ level = "long"
 
 
 def setup_parser(subparser):
+    arguments.add_common_arguments(subparser, ['jobs'])
+    subparser.add_argument(
+        '-d', '--source-path', dest='source_path', default=None,
+        help="Path to the source directory. Defaults to the current directory")
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
@@ -63,6 +67,10 @@ def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
 
+    if args.jobs is not None:
+        if args.jobs <= 0:
+            tty.die("The -j option must be a positive integer!")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
         tty.die("spack diy only takes one spec.")
@@ -85,13 +93,19 @@ def diy(self, args):
         tty.msg("Uninstall or try adding a version suffix for this DIY build.")
         sys.exit(1)
 
+    source_path = args.source_path
+    if source_path is None:
+        source_path = os.getcwd()
+    source_path = os.path.abspath(source_path)
+
     # Forces the build to run out of the current directory.
-    package.stage = DIYStage(os.getcwd())
+    package.stage = DIYStage(source_path)
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
 
     package.do_install(
+        make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
