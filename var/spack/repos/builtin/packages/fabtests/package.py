@@ -31,10 +31,11 @@ class Fabtests(AutotoolsPackage):
     homepage = "http://libfabric.org"
     url      = "https://github.com/ofiwg/fabtests/archive/v1.5.3.tar.gz"
 
-    version('1.6.0',    '0441aa0aeda391b1bf1eb71250a4afbc')
-    version('1.5.3',    'f60cb95843ebf62e4eaa128e08ccdc7d')
+    version('1.6.0',    'ac4808d11103fd29fc738bc2bfd919de')
+    version('1.5.3',    'a80b4741f5885a97983259d045f9865c')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('libfabric', type=('build', 'run'))
