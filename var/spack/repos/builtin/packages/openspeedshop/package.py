@@ -121,8 +121,8 @@ class Openspeedshop(CMakePackage):
     depends_on("elf", type="link")
     depends_on("libdwarf")
     depends_on("sqlite")
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("dyninst@9.3.2")
+    depends_on("boost@1.50.0:")
+    depends_on("dyninst@9.3.2:")
     depends_on("python")
     depends_on("libxml2+python")
     depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
@@ -362,6 +362,7 @@ class Openspeedshop(CMakePackage):
                         join_path(oss_libdir + '/openspeedshop'))
             run_env.prepend_path('PATH', self.spec['papi'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['libdwarf'].prefix.bin)
+            run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
 
             if '+mpich' in self.spec:
                 run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich')
@@ -382,3 +383,4 @@ class Openspeedshop(CMakePackage):
             run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
+            run_env.prepend_path('PATH', self.spec['python'].prefix.bin)

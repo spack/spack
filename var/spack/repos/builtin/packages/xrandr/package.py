@@ -37,6 +37,7 @@ class Xrandr(AutotoolsPackage):
     depends_on('libxrandr@1.5:')
     depends_on('libxrender')
     depends_on('libx11')
+    depends_on('randrproto')
 
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkgconfig', type='build')
