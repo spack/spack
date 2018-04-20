@@ -106,7 +106,12 @@ class Environment(object):
     def install(self):
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
-            spec.package.do_install()
+
+            # Parse cli arguments and construct a dictionary
+            # that will be passed to Package.do_install API
+            kwargs = dict()
+            spack.cmd.install.update_kwargs_from_args(args,kwargs)
+            spec.package.do_install(*kwargs)
 
     def list(self, stream, recurse_dependencies=False):
         for user_spec, concretized_hash in zip_longest(
