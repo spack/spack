@@ -57,7 +57,7 @@ class Hdf5(AutotoolsPackage):
     variant('shared', default=True,
             description='Builds a shared version of the library')
 
-    variant('hl', default=False, description='Enable the high-level library')
+    variant('hl', default=True, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
     variant('threadsafe', default=False,
