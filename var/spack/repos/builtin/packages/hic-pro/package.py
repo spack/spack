@@ -38,18 +38,15 @@ class HicPro(MakefilePackage):
     depends_on('bowtie2')
     depends_on('samtools')
     depends_on('python@2.7:2.8')
-    depends_on('py-numpy')
-    depends_on('py-scipy')
-    depends_on('py-pysam')
-    depends_on('py-bx-python')
     depends_on('r')
-    depends_on('r-rcolorbrewer')
-    depends_on('r-ggplot2')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-pysam', type=('build', 'run'))
+    depends_on('py-bx-python', type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('cp -Ri $(MK_PATH)',
-                        'cp -R $(MK_PATH)/*')
         config = FileFilter('config-install.txt')
         config.filter('PREFIX =.*', 'PREFIX = {0}'.format(prefix))
         config.filter('BOWTIE2 PATH =.*',
@@ -62,7 +59,8 @@ class HicPro(MakefilePackage):
                       'PYTHON_RPTH ={0}'.format(spec['python'].prefix))
 
     def build(self, spec, preifx):
-        make('-f', './scripts/install/Makefile', 'CONFIG_SYS=./config-install.txt')
+        make('-f', './scripts/install/Makefile',
+             'CONFIG_SYS=./config-install.txt')
         make('mapbuilder')
         make('readstrimming')
         make('iced')
@@ -76,7 +74,7 @@ class HicPro(MakefilePackage):
         install('config-install.txt', prefix)
         install('config-system.txt', prefix)
         install_tree('bin', prefix.bin)
-        install_tree('annotation', join_path(prefix, 'annotation'))
-        install_tree('doc', join_path(prefix, 'doc'))
-        install_tree('scripts', join_path(prefix, 'scripts'))
+        install_tree('annotation', prefix.annotation)
+        install_tree('doc', prefix.doc)
+        install_tree('scripts', prefix.scripts)
         install_tree('test-op', join_path(prefix, 'test-op'))
