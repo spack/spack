@@ -103,7 +103,7 @@ class Environment(object):
             self.concretized_order.append(spec.dag_hash())
         return new_specs
 
-    def install(self):
+    def install(self, args):
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
 
@@ -441,7 +441,7 @@ def _environment_concretize(environment):
 def environment_install(args):
     environment = read(args.environment)
     prepare_repository(environment)
-    environment.install()
+    environment.install(args)
 
 
 def dump_to_environment_repo(spec, repo):
