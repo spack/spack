@@ -25,18 +25,12 @@
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class PyPoster(PythonPackage):
+    """Streaming HTTP uploads and multipart/form-data encoding."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://pypi.org/project/poster/"
+    url      = "https://atlee.ca/software/poster/dist/0.8.1/poster-0.8.1.tar.gz"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('0.8.1', '2db12704538781fbaa7e63f1505d6fc8')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

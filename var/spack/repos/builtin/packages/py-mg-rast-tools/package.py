@@ -25,18 +25,26 @@
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class PyMgRastTools(PythonPackage):
+    """Repository of scripts and libraries for using the MG-RAST API and
+    MG-RAST data."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://github.com/MG-RAST/MG-RAST-Tools"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('2018.04.17', git='https://github.com/MG-RAST/MG-RAST-Tools.git', commit='a40c6e6539ad0bc1c08e1b03dfc0a9759755a326')
 
     depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools@28.0:', type='build')
+    depends_on('py-prettytable@0.7:', type=('build', 'run'))
+    depends_on('py-poster@0.8.1:', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run'))
+    depends_on('py-requests-toolbelt@0.8:', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('r-matr', type=('build', 'run'))
+    depends_on('shocklibs@0.1.30:')
+    depends_on('perl-list-moreutils', type=('build', 'run'))
+    depends_on('perl-exporter-tiny', type=('build', 'run'))
+    depends_on('perl-libwww-perl', type=('build', 'run'))
+    depends_on('perl-http-message', type=('build', 'run'))
+    depends_on('perl-json', type=('build', 'run'))
