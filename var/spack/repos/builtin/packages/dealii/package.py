@@ -159,6 +159,7 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+scalapack', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
     conflicts('+adol-c', when='@:8.5.1')
+    conflicts('+slepc', when='~petsc')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc', '+scalapack',
