@@ -32,6 +32,7 @@ class Pangomm(AutotoolsPackage):
     url      = "https://ftp.gnome.org/pub/GNOME/sources/pangomm/2.14/pangomm-2.14.1.tar.gz"
 
     version('2.14.1', '607a404291d9eeb895f1df3d08f531d7')
+    version('2.14.0', '897d8c56cec4a9c297a426eb0fc2af91')
 
     depends_on('pango')
     depends_on('glibmm')
@@ -42,9 +43,3 @@ class Pangomm(AutotoolsPackage):
         url = "https://ftp.acc.umu.se/pub/GNOME/sources/pangomm"
         ext = '.tar.gz' if version < Version('2.28.3') else '.tar.xz'
         return url + "/%s/pangomm-%s%s" % (version.up_to(2), version, ext)
-
-    def configure_args(self):
-        specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
-                       for s in specs if not s.external]
-        return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]

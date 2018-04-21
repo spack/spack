@@ -45,9 +45,3 @@ class Glibmm(AutotoolsPackage):
         url = "https://ftp.acc.umu.se/pub/GNOME/sources/glibmm"
         ext = '.tar.gz' if version < Version('2.28.2') else '.tar.xz'
         return url + "/%s/glibmm-%s%s" % (version.up_to(2), version, ext)
-
-    def configure_args(self):
-        specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
-                       for s in specs if not s.external]
-        return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]

@@ -83,9 +83,3 @@ class Workrave(AutotoolsPackage):
             src = '%s/%s' % (self.package_dir, fname)
             dest = '%s/m4/%s' % (self.stage.source_path, fname)
             copyfile(src, dest)
-
-    def configure_args(self):
-        specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
-                       for s in specs if not s.external]
-        return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]

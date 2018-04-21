@@ -51,9 +51,3 @@ class Gtkmm(AutotoolsPackage):
         url = "https://ftp.acc.umu.se/pub/GNOME/sources/gtkmm"
         ext = '.tar.gz' if version < Version('3.1.0') else '.tar.xz'
         return url + "/%s/gtkmm-%s%s" % (version.up_to(2), version, ext)
-
-    def configure_args(self):
-        specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
-                       for s in specs if not s.external]
-        return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]

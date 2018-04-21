@@ -32,12 +32,7 @@ class Cairomm(AutotoolsPackage):
     url      = "https://cairographics.org/releases/cairomm-1.6.4.tar.gz"
 
     version('1.6.4', '63561c62536173a98f03005dfe55c90e')
+    version('1.6.2', 'eac5d159e4cba98e32ea174483dee24e')
 
     depends_on('cairo')
     depends_on('libsigcpp')
-
-    def configure_args(self):
-        specs = self.spec.traverse(root=False)
-        pkgconfdirs = ['%s/pkgconfig' % s.prefix.lib
-                       for s in specs if not s.external]
-        return ['PKG_CONFIG_PATH=%s' % ':'.join(pkgconfdirs)]
