@@ -62,7 +62,8 @@ class HicPro(MakefilePackage):
                       'PYTHON_RPTH ={0}'.format(spec['python'].prefix))
 
     def build(self, spec, preifx):
-        make('-f', './scripts/install/Makefile', 'CONFIG_SYS=./config-install.txt')
+        make('-f', './scripts/install/Makefile',
+             'CONFIG_SYS=./config-install.txt')
         make('mapbuilder')
         make('readstrimming')
         make('iced')
