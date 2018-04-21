@@ -63,8 +63,9 @@ def setup_parser(subparser):
              " ALL versions of `libelf` are uninstalled. if no spec is "
              "supplied all installed software will be uninstalled. this "
              "is both useful and dangerous, like rm -r")
-    
-    arguments.add_common_arguments(subparser, ['recurse_dependents', 'yes_to_all'])
+
+    arguments.add_common_arguments(subparser,
+        ['recurse_dependents', 'yes_to_all'])
 
     subparser.add_argument(
         'packages',
