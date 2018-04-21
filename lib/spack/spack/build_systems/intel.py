@@ -150,21 +150,17 @@ class IntelPackage(PackageBase):
         if self._has_compilers:
             dirs.append(self.component_bin_dir('compiler'))
 
-            addons_by_variant = {
+            addon_dirs_by_variant = {
                 '+advisor':    'advisor',
                 '+inspector':  'inspector',
                 '+itac':       'itac',
                 '+vtune':      'vtune_amplifier',
             }
 
-            for variant, dir_name in addons_by_variant.items():
-                if variant not in self.spec:
-                    continue
-                if (self._version_yearlike < Version('2018') and
-                        dir_name != 'itac'):
-                    dir_name += '_xe'
-                dirs.append(self.normalize_path(
-                    'licenses', dir_name, relative=True))
+            for variant, dir_name in addon_dirs_by_variant.items():
+                if variant in self.spec:
+                    dirs.append(self.normalize_path(
+                        'licenses', dir_name, relative=True))
 
         return [os.path.join(d, 'license.lic') for d in dirs]
 
@@ -471,10 +467,17 @@ class IntelPackage(PackageBase):
                 deeper relative path.
 
             component_suite_dir (str): _Unversioned_ name of the expected
-                parent directory of component_path.  When absent or None,
-                the default compilers_and_libraries will be used.  A present
-                but empty string "" requests that component_path refer to
-                self.prefix directly.
+                parent directory of component_path.  When absent or `None`, an
+                appropriate default will be used.  A present but empty string
+                `""` requests that `component_path` refer to `self.prefix`
+                directly.
+
+                Typical values: `compilers_and_libraries`, `composer_xe`,
+                `parallel_studio_xe`.
+
+                Also supported: `advisor`, `inspector`, `vtune`. The actual
+                directory name for these suites varies by release year. The
+                name will be corrected as needed for use in the return value.
 
             relative (bool): When True, return path relative to self.prefix,
                 otherwise, return an absolute path (the default).
@@ -493,6 +496,17 @@ class IntelPackage(PackageBase):
                 component_suite_dir = 'parallel_studio_xe'
             else:
                 component_suite_dir = 'compilers_and_libraries'  # most comps.
+
+        # Handle version-agnostic shorthands
+        if component_suite_dir == 'vtune':
+            component_suite_dir += '_amplifier'
+
+        if ((component_suite_dir == 'vtune_amplifier' and
+                self._version_yearlike < Version('2018'))
+            or
+            (component_suite_dir in 'advisor inspector'.split() and
+                self._version_yearlike < Version('2017'))):
+            component_suite_dir += '_xe'
 
         d = self.normalize_suite_dir(component_suite_dir)
         parent_dir = ancestor(os.path.realpath(d))   # usu. same as self.prefix
