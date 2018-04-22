@@ -35,8 +35,8 @@ level = "short"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser,
-        ['long', 'very_long', 'install_status'])
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
         '-y', '--yaml', action='store_true', default=False,
         help='print concrete spec as YAML')
