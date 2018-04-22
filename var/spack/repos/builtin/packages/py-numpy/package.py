@@ -49,7 +49,7 @@ class PyNumpy(PythonPackage):
     # FIXME: Is this expected?
     
     version('1.14.2', '080f01a19707cf467393e426382c7619')
-    version('1.14,1', 'b8324ef90ac9064cd0eac46b8b388674')
+    version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
     version('1.14.0', 'c12d4bf380ac925fcdc8a59ada6c3298')
     version('1.13.3', '300a6f0528122128ac07c6deb5c95917')
     version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
