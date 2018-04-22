@@ -25,19 +25,19 @@
 
 from spack import *
 import os
-from shutil import copyfile
 import glob
 
 
 class Xgboost(Package):
     """
     XGBoost is an optimized distributed gradient boosting library designed to
-    be highly efficient, flexible and portable. It implements machine learning
-    algorithms under the Gradient Boosting framework. XGBoost provides a
-    parallel tree boosting (also known as GBDT, GBM) that solve many data
-    science problems in a fast and accurate way. The same code runs on major
-    distributed environment (Hadoop, SGE, MPI) and can solve problems beyond
-    billions of examples.
+    be highly efficient, flexible and portable.
+
+    It implements machine learning algorithms under the Gradient Boosting
+    framework. XGBoost provides a parallel tree boosting (also known as GBDT,
+    GBM) that solve many data science problems in a fast and accurate way. The
+    same code runs on major distributed environment (Hadoop, SGE, MPI) and can
+    solve problems beyond billions of examples.
     """
 
     homepage = "http://xgboost.readthedocs.io/en/latest/"
@@ -64,6 +64,7 @@ class Xgboost(Package):
         if '+cuda' in spec:
             cmake('-DUSE_CUDA=ON')
             # get back to xgboost dir to make
+            # normally this should not be necessary (a bug in code?)
             os.chdir(str(self.stage.source_path))
         make()
 
@@ -93,5 +94,5 @@ class Xgboost(Package):
                 ujars = glob.glob(mvn_repo + '/ml/dmlc/xgboost4j' + xgtype +
                                   '/' + ver + '/*.jar')
                 for jar in ujars:
-                    copyfile(jar, str(spec.prefix) + '/' +
+                    install(jar, str(spec.prefix) + '/' +
                              os.path.basename(jar))
