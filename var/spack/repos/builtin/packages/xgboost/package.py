@@ -95,4 +95,4 @@ class Xgboost(Package):
                                   '/' + ver + '/*.jar')
                 for jar in ujars:
                     install(jar, str(spec.prefix) + '/' +
-                             os.path.basename(jar))
+                            os.path.basename(jar))
