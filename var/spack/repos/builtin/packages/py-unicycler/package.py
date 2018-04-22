@@ -39,14 +39,14 @@ class PyUnicycler(PythonPackage):
 
     version('0.4.5', 'f7b4f6b712fee6a4fa86a046a6781768')
 
-    depends_on('python@3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('python@3.4:', type=('build', 'link', 'run'))
+    depends_on('py-setuptools')
     depends_on('spades')
     depends_on('pilon')
     depends_on('jdk')
     depends_on('bowtie2')
-    depends_on('samtools@1.0:')
-    depends_on('racon')
+    depends_on('samtools@1.0:', type=('build', 'link', 'run'))
+    depends_on('racon', type=('build', 'link', 'run'))
     depends_on('blast-plus')
 
     conflicts('%gcc@:4.9.0')
