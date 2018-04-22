@@ -46,17 +46,19 @@ class OmegaH(CMakePackage):
 
     def cmake_args(self):
         args = ['-DUSE_XSDK_DEFAULTS:BOOL=ON']
-        libext = 'so'
-        if not '~shared' in self.spec:
+        if '+shared' in self.spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')
         else:
             args.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
-            libext = 'a'
-        if not '~mpi' in self.spec:
+        if '+mpi' in self.spec:
             args.append('-DOmega_h_USE_MPI:BOOL=ON')
             args.append('-DCMAKE_CXX_COMPILER:FILEPATH={0}'.format(self.spec['mpi'].mpicxx))
-        if not '~zlib' in self.spec:
+        else:
+            args.append('-DOmega_h_USE_MPI:BOOL=OFF')
+        if '+zlib' in self.spec:
             args.append('-DTPL_ENABLE_ZLIB:BOOL=ON')
-            args.append('-DTPL_ZLIB_INCLUDE_DIRS:STRING={0}/include'.format(self.spec['zlib'].prefix))
+            args.append('-DTPL_ZLIB_INCLUDE_DIRS:STRING={0}'.format(self.spec['zlib'].prefix.include))
             args.append('-DTPL_ZLIB_LIBRARIES:STRING={0}'.format(self.spec['zlib'].libs))
+        else:
+            args.append('-DTPL_ENABLE_ZLIB:BOOL=OFF')
         return args
