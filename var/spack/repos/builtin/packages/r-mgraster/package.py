@@ -25,18 +25,14 @@
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class RMgraster(RPackage):
+    """Convenience Functions for R Language Access to the v.1 API of the
+    MG-RAST Metagenome Annotation Server, part of the US Department of Energy
+    (DOE) Systems Biology Knowledge Base (KBase)."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://github.com/braithwaite/MGRASTer/"
+    url      = "https://cran.r-project.org/src/contrib/MGRASTer_0.9.tar.gz"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('0.9', '902c7ad4180b858d6b6428ea26d7652a')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('r@3:', type=('build', 'run'))

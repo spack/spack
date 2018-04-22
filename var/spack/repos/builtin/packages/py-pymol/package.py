@@ -25,18 +25,27 @@
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class PyPymol(PythonPackage):
+    """PyMOL is a Python-enhanced molecular graphics tool. It excels at 3D
+       visualization of proteins, small molecules, density, surfaces, and
+       trajectories. It also includes molecular editing, ray tracing, and
+       movies. Open Source PyMOL is free to everyone!"""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://pymol.org"
+    url      = "https://sourceforge.net/projects/pymol/files/pymol/2/pymol-v2.1.0.tar.bz2"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('2.1.0', 'ef2ab2ce11d65785ca3258b4e6982dfb')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('python+tk', type=('build', 'run'))
+    depends_on('tcl')
+    depends_on('tk')
+    depends_on('py-pmw')
+    depends_on('gl')
+    depends_on('glu')
+    depends_on('glew')
+    depends_on('libpng')
+    depends_on('freetype')
+    depends_on('libxml2')
+    depends_on('msgpack-c')
+    depends_on('py-pyqt', type=('build', 'run'))
+    depends_on('freeglut')

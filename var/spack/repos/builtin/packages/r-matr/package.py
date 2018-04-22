@@ -25,18 +25,18 @@
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class RMatr(RPackage):
+    """Package matR (Metagenomics Analysis Tools for R) is an analysis
+    client for the MG-RAST metagenome annotation engine, part of the US
+    Department of Energy (DOE) Systems Biology Knowledge Base (KBase).
+    Customized analysis and visualization tools securely access remote
+    data and metadata within the popular open source R language and
+    environment for statistical computing."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://github.com/MG-RAST/matR"
+    url      = "https://cran.r-project.org/src/contrib/Archive/matR/matR_0.9.tar.gz"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('0.9', 'e2be8734009f5c5b9c1f6b677a77220a')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('r-mgraster', type=('build', 'run'))
+    depends_on('r-biom-utils', type=('build', 'run'))

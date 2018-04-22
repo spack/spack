@@ -22,21 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class Racon(CMakePackage):
+    """Ultrafast consensus module for raw de novo genome assembly of long
+     uncorrected reads."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://github.com/isovic/racon"
+    url      = "https://github.com/isovic/racon/releases/download/1.2.1/racon-v1.2.1.tar.gz"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('1.3.0', 'e00d61f391bce2af20ebd2a3aee1e05a')
+    version('1.2.1', '7bf273b965a5bd0f41342a9ffe5c7639')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('cmake@3.2:', type='build')
+    depends_on('python', type='build')
+
+    conflicts('%gcc@:4.7')
+    conflicts('%clang@:3.1')
+
+    def cmake_args(self):
+        args = ['-Dracon_build_wrapper=ON']
+        return args
+
+    def install(self, spec, prefix):
+        install_tree('spack-build/bin', prefix.bin)
+        install_tree('spack-build/lib', prefix.lib)

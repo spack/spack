@@ -25,18 +25,14 @@
 from spack import *
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class PyRequestsToolbelt(PythonPackage):
+    """A toolbelt of useful classes and functions to be used with
+    python-requests"""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://toolbelt.readthedocs.org/"
+    url      = "https://github.com/requests/toolbelt/archive/0.8.0.tar.gz"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab',
-            url='https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('0.8.0', 'de9bf7fbcc6ae341a5c4fd9f8912bcac')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-requests@2.0.1:3.0.0', type=('build', 'run'))
