@@ -35,7 +35,7 @@ class OmegaH(CMakePackage):
     homepage = "https://github.com/ibaned/omega_h"
     url      = "https://github.com/ibaned/omega_h/archive/v9.13.4.tar.gz"
 
-    version('9.13.4', git='https://github.com/ibaned/omega_h.git', tag='v9.13.4')
+    version('9.13.4', '035f9986ec07ad97ae0aa1e171872307')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
