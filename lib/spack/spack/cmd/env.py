@@ -118,6 +118,15 @@ class Environment(object):
             with pushd(self, args.output):
                 spec.package.do_install(**kwargs)
 
+    def uninstall(self, args):
+        environment = read(args.environment)
+
+        specs = environment._get_environment_specs(
+                recurse_dependencies=True)
+
+        args.all = False
+        spack.cmd.uninstall.uninstall_specs(args, specs)
+
     def list(self, stream, **kwargs):
         for user_spec, concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
@@ -439,6 +448,11 @@ def environment_install(args):
     prepare_repository(environment)
     environment.install(args)
 
+def environment_uninstall(args):
+    environment = read(args.environment)
+    prepare_repository(environment)
+    environment.uninstall(args)
+
 
 def dump_to_environment_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
@@ -637,6 +651,10 @@ version''')
         '-o', '--output', dest='output', default=None,
         help="Write install logs and setup files here (defaults to environment path)")
 
+    uninstall_parser = sp.add_parser(
+        'uninstall',
+        help='Uninstall all concretized specs in an environment')
+    spack.cmd.uninstall.add_common_arguments(uninstall_parser)
 
 def env(parser, args, **kwargs):
     action = {
@@ -651,6 +669,7 @@ def env(parser, args, **kwargs):
         'upgrade': environment_upgrade_dependency,
         'stage': environment_stage,
         'install': environment_install,
+        'uninstall': environment_uninstall,
         'update-config': environment_update_config,
     }
     action[args.environment_command](args)
