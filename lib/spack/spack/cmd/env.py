@@ -29,6 +29,7 @@ import spack.modules
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.cmd.install
+import spack.cmd.uninstall
 import spack.cmd.module
 import spack.cmd.common.arguments as arguments
 from spack.config import ConfigScope
@@ -114,7 +115,8 @@ class Environment(object):
             # that will be passed to Package.do_install API
             kwargs = dict()
             spack.cmd.install.update_kwargs_from_args(args,kwargs)
-            spec.package.do_install(*kwargs)
+            with pushd(self, args.output):
+                spec.package.do_install(**kwargs)
 
     def list(self, stream, **kwargs):
         for user_spec, concretized_hash in zip_longest(
@@ -513,6 +515,13 @@ def redirect_stdout(environment, ofname, defname):
             yield
             sys.stdout = original
 
+@contextmanager
+def pushd(environment, odname):
+    original = os.getcwd()
+    os.chdir(environment.path() if odname is None else odname)
+    yield
+    os.chdir(original)
+
 def environment_loads(args):
     # Set the module types that have been selected
     module_types = args.module_type
@@ -624,6 +633,9 @@ version''')
         'install',
         help='Install all concretized specs in an environment')
     spack.cmd.install.add_common_arguments(install_parser)
+    install_parser.add_argument(
+        '-o', '--output', dest='output', default=None,
+        help="Write install logs and setup files here (defaults to environment path)")
 
 
 def env(parser, args, **kwargs):
