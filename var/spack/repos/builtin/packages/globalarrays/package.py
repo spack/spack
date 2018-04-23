@@ -60,19 +60,19 @@ class Globalarrays(AutotoolsPackage):
 
         if '+blas' in self.spec:
             if '+int64' in self.spec:
-                args.append(['--with-blas8'])
+                args.append('--with-blas8')
             else:
-                args.append(['--with-blas'])
+                args.append('--with-blas')
 
         if '+lapack' in self.spec:
-            args.append(['--with-lapack'])
+            args.append('--with-lapack')
 
         if '+scalapack' in self.spec:
             if '+int64' in self.spec:
-                args.append(['--with-scalapack8'])
+                args.append('--with-scalapack8')
             else:
-                args.append(['--with-scalapack'])
+                args.append('--with-scalapack')
 
-        args.append(['--with-' + self.spec.variants['armci'].value])
+        args.append('--with-' + self.spec.variants['armci'].value)
 
         return args
