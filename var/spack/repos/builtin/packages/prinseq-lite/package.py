@@ -34,12 +34,12 @@ class PrinseqLite(Package):
 
     version('0.20.4', '3be1a572073ebbbecfeba42a42853ff5')
 
-    variant('nopca', default=True)
+    variant('nopca', default=True, description="Graphs version without PCA")
 
-    depends_on('perl')
-    depends_on('perl-cairo')
-    depends_on('perl-digest-md5')
-    depends_on('perl-json')
+    depends_on('perl', type='run')
+    depends_on('perl-cairo', type='run')
+    depends_on('perl-digest-md5', type='run')
+    depends_on('perl-json', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
