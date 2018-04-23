@@ -1,0 +1,42 @@
+diff -ruN LAXlib-orig/dspev_drv.f90 LAXlib/dspev_drv.f90
+--- a/LAXlib/dspev_drv.f90	2017-06-12 15:00:46.157372185 +0200
++++ b/LAXlib/dspev_drv.f90	2017-06-12 15:01:19.937371580 +0200
+@@ -708,11 +708,11 @@
+ 
+ #if defined(__ELPA_2016)
+      ! -> ELPA 2016.11.001_pre
+-     ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+-     success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols, ortho_comm)
++     !ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
++     !success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols, ortho_comm)
+      ! -> ELPA 2016.05.003
+-     !ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+-     !success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)
++     ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
++     success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)
+ #elif defined(__ELPA_2015)
+      ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+      ierr = solve_evp_real(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)
+diff -ruN LAXlib-orig/zhpev_drv.f90 LAXlib/zhpev_drv.f90
+--- a/LAXlib/zhpev_drv.f90	2017-06-12 15:00:46.157372185 +0200
++++ b/LAXlib/zhpev_drv.f90	2017-06-12 15:02:09.309370696 +0200
+@@ -1519,13 +1519,13 @@
+ 
+ #if defined(__ELPA_2016)
+      ! -> ELPA 2016.11.001_pre
+-     ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+-     success = solve_evp_complex_1stage_double(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
+-                           mpi_comm_rows, mpi_comm_cols, ortho_comm)
++     !ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
++     !success = solve_evp_complex_1stage_double(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
++     !                      mpi_comm_rows, mpi_comm_cols, ortho_comm)
+      ! -> ELPA 2016.05.003
+-     !ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+-     !success = solve_evp_complex(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
+-     !                      mpi_comm_rows, mpi_comm_cols)
++     ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
++     success = solve_evp_complex(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
++                           mpi_comm_rows, mpi_comm_cols)
+ #elif defined(__ELPA_2015)
+      ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+      ierr = solve_evp_complex(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &

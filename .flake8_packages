@@ -1,0 +1,22 @@
+# -*- conf -*-
+# flake8 settings for Spack package files.
+#
+# This should include all the same exceptions that we use for core files.
+#
+# In Spack packages, we also allow the single `from spack import *`
+# wildcard import and dependencies can set globals for their
+# dependents. So we add exceptions for checks related to undefined names.
+#
+# Note that we also add *per-line* exemptions for certain patters in the
+# `spack flake8` command.  This is where F403 for `from spack import *`
+# is added (beause we *only* allow that wildcard).
+#
+# See .flake8 for regular exceptions.
+#
+# Redefinition exceptions:
+# - F405: `name` may be undefined, or undefined from star imports: `module`
+# - F821: undefined name `name` (needed for cmake, configure, etc.)
+#
+[flake8]
+ignore = E129,E221,E241,E272,E731,F999,F405,F821
+max-line-length = 79

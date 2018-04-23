@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -110,7 +110,7 @@ class Pagmo(CMakePackage):
         if '+python' in spec:
             args.extend([
                 # By default picks up the system python not the Spack build
-                '-DPYTHON_EXECUTABLE={0}'.format(python_exe),
+                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
                 # By default installs to the python prefix not the pagmo prefix
                 '-DPYTHON_MODULES_DIR={0}'.format(site_packages_dir),
             ])

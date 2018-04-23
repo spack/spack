@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,28 +30,32 @@ import re
 import llnl.util.tty as tty
 import spack
 import spack.cmd
-import spack.cmd.checksum
 import spack.util.web
 from llnl.util.filesystem import mkdirp
 from spack.repository import Repo
 from spack.spec import Spec
-from spack.util.executable import which
-from spack.util.naming import *
-from spack.url import *
+from spack.util.executable import which, ProcessError
+from spack.util.naming import mod_to_class
+from spack.util.naming import simplify_name, valid_fully_qualified_module_name
+from spack.url import UndetectableNameError, UndetectableVersionError
+from spack.url import parse_name, parse_version
 
 description = "create a new package file"
+section = "packaging"
+level = "short"
+
 
 package_template = '''\
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -190,18 +194,39 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class QMakePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for QMake-based packages"""
+
+    base_class_name = 'QMakePackage'
+
+    body = """\
+    def qmake_args(self):
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
-    dependencies = """\
-    # FIXME: Add additional dependencies if required.
-    depends_on('scons', type='build')"""
+    base_class_name = 'SConsPackage'
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        scons('prefix={0}'.format(prefix))
-        scons('install')"""
+    def build_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to build.
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
+class WafPackageTemplate(PackageTemplate):
+    """Provides appropriate override for Waf-based packages"""
+
+    base_class_name = 'WafPackage'
+
+    body = """\
+    # FIXME: Override configure_args(), build_args(),
+    # or install_args() if necessary."""
 
 
 class BazelPackageTemplate(PackageTemplate):
@@ -252,7 +277,11 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    # FIXME: Override install() if necessary."""
+    def configure_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to install via --configure-args
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
@@ -303,20 +332,13 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
+    base_class_name = 'OctavePackage'
+
     dependencies = """\
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
     # depends_on('octave-foo', type=('build', 'run'))"""
-
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        octave('--quiet', '--norc',
-               '--built-in-docstrings-file=/dev/null',
-               '--texi-macros-file=/dev/null',
-               '--eval', 'pkg prefix {0}; pkg install {1}'.format(
-                   prefix, self.stage.archive_file))"""
 
     def __init__(self, name, *args):
         # If the user provided `--name octave-splines`, don't rename it
@@ -342,11 +364,22 @@ class MakefilePackageTemplate(PackageTemplate):
         # makefile.filter('CC = .*', 'CC = cc')"""
 
 
+class IntelPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for licensed Intel software"""
+
+    base_class_name = 'IntelPackage'
+
+    body = """\
+    # FIXME: Override `setup_environment` if necessary."""
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
+    'qmake':      QMakePackageTemplate,
     'scons':      SconsPackageTemplate,
+    'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
@@ -354,7 +387,8 @@ templates = {
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
-    'generic':    PackageTemplate
+    'intel':      IntelPackageTemplate,
+    'generic':    PackageTemplate,
 }
 
 
@@ -407,18 +441,23 @@ class BuildSystemGuesser:
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
+        # NOTE: Order is important here. If a package supports multiple
+        # build systems, we choose the first match in this list.
         clues = [
-            ('/configure$',         'autotools'),
-            ('/configure.(in|ac)$', 'autoreconf'),
-            ('/Makefile.am$',       'autoreconf'),
-            ('/CMakeLists.txt$',    'cmake'),
-            ('/SConstruct$',        'scons'),
-            ('/setup.py$',          'python'),
-            ('/NAMESPACE$',         'r'),
-            ('/WORKSPACE$',         'bazel'),
-            ('/Build.PL$',          'perlbuild'),
-            ('/Makefile.PL$',       'perlmake'),
-            ('/(GNU)?[Mm]akefile$', 'makefile'),
+            (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/configure$',          'autotools'),
+            (r'/configure\.(in|ac)$', 'autoreconf'),
+            (r'/Makefile\.am$',       'autoreconf'),
+            (r'/SConstruct$',         'scons'),
+            (r'/waf$',                'waf'),
+            (r'/setup\.py$',          'python'),
+            (r'/NAMESPACE$',          'r'),
+            (r'/WORKSPACE$',          'bazel'),
+            (r'/Build\.PL$',          'perlbuild'),
+            (r'/Makefile\.PL$',       'perlmake'),
+            (r'/.*\.pro$',            'qmake'),
+            (r'/(GNU)?[Mm]akefile$',  'makefile'),
+            (r'/DESCRIPTION$',        'octave'),
         ]
 
         # Peek inside the compressed file.
@@ -426,14 +465,14 @@ class BuildSystemGuesser:
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         else:
             try:
                 tar    = which('tar')
                 output = tar('--exclude=*/*/*', '-tf',
                              stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         lines = output.split('\n')
 
@@ -451,10 +490,12 @@ def get_name(args):
     If a name was provided, always use that. Otherwise, if a URL was
     provided, extract the name from that. Otherwise, use a default.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
+    Args:
+        args (param argparse.Namespace): The arguments given to
+            ``spack create``
 
-    :returns: The name of the package
-    :rtype: str
+    Returns:
+        str: The name of the package
     """
 
     # Default package name
@@ -487,10 +528,11 @@ def get_url(args):
 
     Use a default URL if none is provided.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
 
-    :returns: The URL of the package
-    :rtype: str
+    Returns:
+        str: The URL of the package
     """
 
     # Default URL
@@ -510,11 +552,13 @@ def get_versions(args, name):
 
     Returns default values if no URL is provided.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param str name: The name of the package
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        name (str): The name of the package
 
-    :returns: Versions and hashes, and a BuildSystemGuesser object
-    :rtype: str and BuildSystemGuesser
+    Returns:
+        str and BuildSystemGuesser: Versions and hashes, and a
+            BuildSystemGuesser object
     """
 
     # Default version, hash, and guesser
@@ -538,7 +582,7 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.cmd.checksum.get_checksums(
+        versions = spack.util.web.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
 
@@ -552,12 +596,13 @@ def get_build_system(args, guesser):
     is provided, download the tarball and peek inside to guess what
     build system it uses. Otherwise, use a generic template by default.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param BuildSystemGuesser guesser: The first_stage_function given to \
-        ``spack checksum`` which records the build system it detects
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        guesser (BuildSystemGuesser): The first_stage_function given to
+            ``spack checksum`` which records the build system it detects
 
-    :returns: The name of the build system template to use
-    :rtype: str
+    Returns:
+        str: The name of the build system template to use
     """
 
     # Default template
@@ -584,11 +629,12 @@ def get_repository(args, name):
     """Returns a Repo object that will allow us to determine the path where
     the new package file should be created.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param str name: The name of the package to create
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        name (str): The name of the package to create
 
-    :returns: A Repo object capable of determining the path to the package file
-    :rtype: Repo
+    Returns:
+        Repo: A Repo object capable of determining the path to the package file
     """
     spec = Spec(name)
     # Figure out namespace for spec
@@ -605,7 +651,7 @@ def get_repository(args, name):
         repo = Repo(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die("Can't create package with namespace {0} in repo with "
-                    "namespace {0}".format(spec.namespace, repo.namespace))
+                    "namespace {1}".format(spec.namespace, repo.namespace))
     else:
         if spec.namespace:
             repo = spack.repo.get_repo(spec.namespace, None)

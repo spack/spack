@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,7 @@ class PyFlake8(PythonPackage):
     homepage = "https://github.com/PyCQA/flake8"
     url      = "https://github.com/PyCQA/flake8/archive/3.0.4.tar.gz"
 
+    version('3.5.0', '4e312803bbd8e4a1e566ffac887ae647')
     version('3.0.4', 'cf2a7d8c92070f7b62253404ffb54df7')
     version('2.5.4', '366dd1de6c300254c830b81e66979f06')
 
@@ -40,25 +41,31 @@ class PyFlake8(PythonPackage):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-flake8 requires py-setuptools during runtime as well.
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@30:', type=('build', 'run'))
 
+    # pyflakes >= 1.5.0, < 1.7.0
+    depends_on('py-pyflakes@1.5.0:1.6.999', when='@3.5.0', type=('build', 'run'))
     # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
     depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=('build', 'run'))
     # pyflakes >= 0.8.1, < 1.1
     depends_on('py-pyflakes@0.8.1:1.0.0', when='@2.5.4', type=('build', 'run'))
 
+    # pycodestyle >= 2.3.0, < 2.4.0
+    depends_on('py-pycodestyle@2.3.0:2.3.999', when='@3.5.0', type=('build', 'run'))
     # pycodestyle >= 2.0.0, < 2.1.0
     depends_on('py-pycodestyle@2.0.0:2.0.999', when='@3.0.4', type=('build', 'run'))
     # pep8 >= 1.5.7, != 1.6.0, != 1.6.1, != 1.6.2
     depends_on('py-pycodestyle@1.5.7,1.7.0:', when='@2.5.4', type=('build', 'run'))
 
+    # mccabe >= 0.6.0, < 0.7.0
+    depends_on('py-mccabe@0.6.0:0.6.999', when='@3.5.0', type=('build', 'run'))
     # mccabe >= 0.5.0, < 0.6.0
     depends_on('py-mccabe@0.5.0:0.5.999', when='@3.0.4', type=('build', 'run'))
     # mccabe >= 0.2.1, < 0.5
     depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=('build', 'run'))
 
     # These dependencies breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
+    # See https://github.com/spack/spack/issues/2793
     # depends_on('py-configparser', when='^python@:3.3', type=('build', 'run'))
     # depends_on('py-enum34', when='^python@:3.1', type=('build', 'run'))
     depends_on('py-configparser', type=('build', 'run'))
@@ -66,3 +73,7 @@ class PyFlake8(PythonPackage):
 
     # TODO: Add test dependencies
     # depends_on('py-nose', type='test')
+
+    def patch(self):
+        """Filter pytest-runner requirement out of setup.py."""
+        filter_file("['pytest-runner']", "[]", 'setup.py', string=True)

@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,10 +46,14 @@ class GoBootstrap(Package):
     # See: https://golang.org/doc/install/source#go14 and
     # https://github.com/golang/go/issues/17545 and
     # https://github.com/golang/go/issues/16352
+    version('1.4-bootstrap-20171003', 'dbf727a4b0e365bf88d97cbfde590016',
+            url='https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz')
+    version('1.4-bootstrap-20170531', 'd2cc61cb9f829b3510ee39c0c5568014',
+            url='https://storage.googleapis.com/golang/go1.4-bootstrap-20170531.tar.gz')
     version('1.4-bootstrap-20161024', '76e42c8152e8560ded880a6d1d1f53cb',
             url='https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz')
 
-    provides('golang@:1.4-bootstrap-20161024')
+    provides('golang@:1.4-bootstrap-20171003')
 
     depends_on('git', type=('build', 'link', 'run'))
 
@@ -64,10 +68,6 @@ class GoBootstrap(Package):
             r'^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$',
             r'# \1\2\3',
         )
-
-    @when('@1.5.0:')  # noqa: F811
-    def patch(self):
-        pass
 
     def install(self, spec, prefix):
         env['CGO_ENABLED'] = '0'

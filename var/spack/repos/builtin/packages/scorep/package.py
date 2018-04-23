@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,10 +34,13 @@ class Scorep(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz"
 
+    version('3.1',   '065bf8eb08398e8146c895718ddb9145')
     version('3.0',   '44da8beaa3f71436a5f6fe51938aab2f')
     version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
     version('1.3',   '9db6f957b7f51fa01377a9537867a55c')
+
+    patch('gcc7.patch')
 
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more
@@ -62,12 +65,13 @@ class Scorep(AutotoolsPackage):
 
     depends_on("mpi")
     depends_on("papi")
+    depends_on('pdt')
 
     variant('shmem', default=False, description='Enable shmem tracing')
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
-    # https://github.com/LLNL/spack/issues/1609
+    # https://github.com/spack/spack/issues/1609
     conflicts('platform=darwin')
 
     def configure_args(self):
@@ -79,11 +83,29 @@ class Scorep(AutotoolsPackage):
             "--with-cube=%s" % spec['cube'].prefix.bin,
             "--with-papi-header=%s" % spec['papi'].prefix.include,
             "--with-papi-lib=%s" % spec['papi'].prefix.lib,
-            "--enable-shared",
-        ]
+            "--with-pdt=%s" % spec['pdt'].prefix.bin,
+            "--enable-shared"]
+
+        cname = spec.compiler.name
+        config_args.append('--with-nocross-compiler-suite={0}'.format(cname))
+
+        if spec.satisfies('^intel-mpi'):
+            config_args.append('--with-mpi=intel3')
+        elif spec.satisfies('^mpich') or spec.satisfies('^mvapich2'):
+            config_args.append('--with-mpi=mpich3')
+        elif spec.satisfies('^openmpi'):
+            config_args.append('--with-mpi=openmpi')
 
         if '~shmem' in spec:
             config_args.append("--without-shmem")
 
-        config_args.extend(["CFLAGS=-fPIC", "CXXFLAGS=-fPIC"])
+        config_args.extend([
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+            'MPICC={0}'.format(spec['mpi'].mpicc),
+            'MPICXX={0}'.format(spec['mpi'].mpicxx),
+            'MPIF77={0}'.format(spec['mpi'].mpif77),
+            'MPIFC={0}'.format(spec['mpi'].mpifc)
+        ])
+
         return config_args

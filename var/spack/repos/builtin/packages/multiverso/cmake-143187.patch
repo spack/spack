@@ -1,0 +1,28 @@
+From 478bcfecadafb09aa73bacab35d932851b323142 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Mon, 10 Apr 2017 15:29:50 +0800
+Subject: [PATCH 1/1] Patch 1431875.
+
+---
+ CMakeLists.txt | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6a824f1..100b21c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -30,9 +30,10 @@ ADD_SUBDIRECTORY(Test/unittests)
+ ADD_SUBDIRECTORY(Applications/WordEmbedding)
+ ADD_SUBDIRECTORY(Applications/LogisticRegression)
+
+-if(USE_INSTALL_MULTIVERSO)
++if(INSTALL_MULTIVERSO)
+     install (DIRECTORY ${PROJECT_SOURCE_DIR}/include/multiverso DESTINATION include)
+-endif(USE_INSTALL_MULTIVERSO)
++    install (DIRECTORY ${PROJECT_SOURCE_DIR}/Test DESTINATION .)
++endif(INSTALL_MULTIVERSO)
+
+
+ # uninstall target
+--
+2.11.1

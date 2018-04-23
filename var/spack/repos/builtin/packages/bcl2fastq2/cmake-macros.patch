@@ -1,0 +1,10 @@
+--- a/src/cmake/bcl2fastq_redist_macros.cmake        2017-05-11 15:03:27.652495488 -0700
++++ b/src/cmake/bcl2fastq_redist_macros.cmake        2017-05-11 15:06:38.326745889 -0700
+@@ -30,6 +30,7 @@
+        message(" Found: ${libname}, correct version ${version}")
+        message("   ${${libname}_UPPER}_INCLUDE_DIR = ${${${libname}_UPPER}_INCLUDE_DIR}")
+        message("   ${${libname}_UPPER}_LIBRARIES = ${${${libname}_UPPER}_LIBRARIES}")
++       set (HAVE_${${libname}_UPPER} true CACHE BOOL "package" FORCE)
+     else("${${${libname}_UPPER}_VERSION_STRING}" STREQUAL "${version}")
+        message(" Not found: ${libname}, incorrect version ( ${${${libname}_UPPER}_VERSION} )")
+        set(${${libname}_UPPER}_FOUND "FALSE")

@@ -1,0 +1,21 @@
+enable:
+  - tcl
+tcl:
+  all:
+    filter:
+      environment_blacklist':
+        - CMAKE_PREFIX_PATH
+    environment:
+      set:
+        '${PACKAGE}_ROOT_${PREFIX}': '${PREFIX}'
+
+  'platform=test target=x86_64':
+    environment:
+      set:
+        FOO_${OPTIONS}: 'foo'
+      unset:
+        - BAR
+
+  'platform=test target=x86_32':
+    load:
+      - 'foo/bar'

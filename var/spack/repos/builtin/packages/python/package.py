@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,19 +24,22 @@
 ##############################################################################
 import ast
 import os
+import platform
 import re
-from contextlib import closing
+import sys
 
-import spack
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from llnl.util.filesystem import force_remove
+
+import spack
 from spack import *
-from spack.util.environment import *
+from spack.util.environment import is_system_path
+from spack.util.prefix import Prefix
 import spack.util.spack_json as sjson
 
 
-class Python(Package):
+class Python(AutotoolsPackage):
     """The Python programming language."""
 
     homepage = "http://www.python.org"
@@ -44,6 +47,11 @@ class Python(Package):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
+    version('3.6.4', '9de6494314ea199e3633211696735f65')
+    version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
+    version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
+    version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
     version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
@@ -52,7 +60,8 @@ class Python(Package):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700', preferred=True)
+    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724', preferred=True)
+    version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
     version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
@@ -61,6 +70,10 @@ class Python(Package):
 
     extendable = True
 
+    # --enable-shared is known to cause problems for some users on macOS
+    # See http://bugs.python.org/issue29846
+    variant('shared', default=sys.platform != 'darwin',
+            description='Enable shared libraries')
     variant('tk', default=False, description='Provide support for Tkinter')
     variant('ucs4', default=False,
             description='Enable UCS4 (wide) unicode strings')
@@ -71,6 +84,15 @@ class Python(Package):
     # builds then use a 32-bit type for Py_UNICODE and store Unicode data
     # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
     # compatible.
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
+
+    variant('dbm', default=True, description='Provide support for dbm')
+    variant(
+        'optimizations',
+        default=False,
+        description='Enable expensive build-time optimizations, if available'
+    )
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -80,14 +102,31 @@ class Python(Package):
     depends_on("zlib")
     depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
+    depends_on("gdbm", when='+dbm')
 
-    patch('ncurses.patch')
+    # Patch does not work for Python 3.1
+    patch('ncurses.patch', when='@:2.8,3.2:')
+
+    # Ensure that distutils chooses correct compiler option for RPATH on cray:
+    patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
+    patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
+
+    # For more information refer to this bug report:
+    # https://bugs.python.org/issue29712
+    conflicts(
+        '@:2.8 +shared',
+        when='+optimizations',
+        msg='+optimizations is incompatible with +shared in python@2.X'
+    )
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
 
-    @when('@2.7,3.4:')
+    # An in-source build with --enable-optimizations fails for python@3.X
+    build_directory = 'spack-build'
+
+    @when('@2.7:2.8,3.4:')
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
         # user's local configurations to change the Spack installation.  In
@@ -99,7 +138,9 @@ class Python(Package):
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
 
-    def install(self, spec, prefix):
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+
         # TODO: The '--no-user-cfg' option for Python installation is only in
         # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
         # adding support for ignoring user configuration will require
@@ -109,22 +150,35 @@ class Python(Package):
                       'user configurations are present.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
-        env['PYTHONHOME'], env['PYTHONPATH'] = prefix, prefix
-        env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
+        spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
-        # Rest of install is pretty standard except setup.py needs to
-        # be able to read the CPPFLAGS and LDFLAGS as it scans for the
-        # library and headers to build
+    def configure_args(self):
+        spec = self.spec
+
+        # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
+        # as it scans for the library and headers to build
         dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--with-threads',
-            '--enable-shared',
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
-        if spec.satisfies("platform=darwin") and ('%gcc' in spec):
+
+        if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
+                and '+optimizations' in spec:
+            config_args.append('--enable-optimizations')
+
+        if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
+
+        if spec.satisfies('%intel', strict=True) and \
+                spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
+            config_args.append('--with-icc')
+
+        if '+shared' in spec:
+            config_args.append('--enable-shared')
+        else:
+            config_args.append('--disable-shared')
 
         if '+ucs4' in spec:
             if spec.satisfies('@:2.7'):
@@ -139,18 +193,21 @@ class Python(Package):
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
 
-        configure(*config_args)
-        make()
-        make('install')
+        if '+pic' in spec:
+            config_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+
+        return config_args
+
+    @run_after('install')
+    def post_install(self):
+        spec = self.spec
+        prefix = self.prefix
 
         self.sysconfigfilename = '_sysconfigdata.py'
         if spec.satisfies('@3.6:'):
             # Python 3.6.0 renamed the sys config file
-            python3 = os.path.join(prefix.bin,
-                                   'python{0}'.format(self.version.up_to(1)))
-            python = Executable(python3)
             sc = 'import sysconfig; print(sysconfig._get_sysconfigdata_name())'
-            cf = python('-c', sc, output=str).strip('\n')
+            cf = self.command('-c', sc, output=str).strip()
             self.sysconfigfilename = '{0}.py'.format(cf)
 
         self._save_distutil_vars(prefix)
@@ -173,6 +230,12 @@ class Python(Package):
             for f in os.listdir(src):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
+
+        if spec.satisfies('@3:'):
+            os.symlink(os.path.join(prefix.bin, 'python3'),
+                       os.path.join(prefix.bin, 'python'))
+            os.symlink(os.path.join(prefix.bin, 'python3-config'),
+                       os.path.join(prefix.bin, 'python-config'))
 
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
@@ -204,7 +267,7 @@ class Python(Package):
         Spack partially covers this by setting environment variables that
         are also accounted for by distutils. Currently there is one more known
         variable that must be set, which is LDSHARED, so the method saves its
-        autogenerated value to pass it to the dependant package's setup script.
+        autogenerated value to pass it to the dependent package's setup script.
         """
 
         self._distutil_vars = {}
@@ -233,20 +296,20 @@ class Python(Package):
             pass
 
         if not input_dict:
-            tty.warn('Failed to find \'build_time_vars\' dictionary in file '
-                     '\'%s\'. This might cause the extensions that are '
-                     'installed with distutils to call compilers directly '
-                     'avoiding Spack\'s wrappers.' % input_filename)
+            tty.warn("Failed to find 'build_time_vars' dictionary in file "
+                     "'%s'. This might cause the extensions that are "
+                     "installed with distutils to call compilers directly "
+                     "avoiding Spack's wrappers." % input_filename)
             return
 
         for var_name in Python._DISTUTIL_VARS_TO_SAVE:
             if var_name in input_dict:
                 self._distutil_vars[var_name] = input_dict[var_name]
             else:
-                tty.warn('Failed to find key \'%s\' in \'build_time_vars\' '
-                         'dictionary in file \'%s\'. This might cause the '
-                         'extensions that are installed with distutils to '
-                         'call compilers directly avoiding Spack\'s wrappers.'
+                tty.warn("Failed to find key '%s' in 'build_time_vars' "
+                         "dictionary in file '%s'. This might cause the "
+                         "extensions that are installed with distutils to "
+                         "call compilers directly avoiding Spack's wrappers."
                          % (var_name, input_filename))
 
         if len(self._distutil_vars) > 0:
@@ -257,11 +320,11 @@ class Python(Package):
                     Python._DISTUTIL_CACHE_FILENAME)
                 with open(output_filename, 'w') as output_file:
                     sjson.dump(self._distutil_vars, output_file)
-            except:
-                tty.warn('Failed to save metadata for distutils. This might '
-                         'cause the extensions that are installed with '
-                         'distutils to call compilers directly avoiding '
-                         'Spack\'s wrappers.')
+            except Exception:
+                tty.warn("Failed to save metadata for distutils. This might "
+                         "cause the extensions that are installed with "
+                         "distutils to call compilers directly avoiding "
+                         "Spack's wrappers.")
                 # We make the cache empty if we failed to save it to file
                 # to provide the same behaviour as in the case when the cache
                 # is initialized by the method load_distutils_data().
@@ -280,7 +343,7 @@ class Python(Package):
                 if os.path.isfile(input_filename):
                     with open(input_filename) as input_file:
                         self._distutil_vars = sjson.load(input_file)
-            except:
+            except Exception:
                 pass
 
             if not self._distutil_vars:
@@ -319,6 +382,144 @@ class Python(Package):
     # ========================================================================
 
     @property
+    def command(self):
+        """Returns the Python command, which may vary depending
+        on the version of Python and how it was installed.
+
+        In general, Python 2 comes with ``python`` and ``python2`` commands,
+        while Python 3 only comes with a ``python3`` command.
+
+        :returns: The Python command
+        :rtype: Executable
+        """
+        # We need to be careful here. If the user is using an externally
+        # installed python, all 3 commands could be in the same directory.
+
+        # Search for `python2` iff using Python 2
+        if (self.spec.satisfies('@:2') and
+                os.path.exists(os.path.join(self.prefix.bin, 'python2'))):
+            command = 'python2'
+        # Search for `python3` iff using Python 3
+        elif (self.spec.satisfies('@3:') and
+                os.path.exists(os.path.join(self.prefix.bin, 'python3'))):
+            command = 'python3'
+        # If neither were found, try `python`
+        elif os.path.exists(os.path.join(self.prefix.bin, 'python')):
+            command = 'python'
+        else:
+            msg = 'Unable to locate {0} command in {1}'
+            raise RuntimeError(msg.format(self.name, self.prefix.bin))
+
+        # The python command may be a symlink if it was installed
+        # with Homebrew. Since some packages try to determine the
+        # location of libraries and headers based on the path,
+        # return the realpath
+        path = os.path.realpath(os.path.join(self.prefix.bin, command))
+
+        return Executable(path)
+
+    def print_string(self, string):
+        """Returns the appropriate print string depending on the
+        version of Python.
+
+        Examples:
+
+        * Python 2
+
+          .. code-block:: python
+
+             >>> self.print_string('sys.prefix')
+             'print sys.prefix'
+
+        * Python 3
+
+          .. code-block:: python
+
+             >>> self.print_string('sys.prefix')
+             'print(sys.prefix)'
+        """
+        if self.spec.satisfies('@:2'):
+            return 'print {0}'.format(string)
+        else:
+            return 'print({0})'.format(string)
+
+    def get_config_var(self, key):
+        """Returns the value of a single variable. Wrapper around
+        ``distutils.sysconfig.get_config_var()``."""
+
+        cmd = 'from distutils.sysconfig import get_config_var; '
+        cmd += self.print_string("get_config_var('{0}')".format(key))
+
+        return self.command('-c', cmd, output=str).strip()
+
+    def get_config_h_filename(self):
+        """Returns the full path name of the configuration header.
+        Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
+
+        cmd = 'from distutils.sysconfig import get_config_h_filename; '
+        cmd += self.print_string('get_config_h_filename()')
+
+        return self.command('-c', cmd, output=str).strip()
+
+    @property
+    def home(self):
+        """Most of the time, ``PYTHONHOME`` is simply
+        ``spec['python'].prefix``. However, if the user is using an
+        externally installed python, it may be symlinked. For example,
+        Homebrew installs python in ``/usr/local/Cellar/python/2.7.12_2``
+        and symlinks it to ``/usr/local``. Users may not know the actual
+        installation directory and add ``/usr/local`` to their
+        ``packages.yaml`` unknowingly. Query the python executable to
+        determine exactly where it is installed."""
+
+        prefix = self.get_config_var('prefix')
+        return Prefix(prefix)
+
+    @property
+    def libs(self):
+        # Spack installs libraries into lib, except on openSUSE where it
+        # installs them into lib64. If the user is using an externally
+        # installed package, it may be in either lib or lib64, so we need
+        # to ask Python where its LIBDIR is.
+        libdir = self.get_config_var('LIBDIR')
+
+        # The system Python installation on macOS and Homebrew installations
+        # install libraries into a Frameworks directory
+        frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+
+        if '+shared' in self.spec:
+            ldlibrary = self.get_config_var('LDLIBRARY')
+
+            if os.path.exists(os.path.join(libdir, ldlibrary)):
+                return LibraryList(os.path.join(libdir, ldlibrary))
+            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
+                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+            else:
+                msg = 'Unable to locate {0} libraries in {1}'
+                raise RuntimeError(msg.format(self.name, libdir))
+        else:
+            library = self.get_config_var('LIBRARY')
+
+            if os.path.exists(os.path.join(libdir, library)):
+                return LibraryList(os.path.join(libdir, library))
+            elif os.path.exists(os.path.join(frameworkprefix, library)):
+                return LibraryList(os.path.join(frameworkprefix, library))
+            else:
+                msg = 'Unable to locate {0} libraries in {1}'
+                raise RuntimeError(msg.format(self.name, libdir))
+
+    @property
+    def headers(self):
+        config_h = self.get_config_h_filename()
+
+        if os.path.exists(config_h):
+            return HeaderList(config_h)
+        else:
+            includepy = self.get_config_var('INCLUDEPY')
+            msg = 'Unable to locate {0} headers in {1}'
+            raise RuntimeError(msg.format(self.name, includepy))
+
+    @property
     def python_lib_dir(self):
         return join_path('lib', 'python{0}'.format(self.version.up_to(2)))
 
@@ -330,34 +531,27 @@ class Python(Package):
     def site_packages_dir(self):
         return join_path(self.python_lib_dir, 'site-packages')
 
+    @property
+    def easy_install_file(self):
+        return join_path(self.site_packages_dir, "easy-install.pth")
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Set PYTHONPATH to include site-packages dir for the
+        """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
-        # The python executable for version 3 may be python3 or python
-        # See https://github.com/LLNL/spack/pull/2173#issuecomment-257170199
-        pythonex = 'python{0}'.format('3' if self.spec.satisfies('@3') else '')
-        if os.path.isdir(self.prefix.bin):
-            base = self.prefix.bin
-        else:
-            base = self.prefix
-        if not os.path.isfile(os.path.join(base, pythonex)):
-            if self.spec.satisfies('@3'):
-                python = Executable(os.path.join(base, 'python'))
-                version = python('-c', 'import sys; print(sys.version)',
-                                 output=str)
-                if version.startswith('3'):
-                    pythonex = 'python'
-                else:
-                    raise RuntimeError('Cannot locate python executable')
-            else:
-                raise RuntimeError('Cannot locate python executable')
-        python = Executable(os.path.join(base, pythonex))
-        prefix = python('-c', 'import sys; print(sys.prefix)', output=str)
-        spack_env.set('PYTHONHOME', prefix.strip('\n'))
+
+        # If we set PYTHONHOME, we must also ensure that the corresponding
+        # python is found in the build environment. This to prevent cases
+        # where a system provided python is run against the standard libraries
+        # of a Spack built python. See issue #7128
+        spack_env.set('PYTHONHOME', self.home)
+
+        path = os.path.dirname(self.command.path)
+        if not is_system_path(path):
+            spack_env.prepend_path('PATH', path)
 
         python_paths = []
         for d in dependent_spec.traverse(
-                deptype=('build', 'run'), deptype_query='run'):
+                deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))
@@ -377,19 +571,15 @@ class Python(Package):
         In most cases, extensions will only need to have one line::
 
         setup_py('install', '--prefix={0}'.format(prefix))"""
-        python_path = join_path(
-            self.spec.prefix.bin,
-            'python{0}'.format('3' if self.spec.satisfies('@3') else '')
-        )
 
-        module.python_exe = python_path
-        module.python = Executable(python_path)
-        module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
+        module.python = self.command
+        module.setup_py = Executable(
+            self.command.path + ' setup.py --no-user-cfg')
 
         distutil_vars = self._load_distutil_vars()
 
         if distutil_vars:
-            for key, value in distutil_vars.iteritems():
+            for key, value in distutil_vars.items():
                 module.setup_py.add_default_env(key, value)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
@@ -399,6 +589,8 @@ class Python(Package):
                                               self.python_include_dir)
         module.site_packages_dir = join_path(dependent_spec.prefix,
                                              self.site_packages_dir)
+
+        self.spec.home = self.home
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
@@ -428,20 +620,24 @@ class Python(Package):
         if ext_pkg.name != 'py-pygments':
             patterns.append(r'bin/pygmentize$')
         if ext_pkg.name != 'py-numpy':
-            patterns.append(r'bin/f2py3?$')
+            patterns.append(r'bin/f2py[0-9.]*$')
 
         return match_predicate(ignore_arg, patterns)
 
-    def write_easy_install_pth(self, exts):
+    def write_easy_install_pth(self, exts, prefix=None):
+        if not prefix:
+            prefix = self.prefix
+
         paths = []
+        unique_paths = set()
+
         for ext in sorted(exts.values()):
-            ext_site_packages = join_path(ext.prefix, self.site_packages_dir)
-            easy_pth = join_path(ext_site_packages, "easy-install.pth")
+            easy_pth = join_path(ext.prefix, self.easy_install_file)
 
             if not os.path.isfile(easy_pth):
                 continue
 
-            with closing(open(easy_pth)) as f:
+            with open(easy_pth) as f:
                 for line in f:
                     line = line.rstrip()
 
@@ -454,17 +650,18 @@ class Python(Package):
                             re.search(r'setuptools.*egg$', line)):
                         continue
 
-                    paths.append(line)
+                    if line not in unique_paths:
+                        unique_paths.add(line)
+                        paths.append(line)
 
-        site_packages = join_path(self.prefix, self.site_packages_dir)
-        main_pth = join_path(site_packages, "easy-install.pth")
+        main_pth = join_path(prefix, self.easy_install_file)
 
         if not paths:
             if os.path.isfile(main_pth):
                 os.remove(main_pth)
 
         else:
-            with closing(open(main_pth, 'w')) as f:
+            with open(main_pth, 'w') as f:
                 f.write("import sys; sys.__plen = len(sys.path)\n")
                 for path in paths:
                     f.write("{0}\n".format(path))
@@ -478,18 +675,29 @@ class Python(Package):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
         super(Python, self).activate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
-        self.write_easy_install_pth(exts)
+
+        self.write_easy_install_pth(
+            exts,
+            prefix=extensions_layout.extendee_target_directory(self))
 
     def deactivate(self, ext_pkg, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
+        exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(exts)
+            self.write_easy_install_pth(
+                exts,
+                prefix=extensions_layout.extendee_target_directory(self))

@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,19 +34,23 @@ class Dia(Package):
 
     depends_on('intltool', type='build')
     depends_on('gtkplus@2.6.0:')
-    depends_on('cairo')
-    depends_on('libpng')
     depends_on('libxslt')
     depends_on('python')
     depends_on('swig')
+    depends_on('libsm')
+    depends_on('libuuid')
+    depends_on('libxinerama')
+    depends_on('libxrender')
+    depends_on('libxml2')
+    depends_on('freetype')
 
     # TODO: Optional dependencies, not yet supported by Spack
     # depends_on('libart')
-    # depends_on('py-gtk', type=('build', 'run'))
+    # depends_on('py-pygtk', type=('build', 'run'))
 
     def url_for_version(self, version):
         """Handle Dia's version-based custom URLs."""
-        return 'https://ftp.gnome.org/pub/gnome/source/dia/%s/dia-%s.tar.xz' % (version.up_to(2), version)
+        return 'https://ftp.gnome.org/pub/gnome/sources/dia/%s/dia-%s.tar.xz' % (version.up_to(2), version)
 
     def install(self, spec, prefix):
 

@@ -3,13 +3,12 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    = -E
-JOBS          ?= $(shell python -c 'import multiprocessing; print multiprocessing.cpu_count()')
-SPHINXBUILD   = sphinx-build -j $(JOBS)
+SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
 
 export PYTHONPATH := ../../spack:$(PYTHONPATH)
-APIDOC_FILES  = spack*.rst
+APIDOC_FILES  = spack*.rst llnl*.rst
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -18,7 +17,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext apidoc
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext apidoc dashdoc
 
 all: html
 
@@ -58,7 +57,8 @@ upload:
 	git push -f github gh-pages
 
 apidoc:
-	sphinx-apidoc -T -o . $(PYTHONPATH)/spack
+	sphinx-apidoc -f -T -o . ../spack
+	sphinx-apidoc -f -T -o . ../llnl
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -83,7 +83,7 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -f package_list.rst command_index.rst modules.rst
+	-rm -f command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
 html:
@@ -196,3 +196,9 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+dashdoc:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/dashdoc
+	doc2dash -A -v -n spack -d $(BUILDDIR)/ -f -I index.html -j $(BUILDDIR)/dashdoc
+	@echo
+	@echo "Build finished. The Docset is in $(BUILDDIR)/dashdoc."

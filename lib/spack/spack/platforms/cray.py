@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,9 +28,10 @@ import llnl.util.tty as tty
 from spack import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
-from spack.operating_systems.linux_distro import LinuxDistro
+from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
+from spack.util.module_cmd import get_module_cmd, unload_module
 
 
 def _get_modules_in_modulecmd_output(output):
@@ -87,7 +88,7 @@ class Cray(Platform):
         else:
             raise NoPlatformError()
 
-        front_distro = LinuxDistro()
+        front_distro = CrayFrontend()
         back_distro = Cnl()
 
         self.default_os = str(back_distro)
@@ -102,11 +103,22 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
+        # Unload these modules to prevent any silent linking or unnecessary
+        # I/O profiling in the case of darshan.
+        modules_to_unload = ["cray-mpich", "darshan", "cray-libsci"]
+        for module in modules_to_unload:
+            unload_module(module)
+
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
         cray_wrapper_names = join_path(build_env_path, 'cray')
+
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
             env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)
+
+        # Makes spack installed pkg-config work on Crays
+        env.append_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
+        env.append_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")
 
     @classmethod
     def detect(cls):
@@ -142,8 +154,7 @@ class Cray(Platform):
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
         if getattr(self, '_craype_targets', None) is None:
-            module = which('modulecmd', required=True)
-            module.add_default_arg('python')
+            module = get_module_cmd()
             output = module('avail', '-t', 'craype-', output=str, error=str)
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []

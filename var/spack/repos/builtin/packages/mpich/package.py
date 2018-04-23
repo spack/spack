@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Mpich(AutotoolsPackage):
@@ -34,6 +35,7 @@ class Mpich(AutotoolsPackage):
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
+    version('3.2.1', 'e175452f4d61646a52c73031683fc375')
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
     version('3.1.3', '93cb17f91ac758cbf9174ecb03563778')
@@ -41,14 +43,52 @@ class Mpich(AutotoolsPackage):
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
+    version('develop', git='git://github.com/pmodels/mpich', submodules=True)
 
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('pmi',   default=True,  description='Build with PMI support')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant(
+        'device',
+        default='ch3',
+        description='''Abstract Device Interface (ADI)
+implementation. The ch4 device is currently in experimental state''',
+        values=('ch3', 'ch4'),
+        multi=False
+    )
+    variant(
+        'netmod',
+        default='tcp',
+        description='''Network module. Only single netmod builds are
+supported. For ch3 device configurations, this presumes the
+ch3:nemesis communication channel. ch3:sock is not supported by this
+spack package at this time.''',
+        values=('tcp', 'mxm', 'ofi', 'ucx'),
+        multi=False
+    )
 
+    provides('mpi')
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
+
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
+
+    # fix MPI_Barrier segmentation fault
+    # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
+    # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
+    patch('mpich32_clang.patch', when='@3.2%clang')
+
+    depends_on('libfabric', when='netmod=ofi')
+
+    conflicts('device=ch4', when='@:3.2')
+    conflicts('netmod=ofi', when='@:3.1.4')
+    conflicts('netmod=ucx', when='device=ch3')
+    conflicts('netmod=mxm', when='device=ch4')
+    conflicts('netmod=mxm', when='@:3.1.3')
+    conflicts('netmod=tcp', when='device=ch4')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
@@ -86,6 +126,15 @@ class Mpich(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
+    def autoreconf(self, spec, prefix):
+        """Not needed usually, configure should be already there"""
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else bootstrap with autotools
+        bash = which('bash')
+        bash('./autogen.sh')
+
     @run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
@@ -98,7 +147,7 @@ class Mpich(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        return [
+        config_args = [
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--with-pmi={0}'.format('yes' if '+pmi' in spec else 'no'),
@@ -106,33 +155,22 @@ class Mpich(AutotoolsPackage):
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
 
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-        compilers that Spack built the package with.
+        # setup device configuration
+        device_config = ''
+        if 'device=ch4' in spec:
+            device_config = '--with-device=ch4:'
+        elif 'device=ch3' in spec:
+            device_config = '--with-device=ch3:nemesis:'
 
-        If this isn't done, they'll have CC, CXX, F77, and FC set
-        to Spack's generic cc, c++, f77, and f90.  We want them to
-        be bound to whatever compiler they were built with."""
+        if 'netmod=ucx' in spec:
+            device_config += 'ucx'
+        elif 'netmod=ofi' in spec:
+            device_config += 'ofi'
+        elif 'netmod=mxm' in spec:
+            device_config += 'mxm'
+        elif 'netmod=tcp' in spec:
+            device_config += 'tcp'
 
-        mpicc = join_path(self.prefix.bin, 'mpicc')
-        mpicxx = join_path(self.prefix.bin, 'mpicxx')
-        mpif77 = join_path(self.prefix.bin, 'mpif77')
-        mpif90 = join_path(self.prefix.bin, 'mpif90')
+        config_args.append(device_config)
 
-        # Substitute Spack compile wrappers for the real
-        # underlying compiler
-        kwargs = {
-            'ignore_absent': True,
-            'backup': False,
-            'string': True
-        }
-        filter_file(env['CC'],  self.compiler.cc,  mpicc,  **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'],  self.compiler.fc,  mpif90, **kwargs)
-
-        # Remove this linking flag if present
-        # (it turns RPATH into RUNPATH)
-        for wrapper in (mpicc, mpicxx, mpif77, mpif90):
-            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)
+        return config_args

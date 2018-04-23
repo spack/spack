@@ -1,14 +1,14 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -64,8 +64,15 @@ mock_packages_path = join_path(repos_path, "builtin.mock")
 user_config_path = os.path.expanduser('~/.spack')
 
 prefix = spack_root
-opt_path       = join_path(prefix, "opt")
-etc_path       = join_path(prefix, "etc")
+opt_path        = join_path(prefix, "opt")
+etc_path        = join_path(prefix, "etc")
+system_etc_path = '/etc'
+
+# GPG paths.
+gpg_keys_path      = join_path(var_path, "gpg")
+mock_gpg_data_path = join_path(var_path, "gpg.mock", "data")
+mock_gpg_keys_path = join_path(var_path, "gpg.mock", "keys")
+gpg_path           = join_path(opt_path, "spack", "gpg")
 
 
 #-----------------------------------------------------------------------------
@@ -83,13 +90,13 @@ from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
-
+from spack.package_prefs import PackageTesting
 
 #-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
 #-----------------------------------------------------------------------------
 # Version information
-spack_version = Version("0.10.0")
+spack_version = Version("0.11.2")
 
 
 # Set up the default packages database.
@@ -127,6 +134,13 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+binary_cache_retrieved_specs = set()
+
+
+#: Directories where to search for templates
+template_dirs = spack.config.get_config('config')['template_dirs']
+template_dirs = [canonicalize_path(x) for x in template_dirs]
+
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
 insecure = not _config.get('verify_ssl', True)
@@ -147,6 +161,10 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
+# Needed for test dependencies
+package_testing = PackageTesting()
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
@@ -163,30 +181,50 @@ __all__ = []
 
 from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.scons import SConsPackage
+from spack.build_systems.waf import WafPackage
+from spack.build_systems.octave import OctavePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
+from spack.build_systems.intel import IntelPackage
 
 __all__ += [
     'run_before',
     'run_after',
     'on_package_attributes',
     'Package',
-    'CMakePackage',
-    'AutotoolsPackage',
     'MakefilePackage',
+    'AspellDictPackage',
+    'AutotoolsPackage',
+    'CMakePackage',
+    'CudaPackage',
+    'QMakePackage',
+    'SConsPackage',
+    'WafPackage',
+    'OctavePackage',
     'PythonPackage',
     'RPackage',
-    'PerlPackage'
+    'PerlPackage',
+    'IntelPackage',
 ]
+
+from spack.mixins import filter_compiler_wrappers
+__all__ += ['filter_compiler_wrappers']
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps
-__all__ += ['Spec', 'alldeps']
+from spack.spec import Spec
+__all__ += ['Spec']
+
+from spack.dependency import all_deptypes
+__all__ += ['all_deptypes']
 
 from spack.multimethod import when
 __all__ += ['when']
@@ -203,8 +241,24 @@ import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
-# User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", "vi"))
+
+# Set up the user's editor
+# $EDITOR environment variable has the highest precedence
+editor = os.environ.get('EDITOR')
+
+# if editor is not set, use some sensible defaults
+if editor is not None:
+    editor = Executable(editor)
+else:
+    editor = which('vim', 'vi', 'emacs', 'nano')
+
+# If there is no editor, only raise an error if we actually try to use it.
+if not editor:
+    def editor_not_found(*args, **kwargs):
+        raise EnvironmentError(
+            'No text editor found! Please set the EDITOR environment variable '
+            'to your preferred text editor.')
+    editor = editor_not_found
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
@@ -215,5 +269,5 @@ __all__ += [
 
 # Add default values for attributes that would otherwise be modified from
 # Spack main script
-debug = True
+debug = False
 spack_working_dir = None

@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,7 +24,7 @@
 ##############################################################################
 """Test YAML serialization for specs.
 
-YAML format preserves DAG informatoin in the spec.
+YAML format preserves DAG information in the spec.
 
 """
 from collections import Iterable, Mapping
@@ -70,6 +70,12 @@ def test_ambiguous_version_spec(builtin_mock):
 
 def test_concrete_spec(config, builtin_mock):
     spec = Spec('mpileaks+debug~opt')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+
+def test_yaml_multivalue():
+    spec = Spec('multivalue_variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)
 
@@ -189,6 +195,16 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         assert spec.dag_hash() == round_trip_json_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
+        # full_hashes are equal
+        spec.concretize()
+        round_trip_yaml_spec.concretize()
+        round_trip_json_spec.concretize()
+        round_trip_reversed_yaml_spec.concretize()
+        round_trip_reversed_json_spec.concretize()
+        assert spec.full_hash() == round_trip_yaml_spec.full_hash()
+        assert spec.full_hash() == round_trip_json_spec.full_hash()
+        assert spec.full_hash() == round_trip_reversed_yaml_spec.full_hash()
+        assert spec.full_hash() == round_trip_reversed_json_spec.full_hash()
 
 
 def reverse_all_dicts(data):

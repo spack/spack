@@ -1,13 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+#############################################################################
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,11 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
+import llnl.util.lang
 import spack
 import spack.architecture
+
 from spack.concretize import find_spec
-from spack.spec import Spec, CompilerSpec, ConflictsInSpecError, SpecError
+from spack.spec import Spec, CompilerSpec
+from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
 def check_spec(abstract, concrete):
@@ -75,7 +79,7 @@ def check_concretize(abstract_spec):
         # dag
         'callpath', 'mpileaks', 'libelf',
         # variant
-        'mpich+debug', 'mpich~debug', 'mpich debug=2', 'mpich',
+        'mpich+debug', 'mpich~debug', 'mpich debug=True', 'mpich',
         # compiler flags
         'mpich cppflags="-O3"',
         # with virtual
@@ -89,19 +93,6 @@ def check_concretize(abstract_spec):
     ]
 )
 def spec(request):
-    """Spec to be concretized"""
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        'conflict%clang',
-        'conflict%clang+foo',
-        'conflict-parent%clang',
-        'conflict-parent@0.9^conflict~foo'
-    ]
-)
-def conflict_spec(request):
     """Spec to be concretized"""
     return request.param
 
@@ -157,6 +148,18 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
+    def test_concretize_disable_compiler_existence_check(self):
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            check_concretize('dttop %gcc@100.100')
+
+        try:
+            spack.concretizer.disable_compiler_existence_check()
+            spec = check_concretize('dttop %gcc@100.100')
+            assert spec.satisfies('%gcc@100.100')
+            assert spec['dtlink3'].satisfies('%gcc@100.100')
+        finally:
+            spack.concretizer.enable_compiler_existence_check()
+
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
@@ -202,12 +205,55 @@ class TestConcretize(object):
         assert set(client.compiler_flags['fflags']) == set(['-O0'])
         assert not set(cmake.compiler_flags['fflags'])
 
+    def test_architecture_inheritance(self):
+        """test_architecture_inheritance is likely to fail with an
+        UnavailableCompilerVersionError if the architecture is concretized
+        incorrectly.
+        """
+        spec = Spec('cmake-client %gcc@4.7.2 os=fe ^ cmake')
+        spec.concretize()
+        assert spec['cmake'].architecture == spec.architecture
+
+    def test_architecture_deep_inheritance(self):
+        """Make sure that indirect dependencies receive architecture
+        information from the root even when partial architecture information
+        is provided by an intermediate dependency.
+        """
+        saved_repo = spack.repo
+
+        default_dep = ('link', 'build')
+
+        bazpkg = MockPackage('bazpkg', [], [])
+        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
+        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
+        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+
+        spack.repo = mock_repo
+
+        try:
+            spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
+                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+            spec.concretize()
+
+            for s in spec.traverse(root=False):
+                assert s.architecture.target == spec.architecture.target
+
+        finally:
+            spack.repo = saved_repo
+
+    def test_compiler_flags_from_user_are_grouped(self):
+        spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
+        spec.concretize()
+        cflags = spec.compiler_flags['cflags']
+        assert any(x == '-foo-flag foo-val' for x in cflags)
+
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
     def test_concretize_two_virtuals(self):
+
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
 
@@ -329,59 +375,94 @@ class TestConcretize(object):
 
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization. """
-        s = Spec('a +foo',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d +foo')),
-                 Spec('e +foo'))
+        s = Spec.from_literal({
+            'a +foo': {
+                'b +foo': {
+                    'c': None,
+                    'd+foo': None
+                },
+                'e +foo': None
+            }
+        })
 
         assert 'a' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_children(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d +foo')),
-                 Spec('e +foo'))
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd+foo': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'd' == find_spec(s['b'], lambda s: '+foo' in s).name
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c +foo'),
-                      Spec('d')),
-                 Spec('e +foo'))
+
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c+foo': None,
+                    'd': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'c' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_sibling(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e +foo'))
+
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'e' == find_spec(s['b'], lambda s: '+foo' in s).name
         assert 'b' == find_spec(s['e'], lambda s: '+foo' in s).name
 
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e',
-                      Spec('f +foo')))
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e': {
+                    'f +foo': None
+                }
+            }
+        })
+
         assert 'f' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_self(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e'))
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e': None
+            }
+        })
         assert 'b' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_none(self):
-        s = Spec('a',
-                 Spec('b',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e'))
+        s = Spec.from_literal({
+            'a': {
+                'b': {
+                    'c': None,
+                    'd': None
+                },
+                'e': None
+            }
+        })
         assert find_spec(s['b'], lambda s: '+foo' in s) is None
 
     def test_compiler_child(self):
@@ -397,3 +478,49 @@ class TestConcretize(object):
             s = Spec(conflict_spec)
             with pytest.raises(exc_type):
                 s.concretize()
+
+    def test_regression_issue_4492(self):
+        # Constructing a spec which has no dependencies, but is otherwise
+        # concrete is kind of difficult. What we will do is to concretize
+        # a spec, and then modify it to have no dependency and reset the
+        # cache values.
+
+        s = Spec('mpileaks')
+        s.concretize()
+
+        # Check that now the Spec is concrete, store the hash
+        assert s.concrete
+
+        # Remove the dependencies and reset caches
+        s._dependencies.clear()
+        s._concrete = False
+
+        assert not s.concrete
+
+    @pytest.mark.regression('7239')
+    def test_regression_issue_7239(self):
+        # Constructing a SpecBuildInterface from another SpecBuildInterface
+        # results in an inconsistent MRO
+
+        # Normal Spec
+        s = Spec('mpileaks')
+        s.concretize()
+
+        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+
+        # Spec wrapped in a build interface
+        build_interface = s['mpileaks']
+        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+
+        # Mimics asking the build interface from a build interface
+        build_interface = s['mpileaks']['mpileaks']
+        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+
+    @pytest.mark.regression('7705')
+    def test_regression_issue_7705(self):
+        # spec.package.provides(name) doesn't account for conditional
+        # constraints in the concretized spec
+        s = Spec('simple-inheritance~openblas')
+        s.concretize()
+
+        assert not s.package.provides('lapack')

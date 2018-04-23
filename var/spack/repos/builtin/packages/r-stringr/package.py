@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,6 +36,7 @@ class RStringr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/stringr_1.1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/stringr"
 
+    version('1.2.0', '9054b1de91c578cc5cf454d656e9c697')
     version('1.1.0', '47973a33944c6d5db9524b1e835b8a5d')
     version('1.0.0', '5ca977c90351f78b1b888b379114a7b4')
 

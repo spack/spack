@@ -1,0 +1,63 @@
+From e75004208ea98cea0bb2ad9b5f18a59cf6814333 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Mon, 11 Sep 2017 00:26:24 +0800
+Subject: [PATCH] Install nnvm lib and haders. Offer choice to build static or
+ shared lib.
+
+---
+ CMakeLists.txt | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d40deb5..aac0531 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -17,6 +17,10 @@ set(nnvm_LINKER_LIBS "")
+ 
+ add_definitions(-DNNVM_EXPORTS)
+ 
++# Build a shared lib (libnnvm.so) by default
++option(USE_SHARED_NNVM "Build a shared nnvm lib" ON)            
++option(USE_STATIC_NNVM "Build a static nnvm lib" OFF)
++
+ # compile
+ if(MSVC)
+   add_definitions(-DDMLC_USE_CXX11)
+@@ -61,8 +65,15 @@ elseif(DMLC_CORE_PATH)
+   include_directories(${DMLC_CORE_PATH}/include)
+ endif()
+ 
+-add_library(nnvm SHARED ${SOURCE})
+-target_link_libraries(nnvm ${nnvm_LINKER_LIBS})
++if(USE_SHARED_NNVM)
++  add_library(nnvm SHARED ${SOURCE})
++  target_link_libraries(nnvm ${nnvm_LINKER_LIBS})
++endif()
++if(USE_STATIC_NNVM)
++  add_library(nnvm_static STATIC ${SOURCE})
++  target_link_libraries(nnvm_static ${nnvm_LINKER_LIBS})
++  set_target_properties(nnvm_static PROPERTIES OUTPUT_NAME "nnvm")
++endif()
+ 
+ if(INSTALL_INCLUDE_DIR)
+   add_custom_command(TARGET nnvm POST_BUILD
+@@ -71,6 +82,16 @@ if(INSTALL_INCLUDE_DIR)
+     )
+ endif()
+ 
++# ---[ Install lib, header and docs
++if(USE_SHARED_NNVM)
++  install(TARGETS nnvm LIBRARY DESTINATION lib) 
++endif()
++if(USE_STATIC_NNVM)
++  install(TARGETS nnvm_static ARCHIVE DESTINATION lib) 
++endif()
++install(DIRECTORY include DESTINATION .)
++install(DIRECTORY docs DESTINATION .)
++
+ # ---[ Linter target
+ if(MSVC)
+   find_package(PythonInterp 2)
+-- 
+1.8.3.1
+

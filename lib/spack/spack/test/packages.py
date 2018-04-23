@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,7 +28,8 @@ import pytest
 from llnl.util.filesystem import join_path
 from spack.repository import Repo
 from spack.util.naming import mod_to_class
-from spack.spec import *
+from spack.spec import Spec
+from spack.util.package_hash import package_content
 
 
 @pytest.mark.usefixtures('config', 'builtin_mock')
@@ -66,6 +67,36 @@ class TestPackage(object):
         assert 'PmgrCollective' == mod_to_class('pmgr-collective')
         assert 'Pmgrcollective' == mod_to_class('PmgrCollective')
         assert '_3db' == mod_to_class('3db')
+
+    def test_content_hash_all_same_but_patch_contents(self):
+        spec1 = Spec("hash-test1@1.1")
+        spec2 = Spec("hash-test2@1.1")
+        content1 = package_content(spec1)
+        content1 = content1.replace(spec1.package.__class__.__name__, '')
+        content2 = package_content(spec2)
+        content2 = content2.replace(spec2.package.__class__.__name__, '')
+        assert spec1.package.content_hash(content=content1) != \
+            spec2.package.content_hash(content=content2)
+
+    def test_content_hash_different_variants(self):
+        spec1 = Spec("hash-test1@1.2 +variantx")
+        spec2 = Spec("hash-test2@1.2 ~variantx")
+        content1 = package_content(spec1)
+        content1 = content1.replace(spec1.package.__class__.__name__, '')
+        content2 = package_content(spec2)
+        content2 = content2.replace(spec2.package.__class__.__name__, '')
+        assert spec1.package.content_hash(content=content1) == \
+            spec2.package.content_hash(content=content2)
+
+    def test_all_same_but_archive_hash(self):
+        spec1 = Spec("hash-test1@1.3")
+        spec2 = Spec("hash-test2@1.3")
+        content1 = package_content(spec1)
+        content1 = content1.replace(spec1.package.__class__.__name__, '')
+        content2 = package_content(spec2)
+        content2 = content2.replace(spec2.package.__class__.__name__, '')
+        assert spec1.package.content_hash(content=content1) != \
+            spec2.package.content_hash(content=content2)
 
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace

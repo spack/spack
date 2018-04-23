@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -41,9 +41,11 @@
 ##########################################################################
 
 from spack import *
+import spack
+import spack.store
 
 
-class CbtfKrell(Package):
+class CbtfKrell(CMakePackage):
     """CBTF Krell project contains the Krell Institute contributions to the
        CBTF project.  These contributions include many performance data
        collectors and support libraries as well as some example tools
@@ -52,11 +54,7 @@ class CbtfKrell(Package):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    # optional mirror access template
-    # url      = "file:/home/jeg/cbtf-krell-1.6.tar.gz"
-    # version('1.6', 'edeb61cd488f16e7b124f77db9ce762d')
-
-    version('1.8', branch='master',
+    version('1.9.1', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
     # MPI variants
@@ -72,25 +70,38 @@ class CbtfKrell(Package):
             description="Build mpi experiment collector for mpich2 MPI.")
     variant('mpich', default=False,
             description="Build mpi experiment collector for mpich MPI.")
+    variant('runtime', default=False,
+            description="build only the runtime libraries and collectors.")
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
+    variant('crayfe', default=False,
+            description="build only the FE tool using the runtime_dir \
+                         to point to target build.")
 
     # Dependencies for cbtf-krell
     depends_on("cmake@3.0.2:", type='build')
 
     # For binutils service
-    depends_on("binutils@2.24+krellpatch")
+    depends_on("binutils")
 
     # collectionTool
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("dyninst@9.2.0")
+    depends_on("boost@1.50.0:")
+    depends_on("dyninst@9.3.2:")
+    depends_on("mrnet@5.0.1:+cti", when='+cti')
     depends_on("mrnet@5.0.1:+lwthreads")
 
     depends_on("xerces-c@3.1.1:")
     depends_on("cbtf")
+    depends_on("cbtf+cti", when='+cti')
+    depends_on("cbtf+runtime", when='+runtime')
 
     # for services and collectors
     depends_on("libmonitor+krellpatch")
     depends_on("libunwind")
     depends_on("papi")
+    depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
     # MPI Installations
     # These have not worked either for build or execution, commenting out for
@@ -104,31 +115,15 @@ class CbtfKrell(Package):
 
     parallel = False
 
-    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the options that will
-        # enable the cbtf-krell built type settings
+    build_directory = 'build_cbtf_krell'
 
-        compile_flags = "-O2 -g"
-        BuildTypeOptions = []
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it to be, not the
-        # stdcmakeargs
-        for word in cmakeOptions[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_CXX_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_C_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_VERBOSE_MAKEFILE'):
-                cmakeOptions.remove(word)
-        BuildTypeOptions.extend([
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
-            '-DCMAKE_BUILD_TYPE=None',
-            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
-            '-DCMAKE_C_FLAGS=%s'           % compile_flags
-        ])
+    def set_RTOnly_cmakeOptions(self, spec, cmakeOptions):
+        # Appends to cmakeOptions the options that will enable the appropriate
+        # MPI implementations
 
-        cmakeOptions.extend(BuildTypeOptions)
+        RTOnlyOptions = []
+        RTOnlyOptions.append('-DRUNTIME_ONLY=true')
+        cmakeOptions.extend(RTOnlyOptions)
 
     def set_mpi_cmakeOptions(self, spec, cmakeOptions):
         # Appends to cmakeOptions the options that will enable the appropriate
@@ -137,155 +132,104 @@ class CbtfKrell(Package):
         MPIOptions = []
 
         # openmpi
-        if '+openmpi' in spec:
+        if spec.satisfies('+openmpi'):
             MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
-        if '+mpich' in spec:
+        if spec.satisfies('+mpich'):
             MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
-        if '+mpich2' in spec:
+        if spec.satisfies('+mpich2'):
             MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
-        if '+mvapich' in spec:
+        if spec.satisfies('+mvapich'):
             MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
-        if '+mvapich2' in spec:
+        if spec.satisfies('+mvapich2'):
             MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
-        if '+mpt' in spec:
+        if spec.satisfies('+mpt'):
             MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
         cmakeOptions.extend(MPIOptions)
 
-    def install(self, spec, prefix):
+    def set_CrayLoginNode_cmakeOptions(self, spec, cmakeOptions):
+        # Appends to cmakeOptions the options that will enable
+        # the appropriate Cray login node libraries
+
+        CrayLoginNodeOptions = []
+        rt_platform = "cray"
+        # How do we get the compute node (CNL) cbtf package
+        # install directory path. spec['cbtf'].prefix is the
+        # login node path for this build, as we are building
+        # the login node components with this spack invocation. We
+        # need these paths to be the ones created in the CNL
+        # spack invocation.
+        be_cbtf = spack.store.db.query_one('cbtf arch=cray-CNL-haswell')
+        be_cbtfk = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+        be_papi = spack.store.db.query_one('papi arch=cray-CNL-haswell')
+        be_boost = spack.store.db.query_one('boost arch=cray-CNL-haswell')
+        be_mont = spack.store.db.query_one('libmonitor arch=cray-CNL-haswell')
+        be_unw = spack.store.db.query_one('libunwind arch=cray-CNL-haswell')
+        be_xer = spack.store.db.query_one('xerces-c arch=cray-CNL-haswell')
+        be_dyn = spack.store.db.query_one('dyninst arch=cray-CNL-haswell')
+        be_mrnet = spack.store.db.query_one('mrnet arch=cray-CNL-haswell')
+
+        CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'
+                                    % rt_platform)
+
+        # Use install directories as CMAKE args for the building
+        # of login cbtf-krell
+        CrayLoginNodeOptions.append('-DCBTF_CN_RUNTIME_DIR=%s'
+                                    % be_cbtf.prefix)
+        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+                                    % be_cbtfk.prefix)
+        CrayLoginNodeOptions.append('-DPAPI_CN_RUNTIME_DIR=%s'
+                                    % be_papi.prefix)
+        CrayLoginNodeOptions.append('-DBOOST_CN_RUNTIME_DIR=%s'
+                                    % be_boost.prefix)
+        CrayLoginNodeOptions.append('-DLIBMONITOR_CN_RUNTIME_DIR=%s'
+                                    % be_mont.prefix)
+        CrayLoginNodeOptions.append('-DLIBUNWIND_CN_RUNTIME_DIR=%s'
+                                    % be_unw.prefix)
+        CrayLoginNodeOptions.append('-DXERCESC_CN_RUNTIME_DIR=%s'
+                                    % be_xer.prefix)
+        CrayLoginNodeOptions.append('-DDYNINST_CN_RUNTIME_DIR=%s'
+                                    % be_dyn.prefix)
+        CrayLoginNodeOptions.append('-DMRNET_CN_RUNTIME_DIR=%s'
+                                    % be_mrnet.prefix)
+
+        cmakeOptions.extend(CrayLoginNodeOptions)
+
+    def cmake_args(self):
+        spec = self.spec
+
+        compile_flags = "-O2 -g"
 
         # Add in paths for finding package config files that tell us
         # where to find these packages
-        # cmake_prefix_path = \
-        #     join_path(spec['cbtf'].prefix) + ':' + \
-        #     join_path(spec['dyninst'].prefix)
-        # '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path
+        cmake_args = [
+            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
+            '-DCMAKE_C_FLAGS=%s'           % compile_flags,
+            '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+            '-DBINUTILS_DIR=%s' % spec['binutils'].prefix,
+            '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
+            '-DLIBUNWIND_DIR=%s' % spec['libunwind'].prefix,
+            '-DPAPI_DIR=%s' % spec['papi'].prefix,
+            '-DBOOST_DIR=%s' % spec['boost'].prefix,
+            '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
+            '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
+            '-DLIBIOMP_DIR=%s' % spec['llvm-openmp-ompt'].prefix,
+            '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix]
 
-        # Build cbtf-krell with cmake
-        with working_dir('build_cbtf_krell', create=True):
-            cmakeOptions = []
-            cmakeOptions.extend(
-                ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                 '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-                 '-DBINUTILS_DIR=%s' % spec['binutils'].prefix,
-                 '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
-                 '-DLIBUNWIND_DIR=%s' % spec['libunwind'].prefix,
-                 '-DPAPI_DIR=%s' % spec['papi'].prefix,
-                 '-DBOOST_DIR=%s' % spec['boost'].prefix,
-                 '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
-                 '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
-                 '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix])
+        if self.spec.satisfies('+runtime'):
+            self.set_RTOnly_cmakeOptions(spec, cmake_args)
 
-            # Add any MPI implementations coming from variant settings
-            self.set_mpi_cmakeOptions(spec, cmakeOptions)
+        # Add any MPI implementations coming from variant settings
+        self.set_mpi_cmakeOptions(spec, cmake_args)
 
-            # Add in the standard cmake arguments
-            cmakeOptions.extend(std_cmake_args)
+        if self.spec.satisfies('+crayfe'):
+            # We need to build target/compute node components/libraries first
+            # then pass those libraries to the cbtf-krell login node build
+            self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
 
-            # Adjust the standard cmake arguments to what we want the build
-            # type, etc to be
-            self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-            # Invoke cmake
-            cmake('..', *cmakeOptions)
-
-            make("clean")
-            make()
-            make("install")
-
-        # if '+cray' in spec:
-        # if 'cray' in self.spec.architecture:
-        #    if '+runtime' in spec:
-        #        with working_dir('build_cbtf_cray_runtime', create=True):
-        #            python_vers='%d.%d' % spec['python'].version[:2]
-        #            cmake .. \
-        #                -DCMAKE_BUILD_TYPE=Debug \
-        #                -DTARGET_OS="cray" \
-        #                -DRUNTIME_ONLY="true" \
-        #                -DCMAKE_INSTALL_PREFIX=${CBTF_KRELL_PREFIX} \
-        #                -DCMAKE_PREFIX_PATH=${CBTF_ROOT} \
-        #                -DCBTF_DIR=${CBTF_ROOT} \
-        #                -DBOOST_ROOT=${BOOST_INSTALL_PREFIX} \
-        #                -DXERCESC_DIR=${XERCESC_INSTALL_PREFIX} \
-        #                -DBINUTILS_DIR=${KRELL_ROOT} \
-        #                -DLIBMONITOR_DIR=${KRELL_ROOT_COMPUTE} \
-        #                -DLIBUNWIND_DIR=${KRELL_ROOT_COMPUTE} \
-        #                -DPAPI_DIR=${PAPI_ROOT} \
-        #                -DDYNINST_DIR=${DYNINST_CN_ROOT} \
-        #                -DMRNET_DIR=${MRNET_INSTALL_PREFIX} \
-        #                -DMPICH2_DIR=/opt/cray/mpt/7.0.1/gni/mpich2-gnu/48
-        #    else:
-        #        with working_dir('build_cbtf_cray_frontend', create=True):
-        #            python_vers='%d.%d' % spec['python'].version[:2]
-        #            cmake .. \
-        #            -DCMAKE_BUILD_TYPE=Debug \
-        #            -DCMAKE_INSTALL_PREFIX=${CBTF_KRELL_PREFIX} \
-        #            -DCMAKE_PREFIX_PATH=${CBTF_ROOT} \
-        #            -DCBTF_DIR=${CBTF_ROOT} \
-        #            -DRUNTIME_TARGET_OS="cray" \
-        #          -DCBTF_KRELL_CN_RUNTIME_DIR=${CBTF_KRELL_CN_RUNTIME_ROOT} \
-        #            -DCBTF_CN_RUNTIME_DIR=${CBTF_CN_RUNTIME_ROOT} \
-        #            -DLIBMONITOR_CN_RUNTIME_DIR=${LIBMONITOR_CN_ROOT} \
-        #            -DLIBUNWIND_CN_RUNTIME_DIR=${LIBUNWIND_CN_ROOT} \
-        #            -DPAPI_CN_RUNTIME_DIR=${PAPI_CN_ROOT} \
-        #            -DXERCESC_CN_RUNTIME_DIR=/${XERCESC_CN_ROOT} \
-        #            -DMRNET_CN_RUNTIME_DIR=${MRNET_CN_ROOT} \
-        #            -DBOOST_CN_RUNTIME_DIR=${BOOST_CN_ROOT} \
-        #            -DDYNINST_CN_RUNTIME_DIR=${DYNINST_CN_ROOT} \
-        #            -DBOOST_ROOT=/${KRELL_ROOT} \
-        #            -DXERCESC_DIR=/${KRELL_ROOT} \
-        #            -DBINUTILS_DIR=/${KRELL_ROOT} \
-        #            -DLIBMONITOR_DIR=${KRELL_ROOT} \
-        #            -DLIBUNWIND_DIR=${KRELL_ROOT} \
-        #            -DPAPI_DIR=${PAPI_ROOT} \
-        #            -DDYNINST_DIR=${KRELL_ROOT} \
-        #            -DMRNET_DIR=${KRELL_ROOT} \
-        #            -DMPICH2_DIR=/opt/cray/mpt/7.0.1/gni/mpich2-gnu/48
-        #    fi
-#
-#                    make("clean")
-#                    make()
-#                    make("install")
-#
-#        elif '+mic' in spec:
-#            if '+runtime' in spec:
-#                with working_dir('build_cbtf_mic_runtime', create=True):
-#                    python_vers='%d.%d' % spec['python'].version[:2]
-#                    cmake .. \
-#
-#            else:
-#                with working_dir('build_cbtf_cray_frontend', create=True):
-#                    python_vers='%d.%d' % spec['python'].version[:2]
-#                    cmake .. \
-#            fi
-#
-#        else:
-#            # Build cbtf-krell with cmake
-#            with working_dir('build_cbtf_krell', create=True):
-#                cmake('..',
-#                      '-DCMAKE_BUILD_TYPE=Debug',
-#                      '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-#                      '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-#                      '-DBINUTILS_DIR=%s' % spec['binutils'].prefix,
-#                      '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
-#                      '-DLIBUNWIND_DIR=%s'% spec['libunwind'].prefix,
-#                      '-DPAPI_DIR=%s' % spec['papi'].prefix,
-#                      '-DBOOST_DIR=%s' % spec['boost'].prefix,
-#                      '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
-#                      '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
-#                      '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix,
-#                      '-DOPENMPI_DIR=%s' % openmpi_prefix_path,
-#                      '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path,
-#                      *std_cmake_args)
-#
-#                make("clean")
-#                make()
-#                make("install")
-#
-#        fi
-#
+        return cmake_args

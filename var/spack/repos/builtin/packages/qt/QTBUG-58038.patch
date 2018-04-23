@@ -1,0 +1,12 @@
+diff --git a/qtbase/src/3rdparty/freetype/freetype.pro b/qtbase/src/3rdparty/freetype/freetype.pro
+index 5b1eb92..390a6da 100644
+--- a/qtbase/src/3rdparty/freetype/freetype.pro
++++ b/qtbase/src/3rdparty/freetype/freetype.pro
+@@ -69,6 +69,7 @@ DEFINES += FT_CONFIG_OPTION_SYSTEM_ZLIB
+ include(../zlib_dependency.pri)
+
+ DEFINES += FT_CONFIG_OPTION_USE_PNG
++include($$OUT_PWD/../../gui/qtgui-config.pri)
+ QMAKE_USE_PRIVATE += libpng
+
+ DEFINES += TT_CONFIG_OPTION_SUBPIXEL_HINTING

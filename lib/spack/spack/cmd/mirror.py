@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,6 +38,8 @@ from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -73,7 +75,8 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # Remove
@@ -81,13 +84,15 @@ def setup_parser(subparser):
                                   help=mirror_remove.__doc__)
     remove_parser.add_argument('name')
     remove_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
 
@@ -153,7 +158,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError as e:
-                tty.die("Parse error in %s, line %d:" % (args.file, i + 1),
+                tty.die("Parse error in %s, line %d:" % (filename, i + 1),
                         ">>> " + string, str(e))
     return specs
 
@@ -162,6 +167,7 @@ def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
+    spack.concretizer.disable_compiler_existence_check()
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
 
     # If there is a file, parse each line as a spec and add it to the list.
@@ -180,7 +186,7 @@ def mirror_create(args):
         new_specs = set()
         for spec in specs:
             spec.concretize()
-            for s in spec.traverse(deptype_query=spack.alldeps):
+            for s in spec.traverse():
                 new_specs.add(s)
         specs = list(new_specs)
 
@@ -211,7 +217,7 @@ def mirror_create(args):
         "  %-4d failed to fetch." % e)
     if error:
         tty.error("Failed downloads:")
-        colify(s.format("$_$@") for s in error)
+        colify(s.cformat("$_$@") for s in error)
 
 
 def mirror(parser, args):

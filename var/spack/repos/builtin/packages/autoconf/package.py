@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,8 +39,28 @@ class Autoconf(AutotoolsPackage):
     # Note: m4 is not a pure build-time dependency of autoconf. m4 is
     # needed when autoconf runs, not only when autoconf is built.
     depends_on('m4@1.4.6:', type=('build', 'run'))
+    depends_on('perl', type=('build', 'run'))
 
     build_directory = 'spack-build'
+
+    def patch(self):
+        # The full perl shebang might be too long; we have to fix this here
+        # because autom4te is called during the build
+        filter_file('^#! @PERL@ -w',
+                    '#! /usr/bin/env perl',
+                    'bin/autom4te.in')
+
+    @run_after('install')
+    def filter_sbang(self):
+        # We have to do this after install because otherwise the install
+        # target will try to rebuild the binaries (filter_file updates the
+        # timestamps)
+
+        # Revert sbang, so Spack's sbang hook can fix it up
+        filter_file('^#! /usr/bin/env perl',
+                    '#! {0} -w'.format(self.spec['perl'].command.path),
+                    self.prefix.bin.autom4te,
+                    backup=False)
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

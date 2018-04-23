@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,9 +33,9 @@ class Abinit(AutotoolsPackage):
     energy, charge density and electronic structure of systems made of
     electrons and nuclei (molecules and periodic solids) within
     Density Functional Theory (DFT), using pseudopotentials and a planewave
-    or wavelet basis. 
-    
-    ABINIT also includes options to optimize the geometry according to the 
+    or wavelet basis.
+
+    ABINIT also includes options to optimize the geometry according to the
     DFT forces and stresses, or to perform molecular dynamics
     simulations using these forces, or to generate dynamical matrices,
     Born effective charges, and dielectric tensors, based on Density-Functional
@@ -47,8 +47,9 @@ class Abinit(AutotoolsPackage):
     """
 
     homepage = 'http://www.abinit.org'
-    url      = 'http://ftp.abinit.org/abinit-8.0.8b.tar.gz'
+    url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
+    version('8.6.3', '6c34d2cec0cf0008dd25b8ec1b6d3ee8')
     version('8.2.2', '5f25250e06fdc0815c224ffd29858860')
     # Versions before 8.0.8b are not supported.
     version('8.0.8b', 'abc9e303bfa7f9f43f95598f87d84d5d')
@@ -149,7 +150,7 @@ class Abinit(AutotoolsPackage):
         # LibXC library
         libxc = spec['libxc:fortran']
         options.extend([
-            'with_libxc_incs={0}'.format(libxc.cppflags),
+            'with_libxc_incs={0}'.format(libxc.headers.cpp_flags),
             'with_libxc_libs={0}'.format(libxc.libs.ld_flags + ' -lm')
         ])
 
@@ -161,7 +162,7 @@ class Abinit(AutotoolsPackage):
             hdf5 = spec['hdf5:hl']
             netcdff = spec['netcdf-fortran:shared']
             options.extend([
-                '--with-netcdf-incs={0}'.format(netcdff.cppflags),
+                '--with-netcdf-incs={0}'.format(netcdff.headers.cpp_flags),
                 '--with-netcdf-libs={0}'.format(
                     netcdff.libs.ld_flags + ' ' + hdf5.libs.ld_flags
                 ),
@@ -175,7 +176,7 @@ class Abinit(AutotoolsPackage):
 
     def check(self):
         """This method is called after the build phase if tests have been
-        explicitly activated by user. 
+        explicitly activated by user.
         """
         make('check')
         make('tests_in')

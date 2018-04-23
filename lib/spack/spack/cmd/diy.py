@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,9 +34,15 @@ import spack.cmd.common.arguments as arguments
 from spack.stage import DIYStage
 
 description = "do-it-yourself: build from an existing source directory"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):
+    arguments.add_common_arguments(subparser, ['jobs'])
+    subparser.add_argument(
+        '-d', '--source-path', dest='source_path', default=None,
+        help="path to source directory. defaults to the current directory")
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
@@ -61,6 +67,10 @@ def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
 
+    if args.jobs is not None:
+        if args.jobs <= 0:
+            tty.die("the -j option must be a positive integer")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
         tty.die("spack diy only takes one spec.")
@@ -83,13 +93,19 @@ def diy(self, args):
         tty.msg("Uninstall or try adding a version suffix for this DIY build.")
         sys.exit(1)
 
+    source_path = args.source_path
+    if source_path is None:
+        source_path = os.getcwd()
+    source_path = os.path.abspath(source_path)
+
     # Forces the build to run out of the current directory.
-    package.stage = DIYStage(os.getcwd())
+    package.stage = DIYStage(source_path)
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
 
     package.do_install(
+        make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,

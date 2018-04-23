@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,6 +39,7 @@ class Mercurial(PythonPackage):
         'mercurial.httpclient', 'mercurial.pure'
     ]
 
+    version('4.4.1', '37974a416d1d9525e1375c92025b16d9')
     version('4.1.2', '934c99808bdc8385e074b902d59b0d93')
     version('3.9.1', '3759dd10edb8c1a6dfb8ff0ce82658ce')
     version('3.9',   'e2b355da744e94747daae3a5339d28a0')
@@ -47,7 +48,8 @@ class Mercurial(PythonPackage):
     version('3.8.2', 'c38daa0cbe264fc621dc3bb05933b0b3')
     version('3.8.1', '172a8c588adca12308c2aca16608d7f4')
 
-    depends_on('python@2.6:2.8')
+    depends_on('python@2.6:2.8', when='@:4.2.99')
+    depends_on('python@2.7:2.8,3.5:3.5.999,3.6.2:', when='@4.3:')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-certifi',  type=('build', 'run'))
@@ -57,14 +59,14 @@ class Mercurial(PythonPackage):
         prefix = self.prefix
 
         # Install man pages
-        mkdirp(prefix.man1)
-        mkdirp(prefix.man5)
-        mkdirp(prefix.man8)
+        mkdirp(prefix.man.man1)
+        mkdirp(prefix.man.man5)
+        mkdirp(prefix.man.man8)
         with working_dir('doc'):
-            install('hg.1', prefix.man1)
-            install('hgignore.5', prefix.man5)
-            install('hgrc.5', prefix.man5)
-            install('hg-ssh.8', prefix.man8)
+            install('hg.1', prefix.man.man1)
+            install('hgignore.5', prefix.man.man5)
+            install('hgrc.5', prefix.man.man5)
+            install('hg-ssh.8', prefix.man.man8)
 
         # Install completion scripts
         contrib = join_path(prefix, 'contrib')
@@ -84,8 +86,8 @@ class Mercurial(PythonPackage):
         hgrc_filename = join_path(etc_dir, 'hgrc')
 
         # Use certifi to find the location of the CA certificate
-        certificate = python('-c', 'import certifi; print certifi.where()',
-                             output=str)
+        print_str = self.spec['python'].package.print_string('certifi.where()')
+        certificate = python('-c', 'import certifi; ' + print_str)
 
         if not certificate:
             tty.warn('CA certificate not found. You may not be able to '
