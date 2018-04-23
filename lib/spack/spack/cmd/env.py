@@ -96,14 +96,19 @@ class Environment(object):
             del self.concretized_order[match_index]
             del self.specs_by_hash[spec_hash]
 
-    def concretize(self):
+    def concretize(self, force=False):
+        if force:
+            self.specs_by_hash = dict()
+            self.concretized_order = list()
+
         num_concretized = len(self.concretized_order)
         new_specs = list()
         for user_spec in self.user_specs[num_concretized:]:
             spec = Spec(user_spec)
             spec.concretize()
             new_specs.append(spec)
-            self.specs_by_hash[spec.dag_hash()] = spec
+            dag_hash = spec.dag_hash()
+            self.specs_by_hash[dag_hash] = spec
             self.concretized_order.append(spec.dag_hash())
         return new_specs
 
@@ -429,14 +434,15 @@ def environment_remove(args):
 
 def environment_concretize(args):
     environment = read(args.environment)
-    _environment_concretize(environment)
+    _environment_concretize(environment, force=args.force)
 
 
-def _environment_concretize(environment):
+def _environment_concretize(environment, force=False):
+    """Function body separated out to aid in testing."""
     repo = prepare_repository(environment)
     prepare_config_scope(environment)
 
-    new_specs = environment.concretize()
+    new_specs = environment.concretize(force=force)
     for spec in new_specs:
         for dep in spec.traverse():
             dump_to_environment_repo(dep, repo)
@@ -595,6 +601,9 @@ def setup_parser(subparser):
 
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')
+    concretize_parser.add_argument(
+        '-f', '--force', action='store_true',
+        help="Re-concretize even if already concretized.")
 
     relocate_parser = sp.add_parser(
         'relocate',
