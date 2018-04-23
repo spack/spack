@@ -1479,12 +1479,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
             if kwargs.get('use_cache', False):
-                    if self.try_install_from_binary_cache(explicit):
-                        tty.msg('Successfully installed %s from binary cache'
-                            % self.name)
-                        print_pkg(self.prefix)
-                        spack.hooks.post_install(self.spec)
-                        return
+                if self.try_install_from_binary_cache(explicit):
+                    tty.msg('Successfully installed %s from binary cache'
+                        % self.name)
+                    print_pkg(self.prefix)
+                    spack.hooks.post_install(self.spec)
+                    return
 
                 tty.msg('No binary for %s found: installing from source'
                         % self.name)
