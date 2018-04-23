@@ -24,6 +24,8 @@ class Galahad(Package):
     version('2.60003', '2a0b77eacb55987118d2217a318f8541')
     url='http://none/galahad-2.60003.tar.gz'
 
+    mainatiners = ['citibeth']
+
     # GALAHAD uses its own internal BLAS/LAPACK, I don't know how to turn it off for now
     # depends_on('blas')
     # depends_on('lapack')
