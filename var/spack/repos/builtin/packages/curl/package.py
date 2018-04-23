@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,15 +48,21 @@ class Curl(AutotoolsPackage):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
+    variant('nghttp2', default=False, description='build nghttp2 library (requires C++11)')
+    variant('libssh2', default=True, description='enable libssh2 support')
+
     depends_on('openssl')
     depends_on('zlib')
-    depends_on('nghttp2')
+    depends_on('nghttp2', when='+nghttp2')
+    depends_on('libssh2', when='+libssh2')
 
     def configure_args(self):
         spec = self.spec
 
-        return [
+        args = [
             '--with-zlib={0}'.format(spec['zlib'].prefix),
-            '--with-ssl={0}'.format(spec['openssl'].prefix),
-            '--with-http2={0}'.format(spec['nghttp2'].prefix),
+            '--with-ssl={0}'.format(spec['openssl'].prefix)
         ]
+        args += self.with_or_without('nghttp2')
+        args += self.with_or_without('libssh2')
+        return args

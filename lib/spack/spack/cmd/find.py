@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,9 @@
 import sys
 
 import llnl.util.tty as tty
+import llnl.util.lang
 import spack
+import spack.database
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
@@ -96,6 +98,14 @@ def setup_parser(subparser):
                            action='store_true',
                            help='show fully qualified package names')
 
+    subparser.add_argument(
+        '--start-date',
+        help='earliest date of installation [YYYY-MM-DD]'
+    )
+    subparser.add_argument(
+        '--end-date', help='latest date of installation [YYYY-MM-DD]'
+    )
+
     arguments.add_common_arguments(subparser, ['constraint'])
 
 
@@ -114,6 +124,13 @@ def query_arguments(args):
     if args.implicit:
         explicit = False
     q_args = {'installed': installed, 'known': known, "explicit": explicit}
+
+    # Time window of installation
+    for attribute in ('start_date', 'end_date'):
+        date = getattr(args, attribute)
+        if date:
+            q_args[attribute] = llnl.util.lang.pretty_string_to_date(date)
+
     return q_args
 
 

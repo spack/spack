@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class Gdbm(AutotoolsPackage):
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
     url      = "http://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
 
+    version('1.14.1', 'c2ddcb3897efa0f57484af2bd4f4f848')
     version('1.13',  '8929dcda2a8de3fd2367bdbf66769376')
     version('1.12',  '9ce96ff4c99e74295ea19040931c8fb9')
     version('1.11',  '72c832680cf0999caedbe5b265c8c1bd')
@@ -44,5 +45,12 @@ class Gdbm(AutotoolsPackage):
 
     depends_on("readline")
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CC', spack_cc)
+
     def configure_args(self):
-        return ['--enable-libgdbm-compat']
+        config_args = [
+            '--enable-libgdbm-compat',
+        ]
+
+        return config_args

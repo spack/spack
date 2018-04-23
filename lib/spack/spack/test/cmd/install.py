@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,12 @@ import filecmp
 
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack
 import spack.cmd.install
+import spack.package
+from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
 
@@ -57,8 +61,8 @@ def test_install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
 
-    tmpdir.chdir()
-    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+    with tmpdir.as_cwd():
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -68,9 +72,6 @@ def test_install_package_and_dependency(
     assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
-
-    s = Spec('libdwarf').concretized()
-    assert not spack.repo.get(s).stage.created
 
 
 @pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
@@ -104,9 +105,9 @@ def test_install_package_already_installed(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
 
-    tmpdir.chdir()
-    install('libdwarf')
-    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+    with tmpdir.as_cwd():
+        install('libdwarf')
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -150,6 +151,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     assert "'install'\nAFTER INSTALL" in out
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
                                        config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
@@ -161,6 +163,7 @@ def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
     assert 'configure: error: cannot run C compiled programs.' in out
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
                                         config, install_mockery):
     out = install('failing-build', fail_on_error=False)
@@ -169,6 +172,7 @@ def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
     assert 'raise InstallError("Expected failure.")' in out
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_with_source(
         builtin_mock, mock_archive, mock_fetch, config, install_mockery):
     """Verify that source has been copied into place."""
@@ -180,6 +184,7 @@ def test_install_with_source(
                        os.path.join(src, 'configure'))
 
 
+@pytest.mark.disable_clean_stage_check
 def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
                            config, install_mockery, capfd):
     """Make sure --show-log-on-error works."""
@@ -193,3 +198,181 @@ def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
     assert len(errors) == 2
+
+
+def test_install_overwrite(
+        builtin_mock, mock_archive, mock_fetch, config, install_mockery
+):
+    # It's not possible to overwrite something that is not yet installed
+    with pytest.raises(AssertionError):
+        install('--overwrite', 'libdwarf')
+
+    # --overwrite requires a single spec
+    with pytest.raises(AssertionError):
+        install('--overwrite', 'libdwarf', 'libelf')
+
+    # Try to install a spec and then to reinstall it.
+    spec = Spec('libdwarf')
+    spec.concretize()
+
+    install('libdwarf')
+
+    assert os.path.exists(spec.prefix)
+    expected_md5 = fs.hash_directory(spec.prefix)
+
+    # Modify the first installation to be sure the content is not the same
+    # as the one after we reinstalled
+    with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
+        f.write('This content is here to differentiate installations.')
+
+    bad_md5 = fs.hash_directory(spec.prefix)
+
+    assert bad_md5 != expected_md5
+
+    install('--overwrite', '-y', 'libdwarf')
+    assert os.path.exists(spec.prefix)
+    assert fs.hash_directory(spec.prefix) == expected_md5
+    assert fs.hash_directory(spec.prefix) != bad_md5
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+)
+def test_install_conflicts(conflict_spec):
+    # Make sure that spec with conflicts raises a SpackError
+    with pytest.raises(SpackError):
+        install(conflict_spec)
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+)
+def test_install_invalid_spec(invalid_spec):
+    # Make sure that invalid specs raise a SpackError
+    with pytest.raises(SpackError, match='Unexpected token'):
+        install(invalid_spec)
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('spec,concretize,error_code', [
+    (Spec('mpi'), False, 1),
+    (Spec('mpi'), True, 0),
+    (Spec('boost'), False, 1),
+    (Spec('boost'), True, 0)
+])
+def test_install_from_file(spec, concretize, error_code, tmpdir):
+
+    if concretize:
+        spec.concretize()
+
+    specfile = tmpdir.join('spec.yaml')
+
+    with specfile.open('w') as f:
+        spec.to_yaml(f)
+
+    # Relative path to specfile (regression for #6906)
+    with fs.working_dir(specfile.dirname):
+        # A non-concrete spec will fail to be installed
+        install('-f', specfile.basename, fail_on_error=False)
+    assert install.returncode == error_code
+
+    # Absolute path to specfile (regression for #6983)
+    install('-f', str(specfile), fail_on_error=False)
+    assert install.returncode == error_code
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+@pytest.mark.parametrize('exc_typename,msg', [
+    ('RuntimeError', 'something weird happened'),
+    ('ValueError', 'spec is not concrete')
+])
+def test_junit_output_with_failures(tmpdir, exc_typename, msg):
+    with tmpdir.as_cwd():
+        install(
+            '--log-format=junit', '--log-file=test.xml',
+            'raiser',
+            'exc_type={0}'.format(exc_typename),
+            'msg="{0}"'.format(msg)
+        )
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+
+    # Count failures and errors correctly
+    assert 'tests="1"' in content
+    assert 'failures="1"' in content
+    assert 'errors="0"' in content
+
+    # We want to have both stdout and stderr
+    assert '<system-out>' in content
+    assert msg in content
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+@pytest.mark.parametrize('exc_typename,msg', [
+    ('RuntimeError', 'something weird happened'),
+    ('KeyboardInterrupt', 'Ctrl-C strikes again')
+])
+def test_junit_output_with_errors(tmpdir, monkeypatch, exc_typename, msg):
+
+    def just_throw(*args, **kwargs):
+        from six.moves import builtins
+        exc_type = getattr(builtins, exc_typename)
+        raise exc_type(msg)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'do_install', just_throw)
+
+    with tmpdir.as_cwd():
+        install(
+            '--log-format=junit', '--log-file=test.xml',
+            'libdwarf',
+            fail_on_error=False
+        )
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+
+    # Count failures and errors correctly
+    assert 'tests="1"' in content
+    assert 'failures="0"' in content
+    assert 'errors="1"' in content
+
+    # We want to have both stdout and stderr
+    assert '<system-out>' in content
+    assert msg in content
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('clispecs,filespecs', [
+    [[],                  ['mpi']],
+    [[],                  ['mpi', 'boost']],
+    [['cmake'],           ['mpi']],
+    [['cmake', 'libelf'], []],
+    [['cmake', 'libelf'], ['mpi', 'boost']],
+])
+def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+
+    args = clispecs
+
+    for spec in filespecs:
+        filepath = tmpdir.join(spec + '.yaml')
+        args = ['-f', str(filepath)] + args
+        s = Spec(spec)
+        s.concretize()
+        with filepath.open('w') as f:
+            s.to_yaml(f)
+
+    install(*args, fail_on_error=False)
+    assert install.returncode == 0

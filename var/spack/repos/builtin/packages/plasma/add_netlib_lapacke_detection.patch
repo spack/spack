@@ -1,0 +1,11 @@
+--- a/include/core_lapack.h 2017-01-13 13:59:46.000000000 -0500
++++ b/include/core_lapack.h 2017-10-30 16:37:54.481966195 -0400
+@@ -27,7 +27,7 @@
+     // Netlib    cblas.h does: enum CBLAS_ORDER {...};
+     // OpenBLAS  cblas.h does: typedef enum CBLAS_ORDER {...} CBLAS_ORDER;
+     // We use (CBLAS_ORDER), so add these typedefs for Netlib.
+-    #ifndef OPENBLAS_VERSION
++    #if ! defined(OPENBLAS_VERSION) && ! defined(F77_HEADER_INCLUDED)
+     typedef enum CBLAS_ORDER CBLAS_ORDER;
+     typedef enum CBLAS_TRANSPOSE CBLAS_TRANSPOSE;
+     typedef enum CBLAS_UPLO CBLAS_UPLO;

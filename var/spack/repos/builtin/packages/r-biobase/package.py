@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,8 +31,11 @@ class RBiobase(RPackage):
  or which replace R functions."""
 
     homepage = "https://www.bioconductor.org/packages/Biobase/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/Biobase_2.36.2.tar.gz"
+    url      = "https://git.bioconductor.org/packages/Biobase"
     list_url = homepage
-    version('2.36.2', '8854eb70acabb07b55d2953fb1ecff31')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    version('2.38.0', git='https://git.bioconductor.org/packages/Biobase', commit='83f89829e0278ac014b0bc6664e621ac147ba424')
+    version('2.36.2', git='https://git.bioconductor.org/packages/Biobase', commit='15f50912f3fa08ccb15c33b7baebe6b8a59ce075')
+
+    depends_on('r-biocgenerics@0.16.1:', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.36.2:')

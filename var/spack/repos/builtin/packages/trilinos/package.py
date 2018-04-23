@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 import sys
-import platform
+from spack import *
+from spack.operating_systems.mac_os import macOS_version
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -58,17 +58,17 @@ class Trilinos(CMakePackage):
             git='https://github.com/trilinos/Trilinos.git', tag='master')
     version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
-    version('12.8.1', '01c0026f1e2050842857db941060ecd5')
-    version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
-    version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
-    version('12.6.2', 'dc7f9924872778798149ecadd81605a5')
-    version('12.6.1', '8aecea78546e7558f63ecc9a3b2949da')
-    version('12.4.2', '4c25a757d86bde3531090bd900a2cea8')
-    version('12.2.1', '85d011f7f99a776a9c6c2625e8cb721c')
-    version('12.0.1', 'bcb3fdefd14d05dd6aa65ba4c5b9aa0e')
-    version('11.14.3', 'dea62e57ebe51a886bee0b10a2176969')
-    version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
-    version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
+    version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
+    version('12.6.4', 'e11fff717d0e4565779f75a47feecbb2')
+    version('12.6.3', '9ce30b6ab956bfc41730479a9ef05d05')
+    version('12.6.2', '0237d32feedd979a6fbb139aa5df8500')
+    version('12.6.1', '14ab8f7e74b66c33d5731cbf68b8cb82')
+    version('12.4.2', '98880f414752220e60feaeb36b023f60')
+    version('12.2.1', '8b344a9e9e533126dfd96db58ce69dde')
+    version('12.0.1', 'b8263f7037f7c688091d0da19d169709')
+    version('11.14.3', 'ff31ad49d633ab28369c228784055c85')
+    version('11.14.2', '1fdf15a5b4494f832b414f9c447ab685')
+    version('11.14.1', '478d0438d935294a7c94347c94a7c8cb')
 
     # ###################### Variants ##########################
 
@@ -124,7 +124,7 @@ class Trilinos(CMakePackage):
             description='Compile with Amesos')
     variant('amesos2',      default=True,
             description='Compile with Amesos2')
-    variant('anasazi',       default=True,
+    variant('anasazi',      default=True,
             description='Compile with Anasazi')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
@@ -154,14 +154,18 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
     variant('openmp',       default=False,
             description='Enable OpenMP')
+    variant('rol',          default=False,
+            description='Enable ROL')
     variant('nox',          default=False,
             description='Enable NOX')
     variant('shards',       default=False,
             description='Enable Shards')
     variant('intrepid',     default=False,
             description='Enable Intrepid')
-    variant('intrepid2',     default=False,
+    variant('intrepid2',    default=False,
             description='Enable Intrepid2')
+    variant('cgns',         default=False,
+            description='Enable CGNS')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -202,9 +206,9 @@ class Trilinos(CMakePackage):
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi', when="~pnetcdf")
-    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master")
-    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@12.10.2:")
+    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
+    depends_on('cgns', when='+cgns')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
@@ -223,7 +227,8 @@ class Trilinos(CMakePackage):
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
-    depends_on('hdf5+mpi', when='+hdf5')
+    # FIXME: concretizer bug? 'hl' req by netcdf is affecting this code.
+    depends_on('hdf5+hl+mpi', when='+hdf5')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
@@ -310,6 +315,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
                 'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
+                'ON' if '+rol' in spec else 'OFF'),
             '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
                 'ON' if '+nox' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Shards=%s' % (
@@ -336,7 +343,8 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_STKTopology:BOOL=ON',
                 '-DTrilinos_ENABLE_STKUnit_tests:BOOL=ON',
                 '-DTrilinos_ENABLE_STKUnit_test_utils:BOOL=ON',
-                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF'
+                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF',
+                '-DTrilinos_ENABLE_STKExprEval:BOOL=ON'
             ])
 
         if '+dtk' in spec:
@@ -443,8 +451,9 @@ class Trilinos(CMakePackage):
                 '-DParMETIS_LIBRARY_DIRS=%s;%s' % (
                     spec['parmetis'].prefix.lib, spec['metis'].prefix.lib),
                 '-DParMETIS_LIBRARY_NAMES=parmetis;metis',
-                '-DTPL_ParMETIS_INCLUDE_DIRS=%s' % (
-                    spec['parmetis'].prefix.include)
+                '-DTPL_ParMETIS_INCLUDE_DIRS=%s;%s' % (
+                    spec['parmetis'].prefix.include,
+                    spec['metis'].prefix.include)
             ])
         else:
             options.extend([
@@ -535,6 +544,17 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_Zlib:BOOL=OFF'
             ])
 
+        if '+cgns' in spec:
+            options.extend([
+                '-DTPL_ENABLE_CGNS:BOOL=ON',
+                '-DCGNS_INCLUDE_DIRS:PATH=%s' % spec['cgns'].prefix.include,
+                '-DCGNS_LIBRARY_DIRS:PATH=%s' % spec['cgns'].prefix.lib
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_GGNS:BOOL=OFF'
+            ])
+
         # ################# Miscellaneous Stuff ######################
 
         # OpenMP
@@ -586,11 +606,12 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
 
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+        if sys.platform == 'darwin' and macOS_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
-            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' % prefix.lib)
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' %
+                           self.prefix.lib)
 
         if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
             # Panzer uses some std:chrono that is not recognized by Intel

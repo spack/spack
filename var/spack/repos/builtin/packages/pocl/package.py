@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 
 from spack import *
-from spack.package_test import *
-import os
+from spack.package_test import compile_c_and_execute, compare_output_file
 
 
 class Pocl(CMakePackage):
@@ -57,20 +57,19 @@ class Pocl(CMakePackage):
 
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
-    depends_on("libtool", type=("build", "run"))
+    depends_on("libtool", type=("build", "link", "run"))
+    depends_on("pkgconfig", type="build")
+
     # We don't request LLVM's shared libraries because these are not
     # enabled by default, and also because they fail to build for us
     # (see #1616)
-    depends_on("llvm +clang")
-    depends_on("pkg-config", type="build")
-
     # These are the supported LLVM versions
-    depends_on("llvm @3.7:3.9", when="@master")
-    depends_on("llvm @3.7:4.0", when="@0.14")
-    depends_on("llvm @3.7:3.8", when="@0.13")
-    depends_on("llvm @3.2:3.7", when="@0.12")
-    depends_on("llvm @3.2:3.6", when="@0.11")
-    depends_on("llvm @3.2:3.5", when="@0.10")
+    depends_on("llvm +clang @3.7:3.9", when="@master")
+    depends_on("llvm +clang @3.7:4.0", when="@0.14")
+    depends_on("llvm +clang @3.7:3.8", when="@0.13")
+    depends_on("llvm +clang @3.2:3.7", when="@0.12")
+    depends_on("llvm +clang @3.2:3.6", when="@0.11")
+    depends_on("llvm +clang @3.2:3.5", when="@0.10")
 
     variant("distro", default=False,
             description=("Support several CPU architectures, "
@@ -91,8 +90,7 @@ class Pocl(CMakePackage):
 
     @run_after('install')
     def symlink_opencl(self):
-        with working_dir(self.build_directory):
-            os.symlink("OpenCL", join_path(self.prefix.include, "CL"))
+        os.symlink("CL", self.prefix.include.OpenCL)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

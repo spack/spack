@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,9 +34,9 @@ class RAffycompatible(RPackage):
     (AGCC)-compatible sample annotation files."""
 
     homepage = "https://www.bioconductor.org/packages/AffyCompatible/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/AffyCompatible_1.36.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/AffyCompatible"
 
-    version('1.36.0', '0e30d7f20308d7c48beb4a03b5ea20c6')
+    version('1.36.0', 'https://git.bioconductor.org/packages/AffyCompatible', commit='dbbfd43a54ae1de6173336683a9461084ebf38c3')
 
     depends_on('r@3.4.0:3.4.9', when=('@1.36.0'))
     depends_on('r-xml', type=('build', 'run'))

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,16 +44,19 @@ class Libxml2(AutotoolsPackage):
     depends_on('zlib')
     depends_on('xz')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     def configure_args(self):
         spec = self.spec
+
+        args = ["--with-lzma=%s" % spec['xz'].prefix]
+
         if '+python' in spec:
-            python_args = [
+            args.extend([
                 '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
-            ]
+            ])
         else:
-            python_args = ['--without-python']
+            args.append('--without-python')
 
-        return python_args
+        return args
