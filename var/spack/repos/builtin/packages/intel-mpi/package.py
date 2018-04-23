@@ -51,15 +51,14 @@ class IntelMpi(IntelPackage):
     provides('mpi')
 
     def setup_dependent_environment(self, *args):
+        # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py
         #   ../intel-parallel-studio/package.py
-        # Tail-call the actual implementation, conveying client's compilers.
-        return self.mpi_setup_dependent_environment(
-            *args, compilers_of_client={
-                'CC':   spack_cc,
-                'CXX':  spack_cxx,
-                'F77':  spack_f77,
-                'F90':  spack_fc,
-                'FC':   spack_fc,
-            })
+        self._setup_dependent_env_callback(*args, compilers_of_client={
+            'CC':   spack_cc,
+            'CXX':  spack_cxx,
+            'F77':  spack_f77,
+            'F90':  spack_fc,
+            'FC':   spack_fc,
+        })

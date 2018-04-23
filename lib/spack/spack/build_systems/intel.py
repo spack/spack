@@ -33,9 +33,10 @@ import llnl.util.tty as tty
 
 from llnl.util.filesystem import \
     install, join_path, ancestor, filter_file, \
-    LibraryList, find_headers, find_libraries, find_system_libraries
+    HeaderList, find_headers, \
+    LibraryList, find_libraries, find_system_libraries
 
-from spack.version import Version
+from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
@@ -71,23 +72,29 @@ def _expand_fields(s):
 
     Supported fields and their typical expansions are::
 
-        {platform}  linux
-        {arch}      intel64
+        {platform}  linux, mac
+        {arch}      intel64 (including on Mac)
+        {libarch}   intel64, empty on Mac
         {bits}      64
 
     '''
     # Python-native string formatting requires arg list counts to match the
     # replacement field count; optional fields are far easier with regexes.
 
-    if 'linux' in sys.platform:            # NB: linux2 vs. linux
+    _bits = '64'
+    _arch = 'intel64'   # TBD: ia32
+
+    if 'linux' in sys.platform:         # NB: linux2 vs. linux
         s = re.sub('{platform}', 'linux', s)
-    # elif 'darwin' in sys.platform:         # TBD
-    #     s = re.sub('{platform}', '', s)    # typically not used (right?)
+        s = re.sub('{libarch}', _arch, s)
+    elif 'darwin' in sys.platform:
+        s = re.sub('{platform}', 'mac', s)
+        s = re.sub('{libarch}', '', s)  # no arch dirs are used (as of 2018)
     # elif 'win' in sys.platform:            # TBD
     #     s = re.sub('{platform}', 'windows', s)
 
-    s = re.sub('{arch}', 'intel64', s)      # TBD: ia32
-    s = re.sub('{bits}', '64', s)
+    s = re.sub('{arch}', _arch, s)
+    s = re.sub('{bits}', _bits, s)
     return s
 
 
@@ -131,7 +138,7 @@ class IntelPackage(PackageBase):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify one anyway will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self._has_compilers or self.version < Version('2017.2')
+        return self._has_compilers or self.version < ver('2017.2')
 
     #: Comment symbol used in the license.lic file
     license_comment = '#'
@@ -150,17 +157,15 @@ class IntelPackage(PackageBase):
         if self._has_compilers:
             dirs.append(self.component_bin_dir('compiler'))
 
-            addon_dirs_by_variant = {
+            for variant, component_suite_dir in {
                 '+advisor':    'advisor',
                 '+inspector':  'inspector',
                 '+itac':       'itac',
                 '+vtune':      'vtune_amplifier',
-            }
-
-            for variant, dir_name in addon_dirs_by_variant.items():
+            }.items():
                 if variant in self.spec:
                     dirs.append(self.normalize_path(
-                        'licenses', dir_name, relative=True))
+                        'licenses', component_suite_dir, relative=True))
 
         return [os.path.join(d, 'license.lic') for d in dirs]
 
@@ -306,27 +311,7 @@ class IntelPackage(PackageBase):
                     v_year = year
                     break
 
-        return Version('%s.%s' % (v_year, v_tail))
-
-    @property
-    def _uses_early_dir_layout(self):
-        # Intel's nomenclature and scope for product names changed over the
-        # years.  In 2015, "Parallel Studio" simply was the higher-tier
-        # product. In Spack, we justifiably retconned this as "cluster
-        # edition".  "Composer" in 2015 simply was the lower-tier product,
-        # later retconned as "composer edition".  Both products used the
-        # "composer_xe" dir layout.
-        #
-        # The *virtual* library packages derived from those 2015 products
-        # *also* use the older layout(!).
-        #
-        # The *standalone* "intel-foo" library packages in Spack as of 2018-04
-        # are all 2016 and later releases. All are versioned by year only from
-        # 2017 onwards [except DAAL], and *all* use "compilers_and_libraries".
-
-        result = self._version_yearlike < Version('2016')
-        debug_print(result)
-        return result
+        return ver('%s.%s' % (v_year, v_tail))
 
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
@@ -339,13 +324,13 @@ class IntelPackage(PackageBase):
     # Not using class IntelPackage:
     #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
     #
-    def normalize_suite_dir(self, product_dir_name, version_glob='_*.*.*'):
+    def normalize_suite_dir(self, suite_dir_name, version_glob='_*.*.*'):
         '''Returns the version-specific and absolute path to the directory of
         an Intel product or a suite of product components.
 
         Parameters:
 
-            product_dir_name (str):
+            suite_dir_name (str):
                 Name of the product directory, without numeric version.
 
                 - Examples::
@@ -364,31 +349,28 @@ class IntelPackage(PackageBase):
                 the modulefiles that Spack produces).
 
             version_glob (str): A glob pattern that fully qualifies
-                product_dir_name to a specific version within an actual
+                suite_dir_name to a specific version within an actual
                 directory (not a symlink).
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
         d = self.prefix
-        if sys.platform == 'darwin':
-            # TODO: Verify on Mac.
-            return Prefix(d)
 
         # Distinguish between product installations that were done external to
         # Spack (integrated via packages.yaml) and Spack-internal ones. The
         # resulting prefixes may differ in directory depth and specificity.
-        dir_to_expand = ''
-        if product_dir_name and product_dir_name in d:
+        unversioned_dirname = ''
+        if suite_dir_name and suite_dir_name in d:
             # If e.g. MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
             # products and their releases that were installed in sibling or
             # cousin directories.  In such cases, the prefix given to Spack
             # will inevitably be a highly product-specific and preferably fully
             # version-specific directory.  This is what we want and need, and
-            # nothing more specific than that, i.e., if needed, convert:
+            # nothing more specific than that, i.e., if needed, convert, e.g.:
             #   .../compilers_and_libraries*/* -> .../compilers_and_libraries*
             d = re.sub('(%s%s.*?)%s.*' %
-                       (os.sep, re.escape(product_dir_name), os.sep), r'\1', d)
+                       (os.sep, re.escape(suite_dir_name), os.sep), r'\1', d)
 
             # The Intel installer scripts try hard to place compatibility links
             # named like this in the install dir to convey upgrade benefits to
@@ -398,7 +380,7 @@ class IntelPackage(PackageBase):
             # builds of dependent packages may be affected. (Though Intel has
             # been remarkably good at backward compatibility.)
             # I'm not sure if Spack's package hashing includes link targets.
-            if d.endswith(product_dir_name):
+            if d.endswith(suite_dir_name):
                 # NB: This could get tiresome without a seen++ test.
                 # tty.warn('Intel product found in a version-neutral directory'
                 #          ' - future builds may not be reproducible.')
@@ -406,7 +388,7 @@ class IntelPackage(PackageBase):
                 # Simply doing realpath() would not be enough, because:
                 #   compilers_and_libraries -> compilers_and_libraries_2018
                 # which is mostly a staging directory for symlinks (see next).
-                dir_to_expand = d
+                unversioned_dirname = d
         else:
             # By contrast, a Spack-internal MKL installation will inherit its
             # prefix from install.sh of Intel's package distribution, where it
@@ -439,10 +421,10 @@ class IntelPackage(PackageBase):
             #  So, we can't have it quite as easy as:
             # d = Prefix(d.append('compilers_and_libraries_' + self.version))
             #  Alright, let's see what we can find instead:
-            dir_to_expand = join_path(d, product_dir_name)
+            unversioned_dirname = join_path(d, suite_dir_name)
 
-        if dir_to_expand:
-            matching_dirs = glob.glob(dir_to_expand + version_glob)
+        if unversioned_dirname:
+            matching_dirs = glob.glob(unversioned_dirname + version_glob)
             if matching_dirs:
                 # Take the highest and thus presumably newest match, which
                 # better be the sole one anyway.
@@ -451,7 +433,7 @@ class IntelPackage(PackageBase):
                 # No match -- this *will* happen during pre-build call to
                 # setup_environment() when the destination dir is still empty.
                 # Return a sensible value anyway.
-                d = dir_to_expand
+                d = unversioned_dirname
 
         debug_print(d)
         return Prefix(d)
@@ -460,6 +442,10 @@ class IntelPackage(PackageBase):
                        relative=False):
         '''Returns the absolute or relative path to a component or file under a
         component suite directory.
+
+        Intel's product names, scope, and directory layout changed over the
+        years.  This function provides a unified interface to their directory
+        names.
 
         Parameters:
 
@@ -488,36 +474,43 @@ class IntelPackage(PackageBase):
         # a function for that).  I chose "" to allow that case be represented,
         # and 'None' or the absence of the kwarg to represent the most relevant
         # case for the time of writing.
+        #
+        # In the 2015 releases (the earliest in Spack as of 2018), there were
+        # nominally two separate products that provided the compilers:
+        # "Composer" as lower tier, and "Parallel Studio" as upper tier. In
+        # Spack, we justifiably retcon both as "intel-parallel-studio@composer"
+        # and "...@cluster", respectively.  Both of these use the older
+        # "composer_xe" dir layout, as do their virtual package personas.
+        #
+        # All other "intel-foo" packages in Spack as of 2018-04 use the
+        # "compilers_and_libraries" layout, including the 2016 releases that
+        # are not natively versioned by year.
 
-        if component_suite_dir is None:
-            if self._uses_early_dir_layout:
-                component_suite_dir = 'composer_xe'     # The only one present.
-            elif component_path.startswith('ism'):
-                component_suite_dir = 'parallel_studio_xe'
-            else:
-                component_suite_dir = 'compilers_and_libraries'  # most comps.
+        c = component_suite_dir
+        if c is None and component_path.startswith('ism'):
+            c = 'parallel_studio_xe'
 
-        # Handle version-agnostic shorthands
-        if component_suite_dir == 'vtune':
-            component_suite_dir += '_amplifier'
+        v = self._version_yearlike
+        for rename_rule in [
+            # c given as arg -> for years -> dir actually used
+            [None,              ':2015', 'composer_xe'],
+            [None,              '2016:', 'compilers_and_libraries'],
+            ['advisor',         ':2016', 'advisor_xe'],
+            ['inspector',       ':2016', 'inspector_xe'],
+            ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
+            ['vtune',           ':2017', 'vtune_amplifier_xe'],  # alt.
+        ]:
+            if c == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
+                c = rename_rule[2]
 
-        if ((component_suite_dir == 'vtune_amplifier' and
-                self._version_yearlike < Version('2018'))
-            or
-            (component_suite_dir in 'advisor inspector'.split() and
-                self._version_yearlike < Version('2017'))):
-            component_suite_dir += '_xe'
+        d = self.normalize_suite_dir(c)
+        parent_dir = ancestor(os.path.realpath(d))  # usu. same as self.prefix
 
-        d = self.normalize_suite_dir(component_suite_dir)
-        parent_dir = ancestor(os.path.realpath(d))   # usu. same as self.prefix
-
-        if component_suite_dir == 'compilers_and_libraries':    # passed or set
-            if 'linux' in sys.platform:
-                d += '/linux'          # Not used in any other component suite.
-
-        if self._uses_early_dir_layout:
-            if component_path.startswith('mpi'):
-                # Need to rejigger and re-parent the component dir.
+        if c == 'compilers_and_libraries':          # must qualify further
+            d = join_path(d, _expand_fields('{platform}'))
+        elif c == 'composer_xe':
+            # Components mkl, ipp, tbb are found fine under c, but not mpi:
+            if component_path.startswith('mpi'):    # look in parent
                 dirs = glob.glob(join_path(parent_dir, 'impi', '[45].*.*'))
                 debug_print('dirs: %s' % dirs)
                 # Brazenly assume last match is the most recent version;
@@ -525,7 +518,7 @@ class IntelPackage(PackageBase):
                 rel_dir = dirs[-1].split(parent_dir + os.sep, 1)[-1]
                 component_path = component_path.replace('mpi', rel_dir, 1)
                 d = parent_dir
-            # Ignore imb = MPI Benchmarks; mkl OK under component_suite_dir.
+            # ignore 'imb' (MPI Benchmarks)
 
         d = join_path(d, component_path)
 
@@ -538,17 +531,15 @@ class IntelPackage(PackageBase):
     def component_bin_dir(self, component, **kwargs):
         d = self.normalize_path(component, **kwargs)
 
-        if sys.platform == 'darwin':
-            d = join_path(d, 'bin')
+        if component == 'compiler':     # bin dir is always under PARENT
+            d = join_path(ancestor(d), 'bin', _expand_fields('{libarch}'))
+            d = d.rstrip(os.sep)        # cosmetics, when {libarch} is empty
+            # NB: Works fine even with relative=True, e.g.:
+            #   composer_xe/compiler -> composer_xe/bin/intel64
+        elif component == 'mpi':
+            d = join_path(d, _expand_fields('{libarch}'), 'bin')
         else:
-            if component == 'mpi':
-                d = join_path(d, _expand_fields('{arch}'), 'bin')
-            elif component == 'compiler':
-                d = join_path(ancestor(d), 'bin', _expand_fields('{arch}'))
-                # works fine even with relative=True, e.g.:
-                #   composer_xe/compiler -> composer_xe/bin/intel64
-            else:
-                d = join_path(d, 'bin')
+            d = join_path(d, 'bin')
         debug_print(d)
         return d
 
@@ -558,16 +549,14 @@ class IntelPackage(PackageBase):
         '''
         d = self.normalize_path(component, **kwargs)
 
-        if sys.platform == 'darwin':
-            d = join_path(d, 'lib')
+        if component == 'mpi':
+            d = join_path(d, _expand_fields('{libarch}'), 'lib')
         else:
-            if component == 'mpi':
-                d = join_path(d, _expand_fields('{arch}'), 'lib')
-            else:
-                d = join_path(d, 'lib', _expand_fields('{arch}'))
+            d = join_path(d, 'lib', _expand_fields('{libarch}'))
+            d = d.rstrip(os.sep)        # cosmetics, when {libarch} is empty
 
-            if component == 'tbb':      # must further qualify for abi
-                d = join_path(d, self._tbb_abi)
+        if component == 'tbb':      # must qualify further for abi
+            d = join_path(d, self._tbb_abi)
 
         debug_print(d)
         return d
@@ -576,8 +565,10 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'mpi':
-            d = join_path(d, _expand_fields('{arch}'))
-        d = join_path(d, 'include')
+            d = join_path(d, _expand_fields('{libarch}'), 'include')
+        else:
+            d = join_path(d, 'include')
+
         debug_print(d)
         return d
 
@@ -591,16 +582,17 @@ class IntelPackage(PackageBase):
         '''
         vars_file_info_for = {
             # key (usu. spack package name) -> [rel_path, component_suite_dir]
-            '@early_compiler':       ['bin/compilervars',       None],
+            # Extension note: handle additions by Spack name or ad-hoc keys.
+            '@early_compiler':       ['bin/compilervars',           None],
             'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
-            'intel':                 ['bin/compilervars',       None],
-            'intel-daal':            ['daal/bin/daalvars',      None],
-            'intel-ipp':             ['ipp/bin/ippvars',        None],
-            'intel-mkl':             ['mkl/bin/mklvars',        None],
-            'intel-mpi':             ['mpi/{arch}/bin/mpivars', None],
+            'intel':                 ['bin/compilervars',           None],
+            'intel-daal':            ['daal/bin/daalvars',          None],
+            'intel-ipp':             ['ipp/bin/ippvars',            None],
+            'intel-mkl':             ['mkl/bin/mklvars',            None],
+            'intel-mpi':             ['mpi/{libarch}/bin/mpivars',  None],
         }
         key = self.name
-        if self._uses_early_dir_layout:
+        if self._version_yearlike.satisfies(ver(':2015')):
             # Same file as 'intel' but 'None' for component_suite_dir will
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
@@ -673,17 +665,18 @@ class IntelPackage(PackageBase):
         gcc = Executable('gcc')
         matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
                             gcc('--version', output=str), re.I | re.M)
-        if matches:
+        abi = ''
+        if sys.platform == 'darwin':
+            pass
+        elif matches:
             # TODO: Confirm that this covers clang (needed on Linux only)
             gcc_version = Version(matches.groups()[1])
-            if gcc_version >= Version('4.7'):
+            if gcc_version >= ver('4.7'):
                 abi = 'gcc4.7'
-            elif gcc_version >= Version('4.4'):
+            elif gcc_version >= ver('4.4'):
                 abi = 'gcc4.4'
             else:
                 abi = 'gcc4.1'     # unlikely, one hopes.
-        else:
-            abi = ''
 
         # Alrighty then ...
         debug_print(abi)
@@ -870,29 +863,38 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     @property
     def headers(self):
+        result = HeaderList([])
         if '+mpi' in self.spec or self.provides('mpi'):
-            return find_headers(
+            result += find_headers(
                 ['mpi'],
                 root=self.component_include_dir('mpi'),
                 recursive=False)
         if '+mkl' in self.spec or self.provides('mkl'):
-            return find_headers(
+            result += find_headers(
                 ['mkl_cblas', 'mkl_lapacke'],
                 root=self.component_include_dir('mkl'),
                 recursive=False)
+        debug_print(result)
+        return result
 
     @property
     def libs(self):
+        result = LibraryList([])
         if '+mpi' in self.spec or self.provides('mpi'):
             # If prefix is too general, recursive searches may get files from
             # supported but inappropriate sub-architectures like 'mic'.
             libnames = ['libmpifort', 'libmpi']
             if 'cxx' in self.spec.last_query.extra_parameters:
                 libnames = ['libmpicxx'] + libnames
-            return find_libraries(
+            result += find_libraries(
                 libnames,
                 root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True)
+
+        # NB: MKL uses domain-specifics: blas_libs/lapack_libs/scalapack_libs
+
+        debug_print(result)
+        return result
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -918,23 +920,39 @@ class IntelPackage(PackageBase):
 
         tty.debug("sourcing " + f)
 
-        if sys.platform == 'darwin':
-            args = ()
-        else:
-            # All Intel packages expect at least the architecture as argument.
-            # Some accept more args, but those are not (yet?) handled here.
-            args = (_expand_fields('{arch}'),)
+        # All Intel packages expect at least the architecture as argument.
+        # Some accept more args, but those are not (yet?) handled here.
+        args = (_expand_fields('{arch}'),)
+
+        # On Mac, the platform is *also required*, at least as of 2018.
+        # I am not sure about earlier versions.
+        # if sys.platform == 'darwin':
+        #     args = ()
 
         run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # Handle everything in a callback version.
+        self._setup_dependent_env_callback(spack_env, run_env, dependent_spec)
+
+    def _setup_dependent_env_callback(
+            self, spack_env, run_env, dependent_spec, compilers_of_client={}):
+        # Expected to be called from a client's setup_dependent_environment(),
+        # with args extended to convey the client's compilers as needed.
+
         if '+mkl' in self.spec or self.provides('mkl'):
             # Spack's env philosophy demands that we replicate some of the
             # settings normally handled by file_to_source ...
             spack_env.set('MKLROOT', self.normalize_path('mkl'))
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir('mkl'))
-        # For mpi, see mpi_setup_dependent_environment()
+
+        if '+mpi' in self.spec or self.provides('mpi'):
+            if compilers_of_client:
+                self.mpi_setup_dependent_environment(
+                    spack_env, run_env, dependent_spec, compilers_of_client)
+            else:
+                raise InstallError('compilers_of_client arg required for MPI')
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec or self.provides('mpi'):
