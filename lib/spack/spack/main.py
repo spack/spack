@@ -432,8 +432,9 @@ class SpackCommand(object):
         fail_on_error = kwargs.get('fail_on_error', True)
 
         out = StringIO()
+        echo = kwargs.get('echo', False)
         try:
-            with log_output(out):
+            with log_output(out, echo=echo):
                 self.returncode = _invoke_spack_command(
                     self.command, self.parser, args, unknown)
 

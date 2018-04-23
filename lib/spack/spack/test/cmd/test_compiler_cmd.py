@@ -80,6 +80,7 @@ class TestCompilerCommand(object):
 
         args = spack.util.pattern.Bunch(
             all=None,
+            specs=[],
             compiler_spec=None,
             add_paths=[mock_compiler_dir],
             scope=None
