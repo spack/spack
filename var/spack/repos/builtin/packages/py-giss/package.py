@@ -25,8 +25,10 @@
 from spack import *
 
 
-class PyGiss(Package):
-    """Misc. Python Stuff."""
+class PyGiss(PythonPackage):
+    """General Python library used at the Goddard Institute of Space
+    Studies (GISS).  Typically for pre- and post-processing of ModelE
+    data."""
 
     homepage = "https://github.com/citibeth/pygiss"
     url      = "https://codeland.github.com/citibeth/pygiss/tar.gz/v0.1.0.tar.gz"
@@ -41,15 +43,12 @@ class PyGiss(Package):
     # Requires python@3:
     extends('python')
 
-    depends_on('python@3:')
-    depends_on('py-numpy+blas+lapack')
-    depends_on('py-netcdf')
-    depends_on('py-matplotlib')
-    depends_on('py-basemap')
-    depends_on('py-proj')
-    depends_on('py-scipy')
-    depends_on('py-six')
-    depends_on('py-udunits')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on('python@3:', type=('build', 'run'))
+    depends_on('py-numpy+blas+lapack', type=('build', 'run'))
+    depends_on('py-netcdf', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-basemap', type=('build', 'run'))
+    depends_on('py-proj', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-udunits', type=('build', 'run'))

@@ -41,6 +41,3 @@ class Modelex(CMakePackage):
 #    depends_on('netcdf-cxx4')
 #    depends_on('ibmisc')
     depends_on('cmake', type='build')
-
-    def cmake_args(self):
-        return []

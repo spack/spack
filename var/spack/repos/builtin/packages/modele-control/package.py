@@ -25,8 +25,8 @@
 from spack import *
 
 
-class ModeleControl(Package):
-    """Misc. Python Stuff."""
+class ModeleControl(PythonPackage):
+    """Prepare ModelE inputs and launch ModelE"""
 
     homepage = "https://github.com/citibeth/modele-control"
     url      = "https://codeland.github.com/citibeth/modele-control/tar.tz/v0.1.0.tar.gz"
@@ -40,6 +40,3 @@ class ModeleControl(Package):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-giss', type=('build', 'run'))
     depends_on('netcdf', type='run')        # ncdump executable
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

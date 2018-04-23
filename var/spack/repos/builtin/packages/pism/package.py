@@ -105,9 +105,8 @@ class Pism(CMakePackage):
 
     extends('python', when='+python')
     depends_on('python@2.7', when='+python')
-    depends_on('py-matplotlib', when='+python')  # Implies py-numpy too
-
-    depends_on('cmake', type='build')
+    depends_on('py-matplotlib', when='+python')
+    depends_on('py-numpy', when='+python')
 
     def cmake_args(self):
         spec = self.spec
@@ -136,17 +135,12 @@ class Pism(CMakePackage):
             '-DPism_USE_EVERYTRACE=%s' %
             ('YES' if '+everytrace' in spec else 'NO')]
 
-    def install_install(self):
-        make = self.make_make()
-        with working_dir(self.build_directory, create=False):
-            make('install')
-
     def setup_environment(self, spack_env, env):
         """Add <prefix>/bin to the module; this is not the default if we
         extend python."""
-        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+        env.prepend_path('PATH', self.prefix.bin)
         env.set('PISM_PREFIX', self.prefix)
-        env.set('PISM_BIN', join_path(self.prefix, 'bin', ''))
+        env.set('PISM_BIN', self.prefix.bin)
 
 
 # From email correspondence with Constantine Khroulev:

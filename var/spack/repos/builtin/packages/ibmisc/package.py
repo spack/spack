@@ -29,7 +29,7 @@ class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
 
     homepage = "https://github.com/citibeth/ibmisc"
-    url      = "https://codeload.github.com/citibeth/ibmisc/tar.gz/v0.1.0.tar.gz"
+    url      = "https://codeload.github.com/citibeth/ibmisc/tar.gz/v0.1.3.tar.gz"
 
     maintainers = ['citibeth']
 
@@ -58,8 +58,8 @@ class Ibmisc(CMakePackage):
     variant('doc', default=False,
             description='Build the documentation')
 
-    extends('python')
-    depends_on('python@3:')    # Needed for the build...
+    extends('python', when='+python')
+    depends_on('python@3:', when='+python')
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')

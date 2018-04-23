@@ -30,11 +30,10 @@ class ModeleUtils(CMakePackage):
 
     homepage = "http://www.giss.nasa.gov/tools/modelE"
 
-    # This must be built a user with access to simplex.
+    # This must be built by a user with access to simplex.
     version('develop',
             git='simplex.giss.nasa.gov:/giss/gitrepo/modelE.git',
-            branch='landice',
-            preferred=True)
+            branch='landice')
 
     maintainers = ['citibeth']
 
@@ -70,7 +69,3 @@ class ModeleUtils(CMakePackage):
             '-DUSE_FEXCEPTION=NO',
             '-DUSE_EVERYTRACE=NO',
             '-DUSE_ICEBIN=NO']
-
-    def setup_environment(self, spack_env, env):
-        """Add <prefix>/bin to the module"""
-        env.prepend_path('PATH', join_path(self.prefix, 'bin'))

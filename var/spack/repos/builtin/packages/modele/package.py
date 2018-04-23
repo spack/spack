@@ -26,7 +26,9 @@ from spack import *
 
 
 class Modele(CMakePackage):
-    """GISS GCM"""
+
+    """General Circulation (Climate) Model from the Columbia/NASA Goddard
+    Institute of Space Studes"""
 
     homepage = "http://www.giss.nasa.gov/tools/modelE"
 
@@ -68,8 +70,6 @@ class Modele(CMakePackage):
             description='Build init_cond directory')
 
     # --- Variants controlling how we build
-    variant('debug', default=False,
-            description='Use Debug for CMAKE_BUILD_TYPE')
     variant('mods', default=False,
             description='Install .mod files')
 
@@ -104,10 +104,4 @@ class Modele(CMakePackage):
 
 
             '-DCMAKE_BUILD_TYPE=%s' %
-            ('Debug' if '+debug' in spec else 'Release'),
             '-DINSTALL_MODS=%s' % ('YES' if '+mods' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, env):
-        """Add <prefix>/bin to the module; this is not the default if we
-        extend python."""
-        env.prepend_path('PATH', join_path(self.prefix, 'bin'))

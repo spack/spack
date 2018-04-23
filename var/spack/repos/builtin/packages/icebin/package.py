@@ -55,9 +55,10 @@ class Icebin(CMakePackage):
 
     depends_on('everytrace')
 
-    depends_on('python@3:', when='+python')
-    depends_on('py-cython', when='+python')
-    depends_on('py-numpy', when='+python')
+    extends('python', when='+python')
+    depends_on('python@3:', when='+python', type=('build', 'run'))
+    depends_on('py-cython', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
 
     depends_on('cgal', when='+gridgen')
     depends_on('gmp', when='+gridgen')
@@ -89,8 +90,3 @@ class Icebin(CMakePackage):
             '-DBUILD_MODELE=%s' % ('YES' if '+modele' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO'),
             '-DBUILD_DOCS=%s' % ('YES' if '+doc' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, run_env):
-        """Add <prefix>/bin to the module; this is not the default if we
-        extend python."""
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))

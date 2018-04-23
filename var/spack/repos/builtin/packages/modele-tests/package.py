@@ -39,6 +39,3 @@ class ModeleTests(CMakePackage):
     depends_on('pfunit')
     depends_on('everytrace')
     # Does not depend on ModelE; that will be provided later
-
-    def configure_args(self):
-        return []
