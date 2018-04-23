@@ -1,5 +1,6 @@
-#############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+##############################################################################
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -21,23 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class VotcaMoo(CMakePackage):
-    """Versatile Object-oriented Toolkit for Coarse-graining
-       Applications (VOTCA) is a package intended to reduce the amount of
-       routine work when doing systematic coarse-graining of various
-       systems. The core is written in C++.
+class Fermi(MakefilePackage):
+    """A WGS de novo assembler based on the FMD-index for large genomes."""
 
-       This package contains the VOTCA molecular orbital module.
-    """
-    homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/moo/tarball/v1.4"
+    homepage = "https://github.com/lh3/fermi"
+    url      = "https://github.com/downloads/lh3/fermi/fermi-1.1.tar.bz2"
 
-    version('develop', git='https://github.com/votca/moo', branch='master')
+    version('1.1', 'd5f006315652b6f18070b31474ca5ebb')
 
-    depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
+    depends_on('zlib')
+    depends_on('perl', type='run')
+
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('fermi', prefix.bin)
+        install('run-fermi.pl', prefix.bin)
