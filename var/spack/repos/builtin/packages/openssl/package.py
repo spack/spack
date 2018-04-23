@@ -30,7 +30,7 @@ import spack.architecture
 import os
 
 
-class Openssl(Package):
+class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
@@ -58,10 +58,12 @@ class Openssl(Package):
     version('1.0.2f', 'b3bf73f507172be9292ea2a8c28b659d')
     version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
     version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
+
     version('1.0.1u', '130bb19745db2a5a09f22ccbbf7e69d0')
     version('1.0.1t', '9837746fcf8a6727d46d22ca35953da1')
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
+    version('1.0.1e', '66bf6f10f060d561929de96f9dfe5b8c') # CentOS7
 
     variant('systemcerts', default=True, description='Use system certificates')
 

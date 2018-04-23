@@ -35,12 +35,17 @@ class Pfunit(CMakePackage):
     url      = "https://downloads.sourceforge.net/project/pfunit/Source/pFUnit.tar.gz"
     giturl   = "https://git.code.sf.net/p/pfunit/code"
 
+    maintainers = ['citibeth']
+
     version('3.2.9', git=giturl,
             commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79')
     version('develop', git=giturl, branch='master')
 
+    variant('shared', default=True,
+            description='Build shared library in addition to static')
     variant('mpi', default=False, description='Enable MPI')
     variant('openmp', default=False, description='Enable OpenMP')
+    variant('docs', default=False, description='Build docs')
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-unittest2', type=('run'))
@@ -54,16 +59,17 @@ class Pfunit(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include]
+        args = [
+            '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
+            '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
+            '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
+            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO')]
+
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
                          '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
         else:
             args.append('-DMPI=NO')
-        if spec.satisfies('+openmp'):
-            args.append('-DOPENMP=YES')
-        else:
-            args.append('-DOPENMP=NO')
         return args
 
     def check(self):

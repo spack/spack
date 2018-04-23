@@ -62,6 +62,8 @@ class PyScipy(PythonPackage):
 
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-nose', type='build')
+    depends_on('binutils@2.26:', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see

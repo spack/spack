@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,23 +25,16 @@
 from spack import *
 
 
-class Libxaw(AutotoolsPackage):
-    """Xaw is the X Athena Widget Set.
-    Xaw is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
+class PyMoreItertools(Package):
+    """Additions to the standard Python itertools package."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXaw"
-    url      = "https://www.x.org/archive/individual/lib/libXaw-1.0.13.tar.gz"
+    homepage = "https://github.com/erikrose/more-itertools"
+    url      = "https://pypi.python.org/packages/3d/4d/5900efaab46680e3c6c7a2fd87e4531f87e101ec35f6941621dc7f097e82/more-itertools-2.2.tar.gz#md5=b8d328a33f966bf40bb829bcf8da35ce"
 
-    version('1.0.13', '6c522476024df5872cddc5f1562fb656')
-    version('1.0.12', 'a1dd3ced7cefe99b2db8a5d390cf5fe9') # CentOS7
+    version('2.2', 'b8d328a33f966bf40bb829bcf8da35ce')
 
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxt')
-    depends_on('libxmu')
-    depends_on('libxpm')
+    extends('python')
+    depends_on('py-setuptools', type='build')
 
-    depends_on('xproto', type='build')
-    depends_on('xextproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    def install(self, spec, prefix):
+        setup_py('install', '--prefix={0}'.format(prefix))
