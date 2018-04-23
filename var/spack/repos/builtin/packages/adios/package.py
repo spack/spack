@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,9 +34,12 @@ class Adios(AutotoolsPackage):
 
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
     url = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
+    version('1.13.1', '958aed11240d7f5a065ab5ee271ecb44')
+    version('1.13.0', '68af36b821debbdf4748b20320a990ce')
     version('1.12.0', '84a1c71b6698009224f6f748c5257fc9')
     version('1.11.1', '5639bfc235e50bf17ba9dafb14ea4185')
     version('1.11.0', '5eead5b2ccf962f5e6d5f254d29d5238')
@@ -65,6 +68,10 @@ class Adios(AutotoolsPackage):
             description='Enable ZFP transform support')
     variant('sz', default=True,
             description='Enable SZ transform support')
+    variant('lz4', default=True,
+            description='Enable LZ4 transform support')
+    variant('blosc', default=True,
+            description='Enable Blosc transform support')
     # transports and serial file converters
     variant('hdf5', default=False,
             description='Enable parallel HDF5 transport and serial bp2h5 ' +
@@ -90,10 +97,14 @@ class Adios(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
-    depends_on('sz', when='+sz')
+    depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
+    depends_on('sz@1.4.11.0:', when='@1.13.0 +sz')
+    depends_on('sz@1.4.12.3:', when='@1.13.1: +sz')
     depends_on('zfp@:0.5.0', when='+zfp')
+    depends_on('lz4', when='+lz4')
+    depends_on('c-blosc@1.12.0:', when='+blosc')
     # optional transports & file converters
-    depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
     depends_on('dataspaces+mpi', when='staging=dataspaces')
@@ -108,7 +119,7 @@ class Adios(AutotoolsPackage):
     patch('python.patch', when='@1.10.0:')
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
-    #   https://github.com/LLNL/spack/issues/1683
+    #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
 
     def validate(self, spec):
@@ -153,7 +164,16 @@ class Adios(AutotoolsPackage):
         extra_args += self.with_or_without('infiniband')
 
         # Transforms
-        variants = ['zlib', 'bzip2', 'szip', 'zfp', 'sz']
+        variants = ['zlib', 'bzip2', 'szip']
+        if spec.satisfies('@1.11.0:'):
+            variants += ['zfp']
+        if spec.satisfies('@1.12.0:'):
+            variants += ['sz', 'lz4']
+        if spec.satisfies('@1.13.0:'):
+            extra_args += self.with_or_without(
+                'blosc',
+                activation_value=lambda x: spec['c-blosc'].prefix
+            )
 
         # External I/O libraries
         variants += ['hdf5', 'netcdf']

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,11 @@ class Cmake(Package):
     list_url = 'https://cmake.org/files/'
     list_depth = 1
 
+    version('3.11.1',   '12a3177477e4e2c7bc514193d421dafe')
+    version('3.11.0',   'f3ebc79b5dec85b49abe75958ffa1a03')
+    version('3.10.2',   '732808e17fc14dc8cee50d51518c34eb')
+    version('3.10.1',   '9a726e5ec69618b172aa4b06d18c3998')
+    version('3.10.0',   'f3f8e70ca3055f3cd288f89ff233057e')
     version('3.9.4',    '33769e001bdcd788f565bf378692e5ae')
     version('3.9.0',    '180e23b4c9b55915d271b315297f6951')
     version('3.8.2',    'b5dff61f6a7f1305271ab3f6ae261419')

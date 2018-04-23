@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,7 +35,7 @@ level = "long"
 def setup_parser(subparser):
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs. default is #cpus")
+        help="explicitly set number of make jobs (default: #cpus)")
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="don't remove the install prefix if installation fails")

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -38,8 +38,9 @@ class RRcpp(RPackage):
 
     homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
     url      = "https://cran.rstudio.com/src/contrib/Rcpp_0.12.13.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/Rcpp"
 
+    version('0.12.14', '89a3dbad0aa3e345b9d0b862fa1fc56a')
     version('0.12.13', '5186d119132bfe07f66da74c50b190a4')
     version('0.12.12', '97b36a3b567e3438067c4a7d0075fd90')
     version('0.12.11', 'ea1710213cbb1d91b1d0318e6fa9aa37')

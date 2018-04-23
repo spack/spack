@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,14 +45,15 @@ import yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path, install
 
 import spack
 import spack.error
 import spack.spec
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
-from spack.util.naming import *
+from spack.util.naming import NamespaceTrie, valid_module_name
+from spack.util.naming import mod_to_class, possible_spack_module_names
 
 #
 # Super-namespace for all packages.
@@ -537,20 +538,29 @@ class RepoPath(object):
         sys.modules[fullname] = module
         return module
 
-    @_autospec
     def repo_for_pkg(self, spec):
         """Given a spec, get the repository for its package."""
+        # We don't @_autospec this function b/c it's called very frequently
+        # and we want to avoid parsing str's into Specs unnecessarily.
+        namespace = None
+        if isinstance(spec, spack.spec.Spec):
+            namespace = spec.namespace
+            name = spec.name
+        else:
+            # handle strings directly for speed instead of @_autospec'ing
+            namespace, _, name = spec.rpartition('.')
+
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
-        if spec.namespace:
-            fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
+        if namespace:
+            fullspace = '%s.%s' % (self.super_namespace, namespace)
             if fullspace not in self.by_namespace:
                 raise UnknownNamespaceError(spec.namespace)
             return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
         for repo in self.repos:
-            if spec.name in repo:
+            if name in repo:
                 return repo
 
         # If the package isn't in any repo, return the one with
@@ -673,7 +683,7 @@ class Repo(object):
         self._instances = {}
 
         # Maps that goes from package name to corresponding file stat
-        self._fast_package_checker = FastPackageChecker(self.packages_path)
+        self._fast_package_checker = None
 
         # Index of virtual dependencies, computed lazily
         self._provider_index = None
@@ -809,8 +819,8 @@ class Repo(object):
                     % (self.config_file, self.root))
 
     @_autospec
-    def get(self, spec, new=False):
-        if spec.virtual:
+    def get(self, spec):
+        if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
@@ -818,18 +828,13 @@ class Repo(object):
                 "Repository %s does not contain package %s"
                 % (self.namespace, spec.fullname))
 
-        key = hash(spec)
-        if new or key not in self._instances:
-            package_class = self.get_pkg_class(spec.name)
-            try:
-                copy = spec.copy()  # defensive copy.  Package owns its spec.
-                self._instances[key] = package_class(copy)
-            except Exception:
-                if spack.debug:
-                    sys.excepthook(*sys.exc_info())
-                raise FailedConstructorError(spec.fullname, *sys.exc_info())
-
-        return self._instances[key]
+        package_class = self.get_pkg_class(spec.name)
+        try:
+            return package_class(spec)
+        except Exception:
+            if spack.debug:
+                sys.excepthook(*sys.exc_info())
+            raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
     @_autospec
     def dump_provenance(self, spec, path):
@@ -923,9 +928,15 @@ class Repo(object):
         pkg_dir = self.dirname_for_package_name(spec.name)
         return join_path(pkg_dir, package_file_name)
 
+    @property
+    def _pkg_checker(self):
+        if self._fast_package_checker is None:
+            self._fast_package_checker = FastPackageChecker(self.packages_path)
+        return self._fast_package_checker
+
     def all_package_names(self):
         """Returns a sorted list of all package names in the Repo."""
-        return sorted(self._fast_package_checker.keys())
+        return sorted(self._pkg_checker.keys())
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
@@ -947,7 +958,7 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        return pkg_name in self._fast_package_checker
+        return pkg_name in self._pkg_checker
 
     def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""
@@ -977,7 +988,14 @@ class Repo(object):
             # e.g., spack.pkg.builtin.mpich
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
-            module = imp.load_source(fullname, file_path)
+            try:
+                module = imp.load_source(fullname, file_path)
+            except SyntaxError as e:
+                # SyntaxError strips the path from the filename so we need to
+                # manually construct the error message in order to give the
+                # user the correct package.py where the syntax error is located
+                raise SyntaxError('invalid syntax in {0:}, line {1:}'
+                                  ''.format(file_path, e.lineno))
             module.__package__ = self.full_namespace
             module.__loader__ = self
             self._modules[pkg_name] = module

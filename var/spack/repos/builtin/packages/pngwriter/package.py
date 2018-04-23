@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,14 +37,25 @@ class Pngwriter(CMakePackage):
 
     homepage = "http://pngwriter.sourceforge.net/"
     url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', branch='dev',
             git='https://github.com/pngwriter/pngwriter.git')
     version('master', branch='master',
             git='https://github.com/pngwriter/pngwriter.git')
+    version('0.7.0', 'a68aa0889f120f5bb07848afce278a95')
     version('0.6.0', '0a19bc55c5f6379fea7343752fd3ffae')
     version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
 
     depends_on('libpng')
     depends_on('zlib')
     depends_on('freetype')
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+
+        if spec.satisfies('@0.7.0:'):
+            args += ['-DPNGwriter_USE_FREETYPE:BOOL=ON']
+
+        return args

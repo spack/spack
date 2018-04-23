@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,11 +26,13 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
-
 import pytest
+
+from llnl.util.filesystem import join_path
+
 import spack
-from spack.directory_layout import (YamlDirectoryLayout,
-                                    InvalidDirectoryLayoutParametersError)
+from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import InvalidDirectoryLayoutParametersError
 from spack.repository import RepoPath
 from spack.spec import Spec
 
@@ -72,12 +74,18 @@ def test_yaml_directory_layout_parameters(
     # Test path_scheme
     arch, compiler, package7 = path_7.split('/')
     scheme_package7 = "${PACKAGE}-${VERSION}-${HASH:7}"
-
     layout_package7 = YamlDirectoryLayout(str(tmpdir),
                                           path_scheme=scheme_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
     assert(package7 == path_package7)
+
+    # Test separation of architecture
+    arch_scheme_package = "${PLATFORM}/${TARGET}/${OS}/${PACKAGE}/${VERSION}/${HASH:7}"   # NOQA: ignore=E501
+    layout_arch_package = YamlDirectoryLayout(str(tmpdir),
+                                              path_scheme=arch_scheme_package)
+    arch_path_package = layout_arch_package.relative_path_for_spec(spec)
+    assert(arch_path_package == spec.format(arch_scheme_package))
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # License
@@ -52,14 +52,18 @@
 # - Combining +parmgridgen with +float32 probably won't work.
 #
 ##############################################################################
-from spack import *
-from spack.environment import *
-
 import glob
 import re
 import shutil
 import os
-from spack.pkg.builtin.openfoam_com import *
+
+from spack import *
+from spack.environment import EnvironmentModifications
+from spack.pkg.builtin.openfoam_com import OpenfoamArch
+from spack.pkg.builtin.openfoam_com import add_extra_files
+from spack.pkg.builtin.openfoam_com import write_environ
+from spack.pkg.builtin.openfoam_com import rewrite_environ_files
+import llnl.util.tty as tty
 
 
 class FoamExtend(Package):
@@ -138,14 +142,77 @@ class FoamExtend(Package):
     #
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
-        run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-        run_env.set('WM_PROJECT_DIR', self.projectdir)
-        for d in ['wmake', self.archbin]:  # bin already added automatically
-            run_env.prepend_path('PATH', join_path(self.projectdir, d))
+        """Add environment variables to the generated module file.
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ . $WM_PROJECT_DIR/etc/bashrc
+        """
+
+        # NOTE: Spack runs setup_environment twice.
+        # 1) pre-build to set up the build environment
+        # 2) post-install to determine runtime environment variables
+        # The etc/bashrc is only available (with corrrect content)
+        # post-installation.
+
+        bashrc = join_path(self.projectdir, 'etc', 'bashrc')
+        minimal = True
+        if os.path.isfile(bashrc):
+            # post-install: source the installed bashrc
+            try:
+                mods = EnvironmentModifications.from_sourcing_file(
+                    bashrc,
+                    clean=True,  # Remove duplicate entries
+                    blacklist=[  # Blacklist these
+                        # Inadvertent changes
+                        # -------------------
+                        'PS1',            # Leave unaffected
+                        'MANPATH',        # Leave unaffected
+
+                        # Unneeded bits
+                        # -------------
+                        'FOAM_INST_DIR',  # Possibly incorrect
+                        'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
+                        'FOAM_TEST_.*_DIR',
+                        'WM_NCOMPPROCS',
+                        # 'FOAM_TUTORIALS',  # can be useful
+
+                        # Lots of third-party cruft
+                        # -------------------------
+                        '[A-Z].*_(BIN|LIB|INCLUDE)_DIR',
+                        '[A-Z].*_SYSTEM',
+                        'WM_THIRD_PARTY_.*',
+                        '(BISON|FLEX|CMAKE|ZLIB)_DIR',
+                        '(METIS|PARMETIS|PARMGRIDGEN|SCOTCH)_DIR',
+
+                        # User-specific
+                        # -------------
+                        'FOAM_RUN',
+                        '(FOAM|WM)_.*USER_.*',
+                    ],
+                    whitelist=[  # Whitelist these
+                        'MPI_ARCH_PATH',  # Can be needed for compilation
+                        'PYTHON_BIN_DIR',
+                    ])
+
+                run_env.extend(mods)
+                minimal = False
+                tty.info('foam-extend env: {0}'.format(bashrc))
+            except Exception:
+                minimal = True
+
+        if minimal:
+            # pre-build or minimal environment
+            tty.info('foam-extend minimal env {0}'.format(self.prefix))
+            run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
+            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
+            run_env.set('WM_PROJECT_DIR', self.projectdir)
+            for d in ['wmake', self.archbin]:  # bin added automatically
+                run_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Provide location of the OpenFOAM project.
+        """Location of the OpenFOAM project.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.

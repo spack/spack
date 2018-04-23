@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,8 @@ from __future__ import print_function
 import os
 import sys
 import re
+
+import pytest
 
 import llnl.util.tty as tty
 import spack
@@ -154,11 +156,13 @@ def check_python_versions(files):
     assert not all_issues
 
 
+@pytest.mark.maybeslow
 def test_core_module_compatibility():
     """Test that all core spack modules work with supported Python versions."""
     check_python_versions(pyfiles([spack.lib_path], exclude=exclude_paths))
 
 
+@pytest.mark.maybeslow
 def test_package_module_compatibility():
     """Test that all spack packages work with supported Python versions."""
     check_python_versions(pyfiles([spack.packages_path]))

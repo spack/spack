@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,8 @@ import re
 import pytest
 from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
-from spack.cmd.url import *
+from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
+from spack.cmd.url import url_summary
 
 url = SpackCommand('url')
 
@@ -82,6 +83,7 @@ def test_url_with_no_version_fails():
         url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
 
 
+@pytest.mark.network
 def test_url_list():
     out = url('list')
     total_urls = len(out.split('\n'))
@@ -111,6 +113,7 @@ def test_url_list():
     assert 0 < correct_version_urls < total_urls
 
 
+@pytest.mark.network
 def test_url_summary():
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,8 +35,9 @@ class Openssh(AutotoolsPackage):
     """
 
     homepage = "https://www.openssh.com/"
-    url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.5p1.tar.gz"
+    url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.6p1.tar.gz"
 
+    version('7.6p1',   '06a88699018e5fef13d4655abfed1f63')
     version('7.5p1',   '652fdc7d8392f112bef11cacf7e69e23')
     version('7.4p1',   'b2db2a83caf66a208bb78d6d287cdaa3')
     version('7.3p1',   'dfadd9f035d38ce5d58a3bf130b86d08')

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 #
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 # This program is free software; you can redistribute it and/or modify
@@ -30,12 +30,14 @@ class Lammps(CMakePackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator. This package uses patch releases, not
     stable release.
-    See https://github.com/LLNL/spack/pull/5342 for a detailed
+    See https://github.com/spack/spack/pull/5342 for a detailed
     discussion.
     """
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
 
+    version('20180316', '25bad35679583e0dd8cb8753665bb84b')
+    version('20180222', '4d0513e3183bd57721814d217fdaf957')
     version('20170922', '4306071f919ec7e759bda195c26cfd9a')
     version('20170901', '767e7f07289663f033474dfe974974e7')
     version('develop', git='https://github.com/lammps/lammps', branch='master')
@@ -45,8 +47,13 @@ class Lammps(CMakePackage):
         return "https://github.com/lammps/lammps/archive/patch_{0}.tar.gz".format(
             vdate.strftime("%d%b%Y").lstrip('0'))
 
-    supported_packages = ['voronoi', 'rigid', 'user-netcdf', 'kspace',
-                          'latte', 'user-atc', 'user-omp', 'meam', 'manybody']
+    supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
+                          'coreshell', 'dipole', 'granular', 'kspace', 'latte',
+                          'manybody', 'mc', 'meam', 'misc', 'molecule',
+                          'mpiio', 'peri', 'poems', 'python', 'qeq', 'reax',
+                          'replica', 'rigid', 'shock', 'snap', 'srd',
+                          'user-atc', 'user-h5md', 'user-lb', 'user-misc',
+                          'user-netcdf', 'user-omp', 'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -57,16 +64,29 @@ class Lammps(CMakePackage):
             description='Build with mpi')
 
     depends_on('mpi', when='+mpi')
+    depends_on('mpi', when='+mpiio')
     depends_on('fftw', when='+kspace')
     depends_on('voropp', when='+voronoi')
     depends_on('netcdf+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
-    depends_on('latte', when='+latte')
+    depends_on('latte@1.0.1', when='@:20180222+latte')
+    depends_on('latte@1.1.1:', when='@20180316:+latte')
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
+    depends_on('python', when='+python')
+    depends_on('mpi', when='+user-lb')
+    depends_on('mpi', when='+user-h5md')
+    depends_on('hdf5', when='+user-h5md')
 
+    conflicts('+body', when='+poems')
     conflicts('+latte', when='@:20170921')
+    conflicts('+python', when='~lib')
+    conflicts('+qeq', when='~manybody')
+    conflicts('+user-atc', when='~manybody')
+    conflicts('+user-misc', when='~manybody')
+    conflicts('+user-phonon', when='~kspace')
+    conflicts('+user-misc', when='~manybody')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")

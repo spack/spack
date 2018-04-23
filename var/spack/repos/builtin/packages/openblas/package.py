@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
-from spack.package_test import *
-import spack.architecture
 import os
+
+from spack import *
+from spack.package_test import compare_output_file, compile_c_and_execute
+import spack.architecture
 
 
 class Openblas(MakefilePackage):
@@ -39,8 +40,8 @@ class Openblas(MakefilePackage):
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-
-    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
+    version('develop', git='https://github.com/xianyi/OpenBLAS.git',
+            branch='develop')
 
     variant(
         'shared',
@@ -61,6 +62,12 @@ class Openblas(MakefilePackage):
         multi=False
     )
 
+    variant(
+        'virtual_machine',
+        default=False,
+        description="Adding options to build openblas on Linux virtual machine"
+    )
+
     # virtual dependency
     provides('blas')
     provides('lapack')
@@ -72,6 +79,7 @@ class Openblas(MakefilePackage):
     patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+    patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
@@ -90,10 +98,11 @@ class Openblas(MakefilePackage):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
         # require both.
-        if self.compiler.f77 is None:
+        if self.compiler.fc is None:
             raise InstallError(
                 'OpenBLAS requires both C and Fortran compilers!'
             )
+
         # Add support for OpenMP
         if (self.spec.satisfies('threads=openmp') and
             self.spec.satisfies('%clang')):
@@ -108,7 +117,7 @@ class Openblas(MakefilePackage):
 
     @property
     def make_defs(self):
-        # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
+        # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
@@ -116,9 +125,16 @@ class Openblas(MakefilePackage):
 
         make_defs = [
             'CC={0}'.format(spack_cc),
-            'FC={0}'.format(spack_f77),
+            'FC={0}'.format(spack_fc),
             'MAKE_NO_J=1'
         ]
+
+        if self.spec.variants['virtual_machine'].value:
+            make_defs += [
+                'DYNAMIC_ARCH=1',
+                'NO_AVX2=1'
+            ]
+
         if self.spec.variants['cpu_target'].value:
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)

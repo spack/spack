@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ import llnl.util.tty as tty
 
 import spack.spec
 import spack.config
-from spack.repository import *
+from spack.repository import Repo, create_repo, canonicalize_path, RepoError
 
 description = "manage package source repositories"
 section = "config"
@@ -52,7 +52,8 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
     list_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
     # Add
@@ -60,7 +61,8 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'path', help="path to a Spack package repository directory")
     add_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # Remove
@@ -70,7 +72,8 @@ def setup_parser(subparser):
         'path_or_namespace',
         help="path or namespace of a Spack package repository")
     remove_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
 
