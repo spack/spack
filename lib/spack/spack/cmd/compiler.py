@@ -25,12 +25,16 @@
 from __future__ import print_function
 
 import argparse
+import collections
+import os.path
 import sys
 from six import iteritems
 
 import llnl.util.tty as tty
+import spack.cmd
 import spack.compilers
 import spack.config
+import spack.main
 import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
@@ -54,6 +58,15 @@ def setup_parser(subparser):
         'find', aliases=['add'],
         help='search the system for compilers to add to Spack configuration')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
+    find_parser.add_argument(
+        '--spec', '-s', action='append', dest='specs',
+        help='register a spack installed compiler'
+    )
+    find_parser.add_argument(
+        '--install-missing', action='store_true',
+        help='install specs that are not in the DB yet'
+    )
+
     find_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_modify_scope(),
@@ -92,7 +105,48 @@ def compiler_find(args):
        add them to Spack's configuration.
 
     """
-    paths = args.add_paths
+    paths = args.add_paths or []
+
+    # Specs
+    if args.specs:
+        abstract_specs = spack.cmd.parse_specs(args.specs)
+        concretized = [item.concretized() for item in abstract_specs]
+        Compiler = collections.namedtuple(
+            'Compiler', 'request,abstract,concretized'
+        )
+        specs = [
+            Compiler(x, y, z) for x, y, z
+            in zip(args.specs, abstract_specs, concretized)
+        ]
+
+        # Check that the spec is that of a compiler
+        supported = spack.compilers.supported_compilers() + ['llvm']
+        not_compilers = [x for x in specs if x.abstract.name not in supported]
+        if not_compilers:
+            msg = 'these packages are not compilers [{0}]'
+            raise ValueError(
+                msg.format(', '.join(x.request for x in not_compilers))
+            )
+
+        # Check if all the specs are installed and eventually take care of them
+        not_installed = [
+            x for x in specs if not os.path.exists(x.concretized.prefix)
+        ]
+        if args.install_missing:
+            install = spack.main.SpackCommand('install')
+            for item in not_installed:
+                msg = "Installing missing spec for '{0}' (might take a while)"
+                tty.msg(msg.format(item.request))
+                install(item.request, echo=True)
+        elif not_installed:
+            msg = 'the following specs need to be installed first [{0}]'
+            raise RuntimeError(
+                msg.format(', '.join(x.request for x in not_installed))
+            )
+
+        # Finally, add the paths to those that need to be checked
+        paths_from_specs = [item.concretized.prefix for item in specs]
+        paths.extend(paths_from_specs)
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the
