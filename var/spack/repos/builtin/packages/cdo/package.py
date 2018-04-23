@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,10 @@ class Cdo(AutotoolsPackage):
     url = 'https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz'
     list_url = 'https://code.mpimet.mpg.de/projects/cdo/files'
 
+    maintainers = ['skosukhin']
+
+    version('1.9.3', '13ae222164413dbd53532b03b072def5')
+    version('1.9.2', '38e68d34f0b5b44a52c3241be6831423')
     version('1.9.1', 'e60a89f268ba24cee5c461f2c217829e')
     version('1.9.0', '2d88561b3b4a880df0422a62e5027e40')
     version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121')
@@ -133,8 +137,13 @@ class Cdo(AutotoolsPackage):
 
         config_args += self.enable_or_disable('openmp')
 
-        # Workaround for a problem in CDO
+        # Starting version 1.9.0 CDO is a C++ program but it uses the C
+        # interface of HDF5 without the parallel features. To avoid
+        # unnecessary dependencies on mpi's cxx library, we need to set the
+        # following flags. This works for OpenMPI, MPICH, MVAPICH, Intel MPI,
+        # IBM Spectrum MPI, bullx MPI, and Cray MPI.
         if self.spec.satisfies('@1.9:+hdf5^hdf5+mpi'):
-            config_args.append('CXX=' + self.spec['mpi'].mpicxx)
+            config_args.append(
+                'CPPFLAGS=-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX')
 
         return config_args

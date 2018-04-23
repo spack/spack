@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,6 +37,7 @@ class Stc(AutotoolsPackage):
     depends_on('java')
     depends_on('ant')
     depends_on('turbine')
+    depends_on('zsh', type='run')
 
     def configure_args(self):
         args = ['--with-turbine=' + self.spec['turbine'].prefix]

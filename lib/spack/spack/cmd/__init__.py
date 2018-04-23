@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,7 +26,6 @@ from __future__ import print_function
 
 import os
 import re
-import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
@@ -38,6 +37,7 @@ import spack
 import spack.config
 import spack.spec
 import spack.store
+from spack.error import SpackError
 
 #
 # Settings for commands that modify configuration
@@ -45,6 +45,7 @@ import spack.store
 # Commands that modify configuration by default modify the *highest*
 # priority scope.
 default_modify_scope = spack.config.highest_precedence_scope().name
+
 # Commands that list configuration list *all* scopes by default.
 default_list_scope = None
 
@@ -59,12 +60,25 @@ DESCRIPTION = "description"
 
 command_path = os.path.join(spack.lib_path, "spack", "cmd")
 
-commands = []
+#: Names of all commands
+all_commands = []
+
+
+def python_name(cmd_name):
+    """Convert ``-`` to ``_`` in command name, to make a valid identifier."""
+    return cmd_name.replace("-", "_")
+
+
+def cmd_name(python_name):
+    """Convert module name (with ``_``) to command name (with ``-``)."""
+    return python_name.replace('_', '-')
+
+
 for file in os.listdir(command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
-        commands.append(cmd)
-commands.sort()
+        all_commands.append(cmd_name(cmd))
+all_commands.sort()
 
 
 def remove_options(parser, *options):
@@ -76,33 +90,38 @@ def remove_options(parser, *options):
                 break
 
 
-def get_python_name(name):
-    """Commands can have '-' in their names, unlike Python identifiers."""
-    return name.replace("-", "_")
+def get_module(cmd_name):
+    """Imports the module for a particular command name and returns it.
 
-
-def get_module(name):
-    """Imports the module for a particular command name and returns it."""
-    module_name = "%s.%s" % (__name__, name)
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    pname = python_name(cmd_name)
+    module_name = "%s.%s" % (__name__, pname)
     module = __import__(module_name,
-                        fromlist=[name, SETUP_PARSER, DESCRIPTION],
+                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
                         level=0)
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
-    fn_name = get_python_name(name)
-    if not hasattr(module, fn_name):
+    if not hasattr(module, pname):
         tty.die("Command module %s (%s) must define function '%s'." %
-                (module.__name__, module.__file__, fn_name))
+                (module.__name__, module.__file__, pname))
 
     return module
 
 
-def get_command(name):
-    """Imports the command's function from a module and returns it."""
-    python_name = get_python_name(name)
-    return getattr(get_module(python_name), python_name)
+def get_command(cmd_name):
+    """Imports the command's function from a module and returns it.
+
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    pname = python_name(cmd_name)
+    return getattr(get_module(pname), pname)
 
 
 def parse_specs(args, **kwargs):
@@ -122,13 +141,18 @@ def parse_specs(args, **kwargs):
 
         return specs
 
-    except spack.parse.ParseError as e:
-        tty.error(e.message, e.string, e.pos * " " + "^")
-        sys.exit(1)
+    except spack.spec.SpecParseError as e:
+        msg = e.message + "\n" + str(e.string) + "\n"
+        msg += (e.pos + 2) * " " + "^"
+        raise SpackError(msg)
 
     except spack.spec.SpecError as e:
-        tty.error(e.message)
-        sys.exit(1)
+
+        msg = e.message
+        if e.long_message:
+            msg += e.long_message
+
+        raise SpackError(msg)
 
 
 def elide_list(line_list, max_num=10):
@@ -241,7 +265,11 @@ def display_specs(specs, args=None, **kwargs):
         header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
                                       architecture, spack.spec.compiler_color,
                                       compiler)
-        tty.hline(colorize(header), char='-')
+        # Sometimes we want to display specs that are not yet concretized.
+        # If they don't have a compiler / architecture attached to them,
+        # then skip the header
+        if architecture is not None or compiler is not None:
+            tty.hline(colorize(header), char='-')
 
         specs = index[(architecture, compiler)]
         specs.sort()

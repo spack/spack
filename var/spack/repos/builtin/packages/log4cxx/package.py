@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,8 +33,9 @@ class Log4cxx(AutotoolsPackage):
 
     version('0.10.0', 'b30ffb8da3665178e68940ff7a61084c')
 
-    depends_on('libxml2')
     depends_on('apr-util')
+    depends_on('apr')
+    depends_on('zip')
 
     build_directory = 'spack-build'
 
@@ -44,4 +45,5 @@ class Log4cxx(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--disable-static']
+
         return args

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,8 +34,9 @@ class Tmux(AutotoolsPackage):
     """
 
     homepage = "http://tmux.github.io"
-    url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
+    url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('2.6', 'd541ff392249f94c4f3635793556f827')
     version('2.5', '4a5d73d96d8f11b0bdf9b6f15ab76d15')
     version('2.4', '6165d3aca811a3225ef8afbd1afcf1c5')
     version('2.3', 'fcfd1611d705d8b31df3c26ebc93bd3e')

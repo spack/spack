@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,6 +37,10 @@ class PyPybind11(CMakePackage):
     homepage = "https://pybind11.readthedocs.io"
     url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
 
+    version('develop', branch='master',
+            git='https://github.com/pybind/pybind11.git')
+    version('2.2.2', 'fc174e1bbfe7ec069af7eea86ec37b5c')
+    version('2.2.1', 'bab1d46bbc465af5af3a4129b12bfa3b')
     version('2.2.0', '978b26aea1c6bfc4f88518ef33771af2')
     version('2.1.1', '5518988698df937ccee53fb6ba91d12a')
     version('2.1.0', '3cf07043d677d200720c928569635e12')

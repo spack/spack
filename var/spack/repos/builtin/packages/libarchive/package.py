@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class Libarchive(AutotoolsPackage):
     homepage = "http://www.libarchive.org"
     url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
 
+    version('3.3.2', '4583bd6b2ebf7e0e8963d90879eb1b27')
     version('3.2.1', 'afa257047d1941a565216edbf0171e72')
     version('3.1.2', 'efad5a503f66329bb9d2f4308b5de98a')
     version('3.1.1', '1f3d883daf7161a0065e42a15bbf168f')

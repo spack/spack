@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -141,6 +141,14 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
             bool: True if can cache, False otherwise.
         """
 
+    def source_id(self):
+        """A unique ID for the source.
+
+        The returned value is added to the content which determines the full
+        hash for a package using `str()`.
+        """
+        raise NotImplementedError
+
     def __str__(self):  # Should be human readable URL.
         return "FetchStrategy.__str___"
 
@@ -159,6 +167,11 @@ class FetchStrategyComposite(object):
     """
     matches = FetchStrategy.matches
     set_stage = FetchStrategy.set_stage
+
+    def source_id(self):
+        component_ids = tuple(i.source_id() for i in self)
+        if all(component_ids):
+            return component_ids
 
 
 class URLFetchStrategy(FetchStrategy):
@@ -196,6 +209,9 @@ class URLFetchStrategy(FetchStrategy):
         if not self._curl:
             self._curl = which('curl', required=True)
         return self._curl
+
+    def source_id(self):
+        return self.digest
 
     @_needs_stage
     def fetch(self):
@@ -276,7 +292,8 @@ class URLFetchStrategy(FetchStrategy):
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
         # redirects properly.
-        content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
+        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
+                                   flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
             tty.warn("The contents of ",
                      (self.archive_file if self.archive_file is not None
@@ -601,6 +618,16 @@ class GitFetchStrategy(VCSFetchStrategy):
     def cachable(self):
         return bool(self.commit or self.tag)
 
+    def source_id(self):
+        return self.commit or self.tag
+
+    def get_source_id(self):
+        if not self.branch:
+            return
+        output = self.git('ls-remote', self.url, self.branch, output=str)
+        if output:
+            return output.split()[0]
+
     def fetch(self):
         if self.stage.source_path:
             tty.msg("Already fetched %s" % self.stage.source_path)
@@ -743,6 +770,18 @@ class SvnFetchStrategy(VCSFetchStrategy):
     def cachable(self):
         return bool(self.revision)
 
+    def source_id(self):
+        return self.revision
+
+    def get_source_id(self):
+        output = self.svn('info', self.url, output=str)
+        if not output:
+            return None
+        lines = output.split('\n')
+        for line in lines:
+            if line.startswith('Revision:'):
+                return line.split()[-1]
+
     @_needs_stage
     def fetch(self):
         if self.stage.source_path:
@@ -838,6 +877,14 @@ class HgFetchStrategy(VCSFetchStrategy):
     def cachable(self):
         return bool(self.revision)
 
+    def source_id(self):
+        return self.revision
+
+    def get_source_id(self):
+        output = self.hg('id', self.url, output=str)
+        if output:
+            return output.strip()
+
     @_needs_stage
     def fetch(self):
         if self.stage.source_path:
@@ -914,7 +961,7 @@ def from_kwargs(**kwargs):
     # Raise an error in case we can't instantiate any known strategy
     message = "Cannot instantiate any FetchStrategy"
     long_message = message + " from the given arguments : {arguments}".format(
-        srguments=kwargs)
+        arguments=kwargs)
     raise FetchError(message, long_message)
 
 

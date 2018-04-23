@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,4 +43,4 @@ class PyMpi4py(PythonPackage):
     depends_on('python@2.7:2.8,3.3:')
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
-    depends_on('py-cython', when='@3.0.0:', type='build')
+    depends_on('py-cython', when='@develop', type='build')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -37,28 +36,45 @@ class Nekbone(Package):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('17.0', 'cc339684547614a0725959e41839fec1')
+    version('17.0', 'cc339684547614a0725959e41839fec1', git='https://github.com/Nek5000/Nekbone.git')
     version('develop', git='https://github.com/Nek5000/Nekbone.git')
 
-    depends_on('mpi')
+    # Variants
+    variant('mpi', default=True, description='Build with MPI')
+
+    # dependencies
+    depends_on('mpi', when='+mpi')
+
+    @run_before('install')
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = 'Nekbone can not be built without a Fortran compiler.'
+            raise RuntimeError(msg)
 
     def install(self, spec, prefix):
-
-        working_dirs = ['example1', 'example2', 'example3', 'nek_comm',
-                        'nek_delay', 'nek_mgrid']
         mkdir(prefix.bin)
 
-        for wdir in working_dirs:
-            with working_dir('test/' + wdir):
-                makenec = FileFilter('makenek')
-                makenec.filter('CC.*', 'CC=' + self.spec['mpi'].mpicc)
-                makenec.filter('FF77.*', 'FF77=' + self.spec['mpi'].mpif77)
-                makenek = Executable('./makenek')
-                path = join_path(prefix.bin,  wdir)
-                makenek('ex1', '../../src')
-                mkdir(path)
-                install('nekbone', path)
-                install('nekpmpi', path)
-                install('data.rea', path)
-                install('SIZE', path)
-                install('README', path)
+        FC = self.compiler.fc
+        CC = self.compiler.cc
+        if '+mpi' in spec:
+            FC = spec['mpi'].mpif77
+            CC = spec['mpi'].mpicc
+
+        # Install Nekbone in prefix.bin
+        install_tree("../Nekbone", prefix.bin.Nekbone)
+
+        # Install scripts in prefix.bin
+        nekpmpi = 'test/example1/nekpmpi'
+        makenek = 'test/example1/makenek'
+
+        install(makenek, prefix.bin)
+        install(nekpmpi, prefix.bin)
+
+        with working_dir(prefix.bin):
+            filter_file(r'^SOURCE_ROOT\s*=.*', 'SOURCE_ROOT=\"' +
+                        prefix.bin.Nekbone + '/src\"', 'makenek')
+            filter_file(r'^CC\s*=.*', 'CC=\"' + CC + '\"', 'makenek')
+            filter_file(r'^F77\s*=.*', 'F77=\"' + FC + '\"', 'makenek')
+
+            if '+mpi' not in spec:
+                filter_file(r'^#IFMPI=\"false\"', 'IFMPI=\"false\"', 'makenek')

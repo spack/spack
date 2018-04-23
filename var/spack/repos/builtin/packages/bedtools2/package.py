@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,8 @@ class Bedtools2(Package):
     homepage = "https://github.com/arq5x/bedtools2"
     url      = "https://github.com/arq5x/bedtools2/archive/v2.26.0.tar.gz"
 
+    version('2.27.1', '8e0afcab95a824e42a6e99c5436a8438')
+    version('2.27.0', '052f22eb214ef2e7e7981b3c01167302')
     version('2.26.0', '52227e7efa6627f0f95d7d734973233d')
     version('2.25.0', '534fb4a7bf0d0c3f05be52a0160d8e3d')
     version('2.23.0', '4fa3671b3a3891eefd969ad3509222e3')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -67,14 +67,17 @@ def failure_args(request):
 # TODO : this requires having a separate directory for test modules
 # TODO : add tests for loads and find to check the prompt format
 
-
-def test_exit_with_failure(database, parser, failure_args):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_exit_with_failure(parser, failure_args):
     args = parser.parse_args(failure_args)
     with pytest.raises(SystemExit):
         module.module(parser, args)
 
 
-def test_remove_and_add_tcl(database, parser):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_remove_and_add_tcl(parser):
     """Tests adding and removing a tcl module file."""
 
     # Remove existing modules [tcl]
@@ -97,15 +100,23 @@ def test_remove_and_add_tcl(database, parser):
         assert os.path.exists(item)
 
 
-def test_find(database, parser):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+@pytest.mark.parametrize('cli_args', [
+    ['--module-type', 'tcl', 'libelf'],
+    ['--module-type', 'tcl', '--full-path', 'libelf']
+])
+def test_find(parser, cli_args):
     """Tests the 'spack module find' under a few common scenarios."""
 
     # Try to find it for tcl module files
-    args = parser.parse_args(['find', '--module-type', 'tcl', 'libelf'])
+    args = parser.parse_args(['find'] + cli_args)
     module.module(parser, args)
 
 
-def test_remove_and_add_dotkit(database, parser):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_remove_and_add_dotkit(parser):
     """Tests adding and removing a dotkit module file."""
 
     # Remove existing modules [dotkit]

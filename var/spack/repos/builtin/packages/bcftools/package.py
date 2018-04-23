@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bcftools(Package):
+class Bcftools(AutotoolsPackage):
     """BCFtools is a set of utilities that manipulate variant calls in the
        Variant Call Format (VCF) and its binary counterpart BCF. All
        commands work transparently with both VCFs and BCFs, both
@@ -43,7 +43,3 @@ class Bcftools(Package):
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
     depends_on('htslib@1.2', when='@1.2')
-
-    def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "all")
-        make("prefix=%s" % prefix, "install")

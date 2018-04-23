@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
@@ -49,6 +50,7 @@ class Libdwarf(Package):
     version('20130207', '64b42692e947d5180e162e46c689dfbf')
     version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
     depends_on("elf", type='link')
+    depends_on('zlib', type='link')
 
     parallel = False
 
@@ -77,16 +79,33 @@ class Libdwarf(Package):
                 if spec.satisfies('^libelf'):
                     libelf_inc_dir = join_path(spec['libelf'].prefix,
                                                'include/libelf')
-                    extra_config_args.append('CFLAGS=-I{0}'.format(
-                                             libelf_inc_dir))
+                    extra_config_args.append(
+                        'CFLAGS=-I{0} -Wl,-L{1} -Wl,-lelf'.format(
+                            libelf_inc_dir, spec['libelf'].prefix.lib))
                 configure("--prefix=" + prefix, "--enable-shared",
                           *extra_config_args)
+                filter_file(r'^dwfzlib\s*=\s*-lz',
+                            'dwfzlib=-L{0} -lz'.format(
+                                self.spec['zlib'].prefix.lib),
+                            'Makefile')
                 make()
 
+                libdwarf_name = 'libdwarf.{0}'.format(dso_suffix)
                 install('libdwarf.a',  prefix.lib)
-                install('libdwarf.so', prefix.lib)
+                install('libdwarf.so', join_path(prefix.lib, libdwarf_name))
                 install('libdwarf.h',  prefix.include)
                 install('dwarf.h',     prefix.include)
+
+                # It seems like fix_darwin_install_name can't be used
+                # here directly; the install name of the library in
+                # the stage directory must be fixed in order for dyld
+                # to locate it on Darwin when spack builds dwarfdump
+                if sys.platform == 'darwin':
+                    install_name_tool = which('install_name_tool')
+                    install_name_tool('-id',
+                                      join_path('..', 'libdwarf',
+                                                'libdwarf.so'),
+                                      'libdwarf.so')
 
             if spec.satisfies('@20130126:20130729'):
                 dwarfdump_dir = 'dwarfdump2'
@@ -94,6 +113,10 @@ class Libdwarf(Package):
                 dwarfdump_dir = 'dwarfdump'
             with working_dir(dwarfdump_dir):
                 configure("--prefix=" + prefix)
+                filter_file(r'^dwfzlib\s*=\s*-lz',
+                            'dwfzlib=-L{0} -lz'.format(
+                                self.spec['zlib'].prefix.lib),
+                            'Makefile')
 
                 # This makefile has strings of copy commands that
                 # cause a race in parallel
@@ -102,3 +125,8 @@ class Libdwarf(Package):
                 install('dwarfdump',      prefix.bin)
                 install('dwarfdump.conf', prefix.lib)
                 install('dwarfdump.1',    prefix.man.man1)
+
+    @run_after('install')
+    def darwin_fix(self):
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)

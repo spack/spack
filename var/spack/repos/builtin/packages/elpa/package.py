@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -57,7 +57,7 @@ class Elpa(AutotoolsPackage):
     def libs(self):
         libname = 'libelpa_openmp' if '+openmp' in self.spec else 'libelpa'
         return find_libraries(
-            libname, root=self.prefix, shared=True, recurse=True
+            libname, root=self.prefix, shared=True, recursive=True
         )
 
     build_directory = 'spack-build'

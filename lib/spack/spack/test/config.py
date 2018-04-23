@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,7 +27,7 @@ import getpass
 import os
 import tempfile
 
-import ordereddict_backport
+import spack.util.ordereddict
 import pytest
 import spack
 import spack.config
@@ -198,7 +198,7 @@ def config(tmpdir):
     """Mocks the configuration scope."""
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
-    spack.config.config_scopes = ordereddict_backport.OrderedDict()
+    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
     for priority in ['low', 'high']:
         spack.config.ConfigScope(priority, str(tmpdir.join(priority)))
     Config = collections.namedtuple('Config', ['real', 'mock'])

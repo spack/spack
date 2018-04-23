@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -253,6 +253,7 @@ class TestSpecSyntax(object):
             str(spec), spec.name + '@' + str(spec.version) +
             ' /' + spec.dag_hash()[:6])
 
+    @pytest.mark.db
     def test_spec_by_hash(self, database):
         specs = database.mock.db.query()
         assert len(specs)  # make sure something's in the DB
@@ -260,6 +261,7 @@ class TestSpecSyntax(object):
         for spec in specs:
             self._check_hash_parse(spec)
 
+    @pytest.mark.db
     def test_dep_spec_by_hash(self, database):
         mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
         zmpi = database.mock.db.query_one('zmpi')
@@ -287,6 +289,7 @@ class TestSpecSyntax(object):
         assert 'fake' in mpileaks_hash_fake_and_zmpi
         assert mpileaks_hash_fake_and_zmpi['fake'] == fake
 
+    @pytest.mark.db
     def test_multiple_specs_with_hash(self, database):
         mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
         callpath_mpich2 = database.mock.db.query_one('callpath ^mpich2')
@@ -319,6 +322,7 @@ class TestSpecSyntax(object):
                          ' / ' + callpath_mpich2.dag_hash())
         assert len(specs) == 2
 
+    @pytest.mark.db
     def test_ambiguous_hash(self, database):
         x1 = Spec('a')
         x1._hash = 'xy'
@@ -335,6 +339,7 @@ class TestSpecSyntax(object):
         # ambiguity in first hash character AND spec name
         self._check_raises(AmbiguousHashError, ['a/x'])
 
+    @pytest.mark.db
     def test_invalid_hash(self, database):
         mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
         zmpi = database.mock.db.query_one('zmpi')
@@ -352,6 +357,7 @@ class TestSpecSyntax(object):
             'mpileaks ^mpich /' + mpileaks_zmpi.dag_hash(),
             'mpileaks ^zmpi /' + mpileaks_mpich.dag_hash()])
 
+    @pytest.mark.db
     def test_nonexistent_hash(self, database):
         """Ensure we get errors for nonexistant hashes."""
         specs = database.mock.db.query()
@@ -365,6 +371,7 @@ class TestSpecSyntax(object):
             '/' + no_such_hash,
             'mpileaks /' + no_such_hash])
 
+    @pytest.mark.db
     def test_redundant_spec(self, database):
         """Check that redundant spec constraints raise errors.
 

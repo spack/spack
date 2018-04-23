@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Libaio(Package):
     """This is the linux native Asynchronous I/O interface library."""
 
     homepage = "http://lse.sourceforge.net/io/aio.html"
-    url      = "https://ftp.de.debian.org/debian/pool/main/liba/libaio/libaio_0.3.110.orig.tar.gz"
+    url      = "https://debian.inf.tu-dresden.de/debian/pool/main/liba/libaio/libaio_0.3.110.orig.tar.gz"
 
     version('0.3.110', '2a35602e43778383e2f4907a4ca39ab8')
 

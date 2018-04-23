@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Nginx(AutotoolsPackage):
     homepage = "https://nginx.org/en/"
     url      = "https://nginx.org/download/nginx-1.12.0.tar.gz"
 
+    version('1.13.8', 'df4be9294365782dc1349ca33ce8c4ac')
     version('1.12.0', '995eb0a140455cf0cfc497e5bd7f94b3')
 
     depends_on('openssl')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,10 +30,12 @@ class Adios2(CMakePackage):
 
     homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS2/archive/v2.0.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', branch='master',
             git='https://github.com/ornladios/ADIOS2.git')
 
+    version('2.1.0', '431fa5b015349f1838b96b8f5a1cc8f8')
     version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
 
     variant('shared', default=True,
@@ -58,6 +60,8 @@ class Adios2(CMakePackage):
     # language bindings
     variant('python', default=True,
             description='Enable the Python >= 2.7 bindings')
+    variant('fortran', default=True,
+            description='Enable the Fortran bindings')
 
     # requires mature C++11 implementations
     conflicts('%gcc@:4.7')
@@ -73,7 +77,7 @@ class Adios2(CMakePackage):
     # depends_on('googletest')
     # depends_on('pugixml')
     # depends_on('kwsys')
-    # depends_on('nlohmannjson')
+    # depends_on('nlohmann-json')
     # depends_on('pybind11@2.1.1:', when='+python')
 
     depends_on('mpi', when='+mpi')
@@ -96,24 +100,29 @@ class Adios2(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format((
-                'ON' if '+shared' in spec else 'OFF')),
+            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             '-DADIOS2_BUILD_TESTING=OFF',
-            '-DADIOS2_USE_MPI={0}'.format((
-                'ON' if '+mpi' in spec else 'OFF')),
-            '-DADIOS2_USE_BZip2={0}'.format((
-                'ON' if '+bzip2' in spec else 'OFF')),
-            '-DADIOS2_USE_ZFP={0}'.format((
-                'ON' if '+zfp' in spec else 'OFF')),
-            '-DADIOS2_USE_DataMan={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_ZeroMQ={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_HDF5={0}'.format((
-                'ON' if '+hdf5' in spec else 'OFF')),
-            '-DADIOS2_USE_ADIOS1={0}'.format((
-                'ON' if '+adios1' in spec else 'OFF')),
-            '-DADIOS2_USE_Python={0}'.format((
-                'ON' if '+python' in spec else 'OFF'))
+            '-DADIOS2_USE_MPI={0}'.format(
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DADIOS2_USE_BZip2={0}'.format(
+                'ON' if '+bzip2' in spec else 'OFF'),
+            '-DADIOS2_USE_ZFP={0}'.format(
+                'ON' if '+zfp' in spec else 'OFF'),
+            '-DADIOS2_USE_DataMan={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_ZeroMQ={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_HDF5={0}'.format(
+                'ON' if '+hdf5' in spec else 'OFF'),
+            '-DADIOS2_USE_ADIOS1={0}'.format(
+                'ON' if '+adios1' in spec else 'OFF'),
+            '-DADIOS2_USE_Python={0}'.format(
+                'ON' if '+python' in spec else 'OFF'),
+            '-DADIOS2_USE_Fortran={0}'.format(
+                'ON' if '+fortran' in spec else 'OFF')
         ]
+        if spec.satisfies('+python'):
+            args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
+                        % self.spec['python'].command.path)
         return args

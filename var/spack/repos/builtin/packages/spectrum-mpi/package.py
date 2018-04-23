@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at International Business Machines Corporation
 #
 # This file is part of Spack.
@@ -68,3 +68,5 @@ class SpectrumMpi(Package):
         spack_env.set('OMPI_CXX', spack_cxx)
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
+
+        spack_env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)

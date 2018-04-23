@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -75,7 +75,8 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # Remove
@@ -83,13 +84,15 @@ def setup_parser(subparser):
                                   help=mirror_remove.__doc__)
     remove_parser.add_argument('name')
     remove_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
 
@@ -164,6 +167,7 @@ def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
+    spack.concretizer.disable_compiler_existence_check()
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
 
     # If there is a file, parse each line as a spec and add it to the list.

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -50,6 +50,7 @@ class PyAstropy(PythonPackage):
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-scikit-image', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-markupsafe', type=('build', 'run'))
 
     # System dependencies
     depends_on('cfitsio')

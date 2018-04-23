@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,6 +44,7 @@ class Abyss(AutotoolsPackage):
     depends_on('boost@:1.50.0,1.53.0:1.59.0', when='@:1.5.2')
     depends_on('sparsehash')
     depends_on('sqlite')
+    depends_on('libtool')
 
     conflicts('^intel-mpi')
     conflicts('^intel-parallel-studio+mpi')

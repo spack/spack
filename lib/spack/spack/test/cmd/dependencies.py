@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+
+import pytest
 
 from llnl.util.tty.color import color_when
 
@@ -50,6 +52,7 @@ def test_transitive_dependencies(builtin_mock):
     assert expected == actual
 
 
+@pytest.mark.db
 def test_immediate_installed_dependencies(builtin_mock, database):
     with color_when(False):
         out = dependencies('--installed', 'mpileaks^mpich')
@@ -63,6 +66,7 @@ def test_immediate_installed_dependencies(builtin_mock, database):
     assert expected == hashes
 
 
+@pytest.mark.db
 def test_transitive_installed_dependencies(builtin_mock, database):
     with color_when(False):
         out = dependencies('--installed', '--transitive', 'mpileaks^zmpi')

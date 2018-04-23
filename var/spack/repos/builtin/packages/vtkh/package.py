@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import os
 
 
 class Vtkh(Package):
@@ -67,7 +68,9 @@ class Vtkh(Package):
                 mpicxx = spec['mpi'].mpicxx
                 cmake_args.extend(["-DMPI_C_COMPILER={0}".format(mpicc),
                                    "-DMPI_CXX_COMPILER={0}".format(mpicxx)])
-
+                mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+                if os.path.isfile(mpiexe_bin):
+                    cmake_args.append("-DMPIEXEC={0}".format(mpiexe_bin))
             # tbb support
             if "+tbb" in spec:
                 cmake_args.append("-DTBB_DIR={0}".format(spec["tbb"].prefix))

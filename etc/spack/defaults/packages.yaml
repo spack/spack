@@ -21,6 +21,8 @@ packages:
       blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
+      gl: [mesa, opengl]
+      glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
       java: [jdk]

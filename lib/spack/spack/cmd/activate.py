@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -59,6 +59,8 @@ def activate(parser, args):
         layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
 
     if spec.package.is_activated(extensions_layout=layout):
-        tty.die("Package %s is already activated." % specs[0].short_spec)
+        tty.msg("Package %s is already activated." % specs[0].short_spec)
+        return
 
-    spec.package.do_activate(extensions_layout=layout)
+    spec.package.do_activate(extensions_layout=layout,
+                             with_dependencies=not args.force)

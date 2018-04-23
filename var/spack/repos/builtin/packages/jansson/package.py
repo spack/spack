@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,7 @@ class Jansson(CMakePackage):
 
     homepage = "http://www.digip.org/jansson/"
     url      = "https://github.com/akheron/jansson/archive/v2.9.tar.gz"
+    maintainers = ['ax3l']
 
     version('2.9', 'd2db25c437b359fc5a065ed938962237')
 

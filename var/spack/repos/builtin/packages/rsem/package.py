@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,7 +32,7 @@ class Rsem(MakefilePackage):
     homepage = "http://deweylab.github.io/RSEM/"
     url      = "https://github.com/deweylab/RSEM/archive/v1.3.0.tar.gz"
 
-    version('1.3.0', '9728161625d339d022130e2428604bf5')
+    version('1.3.0', '273fd755e23d349cc38a079b81bb03b6')
 
     depends_on('r', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))

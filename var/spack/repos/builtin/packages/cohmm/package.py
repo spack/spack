@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,7 +41,7 @@ class Cohmm(MakefilePackage):
             branch='sad')
 
     variant('openmp', default=True, description='Build with OpenMP Support')
-    variant('gnuplot', default=True, description='Enable gnu plot Support')
+    variant('gnuplot', default=False, description='Enable gnu plot Support')
     depends_on('gnuplot', when='+gnuplot')
 
     def edit(self, spec, prefix):

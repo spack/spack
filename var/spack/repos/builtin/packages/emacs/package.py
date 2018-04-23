@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
@@ -43,6 +45,7 @@ class Emacs(AutotoolsPackage):
         values=('gtk', 'athena'),
         description="Select an X toolkit (gtk, athena)"
     )
+    variant('tls', default=False, description="Build Emacs with gnutls")
 
     depends_on('pkgconfig', type='build')
 
@@ -54,7 +57,10 @@ class Emacs(AutotoolsPackage):
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('gtkplus+X', when='+X toolkit=gtk')
+    depends_on('gtkplus', when='+X toolkit=gtk')
+    depends_on('gnutls', when='+tls')
+    depends_on('libxpm ^gettext+libunistring', when='+tls')
+    depends_on('ncurses+termlib', when='+tls')
 
     def configure_args(self):
         spec = self.spec
@@ -67,5 +73,10 @@ class Emacs(AutotoolsPackage):
             ]
         else:
             args = ['--without-x']
+
+        # On OS X/macOS, do not build "nextstep/Emacs.app", because
+        # doing so throws an error at build-time
+        if sys.platform == 'darwin':
+            args.append('--without-ns')
 
         return args

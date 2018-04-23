@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -226,7 +226,7 @@ def setup_parser(subparser):
         help="send filtered files to stdout as well as temp files")
     subparser.add_argument(
         '-r', '--root-relative', action='store_true', default=False,
-        help="print root-relative paths (default is cwd-relative)")
+        help="print root-relative paths (default: cwd-relative)")
     subparser.add_argument(
         '-U', '--no-untracked', dest='untracked', action='store_false',
         default=True, help="exclude untracked files from checks")

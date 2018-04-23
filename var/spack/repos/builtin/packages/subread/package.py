@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Subread(MakefilePackage):
     homepage = "http://subread.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/subread/subread-1.5.2/subread-1.5.2-source.tar.gz"
 
+    version('1.6.0', 'ed7e32c56bda1e769703e0a4db5a89a7')
     version('1.5.2', '817d2a46d87fcef885c8832475b8b247')
 
     depends_on('zlib')

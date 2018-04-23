@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Relion(CMakePackage):
+class Relion(CMakePackage, CudaPackage):
     """RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on) is a
     stand-alone computer program that employs an empirical Bayesian approach to
     refinement of (multiple) 3D reconstructions or 2D class averages in
@@ -34,6 +34,8 @@ class Relion(CMakePackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     url      = "https://github.com/3dem/relion"
 
+    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
+    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
     version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
@@ -48,7 +50,11 @@ class Relion(CMakePackage):
     depends_on('mpi')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
+    # cuda 9 not yet supported
+    #  https://github.com/3dem/relion/issues/296
     depends_on('cuda@8.0:8.99', when='+cuda')
+    # use gcc < 5 when compiled with cuda 8
+    conflicts('%gcc@5:', when='+cuda')
 
     def cmake_args(self):
         args = [
@@ -58,9 +64,15 @@ class Relion(CMakePackage):
             '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
         ]
+
+        carch = self.spec.variants['cuda_arch'].value
+
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
-                '-DCUFFT=on',
             ]
+            if carch is not None:
+                args += [
+                    '-DCUDA_ARCH=%s' % (carch),
+                ]
         return args

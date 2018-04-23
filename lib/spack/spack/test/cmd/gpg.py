@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -52,6 +52,7 @@ def has_gnupg2():
         return False
 
 
+@pytest.mark.maybeslow
 @pytest.mark.skipif(not has_gnupg2(),
                     reason='These tests require gnupg2')
 def test_gpg(gpg, tmpdir, testing_gpg_directory):

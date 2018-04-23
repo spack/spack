@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -96,8 +96,13 @@ class Kaldi(Package):    # Does not use Autotools
             make()
 
             mkdirp(prefix.bin)
-            for root, dirs, files in os.walk('bin'):
+            for root, dirs, files in os.walk('.'):
                 for name in files:
+                    if name.endswith(".so") or name.endswith(".cc") \
+                            or name.endswith(".pptx"):
+                        continue
+                    if "configure" is name:
+                        continue
                     if os.access(join(root, name), os.X_OK):
                         install(join(root, name), prefix.bin)
 

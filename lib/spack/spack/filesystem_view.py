@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -94,7 +94,7 @@ class FilesystemView(object):
 
     def add_extension(self, spec):
         """
-            Add (link) an extension in this view.
+            Add (link) an extension in this view. Does not add dependencies.
         """
         raise NotImplementedError
 
@@ -228,6 +228,9 @@ class YamlFilesystemView(FilesystemView):
         try:
             if not spec.package.is_activated(self.extensions_layout):
                 spec.package.do_activate(
+                    ignore_conflicts=self.ignore_conflicts,
+                    with_dependencies=False,  # already taken care of
+                                              # in add_specs()
                     verbose=self.verbose,
                     extensions_layout=self.extensions_layout)
 

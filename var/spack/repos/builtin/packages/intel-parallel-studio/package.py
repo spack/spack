@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -201,7 +201,7 @@ class IntelParallelStudio(IntelPackage):
         mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
@@ -258,7 +258,7 @@ class IntelParallelStudio(IntelPackage):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recursive=True
         )
 
     @property
@@ -266,7 +266,7 @@ class IntelParallelStudio(IntelPackage):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
+        return find_headers('mpi', root=mpi_root, recursive=False)
 
     @property
     def components(self):
@@ -341,7 +341,7 @@ class IntelParallelStudio(IntelPackage):
 
         # Intel(R) VTune(TM) Amplifier XE
         if '+vtune' in spec:
-            components.append('intel-vtune-amplifier-xe')
+            components.append('intel-vtune-amplifier')
 
         return components
 
@@ -397,6 +397,9 @@ class IntelParallelStudio(IntelPackage):
         if '+vtune' in spec:
             vtune_dir = 'vtune_amplifier_xe/licenses'
 
+            if year >= 2018:
+                vtune_dir = 'vtune_amplifier/licenses'
+
             directories.append(vtune_dir)
 
         return [os.path.join(dir, 'license.lic') for dir in directories]
@@ -430,20 +433,22 @@ class IntelParallelStudio(IntelPackage):
             for compiler in ['icc', 'icpc', 'ifort']:
                 cfgfilename = os.path.join(
                     self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                cfgfilename = os.path.abspath(cfgfilename)
                 with open(cfgfilename, 'w') as f:
                     f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     @run_after('install')
     def fix_psxevars(self):
-        """Newer versions of Intel Parallel Studio have a bug in the
+        """Newer versions (>2016) of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
 
         bindir = glob.glob(join_path(
             self.prefix, 'parallel_studio*', 'bin'))[0]
-
-        filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
-                    os.path.join(bindir, 'psxevars.sh'),
-                    os.path.join(bindir, 'psxevars.csh'))
+        bindir = os.path.abspath(bindir)
+        if self.version[1] > 2016:
+            filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
+                        os.path.join(bindir, 'psxevars.sh'),
+                        os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mpi' in self.spec:

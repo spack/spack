@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -56,7 +56,7 @@ class Openfast(CMakePackage):
     # Additional dependencies when compiling C++ library
     depends_on('mpi', when='+cxx')
     depends_on('yaml-cpp', when='+cxx')
-    depends_on('hdf5+mpi+cxx', when='+cxx')
+    depends_on('hdf5+mpi+cxx+hl', when='+cxx')
     depends_on('zlib', when='+cxx')
     depends_on('libxml2', when='+cxx')
 
@@ -79,8 +79,18 @@ class Openfast(CMakePackage):
                 'ON' if '+cxx' in spec else 'OFF'),
         ])
 
+        # Make sure we use Spack's blas/lapack:
+        blas_libs = spec['lapack'].libs + spec['blas'].libs
+        options.extend([
+            '-DBLAS_LIBRARIES=%s' % blas_libs.joined(';'),
+            '-DLAPACK_LIBRARIES=%s' % blas_libs.joined(';')
+        ])
+
         if '+cxx' in spec:
             options.extend([
+                '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
+                '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
+                '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc,
                 '-DHDF5_ROOT:PATH=%s' % spec['hdf5'].prefix,
                 '-DYAML_ROOT:PATH=%s' % spec['yaml-cpp'].prefix,
             ])

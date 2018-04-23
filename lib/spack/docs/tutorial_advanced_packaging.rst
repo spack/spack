@@ -4,18 +4,17 @@
 Advanced Topics in Packaging
 ============================
 
-While you can quickly accomplish most common tasks with what
-was covered in :ref:`packaging-tutorial`, there are times when such
-knowledge won't suffice. Usually this happens for libraries that provide
-more than one API and need to let dependents decide which one to use
-or for packages that provide tools that are invoked at build-time,
-or in other similar situations.
+Spack tries to automatically configure packages with information from
+dependencies such that all you need to do is to list the dependencies
+(i.e. with the ``depends_on`` directive) and the build system (for example
+by deriving from :code:`CmakePackage`).
 
-In the following we'll dig into some of the details of package
-implementation that help us deal with these rare, but important,
-occurrences. You can rest assured that in every case Spack remains faithful to
-its philosophy: keep simple things simple, but be flexible enough when
-complex requests arise!
+However, there are many special cases. Often you need to retrieve details
+about dependencies to set package-specific configuration options, or to
+define package-specific environment variables used by the package's build
+system. This tutorial covers how to retrieve build information from
+dependencies, and how you can automatically provide important information to
+dependents in your package.
 
 ----------------------
 Setup for the tutorial
@@ -37,7 +36,7 @@ which comes with Spack and various packages pre-installed:
 
 If you already started the image, you can set the ``EDITOR`` environment
 variable to your preferred editor (``vi``, ``emacs``, and ``nano`` are included in the image)
-and move directly to :ref:`specs_build_interface_tutorial`.
+and move directly to :ref:`adv_pkg_tutorial_start`.
 
 If you choose not to use the Docker image, you can clone the Spack repository
 and build the necessary bits yourself:
@@ -76,29 +75,44 @@ Now, you are ready to set your preferred ``EDITOR`` and continue with
 the rest of the tutorial.
 
 
-.. _specs_build_interface_tutorial:
+.. _adv_pkg_tutorial_start:
 
-----------------------
-Spec's build interface
-----------------------
+------------------------------
+Retrieving library information
+------------------------------
 
-Spack is designed with an emphasis on assigning responsibilities
-to the appropriate entities, as this results in a clearer and more intuitive interface
-for the users.
-When it comes to packaging, one of the most fundamental guideline that
-emerged from this tenet is that:
+Although Spack attempts to help packages locate their dependency libraries
+automatically (e.g. by setting PKG_CONFIG_PATH and CMAKE_PREFIX_PATH), a
+package may have unique configuration options that are required to locate
+libraries. When a package needs information about dependency libraries, the
+general approach in Spack is to query the dependencies for the locations of
+their libraries and set configuration options accordingly. By default most
+Spack packages know how to automatically locate their libraries. This section
+covers how to retrieve library information from dependencies and how to locate
+libraries when the default logic doesn't work.
 
-  *It is a package's responsibility to know
-  every software it directly depends on and to expose to others how to
-  use the services it provides*.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Accessing dependency libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spec's build interface is a protocol-like implementation of this guideline
-that allows packages to easily query their dependencies,
-and prescribes how they should expose their own build information.
+If you need to access the libraries of a dependency, you can do so
+via the ``libs`` property of the spec, for example in the ``arpack-ng``
+package:
 
-^^^^^^^^^^^^^^^^^^^^
-A motivating example
-^^^^^^^^^^^^^^^^^^^^
+.. code-block:: python
+
+    def install(self, spec, prefix):
+        lapack_libs = spec['lapack'].libs.joined(';')
+        blas_libs = spec['blas'].libs.joined(';')
+
+        cmake(*[
+            '-DLAPACK_LIBRARIES={0}'.format(lapack_libs),
+            '-DBLAS_LIBRARIES={0}'.format(blas_libs)
+        ], '.')
+
+Note that ``arpack-ng`` is querying virtual dependencies, which Spack
+automatically resolves to the installed implementation (e.g. ``openblas``
+for ``blas``).
 
 We've started work on a package for ``armadillo``. You should open it,
 read through the comment that starts with ``# TUTORIAL:`` and complete
@@ -160,8 +174,32 @@ Hopefully the installation went fine and the code we added expanded to the right
 of semicolon separated libraries (you are encouraged to open ``armadillo``'s
 build logs to double check).
 
-If we try to build another version tied to ``netlib-lapack`` we'll
-notice that this time the installation won't complete:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Providing libraries to dependents
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack provides a default implementation for ``libs`` which often works
+out of the box. A user can write a package definition without having to
+implement a ``libs`` property and dependents can retrieve its libraries
+as shown in the above section. However, the default implementation assumes that
+libraries follow the naming scheme ``lib<package name>.so`` (or e.g.
+``lib<package name>.a`` for static libraries). Packages which don't
+follow this naming scheme must implement this function themselves, e.g.
+``opencv``:
+
+.. code-block:: python
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "libopencv_*", root=self.prefix, shared=shared, recurse=True
+        )
+
+This issue is common for packages which implement an interface (i.e.
+virtual package providers in Spack). If we try to build another version of
+``armadillo`` tied to ``netlib-lapack`` we'll notice that this time the
+installation won't complete:
 
 .. code-block:: console
 
@@ -190,8 +228,9 @@ notice that this time the installation won't complete:
   See build log for details:
     /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build.out
 
-This is because ``netlib-lapack`` requires extra work, compared to ``openblas``,
-to expose its build information to other packages. Let's edit it:
+Unlike ``openblas`` which provides a library named ``libopenblas.so``,
+``netlib-lapack`` provides ``liblapack.so``, so it needs to implement
+customized library search logic. Let's edit it:
 
 .. code-block:: console
 
@@ -210,7 +249,13 @@ What we need to implement is:
       )
 
 i.e. a property that returns the correct list of libraries for the LAPACK interface.
-Now we can finally install ``armadillo ^netlib-lapack``:
+
+We use the name ``lapack_libs`` rather than ``libs`` because
+``netlib-lapack`` can also provide ``blas``, and when it does it is provided
+as a separate library file. Using this name ensures that when
+dependents ask for ``lapack`` libraries, ``netlib-lapack`` will retrieve only
+the libraries associated with the ``lapack`` interface. Now we can finally
+install ``armadillo ^netlib-lapack``:
 
 .. code-block:: console
 
@@ -225,62 +270,170 @@ Now we can finally install ``armadillo ^netlib-lapack``:
     Fetch: 0.01s.  Build: 3.75s.  Total: 3.76s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/armadillo-8.100.1-sxmpu5an4dshnhickh6ykchyfda7jpyn
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-What happens at subscript time?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Since each implementation of a virtual package is responsible for locating the
+libraries associated with the interfaces it provides, dependents do not need
+to include special-case logic for different implementations and for example
+need only ask for :code:`spec['blas'].libs`.
 
-The example above leaves us with a few questions. How could it be that the
-attribute:
+---------------------------------------
+Modifying a package's build environment
+---------------------------------------
+
+Spack sets up several environment variables like PATH by default to aid in
+building a package, but many packages make use of environment variables which
+convey specific information about their dependencies, for example MPICC. This
+section covers how update your Spack packages so that package-specific
+environment variables are defined at build-time.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Set environment variables in dependent packages at build-time
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Dependencies can set environment variables that are required when their
+dependents build. For example, when a package depends on a python extension
+like py-numpy, Spack's ``python`` package will add it to ``PYTHONPATH``
+so it is available at build time; this is required because the default setup
+that spack does is not sufficient for python to import modules.
+
+To provide environment setup for a dependent, a package can implement the
+:py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
+function. This function takes as a parameter a :py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>`
+object which includes convenience methods to update the environment. For
+example an MPI implementation can set ``MPICC`` for packages that depend on it:
 
 .. code-block:: python
 
-  spec['lapack'].libs
+  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+      spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
 
-stems from a property of the ``netlib-lapack`` package that has a different name?
-How is it even computed for ``openblas``, given that in its package there's no code
-that deals with finding libraries?
-The answer is that ``libs`` is one of the few properties of specs that follow the
-*build-interface protocol*. The others are currently ``command`` and ``headers``.
-These properties exist only on concrete specs that have been retrieved via the
-subscript notation.
+In this case packages which depend on ``mpi`` will have ``MPICC`` defined in
+their environment when they build. This section is focused on modifying the
+build-time environment represented by ``spack_env``, but it's worth noting that
+modifications to ``run_env`` are included in Spack's automatically-generated
+module files.
 
-What happens is that, whenever you retrieve a spec using subscripts:
+We can practice by editing the ``mpich`` package to set the ``MPICC``
+environment variable in the build-time environment of dependent packages.
+
+.. code-block:: console
+
+  root@advanced-packaging-tutorial:/# spack edit mpich
+
+Once you're finished the method should look like this:
 
 .. code-block:: python
 
-  lapack = spec['lapack']
+  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+      spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+      spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+      spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+      spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-the key that appears in the query (in this case ``'lapack'``) is attached to the
-returned item. When, later on, you access any of the build-interface attributes, this
-key is used to compute the result according to the following algorithm:
+      spack_env.set('MPICH_CC', spack_cc)
+      spack_env.set('MPICH_CXX', spack_cxx)
+      spack_env.set('MPICH_F77', spack_f77)
+      spack_env.set('MPICH_F90', spack_fc)
+      spack_env.set('MPICH_FC', spack_fc)
 
-.. code-block:: none
+At this point we can, for instance, install ``netlib-scalapack``:
 
-  Given any pair of <query-key> and <build-attribute>:
+.. code-block:: console
 
-    1. If <query-key> is the name of a virtual spec and the package
-       providing it has an attribute named '<query-key>_<build-attribute>'
-       return it
+  root@advanced-packaging-tutorial:/# spack install netlib-scalapack ^mpich
+  ...
+  ==> Created stage in /usr/local/var/spack/stage/netlib-scalapack-2.0.2-km7tsbgoyyywonyejkjoojskhc5knz3z
+  ==> No patches needed for netlib-scalapack
+  ==> Building netlib-scalapack [CMakePackage]
+  ==> Executing phase: 'cmake'
+  ==> Executing phase: 'build'
+  ==> Executing phase: 'install'
+  ==> Successfully installed netlib-scalapack
+    Fetch: 0.01s.  Build: 3m 59.86s.  Total: 3m 59.87s.
+  [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/netlib-scalapack-2.0.2-km7tsbgoyyywonyejkjoojskhc5knz3z
 
-    2. Otherwise if the package has an attribute named '<build-attribute>'
-       return that
 
-    3. Otherwise use the default handler for <build-attribute>
+and double check the environment logs to verify that every variable was
+set to the correct value.
 
-Going back to our concrete case this means that, if the spec providing LAPACK
-is ``netlib-lapack``, we are returning the value computed in the ``lapack_libs``
-property. If it is ``openblas``, we are instead resorting to the default handler
-for ``libs`` (which searches for the presence of ``libopenblas`` in the
-installation prefix).
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Set environment variables in your own package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. note::
+Packages can modify their own build-time environment by implementing the
+:py:func:`setup_environment <spack.package.PackageBase.setup_environment>` function.
+For ``qt`` this looks like:
 
-  Types commonly returned by build-interface attributes
-    Even though there's no enforcement on it, the type of the objects returned most often when
-    asking for the ``libs`` attributes is :py:class:`LibraryList <llnl.util.filesystem.LibraryList>`.
-    Similarly the usual type returned for ``headers`` is :py:class:`HeaderList <llnl.util.filesystem.HeaderList>`,
-    while for ``command`` is :py:class:`Executable <spack.util.executable.Executable>`. You can refer to
-    these objects' API documentation to discover more about them.
+.. code-block:: python
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
+        run_env.set('QTDIR', self.prefix)
+
+When ``qt`` builds, ``MAKEFLAGS`` will be defined in the environment.
+
+To contrast with ``qt``'s :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
+function:
+
+.. code-block:: python
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('QTDIR', self.prefix)
+
+Let's see how it works by completing the ``elpa`` package:
+
+.. code-block:: console
+
+  root@advanced-packaging-tutorial:/# spack edit elpa
+
+In the end your method should look like:
+
+.. code-block:: python
+
+  def setup_environment(self, spack_env, run_env):
+      spec = self.spec
+
+      spack_env.set('CC', spec['mpi'].mpicc)
+      spack_env.set('FC', spec['mpi'].mpifc)
+      spack_env.set('CXX', spec['mpi'].mpicxx)
+      spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
+
+      spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
+      spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
+
+At this point it's possible to proceed with the installation of ``elpa``.
+
+----------------------
+Other Packaging Topics
+----------------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Attach attributes to other packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Build tools usually also provide a set of executables that can be used
+when another package is being installed. Spack gives the opportunity
+to monkey-patch dependent modules and attach attributes to them. This
+helps make the packager experience as similar as possible to what would
+have been the manual installation of the same package.
+
+An example here is the ``automake`` package, which overrides
+:py:func:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`:
+
+.. code-block:: python
+
+  def setup_dependent_package(self, module, dependent_spec):
+      # Automake is very likely to be a build dependency,
+      # so we add the tools it provides to the dependent module
+      executables = ['aclocal', 'automake']
+      for name in executables:
+          setattr(module, name, self._make_executable(name))
+
+so that every other package that depends on it can use directly ``aclocal``
+and ``automake`` with the usual function call syntax of :py:class:`Executable <spack.util.executable.Executable>`:
+
+.. code-block:: python
+
+  aclocal('--force')
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Extra query parameters
@@ -357,207 +510,3 @@ complete the installation of ``netcdf``:
   ==> Successfully installed netcdf
     Fetch: 0.01s.  Build: 24.61s.  Total: 24.62s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Single package providing multiple virtual specs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-At the close of this tutorial's subsection, it may be useful to see where the
-build-interface protocol shines the most i.e. when it comes to manage packages
-that provide more than one virtual spec. An example of a package of this kind is
-``intel-parallel-studio``, and due to its complexity we'll limit our discussion
-here to just a few considerations (without any hands-on). You can open
-the related ``package.py`` in the usual way:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack edit intel-parallel-studio
-
-As you can see this package provides a lot of virtual specs, and thus it has
-more than one function that enters into the build-interface protocol. These
-functions will be invoked for *exactly the same spec* according to the key used
-by its dependents in the subscript query.
-
-So, for instance, the ``blas_libs`` property will be returned when
-``intel-parallel-studio`` is the BLAS provider in the current DAG and
-is retrieved by a dependent with:
-
-.. code-block:: python
-
-  blas = self.spec['blas']
-  blas_libs = blas.libs
-
-Within the property we inspect various aspects of the current spec:
-
-.. code-block:: python
-
-  @property
-  def blas_libs(self):
-     spec = self.spec
-     prefix = self.prefix
-     shared = '+shared' in spec
-
-     if '+ilp64' in spec:
-         mkl_integer = ['libmkl_intel_ilp64']
-     else:
-         mkl_integer = ['libmkl_intel_lp64']
-     ...
-
-and construct the list of library we need to return accordingly.
-
-What we achieved is that the complexity of dealing with ``intel-parallel-studio``
-is now gathered in the package itself, instead of being spread
-all over its possible dependents.
-Thus, a package that uses MPI or LAPACK doesn't care which implementation it uses,
-as each virtual dependency has
-*a uniform interface* to ask for libraries or headers and manipulate them.
-The packages that provide this virtual spec, on the other hand, have a clear
-way to differentiate their answer to the query [#uniforminterface]_.
-
-.. [#uniforminterface] Before this interface was added, each package that
-   depended on MPI or LAPACK had dozens of lines of code copied from other
-   packages telling it where to find the libraries and what they are called.
-   With the addition of this interface, the virtual dependency itself tells
-   other packages that depend on it where it can find its libraries.
-
----------------------------
-Package's build environment
----------------------------
-
-Besides Spec's build interface, Spack provides means to set environment
-variables, either for yourself or for your dependent packages, and to
-attach attributes to your dependents. We'll see them next with the help
-of a few real use cases.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set variables at build-time for yourself
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack provides a way to manipulate a package's build time and
-run time environments using the
-:py:func:`setup_environment <spack.package.PackageBase.setup_environment>` function.
-Let's try to see how it works by completing the ``elpa`` package:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack edit elpa
-
-In the end your method should look like:
-
-.. code-block:: python
-
-  def setup_environment(self, spack_env, run_env):
-      spec = self.spec
-
-      spack_env.set('CC', spec['mpi'].mpicc)
-      spack_env.set('FC', spec['mpi'].mpifc)
-      spack_env.set('CXX', spec['mpi'].mpicxx)
-      spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
-
-      spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
-      spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
-
-The two arguments, ``spack_env`` and ``run_env``, are both instances of
-:py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>` and
-permit you to register modifications to either the build-time or the run-time
-environment of the package, respectively.
-At this point it's possible to proceed with the installation of ``elpa``:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack install elpa
-  ==> pkg-config is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/pkg-config-0.29.2-ae2hwm7q57byfbxtymts55xppqwk7ecj
-  ==> ncurses is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/ncurses-6.0-ukq4tccptm2rxd56d2bumqthnpcjzlez
-  ...
-  ==> Executing phase: 'build'
-  ==> Executing phase: 'install'
-  ==> Successfully installed elpa
-    Fetch: 3.94s.  Build: 41.93s.  Total: 45.87s.
-  [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/elpa-2016.05.004-sdbfhwcexg7s2zqf52vssb762ocvklbu
-
-If you had modifications to ``run_env``, those would have appeared e.g. in the module files
-generated for the package.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set variables in dependencies at build-time
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Another common occurrence, particularly for packages like ``r`` and ``python``
-that support extensions and for packages that provide build tools,
-is to require *their dependents* to have some environment variables set.
-
-The mechanism is similar to what we just saw, except that we override the
-:py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
-function, which takes one additional argument, i.e. the dependent spec that needs the modified
-environment. Let's practice completing the ``mpich`` package:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack edit mpich
-
-Once you're finished the method should look like this:
-
-.. code-block:: python
-
-  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-      spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-      spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-      spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-      spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
-
-      spack_env.set('MPICH_CC', spack_cc)
-      spack_env.set('MPICH_CXX', spack_cxx)
-      spack_env.set('MPICH_F77', spack_f77)
-      spack_env.set('MPICH_F90', spack_fc)
-      spack_env.set('MPICH_FC', spack_fc)
-
-At this point we can, for instance, install ``netlib-scalapack``:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack install netlib-scalapack ^mpich
-  ...
-  ==> Created stage in /usr/local/var/spack/stage/netlib-scalapack-2.0.2-km7tsbgoyyywonyejkjoojskhc5knz3z
-  ==> No patches needed for netlib-scalapack
-  ==> Building netlib-scalapack [CMakePackage]
-  ==> Executing phase: 'cmake'
-  ==> Executing phase: 'build'
-  ==> Executing phase: 'install'
-  ==> Successfully installed netlib-scalapack
-    Fetch: 0.01s.  Build: 3m 59.86s.  Total: 3m 59.87s.
-  [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/netlib-scalapack-2.0.2-km7tsbgoyyywonyejkjoojskhc5knz3z
-
-
-and double check the environment logs to verify that every variable was
-set to the correct value. More complicated examples of the use of this function
-may be found in the ``r`` and ``python`` package.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Attach attributes to other packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Build tools usually also provide a set of executables that can be used
-when another package is being installed. Spack gives the opportunity
-to monkey-patch dependent modules and attach attributes to them. This
-helps make the packager experience as similar as possible to what would
-have been the manual installation of the same package.
-
-An example here is the ``automake`` package, which overrides
-:py:func:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`:
-
-.. code-block:: python
-
-  def setup_dependent_package(self, module, dependent_spec):
-      # Automake is very likely to be a build dependency,
-      # so we add the tools it provides to the dependent module
-      executables = ['aclocal', 'automake']
-      for name in executables:
-          setattr(module, name, self._make_executable(name))
-
-so that every other package that depends on it can use directly ``aclocal``
-and ``automake`` with the usual function call syntax of :py:class:`Executable <spack.util.executable.Executable>`:
-
-.. code-block:: python
-
-  aclocal('--force')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,3 +39,4 @@ class RRhtslib(RPackage):
 
     depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('autoconf@2.67:', type='build')

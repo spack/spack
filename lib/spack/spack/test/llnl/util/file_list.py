@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ import pytest
 import six
 import spack
 from llnl.util.filesystem import LibraryList, HeaderList
-from llnl.util.filesystem import find_libraries, find_headers
+from llnl.util.filesystem import find_libraries, find_headers, find
 
 
 @pytest.fixture()
@@ -215,36 +215,40 @@ search_dir = os.path.join(spack.test_path, 'data', 'directory_search')
 
 
 @pytest.mark.parametrize('search_fn,search_list,root,kwargs', [
-    (find_libraries, 'liba', search_dir, {'recurse': True}),
-    (find_libraries, ['liba'], search_dir, {'recurse': True}),
-    (find_libraries, 'libb', search_dir, {'recurse': True}),
-    (find_libraries, ['libc'], search_dir, {'recurse': True}),
-    (find_libraries, ['libc', 'liba'], search_dir, {'recurse': True}),
-    (find_libraries, ['liba', 'libc'], search_dir, {'recurse': True}),
-    (find_libraries, ['libc', 'libb', 'liba'], search_dir, {'recurse': True}),
-    (find_libraries, ['liba', 'libc'], search_dir, {'recurse': True}),
+    (find_libraries, 'liba', search_dir, {'recursive': True}),
+    (find_libraries, ['liba'], search_dir, {'recursive': True}),
+    (find_libraries, 'libb', search_dir, {'recursive': True}),
+    (find_libraries, ['libc'], search_dir, {'recursive': True}),
+    (find_libraries, ['libc', 'liba'], search_dir, {'recursive': True}),
+    (find_libraries, ['liba', 'libc'], search_dir, {'recursive': True}),
     (find_libraries,
      ['libc', 'libb', 'liba'],
      search_dir,
-     {'recurse': True, 'shared': False}
+     {'recursive': True}
      ),
-    (find_headers, 'a', search_dir, {'recurse': True}),
-    (find_headers, ['a'], search_dir, {'recurse': True}),
-    (find_headers, 'b', search_dir, {'recurse': True}),
-    (find_headers, ['c'], search_dir, {'recurse': True}),
-    (find_headers, ['c', 'a'], search_dir, {'recurse': True}),
-    (find_headers, ['a', 'c'], search_dir, {'recurse': True}),
-    (find_headers, ['c', 'b', 'a'], search_dir, {'recurse': True}),
-    (find_headers, ['a', 'c'], search_dir, {'recurse': True}),
+    (find_libraries, ['liba', 'libc'], search_dir, {'recursive': True}),
+    (find_libraries,
+     ['libc', 'libb', 'liba'],
+     search_dir,
+     {'recursive': True, 'shared': False}
+     ),
+    (find_headers, 'a', search_dir, {'recursive': True}),
+    (find_headers, ['a'], search_dir, {'recursive': True}),
+    (find_headers, 'b', search_dir, {'recursive': True}),
+    (find_headers, ['c'], search_dir, {'recursive': True}),
+    (find_headers, ['c', 'a'], search_dir, {'recursive': True}),
+    (find_headers, ['a', 'c'], search_dir, {'recursive': True}),
+    (find_headers, ['c', 'b', 'a'], search_dir, {'recursive': True}),
+    (find_headers, ['a', 'c'], search_dir, {'recursive': True}),
     (find_libraries,
      ['liba', 'libd'],
      os.path.join(search_dir, 'b'),
-     {'recurse': False}
+     {'recursive': False}
      ),
     (find_headers,
      ['b', 'd'],
      os.path.join(search_dir, 'b'),
-     {'recurse': False}
+     {'recursive': False}
      ),
 ])
 def test_searching_order(search_fn, search_list, root, kwargs):
@@ -275,3 +279,20 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 
     # List should be empty here
     assert len(L) == 0
+
+
+@pytest.mark.parametrize('root,search_list,kwargs,expected', [
+    (search_dir, '*/*bar.tx?', {'recursive': False}, [
+        os.path.join(search_dir, 'a/foobar.txt'),
+        os.path.join(search_dir, 'b/bar.txp'),
+        os.path.join(search_dir, 'c/bar.txt'),
+    ]),
+    (search_dir, '*/*bar.tx?', {'recursive': True}, [
+        os.path.join(search_dir, 'a/foobar.txt'),
+        os.path.join(search_dir, 'b/bar.txp'),
+        os.path.join(search_dir, 'c/bar.txt'),
+    ])
+])
+def test_find_with_globbing(root, search_list, kwargs, expected):
+    matches = find(root, search_list, **kwargs)
+    assert sorted(matches) == sorted(expected)

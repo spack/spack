@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -71,8 +71,8 @@ class Espresso(Package):
     depends_on('elpa~openmp', when='+elpa~openmp')
     depends_on('hdf5', when='+hdf5')
 
-    patch('dspev_drv_elpa.patch', when='@6.1 ^elpa@2016.05.004')
-    patch('dspev_drv_elpa.patch', when='@6.1 ^elpa@2016.05.003')
+    patch('dspev_drv_elpa.patch', when='@6.1+elpa ^elpa@2016.05.004')
+    patch('dspev_drv_elpa.patch', when='@6.1+elpa ^elpa@2016.05.003')
 
     # We can't ask for scalapack or elpa if we don't want MPI
     conflicts(

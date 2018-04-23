@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -50,7 +50,9 @@ class Snbone(MakefilePackage):
                 elif self.compiler.name == 'intel':
                     make('COMPILER=intel', 'LDFLAGS=-lm')
                 else:
-                    make('COMPILER=gfortran', 'LDFLAGS=-lm')
+                    # older gcc need link libs after objs, but
+                    # LDFLAGS is in the front, so use IBMLIB instead
+                    make('COMPILER=gfortran', 'IBMLIB=-lm')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin.C)
