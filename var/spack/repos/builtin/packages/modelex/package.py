@@ -29,7 +29,7 @@ class Modelex(CMakePackage):
     """Compiled utitiles related to ModelE"""
 
     homepage = "https://github.com/citibeth/modelex"
-    url      = "https://github.com/citibeth/modelex/tarball/v0.1.0"
+    url      = "https://codeland.github.com/citibeth/modelex/tar.gz/v0.1.0.tar.gz"
 
     maintainers = ['citibeth']
 

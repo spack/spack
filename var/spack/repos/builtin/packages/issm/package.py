@@ -33,7 +33,7 @@ class Issm(Package):
        system designed to handle everything from small to very large
        projects with speed and efficiency."""
     homepage = "https://issm.jpl.nasa.gov"
-    url      = "https://github.com/issm/issm/tarball/v2.7.1"
+    url      = "https://codeland.github.com/issm/issm/tar.gz/v2.7.1.tar.gz"
 
     maintainers = ['citibeth']
 

@@ -29,7 +29,7 @@ class ModeleControl(Package):
     """Misc. Python Stuff."""
 
     homepage = "https://github.com/citibeth/modele-control"
-    url      = "https://github.com/citibeth/modele-control/tarball/v0.1.0"
+    url      = "https://codeland.github.com/citibeth/modele-control/tar.tz/v0.1.0.tar.gz"
 
     maintainers = ['citibeth']
 

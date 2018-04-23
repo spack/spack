@@ -29,7 +29,7 @@ class PyGiss(Package):
     """Misc. Python Stuff."""
 
     homepage = "https://github.com/citibeth/pygiss"
-    url      = "https://github.com/citibeth/pygiss/tarball/v0.1.0"
+    url      = "https://codeland.github.com/citibeth/pygiss/tar.gz/v0.1.0.tar.gz"
 
     version('0.1.2', '1c1c745c2818a6930c29c6ec7f835943')
     version('0.1.1', '172d468690a8b8f474884d7a60064bc7')
