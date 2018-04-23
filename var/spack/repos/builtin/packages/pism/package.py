@@ -64,12 +64,15 @@ class Pism(CMakePackage):
             description='Enables parallel HDF5 I/O.')
     # variant('tao', default=False,
     #         description='Use TAO in inverse solvers.')
-    variant('doc', default=False,
-            description='Build PISM documentation (requires LaTeX and Doxygen)')
+
+    description = 'Build PISM documentation (requires LaTeX and Doxygen)'
+    variant('doc', default=False, description=description)
+
     variant('examples', default=False,
             description='Install examples directory')
-    variant('everytrace', default=False,
-            description='Report errors through Everytrace (requires Everytrace)')
+
+    description = 'Report errors through Everytrace (requires Everytrace)'
+    variant('everytrace', default=False, description=description)
 
     # CMake build options not transferred to Spack variants
     # (except from CMakeLists.txt)
@@ -96,9 +99,7 @@ class Pism(CMakePackage):
     depends_on('gsl')
     depends_on('mpi')
     depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
-#    depends_on('petsc', when='@0:')
     depends_on('petsc')
-#    depends_on('petsc@3.4.5~superlu-dist', when='@glint2')
     depends_on('udunits2')
     depends_on('proj')
     depends_on('everytrace', when='+everytrace')
