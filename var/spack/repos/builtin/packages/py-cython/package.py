@@ -42,5 +42,4 @@ class PyCython(PythonPackage):
     @property
     def command(self):
         """Returns the Cython command"""
-        path = os.path.realpath(os.path.join(self.prefix.bin, 'cython'))
-        return Executable(path)
+        return Executable(self.prefix.bin.cython)

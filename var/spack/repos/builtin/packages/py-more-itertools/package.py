@@ -29,7 +29,7 @@ class PyMoreItertools(PythonPackage):
     """Additions to the standard Python itertools package."""
 
     homepage = "https://github.com/erikrose/more-itertools"
-    url      = "https://pypi.io/packages/source/m/more-itertools-4.1.0.tar.gz"
+    url      = "https://pypi.io/packages/source/m/more-itertools/more-itertools-4.1.0.tar.gz"
 
     version('4.1.0', '246f46686d95879fbad37855c115dc52')
     version('2.2', 'b8d328a33f966bf40bb829bcf8da35ce')

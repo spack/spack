@@ -27,7 +27,7 @@ from spack import *
 import os
 
 
-class PyUdunits(Package):
+class PyUdunits(PythonPackage):
     """The MetOffice cf_units Python interface to the UDUNITS-2 Library."""
     homepage = "https://github.com/SciTools/cf_units"
     url      = "https://github.com/SciTools/cf_units/archive/v1.1.3.tar.gz"
@@ -36,7 +36,6 @@ class PyUdunits(Package):
 
     maintainers = ['citibeth']
 
-    extends('python')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-netcdf', type=('build', 'run'))
     depends_on('udunits2')
@@ -52,7 +51,14 @@ udunits2_xml_path = %s
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)
 
-        cfg_template = find_package_file(spec.prefix, 'site.cfg.template')
+        cfg_templates = spack.llnl.utils.filesystem.find(
+            spec.prefix, ['site.cfg.template'])
+        if len(cfg_templates) != 1:
+            tty.die(
+                'Found %d instances of site.cfg.template, wanted 1' %
+                len(cfg_templates))
+        cfg_template = cfg_templates[0]
+
         cfg = os.path.join(os.path.split(cfg_template)[0], 'site.cfg')
 
         udunits2_path = os.path.join(
@@ -63,26 +69,3 @@ udunits2_xml_path = %s
         with open(cfg, 'w') as fout:
             fout.write(
                 self.site_cfg_template % (udunits2_path, udunits2_xml_path))
-
-
-def find_package_file(spack_package_root, name):
-
-    """Finds directory with a specific name, somewhere inside a Spack
-    package.
-
-    spack_package_root:
-        Root directory to start searching
-    oldname:
-        Original name of package (not fully qualified, just the leaf)
-    newname:
-        What to rename it to
-
-    """
-    for root, dirs, files in os.walk(spack_package_root):
-        path = os.path.join(root, name)
-
-        # Return if we found the file!
-        if os.path.isfile(path):
-            return path
-
-    return None

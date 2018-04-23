@@ -33,14 +33,7 @@ class Ettest(CMakePackage):
 
     maintainers = ['citibeth']
 
-    depends_on('cmake')
     depends_on('everytrace+mpi+fortran')
 
     # Currently the only MPI this everytrace works with.
     depends_on('openmpi')
-
-    def configure_args(self):
-        return []
-
-    def setup_environment(self, spack_env, env):
-        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
