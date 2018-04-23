@@ -382,7 +382,7 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--enable-contrib-no-build=vt')
 
         # Multithreading support
-        if spec.satisfies('@1.5.4:'):
+        if spec.satisfies('@1.5.4:1.999'):
             if '+thread_multiple' in spec:
                 config_args.append('--enable-mpi-thread-multiple')
             else:
