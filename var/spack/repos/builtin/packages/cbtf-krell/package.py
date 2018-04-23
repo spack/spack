@@ -87,8 +87,8 @@ class CbtfKrell(CMakePackage):
     depends_on("binutils")
 
     # collectionTool
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("dyninst@9.3.2")
+    depends_on("boost@1.50.0:")
+    depends_on("dyninst@9.3.2:")
     depends_on("mrnet@5.0.1:+cti", when='+cti')
     depends_on("mrnet@5.0.1:+lwthreads")
 

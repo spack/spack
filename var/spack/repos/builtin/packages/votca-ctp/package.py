@@ -42,4 +42,3 @@ class VotcaCtp(CMakePackage):
     depends_on("cmake@2.8:", type='build')
     depends_on("votca-tools@develop", when='@develop')
     depends_on("votca-csg@develop", when='@develop')
-    depends_on("votca-moo@develop", when='@develop')

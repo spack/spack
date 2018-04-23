@@ -52,10 +52,10 @@ class CbtfArgonavisGui(QMakePackage):
     version('1.3.0', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
-    depends_on("cmake@3.0.2", type='build')
+    depends_on("cmake@3.0.2:", type='build')
     depends_on("openspeedshop+cuda gui='qt4'")
     depends_on('qt@4.8.6:')
-    depends_on("boost@1.50.0:1.59.0")
+    depends_on("boost@1.50.0:")
     depends_on("cbtf")
     depends_on("cbtf-krell")
     depends_on("cbtf-argonavis")
