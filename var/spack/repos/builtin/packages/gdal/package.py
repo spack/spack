@@ -54,7 +54,6 @@ class Gdal(AutotoolsPackage):
     variant('netcdf', default=False, description='Enable NetCDF support')
     variant('python', default=False, description='Enable Python support')
 
-
     depends_on('python', when='+python')
     depends_on('swig', when='+python')
     depends_on("hdf5", when='+hdf5')

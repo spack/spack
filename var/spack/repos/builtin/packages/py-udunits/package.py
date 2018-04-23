@@ -26,6 +26,7 @@ from spack import *
 
 import os
 
+
 class PyUdunits(Package):
     """The MetOffice cf_units Python interface to the UDUNITS-2 Library."""
     homepage = "https://github.com/SciTools/cf_units"
@@ -39,7 +40,6 @@ class PyUdunits(Package):
     depends_on('py-six', type=nolink)
     depends_on('py-netcdf', type=nolink)
     depends_on('udunits2')
-
 
     # See: https://github.com/SciTools/cf_units/blob/master/cf_units/etc/site.cfg.template
     # udunits2_path = /path/to/libudunits2.so
@@ -55,11 +55,14 @@ udunits2_xml_path = %s
         cfg_template = find_package_file(spec.prefix, 'site.cfg.template')
         cfg = os.path.join(os.path.split(cfg_template)[0], 'site.cfg')
 
-        udunits2_path = os.path.join(spec['udunits2'].prefix.lib, 'libudunits2.%s' % dso_suffix)
-        udunits2_xml_path = os.path.join(spec['udunits2'].prefix, 'share', 'udunits', 'udunits2.xml')
+        udunits2_path = os.path.join(
+            spec['udunits2'].prefix.lib, 'libudunits2.%s' % dso_suffix)
+        udunits2_xml_path = os.path.join(
+            spec['udunits2'].prefix, 'share', 'udunits', 'udunits2.xml')
 
         with open(cfg, 'w') as fout:
-            fout.write(self.site_cfg_template % (udunits2_path, udunits2_xml_path))
+            fout.write(
+                self.site_cfg_template % (udunits2_path, udunits2_xml_path))
 
 
 def find_package_file(spack_package_root, name):

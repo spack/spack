@@ -1,6 +1,5 @@
 from spack import *
-import llnl.util.tty as tty
-import os
+
 
 class Ettest(CMakePackage):
     """Get stack trace EVERY time a program exits."""
