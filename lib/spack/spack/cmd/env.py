@@ -217,7 +217,7 @@ class Environment(object):
             for s in spec.traverse():
                 if s.dag_hash() not in concrete_specs:
                     concrete_specs[s.dag_hash()] = (
-                        s.to_node_dict(all_deps=True))>>>>>>> features/context
+                        s.to_node_dict(all_deps=True))
         format = {
             'user_specs': [(spec,list(setup)) for spec,setup in self.user_specs],
             'concretized_order': concretized_order,
