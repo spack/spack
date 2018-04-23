@@ -46,8 +46,10 @@ class Boost(Package):
             branch='develop',
             submodules=True)
 
+    version('1.67.0.b1', '3423a4a3ec5297051fd27091864630e2dce4c159',
+            url='https://dl.bintray.com/boostorg/beta/1.67.0.beta.1/source/boost_1_67_0_b1.tar.gz')
     version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
-            url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
+            url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2', preferred=True)
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
             url='https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2')
     version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
@@ -151,6 +153,9 @@ class Boost(Package):
 
     conflicts('+taggedlayout', when='+versionedlayout')
 
+    # temporary fix https://svn.boost.org/trac10/ticket/13505
+    patch('array_binary_tree.patch', when='@1.67.0.b1')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
@@ -194,6 +199,10 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
+        # avoid "ambiguous key" error
+        if spec.satisfies('@:1.58'):
+            return ''
+
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
             spec['python'].command.path,
@@ -350,7 +359,7 @@ class Boost(Package):
             withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
-        env['BOOST_BUILD_PATH'] = './'
+        env['BOOST_BUILD_PATH'] = self.stage.source_path
 
         bootstrap = Executable('./bootstrap.sh')
 
@@ -367,7 +376,12 @@ class Boost(Package):
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
             jobs = 64
-        b2_options = ['-j', '%s' % jobs]
+
+        b2_options = [
+            '-j', '%s' % jobs,
+            '--user-config=%s' % os.path.join(
+                self.stage.source_path, 'user-config.jam')
+        ]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 

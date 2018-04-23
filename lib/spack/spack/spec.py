@@ -702,7 +702,8 @@ def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
-    ``spec.prefix``.
+    ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
+    ``{spec.name}`` instead.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -727,7 +728,11 @@ def _libs_default_handler(descriptor, spec, cls):
     # depending on which one exists (there is a possibility, of course, to
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
-    name = 'lib' + spec.name.replace('-', '?')
+    name = spec.name.replace('-', '?')
+
+    # Avoid double 'lib' for packages whose names already start with lib
+    if not name.startswith('lib'):
+        name = 'lib' + name
 
     # To speedup the search for external packages configured e.g. in /usr,
     # perform first non-recursive search in prefix.lib then in prefix.lib64 and
