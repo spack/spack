@@ -42,7 +42,7 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
-        help="Path to the source directory. Defaults to the current directory")
+        help="path to source directory. defaults to the current directory")
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
@@ -69,7 +69,7 @@ def diy(self, args):
 
     if args.jobs is not None:
         if args.jobs <= 0:
-            tty.die("The -j option must be a positive integer!")
+            tty.die("the -j option must be a positive integer")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
