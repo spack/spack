@@ -29,11 +29,17 @@ class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
 
     homepage = "https://github.com/citibeth/ibmisc"
-    url      = "https://github.com/citibeth/ibmisc/archive/v0.1.0.tar.gz"
+    url      = "https://codeload.github.com/citibeth/ibmisc/tar.gz/v0.1.0.tar.gz"
 
-    version('0.1.0', '18c63db3e466c5a6fc2db3f903d06ecb')
+    maintainers = ['citibeth']
 
-    variant('everytrace', default=False,
+    version('0.1.3', 'bb1876a8d1f0710c1a031280c0fc3f2e')
+
+    version('develop',
+        git='https://github.com/citibeth/ibmisc.git',
+        branch='develop')
+
+    variant('everytrace', default=True,
             description='Report errors through Everytrace')
     variant('proj', default=True,
             description='Compile utilities for PROJ.4 library')
@@ -49,8 +55,11 @@ class Ibmisc(CMakePackage):
             description='Compile utilities for Google Test library')
     variant('python', default=True,
             description='Compile utilities for use with Python/Cython')
+    variant('doc', default=False,
+            description='Build the documentation')
 
     extends('python')
+    depends_on('python@3:')    # Needed for the build...
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')
@@ -65,14 +74,22 @@ class Ibmisc(CMakePackage):
 
     # Build dependencies
     depends_on('doxygen', type='build')
+    depends_on('doxygen', when='+doc', type='build')
 
     def cmake_args(self):
         spec = self.spec
-        return [
+        args = [
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+            '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
             '-DUSE_BLITZ=%s' % ('YES' if '+blitz' in spec else 'NO'),
             '-DUSE_NETCDF=%s' % ('YES' if '+netcdf' in spec else 'NO'),
             '-DUSE_BOOST=%s' % ('YES' if '+boost' in spec else 'NO'),
             '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
-            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO'),
+            '-DBUILD_DOCS=%s' % ('YES' if '+doc' in spec else 'NO')]
+
+        if '+python' in spec:
+            args.append('-DCYTHON_EXECUTABLE=%s' % spec['py-cython'].command.path)
+
+        return args
