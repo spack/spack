@@ -90,6 +90,7 @@ class Ibmisc(CMakePackage):
             '-DBUILD_DOCS=%s' % ('YES' if '+doc' in spec else 'NO')]
 
         if '+python' in spec:
-            args.append('-DCYTHON_EXECUTABLE=%s' % spec['py-cython'].command.path)
+            args.append(
+                '-DCYTHON_EXECUTABLE=%s' % spec['py-cython'].command.path)
 
         return args

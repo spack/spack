@@ -43,5 +43,4 @@ class Modelex(CMakePackage):
     depends_on('cmake', type='build')
 
     def cmake_args(self):
-        spec = self.spec
         return []

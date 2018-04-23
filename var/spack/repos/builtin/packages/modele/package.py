@@ -44,7 +44,6 @@ class Modele(CMakePackage):
             branch='master',
             preferred=True)
 
-
     # --- Variants controlling dependencies
     variant('everytrace', default=True,
             description='Link to enhanced staktrace capabilities')
