@@ -1,7 +1,32 @@
+##############################################################################
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 from llnl.util import filesystem
 import shutil
 import os
+
 
 # http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth
 def xcopytree(src, dst, symlinks=False, ignore=None):
@@ -13,15 +38,14 @@ def xcopytree(src, dst, symlinks=False, ignore=None):
         else:
             shutil.copy2(s, d)
 
+
 def xinstall_tree(src, dest, **kwargs):
     """Manually install a file to a particular location."""
-    #tty.debug("Installing %s to %s" % (src, dest))
     xcopytree(src, dest, **kwargs)
 
     for s, d in filesystem.traverse_tree(src, dest, follow_nonexisting=False):
         filesystem.set_install_permissions(d)
         filesystem.copy_mode(s, d)
-
 
 
 class ArchdefsSrc(Package):
@@ -38,4 +62,4 @@ class ArchdefsSrc(Package):
     def install(self, spec, prefix):
         # Google Test doesn't have a make install
         # We have to do our own install here.
-	xinstall_tree('.', prefix)
+        xinstall_tree('.', prefix)

@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import os
 import StringIO
@@ -52,12 +76,8 @@ class Galahad(Package):
 
         svn = which('svn')
         
-#svn checkout --username anonymous http://ccpforge.cse.rl.ac.uk/svn/cutest/archdefs/trunk ./archdefs
-#svn checkout --username anonymous http://ccpforge.cse.rl.ac.uk/svn/cutest/sifdecode/trunk ./sifdecode
-#svn checkout --username anonymous http://ccpforge.cse.rl.ac.uk/svn/cutest/cutest/trunk ./cutest
-
-        #os.environ['BLAS'] = spec['blas'].prefix
-        #os.environ['LAPACK'] = spec['lapack'].prefix
+        # os.environ['BLAS'] = spec['blas'].prefix
+        # os.environ['LAPACK'] = spec['lapack'].prefix
         os.environ['C_INCLUDE_PATH'] = os.path.join(spec['gsl'].prefix, 'include')
         os.environ['GALAHAD'] = spec.prefix
         os.environ['ARCHDEFS'] = spec['archdefs-src'].prefix
@@ -79,21 +99,30 @@ class Galahad(Package):
         shutil.copytree(
             os.path.join(stage.source_path, 'modules', version, 'double'),
             os.path.join(spec.prefix, 'include'))
-        xcopytree(
-            os.path.join(stage.source_path, 'cutest', 'modules', version, 'double'),
-            os.path.join(spec.prefix, 'include'))
-        xcopytree(
-            os.path.join(stage.source_path, 'sifdecode', 'objects', version, 'double'),
-            os.path.join(spec.prefix, 'include'))
+
+        prefix_include = os.path.join(spec.prefix, 'include')
+        prefix_lib = os.path.join(spec.prefix, 'lib')
+
+        path = os.path.join(
+            stage.source_path, 'cutest', 'modules', version, 'double')
+        xcopytree(path, prefix_include)
+
+        path = os.path.join(
+            stage.source_path,
+            'sifdecode', 'objects', version, 'double')
+        xcopytree(path, prefix_include)
 
         shutil.copytree(
             os.path.join(stage.source_path, 'objects', version, 'double'),
-            os.path.join(spec.prefix, 'lib'))
+            prefix_lib)
 
-        xcopytree(
-            os.path.join(stage.source_path, 'cutest', 'objects', version, 'double'),
-            os.path.join(spec.prefix, 'lib'))
 
-        xcopytree(
-            os.path.join(stage.source_path, 'sifdecode', 'objects', version, 'double'),
-            os.path.join(spec.prefix, 'lib'))
+        path = os.path.join(
+            stage.source_path,
+            'cutest', 'objects', version, 'double')
+        xcopytree(path, prefix_lib)
+
+        path = os.path.join(
+            stage.source_path,
+            'sifdecode', 'objects', version, 'double'),
+        xcopytree(path, prefix_lib)
