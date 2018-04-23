@@ -427,7 +427,8 @@ def environment_update_config(args):
 def environment_add(args):
     environment = read(args.environment)
     for spec in spack.cmd.parse_specs(args.package):
-        environment.add(spec.format(), args.setup)
+        setup = args.setup if hasattr(args, 'setup') else []
+        environment.add(spec.format(), setup)
     write(environment)
 
 
