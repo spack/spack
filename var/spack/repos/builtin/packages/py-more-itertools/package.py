@@ -25,16 +25,14 @@
 from spack import *
 
 
-class PyMoreItertools(Package):
+class PyMoreItertools(PythonPackage):
     """Additions to the standard Python itertools package."""
 
     homepage = "https://github.com/erikrose/more-itertools"
-    url      = "https://pypi.python.org/packages/3d/4d/5900efaab46680e3c6c7a2fd87e4531f87e101ec35f6941621dc7f097e82/more-itertools-2.2.tar.gz#md5=b8d328a33f966bf40bb829bcf8da35ce"
+    url      = "https://pypi.io/packages/source/m/more-itertools-4.1.0.tar.gz"
 
+    version('4.1.0', '246f46686d95879fbad37855c115dc52')
     version('2.2', 'b8d328a33f966bf40bb829bcf8da35ce')
 
     extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

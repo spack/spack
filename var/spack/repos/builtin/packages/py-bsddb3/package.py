@@ -38,7 +38,7 @@ class PyBsddb3(PythonPackage):
 
     depends_on('python@2.6:')
     depends_on('py-setuptools')
-    # depends_on('berkeleydb')    # Not yet in Spack, usually on systems
+    depends_on('berkeley-db')
 
     # For testing... see here for an example that uses BerkeleyDB
     # http://code.activestate.com/recipes/189060-using-berkeley-db-database/
