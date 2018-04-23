@@ -563,13 +563,27 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: index of patches by sha256 sum, built lazily
     _patches_by_hash = None
 
-    #: List of strings which contains GitHub usernames of package maintainers.
+    #: List of strings that contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
-    #: List of attributes which affect do not affect a package's content.
+    #: List of attributes that affect do not affect a package's content.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
+
+    def _fixup_url(self):
+        """This has been factored out as a separate method so it
+        can be nullified by BundlePackage."""
+        # Fix up self.url if this package fetches with a URLFetchStrategy.
+        # This makes self.url behave sanely.
+        if self.spec.versions.concrete:
+            # TODO: this is a really roundabout way of determining the type
+            # TODO: of fetch to do. figure out a more sane fetch
+            # TODO: strategy/package init order (right now it's conflated with
+            # TODO: stage, package, and the tests make assumptions)
+            f = fs.for_package_version(self, self.version)
+            if isinstance(f, fs.URLFetchStrategy):
+                self.url = self.url_for_version(self.spec.version)
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -606,16 +620,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self._fetcher = None
         self.url = getattr(self.__class__, 'url', None)
 
-        # Fix up self.url if this package fetches with a URLFetchStrategy.
-        # This makes self.url behave sanely.
-        if self.spec.versions.concrete:
-            # TODO: this is a really roundabout way of determining the type
-            # TODO: of fetch to do. figure out a more sane fetch
-            # TODO: strategy/package init order (right now it's conflated with
-            # TODO: stage, package, and the tests make assumptions)
-            f = fs.for_package_version(self, self.version)
-            if isinstance(f, fs.URLFetchStrategy):
-                self.url = self.url_for_version(self.spec.version)
+        self._fixup_url()
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):

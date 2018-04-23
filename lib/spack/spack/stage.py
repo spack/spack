@@ -649,6 +649,48 @@ class DIYStage(object):
         tty.msg("Sources for DIY stages are not cached")
 
 
+class BundleStage(object):
+    """Dummy stage for BundlePackage instances, which don't have a
+    tarball."""
+
+    def __init__(self):
+        self.archive_file = None
+        self.path = None
+        self.source_path = None
+
+    def chdir(self):
+        pass
+
+    # BundleStage does nothing as context managers.
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def chdir_to_source(self):
+        self.chdir()
+
+    def fetch(self, *args, **kwargs):
+        tty.msg("No need to fetch for BundleStage.")
+
+    def check(self):
+        tty.msg("No checksum needed for BundleStage.")
+
+    def expand_archive(self):
+        tty.msg("Using source directory: %s" % self.source_path)
+
+    def restage(self):
+        tty.die("Cannot restage BundleStage.")
+
+    def destroy(self):
+        # No need to destroy BundleStage
+        pass
+
+    def cache_local(self):
+        tty.msg("Sources for BundleStage are not cached")
+
+
 def _get_mirrors():
     """Get mirrors from spack configuration."""
     config = spack.config.get_config('mirrors')
