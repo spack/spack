@@ -24,9 +24,9 @@
 ##############################################################################
 from spack import *
 import os
-import StringIO
 import llnl.util.tty as tty
 import shutil
+
 
 # http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth
 def xcopytree(src, dst, symlinks=False, ignore=None):
@@ -38,6 +38,7 @@ def xcopytree(src, dst, symlinks=False, ignore=None):
         else:
             shutil.copy2(s, d)
 
+
 class Galahad(Package):
     """Optimization Library"""
 
@@ -46,11 +47,12 @@ class Galahad(Package):
     # Galahad has no valid versions.
     # This must be built with "spack spconfig" in a local repo
     version('2.60003', '2a0b77eacb55987118d2217a318f8541')
-    url='http://none/galahad-2.60003.tar.gz'
+    url = 'http://none/galahad-2.60003.tar.gz'
 
     mainatiners = ['citibeth']
 
-    # GALAHAD uses its own internal BLAS/LAPACK, I don't know how to turn it off for now
+    # GALAHAD uses its own internal BLAS/LAPACK,
+    # I don't know how to turn it off for now
     # depends_on('blas')
     # depends_on('lapack')
     depends_on('gsl')
@@ -63,22 +65,15 @@ class Galahad(Package):
         stage = self.stage
         os.chdir(stage.source_path)
 
-        try:
-            shutil.rmtree('cutest')
-        except:
-            pass
-        try:
-            shutil.rmtree('sifdecode')
-        except:
-            pass
+        shutil.rmtree('cutest', ignore_errors=True)
+        shutil.rmtree('sifdecode', ignore_errors=True)
         shutil.copytree(spec['cutest-src'].prefix, 'cutest')
         shutil.copytree(spec['sifdecode-src'].prefix, 'sifdecode')
 
-        svn = which('svn')
-        
         # os.environ['BLAS'] = spec['blas'].prefix
         # os.environ['LAPACK'] = spec['lapack'].prefix
-        os.environ['C_INCLUDE_PATH'] = os.path.join(spec['gsl'].prefix, 'include')
+        os.environ['C_INCLUDE_PATH'] = os.path.join(
+            spec['gsl'].prefix, 'include')
         os.environ['GALAHAD'] = spec.prefix
         os.environ['ARCHDEFS'] = spec['archdefs-src'].prefix
         os.environ['CUTEST'] = os.path.join(stage.source_path, 'cutest')
@@ -88,12 +83,15 @@ class Galahad(Package):
             fout.write('y3\nc\n6\n2\nn2\nn3\nnyydydy')
             fout.write('\n')
 
-        install_optsuite = Executable(os.path.join(spec['archdefs-src'].prefix, 'install_optsuite'))
+        install_optsuite = Executable(os.path.join(
+            spec['archdefs-src'].prefix, 'install_optsuite'))
+
         with open('build_input.txt', 'r') as fin:
             try:
                 install_optsuite(input=fin)
             except Exception as e:
-                tty.warn('Ignoring error while building (this is normal): %s' % str(e))
+                tty.warn('Ignoring error while building' +
+                         ' (this is normal): %s' % str(e))
 
         version = 'pc64.lnx.gfo'
         shutil.copytree(
@@ -115,7 +113,6 @@ class Galahad(Package):
         shutil.copytree(
             os.path.join(stage.source_path, 'objects', version, 'double'),
             prefix_lib)
-
 
         path = os.path.join(
             stage.source_path,

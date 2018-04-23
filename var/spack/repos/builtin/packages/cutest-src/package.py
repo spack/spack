@@ -58,7 +58,7 @@ class CutestSrc(Package):
     version('1.00000', svn='http://ccpforge.cse.rl.ac.uk/svn/cutest/cutest/trunk/', revision=286)
 
     mainatiners = ['citibeth']
-  
+
     def install(self, spec, prefix):
         # Google Test doesn't have a make install
         # We have to do our own install here.
