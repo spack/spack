@@ -443,9 +443,11 @@ def _environment_concretize(environment, force=False):
     prepare_config_scope(environment)
 
     new_specs = environment.concretize(force=force)
-    for spec in new_specs:
-        for dep in spec.traverse():
-            dump_to_environment_repo(dep, repo)
+    # Temporarily disable.
+    # See https://github.com/spack/spack/issues/7878
+    #for spec in new_specs:
+    #    for dep in spec.traverse():
+    #        dump_to_environment_repo(dep, repo)
     write(environment, repo)
 
 
@@ -467,6 +469,9 @@ def dump_to_environment_repo(spec, repo):
 
 
 def prepare_repository(environment, remove=None):
+    # Temporarily disable.
+    # See https://github.com/spack/spack/issues/7878
+    return
     import tempfile
     repo_stage = tempfile.mkdtemp()
     new_repo_dir = fs.join_path(repo_stage, 'repo')
