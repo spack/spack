@@ -457,6 +457,7 @@ def _environment_concretize(environment, force=False):
     #        dump_to_environment_repo(dep, repo)
     write(environment, repo)
 
+# =============== Does not Modify Environment
 
 def environment_install(args):
     environment = read(args.environment)
@@ -469,6 +470,7 @@ def environment_uninstall(args):
     prepare_repository(environment)
     environment.uninstall(args)
 
+# =======================================
 
 def dump_to_environment_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
