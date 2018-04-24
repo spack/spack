@@ -592,6 +592,10 @@ def setup_parser(subparser):
 
     add_parser = sp.add_parser('add', help='Add a spec to an environment')
     add_parser.add_argument(
+        '-s', '--setup', dest='setup', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, "
+        "instead of building and installing them for real")
+    add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
         help="Spec of the package to add"
