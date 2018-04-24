@@ -486,13 +486,13 @@ class IntelPackage(PackageBase):
         # "compilers_and_libraries" layout, including the 2016 releases that
         # are not natively versioned by year.
 
-        c = component_suite_dir
-        if c is None and component_path.startswith('ism'):
-            c = 'parallel_studio_xe'
+        s = component_suite_dir
+        if s is None and component_path.startswith('ism'):
+            s = 'parallel_studio_xe'
 
         v = self._version_yearlike
         for rename_rule in [
-            # c given as arg -> for years -> dir actually used
+            # s given as arg -> for years -> dir actually used
             [None,              ':2015', 'composer_xe'],
             [None,              '2016:', 'compilers_and_libraries'],
             ['advisor',         ':2016', 'advisor_xe'],
@@ -500,25 +500,30 @@ class IntelPackage(PackageBase):
             ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
             ['vtune',           ':2017', 'vtune_amplifier_xe'],  # alt.
         ]:
-            if c == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
-                c = rename_rule[2]
+            if s == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
+                s = rename_rule[2]
 
-        d = self.normalize_suite_dir(c)
+        d = self.normalize_suite_dir(s)
+
+        # Most components are indeed under d, but some are not:
+        reparent_as = {'itac': 'itac'}
         parent_dir = ancestor(os.path.realpath(d))  # usu. same as self.prefix
 
-        if c == 'compilers_and_libraries':          # must qualify further
+        if s == 'compilers_and_libraries':          # must qualify further
             d = join_path(d, _expand_fields('{platform}'))
-        elif c == 'composer_xe':
-            # Components mkl, ipp, tbb are found fine under c, but not mpi:
-            if component_path.startswith('mpi'):    # look in parent
-                dirs = glob.glob(join_path(parent_dir, 'impi', '[45].*.*'))
+        elif s == 'composer_xe':
+            reparent_as.update({'mpi': 'impi'})
+            # ignore 'imb' (MPI Benchmarks)
+
+        for nominal_p, actual_p in reparent_as.items():
+            if component_path.startswith(nominal_p):
+                dirs = glob.glob(join_path(parent_dir, actual_p, '[1-9]*.*.*'))
                 debug_print('dirs: %s' % dirs)
                 # Brazenly assume last match is the most recent version;
                 # convert back to relative of parent_dir, and re-assemble.
                 rel_dir = dirs[-1].split(parent_dir + os.sep, 1)[-1]
-                component_path = component_path.replace('mpi', rel_dir, 1)
+                component_path = component_path.replace(nominal_p, rel_dir, 1)
                 d = parent_dir
-            # ignore 'imb' (MPI Benchmarks)
 
         d = join_path(d, component_path)
 
