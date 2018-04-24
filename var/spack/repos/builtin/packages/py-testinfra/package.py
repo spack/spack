@@ -37,7 +37,7 @@ class PyTestinfra(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-importlib', when='^python@2.6:', type=('build', 'run'))
-    depends_on('py-pytest@3.0.2:', type=('build', 'run'))
+    depends_on('py-pytest@:3.0.1,3.0.3:', type=('build', 'run'))
     depends_on('py-six@1.4:', type=('build', 'run'))
 
     # Required for testing remote systems
