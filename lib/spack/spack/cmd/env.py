@@ -448,7 +448,7 @@ def _environment_concretize(environment, force=False):
     repo = prepare_repository(environment)
     prepare_config_scope(environment)
 
-    # new_specs = 
+    # new_specs =
     environment.concretize(force=force)
     # Temporarily disable.
     # See https://github.com/spack/spack/issues/7878
@@ -523,6 +523,7 @@ def environment_list(args):
         hashlen=None if args.very_long else 7,
         install_status=args.install_status)
 
+
 def environment_stage(args):
     environment = read(args.environment)
     prepare_repository(environment)
@@ -543,7 +544,7 @@ def redirect_stdout(environment, ofname, defname):
     if ofname == '-':
         yield
     else:
-        path = os.path.join(environment.path(), defname)
+        path = os.path.join(environment.path(), defname) \
             if ofname is None else ofname
         with open(path, 'w') as f:
             original = sys.stdout
@@ -660,7 +661,7 @@ version''')
         '--dry-run', action='store_true', dest='dry_run',
         help="Just show the updates that would take place")
 
-    # stage_parser = 
+    # stage_parser =
     sp.add_parser(
         'stage',
         help='Download all source files for all packages in an environment')
