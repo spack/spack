@@ -111,7 +111,9 @@ class Environment(object):
             dag_hash = spec.dag_hash()
             self.specs_by_hash[dag_hash] = spec
             self.concretized_order.append(spec.dag_hash())
-            sys.stdout.write(spec.tree(recurse_dependencies=True, install_status=True, hashlen=7, hashes=True))
+            sys.stdout.write(spec.tree(
+                recurse_dependencies=True, install_status=True,
+                hashlen=7, hashes=True))
 
         return new_specs
 
@@ -122,7 +124,7 @@ class Environment(object):
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
-            spack.cmd.install.update_kwargs_from_args(args,kwargs)
+            spack.cmd.install.update_kwargs_from_args(args, kwargs)
             with pushd(self, args.output):
                 spec.package.do_install(**kwargs)
 
@@ -130,7 +132,7 @@ class Environment(object):
         environment = read(args.environment)
 
         specs = environment._get_environment_specs(
-                recurse_dependencies=True)
+            recurse_dependencies=True)
 
         args.all = False
         spack.cmd.uninstall.uninstall_specs(args, specs)
@@ -202,9 +204,10 @@ class Environment(object):
 
         for spec_hash in self.concretized_order:
             spec = self.specs_by_hash[spec_hash]
-            for dep in spec.traverse(deptype=('link', 'run')) \
-                if recurse_dependencies else (spec,):
 
+            specs = spec.traverse(deptype=('link', 'run')) \
+                if recurse_dependencies else (spec,)
+            for dep in specs:
                 if dep.name in package_to_spec:
                     tty.warn("{0} takes priority over {1}"
                              .format(package_to_spec[dep.name].format(),
@@ -445,10 +448,11 @@ def _environment_concretize(environment, force=False):
     repo = prepare_repository(environment)
     prepare_config_scope(environment)
 
-    new_specs = environment.concretize(force=force)
+    # new_specs = 
+    environment.concretize(force=force)
     # Temporarily disable.
     # See https://github.com/spack/spack/issues/7878
-    #for spec in new_specs:
+    # for spec in new_specs:
     #    for dep in spec.traverse():
     #        dump_to_environment_repo(dep, repo)
     write(environment, repo)
@@ -458,6 +462,7 @@ def environment_install(args):
     environment = read(args.environment)
     prepare_repository(environment)
     environment.install(args)
+
 
 def environment_uninstall(args):
     environment = read(args.environment)
@@ -512,8 +517,8 @@ def environment_list(args):
     # TODO? option to list packages w/ multiple instances?
     environment = read(args.environment)
     import sys
-    environment.list(sys.stdout,
-        recurse_dependencies=args.recurse_dependencies,
+    environment.list(
+        sys.stdout, recurse_dependencies=args.recurse_dependencies,
         hashes=args.long or args.very_long,
         hashlen=None if args.very_long else 7,
         install_status=args.install_status)
@@ -530,6 +535,7 @@ def environment_location(args):
     environment = read(args.environment)
     print(environment.path())
 
+
 @contextmanager
 def redirect_stdout(environment, ofname, defname):
     """Redirects STDOUT to (by default) a file within the environment;
@@ -537,11 +543,14 @@ def redirect_stdout(environment, ofname, defname):
     if ofname == '-':
         yield
     else:
-        with open(os.path.join(environment.path(), defname) if ofname is None else ofname, 'w') as f:
+        path = os.path.join(environment.path(), defname)
+            if ofname is None else ofname
+        with open(path, 'w') as f:
             original = sys.stdout
             sys.stdout = f
             yield
             sys.stdout = original
+
 
 @contextmanager
 def pushd(environment, odname):
@@ -549,6 +558,7 @@ def pushd(environment, odname):
     os.chdir(environment.path() if odname is None else odname)
     yield
     os.chdir(original)
+
 
 def environment_loads(args):
     # Set the module types that have been selected
@@ -564,8 +574,9 @@ def environment_loads(args):
     args.recurse_dependencies = False
     with redirect_stdout(environment, args.output, 'loads.sh'):
         specs = environment._get_environment_specs(
-                recurse_dependencies=recurse_dependencies)
+            recurse_dependencies=recurse_dependencies)
         spack.cmd.module.loads(module_types, specs, args)
+
 
 def environment_upgrade_dependency(args):
     environment = read(args.environment)
@@ -621,16 +632,19 @@ def setup_parser(subparser):
     )
 
     list_parser = sp.add_parser('list', help='List specs in an environment')
-    arguments.add_common_arguments(list_parser,
+    arguments.add_common_arguments(
+        list_parser,
         ['recurse_dependencies', 'long', 'very_long', 'install_status'])
 
     loads_parser = sp.add_parser(
         'loads',
-        help='List modules for an installed environment (see spack module loads)')
+        help='List modules for an installed environment '
+        '(see spack module loads)')
     spack.cmd.module.add_loads_arguments(loads_parser)
     loads_parser.add_argument(
         '-o', '--output', dest='output', default=None,
-        help="Output file (or - for stdout); otherwise places in <env-location>/loads.sh")
+        help="Output file (or - for stdout); "
+        "otherwise places in <env-location>/loads.sh")
 
     loads_parser = sp.add_parser(
         'location',
@@ -646,7 +660,8 @@ version''')
         '--dry-run', action='store_true', dest='dry_run',
         help="Just show the updates that would take place")
 
-    stage_parser = sp.add_parser(
+    # stage_parser = 
+    sp.add_parser(
         'stage',
         help='Download all source files for all packages in an environment')
 
@@ -665,12 +680,14 @@ version''')
     spack.cmd.install.add_common_arguments(install_parser)
     install_parser.add_argument(
         '-o', '--output', dest='output', default=None,
-        help="Write install logs and setup files here (defaults to environment path)")
+        help="Write install logs and setup files here "
+        "(defaults to environment path)")
 
     uninstall_parser = sp.add_parser(
         'uninstall',
         help='Uninstall all concretized specs in an environment')
     spack.cmd.uninstall.add_common_arguments(uninstall_parser)
+
 
 def env(parser, args, **kwargs):
     action = {
