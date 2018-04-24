@@ -324,7 +324,7 @@ class IntelPackage(PackageBase):
     # Not using class IntelPackage:
     #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
     #
-    def normalize_suite_dir(self, suite_dir_name, version_glob='_*.*.*'):
+    def normalize_suite_dir(self, suite_dir_name, version_glob='*.*.*'):
         '''Returns the version-specific and absolute path to the directory of
         an Intel product or a suite of product components.
 
@@ -348,9 +348,9 @@ class IntelPackage(PackageBase):
                 toplevel psxevars.sh or equivalent file to source (and thus by
                 the modulefiles that Spack produces).
 
-            version_glob (str): A glob pattern that fully qualifies
-                suite_dir_name to a specific version within an actual
-                directory (not a symlink).
+            version_glob (str): A suffix glob pattern expected to qualify
+                suite_dir_name to its fully version-specific install directory
+                (as opposed to a compatibility directory or symlink).
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
@@ -486,39 +486,52 @@ class IntelPackage(PackageBase):
         # "compilers_and_libraries" layout, including the 2016 releases that
         # are not natively versioned by year.
 
-        s = component_suite_dir
-        if s is None and component_path.startswith('ism'):
-            s = 'parallel_studio_xe'
+        cs = component_suite_dir
+        if cs is None and component_path.startswith('ism'):
+            cs = 'parallel_studio_xe'
 
         v = self._version_yearlike
+
+        # Glob to complete component_suite_dir. The alternatives could be
+        # merged, but using separate ones is clearer and likely more reliable.
+        suffix_glob = '_*.*.*'
+        standalone_glob = '[1-9]*.*.*'
+        normalize_kwargs = {'version_glob': suffix_glob}
+
         for rename_rule in [
-            # s given as arg -> for years -> dir actually used
+            # cs given as arg, in years, dir actually used, [version_glob]
             [None,              ':2015', 'composer_xe'],
             [None,              '2016:', 'compilers_and_libraries'],
             ['advisor',         ':2016', 'advisor_xe'],
             ['inspector',       ':2016', 'inspector_xe'],
             ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
             ['vtune',           ':2017', 'vtune_amplifier_xe'],  # alt.
+            ['itac',            ':',     'itac',   os.sep + standalone_glob],
         ]:
-            if s == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
-                s = rename_rule[2]
+            if cs == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
+                cs = rename_rule[2]
+                if len(rename_rule) > 3:
+                    normalize_kwargs = {'version_glob': rename_rule[3]}
+                break
 
-        d = self.normalize_suite_dir(s)
+        d = self.normalize_suite_dir(cs, **normalize_kwargs)
 
-        # Most components are indeed under d, but some are not:
-        reparent_as = {'itac': 'itac'}
-        parent_dir = ancestor(os.path.realpath(d))  # usu. same as self.prefix
+        # Help find components not located directly under d.
+        # NB: ancestor() not well suited if version_glob may contain os.sep .
+        parent_dir = re.sub(os.sep + re.escape(cs) + '.*', '', d)
 
-        if s == 'compilers_and_libraries':          # must qualify further
+        reparent_as = {}
+        if cs == 'compilers_and_libraries':     # must qualify further
             d = join_path(d, _expand_fields('{platform}'))
-        elif s == 'composer_xe':
-            reparent_as.update({'mpi': 'impi'})
+        elif cs == 'composer_xe':
+            reparent_as = {'mpi': 'impi'}
             # ignore 'imb' (MPI Benchmarks)
 
         for nominal_p, actual_p in reparent_as.items():
             if component_path.startswith(nominal_p):
-                dirs = glob.glob(join_path(parent_dir, actual_p, '[1-9]*.*.*'))
-                debug_print('dirs: %s' % dirs)
+                dirs = glob.glob(
+                    join_path(parent_dir, actual_p, standalone_glob))
+                debug_print('reparent dirs: %s' % dirs)
                 # Brazenly assume last match is the most recent version;
                 # convert back to relative of parent_dir, and re-assemble.
                 rel_dir = dirs[-1].split(parent_dir + os.sep, 1)[-1]
