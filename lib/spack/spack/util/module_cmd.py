@@ -44,7 +44,7 @@ def get_module_cmd(bashopts=''):
             return get_module_cmd_from_which()
         except ModuleError:
             raise ModuleError('Spack requires modulecmd or a defined module'
-                              ' fucntion. Make sure modulecmd is in your path'
+                              ' function. Make sure modulecmd is in your path'
                               ' or the function "module" is defined in your'
                               ' bash environment.')
 
@@ -73,19 +73,19 @@ def get_module_cmd_from_bash(bashopts=''):
                                              'envsubst'.format(bashopts)],
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT,
-                                            executable='/bin/bash',
+                                            executable=os.environ['SHELL'],
                                             shell=True)
         module_func_proc.wait()
         module_func = module_func_proc.stdout.read()
 
     # Find the portion of the module function that is evaluated
     try:
-        find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
+        find_exec = re.search(r'.*`(.*(:? bash | sh | zsh ).*)`.*', module_func)
         exec_line = find_exec.group(1)
     except BaseException:
         try:
             # This will fail with nested parentheses. TODO: expand regex.
-            find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
+            find_exec = re.search(r'.*\(([^()]*(:? bash | sh | zsh )[^()]*)\).*',
                                   module_func)
             exec_line = find_exec.group(1)
         except BaseException:
@@ -97,7 +97,7 @@ def get_module_cmd_from_bash(bashopts=''):
     module_cmd = which(args[0])
     if module_cmd:
         for arg in args[1:]:
-            if arg in ('bash', 'sh'):
+            if arg in ('bash', 'sh', 'zsh'):
                 module_cmd.add_default_arg('python')
                 break
             else:
