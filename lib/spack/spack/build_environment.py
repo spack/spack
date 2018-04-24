@@ -65,6 +65,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
+import spack.config
 import spack.main
 import spack.paths
 import spack.store
@@ -347,7 +348,7 @@ def set_module_variables_for_package(pkg, module):
        This makes things easier for package writers.
     """
     # number of jobs spack will build with.
-    jobs = spack.build_jobs
+    jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
     if not pkg.parallel:
         jobs = 1
     elif pkg.make_jobs:

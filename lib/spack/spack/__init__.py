@@ -24,7 +24,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-import multiprocessing
 
 #-----------------------------------------------------------------------------
 # Below code imports spack packages.
@@ -33,20 +32,8 @@ import multiprocessing
 # TODO: refactor everything below to be more init order agnostic.
 
 
-#-----------------------------------------------------------------------------
-# Import spack.config first, as other modules may rely on its options.
-# TODO: Below code should not import modules other than spack.config
-#-----------------------------------------------------------------------------
-import spack.config
-
-
 # TODO: get this out of __init__.py
 binary_cache_retrieved_specs = set()
-
-
-#: The number of jobs to use when building in parallel.
-#: By default, use all cores on the machine.
-build_jobs = spack.config.get('config:build_jobs', multiprocessing.cpu_count())
 
 
 #-----------------------------------------------------------------------------

@@ -54,6 +54,7 @@ from six import with_metaclass
 import llnl.util.tty as tty
 
 import spack
+import spack.config
 import spack.paths
 import spack.store
 import spack.compilers
@@ -506,7 +507,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     parallel = True
 
     #: # jobs to use for parallel make. If set, overrides default of ncpus.
-    make_jobs = spack.build_jobs
+    make_jobs = None
 
     #: By default do not run tests within package's install()
     run_tests = False
