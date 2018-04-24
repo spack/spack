@@ -33,7 +33,7 @@ class Hacckernels(CMakePackage):
     cores and beyond."""
 
     homepage = "https://xgitlab.cels.anl.gov/hacc/HACCKernels"
-    url      = "https://xgitlab.cels.anl.gov/hacc/HACCKernels.git"
+    # url      = "https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FHACCKernels/repository/archive.tar.gz"
 
     tags = ['proxy-app']
 
