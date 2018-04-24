@@ -438,6 +438,46 @@ def test_internal_config_filename(config, write_config_file):
         config.get_config_filename('command_line', 'config')
 
 
+def test_mark_internal():
+    data = {
+        'config': {
+            'bool': False,
+            'int': 6,
+            'numbers': [1, 2, 3],
+            'string': 'foo',
+            'dict': {
+                'more_numbers': [1, 2, 3],
+                'another_string': 'foo',
+                'another_int': 7,
+            }
+        }
+    }
+
+    marked = spack.config._mark_internal(data, 'x')
+
+    # marked version should be equal to the original
+    assert data == marked
+
+    def assert_marked(obj):
+        if type(obj) is bool:
+            return  # can't subclass bool, so can't mark it
+
+        assert hasattr(obj, '_start_mark') and obj._start_mark.name == 'x'
+        assert hasattr(obj, '_end_mark') and obj._end_mark.name == 'x'
+
+    # everything in the marked version should have marks
+    checks = (marked.keys(), marked.values(),
+              marked['config'].keys(), marked['config'].values(),
+              marked['config']['numbers'],
+              marked['config']['dict'].keys(),
+              marked['config']['dict'].values(),
+              marked['config']['dict']['more_numbers'])
+
+    for seq in checks:
+        for obj in seq:
+            assert_marked(obj)
+
+
 def test_internal_config_from_data():
     config = spack.config.Configuration()
 
