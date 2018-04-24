@@ -167,6 +167,7 @@ def test_url_strip_name_suffixes(url, version, expected):
     ('libxc', 58, '2.2.2', 64, 'http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz'),
     # Version in suffix
     ('swiftsim', 36, '0.3.0', 76, 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    ('swiftsim', 55, '0.3.0', 95, 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     ('sionlib', 30, '1.7.1', 59, 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
     # Regex in name
     ('voro++', 40, '0.4.6', 47, 'http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz'),

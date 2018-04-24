@@ -532,6 +532,9 @@ def parse_version_offset(path):
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
         (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
 
+        # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
+        (r'\?sha=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
+
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'\?version=v?(\d[\da-zA-Z._-]*)$', suffix),
 
@@ -640,9 +643,13 @@ def parse_name_offset(path, v=None):
         # e.g. https://github.com/nco/nco/archive/4.6.2.tar.gz
         (r'github\.com/[^/]+/([^/]+)', path),
 
-        # GitLab: gitlab.*/repo/name/
+        # GitLab non-API endpoint: gitlab.*/repo/name/
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        (r'gitlab[^/]+/[^/]+/([^/]+)', path),
+        (r'gitlab[^/]+/(?!api/v4/projects)[^/]+/([^/]+)', path),
+
+        # GitLab API endpoint: gitlab.*/api/v4/projects/repo%2Fname/
+        # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
+        (r'gitlab[^/]+/api/v4/projects/[^/]+%2F([^/]+)', path),
 
         # Bitbucket: bitbucket.org/repo/name/
         # e.g. https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2
