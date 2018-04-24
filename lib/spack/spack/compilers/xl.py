@@ -118,7 +118,6 @@ class Xl(Compiler):
                compiler version to match that of the C compiler version.
             """
             return str(fver)
- 
         cver = float(fver) - 2
         if cver < 10:
             cver = cver - 0.1
