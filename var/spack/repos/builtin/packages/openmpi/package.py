@@ -184,7 +184,7 @@ class Openmpi(AutotoolsPackage):
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
-        description=("List of fabrics that are enabled"),
+        description="List of fabrics that are enabled",
         values=fabrics,
         multi=True
     )
