@@ -32,7 +32,8 @@ class Busco(PythonPackage):
     homepage = "http://busco.ezlab.org/"
     url      = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
 
-    # TODO: check the installation procedure for version 3.0.2 and uncomment the following line
+    # TODO: check the installation procedure for version 3.0.2
+    # and uncomment the following line
     # version('3.0.2', '31d80042bb7e96422843fa43d0acbd21')
 
     # There is no tag for version 3.0.1
