@@ -35,14 +35,9 @@ class RdmaCore(CMakePackage):
     version('13', '6b072b4307d1cfe45eba4373f68e2927')
 
     depends_on('libnl')
+    conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
 
     def cmake_args(self):
         cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
                       self.spec.prefix.etc]
         return cmake_args
-
-    @run_before('cmake')
-    def check_platform(self):
-        if not (sys.platform.startswith('freebsd') or
-                sys.platform.startswith('linux')):
-            raise InstallError("rdma-core requires FreeBSD or Linux")
