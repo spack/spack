@@ -24,7 +24,6 @@
 ##############################################################################
 
 from spack import *
-import sys
 
 
 class Libnl(AutotoolsPackage):
@@ -40,8 +39,4 @@ class Libnl(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('m4', type='build')
 
-    @run_before('autoreconf')
-    def check_platform(self):
-        if not (sys.platform.startswith('freebsd') or
-                sys.platform.startswith('linux')):
-            raise InstallError("libnl requires FreeBSD or Linux")
+    conflicts('platform=darwin', msg='libnl requires FreeBSD or Linux')
