@@ -55,7 +55,8 @@ def add_common_arguments(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="remove regardless of whether other packages depend on this one")
-    arguments.add_common_arguments(subparser, ['recurse_dependents', 'yes_to_all'])
+    arguments.add_common_arguments(
+        subparser, ['recurse_dependents', 'yes_to_all'])
 
 
 def setup_parser(subparser):
@@ -67,7 +68,7 @@ def setup_parser(subparser):
              " ALL versions of `libelf` are uninstalled. if no spec is "
              "supplied all installed software will be uninstalled. this "
              "is both useful and dangerous, like rm -r")
-    
+
     subparser.add_argument(
         'packages',
         nargs=argparse.REMAINDER,
@@ -209,10 +210,11 @@ def uninstall_specs(args, specs):
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)
 
+
 def uninstall(parser, args):
     if not args.packages and not args.all:
         tty.die('uninstall requires at least one package argument.',
                 '  Use `spack uninstall --all` to uninstall ALL packages.')
 
-    uninstall_specs(args,
-        spack.cmd.parse_specs(args.packages) if args.packages else [any])
+    uninstall_specs(
+        args, spack.cmd.parse_specs(args.packages) if args.packages else [any])

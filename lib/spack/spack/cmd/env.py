@@ -582,7 +582,6 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='environment_command')
 
-
     create_parser = sp.add_parser('create', help='Make an environment')
     create_parser.add_argument(
         '--init-file', dest='init_file',

@@ -72,6 +72,7 @@ def add_loads_arguments(subparser):
         subparser, ['module_type', 'recurse_dependencies']
     )
 
+
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
 
