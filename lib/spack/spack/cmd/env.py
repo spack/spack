@@ -55,7 +55,7 @@ _db_dirname = fs.join_path(spack.var_path, 'environments')
 
 
 class Environment(object):
-    def __init__(self, name, module_factory=None):
+    def __init__(self, name):
         self.name = name
         self.user_specs = list()
         self.concretized_order = list()
@@ -66,9 +66,6 @@ class Environment(object):
         # Packages in this set must always appear as the dependency traced from
         # any root of run deps
         self.common_bins = dict()  # name -> hash
-        self.module_factory = (
-            module_factory or
-            (lambda spec: spack.modules.lmod.LmodModulefileWriter(spec)))
 
     def add(self, user_spec):
         query_spec = Spec(user_spec)
@@ -373,6 +370,8 @@ def read(environment_name):
 
     return environment
 
+
+# =============== Modifies Environment
 
 def environment_create(args):
     environment = Environment(args.environment)
