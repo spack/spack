@@ -34,7 +34,7 @@ class Phast(MakefilePackage):
 
     version('1.4', '2bc0412ba58ea1f08ba5e12fad43b4c7')
 
-    depends_on('netlib-lapack+lapacke')
+    depends_on('clapack')
 
     @property
     def build_directory(self):
@@ -42,7 +42,7 @@ class Phast(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = ['CLAPACKPATH={0}'.format(self.spec['netlib-lapack'].prefix)]
+        targets = ['CLAPACKPATH={0}'.format(self.spec['clapack'].prefix)]
         return targets
 
     def edit(self, spec, prefix):
