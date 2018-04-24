@@ -104,12 +104,15 @@ class Environment(object):
         num_concretized = len(self.concretized_order)
         new_specs = list()
         for user_spec in self.user_specs[num_concretized:]:
+            tty.msg('Concretizing %s' % user_spec)
             spec = Spec(user_spec)
             spec.concretize()
             new_specs.append(spec)
             dag_hash = spec.dag_hash()
             self.specs_by_hash[dag_hash] = spec
             self.concretized_order.append(spec.dag_hash())
+            sys.stdout.write(spec.tree(recurse_dependencies=True, install_status=True, hashlen=7, hashes=True))
+
         return new_specs
 
     def install(self, args):
