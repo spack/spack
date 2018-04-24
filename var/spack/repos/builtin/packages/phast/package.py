@@ -48,11 +48,11 @@ class Phast(MakefilePackage):
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             filter_file(r'\$\{PWD\}',
-                '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
-                'make-include.mk')
+                        '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
+                        'make-include.mk')
             filter_file(r'\$\{PWD\}',
-                '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
-                'Makefile')
+                        '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
+                        'Makefile')
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
