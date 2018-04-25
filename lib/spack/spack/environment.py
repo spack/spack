@@ -362,14 +362,47 @@ class EnvironmentModifications(object):
         #       clean=..., blacklist=..., whitelist=...)
         # (Should be a natural fit, given the class name.)
 
-        # Variables unrelated to sourcing a file, and those internal
-        # to an Environment Modules implementation.
-        # NB: "filename" could conceivably use "module" commands iteself.
-        # For that case, however, leave the neeed blacklisting to the user.
+        # Variables unrelated to sourcing a file.
+        # ---------------------------------------------------------------------
+        # *This* blacklist is applied on INPUT (sourcing a shell file). It is
+        # distinct from "environment_blacklist" in modules.yaml, which is
+        # applied on OUTPUT to a specific module flavor.
+        # ---------------------------------------------------------------------
         blacklist.extend(
-            'SHLVL _ PWD OLDPWD PS2 ENV LOADEDMODULES _LMFILES_'
-            ' BASH_FUNC_module()'       # accommodate env-mod 4.x-Tcl
+            ' SHLVL _ PWD OLDPWD PS2 ENV'                   # Bash internals
+            ' LOADEDMODULES _LMFILES_ BASH_FUNC_module()'   # env-mod-4
             ''.split())
+        # ---------------------------------------------------------------------
+        # Given the way we interpret a file here, namely, by having a child
+        # shell source it, there may be interference from any sort of
+        # re-initialization that is done in that shell's dotfiles.  Environment
+        # variables may differ in the child shell from those in the parent
+        # shell that Spack was called from.
+        #
+        # Variables related to a user's chosen Modules implementation are of
+        # particular concern, since the results of the present function usually
+        # end up in a modulefile. This can be terribly confusing.  Notably, in
+        # Environment-Modules-4.x, the definition of the "module" shell
+        # function, and thus the content of "BASH_FUNC_module()", varies
+        # between interactive and non-interactive shell sessions. See function
+        # renderAutoinit in
+        #   https://github.com/cea-hpc/modules/blob/master/modulecmd.tcl.in
+        # (Tcl code), as of 2018-04:
+        #
+        #   # only redirect module from stderr to stdout when session is
+        #   # attached to a terminal to avoid breaking non-terminal session
+        #   # (scp, sftp, etc)
+        #   if {[isStderrTty]} {
+        #      set fname "_moduleraw"
+        #   } else {
+        #      set fname "module"
+        #   }
+        #
+        #
+        # NB2: "filename" could conceivably use some sort of "module" commands
+        # internally, but this should have little direct impact here; should
+        # specific blacklisting be needed, leave that to the caller.
+        # ---------------------------------------------------------------------
 
         def set_intersection(fullset, *args):
             # A set intersection using string literals and regexs
@@ -465,7 +498,7 @@ class EnvironmentModifications(object):
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
                     env.prepend_path(x, after)
-                    continue        # done here; also: avoid UnboundLocalError!
+                    continue        # all set; plus: avoid UnboundLocalError
 
                 if search not in before:
                     # We just need to set the variable to the new value
