@@ -243,7 +243,7 @@ class Environment(object):
         self.concretized_order = new_order
         self.specs_by_hash = new_specs_by_hash
 
-    def _get_environment_specs(self, recurse_dependencies):
+    def _get_environment_specs(self, recurse_dependencies=True):
         """Returns the specs of all the packages in an environment.
         If these specs appear under different user_specs, only one copy
         is added to the list returned."""
