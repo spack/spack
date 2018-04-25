@@ -36,8 +36,9 @@ class RMlrmbo(RPackage):
        features include multi-point batch proposal, parallel execution as well
        as visualization and sophisticated logging mechanisms, which is
        especially useful for teaching and understanding of algorithm behavior.
-       'mlrMBO' is implemented in a modular fashion, such that single components
-       can be easily replaced or adapted by the user for specific use cases."""
+       'mlrMBO' is implemented in a modular fashion, such that single
+       components can be easily replaced or adapted by the user for specific
+       use cases."""
 
     homepage = "https://github.com/mlr-org/mlrMBO/"
     url      = "https://cran.r-project.org/src/contrib/Archive/mlrMBO/mlrMBO_1.1.0.tar.gz"

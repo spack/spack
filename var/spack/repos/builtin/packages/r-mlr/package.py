@@ -33,9 +33,9 @@ class RMlr(RPackage):
        including cross-validation, bootstrapping and subsampling.
        Hyperparameter tuning with modern optimization techniques,
        for single- and multi-objective problems. Filter and wrapper methods for
-       feature selection. Extension of basic learners with additional operations
-       common in machine learning, also allowing for easy nested resampling.
-       Most operations can be parallelized."""
+       feature selection. Extension of basic learners with additional
+       operations common in machine learning, also allowing for easy nested
+       resampling. Most operations can be parallelized."""
 
     homepage = "https://github.com/mlr-org/mlr/"
     url      = "https://cran.r-project.org/src/contrib/Archive/mlr/mlr_2.12.tar.gz"
