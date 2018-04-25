@@ -47,10 +47,7 @@ class Boost(Package):
             submodules=True)
 
     version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae',
-            url='https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2',
-            preferred=True)
-    version('1.67.0.b1', '3423a4a3ec5297051fd27091864630e2dce4c159',
-            url='https://dl.bintray.com/boostorg/beta/1.67.0.beta.1/source/boost_1_67_0_b1.tar.gz')
+            url='https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2')
     version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
             url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
@@ -155,9 +152,6 @@ class Boost(Package):
     depends_on('zlib', when='+iostreams')
 
     conflicts('+taggedlayout', when='+versionedlayout')
-
-    # temporary fix https://svn.boost.org/trac10/ticket/13505
-    patch('array_binary_tree.patch', when='@1.67.0.b1')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
