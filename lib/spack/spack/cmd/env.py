@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import stat
 import llnl.util.tty as tty
 import spack
@@ -29,6 +30,8 @@ import llnl.util.filesystem as fs
 import spack.modules
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.schema.env
+import spack.config
 import spack.cmd.install
 import spack.cmd.uninstall
 import spack.cmd.module
@@ -384,10 +387,23 @@ def read(environment_name):
     # Check that env is in a consistent state on disk
     env_root = get_env_root(environment_name)
 
+    # Read env.yaml file
+    env_yaml = spack.config._read_config_file(
+        fs.join_path(env_root, 'env.yaml'),
+        spack.schema.env.schema)
+    if env_yaml is not None:
+        env_yaml = env_yaml['env']
+    else:
+        # Default env_yaml file if none exists in this environment
+        env_yaml = {
+            'configs' : ['<env>']
+        }
+
     dotenv_dir = get_dotenv_dir(env_root)
     with open(fs.join_path(dotenv_dir, 'environment.json'), 'r') as F:
         environment_dict = sjson.load(F)
     environment = Environment.from_dict(environment_name, environment_dict)
+    environment.yaml = env_yaml
 
     return environment
 
@@ -497,11 +513,25 @@ def prepare_repository(environment, remove=None):
 
 def prepare_config_scope(environment):
     """Adds environment's scope to the global search path of configuration scopes"""
-    dotenv = get_dotenv_dir(environment.path)
-    tty.debug("Check for config scope at " + dotenv)
-    if os.path.exists(dotenv):
-        tty.msg("Using config scope at " + dotenv)
-        ConfigScope(environment.name, dotenv)
+    # Load up configs
+    configs = []
+    for config_spec in environment.yaml['configs']:
+        config_name = os.path.split(config_spec)[1]
+        if config_name == '<env>':
+            # Use default config for the environment; doesn't have to exist
+            config_dir = fs.join_path(environment.path, 'config')
+            if not os.path.isdir(config_dir):
+                continue
+            config_name = environment.name
+        else:
+            # Use external user-provided config
+            config_dir = os.path.normpath(os.path.join(
+                environment.path, config_spec.format(**os.environ)))
+            if not os.path.isdir(config_dir):
+                tty.die('Spack config %s (%s) not found' % (config_name, config_dir))
+
+        tty.msg('Using Spack config %s scope at %s' % (config_name, config_dir))
+        ConfigScope(config_name, config_dir)
 
 
 def environment_relocate(args):
