@@ -29,6 +29,7 @@ import spack.modules
 import spack.util.spack_json as sjson
 import spack.schema.env
 import spack.config
+import spack.cmd.spec
 import spack.cmd.install
 import spack.cmd.uninstall
 import spack.cmd.module
@@ -450,6 +451,10 @@ def environment_remove(args):
     write(environment)
 
 
+def environment_spec(args):
+    environment = read(args.environment)
+    spack.cmd.spec.spec(None, args)
+
 def environment_concretize(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
@@ -656,6 +661,11 @@ def setup_parser(subparser):
         help="Spec of the package to remove"
     )
 
+    spec_parser = sp.add_parser(
+        'spec', help='Concretize sample spec')
+    spack.cmd.spec.add_common_arguments(spec_parser)
+
+
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')
     concretize_parser.add_argument(
@@ -724,6 +734,7 @@ def env(parser, args, **kwargs):
     action = {
         'create': environment_create,
         'add': environment_add,
+        'spec': environment_spec,
         'concretize': environment_concretize,
         'list': environment_list,
         'loads': environment_loads,
