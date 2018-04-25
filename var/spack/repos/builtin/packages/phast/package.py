@@ -53,6 +53,11 @@ class Phast(MakefilePackage):
             filter_file(r'\$\{PWD\}',
                         '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
                         'Makefile')
+        with working_dir(join_path(self.build_directory, 'lib')):
+            if '+external-blas' in self.spec['clapack']:
+                filter_file(r'blas\$\{PLAT\}\.a',
+                        'libcblaswr.a',
+                        'Makefile')
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
