@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,23 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class PyTestinfra(PythonPackage):
+    """With Testinfra you can write unit tests in Python to test actual state
+    of your servers configured by management tools like Salt, Ansible, Puppet,
+    Chef and so on."""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://testinfra.readthedocs.io"
+    url      = "https://pypi.python.org/packages/source/t/testinfra/testinfra-1.11.1.tar.gz"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('1.11.1', 'c64ce6b16661d647c62c9508de419f5f')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-importlib', when='^python@2.6.0:2.6.999', type=('build', 'run'))
+    depends_on('py-pytest@:3.0.1,3.0.3:', type=('build', 'run'))
+    depends_on('py-six@1.4:', type=('build', 'run'))
 
-    depends_on('numactl')
-    depends_on('rdma-core')
+    # Required for testing remote systems
+    depends_on('py-paramiko', type=('build', 'run'))
+
+    # Required for parallel execution
+    depends_on('py-pytest-xdist', type=('build', 'run'))

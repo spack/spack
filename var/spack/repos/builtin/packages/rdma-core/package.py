@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,19 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class RdmaCore(CMakePackage):
+    """RDMA core userspace libraries and daemons"""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://github.com/linux-rdma/rdma-core"
+    url      = "https://github.com/linux-rdma/rdma-core/releases/download/v17.1/rdma-core-17.1.tar.gz"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('17.1', '1d19caf554f815990af5c21356ac4d3a')
+    version('13', '6b072b4307d1cfe45eba4373f68e2927')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
+    depends_on('libnl')
+    conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
 
-    depends_on('numactl')
-    depends_on('rdma-core')
+    def cmake_args(self):
+        cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
+                      self.spec.prefix.etc]
+        return cmake_args
