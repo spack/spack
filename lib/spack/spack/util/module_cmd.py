@@ -74,6 +74,7 @@ def get_module_cmd_from_bash(bashopts=''):
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT,
                                             executable=os.environ['SHELL'],
+                                            universal_newlines=True,
                                             shell=True)
         module_func_proc.wait()
         module_func = module_func_proc.stdout.read()
