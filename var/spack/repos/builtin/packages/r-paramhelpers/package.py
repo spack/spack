@@ -38,5 +38,5 @@ class RParamhelpers(RPackage):
 
     version('1.10', '36e9060488ebd484d62cd991a4693332')
 
-    depends_on('r-bbmisc', type=('build', 'run'))
-    depends_on('r-checkmate', type=('build', 'run'))
+    depends_on('r-bbmisc@1.10:', type=('build', 'run'))
+    depends_on('r-checkmate@1.8.1:', type=('build', 'run'))

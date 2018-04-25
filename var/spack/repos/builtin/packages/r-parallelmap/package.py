@@ -39,5 +39,5 @@ class RParallelmap(RPackage):
 
     version('1.3', 'dd62866b395847b0bd5b13bed98c0081')
 
-    depends_on('r-bbmisc', type=('build', 'run'))
-    depends_on('r-checkmate', type=('build', 'run'))
+    depends_on('r-bbmisc@1.8:', type=('build', 'run'))
+    depends_on('r-checkmate@1.5.1:', type=('build', 'run'))

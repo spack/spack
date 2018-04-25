@@ -35,4 +35,4 @@ class RBbmisc(RPackage):
 
     version('1.11', '681642628037406beb6088d5f773473d')
 
-    depends_on('r-checkmate', type=('build', 'run'))
+    depends_on('r-checkmate@1.8.0:', type=('build', 'run'))

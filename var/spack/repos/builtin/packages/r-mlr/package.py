@@ -43,12 +43,12 @@ class RMlr(RPackage):
 
     version('2.12', '94ee7495aeafb432c8af5a8bdd26c25f')
 
-    depends_on('r-paramhelpers', type=('build', 'run'))
-    depends_on('r-bbmisc', type=('build', 'run'))
-    depends_on('r-backports', type=('build', 'run'))
+    depends_on('r-paramhelpers@1.10:', type=('build', 'run'))
+    depends_on('r-bbmisc@1.11:', type=('build', 'run'))
+    depends_on('r-backports@1.1.0:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))
-    depends_on('r-checkmate', type=('build', 'run'))
+    depends_on('r-checkmate@1.8.2:', type=('build', 'run'))
     depends_on('r-data-table', type=('build', 'run'))
-    depends_on('r-parallelmap', type=('build', 'run'))
+    depends_on('r-parallelmap@1.3:', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))
