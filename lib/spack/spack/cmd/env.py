@@ -80,6 +80,12 @@ class Environment(object):
         self.user_specs = list()
         self.concretized_order = list()
         self.specs_by_hash = dict()
+
+        # Default config
+        self.yaml = {
+            'configs': ['<env>']
+        }
+
         # Libs in this set must always appear as the dependency traced from any
         # root of link deps
         self.common_libs = dict()  # name -> hash
@@ -90,6 +96,9 @@ class Environment(object):
     @property
     def path(self):
         return get_env_root(self.name)
+
+    def repo_path(self):
+        return fs.join_path(get_dotenv_dir(self.path), 'repo')
 
     def add(self, user_spec, setup):
         """Add a single user_spec (non-concretized) to the Environment"""
@@ -249,7 +258,7 @@ class Environment(object):
         self.concretized_order = new_order
         self.specs_by_hash = new_specs_by_hash
 
-    def _get_environment_specs(self, recurse_dependencies):
+    def _get_environment_specs(self, recurse_dependencies=True):
         """Returns the specs of all the packages in an environment.
         If these specs appear under different user_specs, only one copy
         is added to the list returned."""
@@ -353,7 +362,7 @@ def check_consistent_env(env_root):
         tty.die("Partial write state, run 'spack env repair'")
 
 
-def write(environment):
+def write(environment, new_repo=None):
     """Writes an in-memory environment back to its location on disk,
     in an atomic manner."""
 
@@ -364,6 +373,12 @@ def write(environment):
     # create one file for the environment object
     with open(fs.join_path(tmp_new, 'environment.json'), 'w') as F:
         sjson.dump(environment.to_dict(), stream=F)
+
+    dest_repo_dir = fs.join_path(tmp_new, 'repo')
+    if new_repo:
+        shutil.copytree(new_repo.root, dest_repo_dir)
+    elif os.path.exists(environment.repo_path()):
+        shutil.copytree(environment.repo_path(), dest_repo_dir)
 
     # Swap in new directory atomically
     if os.path.exists(dest):
@@ -376,6 +391,7 @@ def write(environment):
 def repair(environment_name):
     """Recovers from crash during critical section of write().
     Possibilities:
+
         tmp_new, dest
         tmp_new, tmp_old
         tmp_old, dest
@@ -404,19 +420,13 @@ def read(environment_name):
     env_yaml = spack.config._read_config_file(
         fs.join_path(env_root, 'env.yaml'),
         spack.schema.env.schema)
-    if env_yaml is not None:
-        env_yaml = env_yaml['env']
-    else:
-        # Default env_yaml file if none exists in this environment
-        env_yaml = {
-            'configs': ['<env>']
-        }
 
     dotenv_dir = get_dotenv_dir(env_root)
     with open(fs.join_path(dotenv_dir, 'environment.json'), 'r') as F:
         environment_dict = sjson.load(F)
     environment = Environment.from_dict(environment_name, environment_dict)
-    environment.yaml = env_yaml
+    if env_yaml:
+        environment.yaml = env_yaml['env']
 
     return environment
 
@@ -462,22 +472,17 @@ def _environment_concretize(environment, force=False):
     """Function body separated out to aid in testing."""
 
     # Change global search paths
-    prepare_repository(environment)
+    repo = prepare_repository(environment)
     prepare_config_scope(environment)
 
-    environment.concretize(force=force)
+    new_specs = environment.concretize(force=force)
 
-    # Temporarily disable.
-    # See https://github.com/spack/spack/issues/7878
-    # for spec in new_specs:
-    #    for dep in spec.traverse():
-    #        # Store in <env>/.env.new
-    #        dump_to_environment_repo(dep, repo)
-    # NOTE: This section of code should write the repo
-    #       already to <env>/.env.new
+    for spec in new_specs:
+        for dep in spec.traverse():
+            dump_to_environment_repo(dep, repo)
 
     # Moves <env>/.env.new to <env>/.env
-    write(environment)
+    write(environment, repo)
 
 # =============== Does not Modify Environment
 
@@ -504,12 +509,11 @@ def dump_to_environment_repo(spec, repo):
         spack.repo.dump_provenance(spec, dest_pkg_dir)
 
 
-def prepare_repository(environment, remove=None):
+def prepare_repository(environment, remove=None, use_repo=False):
     """Adds environment's repository to the global search path of repos"""
-    # Temporarily disable.
-    # See https://github.com/spack/spack/issues/7878
-    return
-    new_repo_dir = get_dotenv_dir(get_env_root(environment.name))
+    import tempfile
+    repo_stage = tempfile.mkdtemp()
+    new_repo_dir = fs.join_path(repo_stage, 'repo')
     if os.path.exists(environment.repo_path()):
         shutil.copytree(environment.repo_path(), new_repo_dir)
     else:
@@ -522,7 +526,8 @@ def prepare_repository(environment, remove=None):
         for d in remove_dirs:
             shutil.rmtree(d)
     repo = Repo(new_repo_dir)
-    spack.repo.put_first(repo)
+    if use_repo:
+        spack.repo.put_first(repo)
     return repo
 
 

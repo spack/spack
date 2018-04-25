@@ -39,10 +39,10 @@ schema = {
             'type': 'object',
             'default': {},
             'properties': {
-                'configs' : {
-                    'type' : 'array',
-                    'default' : [],
-                    'items' : {'type' : 'string'}
+                'configs': {
+                    'type': 'array',
+                    'default': [],
+                    'items': {'type': 'string'}
                 }
             }
         }
