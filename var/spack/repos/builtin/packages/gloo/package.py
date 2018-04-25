@@ -32,5 +32,3 @@ class Gloo(CMakePackage):
     url      = "https://github.com/facebookincubator/gloo.git"
 
     version('master', git='https://github.com/facebookincubator/gloo.git')
-
-    # depends_on('foo')
