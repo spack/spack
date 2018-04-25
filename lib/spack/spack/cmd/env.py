@@ -365,6 +365,7 @@ def write(environment):
 def repair(environment_name):
     """Recovers from crash during critical section of write().
     Possibilities:
+
         tmp_new, dest
         tmp_new, tmp_old
         tmp_old, dest
