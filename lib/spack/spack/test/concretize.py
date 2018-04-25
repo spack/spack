@@ -515,3 +515,12 @@ class TestConcretize(object):
         # Mimics asking the build interface from a build interface
         build_interface = s['mpileaks']['mpileaks']
         assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+
+    @pytest.mark.regression('7705')
+    def test_regression_issue_7705(self):
+        # spec.package.provides(name) doesn't account for conditional
+        # constraints in the concretized spec
+        s = Spec('simple-inheritance~openblas')
+        s.concretize()
+
+        assert not s.package.provides('lapack')

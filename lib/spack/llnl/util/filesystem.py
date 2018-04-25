@@ -201,9 +201,9 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
 
 def set_install_permissions(path):
     """Set appropriate permissions on the installed file."""
-# If this points to a file maintained in a Spack prefix, it is assumed that
-# this function will be invoked on the target. If the file is outside a
-# Spack-maintained prefix, the permissions should not be modified.
+    # If this points to a file maintained in a Spack prefix, it is assumed that
+    # this function will be invoked on the target. If the file is outside a
+    # Spack-maintained prefix, the permissions should not be modified.
     if os.path.islink(path):
         return
     if os.path.isdir(path):

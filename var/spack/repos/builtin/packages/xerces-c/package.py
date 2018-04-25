@@ -37,14 +37,10 @@ class XercesC(AutotoolsPackage):
 
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 
-    variant('curl', default=True, description="enable curl support")
-    variant('icu', default=True, description="enable icu (internationalization) support")
+    depends_on('libiconv')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.append_flags('LDFLAGS', self.spec['libiconv'].libs.ld_flags)
 
     def configure_args(self):
-        args = ['--disable-network']
-        if not '+curl' in self.spec:
-            args += ['--without-curl']
-        if not '+icu' in self.spec:
-            args += ['--without-icu']
-
-        return args
+        return ['--disable-network']

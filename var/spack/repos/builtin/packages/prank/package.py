@@ -31,6 +31,7 @@ class Prank(Package):
     homepage = "http://wasabiapp.org/software/prank/"
     url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
 
+    version('170427', 'a5cda14dc4e5efe1f14b84eb7a7caabd')
     version('150803', '71ac2659e91c385c96473712c0a23e8a')
 
     depends_on('mafft')

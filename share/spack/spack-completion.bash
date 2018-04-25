@@ -754,8 +754,7 @@ function _spack_providers {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "awk blas D daal elf gl golang ipp java lapack mkl mpe mpi
-                    opencl openfoam pil pkgconfig scalapack szip tbb" -- "$cur"
+        compgen -W "$(_providers)" -- "$cur"
     fi
 }
 
@@ -1023,6 +1022,10 @@ function _installed_packages {
 
 function _installed_compilers {
     spack compilers | egrep -v "^(-|=)"
+}
+
+function _providers {
+    spack providers
 }
 
 function _mirrors {
