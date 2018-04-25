@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import spack.architecture
 
 
 class Pmix(AutotoolsPackage):
@@ -48,6 +49,7 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.github.io/pmix"
     url      = "https://github.com/pmix/pmix/releases/download/v2.0.1/pmix-2.0.1.tar.bz2"
 
+    version('2.1.1',    'f9f109421661b757245d5e0bd44a38b3')
     version('2.1.0',    'fc97513b601d78fe7c6bb20c6a21df3c')
     version('2.0.2',    'e3ed1deed87c84f9b43da2621c6ad689')
     version('2.0.1',    'ba3193b485843516e6b4e8641e443b1e')
@@ -61,6 +63,7 @@ class Pmix(AutotoolsPackage):
     depends_on('libevent')
 
     def configure_args(self):
+
         spec = self.spec
         config_args = [
             '--enable-shared',
@@ -70,5 +73,12 @@ class Pmix(AutotoolsPackage):
         # external libevent support (needed to keep Open MPI happy)
         config_args.append(
             '--with-libevent={0}'.format(spec['libevent'].prefix))
+
+        # Versions < 2.1.1 have a bug in the test code that *sometimes*
+        # causes problems on strict alignment architectures such as
+        # aarch64.  Work-around is to just not build the test code.
+        if 'aarch64' in spack.architecture.sys_type() and \
+           self.spec.version < Version('2.1.1'):
+            config_args.append('--without-tests-examples')
 
         return config_args

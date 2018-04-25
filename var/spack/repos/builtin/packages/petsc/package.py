@@ -42,6 +42,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
     version('3.8.4', 'd7767fe2919536aa393eb22841899306')
     version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
     version('3.8.2', '00666e1c4cbfa8dd6eebf91ff8180f79')
@@ -132,12 +133,14 @@ class Petsc(Package):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre~internal-superlu~int64', when='+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13.99~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13.99~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:~internal-superlu~int64', when='@3.9:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
     depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
-    depends_on('hypre~internal-superlu+int64', when='+hypre+mpi~complex+int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')

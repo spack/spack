@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,22 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class Aragorn(Package):
+    """ARAGORN, a program to detect tRNA genes and tmRNA genes in nucleotide
+    sequences."""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "http://mbio-serv2.mbioekol.lu.se/ARAGORN"
+    url      = "http://mbio-serv2.mbioekol.lu.se/ARAGORN/Downloads/aragorn1.2.38.tgz"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('1.2.38', '1df0ed600069e6f520e5cd989de1eaf0')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
+    phases = ['build', 'install']
 
-    depends_on('numactl')
-    depends_on('rdma-core')
+    def build(self, spec, prefix):
+        cc = Executable(spack_cc)
+        cc('-O3', '-ffast-math', '-finline-functions',
+           '-oaragorn', 'aragorn' + format(spec.version.dotted) + '.c')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('aragorn', prefix.bin)

@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,16 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class PyWeblogo(PythonPackage):
+    """WebLogo is a web based application designed to make the generation of
+    sequence logos as easy and painless as possible."""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "http://weblogo.threeplusone.com"
+    url      = "https://pypi.io/packages/source/w/weblogo/weblogo-3.6.0.tar.gz"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('3.6.0', 'd0764f218057543fa664d2ae17d37b6d')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
-
-    depends_on('numactl')
-    depends_on('rdma-core')
+    depends_on('py-setuptools', type='build')
+    depends_on('ghostscript', type=('build', 'run'))
+    depends_on('pdf2svg', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))

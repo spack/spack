@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,22 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class Psm(MakefilePackage):
+    """Intel Performance scaled messaging library"""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://github.com/intel/psm"
+    url      = "https://github.com/intel/psm/archive/v3.3.tar.gz"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('3.3', '031eb27688c932867d55054e76d00875', preferred=True)
+    version('2017-04-28', git='https://github.com/intel/psm.git', commit='604758e')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
+    conflicts('%gcc@6:', when='@3.3')
 
-    depends_on('numactl')
-    depends_on('rdma-core')
+    depends_on('libuuid')
+
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('{DESTDIR}/usr/', '{LOCAL_PREFIX}/')
+
+    def install(self, spec, prefix):
+        make('LOCAL_PREFIX=%s' % prefix, 'install')
