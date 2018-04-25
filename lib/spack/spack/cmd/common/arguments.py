@@ -118,9 +118,9 @@ _arguments['recurse_dependencies'] = Args(
     help='recursively traverse spec dependencies')
 
 _arguments['recurse_dependents'] = Args(
-        '-R', '--dependents', action='store_true', dest='dependents',
-        help='also uninstall any packages that depend on the ones given '
-             'via command line')
+    '-R', '--dependents', action='store_true', dest='dependents',
+    help='also uninstall any packages that depend on the ones given '
+    'via command line')
 
 _arguments['clean'] = Args(
     '--clean',

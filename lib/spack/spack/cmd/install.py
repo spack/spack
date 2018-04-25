@@ -44,6 +44,7 @@ description = "build and install packages"
 section = "build"
 level = "short"
 
+
 def add_common_arguments(subparser):
     arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
     subparser.add_argument(
@@ -84,7 +85,8 @@ def add_common_arguments(subparser):
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-def update_kwargs_from_args(args,kwargs):
+
+def update_kwargs_from_args(args, kwargs):
     """Parse cli arguments and construct a dictionary
     that will be passed to Package.do_install API"""
 
@@ -206,7 +208,7 @@ def install(parser, args, **kwargs):
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
-    update_kwargs_from_args(args,kwargs)
+    update_kwargs_from_args(args, kwargs)
     kwargs.update({
         'install_dependencies': ('dependencies' in args.things_to_install),
         'install_package': ('package' in args.things_to_install)
