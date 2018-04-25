@@ -38,9 +38,10 @@ class RMlr(RPackage):
        resampling. Most operations can be parallelized."""
 
     homepage = "https://github.com/mlr-org/mlr/"
-    url      = "https://cran.r-project.org/src/contrib/Archive/mlr/mlr_2.12.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/mlr_2.12.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/mlr"
 
+    version('2.12.1', 'abddfc9dfe95f290a233ecd97969a4ec')
     version('2.12', '94ee7495aeafb432c8af5a8bdd26c25f')
 
     depends_on('r-paramhelpers@1.10:', type=('build', 'run'))
