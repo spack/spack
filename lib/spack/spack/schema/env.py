@@ -43,7 +43,7 @@ schema = {
                     'type': 'array',
                     'default': [],
                     'items': {'type': 'string'}
-                }
+                },
                 'specs': {
                     'type': 'array',
                     'default': [],

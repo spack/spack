@@ -94,7 +94,8 @@ class Environment(object):
 
         # Default config
         self.yaml = {
-            'configs': ['<env>']
+            'configs': ['<env>'],
+            'specs' : []
         }
 
     @property
@@ -104,15 +105,21 @@ class Environment(object):
     def repo_path(self):
         return fs.join_path(get_dotenv_dir(self.path), 'repo')
 
-    def add(self, user_spec):
+    def add(self, user_spec, report_existing=True):
         """Add a single user_spec (non-concretized) to the Environment"""
         query_spec = Spec(user_spec)
         existing = set(x for x in self.user_specs
                        if Spec(x).name == query_spec.name)
         if existing:
-            tty.die("Package {0} was already added to {1}"
+            if report_existing:
+                tty.die("Package {0} was already added to {1}"
                     .format(query_spec.name, self.name))
-        self.user_specs.append(user_spec)
+            else:
+                tty.msg("Package {0} was already added to {1}"
+                    .format(query_spec.name, self.name))
+        else:
+            tty.msg('Adding %s to environment %s' % (user_spec, self.name))
+            self.user_specs.append(user_spec)
 
     def remove(self, query_spec):
         """Remove specs from an environment that match a query_spec"""
@@ -441,8 +448,24 @@ def _environment_create(name):
 def environment_add(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
-    for spec in spack.cmd.parse_specs(args.package):
-        environment.add(spec.format())
+    parsed_specs = spack.cmd.parse_specs(args.package)
+
+    if args.all:
+        # Don't allow command-line specs with --all
+        if len(parsed_specs) > 0:
+            tty.die('Cannot specify --all and specs too on the command line')
+
+        yaml_specs = environment.yaml['specs']
+        if len(yaml_specs) == 0:
+            tty.msg('No specs to add from env.yaml')
+
+        # Add list of specs from env.yaml file
+        for user_spec in yaml_specs:
+            environment.add(user_spec.format(), report_existing=False)
+    else:
+        for spec in parsed_specs:
+            environment.add(spec.format())
+
     write(environment)
 
 
@@ -654,6 +677,9 @@ def setup_parser(subparser):
 
     add_parser = sp.add_parser('add', help='Add a spec to an environment')
     add_parser.add_argument(
+        '-a', '--all', action='store_true', dest='all',
+        help="Add all specs listed in env.yaml")
+    add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
         help="Spec of the package to add"
@@ -662,13 +688,13 @@ def setup_parser(subparser):
     remove_parser = sp.add_parser(
         'remove', help='Remove a spec from this environment')
     remove_parser.add_argument(
+        '-a', '--all', action='store_true', dest='all',
+        help="Remove all specs from (clear) the environment")
+    remove_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
         help="Spec of the package to remove"
     )
-    subparser.add_argument(
-        '-a', '--all', action='store_true', dest='all',
-        help="Remove all specs from (clear) the environment")
 
     spec_parser = sp.add_parser(
         'spec', help='Concretize sample spec')
