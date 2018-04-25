@@ -44,6 +44,11 @@ schema = {
                     'default': [],
                     'items': {'type': 'string'}
                 }
+                'specs': {
+                    'type': 'array',
+                    'default': [],
+                    'items': {'type': 'string'}
+                }
             }
         }
     }

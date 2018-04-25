@@ -76,16 +76,10 @@ def get_write_paths(env_root):
 
 
 class Environment(object):
-    def __init__(self, name):
-        self.name = name
+    def clear(self):
         self.user_specs = list()
         self.concretized_order = list()
         self.specs_by_hash = dict()
-
-        # Default config
-        self.yaml = {
-            'configs': ['<env>']
-        }
 
         # Libs in this set must always appear as the dependency traced from any
         # root of link deps
@@ -93,6 +87,15 @@ class Environment(object):
         # Packages in this set must always appear as the dependency traced from
         # any root of run deps
         self.common_bins = dict()  # name -> hash
+
+    def __init__(self, name):
+        self.name = name
+        self.clear()
+
+        # Default config
+        self.yaml = {
+            'configs': ['<env>']
+        }
 
     @property
     def path(self):
@@ -446,8 +449,11 @@ def environment_add(args):
 def environment_remove(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
-    for spec in spack.cmd.parse_specs(args.package):
-        environment.remove(spec.format())
+    if args.all:
+        environment.clear()
+    else:
+        for spec in spack.cmd.parse_specs(args.package):
+            environment.remove(spec.format())
     write(environment)
 
 
@@ -660,6 +666,9 @@ def setup_parser(subparser):
         nargs=argparse.REMAINDER,
         help="Spec of the package to remove"
     )
+    subparser.add_argument(
+        '-a', '--all', action='store_true', dest='all',
+        help="Remove all specs from (clear) the environment")
 
     spec_parser = sp.add_parser(
         'spec', help='Concretize sample spec')
