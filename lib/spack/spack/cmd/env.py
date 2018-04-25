@@ -22,14 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import stat
 import llnl.util.tty as tty
 import spack
 import llnl.util.filesystem as fs
 import spack.modules
 import spack.util.spack_json as sjson
-import spack.util.spack_yaml as syaml
 import spack.schema.env
 import spack.config
 import spack.cmd.install
@@ -57,13 +54,16 @@ level = "long"
 
 _db_dirname = fs.join_path(spack.var_path, 'environments')
 
+
 def get_env_root(name):
     """Given an environment name, determines its root directory"""
     return fs.join_path(_db_dirname, name)
 
+
 def get_dotenv_dir(env_root):
     """@return Directory in an environment that is owned by Spack"""
     return fs.join_path(env_root, '.env')
+
 
 def get_write_paths(env_root):
     """Determines the names of temporary and permanent directories to
@@ -158,7 +158,7 @@ class Environment(object):
 
         # Make sure log directory exists
         logs = fs.join_path(self.path, 'logs')
-        try: 
+        try:
             os.makedirs(logs)
         except OSError:
             if not os.path.isdir(logs):
@@ -311,6 +311,7 @@ class Environment(object):
 
         return env
 
+
 def reset_os_and_compiler(spec, compiler=None):
     spec = spec.copy()
     for x in spec.traverse():
@@ -336,9 +337,10 @@ def upgrade_dependency_version(spec, dep_name):
 
 
 def check_consistent_env(env_root):
-    tmp_new,dest,tmp_old = get_write_paths(env_root)
+    tmp_new, dest, tmp_old = get_write_paths(env_root)
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
         tty.die("Partial write state, run 'spack env repair'")
+
 
 def write(environment):
     """Writes an in-memory environment back to its location on disk,
@@ -396,7 +398,7 @@ def read(environment_name):
     else:
         # Default env_yaml file if none exists in this environment
         env_yaml = {
-            'configs' : ['<env>']
+            'configs': ['<env>']
         }
 
     dotenv_dir = get_dotenv_dir(env_root)
@@ -448,7 +450,7 @@ def _environment_concretize(environment, force=False):
     """Function body separated out to aid in testing."""
 
     # Change global search paths
-    repo = prepare_repository(environment)
+    prepare_repository(environment)
     prepare_config_scope(environment)
 
     environment.concretize(force=force)
@@ -467,6 +469,7 @@ def _environment_concretize(environment, force=False):
 
 # =============== Does not Modify Environment
 
+
 def environment_install(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
@@ -482,6 +485,7 @@ def environment_uninstall(args):
 
 # =======================================
 
+
 def dump_to_environment_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
     if not os.path.exists(dest_pkg_dir):
@@ -493,8 +497,7 @@ def prepare_repository(environment, remove=None):
     # Temporarily disable.
     # See https://github.com/spack/spack/issues/7878
     return
-    import tempfile
-    new_repo_dir = get_dotenv_dir(env_root(environment.name))
+    new_repo_dir = get_dotenv_dir(get_env_root(environment.name))
     if os.path.exists(environment.repo_path()):
         shutil.copytree(environment.repo_path(), new_repo_dir)
     else:
@@ -512,9 +515,10 @@ def prepare_repository(environment, remove=None):
 
 
 def prepare_config_scope(environment):
-    """Adds environment's scope to the global search path of configuration scopes"""
+    """Adds environment's scope to the global search path
+    of configuration scopes"""
+
     # Load up configs
-    configs = []
     for config_spec in environment.yaml['configs']:
         config_name = os.path.split(config_spec)[1]
         if config_name == '<env>':
@@ -528,9 +532,11 @@ def prepare_config_scope(environment):
             config_dir = os.path.normpath(os.path.join(
                 environment.path, config_spec.format(**os.environ)))
             if not os.path.isdir(config_dir):
-                tty.die('Spack config %s (%s) not found' % (config_name, config_dir))
+                tty.die('Spack config %s (%s) not found' %
+                        (config_name, config_dir))
 
-        tty.msg('Using Spack config %s scope at %s' % (config_name, config_dir))
+        tty.msg('Using Spack config %s scope at %s' %
+                (config_name, config_dir))
         ConfigScope(config_name, config_dir)
 
 
@@ -604,6 +610,7 @@ def environment_loads(args):
 
     print('To load this environment, type:')
     print('   source %s' % ofname)
+
 
 def environment_upgrade_dependency(args):
     environment = read(args.environment)
