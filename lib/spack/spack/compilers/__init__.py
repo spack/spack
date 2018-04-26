@@ -40,9 +40,6 @@ from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
-_flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
-_other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths']
 _cache_config_file = []
 
 #: cache of compilers constructed from config data, keyed by config entry id.
@@ -64,9 +61,10 @@ def _to_dict(compiler):
     d['paths'] = dict((attr, getattr(compiler, attr, None))
                       for attr in _path_instance_vars)
     d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
-    d['flags'].update(dict((attr, getattr(compiler, attr, None))
-                      for attr in _flags_instance_vars
-                           if hasattr(compiler, attr)))
+    d['flags'].update(
+        dict((attr, getattr(compiler, attr, None))
+             for attr in spack.spec.FlagMap.valid_compiler_flags()
+             if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
@@ -258,32 +256,24 @@ def compiler_from_config_entry(items):
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
+        # Correctness of the input data is ensured by the YAML schema.
         cspec = spack.spec.CompilerSpec(items['spec'])
-        os = items.get('operating_system', None)
-        target = items.get('target', None)
+        os = items['operating_system']
+        target = items['target']
 
-        if not ('paths' in items and
-                all(n in items['paths'] for n in _path_instance_vars)):
-            raise InvalidCompilerConfigurationError(cspec)
-
-        cls  = class_for_compiler_name(cspec.name)
+        cls = class_for_compiler_name(cspec.name)
 
         compiler_paths = []
         for c in _path_instance_vars:
             compiler_path = items['paths'][c]
-            if compiler_path != 'None':
-                compiler_paths.append(compiler_path)
-            else:
-                compiler_paths.append(None)
+            compiler_paths.append(compiler_path)
 
         mods = items.get('modules')
-        if mods == 'None':
-            mods = []
 
-        alias = items.get('alias', None)
-        compiler_flags = items.get('flags', {})
-        environment = items.get('environment', {})
-        extra_rpaths = items.get('extra_rpaths', [])
+        alias = items['alias']
+        compiler_flags = items['flags']
+        environment = items['environment']
+        extra_rpaths = items['extra_rpaths']
 
         compiler = cls(cspec, os, target, compiler_paths, mods, alias,
                        environment, extra_rpaths, **compiler_flags)
@@ -383,15 +373,6 @@ def all_os_classes():
 
 def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
-
-
-class InvalidCompilerConfigurationError(spack.error.SpackError):
-
-    def __init__(self, compiler_spec):
-        super(InvalidCompilerConfigurationError, self).__init__(
-            "Invalid configuration for [compiler \"%s\"]: " % compiler_spec,
-            "Compiler configuration must contain entries for all compilers: %s"
-            % _path_instance_vars)
 
 
 class NoCompilersError(spack.error.SpackError):

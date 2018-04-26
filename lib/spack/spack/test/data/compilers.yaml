@@ -7,7 +7,6 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
 - compiler:
     spec: gcc@4.5.0
     operating_system: {0.name}{0.version}
@@ -16,7 +15,6 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
 - compiler:
     spec: clang@3.3
     operating_system: CNL
@@ -25,7 +23,6 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
 - compiler:
     spec: clang@3.3
     operating_system: SuSE11
@@ -34,7 +31,6 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
 - compiler:
     spec: clang@3.3
     operating_system: yosemite
@@ -43,7 +39,6 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -52,7 +47,6 @@ compilers:
       fc: /path/to/gfortran
     operating_system: CNL
     spec: gcc@4.5.0
-    modules: 'None'
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -61,7 +55,6 @@ compilers:
       fc: /path/to/gfortran
     operating_system: SuSE11
     spec: gcc@4.5.0
-    modules: 'None'
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -70,7 +63,6 @@ compilers:
       fc: /path/to/gfortran
     operating_system: yosemite
     spec: gcc@4.5.0
-    modules: 'None'
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -79,7 +71,6 @@ compilers:
       fc: /path/to/gfortran
     operating_system: elcapitan
     spec: gcc@4.5.0
-    modules: 'None'
 - compiler:
     spec: clang@3.3
     operating_system: elcapitan
@@ -88,7 +79,6 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
 - compiler:
     spec: gcc@4.7.2
     operating_system: redhat6
@@ -101,7 +91,6 @@ compilers:
       cflags: -O0
       cxxflags: -O0
       fflags: -O0
-    modules: 'None'
 - compiler:
     spec: clang@3.5
     operating_system: redhat6
@@ -113,4 +102,3 @@ compilers:
     flags:
       cflags: -O3
       cxxflags: -O3
-    modules: 'None'

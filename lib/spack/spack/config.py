@@ -474,7 +474,10 @@ class ConfigFileError(ConfigError):
 
 def get_path(path, data):
     if path:
-        return get_path(path[1:], data[path[0]])
+        key = path[0]
+        if isinstance(data, list):
+            key = int(key)
+        return get_path(path[1:], data[key])
     else:
         return data
 

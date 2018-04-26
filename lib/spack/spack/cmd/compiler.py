@@ -149,25 +149,41 @@ def compiler_info(args):
     else:
         for c in compilers:
             print(str(c.spec) + ":")
+            print("\ttarget: " + c.target)
+            print("\toperating_system: " + c.operating_system)
+
             print("\tpaths:")
             for cpath in ['cc', 'cxx', 'f77', 'fc']:
-                print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
-            if c.flags:
+                print("\t\t%s: %s" % (cpath, getattr(c, cpath, None)))
+
+            if any(c.flags):
                 print("\tflags:")
                 for flag, flag_value in iteritems(c.flags):
-                    print("\t\t%s = %s" % (flag, flag_value))
-            if len(c.environment) != 0:
-                if len(c.environment['set']) != 0:
-                    print("\tenvironment:")
-                    print("\t    set:")
-                    for key, value in iteritems(c.environment['set']):
-                        print("\t        %s = %s" % (key, value))
-            if c.extra_rpaths:
-                print("\tExtra rpaths:")
+                    print("\t\t%s: %s" % (flag, flag_value))
+            else:
+                print("\tflags: " + str(type(c.flags)()))
+
+            if any(c.environment):
+                print("\tenvironment:")
+                print("\t\tset:")
+                for key, value in iteritems(c.environment['set']):
+                    print("\t\t\t%s: %s" % (key, value))
+            else:
+                print("\tenvironment: " + str(type(c.environment)()))
+
+            if any(c.extra_rpaths):
+                print("\textra_rpaths:")
                 for extra_rpath in c.extra_rpaths:
-                    print("\t\t%s" % extra_rpath)
-            print("\tmodules  = %s" % c.modules)
-            print("\toperating system  = %s" % c.operating_system)
+                    print("\t\t" + extra_rpath)
+            else:
+                print("\textra_rpaths: " + str(type(c.extra_rpaths)()))
+
+            if any(c.modules):
+                print("\tmodules:")
+                for module in c.modules:
+                    print("\t\t" + module)
+            else:
+                print("\tmodules: " + str(type(c.modules)()))
 
 
 def compiler_list(args):
