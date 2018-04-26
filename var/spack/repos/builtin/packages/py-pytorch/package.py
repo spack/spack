@@ -25,19 +25,39 @@
 from spack import *
 
 
-class PyOpenslidePython(PythonPackage):
-    """OpenSlide Python is a Python interface to the OpenSlide library."""
+class PyPytorch(PythonPackage):
+    """
+    PyTorch is a python package that provides
+    tensor computation (like numpy) with strong GPU accelerationi and
+    deep neural networks built on a tape-based autodiff system
+    """
 
-    homepage = "https://github.com/openslide/openslide-python"
-    url      = "https://github.com/openslide/openslide-python/archive/v1.1.1.tar.gz"
-
-    version('1.1.1', '8c207e48069887b63ea1c7bc9eb7dfc0')
+    homepage = "http://pytorch.org/"
+    url      = "https://github.com/pytorch/pytorch/archive/v0.4.0.tar.gz"
 
     install_time_test_callbacks = ['import_module_test']
 
-    import_modules = ['openslide']
+    import_modules = ['torch']
 
-    depends_on('openslide@3.4.0:')
-    depends_on('python@2.6:2.8,3.3:')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pillow+jpeg+jpeg2000+tiff', type=('build', 'run'))
+    version('0.4.0', '897f24fd108f88a755a4dcf5ffa1f5cd')
+    version('0.3.1', '015090b106ca593de203a7710b9431eb')
+
+    variant('cuda', default=False, description='Builds with CUDA support')
+
+    # depends_on('cmake', type='build')
+    depends_on('blas')
+    depends_on('python@2.7:2.8,3.5:3.6')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-cffi', type=('build', 'run'))
+    depends_on('py-typing', type=('build', 'run'))
+    depends_on('magma', when='+cuda')
+
+    def install_test(self):
+        # Change directories due to the following error:
+        #
+        # ImportError: Error importing torch: you should not try to import
+        #       torch from its source directory; please exit the torch
+        #       source tree, and relaunch your python interpreter from there.
+        with working_dir('..'):
+            python('-c', 'import torch')

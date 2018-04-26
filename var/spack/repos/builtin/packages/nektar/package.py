@@ -22,22 +22,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install nektar
+#
+# You can edit this file again by typing:
+#
+#     spack edit nektar
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class PyOpenslidePython(PythonPackage):
-    """OpenSlide Python is a Python interface to the OpenSlide library."""
+class Nektar(CMakePackage):
+    """Nektar++ is a tensor product based finite element package."""
 
-    homepage = "https://github.com/openslide/openslide-python"
-    url      = "https://github.com/openslide/openslide-python/archive/v1.1.1.tar.gz"
+    homepage = "https://www.nektar.info/"
+    url      = "http://rpms.pi.sjtu.edu.cn/mirror/nektar/nektar-4.4.1.tar.xz"
 
-    version('1.1.1', '8c207e48069887b63ea1c7bc9eb7dfc0')
+    version('4.4.1', '748cb744a3a73251d50c37813d750270')
 
-    install_time_test_callbacks = ['import_module_test']
+    depends_on('mpi')
+    depends_on('blas')
+    depends_on('lapack')
+    depends_on('boost@1.15:')
+    depends_on('fftw@3:')
+    depends_on('tinyxml')
 
-    import_modules = ['openslide']
-
-    depends_on('openslide@3.4.0:')
-    depends_on('python@2.6:2.8,3.3:')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pillow+jpeg+jpeg2000+tiff', type=('build', 'run'))
+    def cmake_args(self):
+        # FIXME: Add arguments other than
+        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+        # FIXME: If not needed delete this function
+        args = []
+        return args
