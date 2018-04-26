@@ -440,6 +440,11 @@ def read(environment_name):
     if env_yaml:
         environment.yaml = env_yaml['env']
 
+    print('yyyyyyyyyyaml', environment.yaml)
+    print(type(environment.yaml['specs']))
+    for x in environment.yaml['specs'].items():
+        print(type(x), x)
+
     return environment
 
 
@@ -493,13 +498,17 @@ def environment_add(args):
         if len(parsed_specs) > 0:
             tty.die('Cannot specify --all and specs too on the command line')
 
+        if hasattr(args, 'setup'):
+            tty.die('Cannot specify --setup on the command line with --all')
+
         yaml_specs = environment.yaml['specs']
         if len(yaml_specs) == 0:
             tty.msg('No specs to add from env.yaml')
 
+
         # Add list of specs from env.yaml file
-        for user_spec in yaml_specs:
-            environment.add(user_spec.format(), setup, report_existing=False)
+        for user_spec, setup_list in yaml_specs.items():    # OrderedDict
+            environment.add(user_spec.format(), set(setup_list), report_existing=False)
     else:
         for spec in parsed_specs:
             environment.add(spec.format(), setup)
