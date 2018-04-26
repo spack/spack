@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,18 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class RParamhelpers(RPackage):
+    """Functions for parameter descriptions and operations in black-box
+       optimization, tuning and machine learning. Parameters can be described
+       (type, constraints, defaults, etc.), combined to parameter sets and can
+       in general be programmed on. A useful OptPath object (archive) to log
+       function evaluations is also provided."""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://github.com/berndbischl/ParamHelpers"
+    url      = "https://cran.r-project.org/src/contrib/ParamHelpers_1.10.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ParamHelpers"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('1.10', '36e9060488ebd484d62cd991a4693332')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
-
-    depends_on('numactl')
-    depends_on('rdma-core')
+    depends_on('r-bbmisc@1.10:', type=('build', 'run'))
+    depends_on('r-checkmate@1.8.1:', type=('build', 'run'))

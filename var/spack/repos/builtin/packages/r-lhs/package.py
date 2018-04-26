@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,12 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class RLhs(RPackage):
+    """Provides a number of methods for creating and augmenting Latin Hypercube
+       Samples."""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "http://lhs.r-forge.r-project.org/"
+    url      = "https://cran.r-project.org/src/contrib/lhs_0.16.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/lhs"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
-
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
-
-    depends_on('numactl')
-    depends_on('rdma-core')
+    version('0.16', '088e593e5283414951e7e541a50ec2d1')

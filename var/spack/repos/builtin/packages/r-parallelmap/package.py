@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,19 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class RParallelmap(RPackage):
+    """Unified parallelization framework for multiple back-end, designed for
+       internal package and interactive usage. The main operation is a parallel
+       "map" over lists. Supports local, multicore, mpi and BatchJobs mode.
+       Allows "tagging" of the parallel operation with a level name that can be
+       later selected by the user to switch on parallel execution for exactly
+       this operation."""
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://github.com/berndbischl/parallelMap"
+    url      = "https://cran.r-project.org/src/contrib/parallelMap_1.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/parallelMap"
 
-    # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('1.3', 'dd62866b395847b0bd5b13bed98c0081')
 
-    # Still supported
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
-
-    depends_on('numactl')
-    depends_on('rdma-core')
+    depends_on('r-bbmisc@1.8:', type=('build', 'run'))
+    depends_on('r-checkmate@1.5.1:', type=('build', 'run'))
