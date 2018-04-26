@@ -36,6 +36,7 @@ class Tmux(AutotoolsPackage):
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('2.7', 'bcdfcf910c94c3e02ce6b1c035880306')
     version('2.6', 'd541ff392249f94c4f3635793556f827')
     version('2.5', '4a5d73d96d8f11b0bdf9b6f15ab76d15')
     version('2.4', '6165d3aca811a3225ef8afbd1afcf1c5')
