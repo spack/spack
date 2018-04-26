@@ -45,12 +45,5 @@ class Gdbm(AutotoolsPackage):
 
     depends_on("readline")
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('CC', spack_cc)
-
     def configure_args(self):
-        config_args = [
-            '--enable-libgdbm-compat',
-        ]
-
-        return config_args
+        return ['--enable-libgdbm-compat']
