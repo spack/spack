@@ -152,13 +152,10 @@ class TestConcretize(object):
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
             check_concretize('dttop %gcc@100.100')
 
-        try:
-            spack.concretizer.disable_compiler_existence_check()
+        with spack.concretize.disable_compiler_existence_check():
             spec = check_concretize('dttop %gcc@100.100')
             assert spec.satisfies('%gcc@100.100')
             assert spec['dtlink3'].satisfies('%gcc@100.100')
-        finally:
-            spack.concretizer.enable_compiler_existence_check()
 
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
