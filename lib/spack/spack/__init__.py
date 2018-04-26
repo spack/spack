@@ -62,11 +62,6 @@ except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
-#: Concretizer class implements policy decisions for concretization
-from spack.concretize import Concretizer
-concretizer = Concretizer()
-
-
 #: Needed for test dependencies
 from spack.package_prefs import PackageTesting
 package_testing = PackageTesting()

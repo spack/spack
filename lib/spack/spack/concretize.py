@@ -36,6 +36,7 @@ TODO: make this customizable and allow users to configure
 from __future__ import print_function
 from itertools import chain
 from functools_backport import reverse_order
+from contextlib import contextmanager
 from six import iteritems
 
 import spack
@@ -47,23 +48,48 @@ import spack.error
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
+#: controls whether we check that compiler versions actually exist during
+#: concretization.  Used for testing.
+check_for_compiler_existence = True
+
+
+#: Concretizer singleton
+_concretizer = None
+
 
 #: impements rudimentary logic for ABI compatibility
-abi = spack.abi.ABI()
+_abi_checker = None
+
+
+def _abi():
+    """Get an ABI checker object."""
+    global _abi_checker
+    if _abi_checker is None:
+        _abi_checker = spack.abi.ABI()
+    return _abi_checker
+
+
+def concretizer():
+    """Get concretizer singleton."""
+    global _concretizer
+    if _concretizer is None:
+        _concretizer = Concretizer()
+    return _concretizer
+
+
+@contextmanager
+def disable_compiler_existence_check():
+    global check_for_compiler_existence
+    saved = check_for_compiler_existence
+    check_for_compiler_existence = False
+    yield
+    check_for_compiler_existence = saved
 
 
 class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
-    def __init__(self):
-        self.check_for_compiler_existence = True
-
-    def disable_compiler_existence_check(self):
-        self.check_for_compiler_existence = False
-
-    def enable_compiler_existence_check(self):
-        self.check_for_compiler_existence = True
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -137,8 +163,8 @@ class Concretizer(object):
         return sorted(candidates,
                       reverse=True,
                       key=lambda spec: (
-                          abi.compatible(spec, abi_exemplar, loose=True),
-                          abi.compatible(spec, abi_exemplar)))
+                          _abi().compatible(spec, abi_exemplar, loose=True),
+                          _abi().compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
@@ -299,7 +325,7 @@ class Concretizer(object):
             return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
 
         if spec.compiler and spec.compiler.concrete:
-            if (self.check_for_compiler_existence and not
+            if (check_for_compiler_existence and not
                     _proper_compiler_style(spec.compiler, spec.architecture)):
                 _compiler_concretization_failure(
                     spec.compiler, spec.architecture)
@@ -313,7 +339,7 @@ class Concretizer(object):
 
         # Check if the compiler is already fully specified
         if (other_compiler and other_compiler.concrete and
-                not self.check_for_compiler_existence):
+                not check_for_compiler_existence):
             spec.compiler = other_compiler.copy()
             return True
 
@@ -407,7 +433,7 @@ class Concretizer(object):
             compiler = spack.compilers.compiler_for_spec(
                 spec.compiler, spec.architecture)
         except spack.compilers.NoCompilerForSpecError:
-            if self.check_for_compiler_existence:
+            if check_for_compiler_existence:
                 raise
             return ret
         for flag in compiler.flags:
