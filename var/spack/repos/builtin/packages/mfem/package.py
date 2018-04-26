@@ -163,7 +163,7 @@ class Mfem(Package):
     conflicts('timer=mpi', when='~mpi')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hypre', when='+mpi')
+    depends_on('hypre@:2.13.0', when='+mpi')
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
     depends_on('lapack', when='+lapack')
