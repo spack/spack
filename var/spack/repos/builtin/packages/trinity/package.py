@@ -60,11 +60,15 @@ class Trinity(MakefilePackage):
         force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.classpath'))
         force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.err'))
         force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.project'))
-        remove_linked_tree(join_path(prefix.bin, 'Butterfly', 'src', '.settings'))
+        remove_linked_tree(join_path(prefix.bin, 'Butterfly', 'src',
+                                     '.settings'))
         remove_linked_tree(join_path(prefix.bin, 'Inchworm', 'src', '.deps'))
-        remove_linked_tree(join_path(prefix.bin, 'trinity-plugins', 'ParaFly-0.1.0', 'src', '.deps'))
-        force_remove(join_path(prefix.bin, 'trinity-plugins', 'seqtk-trinity-0.0.2', '.gitignore'))
-        force_remove(join_path(prefix.bin, 'trinity-plugins', 'slclust' ,'bin', '.hidden'))
+        remove_linked_tree(join_path(prefix.bin, 'trinity-plugins',
+                                     'ParaFly-0.1.0', 'src', '.deps'))
+        force_remove(join_path(prefix.bin, 'trinity-plugins',
+                               'seqtk-trinity-0.0.2', '.gitignore'))
+        force_remove(join_path(prefix.bin, 'trinity-plugins', 'slclust', 'bin',
+                               '.hidden'))
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('TRINITY_HOME', self.prefix.bin)
