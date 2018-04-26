@@ -440,11 +440,6 @@ def read(environment_name):
     if env_yaml:
         environment.yaml = env_yaml['env']
 
-    print('yyyyyyyyyyaml', environment.yaml)
-    print(type(environment.yaml['specs']))
-    for x in environment.yaml['specs'].items():
-        print(type(x), x)
-
     return environment
 
 
@@ -477,14 +472,15 @@ def _environment_create(name, init_config=None):
     # When creating the environment, the user may specify configuration
     # to place in the environment initially. Spack does not interfere
     # with this configuration after initialization so it is handled here
-    config_basedir = fs.join_path(environment.path, 'config')
-    os.mkdir(config_basedir)
-    for key, val in config_sections.items():
-        yaml_section = syaml.dump({key: val}, default_flow_style=False)
-        yaml_file = '{0}.yaml'.format(key)
-        yaml_path = fs.join_path(config_basedir, yaml_file)
-        with open(yaml_path, 'w') as F:
-            F.write(yaml_section)
+    if len(config_sections) > 0:
+        config_basedir = fs.join_path(environment.path, 'config')
+        os.mkdir(config_basedir)
+        for key, val in config_sections.items():
+            yaml_section = syaml.dump({key: val}, default_flow_style=False)
+            yaml_file = '{0}.yaml'.format(key)
+            yaml_path = fs.join_path(config_basedir, yaml_file)
+            with open(yaml_path, 'w') as F:
+                F.write(yaml_section)
 
 
 def environment_add(args):
@@ -507,8 +503,9 @@ def environment_add(args):
 
 
         # Add list of specs from env.yaml file
-        for user_spec, setup_list in yaml_specs.items():    # OrderedDict
-            environment.add(user_spec.format(), set(setup_list), report_existing=False)
+        for user_spec, attrs in yaml_specs.items():    # OrderedDict
+            setup = set(attrs['setup'])
+            environment.add(user_spec.format(), setup, report_existing=False)
     else:
         for spec in parsed_specs:
             environment.add(spec.format(), setup)
