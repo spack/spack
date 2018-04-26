@@ -38,13 +38,13 @@ class Loki(MakefilePackage):
 
     def build(self, spec, prefix):
         if '+shared' in spec:
-           make('-C', 'src', 'build-shared')
+            make('-C', 'src', 'build-shared')
         else:
-           make('-C', 'src', 'build-static')
+            make('-C', 'src', 'build-static')
 
     def install(self, spec, prefix):
         make('-C', 'include', 'install', 'prefix={0}'.format(prefix))
         if '+shared' in spec:
-           make('-C', 'src', 'install-shared', 'prefix={0}'.format(prefix))
+            make('-C', 'src', 'install-shared', 'prefix={0}'.format(prefix))
         else:
-           make('-C', 'src', 'install-static', 'prefix={0}'.format(prefix))
+            make('-C', 'src', 'install-static', 'prefix={0}'.format(prefix))
