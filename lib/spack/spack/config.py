@@ -49,7 +49,6 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 """
 
-import copy
 import os
 import re
 import sys
@@ -335,7 +334,7 @@ def _copy(coll):
         return [_copy(x) for x in coll]
     if isinstance(coll, dict):
         ret = syaml.syaml_dict()
-        for k,v in coll.items():
+        for k, v in coll.items():
             ret[k] = _copy(v)
         return ret
     return coll
