@@ -33,8 +33,6 @@ class PyOpenslidePython(PythonPackage):
 
     version('1.1.1', '8c207e48069887b63ea1c7bc9eb7dfc0')
 
-    install_time_test_callbacks = ['import_module_test']
-
     import_modules = ['openslide']
 
     depends_on('openslide@3.4.0:')
