@@ -26,24 +26,26 @@
 import os
 import re
 import tarfile
-import yaml
 import shutil
 import platform
 import tempfile
+import hashlib
+from contextlib import closing
+
+import yaml
 
 import llnl.util.tty as tty
-from spack.util.gpg import Gpg
 from llnl.util.filesystem import mkdirp, join_path, install_tree
-from spack.util.web import spider
-import spack.cmd
+
 import spack
-from spack.stage import Stage
+import spack.cmd
 import spack.fetch_strategy as fs
-from contextlib import closing
 import spack.util.gpg as gpg_util
-import hashlib
-from spack.util.executable import ProcessError
 import spack.relocate as relocate
+from spack.stage import Stage
+from spack.util.gpg import Gpg
+from spack.util.web import spider
+from spack.util.executable import ProcessError
 
 
 class NoOverwriteException(Exception):
@@ -529,14 +531,19 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
 
+#: Internal cache for get_specs
+_cached_specs = None
+
+
 def get_specs(force=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
-    if spack.binary_cache_retrieved_specs:
+    global _cached_specs
+
+    if _cached_specs:
         tty.debug("Using previously-retrieved specs")
-        previously_retrieved = spack.binary_cache_retrieved_specs
-        return previously_retrieved
+        return _cached_specs
 
     mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
@@ -562,7 +569,7 @@ def get_specs(force=False):
                 if re.search("spec.yaml", link) and re.search(path, link):
                     urls.add(link)
 
-    specs = set()
+    _cached_specs = set()
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -578,10 +585,9 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = spack.spec.Spec.from_yaml(f)
                 spec._mark_concrete()
-                specs.add(spec)
+                _cached_specs.add(spec)
 
-    spack.binary_cache_retrieved_specs = specs
-    return specs
+    return _cached_specs
 
 
 def get_keys(install=False, trust=False, force=False):

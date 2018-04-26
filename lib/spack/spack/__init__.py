@@ -26,17 +26,6 @@
 import sys
 
 #-----------------------------------------------------------------------------
-# Below code imports spack packages.
-#-----------------------------------------------------------------------------
-# The imports depend on paths above, or on each other, so ordering is tricky.
-# TODO: refactor everything below to be more init order agnostic.
-
-
-# TODO: get this out of __init__.py
-binary_cache_retrieved_specs = set()
-
-
-#-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
 #
 # TODO: move all of these imports out of __init__ to avoid importing the whole
