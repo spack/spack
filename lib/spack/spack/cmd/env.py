@@ -487,7 +487,7 @@ def environment_add(args):
             tty.msg('No specs to add from env.yaml')
 
         # Add list of specs from env.yaml file
-        for user_spec in yaml_specs:
+        for user_spec, _ in yaml_specs.items():    # OrderedDict
             environment.add(user_spec.format(), report_existing=False)
     else:
         for spec in parsed_specs:

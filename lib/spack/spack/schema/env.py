@@ -34,7 +34,7 @@ schema = {
     'title': 'Spack Environments user configuration file schema',
     'type': 'object',
     'additionalProperties': False,
-    'patternProperties': {
+    'properties': {
         'env': {
             'type': 'object',
             'default': {},
@@ -45,9 +45,16 @@ schema = {
                     'items': {'type': 'string'}
                 },
                 'specs': {
-                    'type': 'array',
-                    'default': [],
-                    'items': {'type': 'string'}
+                    'type': 'object',
+                    'default': {},
+                    'additionalProperties': False,
+                    'patternProperties': {
+                        r'\w[\w-]*': {  # user spec
+                            'type': 'object',
+                            'default': {},
+                            'additionalProperties': False,
+                        }
+                    }
                 }
             }
         }
