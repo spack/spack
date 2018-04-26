@@ -95,7 +95,7 @@ class Environment(object):
         # Default config
         self.yaml = {
             'configs': ['<env>'],
-            'specs' : []
+            'specs': []
         }
 
     @property
@@ -113,10 +113,10 @@ class Environment(object):
         if existing:
             if report_existing:
                 tty.die("Package {0} was already added to {1}"
-                    .format(query_spec.name, self.name))
+                        .format(query_spec.name, self.name))
             else:
                 tty.msg("Package {0} was already added to {1}"
-                    .format(query_spec.name, self.name))
+                        .format(query_spec.name, self.name))
         else:
             tty.msg('Adding %s to environment %s' % (user_spec, self.name))
             self.user_specs.append(user_spec)
@@ -482,7 +482,10 @@ def environment_remove(args):
 
 def environment_spec(args):
     environment = read(args.environment)
+    prepare_repository(environment)
+    prepare_config_scope(environment)
     spack.cmd.spec.spec(None, args)
+
 
 def environment_concretize(args):
     check_consistent_env(get_env_root(args.environment))
@@ -699,7 +702,6 @@ def setup_parser(subparser):
     spec_parser = sp.add_parser(
         'spec', help='Concretize sample spec')
     spack.cmd.spec.add_common_arguments(spec_parser)
-
 
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')

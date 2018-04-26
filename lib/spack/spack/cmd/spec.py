@@ -58,6 +58,7 @@ def add_common_arguments(subparser):
 def setup_parser(subparser):
     add_common_arguments(subparser)
 
+
 def spec(parser, args):
     name_fmt = '$.' if args.namespaces else '$_'
     kwargs = {'cover': args.cover,
