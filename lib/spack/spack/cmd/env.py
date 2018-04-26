@@ -27,6 +27,7 @@ import spack
 import llnl.util.filesystem as fs
 import spack.modules
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.schema.env
 import spack.config
 import spack.cmd.spec
@@ -440,9 +441,34 @@ def environment_create(args):
     _environment_create(args.environment)
 
 
-def _environment_create(name):
+def _environment_create(name, init_config=None):
     environment = Environment(name)
+
+    user_specs = list()
+    config_sections = {}
+    if init_config:
+        for key, val in init_config.items():
+            if key == 'user_specs':
+                user_specs.extend(val)
+            else:
+                config_sections[key] = val
+
+    for user_spec in user_specs:
+        environment.add(user_spec)
+
     write(environment)
+
+    # When creating the environment, the user may specify configuration
+    # to place in the environment initially. Spack does not interfere
+    # with this configuration after initialization so it is handled here
+    config_basedir = fs.join_path(environment.path, 'config')
+    os.mkdir(config_basedir)
+    for key, val in config_sections.items():
+        yaml_section = syaml.dump({key: val}, default_flow_style=False)
+        yaml_file = '{0}.yaml'.format(key)
+        yaml_path = fs.join_path(config_basedir, yaml_file)
+        with open(yaml_path, 'w') as F:
+            F.write(yaml_section)
 
 
 def environment_add(args):
