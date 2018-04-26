@@ -27,8 +27,10 @@ import spack
 import llnl.util.filesystem as fs
 import spack.modules
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.schema.env
 import spack.config
+import spack.cmd.spec
 import spack.cmd.install
 import spack.cmd.uninstall
 import spack.cmd.module
@@ -75,16 +77,10 @@ def get_write_paths(env_root):
 
 
 class Environment(object):
-    def __init__(self, name):
-        self.name = name
+    def clear(self):
         self.user_specs = list()
         self.concretized_order = list()
         self.specs_by_hash = dict()
-
-        # Default config
-        self.yaml = {
-            'configs': ['<env>']
-        }
 
         # Libs in this set must always appear as the dependency traced from any
         # root of link deps
@@ -93,6 +89,16 @@ class Environment(object):
         # any root of run deps
         self.common_bins = dict()  # name -> hash
 
+    def __init__(self, name):
+        self.name = name
+        self.clear()
+
+        # Default config
+        self.yaml = {
+            'configs': ['<env>'],
+            'specs': []
+        }
+
     @property
     def path(self):
         return get_env_root(self.name)
@@ -100,15 +106,21 @@ class Environment(object):
     def repo_path(self):
         return fs.join_path(get_dotenv_dir(self.path), 'repo')
 
-    def add(self, user_spec, setup):
+    def add(self, user_spec, setup, report_existing=True):
         """Add a single user_spec (non-concretized) to the Environment"""
         query_spec = Spec(user_spec)
         existing = set(x[0] for x in self.user_specs
                        if Spec(x[0]).name == query_spec.name)
         if existing:
-            tty.die("Package {0} was already added to {1}"
-                    .format(query_spec.name, self.name))
-        self.user_specs.append((user_spec,setup))
+            if report_existing:
+                tty.die("Package {0} was already added to {1}"
+                        .format(query_spec.name, self.name))
+            else:
+                tty.msg("Package {0} was already added to {1}"
+                        .format(query_spec.name, self.name))
+        else:
+            tty.msg('Adding %s to environment %s' % (user_spec, self.name))
+            self.user_specs.append((user_spec,setup))
 
     def remove(self, query_spec):
         """Remove specs from an environment that match a query_spec"""
@@ -440,26 +452,77 @@ def environment_create(args):
     _environment_create(args.environment)
 
 
-def _environment_create(name):
+def _environment_create(name, init_config=None):
     environment = Environment(name)
+
+    user_specs = list()
+    config_sections = {}
+    if init_config:
+        for key, val in init_config.items():
+            if key == 'user_specs':
+                user_specs.extend(val)
+            else:
+                config_sections[key] = val
+
+    for user_spec in user_specs:
+        environment.add(user_spec)
+
     write(environment)
+
+    # When creating the environment, the user may specify configuration
+    # to place in the environment initially. Spack does not interfere
+    # with this configuration after initialization so it is handled here
+    config_basedir = fs.join_path(environment.path, 'config')
+    os.mkdir(config_basedir)
+    for key, val in config_sections.items():
+        yaml_section = syaml.dump({key: val}, default_flow_style=False)
+        yaml_file = '{0}.yaml'.format(key)
+        yaml_path = fs.join_path(config_basedir, yaml_file)
+        with open(yaml_path, 'w') as F:
+            F.write(yaml_section)
 
 
 def environment_add(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
-    for spec in spack.cmd.parse_specs(args.package):
-        setup = args.setup if hasattr(args, 'setup') else []
-        environment.add(spec.format(), setup)
+    setup = args.setup if hasattr(args, 'setup') else []
+    parsed_specs = spack.cmd.parse_specs(args.package)
+
+    if args.all:
+        # Don't allow command-line specs with --all
+        if len(parsed_specs) > 0:
+            tty.die('Cannot specify --all and specs too on the command line')
+
+        yaml_specs = environment.yaml['specs']
+        if len(yaml_specs) == 0:
+            tty.msg('No specs to add from env.yaml')
+
+        # Add list of specs from env.yaml file
+        for user_spec in yaml_specs:
+            environment.add(user_spec.format(), setup, report_existing=False)
+    else:
+        for spec in parsed_specs:
+            environment.add(spec.format(), setup)
+
     write(environment)
 
 
 def environment_remove(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
-    for spec in spack.cmd.parse_specs(args.package):
-        environment.remove(spec.format())
+    if args.all:
+        environment.clear()
+    else:
+        for spec in spack.cmd.parse_specs(args.package):
+            environment.remove(spec.format())
     write(environment)
+
+
+def environment_spec(args):
+    environment = read(args.environment)
+    prepare_repository(environment)
+    prepare_config_scope(environment)
+    spack.cmd.spec.spec(None, args)
 
 
 def environment_concretize(args):
@@ -659,6 +722,9 @@ def setup_parser(subparser):
         help="Generate <projectname>-setup.py for the given projects, "
         "instead of building and installing them for real")
     add_parser.add_argument(
+        '-a', '--all', action='store_true', dest='all',
+        help="Add all specs listed in env.yaml")
+    add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
         help="Spec of the package to add"
@@ -667,10 +733,17 @@ def setup_parser(subparser):
     remove_parser = sp.add_parser(
         'remove', help='Remove a spec from this environment')
     remove_parser.add_argument(
+        '-a', '--all', action='store_true', dest='all',
+        help="Remove all specs from (clear) the environment")
+    remove_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
         help="Spec of the package to remove"
     )
+
+    spec_parser = sp.add_parser(
+        'spec', help='Concretize sample spec')
+    spack.cmd.spec.add_common_arguments(spec_parser)
 
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')
@@ -740,6 +813,7 @@ def env(parser, args, **kwargs):
     action = {
         'create': environment_create,
         'add': environment_add,
+        'spec': environment_spec,
         'concretize': environment_concretize,
         'list': environment_list,
         'loads': environment_loads,
