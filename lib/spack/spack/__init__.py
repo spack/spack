@@ -25,19 +25,11 @@
 ##############################################################################
 import sys
 
-#-----------------------------------------------------------------------------
-# Initialize various data structures & objects at the core of Spack.
-#
-# TODO: move all of these imports out of __init__ to avoid importing the whole
-# TODO: world on Spack startup. There are some design changes that need to be
-# TODO: made to enable this (decoupling Spec, repo, DB, and store state).
-#
-# TODO: Spack probably needs some kind of object to manage this state so that
-# TODO: this stuff doesn't have to be at module scope.
-# -----------------------------------------------------------------------------
-# Version information
-from spack.version import Version
-spack_version = Version("0.11.2")
+#: major, minor, patch version for Spack, in a tuple
+spack_version_info = (0, 11, 2)
+
+#: String containing Spack version joined with .'s
+spack_version = '.'.join(str(v) for v in spack_version_info)
 
 
 # Set up the default packages database.
