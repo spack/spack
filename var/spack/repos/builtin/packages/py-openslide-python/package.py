@@ -33,17 +33,9 @@ class PyOpenslidePython(PythonPackage):
 
     version('1.1.1', '8c207e48069887b63ea1c7bc9eb7dfc0')
 
-    install_time_test_callbacks = ['import_module_test']
-
     import_modules = ['openslide']
 
     depends_on('openslide@3.4.0:')
     depends_on('python@2.6:2.8,3.3:')
     depends_on('py-setuptools', type='build')
     depends_on('py-pillow+jpeg+jpeg2000+tiff', type=('build', 'run'))
-
-    # def build_args(self, spec, prefix):
-    #     # FIXME: Add arguments other than --prefix
-    #     # FIXME: If not needed delete this function
-    #     args = []
-    #     return args
