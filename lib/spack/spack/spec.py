@@ -1808,9 +1808,13 @@ class Spec(object):
 
         return changed
 
-    def concretize(self):
+    def concretize(self, tests=False):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
+
+        Args:
+            tests (list or bool): list of packages that will need test
+                dependencies, or True/False for test all/none
 
         If this spec could describe more than one version, variant, or build
         of a package, this will add constraints to make it concrete.
@@ -1830,7 +1834,7 @@ class Spec(object):
         force = False
 
         while changed:
-            changes = (self.normalize(force),
+            changes = (self.normalize(force, tests),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
             changed = any(changes)
@@ -2050,7 +2054,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(
-            self, dependency, visited, spec_deps, provider_index):
+            self, dependency, visited, spec_deps, provider_index, tests):
         """Merge dependency information from a Package into this Spec.
 
         Args:
@@ -2146,10 +2150,10 @@ class Spec(object):
             self._add_dependency(spec_dependency, dependency.type)
 
         changed |= spec_dependency._normalize_helper(
-            visited, spec_deps, provider_index)
+            visited, spec_deps, provider_index, tests)
         return changed
 
-    def _normalize_helper(self, visited, spec_deps, provider_index):
+    def _normalize_helper(self, visited, spec_deps, provider_index, tests):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return False
@@ -2170,16 +2174,23 @@ class Spec(object):
             for dep_name in self.package_class.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
+
                 # If dep is a needed dependency, merge it.
-                if dep and (spack.package_testing.check(self.name) or
-                            set(dep.type) - set(['test'])):
-                    changed |= self._merge_dependency(
-                        dep, visited, spec_deps, provider_index)
+                if dep:
+                    merge = (
+                        # caller requested test dependencies
+                        tests is True or (tests and self.name in tests) or
+                        # this is not a test-only dependency
+                        dep.type - set(['test']))
+
+                    if merge:
+                        changed |= self._merge_dependency(
+                            dep, visited, spec_deps, provider_index, tests)
             any_change |= changed
 
         return any_change
 
-    def normalize(self, force=False):
+    def normalize(self, force=False, tests=False):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2220,7 +2231,8 @@ class Spec(object):
         # to package files & their 'when' specs
         visited = set()
 
-        any_change = self._normalize_helper(visited, spec_deps, provider_index)
+        any_change = self._normalize_helper(
+            visited, spec_deps, provider_index, tests)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.

@@ -50,11 +50,6 @@ def setup_parser(subparser):
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    subparser.add_argument(
-        '--run-tests', action='store_true', dest='run_tests',
-        help="run package level tests during installation"
-    )
-
 
 def bootstrap(parser, args, **kwargs):
     kwargs.update({
@@ -62,7 +57,6 @@ def bootstrap(parser, args, **kwargs):
         'keep_stage': args.keep_stage,
         'install_deps': 'dependencies',
         'make_jobs': args.jobs,
-        'run_tests': args.run_tests,
         'verbose': args.verbose,
         'dirty': args.dirty
     })

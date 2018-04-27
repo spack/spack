@@ -1380,6 +1380,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    make_jobs=None,
                    fake=False,
                    explicit=False,
+                   tests=False,
                    dirty=None,
                    **kwargs):
         """Called by commands to install a package and its dependencies.
@@ -1405,6 +1406,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             fake (bool): Don't really build; install fake stub files instead.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
+            tests (bool or list or set): False to run no tests, True to test
+                all packages, or a list of package names to run tests for some
             dirty (bool): Don't clean the build environment before installing.
             force (bool): Install again, even if already installed.
         """
@@ -1435,7 +1438,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 # is installed
                 if keep_stage is False:
                     self.stage.destroy()
-
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
@@ -1454,6 +1456,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
+                    tests=tests,
                     dirty=dirty,
                     **kwargs)
 
@@ -1470,8 +1473,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg('No binary for %s found: installing from source'
                     % self.name)
 
-        # Set run_tests flag before starting build.
-        self.run_tests = spack.package_testing.check(self.name)
+        # Set run_tests flag before starting build
+        self.run_tests = (tests is True or
+                          tests and self.name in tests)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
@@ -1555,6 +1559,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # preserve verbosity across runs
             return echo
 
+        # hook that allow tests to inspect this Package before installation
+        # see unit_test_check() docs.
+        if not self.unit_test_check():
+            return
+
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
@@ -1593,6 +1602,23 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # not created so that the next time self.stage is invoked, we
             # check the filesystem for it.
             self.stage.created = False
+
+    def unit_test_check(self):
+        """Hook for unit tests to assert things about package internals.
+
+        Unit tests can override this function to perform checks after
+        ``Package.install`` and all post-install hooks run, but before
+        the database is updated.
+
+        The overridden function may indicate that the install procedure
+        should terminate early (before updating the database) by
+        returning ``False`` (or any value such that ``bool(result)`` is
+        ``False``).
+
+        Return:
+            (bool): ``True`` to continue, ``False`` to skip ``install()``
+        """
+        return True
 
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):

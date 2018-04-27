@@ -53,10 +53,8 @@ def parser():
 
 @pytest.fixture()
 def noop_install(monkeypatch):
-
     def noop(*args, **kwargs):
-        return
-
+        pass
     monkeypatch.setattr(spack.package.PackageBase, 'do_install', noop)
 
 
@@ -77,31 +75,31 @@ def test_install_package_and_dependency(
     assert 'errors="0"' in content
 
 
-@pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
-def test_install_runtests():
-    assert not spack.package_testing._test_all
-    assert not spack.package_testing.packages_to_test
+@pytest.mark.disable_clean_stage_check
+def test_install_runtests_notests(monkeypatch, builtin_mock, install_mockery):
+    def check(pkg):
+        assert not pkg.run_tests
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
+    install('-v', 'dttop')
 
+
+@pytest.mark.disable_clean_stage_check
+def test_install_runtests_root(monkeypatch, builtin_mock, install_mockery):
+    def check(pkg):
+        assert pkg.run_tests == (pkg.name == 'dttop')
+
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
     install('--test=root', 'dttop')
-    assert not spack.package_testing._test_all
-    assert spack.package_testing.packages_to_test == set(['dttop'])
 
-    spack.package_testing.clear()
 
+@pytest.mark.disable_clean_stage_check
+def test_install_runtests_all(monkeypatch, builtin_mock, install_mockery):
+    def check(pkg):
+        assert pkg.run_tests
+
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
     install('--test=all', 'a')
-    assert spack.package_testing._test_all
-    assert not spack.package_testing.packages_to_test
-
-    spack.package_testing.clear()
-
     install('--run-tests', 'a')
-    assert spack.package_testing._test_all
-    assert not spack.package_testing.packages_to_test
-
-    spack.package_testing.clear()
-
-    assert not spack.package_testing._test_all
-    assert not spack.package_testing.packages_to_test
 
 
 def test_install_package_already_installed(
