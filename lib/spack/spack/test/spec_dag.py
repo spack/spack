@@ -98,16 +98,14 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
     mock_repo = MockPackageMultiRepo([w, x, y, z])
     try:
-        spack.package_testing.test(w.name)
         spack.repo = mock_repo
         spec = Spec('w')
-        spec.concretize()
+        spec.concretize(tests=(w.name,))
 
         assert ('x' in spec)
         assert ('z' not in spec)
     finally:
         spack.repo = saved_repo
-        spack.package_testing.clear()
 
 
 @pytest.mark.usefixtures('refresh_builtin_mock')

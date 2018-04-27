@@ -43,11 +43,6 @@ except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
-#: Needed for test dependencies
-from spack.package_prefs import PackageTesting
-package_testing = PackageTesting()
-
-
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', we import a set of things that
 # should be useful for builds.
