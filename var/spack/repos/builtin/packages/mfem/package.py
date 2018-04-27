@@ -164,7 +164,7 @@ class Mfem(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13.999', when='@:3.3.999+mpi')
-    depends_on('hypre@2.10.0:', when='@3.4:+mpi')
+    depends_on('hypre', when='@3.4:+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
