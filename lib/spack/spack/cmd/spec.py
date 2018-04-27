@@ -29,7 +29,9 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
-description = """show what would be installed, given a spec
+description = """show what would be installed, given a spec"""
+
+help = """
 
 For further documentation regarding the spec syntax see
     spack help --spec

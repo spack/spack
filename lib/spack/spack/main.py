@@ -276,8 +276,12 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # each command module implements a parser() function, to which we
         # pass its subparser for setup.
         module = spack.cmd.get_module(cmd_name)
+        try:
+            help = module.description + module.help
+        except:
+            help = module.description
         subparser = self.subparsers.add_parser(
-            cmd_name, help=module.description, description=module.description)
+            cmd_name, help=module.description, description=help)
         module.setup_parser(subparser)
         return module
 
