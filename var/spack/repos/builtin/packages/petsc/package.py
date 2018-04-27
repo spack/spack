@@ -282,7 +282,7 @@ class Petsc(Package):
         else:
             options.append('--with-zlib=0')
 
-        python('configure', '--prefix=%s' % prefix, *options)
+        which('python2')('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
@@ -322,10 +322,13 @@ class Petsc(Package):
         # configure fails if these env vars are set outside of Spack
         spack_env.unset('PETSC_DIR')
         spack_env.unset('PETSC_ARCH')
+        spack_env.unset('PYTHONPATH')
+        spack_env.unset('PYTHONHOME')
 
         # Set PETSC_DIR in the module file
         run_env.set('PETSC_DIR', self.prefix)
         run_env.unset('PETSC_ARCH')
+
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # Set up PETSC_DIR for everyone using PETSc package
