@@ -42,6 +42,8 @@ class YamlCpp(CMakePackage):
 
     depends_on('boost@:1.66.99', when='@:0.5.3')
 
+    conflicts('gcc@:4.8', when='@0.6.0:')  # requires c++11 support
+
     def cmake_args(self):
         spec = self.spec
         options = []
