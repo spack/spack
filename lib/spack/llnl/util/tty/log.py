@@ -29,6 +29,7 @@ import os
 import re
 import select
 import sys
+import time
 import traceback
 from contextlib import contextmanager
 from six import string_types
@@ -446,6 +447,8 @@ class log_output(object):
         try:
             with keyboard_input(stdin):
                 while True:
+                    do_wait = True
+
                     # Without the last parameter (timeout) select will
                     # wait until at least one of the two streams are
                     # ready. This may cause the function to hang.
@@ -454,11 +457,13 @@ class log_output(object):
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
                     if stdin in rlist:
+                        do_wait = False
                         if stdin.read(1) == 'v':
                             echo = not echo
 
                     # Handle output from the with block process.
                     if in_pipe in rlist:
+                        do_wait = False
                         # If we arrive here it means that in_pipe was
                         # ready for reading : it should never happen that
                         # line is false-ish
@@ -483,6 +488,10 @@ class log_output(object):
                             force_echo = True
                         if xoff in controls:
                             force_echo = False
+
+                    if do_wait:
+                        # Don't overload the CPU
+                        time.sleep(1)
         except BaseException:
             tty.error("Exception occurred in writer daemon!")
             traceback.print_exc()
