@@ -29,8 +29,6 @@ import inspect
 
 import llnl.util.tty as tty
 
-import spack
-
 
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
@@ -74,7 +72,8 @@ class SpackError(Exception):
             sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
-        if spack.debug:
+        import spack.config
+        if spack.config.get('config:debug'):
             if self.traceback:
                 # exception came from a build child, already got
                 # traceback in child, so print it.

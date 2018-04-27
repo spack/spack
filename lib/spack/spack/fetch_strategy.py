@@ -51,7 +51,6 @@ from six import string_types, with_metaclass
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir, mkdirp, join_path
 
-import spack
 import spack.config
 import spack.error
 import spack.util.crypto as crypto
@@ -649,13 +648,13 @@ class GitFetchStrategy(VCSFetchStrategy):
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
             with working_dir(self.stage.path):
-                if spack.debug:
+                if spack.config.get('config:debug'):
                     git('clone', self.url)
                 else:
                     git('clone', '--quiet', self.url)
 
             with working_dir(self.stage.source_path):
-                if spack.debug:
+                if spack.config.get('config:debug'):
                     git('checkout', self.commit)
                 else:
                     git('checkout', '--quiet', self.commit)
@@ -663,7 +662,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         else:
             # Can be more efficient if not checking out a specific commit.
             args = ['clone']
-            if not spack.debug:
+            if not spack.config.get('config:debug'):
                 args.append('--quiet')
 
             # If we want a particular branch ask for it.
@@ -701,7 +700,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                         # pull --tags returns a "special" error code of 1 in
                         # older versions that we have to ignore.
                         # see: https://github.com/git/git/commit/19d122b
-                        if spack.debug:
+                        if spack.config.get('config:debug'):
                             git('pull', '--tags', ignore_errors=1)
                             git('checkout', self.tag)
                         else:
@@ -711,7 +710,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         with working_dir(self.stage.source_path):
             # Init submodules if the user asked for them.
             if self.submodules:
-                if spack.debug:
+                if spack.config.get('config:debug'):
                     git('submodule', 'update', '--init', '--recursive')
                 else:
                     git('submodule', '--quiet', 'update', '--init',
@@ -723,7 +722,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
-            if spack.debug:
+            if spack.config.get('config:debug'):
                 self.git('checkout', '.')
                 self.git('clean', '-f')
             else:

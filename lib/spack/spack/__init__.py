@@ -126,7 +126,3 @@ from spack.package import \
 __all__ += [
     'install_dependency_symlinks', 'flatten_dependencies',
     'DependencyConflictError', 'InstallError', 'ExternalPackageError']
-
-# Add default values for attributes that would otherwise be modified from
-# Spack main script
-debug = False

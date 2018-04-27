@@ -110,6 +110,7 @@ configuration_paths = (
 #: the defaults scope is removed.
 config_defaults = {
     'config': {
+        'debug': False,
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,

@@ -35,7 +35,7 @@ import os
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, join_path
 
-import spack
+import spack.config
 import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
@@ -255,7 +255,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             categories['mirrored'].append(spec)
 
     except Exception as e:
-        if spack.debug:
+        if spack.config.get('config:debug'):
             sys.excepthook(*sys.exc_info())
         else:
             tty.warn(
