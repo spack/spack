@@ -48,6 +48,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, join_path, install
 
 import spack
+import spack.config
 import spack.caches
 import spack.error
 import spack.spec
@@ -835,7 +836,7 @@ class Repo(object):
         try:
             return package_class(spec)
         except Exception:
-            if spack.debug:
+            if spack.config.get('config:debug'):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
 

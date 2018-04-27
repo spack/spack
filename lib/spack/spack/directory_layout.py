@@ -31,7 +31,7 @@ import re
 
 from llnl.util.filesystem import join_path, mkdirp
 
-import spack
+import spack.config
 import spack.spec
 from spack.error import SpackError
 
@@ -227,7 +227,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             with open(path) as f:
                 spec = spack.spec.Spec.from_yaml(f)
         except Exception as e:
-            if spack.debug:
+            if spack.config.get('config:debug'):
                 raise
             raise SpecReadError(
                 'Unable to read file: %s' % path, 'Cause: ' + str(e))

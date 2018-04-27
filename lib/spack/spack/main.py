@@ -345,11 +345,11 @@ def setup_main_options(args):
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
-    spack.debug = args.debug
 
-    if spack.debug:
+    if args.debug:
         import spack.util.debug as debug
         debug.register_interrupt_handler()
+        spack.config.set('config:debug', True, scope='command_line')
 
     if args.mock:
         from spack.repository import RepoPath
@@ -476,7 +476,7 @@ def _main(command, parser, args, unknown_args):
     except SpackError as e:
         e.die()  # gracefully die on any SpackErrors
     except Exception as e:
-        if spack.debug:
+        if spack.config.get('config:debug'):
             raise
         tty.die(str(e))
     except KeyboardInterrupt:
@@ -554,7 +554,7 @@ def main(argv=None):
     try:
         parser.add_command(cmd_name)
     except ImportError:
-        if spack.debug:
+        if spack.config.get('config:debug'):
             raise
         tty.die("Unknown command: %s" % args.command[0])
 
