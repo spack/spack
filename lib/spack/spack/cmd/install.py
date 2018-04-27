@@ -77,10 +77,6 @@ def add_common_arguments(subparser):
     subparser.add_argument(
         '--fake', action='store_true',
         help="fake install for debug purposes.")
-    subparser.add_argument(
-        '-s', '--setup', dest='setup', action='append', default=[],
-        help="Generate <projectname>-setup.py for the given projects, "
-        "instead of building and installing them for real")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -122,6 +118,10 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
+    subparser.add_argument(
+        '-s', '--setup', dest='setup', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, "
+        "instead of building and installing them for real")
     subparser.add_argument(
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',

@@ -40,7 +40,6 @@ from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repository import Repo
 from spack.version import VersionList
 from contextlib import contextmanager
-
 import argparse
 try:
     from itertools import izip_longest as zip_longest
@@ -78,9 +77,9 @@ def get_write_paths(env_root):
 
 class Environment(object):
     def clear(self):
-        self.user_specs = list()
-        self.concretized_order = list()
-        self.specs_by_hash = dict()
+        self.user_specs = list()           # (user_spec, setup) tuples
+        self.concretized_order = list()    # DAG hashes.  len <= len(user_specs
+        self.specs_by_hash = dict()        # Concretized specs
 
         # Libs in this set must always appear as the dependency traced from any
         # root of link deps
@@ -120,7 +119,7 @@ class Environment(object):
                         .format(query_spec.name, self.name))
         else:
             tty.msg('Adding %s to environment %s' % (user_spec, self.name))
-            self.user_specs.append((user_spec,setup))
+            self.user_specs.append((user_spec, setup))
 
     def remove(self, query_spec):
         """Remove specs from an environment that match a query_spec"""
@@ -185,13 +184,16 @@ class Environment(object):
             if not os.path.isdir(logs):
                 raise
 
-        for concretized_hash in self.concretized_order:
+        for (user_spec, setup), concretized_hash in \
+            zip(self.user_specs, self.concretized_order):
+
             spec = self.specs_by_hash[concretized_hash]
 
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
             spack.cmd.install.update_kwargs_from_args(args, kwargs)
+            kwargs['setup'] = setup
             with pushd(self.path):
                 spec.package.do_install(**kwargs)
 
@@ -209,7 +211,7 @@ class Environment(object):
 
     def list(self, stream, **kwargs):
         """List the specs in an environment."""
-        for (user_spec,setup), concretized_hash in zip_longest(
+        for (user_spec, setup), concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
 
             stream.write('========= {0}'.format(user_spec))
@@ -241,7 +243,8 @@ class Environment(object):
         """
         new_order = list()
         new_deps = list()
-        for i, spec_hash in enumerate(self.concretized_order):
+
+        for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[spec_hash]
             if dep_name in spec:
                 if dry_run:
@@ -303,7 +306,7 @@ class Environment(object):
                     concrete_specs[s.dag_hash()] = (
                         s.to_node_dict(all_deps=True))
         format = {
-            'user_specs': [(spec,list(setup)) for spec,setup in self.user_specs],
+            'user_specs': [(spec, list(setup)) for spec, setup in self.user_specs],
             'concretized_order': concretized_order,
             'concrete_specs': concrete_specs,
         }
@@ -460,12 +463,12 @@ def _environment_create(name, init_config=None):
     if init_config:
         for key, val in init_config.items():
             if key == 'user_specs':
-                user_specs.extend(val)
+                user_specs.extend(val)   # TODO: Try append()
             else:
                 config_sections[key] = val
 
-    for user_spec in user_specs:
-        environment.add(user_spec)
+    for user_spec, setup in user_specs:
+        environment.add(user_spec, setup)
 
     write(environment)
 
@@ -494,7 +497,7 @@ def environment_add(args):
         if len(parsed_specs) > 0:
             tty.die('Cannot specify --all and specs too on the command line')
 
-        if hasattr(args, 'setup'):
+        if len(setup) > 0:
             tty.die('Cannot specify --setup on the command line with --all')
 
         yaml_specs = environment.yaml['specs']

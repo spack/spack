@@ -1467,7 +1467,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self.stage = DIYStage(os.getcwd())    # Force build in cwd
 
             # --- Generate spconfig.py
-            spconfig_fname = self.name + '-config.py'
+            spconfig_fname = self.name + '-setup.py'
             tty.msg(
                 'Generating config file {0} [{1}]'.format(
                     spconfig_fname, self.spec.cshort_spec))
@@ -1475,19 +1475,21 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Calls virtual function of subclass
             # (eg: CMakePackage, MakefilePackage, etc.)
             self.write_spconfig(spconfig_fname, dirty)
-        else:
-            tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
-            if kwargs.get('use_cache', False):
-                if self.try_install_from_binary_cache(explicit):
-                    tty.msg('Successfully installed %s from binary cache'
-                        % self.name)
-                    print_pkg(self.prefix)
-                    spack.hooks.post_install(self.spec)
-                    return
+            return	# Just have to write spconfig, nothing more to do
 
-                tty.msg('No binary for %s found: installing from source'
-                        % self.name)
+        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
+
+        if kwargs.get('use_cache', False):
+            if self.try_install_from_binary_cache(explicit):
+                tty.msg('Successfully installed %s from binary cache'
+                    % self.name)
+                print_pkg(self.prefix)
+                spack.hooks.post_install(self.spec)
+                return
+
+            tty.msg('No binary for %s found: installing from source'
+                    % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = spack.package_testing.check(self.name)
@@ -1496,6 +1498,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.make_jobs = make_jobs
 
         # Then install the package itself.
+        # NOTE: Vars & args inherited from surrounding function do_install()
         def build_process():
             """This implements the process forked for each build.
 
@@ -1577,7 +1580,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                          _hms(self._total_time)))
     
             print_pkg(self.prefix)
-        # --------------------- end of def build_process
 
             # preserve verbosity across runs
             return echo
