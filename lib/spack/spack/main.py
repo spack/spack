@@ -277,8 +277,8 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # pass its subparser for setup.
         module = spack.cmd.get_module(cmd_name)
         try:
-            help = module.description + module.help
-        except:
+            help = module.description + module.longdescription
+        except AttributeError:
             help = module.description
         subparser = self.subparsers.add_parser(
             cmd_name, help=module.description, description=help)
