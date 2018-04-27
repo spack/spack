@@ -31,6 +31,7 @@ class YamlCpp(CMakePackage):
     homepage = "https://github.com/jbeder/yaml-cpp"
     url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
 
+    version('0.6.2', '5b943e9af0060d0811148b037449ef82')
     version('0.5.3', '2bba14e6a7f12c7272f87d044e4a7211')
     version('develop', git='https://github.com/jbeder/yaml-cpp', branch='master')
 
@@ -39,7 +40,7 @@ class YamlCpp(CMakePackage):
     variant('pic',   default=True,
             description='Build with position independent code')
 
-    depends_on('boost', when='@:0.5.3')
+    depends_on('boost@:1.66.99', when='@:0.5.3')
 
     def cmake_args(self):
         spec = self.spec
