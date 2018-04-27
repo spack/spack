@@ -43,6 +43,11 @@ class YamlCpp(CMakePackage):
     depends_on('boost@:1.66.99', when='@:0.5.3')
 
     conflicts('%gcc@:4.8', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%clang@:3.3.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%clang-appel@:4.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%intel@:11.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%xl@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%xl_r@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
 
     def cmake_args(self):
         spec = self.spec
