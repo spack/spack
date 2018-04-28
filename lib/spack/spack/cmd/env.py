@@ -199,9 +199,12 @@ class Environment(object):
 
                 # Link the resulting log file into logs dir
                 logname = '%s-%s.log' % (spec.name, spec.dag_hash(7))
-                os.symlink(
-                    spec.package.build_log_path,
-                    fs.join_path(logs, logname))
+                logpath = fs.join_path(logs, logname)
+                try:
+                    os.remove(logpath)
+                except OSError:
+                    pass
+                os.symlink(spec.package.build_log_path, logpath)
 
     def uninstall(self, args):
         """Uninstall all the specs in an Environment."""

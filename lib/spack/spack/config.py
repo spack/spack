@@ -363,7 +363,7 @@ def _merge_yaml(dest, source):
         for sk, sv in iteritems(source):
             if override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
-                dest[sk] = copy.copy(sv)
+                dest[sk] = copy.deepcopy(sv)
             else:
                 # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -371,7 +371,7 @@ def _merge_yaml(dest, source):
 
     # In any other case, overwrite with a copy of the source value.
     else:
-        return copy.copy(source)
+        return copy.deepcopy(source)
 
 
 def get_config(section, scope=None):
