@@ -91,6 +91,8 @@ class Petsc(Package):
             multi=False)
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
+    variant('python3', default=False,
+        description='Enable if you are building a stack with Python3')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -114,7 +116,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-#    depends_on('python@2.6:2.8', type='build')
+    depends_on('python@2.6:2.8', type='build', when='~python3')
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
@@ -282,7 +284,8 @@ class Petsc(Package):
         else:
             options.append('--with-zlib=0')
 
-        which('python2')('configure', '--prefix=%s' % prefix, *options)
+        config_python = which('python2') if python3 else python
+        config_python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
