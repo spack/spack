@@ -70,10 +70,6 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-
     def build_args(self, spec, prefix):
         args = []
 

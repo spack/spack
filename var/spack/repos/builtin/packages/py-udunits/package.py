@@ -37,6 +37,7 @@ class PyUdunits(PythonPackage):
 
     maintainers = ['citibeth']
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-netcdf', type=('build', 'run'))
     depends_on('udunits2')
@@ -49,8 +50,9 @@ udunits2_path = %s
 udunits2_xml_path = %s
 """
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    @run_after('install')
+    def configure_template(self):
+        spec = self.spec
 
         cfg_templates = llnl.util.filesystem.find(
             spec.prefix, ['site.cfg.template'])
