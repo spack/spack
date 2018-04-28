@@ -1412,16 +1412,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
                              % self.spec.name)
+        is_setup = (self.name in setup)
+
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
         if self.spec.external:
             return self._process_external_package(explicit)
 
-        restage = kwargs.get('restage', False)
-        partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
-        if self.name not in setup:
+        if not is_setup:
+            restage = kwargs.get('restage', False)
+            partial = self.check_for_unfinished_installation(keep_prefix, restage)
+
             # Ensure package is not already installed
             layout = spack.store.layout
             with spack.store.db.prefix_read_lock(self.spec):
@@ -1461,7 +1464,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     **kwargs)
 
         this_fake = fake
-        if self.name in setup:
+        if is_setup:
             this_fake = True
             explicit = True
             self.stage = DIYStage(os.getcwd())    # Force build in cwd
@@ -1475,8 +1478,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Calls virtual function of subclass
             # (eg: CMakePackage, MakefilePackage, etc.)
             self.write_spconfig(spconfig_fname, dirty)
-
-            return	# Just have to write spconfig, nothing more to do
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1563,8 +1564,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     echo = logger.echo
                     self.log()
 
-                # Run post install hooks before build stage is removed.
-                spack.hooks.post_install(self.spec)
+                if not is_setup:
+                    # Run post install hooks before build stage is removed.
+                    spack.hooks.post_install(self.spec)
 
             # Stop timer.
             self._total_time = time.time() - start_time
@@ -1583,6 +1585,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
             # preserve verbosity across runs
             return echo
+        # ------------------------- End of build_process()
+
+        if is_setup:
+            keep_prefix = True
 
         try:
             spack.store.layout.create_install_directory(self.spec)
@@ -1590,7 +1596,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Abort install if install directory exists.
             # But do NOT remove it (you'd be overwriting someone else's stuff)
             tty.warn("Keeping existing install prefix in place.")
-            if self.name in setup:
+            if is_setup:
                 keep_prefix = True
             else:
                 raise
