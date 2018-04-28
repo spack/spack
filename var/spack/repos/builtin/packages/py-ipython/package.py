@@ -37,14 +37,17 @@ class PyIpython(PythonPackage):
     version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
 
+    variant('python3', default=False,
+        description='Enable if you are building a stack with Python3')
+
     depends_on('python@2.7:2.8,3.3:')
 
     # These dependencies breaks concretization
     # See https://github.com/spack/spack/issues/2793
     # depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")  # noqa
     # depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
-    depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'))
-    depends_on('py-pathlib2',                   type=('build', 'run'))
+    depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when='~python3')
+    depends_on('py-pathlib2',                   type=('build', 'run'), when='~python3')
 
     depends_on('py-pygments',                   type=('build', 'run'))
     depends_on('py-pickleshare',                type=('build', 'run'))
