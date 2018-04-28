@@ -328,18 +328,6 @@ def _mark_overrides(data):
         return data
 
 
-def _copy(coll):
-    """Deep copy of a syaml_dict"""
-    if isinstance(coll, list):
-        return [_copy(x) for x in coll]
-    if isinstance(coll, dict):
-        ret = syaml.syaml_dict()
-        for k, v in coll.items():
-            ret[k] = _copy(v)
-        return ret
-    return coll
-
-
 def _merge_yaml(dest, source):
     """Merges source into dest; entries in source take precedence over dest.
 
@@ -374,7 +362,7 @@ def _merge_yaml(dest, source):
         for sk, sv in iteritems(source):
             if override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
-                dest[sk] = _copy(sv)
+                dest[sk] = copy.deepcopy(sv)
             else:
                 # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -382,7 +370,7 @@ def _merge_yaml(dest, source):
 
     # In any other case, overwrite with a copy of the source value.
     else:
-        return _copy(source)
+        return copy.deepcopy(source)
 
 
 def get_config(section, scope=None):
