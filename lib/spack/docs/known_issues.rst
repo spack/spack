@@ -77,6 +77,27 @@ See https://github.com/spack/spack/issues/267 and
 https://github.com/spack/spack/issues/2546 for further details.
 
 
+----------------------------------------------------
+Software stacks involving Python3 fail to concretize
+----------------------------------------------------
+
+This can happen for two reasons, both related to the concretizer:
+
+1. A package requires ``python@2`` as a build dependency only (eg:
+   ``petsc``), and Python is not needed after the build phase.  The
+   concretizer is not able to keep a ``python@2`` build dependency in
+   the face of a ``python@3`` run dependency.
+2. A package depends on certain compatibility packages for
+   ``python@2``, but not ``python@3``.  The concretizer is not able to
+   process dependencies like ``depends_on('x', when='^python@2.6:2.8')``
+   and instead keeps them for all Python versions.
+
+The workaround for packages with this problem is to add a ``python3``
+variant to the problematic package, with the understanding that the
+user must set ``all: ['+python3']`` in ``packages.yaml`` for software
+stacks involving Python3.
+
+
 ----------------------------
 ``spack setup`` doesn't work
 ----------------------------
@@ -88,3 +109,4 @@ software outside of Spack. Unfortunately, this command no longer works.
 See https://github.com/spack/spack/issues/2597 and
 https://github.com/spack/spack/issues/2662 for details. This is expected
 to be fixed by https://github.com/spack/spack/pull/2664.
+
