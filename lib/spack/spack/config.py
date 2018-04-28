@@ -49,6 +49,7 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 """
 
+import copy
 import os
 import re
 import sys
