@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import llnl.util.filesystem
 
 import os
 
@@ -32,7 +33,7 @@ class PyUdunits(PythonPackage):
     homepage = "https://github.com/SciTools/cf_units"
     url      = "https://github.com/SciTools/cf_units/archive/v1.1.3.tar.gz"
 
-    version('1.1.3', '8f3a159f43bc407e21b85a9cae04d903')
+    version('1.1.3', '61ea2239c87b4c1d5d30147800a9e750')
 
     maintainers = ['citibeth']
 
@@ -51,7 +52,7 @@ udunits2_xml_path = %s
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)
 
-        cfg_templates = spack.llnl.utils.filesystem.find(
+        cfg_templates = llnl.util.filesystem.find(
             spec.prefix, ['site.cfg.template'])
         if len(cfg_templates) != 1:
             tty.die(
