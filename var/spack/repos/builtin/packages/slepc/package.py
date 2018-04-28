@@ -45,9 +45,11 @@ class Slepc(Package):
     version('develop', git='https://bitbucket.org/slepc/slepc.git')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
+    variant('python3', default=False,
+        description='Enable if you are building a stack with Python3')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
-    depends_on('python@2.6:2.8', type='build')
+    depends_on('python@2.6:2.8', type='build', when='~python3')
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@develop', when='@develop')
     depends_on('petsc@3.9:3.9.99', when='@3.9:3.9.99')
@@ -83,7 +85,8 @@ class Slepc(Package):
                     '--with-arpack-flags=-lparpack,-larpack'
                 ])
 
-        configure('--prefix=%s' % prefix, *options)
+        config_python = which('python2') if python3 else python
+        config_python('configure', '--prefix=%s' % prefix, *options)
 
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         if self.run_tests:
