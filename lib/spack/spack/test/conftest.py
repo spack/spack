@@ -177,23 +177,21 @@ def repo_path():
 
 
 @pytest.fixture(scope='module')
-def builtin_mock(repo_path):
-    """Uses the 'builtin.mock' repository instead of 'builtin'"""
+def mock_packages(repo_path):
+    """Use the 'builtin.mock' repository instead of 'builtin'"""
     mock_repo = copy.deepcopy(repo_path)
     spack.repo.swap(mock_repo)
-    BuiltinMock = collections.namedtuple('BuiltinMock', ['real', 'mock'])
-    # Confusing, but we swapped above
-    yield BuiltinMock(real=mock_repo, mock=spack.repo)
+    yield
     spack.repo.swap(mock_repo)
 
 
-@pytest.fixture()
-def refresh_builtin_mock(builtin_mock, repo_path):
-    """Refreshes the state of spack.repo"""
-    # Get back the real repository
+@pytest.fixture(scope='function')
+def mutable_mock_packages(mock_packages, repo_path):
+    """Function-scoped mock packages, for tests that need to modify them."""
     mock_repo = copy.deepcopy(repo_path)
     spack.repo.swap(mock_repo)
-    return builtin_mock
+    yield
+    spack.repo.swap(mock_repo)
 
 
 @pytest.fixture(scope='session')
@@ -262,7 +260,7 @@ def config(configuration_dir):
 
 
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, builtin_mock, config):
+def database(tmpdir_factory, mock_packages, config):
     """Creates a mock database with some packages installed note that
     the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -366,7 +364,7 @@ def refresh_db_on_exit(database):
 
 
 @pytest.fixture()
-def install_mockery(tmpdir, config, builtin_mock):
+def install_mockery(tmpdir, config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     layout = spack.store.layout
     extensions = spack.store.extensions

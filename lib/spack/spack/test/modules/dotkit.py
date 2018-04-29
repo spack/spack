@@ -30,7 +30,7 @@ import spack.modules.dotkit
 writer_cls = spack.modules.dotkit.DotkitModulefileWriter
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestDotkit(object):
 
     def test_dotkit(self, modulefile_content, patch_configuration):

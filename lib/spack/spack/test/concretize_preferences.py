@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
-@pytest.mark.usefixtures('concretize_scope', 'builtin_mock')
+@pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
     def test_preferred_variants(self):
         """Test preferred variants are applied correctly
@@ -77,7 +77,7 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
-    def test_preferred_compilers(self, refresh_builtin_mock):
+    def test_preferred_compilers(self, mutable_mock_packages):
         """Test preferred compilers are applied correctly
         """
         update_packages('mpileaks', 'compiler', ['clang@3.3'])

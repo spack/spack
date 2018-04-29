@@ -74,7 +74,7 @@ def test_fetch(type_of_test,
                secure,
                mock_git_repository,
                config,
-               refresh_builtin_mock,
+               mutable_mock_packages,
                git_version):
     """Tries to:
 

@@ -34,7 +34,7 @@ from spack.spec import Spec
 from spack.util.package_hash import package_content
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestPackage(object):
     def test_load_package(self):
         spack.repo.get('mpich')

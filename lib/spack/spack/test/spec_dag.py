@@ -108,7 +108,7 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
         spack.repo = saved_repo
 
 
-@pytest.mark.usefixtures('refresh_builtin_mock')
+@pytest.mark.usefixtures('mutable_mock_packages')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):

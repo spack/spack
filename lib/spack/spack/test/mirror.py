@@ -112,7 +112,7 @@ def check_mirror():
                         assert all(l in exclude for l in dcmp.left_only)
 
 
-@pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+@pytest.mark.usefixtures('config', 'mutable_mock_packages')
 class TestMirror(object):
     def test_url_mirror(self, mock_archive):
         set_up_package('trivial-install-test-package', mock_archive, 'url')

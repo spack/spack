@@ -199,7 +199,7 @@ def search_fn():
     return _Mock()
 
 
-@pytest.mark.usefixtures('builtin_mock')
+@pytest.mark.usefixtures('mock_packages')
 class TestStage(object):
 
     stage_name = 'spack-test-stage'
