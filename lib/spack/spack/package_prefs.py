@@ -27,7 +27,7 @@ from six import iteritems
 
 from llnl.util.lang import classproperty
 
-import spack
+import spack.repo
 import spack.error
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
@@ -51,7 +51,7 @@ def get_packages_config():
     # by sometihng, not just packages/names that don't exist.
     # So, this won't include, e.g., 'all'.
     virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-                if spack.repo.is_virtual(pkg_name)]
+                if spack.repo.path().is_virtual(pkg_name)]
 
     # die if there are virtuals in `packages.py`
     if virtuals:

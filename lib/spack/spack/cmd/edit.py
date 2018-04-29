@@ -29,8 +29,8 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.paths
+import spack.repo
 from spack.spec import Spec
-from spack.repository import Repo
 from spack.util.editor import editor
 
 description = "open package files in $EDITOR"
@@ -48,11 +48,11 @@ def edit_package(name, repo_path, namespace):
     """
     # Find the location of the package
     if repo_path:
-        repo = Repo(repo_path)
+        repo = spack.repo.Repo(repo_path)
     elif namespace:
-        repo = spack.repo.get_repo(namespace)
+        repo = spack.repo.path().get_repo(namespace)
     else:
-        repo = spack.repo
+        repo = spack.repo.path()
     path = repo.filename_for_package_name(name)
 
     spec = Spec(name)

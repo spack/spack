@@ -33,7 +33,6 @@ import pytest
 
 from llnl.util.filesystem import remove_linked_tree
 
-import spack
 import spack.architecture
 import spack.config
 import spack.caches
@@ -41,7 +40,7 @@ import spack.database
 import spack.directory_layout
 import spack.paths
 import spack.platforms.test
-import spack.repository
+import spack.repo
 import spack.stage
 import spack.util.ordereddict
 import spack.util.executable
@@ -173,25 +172,23 @@ spack.architecture.platform = lambda: spack.platforms.test.Test()
 @pytest.fixture(scope='session')
 def repo_path():
     """Session scoped RepoPath object pointing to the mock repository"""
-    return spack.repository.RepoPath(spack.paths.mock_packages_path)
+    return spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture(scope='module')
 def mock_packages(repo_path):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     mock_repo = copy.deepcopy(repo_path)
-    spack.repo.swap(mock_repo)
-    yield
-    spack.repo.swap(mock_repo)
+    with spack.repo.swap(mock_repo):
+        yield
 
 
 @pytest.fixture(scope='function')
 def mutable_mock_packages(mock_packages, repo_path):
     """Function-scoped mock packages, for tests that need to modify them."""
     mock_repo = copy.deepcopy(repo_path)
-    spack.repo.swap(mock_repo)
-    yield
-    spack.repo.swap(mock_repo)
+    with spack.repo.swap(mock_repo):
+        yield
 
 
 @pytest.fixture(scope='session')
@@ -221,6 +218,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     compilers_yaml = test_path.join('data', 'compilers.yaml')
     packages_yaml = test_path.join('data', 'packages.yaml')
     config_yaml = test_path.join('data', 'config.yaml')
+    repos_yaml = test_path.join('data', 'repos.yaml')
 
     # Create temporary 'site' and 'user' folders
     tmpdir.ensure('site', dir=True)
@@ -229,6 +227,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     # Copy the configurations that don't need further work
     packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
     config_yaml.copy(tmpdir.join('site', 'config.yaml'))
+    repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
 
     # Write the one that needs modifications
     content = ''.join(compilers_yaml.read()).format(linux_os)
@@ -244,8 +243,6 @@ def config(configuration_dir):
     spack.package_prefs.PackagePrefs.clear_caches()
 
     real_configuration = spack.config._configuration
-
-    print real_configuration
 
     scopes = [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))

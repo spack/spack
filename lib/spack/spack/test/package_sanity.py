@@ -27,9 +27,9 @@ import re
 
 import pytest
 
-import spack
+import spack.repo
 from spack.paths import mock_packages_path
-from spack.repository import RepoPath
+from spack.repo import RepoPath
 
 
 def check_db():
@@ -47,9 +47,8 @@ def test_get_all_packages():
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
     db = RepoPath(mock_packages_path)
-    spack.repo.swap(db)
-    check_db()
-    spack.repo.swap(db)
+    with spack.repo.swap(db):
+        check_db()
 
 
 def test_all_versions_are_lowercase():
@@ -66,7 +65,7 @@ def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
     defaults = spack.config.get('packages', scope='defaults')
     default_providers = defaults['all']['providers']
-    providers = spack.repo.provider_index.providers
+    providers = spack.repo.path().provider_index.providers
 
     for provider in providers:
         assert provider in default_providers

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
+import spack.repo
 from spack import directives
 from spack.error import SpackError
 from spack.spec import Spec
@@ -131,7 +131,7 @@ def package_hash(spec, content=None):
 def package_ast(spec):
     spec = Spec(spec)
 
-    filename = spack.repo.filename_for_package_name(spec.name)
+    filename = spack.repo.path().filename_for_package_name(spec.name)
     with open(filename) as f:
         text = f.read()
         root = ast.parse(text)

@@ -27,9 +27,9 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
 import spack.cmd
 import spack.cmd.find
+import spack.repo
 import spack.store
 from spack.directory_layout import YamlViewExtensionsLayout
 
@@ -105,7 +105,7 @@ def extensions(parser, args):
     if show_packages:
         #
         # List package names of extensions
-        extensions = spack.repo.extensions_for(spec)
+        extensions = spack.repo.path().extensions_for(spec)
         if not extensions:
             tty.msg("%s has no extensions." % spec.cshort_spec)
         else:

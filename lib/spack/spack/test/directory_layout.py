@@ -30,11 +30,10 @@ import pytest
 
 from llnl.util.filesystem import join_path
 
-import spack
 import spack.paths
+import spack.repo
 from spack.directory_layout import YamlDirectoryLayout
 from spack.directory_layout import InvalidDirectoryLayoutParametersError
-from spack.repository import RepoPath
 from spack.spec import Spec
 
 # number of packages to test (to reduce test time)
@@ -105,7 +104,7 @@ def test_read_and_write_spec(
     layout.
     """
     layout, tmpdir = layout_and_dir
-    packages = list(spack.repo.all_packages())[:max_packages]
+    packages = list(spack.repo.path().all_packages())[:max_packages]
 
     for pkg in packages:
         if pkg.name.startswith('external'):
@@ -187,7 +186,7 @@ def test_handle_unknown_package(
     or query them again if the package goes away.
     """
     layout, _ = layout_and_dir
-    mock_db = RepoPath(spack.paths.mock_packages_path)
+    mock_db = spack.repo.RepoPath(spack.paths.mock_packages_path)
 
     not_in_mock = set.difference(
         set(spack.repo.all_package_names()),
@@ -209,28 +208,25 @@ def test_handle_unknown_package(
         layout.create_install_directory(spec)
         installed_specs[spec] = layout.path_for_spec(spec)
 
-    spack.repo.swap(mock_db)
+    with spack.repo.swap(mock_db):
+        # Now check that even without the package files, we know
+        # enough to read a spec from the spec file.
+        for spec, path in installed_specs.items():
+            spec_from_file = layout.read_spec(
+                join_path(path, '.spack', 'spec.yaml'))
 
-    # Now check that even without the package files, we know
-    # enough to read a spec from the spec file.
-    for spec, path in installed_specs.items():
-        spec_from_file = layout.read_spec(
-            join_path(path, '.spack', 'spec.yaml')
-        )
-        # To satisfy these conditions, directory layouts need to
-        # read in concrete specs from their install dirs somehow.
-        assert path == layout.path_for_spec(spec_from_file)
-        assert spec == spec_from_file
-        assert spec.eq_dag(spec_from_file)
-        assert spec.dag_hash() == spec_from_file.dag_hash()
-
-    spack.repo.swap(mock_db)
+            # To satisfy these conditions, directory layouts need to
+            # read in concrete specs from their install dirs somehow.
+            assert path == layout.path_for_spec(spec_from_file)
+            assert spec == spec_from_file
+            assert spec.eq_dag(spec_from_file)
+            assert spec.dag_hash() == spec_from_file.dag_hash()
 
 
 def test_find(layout_and_dir, config, mock_packages):
     """Test that finding specs within an install layout works."""
     layout, _ = layout_and_dir
-    packages = list(spack.repo.all_packages())[:max_packages]
+    packages = list(spack.repo.path().all_packages())[:max_packages]
 
     # Create install prefixes for all packages in the list
     installed_specs = {}

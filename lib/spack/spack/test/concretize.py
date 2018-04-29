@@ -24,8 +24,9 @@
 ##############################################################################
 import pytest
 import llnl.util.lang
-import spack
+
 import spack.architecture
+import spack.repo
 
 from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
@@ -161,7 +162,7 @@ class TestConcretize(object):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo
+        repo = spack.repo.path()
         assert not any(
             s.satisfies('mpich2@:1.0') for s in repo.providers_for('mpi@2.1')
         )
@@ -181,7 +182,7 @@ class TestConcretize(object):
     def test_provides_handles_multiple_providers_of_same_vesrion(self):
         """
         """
-        providers = spack.repo.providers_for('mpi@3.0')
+        providers = spack.repo.path().providers_for('mpi@3.0')
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
@@ -216,8 +217,6 @@ class TestConcretize(object):
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
-        saved_repo = spack.repo
-
         default_dep = ('link', 'build')
 
         bazpkg = MockPackage('bazpkg', [], [])
@@ -225,18 +224,13 @@ class TestConcretize(object):
         foopkg = MockPackage('foopkg', [barpkg], [default_dep])
         mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
 
-        spack.repo = mock_repo
-
-        try:
+        with spack.repo.swap(mock_repo):
             spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
                         ' ^barpkg os=SuSE11 ^bazpkg os=be')
             spec.concretize()
 
             for s in spec.traverse(root=False):
                 assert s.architecture.target == spec.architecture.target
-
-        finally:
-            spack.repo = saved_repo
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')

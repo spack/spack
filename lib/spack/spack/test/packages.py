@@ -26,9 +26,8 @@ import pytest
 
 from llnl.util.filesystem import join_path
 
-import spack
+import spack.repo
 from spack.paths import mock_packages_path
-from spack.repository import Repo
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
 from spack.util.package_hash import package_content
@@ -44,7 +43,7 @@ class TestPackage(object):
         assert pkg.name == 'mpich'
 
     def test_package_filename(self):
-        repo = Repo(mock_packages_path)
+        repo = spack.repo.Repo(mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
         assert filename == join_path(
             mock_packages_path,
@@ -54,7 +53,7 @@ class TestPackage(object):
         )
 
     def test_nonexisting_package_filename(self):
-        repo = Repo(mock_packages_path)
+        repo = spack.repo.Repo(mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
         assert filename == join_path(
             mock_packages_path,

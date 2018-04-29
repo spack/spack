@@ -26,6 +26,7 @@
 import spack
 import pytest
 
+import spack.repo
 from spack.build_environment import get_std_cmake_args
 from spack.spec import Spec
 

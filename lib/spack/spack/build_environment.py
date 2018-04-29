@@ -587,8 +587,8 @@ def setup_package(pkg, dirty):
     for dspec in pkg.spec.traverse(order='post', root=False,
                                    deptype=('build', 'test')):
         # If a user makes their own package repo, e.g.
-        # spack.repos.mystuff.libelf.Libelf, and they inherit from
-        # an existing class like spack.repos.original.libelf.Libelf,
+        # spack.pkg.mystuff.libelf.Libelf, and they inherit from
+        # an existing class like spack.pkg.original.libelf.Libelf,
         # then set the module variables for both classes so the
         # parent class can still use them if it gets called.
         spkg = dspec.package

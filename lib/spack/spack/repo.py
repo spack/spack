@@ -33,6 +33,8 @@ import imp
 import re
 import traceback
 import json
+from contextlib import contextmanager
+from six import string_types
 
 try:
     from collections.abc import Mapping
@@ -222,8 +224,7 @@ class TagIndex(Mapping):
             pkg_name (str): name of the package to be removed from the index
 
         """
-
-        package = spack.repo.get(pkg_name)
+        package = path().get(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():
@@ -345,13 +346,19 @@ def make_tag_index_cache(packages_path, namespace):
 class RepoPath(object):
     """A RepoPath is a list of repos that function as one.
 
-       It functions exactly like a Repo, but it operates on the
-       combined results of the Repos in its list instead of on a
-       single package repository.
+    It functions exactly like a Repo, but it operates on the combined
+    results of the Repos in its list instead of on a single package
+    repository.
+
+    Args:
+        repos (list): list Repo objects or paths to put in this RepoPath
+
+    Optional Args:
+        repo_namespace (str): super-namespace for all packages in this
+            RepoPath (used when importing repos as modules)
     """
 
-    def __init__(self, *repo_dirs, **kwargs):
-        # super-namespace for all packages in the RepoPath
+    def __init__(self, *repos, **kwargs):
         self.super_namespace = kwargs.get('namespace', repo_namespace)
 
         self.repos = []
@@ -361,41 +368,17 @@ class RepoPath(object):
         self._all_package_names = None
         self._provider_index = None
 
-        # If repo_dirs is empty, just use the configuration
-        if not repo_dirs:
-            import spack.config
-            repo_dirs = spack.config.get('repos')
-            if not repo_dirs:
-                raise NoRepoConfiguredError(
-                    "Spack configuration contains no package repositories.")
-
         # Add each repo to this path.
-        for root in repo_dirs:
+        for repo in repos:
             try:
-                repo = Repo(root, self.super_namespace)
+                if isinstance(repo, string_types):
+                    repo = Repo(repo, self.super_namespace)
                 self.put_last(repo)
             except RepoError as e:
-                tty.warn("Failed to initialize repository at '%s'." % root,
+                tty.warn("Failed to initialize repository: '%s'." % repo,
                          e.message,
                          "To remove the bad repository, run this command:",
-                         "    spack repo rm %s" % root)
-
-    def swap(self, other):
-        """Convenience function to make swapping repositories easier.
-
-        This is currently used by mock tests.
-        TODO: Maybe there is a cleaner way.
-
-        """
-        attrs = ['repos',
-                 'by_namespace',
-                 'by_path',
-                 '_all_package_names',
-                 '_provider_index']
-        for attr in attrs:
-            tmp = getattr(self, attr)
-            setattr(self, attr, getattr(other, attr))
-            setattr(other, attr, tmp)
+                         "    spack repo rm %s" % repo)
 
     def _add(self, repo):
         """Add a repository to the namespace and path indexes.
@@ -1094,6 +1077,70 @@ def create_repo(root, namespace=None):
             shutil.rmtree(root, ignore_errors=True)
 
     return full_path, namespace
+
+
+#: Singleton repo path instance
+_path = None
+
+
+def set_path(repo):
+    """Set the path() singleton to a specific value.
+
+    Overwrite _path and register it as an importer in sys.meta_path if
+    it is a ``Repo`` or ``RepoPath``.
+    """
+    global _path
+    _path = repo
+
+    # make the new repo_path an importer if needed
+    append = isinstance(repo, (Repo, RepoPath))
+    if append:
+        sys.meta_path.append(_path)
+    return append
+
+
+def path():
+    """Get the singleton RepoPath instance for Spack.
+
+    Create a RepoPath, add it to sys.meta_path, and return it.
+
+    TODO: consider not making this a singleton.
+    """
+    if _path is None:
+        repo_dirs = spack.config.get('repos')
+        if not repo_dirs:
+            raise NoRepoConfiguredError(
+                "Spack configuration contains no package repositories.")
+        set_path(RepoPath(*repo_dirs))
+
+    return _path
+
+
+def get(spec):
+    """Convenience wrapper around ``spack.repo.get()``."""
+    return path().get(spec)
+
+
+def all_package_names():
+    """Convenience wrapper around ``spack.repo.all_package_names()``."""
+    return path().all_package_names()
+
+
+@contextmanager
+def swap(repo_path):
+    """Temporarily use another RepoPath."""
+    global _path
+
+    # swap out _path for repo_path
+    saved = _path
+    remove_from_meta = set_path(repo_path)
+
+    yield
+
+    # restore _path and sys.meta_path
+    if remove_from_meta:
+        sys.meta_path.remove(repo_path)
+    _path = saved
 
 
 class RepoError(spack.error.SpackError):

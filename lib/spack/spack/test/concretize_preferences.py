@@ -25,6 +25,7 @@
 import pytest
 
 import spack.package_prefs
+import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope
 from spack.spec import Spec
@@ -41,7 +42,7 @@ def concretize_scope(config, tmpdir):
 
     config.pop_scope()
     spack.package_prefs.PackagePrefs.clear_caches()
-    spack.repo._provider_index = None
+    spack.repo.path()._provider_index = None
 
 
 def concretize(abstract_spec):

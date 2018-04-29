@@ -23,7 +23,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 
 #: major, minor, patch version for Spack, in a tuple
 spack_version_info = (0, 11, 2)
@@ -32,29 +31,9 @@ spack_version_info = (0, 11, 2)
 spack_version = '.'.join(str(v) for v in spack_version_info)
 
 
-# Set up the default packages database.
-import spack.error
-try:
-    import spack.repository
-    repo = spack.repository.RepoPath()
-    sys.meta_path.append(repo)
-except spack.error.SpackError as e:
-    import llnl.util.tty as tty
-    tty.die('while initializing Spack RepoPath:', e.message)
-
-
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', we import a set of things that
 # should be useful for builds.
-#
-# Spack internal code should call 'import spack' and accesses other
-# variables (spack.repo, paths, etc.) directly.
-#
-# TODO: maybe this should be separated out to build_environment.py?
-# TODO: it's not clear where all the stuff that needs to be included in
-#       packages should live.  This file is overloaded for spack core vs.
-#       for packages.
-#
 #-----------------------------------------------------------------------------
 __all__ = []
 

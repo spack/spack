@@ -29,13 +29,15 @@ import string
 import sys
 
 import llnl.util.tty as tty
-import spack
+from llnl.util.filesystem import set_executable
+
+import spack.repo
 import spack.store
 import spack.cmd
 import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
-from llnl.util.filesystem import set_executable
-from spack import which
+from spack.util.executable import which
+
 from spack.stage import DIYStage
 
 description = "create a configuration script and module, but don't build"
@@ -135,7 +137,7 @@ def setup(self, args):
     # Take a write lock before checking for existence.
     with spack.store.db.write_transaction():
         spec = specs[0]
-        if not spack.repo.exists(spec.name):
+        if not spack.repo.path().exists(spec.name):
             tty.die("No package for '{0}' was found.".format(spec.name),
                     "  Use `spack create` to create a new package")
         if not spec.versions.concrete:

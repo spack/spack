@@ -25,7 +25,7 @@
 import os
 import pytest
 
-import spack
+import spack.repo
 import spack.store
 from spack.spec import Spec
 

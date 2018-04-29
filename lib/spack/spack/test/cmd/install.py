@@ -165,8 +165,8 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
-                                        config, install_mockery):
+def test_install_output_on_python_error(
+        mock_packages, mock_archive, mock_fetch, config, install_mockery):
     out = install('failing-build', fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.name == 'InstallError'
