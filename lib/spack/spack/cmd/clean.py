@@ -26,9 +26,10 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack
 import spack.caches
 import spack.cmd
+import spack.repo
+import spack.stage
 
 description = "remove temporary build files and/or downloaded archives"
 section = "build"

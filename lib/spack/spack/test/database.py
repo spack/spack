@@ -33,7 +33,7 @@ import pytest
 
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.repo
 import spack.store
 from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
@@ -432,17 +432,12 @@ def test_110_no_write_with_exception_on_install(database):
 def test_115_reindex_with_packages_not_in_repo(database, refresh_db_on_exit):
     install_db = database.mock.db
 
-    saved_repo = spack.repo
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    mock_repo = MockPackageMultiRepo([])
-    try:
-        spack.repo = mock_repo
+    with spack.repo.swap(MockPackageMultiRepo([])):
         spack.store.db.reindex(spack.store.layout)
         _check_db_sanity(install_db)
-    finally:
-        spack.repo = saved_repo
 
 
 def test_external_entries_in_db(database):

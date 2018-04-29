@@ -39,7 +39,7 @@ Tests assume that mock packages provide this::
 """
 from six import StringIO
 
-import spack
+import spack.repo
 from spack.provider_index import ProviderIndex
 from spack.spec import Spec
 

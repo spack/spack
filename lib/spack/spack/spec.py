@@ -114,12 +114,11 @@ from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
-import spack
-
 import spack.architecture
 import spack.compilers as compilers
 import spack.error
 import spack.parse
+import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1229,7 +1228,7 @@ class Spec(object):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.get_pkg_class(self.fullname)
+        return spack.repo.path().get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -1245,7 +1244,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return (name is not None) and (not spack.repo.exists(name))
+        return (name is not None) and (not spack.repo.path().exists(name))
 
     @property
     def concrete(self):
@@ -1850,7 +1849,7 @@ class Spec(object):
             # we can do it as late as possible to allow as much
             # compatibility across repositories as possible.
             if s.namespace is None:
-                s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+                s.namespace = spack.repo.path().repo_for_pkg(s.name).namespace
 
             if s.concrete:
                 continue
@@ -2456,7 +2455,7 @@ class Spec(object):
         if not self.virtual and other.virtual:
             try:
                 pkg = spack.repo.get(self.fullname)
-            except spack.repository.UnknownEntityError:
+            except spack.repo.UnknownEntityError:
                 # If we can't get package info on this spec, don't treat
                 # it as a provider of this vdep.
                 return False

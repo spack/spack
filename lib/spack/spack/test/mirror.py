@@ -28,7 +28,7 @@ import pytest
 
 from llnl.util.filesystem import join_path
 
-import spack
+import spack.repo
 import spack.mirror
 import spack.util.executable
 from spack.spec import Spec

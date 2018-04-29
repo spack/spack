@@ -24,7 +24,7 @@
 ##############################################################################
 import pytest
 
-import spack.repository
+import spack.repo
 import spack.paths
 
 
@@ -33,7 +33,7 @@ import spack.paths
 # given RepoPath
 @pytest.fixture()
 def repo_for_test():
-    return spack.repository.RepoPath(spack.paths.mock_packages_path)
+    return spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture()
@@ -47,7 +47,7 @@ def extra_repo(tmpdir_factory):
 repo:
   namespace: extra_test_repo
 """)
-    return spack.repository.Repo(str(repo_dir))
+    return spack.repo.Repo(str(repo_dir))
 
 
 def test_repo_getpkg(repo_for_test):
@@ -68,10 +68,10 @@ def test_repo_multi_getpkgclass(repo_for_test, extra_repo):
 
 
 def test_repo_pkg_with_unknown_namespace(repo_for_test):
-    with pytest.raises(spack.repository.UnknownNamespaceError):
+    with pytest.raises(spack.repo.UnknownNamespaceError):
         repo_for_test.get('unknown.a')
 
 
 def test_repo_unknown_pkg(repo_for_test):
-    with pytest.raises(spack.repository.UnknownPackageError):
+    with pytest.raises(spack.repo.UnknownPackageError):
         repo_for_test.get('builtin.mock.nonexistentpackage')

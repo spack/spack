@@ -43,6 +43,8 @@ from llnl.util.tty.log import log_output
 import spack
 import spack.config
 import spack.paths
+import spack.repo
+import spack.util.debug
 from spack.error import SpackError
 
 
@@ -347,13 +349,12 @@ def setup_main_options(args):
     tty.set_stacktrace(args.stacktrace)
 
     if args.debug:
-        import spack.util.debug as debug
-        debug.register_interrupt_handler()
+        spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
 
     if args.mock:
-        from spack.repository import RepoPath
-        spack.repo.swap(RepoPath(spack.paths.mock_packages_path))
+        rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
+        spack.repo.set_path(rp)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

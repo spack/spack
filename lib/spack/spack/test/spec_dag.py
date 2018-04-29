@@ -86,8 +86,6 @@ packages in the following spec DAG::
 w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 """
-    saved_repo = spack.repo
-
     default = ('build', 'link')
     test_only = ('test',)
 
@@ -97,15 +95,12 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     w = MockPackage('w', [x, y], [test_only, default])
 
     mock_repo = MockPackageMultiRepo([w, x, y, z])
-    try:
-        spack.repo = mock_repo
+    with spack.repo.swap(mock_repo):
         spec = Spec('w')
         spec.concretize(tests=(w.name,))
 
         assert ('x' in spec)
         assert ('z' not in spec)
-    finally:
-        spack.repo = saved_repo
 
 
 @pytest.mark.usefixtures('mutable_mock_packages')

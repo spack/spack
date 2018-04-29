@@ -31,6 +31,7 @@ from llnl.util.filesystem import working_dir
 from llnl.util.tty.colify import colify_table
 
 import spack.paths
+import spack.repo
 from spack.util.executable import which
 from spack.cmd import spack_is_git_repo
 

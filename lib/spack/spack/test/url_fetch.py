@@ -27,7 +27,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir, is_exe
 
-import spack
+import spack.repo
 import spack.config
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec

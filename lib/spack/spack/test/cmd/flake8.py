@@ -31,7 +31,7 @@ from llnl.util.filesystem import FileFilter
 
 import spack.paths
 from spack.cmd.flake8 import flake8, setup_parser, changed_files
-from spack.repository import Repo
+from spack.repo import Repo
 from spack.util.executable import which
 
 

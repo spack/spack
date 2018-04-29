@@ -26,7 +26,7 @@
 import os
 import platform
 import re
-import spack
+import spack.repo
 import spack.cmd
 from spack.util.executable import Executable, ProcessError
 from llnl.util.filesystem import filter_file

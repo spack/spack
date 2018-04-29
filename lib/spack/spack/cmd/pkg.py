@@ -25,13 +25,14 @@
 from __future__ import print_function
 
 import os
-
 import argparse
+
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
 
 import spack.paths
+import spack.repo
 from spack.util.executable import which
 from spack.cmd import spack_is_git_repo
 
@@ -90,7 +91,7 @@ def list_packages(rev):
 
 def pkg_add(args):
     for pkg_name in args.packages:
-        filename = spack.repo.filename_for_package_name(pkg_name)
+        filename = spack.repo.path().filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)

@@ -28,7 +28,7 @@ import pytest
 
 from llnl.util.filesystem import join_path, touch, working_dir
 
-import spack
+import spack.repo
 import spack.config
 from spack.spec import Spec
 from spack.version import ver

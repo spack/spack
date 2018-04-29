@@ -29,11 +29,11 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
 import spack.cmd
 import spack.concretize
 import spack.config
 import spack.mirror
+import spack.repo
 import spack.cmd.common.arguments as arguments
 from spack.spec import Spec
 from spack.error import SpackError

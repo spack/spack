@@ -29,7 +29,7 @@ import argparse
 import spack
 import spack.cmd
 import spack.store
-import spack.repository
+import spack.repo
 
 from llnl.util import tty
 
@@ -149,7 +149,7 @@ def do_uninstall(specs, force):
         try:
             # should work if package is known to spack
             packages.append(item.package)
-        except spack.repository.UnknownEntityError:
+        except spack.repo.UnknownEntityError:
             # The package.py file has gone away -- but still
             # want to uninstall.
             spack.Package.uninstall_by_spec(item, force=True)

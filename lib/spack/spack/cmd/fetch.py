@@ -26,8 +26,9 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.config
+import spack.repo
 import spack.cmd.common.arguments as arguments
 
 description = "fetch archives for packages"

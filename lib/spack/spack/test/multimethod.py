@@ -23,8 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Test for multi_method dispatch."""
-import spack
 import pytest
+
+import spack.repo
 from spack.multimethod import NoSuchMethodError
 
 

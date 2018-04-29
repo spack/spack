@@ -53,7 +53,6 @@ from six import with_metaclass
 
 import llnl.util.tty as tty
 
-import spack
 import spack.config
 import spack.paths
 import spack.store
@@ -64,7 +63,7 @@ import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
 import spack.mixins
-import spack.repository
+import spack.repo
 import spack.url
 import spack.util.web
 import spack.multimethod
@@ -662,9 +661,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             visited = set([self.name])
 
         for i, name in enumerate(self.dependencies):
-            if spack.repo.is_virtual(name):
+            if spack.repo.path().is_virtual(name):
                 if expand_virtuals:
-                    providers = spack.repo.providers_for(name)
+                    providers = spack.repo.path().providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
                     visited.add(name)
@@ -1934,7 +1933,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Try to get the pcakage for the spec
         try:
             pkg = spec.package
-        except spack.repository.UnknownEntityError:
+        except spack.repo.UnknownEntityError:
             pkg = None
 
         # Pre-uninstall hook runs first.
@@ -2313,25 +2312,25 @@ def dump_packages(spec, path):
 
             # Create a source repo and get the pkg directory out of it.
             try:
-                source_repo = spack.repository.Repo(source_repo_root)
+                source_repo = spack.repo.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except spack.repository.RepoError:
+            except spack.repo.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
 
         # Create a destination repository
         dest_repo_root = join_path(path, node.namespace)
         if not os.path.exists(dest_repo_root):
-            spack.repository.create_repo(dest_repo_root)
-        repo = spack.repository.Repo(dest_repo_root)
+            spack.repo.create_repo(dest_repo_root)
+        repo = spack.repo.Repo(dest_repo_root)
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
         if node is not spec:
             install_tree(source_pkg_dir, dest_pkg_dir)
         else:
-            spack.repo.dump_provenance(node, dest_pkg_dir)
+            spack.repo.path().dump_provenance(node, dest_pkg_dir)
 
 
 def print_pkg(message):

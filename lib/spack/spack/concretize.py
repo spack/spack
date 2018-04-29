@@ -39,7 +39,7 @@ from functools_backport import reverse_order
 from contextlib import contextmanager
 from six import iteritems
 
-import spack
+import spack.repo
 import spack.abi
 import spack.spec
 import spack.compilers
@@ -102,7 +102,7 @@ class Concretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.providers_for(spec)
+            candidates = spack.repo.path().providers_for(spec)
             if not candidates:
                 raise spack.spec.UnsatisfiableProviderSpecError(
                     candidates[0], spec)

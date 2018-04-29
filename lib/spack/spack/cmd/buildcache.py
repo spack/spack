@@ -26,8 +26,10 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.repo
+import spack.store
+import spack.spec
 import spack.binary_distribution as bindist
 
 description = "create, download and install binary packages"

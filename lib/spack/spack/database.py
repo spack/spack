@@ -55,7 +55,7 @@ from llnl.util.filesystem import join_path, mkdirp
 from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
 
 import spack.store
-import spack.repository
+import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
@@ -903,7 +903,7 @@ class Database(object):
                 if explicit is not any and rec.explicit != explicit:
                     continue
 
-                if known is not any and spack.repo.exists(
+                if known is not any and spack.repo.path().exists(
                         rec.spec.name) != known:
                     continue
 
