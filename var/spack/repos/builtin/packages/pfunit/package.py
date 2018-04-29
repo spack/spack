@@ -32,11 +32,13 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/pfunit/Source/pFUnit.tar.gz"
-    giturl   = "https://git.code.sf.net/p/pfunit/code"
+    url      = "https://github.com/OpenFAST/pfunit"
+    giturl   = "https://github.com/OpenFAST/pfunit.git"
 
     maintainers = ['citibeth']
 
+    # See here for evidence that this commit hash = release 3.2.9
+    # https://github.com/OpenFAST/pfunit/commit/3c1d47f594a7e756f21be59074cb730d1a1e9a79
     version('3.2.9', git=giturl,
             commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79')
     version('develop', git=giturl, branch='master')
@@ -47,8 +49,7 @@ class Pfunit(CMakePackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('py-unittest2', type=('run'))
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
 
     def patch(self):
