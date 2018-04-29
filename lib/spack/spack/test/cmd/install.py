@@ -59,7 +59,7 @@ def noop_install(monkeypatch):
 
 
 def test_install_package_and_dependency(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
 
     with tmpdir.as_cwd():
@@ -76,7 +76,7 @@ def test_install_package_and_dependency(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_notests(monkeypatch, builtin_mock, install_mockery):
+def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert not pkg.run_tests
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
@@ -84,7 +84,7 @@ def test_install_runtests_notests(monkeypatch, builtin_mock, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_root(monkeypatch, builtin_mock, install_mockery):
+def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert pkg.run_tests == (pkg.name == 'dttop')
 
@@ -93,7 +93,7 @@ def test_install_runtests_root(monkeypatch, builtin_mock, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_all(monkeypatch, builtin_mock, install_mockery):
+def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert pkg.run_tests
 
@@ -103,7 +103,7 @@ def test_install_runtests_all(monkeypatch, builtin_mock, install_mockery):
 
 
 def test_install_package_already_installed(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
 
     with tmpdir.as_cwd():
@@ -153,7 +153,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
                                        config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
@@ -165,7 +165,7 @@ def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
+def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
                                         config, install_mockery):
     out = install('failing-build', fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
@@ -175,7 +175,7 @@ def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
 
 @pytest.mark.disable_clean_stage_check
 def test_install_with_source(
-        builtin_mock, mock_archive, mock_fetch, config, install_mockery):
+        mock_packages, mock_archive, mock_fetch, config, install_mockery):
     """Verify that source has been copied into place."""
     install('--source', '--keep-stage', 'trivial-install-test-package')
     spec = Spec('trivial-install-test-package').concretized()
@@ -186,7 +186,7 @@ def test_install_with_source(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
+def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
                            config, install_mockery, capfd):
     """Make sure --show-log-on-error works."""
     with capfd.disabled():
@@ -202,7 +202,7 @@ def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
 
 
 def test_install_overwrite(
-        builtin_mock, mock_archive, mock_fetch, config, install_mockery
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
     # It's not possible to overwrite something that is not yet installed
     with pytest.raises(AssertionError):
@@ -237,7 +237,7 @@ def test_install_overwrite(
 
 
 @pytest.mark.usefixtures(
-    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+    'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
 )
 def test_install_conflicts(conflict_spec):
     # Make sure that spec with conflicts raises a SpackError
@@ -246,7 +246,7 @@ def test_install_conflicts(conflict_spec):
 
 
 @pytest.mark.usefixtures(
-    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+    'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
@@ -284,7 +284,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures(
-    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+    'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
 )
 @pytest.mark.parametrize('exc_typename,msg', [
     ('RuntimeError', 'something weird happened'),
@@ -317,7 +317,7 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures(
-    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+    'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
 )
 @pytest.mark.parametrize('exc_typename,msg', [
     ('RuntimeError', 'something weird happened'),
@@ -379,10 +379,8 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
     assert install.returncode == 0
 
 
-@pytest.mark.usefixtures(
-    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
-)
-def test_extra_files_are_archived():
+def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
+                                  config, install_mockery):
     s = Spec('archive-files')
     s.concretize()
 

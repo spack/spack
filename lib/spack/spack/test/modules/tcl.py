@@ -36,7 +36,7 @@ libdwarf_spec_string = 'libdwarf arch=x64-linux'
 writer_cls = spack.modules.tcl.TclModulefileWriter
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestTcl(object):
 
     def test_simple_case(self, modulefile_content, patch_configuration):

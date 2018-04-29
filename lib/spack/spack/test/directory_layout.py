@@ -96,7 +96,7 @@ def test_yaml_directory_layout_parameters(
 
 
 def test_read_and_write_spec(
-        layout_and_dir, config, builtin_mock
+        layout_and_dir, config, mock_packages
 ):
     """This goes through each package in spack and creates a directory for
     it.  It then ensures that the spec for the directory's
@@ -174,7 +174,7 @@ def test_read_and_write_spec(
 
 
 def test_handle_unknown_package(
-        layout_and_dir, config, builtin_mock
+        layout_and_dir, config, mock_packages
 ):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
@@ -227,7 +227,7 @@ def test_handle_unknown_package(
     spack.repo.swap(mock_db)
 
 
-def test_find(layout_and_dir, config, builtin_mock):
+def test_find(layout_and_dir, config, mock_packages):
     """Test that finding specs within an install layout works."""
     layout, _ = layout_and_dir
     packages = list(spack.repo.all_packages())[:max_packages]

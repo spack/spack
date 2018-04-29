@@ -50,7 +50,7 @@ def mock_calls_for_clean(monkeypatch):
 
 
 @pytest.mark.usefixtures(
-    'builtin_mock', 'config', 'mock_calls_for_clean'
+    'mock_packages', 'config', 'mock_calls_for_clean'
 )
 @pytest.mark.parametrize('command_line,counters', [
     ('mpileaks', [1, 0, 0, 0]),

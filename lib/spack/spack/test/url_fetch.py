@@ -46,7 +46,7 @@ def test_fetch(
         secure,
         checksum_type,
         config,
-        refresh_builtin_mock
+        mutable_mock_packages
 ):
     """Fetch an archive and make sure we can checksum it."""
     mock_archive.url
@@ -81,7 +81,7 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
-def test_from_list_url(builtin_mock, config):
+def test_from_list_url(mock_packages, config):
     pkg = spack.repo.get('url-list-test')
     for ver_str in ['0.0.0', '1.0.0', '2.0.0',
                     '3.0', '4.5', '2.0.0b2',

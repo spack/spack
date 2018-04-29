@@ -52,7 +52,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock',)
+@pytest.mark.usefixtures('config', 'mock_packages',)
 class TestLmod(object):
 
     def test_file_layout(

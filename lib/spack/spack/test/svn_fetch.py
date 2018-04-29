@@ -46,7 +46,7 @@ def test_fetch(
         secure,
         mock_svn_repository,
         config,
-        refresh_builtin_mock
+        mutable_mock_packages
 ):
     """Tries to:
 

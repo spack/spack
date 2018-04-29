@@ -97,7 +97,7 @@ def spec(request):
     return request.param
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -255,7 +255,7 @@ class TestConcretize(object):
         Spec('hypre').concretize()
 
     def test_concretize_two_virtuals_with_one_bound(
-            self, refresh_builtin_mock
+            self, mutable_mock_packages
     ):
         """Test a package with multiple virtual dependencies and one preset."""
         Spec('hypre ^openblas').concretize()
