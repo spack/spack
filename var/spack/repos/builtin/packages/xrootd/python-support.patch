@@ -1,0 +1,30 @@
+diff -Naur xrootd-4.8.0/bindings/python/setup.py.in xrootd-4.8.0/bindings/python/setup.py.in
+--- xrootd-4.8.0/bindings/python/setup.py.in	2017-12-13 11:28:52.000000000 -0600
++++ xrootd-4.8.0/bindings/python/setup.py.in	2017-12-21 17:47:51.378701139 -0600
+@@ -16,6 +16,13 @@
+ py_cflags = cfg_vars["PY_CFLAGS"]
+ cfg_vars["PY_CFLAGS"] = " ".join( flag for flag in py_cflags.split() if flag not in ['-Wstrict-prototypes' ${CLANG_PROHIBITED} ] )
+ 
++ccl=cfg_vars["CC"].split()
++ccl[0]="${CMAKE_C_COMPILER}"
++cfg_vars["CC"] = " ".join(ccl)
++cxxl=cfg_vars["CXX"].split()
++cxxl[0]="${CMAKE_CXX_COMPILER}"
++cfg_vars["CXX"] = " ".join(cxxl)
++cfg_vars["PY_CXXFLAGS"] = "${CMAKE_CXX_FLAGS}"
+ 
+ sources = list()
+ depends = list()
+diff -Naur xrootd-4.8.0/cmake/XRootDFindLibs.cmake xrootd-4.8.0/cmake/XRootDFindLibs.cmake
+--- xrootd-4.8.0/cmake/XRootDFindLibs.cmake	2017-12-13 11:28:52.000000000 -0600
++++ xrootd-4.8.0/cmake/XRootDFindLibs.cmake	2017-12-21 17:47:51.379701131 -0600
+@@ -85,8 +85,8 @@
+ endif()
+ 
+ if( ENABLE_PYTHON AND (Linux OR APPLE) )
+-  find_package( PythonLibs ${XRD_PYTHON_REQ_VERSION} )
+   find_package( PythonInterp ${XRD_PYTHON_REQ_VERSION} )
++  find_package( PythonLibs ${XRD_PYTHON_REQ_VERSION} )
+   if( PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND )
+     set( BUILD_PYTHON TRUE )
+     set( PYTHON_FOUND TRUE )
