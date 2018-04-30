@@ -28,10 +28,10 @@ import os
 import re
 
 import llnl.util.tty as tty
-import spack
+from llnl.util.filesystem import mkdirp
+
 import spack.cmd
 import spack.util.web
-from llnl.util.filesystem import mkdirp
 import spack.repo
 from spack.spec import Spec
 from spack.util.executable import which, ProcessError

@@ -50,7 +50,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install
 
-import spack
 import spack.config
 import spack.caches
 import spack.error

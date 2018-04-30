@@ -25,7 +25,6 @@
 import argparse
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
 import spack.store
 from spack.directory_layout import YamlViewExtensionsLayout
