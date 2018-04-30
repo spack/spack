@@ -36,7 +36,7 @@ spack_filter = spack.main.SpackCommand('filter')
     ([], ['boost', 'mpileaks'], ['boost', 'mpileaks']),
     (['--installed'],
      ['boost', 'mpileaks^mpich', 'libelf'],
-     ['mpileaks^mpich', 'libelf']),
+     ['mpileaks ^mpich', 'libelf']),
     (['--not-installed'], ['boost', 'mpileaks^mpich', 'libelf'], ['boost']),
     # The tests below appear to fail for reasons related to mocking
     pytest.param(
