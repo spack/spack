@@ -134,7 +134,7 @@ class Mvapich2(AutotoolsPackage):
 
         opts = []
         if len(other_pms) > 0:
-          opts = ['--with-pm=%s' % ':'.join(other_pms)]
+            opts = ['--with-pm=%s' % ':'.join(other_pms)]
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
@@ -176,7 +176,7 @@ class Mvapich2(AutotoolsPackage):
 
         opts = []
         if len(fs) > 0:
-          opts.append('--with-file-system=%s' % '+'.join(fs))
+            opts.append('--with-file-system=%s' % '+'.join(fs))
 
         return opts
 
