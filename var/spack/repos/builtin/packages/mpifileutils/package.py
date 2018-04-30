@@ -47,8 +47,8 @@ class Mpifileutils(AutotoolsPackage):
     depends_on('lwgrp')
 
     # need precise version of dtcmp, since DTCMP_Segmented_exscan added
-    # in v1.0.2 but renamed in v1.1.0 and later
-    depends_on('dtcmp@1.0.2:1.0.3')
+    # in v1.0.3 but renamed in v1.1.0 and later
+    depends_on('dtcmp@1.0.3')
 
     depends_on('libarchive')
 
