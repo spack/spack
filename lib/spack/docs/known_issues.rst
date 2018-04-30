@@ -104,3 +104,40 @@ is as follows:
 2. Install the downloaded version manually.
 3. Add intel-mkl as external package. By default the path is
    ``/opt/intel``.
+
+MKL can not be installed as regular user – administrator privileges are
+required.
+
+Moreover, the user running the MKL GUI installer is assumed to either
+(a) be an administrator (able to sudo), or (b) has set a password for root
+on the local machine (which is not a given on Mac).
+
+If neither is the case, choose one of the following:
+
+* Log in as administrator, then run the m_mkl*.app normally,
+or
+
+* Run the following shell command directly:
+
+.. code-block:: console
+
+   sudo /Volumes/m_mkl_2018.1.126/m_mkl_2018.1.126.app/Contents/MacOS/install.sh
+
+
+(Adapt the version numbers as appropriate.)
+
+Here's the evidence: Starting the GUI installer as regular user brings up the following:
+
+
+![Install GUI]
+(https://user-images.githubusercontent.com/31289496/37559408-a68510a8-29f3-11e8-8d56-72cb1cf0b746.png)
+
+Observe how there is no means to supply an admin user name as would normally be done if the system-native elevation dialog were used – sigh. Of lesser importance is the following, though also a bit of an eye-roller:
+
+.. code-block:: console
+
+   $ ./install.sh --cli-mode
+
+   Graphical user interface must be enabled to run this program.
+
+   Quitting!
