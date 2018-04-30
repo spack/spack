@@ -55,6 +55,10 @@ class Globalarrays(AutotoolsPackage):
     depends_on('lapack', when='+lapack')
     depends_on('scalapack', when='+scalapack')
 
+    conflicts('+lapack', when='~blas')
+    conflicts('+scalapack', when='~blas')
+    conflicts('+scalapack', when='~lapack')
+
     def configure_args(self):
         args = ['--with-mpi']
 
