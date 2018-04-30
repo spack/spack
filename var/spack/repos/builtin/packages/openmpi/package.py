@@ -238,6 +238,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('valgrind~mpi', when='+memchecker')
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('slurm', when='schedulers=slurm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -422,6 +423,9 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
+
+        if spec.satisfies('schedulers=slurm') and spec.satisfies('+pmi'):
+           config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
 
         return config_args
 
