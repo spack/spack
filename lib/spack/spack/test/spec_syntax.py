@@ -25,7 +25,7 @@
 import pytest
 import shlex
 
-import spack
+import spack.store
 import spack.spec as sp
 from spack.parse import Token
 from spack.spec import Spec, parse, parse_anonymous_spec

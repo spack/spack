@@ -26,7 +26,6 @@ from __future__ import print_function
 
 import argparse
 
-import spack
 import spack.cmd
 import spack.store
 import spack.repo
