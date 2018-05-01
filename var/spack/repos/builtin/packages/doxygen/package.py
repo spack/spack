@@ -38,6 +38,7 @@ class Doxygen(CMakePackage):
     version('1.8.12', '08e0f7850c4d22cb5188da226b209a96')
     version('1.8.11', 'f4697a444feaed739cfa2f0644abc19b')
     version('1.8.10', '79767ccd986f12a0f949015efb5f058f')
+    version('1.8.5', '243a8b67db12ad68d6ea5b51c6f60dc2cc3a34fa47abf1b5b4499196c3d7cc25')
 
     # graphviz appears to be a run-time optional dependency
     variant('graphviz', default=False,
