@@ -38,5 +38,5 @@ class Bedops(MakefilePackage):
     version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
 
     def install(self, spec, prefix):
-        make('install')
-        install_tree('bin', prefix.bin)
+        mkdirp(prefix.bin)
+        make('install', "BINDIR=%s" % prefix.bin)
