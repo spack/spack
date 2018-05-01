@@ -163,7 +163,7 @@ before_script:
   - git config --global user.name "Test User"
 
   # Need this to be able to compute the list of changed files
-  - git fetch origin develop:develop
+  - git fetch origin releases/paien:releases/paien
 
   # Set up external dependencies for build tests, because the take too long to compile
   - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi

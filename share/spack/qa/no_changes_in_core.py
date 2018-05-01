@@ -16,7 +16,9 @@ import spack.cmd.flake8
 
 # Get the complete list of files that changed
 try:
-    files = spack.cmd.flake8.changed_files(base='develop', untracked=True)
+    files = spack.cmd.flake8.changed_files(
+        base='releases/paien', untracked=True
+    )
     # Make the path name absolute
     files = [os.path.abspath(x) for x in files]
 except Exception:

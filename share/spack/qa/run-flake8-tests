@@ -11,4 +11,4 @@
 . "$(dirname $0)/setup.sh"
 check_dependencies flake8
 
-spack flake8
+spack flake8 -b releases/paien
