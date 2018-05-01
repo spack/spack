@@ -52,7 +52,7 @@ class Ibmisc(CMakePackage):
     variant('udunits2', default=True,
             description='Compile utilities for UDUNITS2 library')
     variant('googletest', default=True,
-            description='Compile utilities for Google Test library')
+            description='Build unit tests')
     variant('python', default=True,
             description='Compile utilities for use with Python/Cython')
     variant('doc', default=False,

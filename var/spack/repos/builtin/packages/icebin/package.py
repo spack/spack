@@ -47,8 +47,12 @@ class Icebin(CMakePackage):
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
     variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
     variant('coupler', default=False, description='Build the GCM couplers (requires MPI)')
-    variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
-    variant('modele', default=False, description='Build coupling link with ModelE (no exta requirements')
+    variant('pism', default=False,
+            description='Build coupling link with PISM (requires PISM, PETSc)')
+    variant('modele', default=False,
+            description='Build coupling link with ModelE (no exta requirements')
+    variant('googletest', default=True,
+            description='Build unit tests')
     variant('doc', default=False, description='Build documentation')
 
     extends('python', when='+python')
@@ -65,6 +69,7 @@ class Icebin(CMakePackage):
     depends_on('mpfr', when='+gridgen')
 
     depends_on('mpi', when='+coupler')
+    # pism+python not compatible with our Python3
     depends_on('pism~python', when='+coupler+pism')
     depends_on('petsc', when='+coupler+pism')
 
@@ -76,6 +81,7 @@ class Icebin(CMakePackage):
     depends_on('eigen')
 
     depends_on('cmake@3.1:', type='build')
+    depends_on('googletest', when='+googletest', type='build')
     depends_on('doxygen', type='build', when='+doc')
 
     # Command line parsing
@@ -89,4 +95,5 @@ class Icebin(CMakePackage):
             '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
             '-DBUILD_MODELE=%s' % ('YES' if '+modele' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO'),
+            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO'),
             '-DBUILD_DOCS=%s' % ('YES' if '+doc' in spec else 'NO')]
