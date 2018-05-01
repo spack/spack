@@ -35,6 +35,10 @@ class Graphviz(AutotoolsPackage):
     version('2.40.1', git='https://gitlab.com/graphviz/graphviz.git',
             commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
+    # This version is bundled with RHEL 7
+    version('2.30.1', url='https://ftp.osuosl.org/pub/blfs/conglomeration/graphviz/graphviz-2.30.1.tar.gz',
+            sha256='775fb996987032d2eca2f1502c6f913e0b02fe640c124723e45db11daf46aec8')
+
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
     variant('sharp', default=False,
