@@ -93,6 +93,7 @@ class Python(AutotoolsPackage):
         default=False,
         description='Enable expensive build-time optimizations, if available'
     )
+    # See https://legacy.python.org/dev/peps/pep-0394/
     variant('symlink', default=False,
             description="Symlink 'python3' executable to 'python'")
 
