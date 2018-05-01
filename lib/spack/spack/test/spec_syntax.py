@@ -153,7 +153,11 @@ class TestSpecSyntax(object):
 
     def test_simple_dependence(self):
         self.check_parse("openmpi ^hwloc")
+        self.check_parse("openmpi ^hwloc", "openmpi^hwloc")
+
         self.check_parse("openmpi ^hwloc ^libunwind")
+        self.check_parse("openmpi ^hwloc ^libunwind",
+                         "openmpi^hwloc^libunwind")
 
     def test_dependencies_with_versions(self):
         self.check_parse("openmpi ^hwloc@1.2e6")
@@ -173,6 +177,8 @@ class TestSpecSyntax(object):
         self.check_parse('mvapich emacs@1.1.1%intel cflags="-O3"',
                          'mvapich emacs @1.1.1 %intel cflags=-O3')
         self.check_parse('mvapich cflags="-O3 -fPIC" emacs ^ncurses%intel')
+        self.check_parse('mvapich cflags="-O3 -fPIC" emacs ^ncurses%intel',
+                         'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
 
     def test_full_specs(self):
         self.check_parse(
