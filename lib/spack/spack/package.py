@@ -1564,9 +1564,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     echo = logger.echo
                     self.log()
 
-                if not is_setup:
-                    # Run post install hooks before build stage is removed.
-                    spack.hooks.post_install(self.spec)
+                # Run post install hooks before build stage is removed.
+                # (generates modules)
+                spack.hooks.post_install(self.spec)
 
             # Stop timer.
             self._total_time = time.time() - start_time
