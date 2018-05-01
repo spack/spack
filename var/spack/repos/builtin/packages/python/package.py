@@ -93,6 +93,8 @@ class Python(AutotoolsPackage):
         default=False,
         description='Enable expensive build-time optimizations, if available'
     )
+    variant('symlink', default=False,
+            description="Symlink 'python3' executable to 'python'")
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -231,7 +233,7 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:'):
+        if spec.satisfies('@3:') and spec.satisfies('+symlink'):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
