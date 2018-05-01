@@ -28,7 +28,6 @@ import inspect
 import os
 import platform
 import sys
-import string
 import os
 
 import spack.build_environment
@@ -331,7 +330,7 @@ env = dict(os.environ)
         env_vars = sorted(list(env.keys()))
         for name in env_vars:
             val = env[name]
-            if string.find(name, 'PATH') < 0:
+            if name.find('PATH') < 0:
                 fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
             else:
                 if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
@@ -341,7 +340,7 @@ env = dict(os.environ)
 
                 fout.write(
                     'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
-                for part in string.split(val, sep):
+                for part in val.split(sep):
                     fout.write('    %s\n' % part)
                 fout.write('"""))\n')
 
