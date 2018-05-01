@@ -146,8 +146,13 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials~pthread', when='@9.0:+sundials')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
+    # FIXME: temporary disable Tpetra when using CUDA due to
+    # namespace "Kokkos::Impl" has no member "cuda_abort"
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~tpetra~zoltan2~ifpack2~intrepid2',       when='+trilinos+mpi~int64+cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~tpetra~zoltan2~ifpack2~intrepid2', when='+trilinos+mpi+int64+cuda')
+
 
     # check that the combination of variants makes sense
     conflicts('^openblas+ilp64', when='@:8.5.1')
@@ -252,7 +257,7 @@ class Dealii(CMakePackage, CudaPackage):
             if not spec.satisfies('^cuda@9:'):
                 options.append('-DDEAL_II_WITH_CXX14=OFF')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None:
+            if cuda_arch is not None and cuda_arch[0] is not '':
                 if len(cuda_arch) > 1:
                     raise InstallError(
                         'deal.II only supports compilation for a single GPU!'
