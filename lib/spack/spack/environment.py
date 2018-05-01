@@ -448,6 +448,10 @@ class EnvironmentModifications(object):
                 # before_list
                 remaining_list = [
                     ii for ii in before_list if ii in after_list]
+
+                start = 0
+                end = len(after_list) - 1
+                search = ''
                 try:
                     start = after_list.index(remaining_list[0])
                     end = after_list.index(remaining_list[-1])
