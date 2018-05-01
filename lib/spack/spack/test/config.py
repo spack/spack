@@ -194,6 +194,7 @@ packages_merge_high = {
 }
 
 
+@pytest.mark.regression('7924')
 def test_merge_with_defaults(config, write_config_file):
     """This ensures that specified preferences merge with defaults as
        expected. Originally all defaults were initialized with the
