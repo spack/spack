@@ -32,15 +32,11 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
-    url      = "https://github.com/OpenFAST/pfunit/archive/3.2.9.tar.gz"
-    giturl   = "https://github.com/citibeth/pfunit.git"
+    url      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/archive/3.2.9.tar.gz"
 
     maintainers = ['citibeth']
 
-    # See here for evidence that this commit hash = release 3.2.9
-    # https://github.com/OpenFAST/pfunit/commit/3c1d47f594a7e756f21be59074cb730d1a1e9a79
-    version('3.2.9', '7b4bfee5fce479f22894b3fb32a20fc4',
-        url="https://github.com/OpenFAST/pfunit/archive/3c1d47f594a7e756f21be59074cb730d1a1e9a79.tar.gz")
+    version('3.2.9', 'e13d8362284b13b7c863e2fe769a9d5c')
 
     variant('shared', default=True,
             description='Build shared library in addition to static')
