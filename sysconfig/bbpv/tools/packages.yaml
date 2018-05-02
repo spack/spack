@@ -39,6 +39,10 @@ packages:
         paths:
             fontconfig@2.10.95: /usr
         version: [2.10.95]
+    gettext:
+        paths:
+            gettext@0.19.8.1: /usr
+        version: [0.19.8.1]
     glib:
         paths:
             glib@2.50.3: /usr
