@@ -26,64 +26,22 @@
 from spack import *
 
 
-class Openmc(MakefilePackage):
+class Openmc(CMakePackage):
     """The OpenMC project aims to provide a fully-featured Monte Carlo particle
        transport code based on modern methods. It is a constructive solid
        geometry, continuous-energy transport code that uses ACE format cross
        sections. The project started under the Computational Reactor Physics
        Group at MIT."""
 
-    homepage = "https://github.com/ANL-CESAR/"
-    url = "https://github.com/ANL-CESAR/openmc.git"
+    homepage = "http://openmc.readthedocs.io/"
+    url = "https://github.com/mit-crpg/openmc/tarball/v0.10.0"
 
-    version('develop', git='https://github.com/ANL-CESAR/openmc.git')
+    version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
+    version('develop', git='https://github.com/mit-crpg/openmc.git')
 
-    build_directory = 'src'
+    depends_on("hdf5+hl")
 
-    parallel = False
+    def cmake_args(self):
+        options = ['-DHDF5_ROOT:PATH=%s' % self.spec['hdf5'].prefix]
 
-    @property
-    def build_targets(self):
-
-        targets = []
-
-        if self.compiler.name == 'gcc':
-            targets.append('COMPILER=gnu')
-            targets.append('MACHINE=UNKNOWN')
-        if self.compiler.name == 'intel':
-            targets.append('COMPILER=intel')
-        if self.compiler.name == 'pgi':
-            targets.append('COMPILER=pgi')
-        if self.compiler.name == 'xl':
-            targets.append('COMPILER=ibm')
-        if self.compiler.name == 'cce':
-            targets.append('COMPILER=cray')
-
-        return targets
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            pth_st_cmp = join_path(prefix.bin, 'statepoint_cmp')
-            pth_st_histogram = join_path(prefix.bin, 'statepoint_histogram')
-            pth_st_meshpoint = join_path(prefix.bin, 'statepoint_meshpoint')
-            pth_openmc = join_path(prefix, 'share/man/man1/openmc.1')
-            pth_copyright = join_path(prefix, 'share/doc/openmc/copyright')
-            mkdir(prefix.bin)
-            mkdirp(pth_st_cmp)
-            mkdirp(pth_st_histogram)
-            mkdirp(pth_st_meshpoint)
-            mkdirp(pth_openmc)
-            mkdirp(pth_copyright)
-
-            install('openmc', prefix.bin)
-            install('utils/statepoint_cmp.py', pth_st_cmp)
-            install('utils/statepoint_histogram.py',
-                    pth_st_histogram)
-            install('utils/statepoint_meshplot.py',
-                    pth_st_meshpoint)
-        install('man/man1/openmc.1', pth_openmc)
-        install('LICENSE', pth_copyright)
-        install_tree('docs/', prefix.docs)
-        install_tree('examples/', prefix.examples)
-        install_tree('data/', prefix.data)
-        install_tree('tests/', prefix.tests)
+        return options
