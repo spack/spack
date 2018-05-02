@@ -26,6 +26,7 @@ import os
 
 from spack import *
 from spack.environment import EnvironmentModifications
+from spack.util.prefix import Prefix
 
 
 class IntelMpi(IntelPackage):
@@ -102,7 +103,9 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
+        mpiicc_list = find(self.prefix, 'mpiicc', recursive=True)
+        assert len(mpiicc_list) == 1
+        bindir = Prefix(os.path.dirname(mpiicc_list.pop()))
 
         if self.compiler.name == 'intel':
             self.spec.mpicc  = bindir.mpiicc

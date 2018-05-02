@@ -119,15 +119,11 @@ class IntelMkl(IntelPackage):
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        if sys.platform != 'darwin':
-            mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
-        else:
-            mkl_root = prefix.mkl.lib
-
         mkl_libs = find_libraries(
             mkl_integer + mkl_threading + ['libmkl_core'],
-            root=mkl_root,
-            shared=shared
+            root=prefix,
+            shared=shared,
+            recursive=True
         )
 
         # Intel MKL link line advisor recommends these system libraries
