@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import stat
 import sys
 import glob
 from llnl.util.filesystem import join_path
@@ -208,7 +209,9 @@ class Tau(Package):
             content += 'fi'
             f.write(content)
             f.close()
-            os.chmod(fname, 0755)
+            os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
+                            stat.S_IRGRP | stat.S_IXGRP |
+                            stat.S_IROTH | stat.S_IXOTH)
 
     def get_makefiles(self):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
