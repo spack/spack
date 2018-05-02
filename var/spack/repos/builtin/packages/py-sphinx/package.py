@@ -68,7 +68,7 @@ class PySphinx(PythonPackage):
     depends_on('py-alabaster@0.7.0:0.7.999',  type=('build', 'run'))
     depends_on('py-imagesize', when='@1.4:',  type=('build', 'run'))
     depends_on('py-requests@2.0.0:',          type=('build', 'run'))
-    depends_on('py-sphinx-rtd-theme@0.1:',    type=('build', 'run'))  # optional as of 1.
+    depends_on('py-sphinx-rtd-theme@0.1:',    type=('build', 'run'))  # optional as of 1.4
     # See: https://github.com/sphinx-doc/sphinx/commit/854a227501a7582510eba41a208d25816f754e0c
     depends_on('py-packaging', type=('build', 'run'), when='@1.7.4:')
 
