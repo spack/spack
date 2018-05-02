@@ -159,7 +159,7 @@ class Environment(object):
         for user_spec in self.user_specs[num_concretized:]:
             tty.msg('Concretizing %s' % user_spec)
 
-            spec = Spec(user_spec)
+            spec = spack.cmd.parse_specs(user_spec)[0]
             spec.concretize()
             new_specs.append(spec)
             dag_hash = spec.dag_hash()
@@ -491,10 +491,10 @@ def environment_add(args):
 
         # Add list of specs from env.yaml file
         for user_spec, _ in yaml_specs.items():    # OrderedDict
-            environment.add(user_spec.format(), report_existing=False)
+            environment.add(str(user_spec), report_existing=False)
     else:
         for spec in parsed_specs:
-            environment.add(spec.format())
+            environment.add(str(spec))
 
     write(environment)
 
