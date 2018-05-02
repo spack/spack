@@ -488,6 +488,14 @@ def test_repr_and_str():
     check_repr_and_str('R2016a.2-3_4')
 
 
+def test_len():
+    a = Version('1.2.3.4')
+    assert len(a) == len(a.version)
+    assert(len(a) == 4)
+    b = Version('2018.0')
+    assert(len(b) == 2)
+
+
 def test_get_item():
     a = Version('0.1_2-3')
     assert isinstance(a[1], int)
