@@ -116,7 +116,8 @@ def extend_with_default(validator_class):
     def set_defaults(validator, properties, instance, schema):
         for property, subschema in iteritems(properties):
             if "default" in subschema:
-                instance.setdefault(property, subschema["default"])
+                instance.setdefault(
+                    property, copy.deepcopy(subschema["default"]))
         for err in validate_properties(
                 validator, properties, instance, schema):
             yield err
@@ -127,7 +128,7 @@ def extend_with_default(validator_class):
                 if isinstance(instance, dict):
                     for key, val in iteritems(instance):
                         if re.match(property, key) and val is None:
-                            instance[key] = subschema["default"]
+                            instance[key] = copy.deepcopy(subschema["default"])
 
         for err in validate_pattern_properties(
                 validator, properties, instance, schema):
