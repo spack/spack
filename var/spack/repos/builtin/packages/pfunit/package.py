@@ -32,16 +32,15 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
-    url      = "https://github.com/OpenFAST/pfunit"
-    giturl   = "https://github.com/OpenFAST/pfunit.git"
+    url      = "https://github.com/OpenFAST/pfunit/archive/3.2.9.tar.gz"
+    giturl   = "https://github.com/citibeth/pfunit.git"
 
     maintainers = ['citibeth']
 
     # See here for evidence that this commit hash = release 3.2.9
     # https://github.com/OpenFAST/pfunit/commit/3c1d47f594a7e756f21be59074cb730d1a1e9a79
-    version('3.2.9', git=giturl,
-            commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79')
-    version('develop', git=giturl, branch='master')
+    version('3.2.9', '7b4bfee5fce479f22894b3fb32a20fc4',
+        url="https://github.com/OpenFAST/pfunit/archive/3c1d47f594a7e756f21be59074cb730d1a1e9a79.tar.gz")
 
     variant('shared', default=True,
             description='Build shared library in addition to static')
@@ -49,7 +48,7 @@ class Pfunit(CMakePackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
 
-    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
 
     def patch(self):
@@ -61,6 +60,7 @@ class Pfunit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
+            '-DPYTHON_EXECUTABLE=%s' % spec['python'].command,
             '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
             '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
             '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
