@@ -125,7 +125,8 @@ class Openspeedshop(CMakePackage):
     depends_on("dyninst@9.3.2:")
     depends_on("python")
     depends_on("libxml2+python")
-    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    # depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    depends_on("qt@3.3.8b+krellpatch")
     # Actively working on adding this gui package
     # depends_on("cbtf-argonavis-gui", when='gui=qt4')
 

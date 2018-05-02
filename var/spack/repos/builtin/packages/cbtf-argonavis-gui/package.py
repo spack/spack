@@ -53,7 +53,8 @@ class CbtfArgonavisGui(QMakePackage):
             git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
     depends_on("cmake@3.0.2:", type='build')
-    depends_on("openspeedshop+cuda gui='qt4'")
+    #depends_on("openspeedshop+cuda gui='qt4'")
+    depends_on("openspeedshop+cuda")
     depends_on('qt@4.8.6:')
     depends_on("boost@1.50.0:")
     depends_on("cbtf")
