@@ -58,6 +58,9 @@ class Mvapich2(AutotoolsPackage):
     variant('cuda', default=False,
             description='Enable CUDA extension')
 
+    variant('regcache', default=True,
+            description='Enable memory registration cache')
+
     # Accepted values are:
     #   single      - No threads (MPI_THREAD_SINGLE)
     #   funneled    - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
@@ -105,6 +108,13 @@ class Mvapich2(AutotoolsPackage):
         description='Use alloca to allocate temporary memory if available'
     )
 
+    variant(
+        'file_systems',
+        description='List of the ROMIO file systems to activate',
+        values=('lustre', 'gpfs', 'nfs', 'ufs'),
+        multi=True
+    )
+
     depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     # cuda 9 not yet supported
@@ -122,7 +132,10 @@ class Mvapich2(AutotoolsPackage):
         for x in ('hydra', 'gforker', 'remshell'):
             if 'process_managers={0}'.format(x) in spec:
                 other_pms.append(x)
-        opts = ['--with-pm=%s' % ':'.join(other_pms)]
+
+        opts = []
+        if len(other_pms) > 0:
+            opts = ['--with-pm=%s' % ':'.join(other_pms)]
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
@@ -151,6 +164,21 @@ class Mvapich2(AutotoolsPackage):
             opts = ["--with-device=ch3:nemesis"]
         elif 'fabrics=mrail' in self.spec:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
+        return opts
+
+    @property
+    def file_system_options(self):
+        spec = self.spec
+
+        fs = []
+        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
+            if 'file_systems={0}'.format(x) in spec:
+                fs.append(x)
+
+        opts = []
+        if len(fs) > 0:
+            opts.append('--with-file-system=%s' % '+'.join(fs))
+
         return opts
 
     def setup_environment(self, spack_env, run_env):
@@ -195,7 +223,7 @@ class Mvapich2(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-romio',
-            '-disable-silent-rules',
+            '--disable-silent-rules',
             '--disable-new-dtags',
             '--enable-fortran=all',
             "--enable-threads={0}".format(spec.variants['threads'].value),
@@ -225,6 +253,12 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append('--disable-cuda')
 
+        if '+regcache' in self.spec:
+            args.append('--enable-registration-cache')
+        else:
+            args.append('--disable-registration-cache')
+
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
+        args.extend(self.file_system_options)
         return args

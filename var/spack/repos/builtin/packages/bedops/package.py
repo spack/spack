@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,29 +25,18 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Bedops(MakefilePackage):
+    """BEDOPS is an open-source command-line toolkit that performs highly
+    efficient and scalable Boolean and other set operations, statistical
+    calculations, archiving, conversion and other management of genomic data of
+    arbitrary scale."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "https://bedops.readthedocs.io"
+    url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
 
-    version('3.1.0', 'f036ebd3fa0ef66ee1819e351d15b6cb')
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
-
-    depends_on('java', type='run')
+    version('2.4.34', 'fc467d96134a0efe8b134e638af87a1a')
+    version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
 
     def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+        mkdirp(prefix.bin)
+        make('install', "BINDIR=%s" % prefix.bin)

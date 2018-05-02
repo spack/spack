@@ -25,29 +25,14 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Vt(MakefilePackage):
+    """A tool set for short variant discovery in genetic sequence data."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "http://genome.sph.umich.edu/wiki/vt"
+    url      = "https://github.com/atks/vt/archive/0.577.tar.gz"
 
-    version('3.1.0', 'f036ebd3fa0ef66ee1819e351d15b6cb')
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('0.577',  '59807456022bcecf978314c93254fe15')
 
-    depends_on('java', type='run')
-
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    def install(self, spec, spack):
+        mkdirp(prefix.bin)
+        install('vt', prefix.bin)
