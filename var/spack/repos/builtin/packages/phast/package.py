@@ -33,7 +33,7 @@ class Phast(MakefilePackage):
     url      = "https://github.com/CshlSiepelLab/phast/archive/v1.4.tar.gz"
 
     version('1.4', '2bc0412ba58ea1f08ba5e12fad43b4c7')
-    
+
     # phast cannot build with clapack using external blas
     depends_on('clapack~external-blas')
 
