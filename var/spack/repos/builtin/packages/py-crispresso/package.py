@@ -36,7 +36,6 @@ class PyCrispresso(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
-    depends_on('py-argparse@1.3:', type=('build', 'run'))
     depends_on('py-biopython@1.6.5:', type=('build', 'run'))
     depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
     depends_on('py-numpy@1.9:', type=('build', 'run'))
