@@ -25,14 +25,36 @@
 from spack import *
 
 
-class Nanopb(CMakePackage):
-    """Nanopb is a small code-size Protocol Buffers implementation
-    in ansi C."""
+class PyPytorch(PythonPackage):
+    """
+    PyTorch is a python package that provides
+    tensor computation (like numpy) with strong GPU accelerationi and
+    deep neural networks built on a tape-based autodiff system
+    """
 
-    homepage = "https://jpa.kapsi.fi/nanopb/"
-    url      = "https://github.com/nanopb/nanopb/archive/0.3.9.1.tar.gz"
+    homepage = "http://pytorch.org/"
+    url      = "https://github.com/pytorch/pytorch/archive/v0.4.0.tar.gz"
 
-    version('0.3.9.1', '08d71b315819626366b0303f8658fc68')
+    import_modules = ['torch']
 
-    depends_on('protobuf', type=('build'))
-    depends_on('py-protobuf', type=('build'))
+    version('0.4.0', '897f24fd108f88a755a4dcf5ffa1f5cd')
+
+    variant('cuda', default=False, description='Builds with CUDA support')
+
+    # depends_on('cmake', type='build')
+    depends_on('blas')
+    depends_on('python@2.7:2.8,3.5:3.6')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-cffi', type=('build', 'run'))
+    depends_on('py-typing', type=('build', 'run'))
+    depends_on('magma', when='+cuda')
+
+    def install_test(self):
+        # Change directories due to the following error:
+        #
+        # ImportError: Error importing torch: you should not try to import
+        #       torch from its source directory; please exit the torch
+        #       source tree, and relaunch your python interpreter from there.
+        with working_dir('..'):
+            python('-c', 'import torch')
