@@ -1466,6 +1466,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
+        # Set the new property to indicate that the spec should
+        # not be found in parent databases.
+        self.spec.set_new(True)
+
         # Then install the package itself.
         def build_process():
             """This implements the process forked for each build.

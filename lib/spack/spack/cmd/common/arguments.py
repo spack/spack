@@ -50,7 +50,6 @@ def add_common_arguments(parser, list_of_arguments):
         x = _arguments[argument]
         parser.add_argument(*x.flags, **x.kwargs)
 
-
 class ConstraintAction(argparse.Action):
     """Constructs a list of specs based on a constraint given on the command line
 
@@ -68,16 +67,21 @@ class ConstraintAction(argparse.Action):
         namespace.specs = self._specs
 
     def _specs(self, **kwargs):
+        if 'db' in kwargs:
+            db = kwargs['db']
+            del kwargs['db']
+        else:
+            db = spack.store.db
         qspecs = spack.cmd.parse_specs(self.values)
 
         # return everything for an empty query.
         if not qspecs:
-            return spack.store.db.query(**kwargs)
+            return db.query(**kwargs)
 
         # Return only matching stuff otherwise.
         specs = set()
         for spec in qspecs:
-            for s in spack.store.db.query(spec, **kwargs):
+            for s in db.query(spec, **kwargs):
                 specs.add(s)
         return sorted(specs)
 

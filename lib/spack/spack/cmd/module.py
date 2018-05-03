@@ -173,7 +173,7 @@ def loads(module_types, specs, args):
     module_cls = spack.modules.module_types[module_type]
     modules = [
         (spec, module_cls(spec).layout.use_name)
-        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
+        for spec in specs if os.path.exists(module_cls(spec).layout.existing_filename)
     ]
 
     module_commands = {
@@ -208,7 +208,7 @@ def find(module_types, specs, args):
 
     # Check if the module file is present
     writer = spack.modules.module_types[module_type](spec)
-    if not os.path.isfile(writer.layout.filename):
+    if not os.path.isfile(writer.layout.existing_filename):
         msg = 'Even though {1} is installed, '
         msg += 'no {0} module has been generated for it.'
         tty.die(msg.format(module_type, spec))

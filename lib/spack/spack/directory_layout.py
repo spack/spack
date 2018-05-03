@@ -94,7 +94,11 @@ class DirectoryLayout(object):
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
-        return os.path.join(self.root, path)
+        spec_path = os.path.join(self.root, path)
+        if os.path.isdir(spec_path) or spec.new or not self.parent_layout:
+            return spec_path
+        else:
+            return self.parent_layout.path_for_spec(spec)
 
     def remove_install_directory(self, spec):
         """Removes a prefix and any empty parent directories from the root.
@@ -189,6 +193,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${ARCHITECTURE}/"
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
+        self.parent_layout = kwargs.get('parent_layout') or None
         if self.hash_len is not None:
             if re.search('\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
@@ -272,7 +277,10 @@ class YamlDirectoryLayout(DirectoryLayout):
         spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isdir(path):
-            return None
+            if self.parent_layout:
+                return self.parent_layout.check_installed(spec)
+            else:
+                return None
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(

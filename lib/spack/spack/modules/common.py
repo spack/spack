@@ -65,7 +65,15 @@ import spack.util.environment
 import spack.error
 
 #: Root folders where the various module files should be written
-roots = spack.config.get_config('config').get('module_roots', {})
+config = spack.config.get_config("config")
+roots = config.get('module_roots', {})
+chain_prefixes = config.get('chain_prefixes', [])
+parent_prefixes = []
+for prefix in chain_prefixes:
+    if prefix == spack.prefix:
+        break
+    parent_prefixes.append(prefix)
+
 
 #: Merged modules.yaml as a dictionary
 configuration = spack.config.get_config('modules')
@@ -231,6 +239,35 @@ def root_path(name):
     """
     path = roots.get(name, os.path.join(spack.share_path, name))
     return spack.util.path.canonicalize_path(path)
+
+
+def parent_root_paths(name):
+    """Returns the root folders for module file installation in
+    higher members of a spack chain.
+
+    Args:
+        name: name of the module system t be used (e.g. 'tcl')
+
+    Returns:
+        list of root folders for parent module file installations
+    """
+    config = spack.config.get_config("config")
+    chain_module_roots = config.get("chain_module_roots", None)
+    if chain_module_roots:
+        chain_module_paths = chain_module_roots.get(name)
+        if not isinstance(chain_module_paths, (list, tuple)):
+            chain_module_paths = [chain_module_paths]
+    else:
+        chain_module_paths = [os.path.join(prefix, "share", "spack", "modules")
+                              for prefix in parent_prefixes]
+    this_root_path = root_path(name)
+    retval = []
+    for path in chain_module_paths:
+        canonicalized_path = spack.util.path.canonicalize_path(path)
+        if canonicalized_path == this_root_path:
+            break
+        retval.append(canonicalized_path)
+    return retval
 
 
 class BaseConfiguration(object):
@@ -416,6 +453,12 @@ class BaseFileLayout(object):
         module_system = str(inspect.getmodule(cls).__name__).split('.')[-1]
         return root_path(module_system)
 
+    @classmethod
+    def parent_dirnames(cls):
+        """Root folders for module files of this type in parent repos"""
+        module_system = str(inspect.getmodule(cls).__name__).split('.')[-1]
+        return parent_root_paths(module_system)
+
     @property
     def use_name(self):
         """Returns the 'use' name of the module i.e. the name you have to type
@@ -441,6 +484,27 @@ class BaseFileLayout(object):
         arch_folder = str(self.spec.architecture)
         # Return the absolute path
         return os.path.join(self.dirname(), arch_folder, filename)
+
+    @property
+    def existing_filename(self):
+        """Name of an existing module file for the current spec.
+        Returns default filename if no existing file is found.  """
+        # Just the name of the file
+        filename = self.use_name
+        if self.extension:
+            filename = '{0}.{1}'.format(self.use_name, self.extension)
+        default_pathname = self.filename
+        if os.path.exists(default_pathname):
+            return default_pathname
+        else:
+            arch_folder = str(self.spec.architecture)
+            parent_root_paths = self.parent_dirnames()
+            parent_root_paths.reverse()
+            for path in parent_root_paths:
+                pathname = os.path.join(path, arch_folder, filename)
+                if os.path.exists(pathname):
+                    return pathname
+            return default_pathname
 
 
 class BaseContext(tengine.Context):

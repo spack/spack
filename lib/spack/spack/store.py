@@ -64,10 +64,32 @@ config = spack.config.get_config("config")
 root = canonicalize_path(
     config.get('install_tree', os.path.join(spack.opt_path, 'spack')))
 
-#
-# Set up the installed packages database
-#
-db = Database(root)
+chain_prefixes = config.get('chain_prefixes', [])
+parent_prefixes = []
+for prefix in chain_prefixes:
+    if prefix == spack.prefix:
+        break
+    parent_prefixes.append(prefix)
+parent_install_trees = config.get('parent_install_trees',
+                                  [os.path.join(prefix, 'opt', 'spack')
+                                   for prefix in parent_prefixes])
+if not isinstance(parent_install_trees, (list, tuple)):
+    parent_install_trees = [parent_install_trees]
+if parent_install_trees == [None]:
+    parent_install_trees = []
+parent_dbs = [None]
+parent_layouts = [None]
+for parent_install_tree in parent_install_trees:
+    parent_root = canonicalize_path(parent_install_tree)
+    if parent_root == root:
+        break
+    parent_dbs.append(Database(parent_root, parent_db=parent_dbs[-1]))
+    parent_layouts.append(
+        YamlDirectoryLayout(parent_root,
+                            hash_len=config.get('install_hash_length'),
+                            path_scheme=config.get('install_path_scheme'),
+                            parent_layout=parent_layouts[-1]))
+db = Database(root, parent_db=parent_dbs[-1])
 
 #
 # This controls how spack lays out install prefixes and
@@ -75,6 +97,7 @@ db = Database(root)
 #
 layout = YamlDirectoryLayout(root,
                              hash_len=config.get('install_hash_length'),
-                             path_scheme=config.get('install_path_scheme'))
+                             path_scheme=config.get('install_path_scheme'),
+                             parent_layout=parent_layouts[-1])
 
 extensions = YamlExtensionsLayout(root, layout)
