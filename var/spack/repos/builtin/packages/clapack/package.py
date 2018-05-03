@@ -40,7 +40,8 @@ class Clapack(MakefilePackage):
 
     version('3.2.1', '040da31f3a7d4fbc9ac376c748d18d1f')
 
-    variant('external-blas', default=True)
+    variant('external-blas', default=True,
+            description='Build with external BLAS (ATLAS here).')
 
     depends_on('atlas', when='+external-blas')
 
