@@ -101,7 +101,7 @@ def update_kwargs_from_args(args, kwargs):
             for arg in [x.strip() for x in arglist_s.split(',')]:
                 setups.add(arg)
         kwargs['setup'] = setups
-        tty.msg('Setup={}'.format(kwargs['setup']))
+        tty.msg('Setup={0}'.format(kwargs['setup']))
 
 
 def setup_parser(subparser):
