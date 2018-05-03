@@ -39,3 +39,4 @@ class PyPysam(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.21:', type='build')
     depends_on('bcftools')
+    depends_on('curl')
