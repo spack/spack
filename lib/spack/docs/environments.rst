@@ -12,16 +12,16 @@ You start by creating the environment:
 
 .. code-block:: console
 
-   $ spack env create c1
+   $ spack env c1 create
 
 Then you add some specs to it and concretize/install them:
 
 .. code-block:: console
 
-   $ spack env add c1 mpileaks
-   $ spack env add c1 python
-   $ spack env concretize c1
-   $ spack env install c1
+   $ spack env c1 add mpileaks
+   $ spack env c1 add python
+   $ spack env c1 concretize
+   $ spack env c1 install
 
 The environment is stored in a file that can be relocated to another
 system. You can install all the packages in the environment with the
@@ -31,37 +31,38 @@ The ``spack env relocate`` command can reconcretize the specs in a
 copied environment with the OS and architecture of the target system
 if it differs.
 
-Once the packages are installed, you can list all the module files
-which are needed to expose the packages in the environment to the user:
+Once the packages are installed, you can generate a script which
+includes all the module files that are needed to expose the packages
+in the environment to the user:
 
 .. code-block:: console
 
-   $ spack env list-modules c1
+   $ spack env c1 loads
 
 Usage 
 -----
-spack env create <environment name>
+spack env <environment name> create
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create a new environment to group a set of specs.
 
-spack env add <environment name> <spec>
+spack env <environment name> add <spec>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Add ``spec`` to ``environment name``. This does not concretize the spec
 and so does not detect whether it is possible to concretize. It does
 check whether the spec is properly-formatted.
 
-spack env concretize <environment name>
+spack env <environment name> concretize
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Concretize each spec added to the environment with ``spack env add``.
 This does not install any concretized specs, but it does update the
 saved environment object.
 
-spack env list-modules <environment name>
+spack env <environment name> loads
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-List the locations of all module files associated with all link and
+Generate a script which loads modules associated with all link and
 run dependencies of packages that have been added to the specified
 environment.
