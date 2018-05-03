@@ -39,7 +39,7 @@ class PyUdunits(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-netcdf', type=('build', 'run'))
+    depends_on('py-netcdf4', type=('build', 'run'))
     depends_on('udunits2')
 
     # See: https://github.com/SciTools/cf_units/blob/master/cf_units/etc/site.cfg.template
