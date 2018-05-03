@@ -33,8 +33,9 @@ class Phast(MakefilePackage):
     url      = "https://github.com/CshlSiepelLab/phast/archive/v1.4.tar.gz"
 
     version('1.4', '2bc0412ba58ea1f08ba5e12fad43b4c7')
-
-    depends_on('clapack')
+    
+    # phast cannot build with clapack using external blas
+    depends_on('clapack~external-blas')
 
     @property
     def build_directory(self):
@@ -52,11 +53,6 @@ class Phast(MakefilePackage):
                         'make-include.mk')
             filter_file(r'\$\{PWD\}',
                         '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
-                        'Makefile')
-        with working_dir(join_path(self.build_directory, 'lib')):
-            if '+external-blas' in self.spec['clapack']:
-                filter_file(r'blas\$\{PLAT\}\.a',
-                        'libcblaswr.a',
                         'Makefile')
 
     def install(self, spec, prefix):
