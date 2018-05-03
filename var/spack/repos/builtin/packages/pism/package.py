@@ -29,8 +29,7 @@ class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
-    url      = "https://github.com/pism/pism/tarball/v123"
-    # https://github.com/pism/pism/archive/v0.7.3.tar.gz
+    url      = "https://github.com/pism/pism/archive/v0.7.3.tar.gz
 
     maintainers = ['citibeth']
 
@@ -105,7 +104,7 @@ class Pism(CMakePackage):
     depends_on('everytrace', when='+everytrace')
 
     extends('python', when='+python')
-    depends_on('python@2.7', when='+python')
+    depends_on('python@2.7:2.8', when='+python')
     depends_on('py-matplotlib', when='+python')
     depends_on('py-numpy', when='+python')
 
@@ -143,7 +142,6 @@ class Pism(CMakePackage):
     def setup_environment(self, spack_env, env):
         """Add <prefix>/bin to the module; this is not the default if we
         extend python."""
-        env.prepend_path('PATH', self.prefix.bin)
         env.set('PISM_PREFIX', self.prefix)
         env.set('PISM_BIN', self.prefix.bin)
 
