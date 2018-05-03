@@ -37,7 +37,7 @@ class HicPro(MakefilePackage):
 
     depends_on('bowtie2')
     depends_on('samtools')
-    depends_on('python@2.7:2.8')
+    depends_on('python+ucs4@2.7:2.8')
     depends_on('r')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
