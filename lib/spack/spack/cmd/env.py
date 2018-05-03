@@ -173,7 +173,7 @@ class Environment(object):
 
         return new_specs
 
-    def install(self, args):
+    def install(self, install_args=None):
         """Do a `spack install` on all the (concretized)
         specs in an Environment."""
 
@@ -191,7 +191,8 @@ class Environment(object):
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
-            spack.cmd.install.update_kwargs_from_args(args, kwargs)
+            if install_args:
+                spack.cmd.install.update_kwargs_from_args(install_args, kwargs)
             with pushd(self.path):
                 spec.package.do_install(**kwargs)
 
