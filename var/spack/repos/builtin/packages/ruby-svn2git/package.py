@@ -37,7 +37,6 @@ class RubySvn2git(Package):
     url      = "https://github.com/nirvdrum/svn2git/archive/v2.4.0.tar.gz"
 
     version('2.4.0', 'f19ac6eb0634aa1fed31a1e40a2aeaa2')
-    #, expand=False)
 
     depends_on('git')
     depends_on('subversion+perl')
