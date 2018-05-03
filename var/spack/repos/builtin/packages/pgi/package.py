@@ -17,6 +17,7 @@
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
 # conditions of the GNU Lesser General Public License for more details.
+
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
@@ -39,6 +40,7 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
+    version('18.4',  'b55461f9f0986acbd51902c51c2074b9')
     version('17.10', '85ad6506e7ada610ab11ddb35d697efa')
     version('17.4',  'a311d2756ddda657860bad8e5725597b')
     version('17.3',  '6eefc42f85e756cbaba76467ed640902')
