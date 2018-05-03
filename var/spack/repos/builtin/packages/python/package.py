@@ -67,6 +67,7 @@ class Python(AutotoolsPackage):
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
+    version('2.7.5', 'b4f01a1d0ba0b46b05c73b2ac909b1df')
 
     extendable = True
 
@@ -454,7 +455,9 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_var; '
         cmd += self.print_string("get_config_var('{0}')".format(key))
 
-        return self.command('-c', cmd, output=str).strip()
+        # Spack-installed Python works best without other env vars polluting it.
+        # https://askubuntu.com/questions/640010/fatal-python-error-py-initialize-unable-to-get-the-locale-encoding-syntaxe?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+        return self.command('-c', cmd, output=str, env={}).strip()
 
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
