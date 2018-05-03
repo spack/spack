@@ -25,20 +25,15 @@
 from spack import *
 
 
-class PyBsddb3(PythonPackage):
-    """This module provides a nearly complete wrapping of the Oracle/Sleepycat
-       C API for the Database Environment, Database, Cursor, Log Cursor,
-       Sequence and Transaction objects, and each of these is exposed
-       as a Python type in the bsddb3.db module."""
+class PyMoreItertools(PythonPackage):
+    """Additions to the standard Python itertools package."""
 
-    homepage = "https://pypi.python.org/pypi/bsddb3/6.2.5"
-    url      = "https://pypi.io/packages/source/b/bsddb3/bsddb3-6.2.5.tar.gz"
+    homepage = "https://github.com/erikrose/more-itertools"
+    url      = "https://pypi.io/packages/source/m/more-itertools/more-itertools-4.1.0.tar.gz"
 
-    version('6.2.5', '610267c189964c905a931990e1ba438c')
+    version('4.1.0', '246f46686d95879fbad37855c115dc52')
+    version('2.2', 'b8d328a33f966bf40bb829bcf8da35ce')
 
-    depends_on('python@2.6:')
-    depends_on('py-setuptools')
-    depends_on('berkeley-db')
-
-    # For testing... see here for an example that uses BerkeleyDB
-    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/
+    extends('python')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))

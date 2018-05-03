@@ -25,20 +25,14 @@
 from spack import *
 
 
-class PyBsddb3(PythonPackage):
-    """This module provides a nearly complete wrapping of the Oracle/Sleepycat
-       C API for the Database Environment, Database, Cursor, Log Cursor,
-       Sequence and Transaction objects, and each of these is exposed
-       as a Python type in the bsddb3.db module."""
+class PyNetcdf(PythonPackage):
+    """Python interface to the netCDF Library."""
+    homepage = "http://unidata.github.io/netcdf4-python"
+    url      = "https://github.com/Unidata/netcdf4-python/tarball/v1.2.3.1rel"
 
-    homepage = "https://pypi.python.org/pypi/bsddb3/6.2.5"
-    url      = "https://pypi.io/packages/source/b/bsddb3/bsddb3-6.2.5.tar.gz"
+    version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
 
-    version('6.2.5', '610267c189964c905a931990e1ba438c')
-
-    depends_on('python@2.6:')
-    depends_on('py-setuptools')
-    depends_on('berkeley-db')
-
-    # For testing... see here for an example that uses BerkeleyDB
-    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('netcdf')

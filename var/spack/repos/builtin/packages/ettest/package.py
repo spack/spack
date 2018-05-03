@@ -25,20 +25,15 @@
 from spack import *
 
 
-class PyBsddb3(PythonPackage):
-    """This module provides a nearly complete wrapping of the Oracle/Sleepycat
-       C API for the Database Environment, Database, Cursor, Log Cursor,
-       Sequence and Transaction objects, and each of these is exposed
-       as a Python type in the bsddb3.db module."""
+class Ettest(CMakePackage):
+    """Get stack trace EVERY time a program exits."""
 
-    homepage = "https://pypi.python.org/pypi/bsddb3/6.2.5"
-    url      = "https://pypi.io/packages/source/b/bsddb3/bsddb3-6.2.5.tar.gz"
+    homepage = "https://github.com/citibeth/ettest"
+    version('develop', git='https://github.com/citibeth/ettest.git', branch='develop')
 
-    version('6.2.5', '610267c189964c905a931990e1ba438c')
+    maintainers = ['citibeth']
 
-    depends_on('python@2.6:')
-    depends_on('py-setuptools')
-    depends_on('berkeley-db')
+    depends_on('everytrace+mpi+fortran')
 
-    # For testing... see here for an example that uses BerkeleyDB
-    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/
+    # Currently the only MPI this everytrace works with.
+    depends_on('openmpi')

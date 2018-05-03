@@ -30,7 +30,7 @@ import spack.architecture
 import os
 
 
-class Openssl(Package):
+class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
@@ -46,6 +46,7 @@ class Openssl(Package):
     version('1.1.0e', '51c42d152122e474754aea96f66928c6')
     version('1.1.0d', '711ce3cd5f53a99c0e12a7d5804f0f63')
     version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
+
     # Note: Version 1.0.2 is the "long-term support" version that will
     # remain supported until 2019.
     version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4', preferred=True)
@@ -58,10 +59,12 @@ class Openssl(Package):
     version('1.0.2f', 'b3bf73f507172be9292ea2a8c28b659d')
     version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
     version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
+
     version('1.0.1u', '130bb19745db2a5a09f22ccbbf7e69d0')
     version('1.0.1t', '9837746fcf8a6727d46d22ca35953da1')
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
+    version('1.0.1e', '66bf6f10f060d561929de96f9dfe5b8c')
 
     variant('systemcerts', default=True, description='Use system certificates')
 
