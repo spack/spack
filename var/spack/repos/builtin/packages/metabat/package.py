@@ -39,5 +39,16 @@ class Metabat(SConsPackage):
     def setup_environment(self, spack_env, run_env):
         spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
+    def install_args(self, spec, prefix):
+        return ["PREFIX={}".format(prefix)]
+
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl',
+                    'aggregateBinDepths.pl')
+
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl',
+                    'aggregateContigOverlapsByBin.pl')
+
+        super(Metabat, self).install(spec, prefix)
