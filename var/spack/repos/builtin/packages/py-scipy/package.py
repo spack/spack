@@ -62,16 +62,13 @@ class PyScipy(PythonPackage):
 
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-nose', type='test')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
     depends_on('blas')
     depends_on('lapack')
-
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
 
     def build_args(self, spec, prefix):
         args = []
