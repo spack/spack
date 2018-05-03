@@ -296,7 +296,13 @@ class Petsc(Package):
                 cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
                    '-lpetsc', '-lm', '-o', 'ex50')
                 run = Executable(join_path(spec['mpi'].prefix.bin, 'mpirun'))
-                run('ex50', '-da_grid_x', '4', '-da_grid_y', '4')
+                # Enforce reasonable numproc for Spectrum MPI, default fails on
+                # large systems.
+                if ('spectrum-mpi' in spec):
+                    run.add_default_arg('-np')
+                    run.add_default_arg('4')
+                run('ex50', '-da_grid_x', '4',
+                    '-da_grid_y', '4')
                 if 'superlu-dist' in spec:
                     run('ex50',
                         '-da_grid_x', '4',
