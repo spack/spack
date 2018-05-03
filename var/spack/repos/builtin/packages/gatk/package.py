@@ -33,9 +33,8 @@ class Gatk(Package):
     """Genome Analysis Toolkit
        Variant Discovery in High-Throughput Sequencing Data
     """
-    homepage = "http://broadinstitute.github.io/gatk/"
-    url      = "https://software.broadinstitute.org/gatk/download/auth?package=GATK"
-    _urlfmt  = "https://github.com/broadgsa/gatk-protected/archive/{0}.tar.gz"
+    homepage = "https://software.broadinstitute.org/gatk/"
+    url      = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
 
     version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
             url="https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
@@ -51,7 +50,7 @@ class Gatk(Package):
         # The list of files to install varies with release...
         # ... but skip the spack-{build.env}.out files and gatkdoc directory.
         files = [x for x in glob.glob("*")
-                 if not re.match("^spack-", x) and not re.match("^gatkdoc$", x)]
+                 if not re.match("^spack-", x) and not re.match("^gatkdoc", x)]
         for f in files:
             install(f, prefix.bin)
 
