@@ -40,3 +40,6 @@ class PyPysam(PythonPackage):
     depends_on('py-cython@0.21:', type='build')
     depends_on('bcftools')
     depends_on('curl')
+
+    # pysam works well with htslib@1.6 but conflicts with htslib@1.7
+    conflicts('htslib@1.7:')
