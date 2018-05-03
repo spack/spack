@@ -865,7 +865,8 @@ class Database(object):
             installed=True,
             explicit=any,
             start_date=None,
-            end_date=None
+            end_date=None,
+            include_parents=True
     ):
         """Run a query on the database
 
