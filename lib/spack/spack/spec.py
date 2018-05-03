@@ -1405,6 +1405,7 @@ class Spec(object):
 
     def set_new(self, value):
         self._new = value
+        self._prefix = None
 
     @property
     def new(self):
