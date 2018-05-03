@@ -40,7 +40,7 @@ class RubySvn2git(Package):
     #, expand=False)
 
     depends_on('git')
-    depends_on('subversion')
+    depends_on('subversion+perl')
 
     extends('ruby')
 
