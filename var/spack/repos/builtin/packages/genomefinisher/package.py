@@ -24,57 +24,39 @@
 ##############################################################################
 from spack import *
 from shutil import copyfile
-import glob
-import os.path
-import re
+import os
 
 
-class Gatk(Package):
-    """Genome Analysis Toolkit
-       Variant Discovery in High-Throughput Sequencing Data
-    """
-    homepage = "https://software.broadinstitute.org/gatk/"
-    url      = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip"
+class Genomefinisher(Package):
+    """GFinisher is an application tools for refinement and finalization of
+    prokaryotic genomes assemblies using the bias of GC Skew to identify
+    assembly errors and organizes the contigs/scaffolds with genomes
+    references."""
 
-    version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
-            url="https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
-    version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
-            url="https://software.broadinstitute.org/gatk/download/auth?package=GATK")
+    homepage = "http://gfinisher.sourceforge.net"
+    url      = "https://sourceforge.net/projects/gfinisher/files/GenomeFinisher_1.4.zip"
+
+    version('1.4', 'bd9bbca656fe15ecbe615c4732714bc7')
 
     depends_on('java@8:', type='run')
-    depends_on('python@2.6:2.8,3.6:', type='run', when='@4.0:')
-    depends_on('r@3.2:', type='run', when='@4.0:')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        # The list of files to install varies with release...
-        # ... but skip the spack-{build.env}.out files and gatkdoc directory.
-        files = [x for x in glob.glob("*")
-                 if not re.match("^spack-", x) and not re.match("^gatkdoc", x)]
-        for f in files:
-            install(f, prefix.bin)
-
-        # Skip helper script settings
-        if spec.satisfies('@:4.0'):
-            return
+        jar_file = 'GenomeFinisher.jar'
+        install(jar_file, prefix.bin)
+        install_tree('lib', prefix.lib)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "gatk.sh")
-        script = join_path(prefix.bin, "gatk")
+        script_sh = join_path(os.path.dirname(__file__), "genomefinisher.sh")
+        script = join_path(prefix.bin, "genomefinisher")
         copyfile(script_sh, script)
         set_executable(script)
 
-        # Munge the helper script to explicitly point to java and the
+        # Munge the helper script to explicitly point to java and the jar file
         # jar file.
-        java = join_path(self.spec['java'].prefix, 'bin', 'java')
+        java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
-        filter_file('GenomeAnalysisTK.jar', join_path(prefix.bin,
-                    'GenomeAnalysisTK.jar'),
+        filter_file(jar_file, join_path(prefix.bin, jar_file),
                     script, **kwargs)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('GATK',
-                             join_path(self.prefix, 'bin',
-                                                    'GenomeAnalysisTK.jar'))
