@@ -1,0 +1,13 @@
+diff --git a/packages/kokkos/core/src/impl/Kokkos_Error.hpp b/packages/kokkos/core/src/impl/Kokkos_Error.hpp
+index 4bc2637..f755760 100644
+--- a/packages/kokkos/core/src/impl/Kokkos_Error.hpp
++++ b/packages/kokkos/core/src/impl/Kokkos_Error.hpp
+@@ -72,7 +72,7 @@ std::string human_memory_size(size_t arg_bytes);
+ namespace Kokkos {
+ KOKKOS_INLINE_FUNCTION
+ void abort( const char * const message ) {
+-#ifdef __CUDA_ARCH__
++#ifdef KOKKOS_ENABLE_CUDA
+   Kokkos::Impl::cuda_abort(message);
+ #else
+   #ifndef KOKKOS_ENABLE_OPENMPTARGET
