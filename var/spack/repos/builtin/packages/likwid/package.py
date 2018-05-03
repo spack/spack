@@ -117,9 +117,12 @@ class Likwid(Package):
         env['PWD'] = os.getcwd()
         make()
         make('install')
-        if spec.satisfies('+setgid'):
-          accessD = os.path.join(prefix,'sbin','likwid-accessD')
-          chgrp = which('chgrp')
-          chmod = which('chmod')
-          chgrp('likwid', accessD)
-          chmod('g+s', accessD)
+
+    @run_after('install')
+    def change_group(self):
+        accessD = join_path(self.prefix.sbin, 'likwid-accessD')
+        if self.spec.satisfies('+setgid'):
+            chgrp = which('chgrp')
+            chmod = which('chmod')
+            chgrp('likwid', accessD)
+            chmod('g+s', accessD)
