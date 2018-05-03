@@ -37,9 +37,7 @@ class Phast(MakefilePackage):
     # phast cannot build with clapack using external blas
     depends_on('clapack~external-blas')
 
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'src')
+    build_directory = 'src'
 
     @property
     def build_targets(self):
