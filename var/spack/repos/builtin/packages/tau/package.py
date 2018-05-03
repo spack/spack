@@ -157,7 +157,7 @@ class Tau(Package):
 
             # see #5320, need to see if we cleanup a bit with one logic as
             # headers.directories is generic
-            if spec.satisfies('^intel-mpi'):
+            if spec.satisfies('^intel-mpi') or spec.satisfies('^intel-parallel-studio'):
                 options.append('-mpiinc=%s' % spec['mpi'].headers.directories[0])
             else:
                 options.append('-mpiinc=%s' % spec['mpi'].prefix.include)
@@ -228,9 +228,8 @@ class Tau(Package):
             content += 'fi'
             f.write(content)
             f.close()
-            os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
-                            stat.S_IRGRP | stat.S_IXGRP |
-                            stat.S_IROTH | stat.S_IXOTH)
+            chmod = which('chmod')
+            chmod('go+rx', fname)
 
     def get_makefiles(self):
         pattern = join_path(self.prefix.lib, 'Makefile.*')

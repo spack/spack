@@ -118,6 +118,9 @@ modules:
       - imb
       - osu-micro-benchmarks
       - stat
+      - likwid
+      - hpl
+      - imb
       - 'cmake%gcc@4.8.5'
     blacklist:
       - '%gcc'

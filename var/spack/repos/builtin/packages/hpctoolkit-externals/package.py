@@ -35,7 +35,7 @@ class HpctoolkitExternals(Package):
     version('2017.06', git=url, tag='release-2017.06')
     version('master', git=url)
 
-    parallel = False
+    parallel = True
 
     def install(self, spec, prefix):
 
