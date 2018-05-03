@@ -28,7 +28,7 @@ from distutils.dir_util import copy_tree
 
 class Clapack(MakefilePackage):
     """CLAPACK is a f2c'ed version of LAPACK.
-    
+
        The CLAPACK library was built using a Fortran to C conversion utility
     called f2c.  The entire Fortran 77 LAPACK library is run through f2c to
     obtain C code, and then modified to improve readability.  CLAPACK's goal
@@ -49,7 +49,9 @@ class Clapack(MakefilePackage):
         make_inc = FileFilter('make.inc')
         if '+external-blas' in spec:
             make_inc.filter(r'^BLASLIB.*',
-                'BLASLIB = ../../libcblaswr.a -lcblas -latlas')
+                            'BLASLIB = ../../libcblaswr.a -lcblas -latlas')
+            makefile.filter(r'^lib.*',
+                            'lib: variants lapacklib tmglib')
 
     def build(self, spec, prefix):
         make('f2clib')
@@ -61,6 +63,3 @@ class Clapack(MakefilePackage):
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)
-
-        
-
