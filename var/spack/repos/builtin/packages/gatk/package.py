@@ -37,13 +37,13 @@ class Gatk(Package):
     url      = "https://software.broadinstitute.org/gatk/download/auth?package=GATK"
     _urlfmt  = "https://github.com/broadgsa/gatk-protected/archive/{0}.tar.gz"
 
-    version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
-            url="https://software.broadinstitute.org/gatk/download/auth?package=GATK")
     version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
             url="https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
+    version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
+            url="https://software.broadinstitute.org/gatk/download/auth?package=GATK")
 
     depends_on('java@8:', type='run')
-    depends_on('python@2.6:2.8,3.6:3.7', type='run', when='@4.0:')
+    depends_on('python@2.6:2.8,3.6:', type='run', when='@4.0:')
     depends_on('r@3.2:', type='run', when='@4.0:')
 
     def install(self, spec, prefix):
