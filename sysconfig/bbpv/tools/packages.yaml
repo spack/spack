@@ -51,6 +51,10 @@ packages:
         paths:
             gtkplus@2.24.31: /usr
         version: [2.24.31]
+    hdf5:
+        paths:
+            hdf5@1.8.12: /usr
+        version: [1.8.12]
     hwloc:
         paths:
             hwloc@1.11.2: /usr
@@ -167,6 +171,6 @@ packages:
         buildable: False
         version: [cluster.2018.1]
     all:
-        compiler: [gcc, intel]
+        compiler: [gcc@4.8.5, gcc@5.4.0, intel]
         providers:
             mpi: [intel-parallel-studio]

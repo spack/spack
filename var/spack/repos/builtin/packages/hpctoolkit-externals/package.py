@@ -16,7 +16,7 @@ class HpctoolkitExternals(Package):
     version('master')
     version('2017.06', tag='release-2017.06')
 
-    parallel = False
+    parallel = True
 
     def install(self, spec, prefix):
 
