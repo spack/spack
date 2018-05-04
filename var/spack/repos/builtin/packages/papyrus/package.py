@@ -33,6 +33,6 @@ class Papyrus(CMakePackage):
 
     version('develop',
             git='https://code.ornl.gov/eck/papyrus.git', branch='master')
-    version('1.0.0', 'b5ec3337271ebfda51637892fcedd86e')
+    version('1.0.0', 'fe0fca073c3604110f0507f375d71e64')
 
     depends_on('mpi')
