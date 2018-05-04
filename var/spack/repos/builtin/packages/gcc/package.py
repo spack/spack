@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -102,13 +102,12 @@ class Gcc(AutotoolsPackage):
     # depends_on('ppl')
     # depends_on('cloog')
 
-    # TODO: Add a 'test' deptype
-    # https://github.com/spack/spack/issues/1279
-    # depends_on('dejagnu@1.4.4', type='test')
-    # depends_on('expect', type='test')
-    # depends_on('tcl', type='test')
-    # depends_on('autogen@5.5.4:', type='test')
-    # depends_on('guile@1.4.1:', type='test')
+    # https://gcc.gnu.org/install/test.html
+    depends_on('dejagnu@1.4.4', type='test')
+    depends_on('expect', type='test')
+    depends_on('tcl', type='test')
+    depends_on('autogen@5.5.4:', type='test')
+    depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
     provides('golang',        when='languages=go @4.6:')
@@ -158,7 +157,7 @@ class Gcc(AutotoolsPackage):
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
         if macOS_version() >= Version('10.13'):
-            patch('darwin/apfs.patch', when='@7.2.0')
+            patch('darwin/apfs.patch', when='@6.1:6.4,7.1:7.3')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')

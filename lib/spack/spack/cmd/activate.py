@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -62,7 +62,8 @@ def activate(parser, args):
     view = YamlFilesystemView(target, spack.store.layout)
 
     if spec.package.is_activated(view):
-        tty.die("Package %s is already activated." % specs[0].short_spec)
+        tty.msg("Package %s is already activated." % specs[0].short_spec)
+        return
 
     # TODO: refactor FilesystemView.add_extension and use that here (so there
     # aren't two ways of activating extensions)

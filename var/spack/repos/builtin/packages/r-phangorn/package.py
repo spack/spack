@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,7 @@ class RPhangorn(RPackage):
        and Hadamard conjugation. Allows to compare trees, models selection and
        offers visualizations for trees and split networks."""
 
-    homepage = "http://www.example.co://github.com/KlausVigo/phangorn"
+    homepage = "https://cran.r-project.org/package=phangorn"
     url      = "https://cran.r-project.org/src/contrib/phangorn_2.3.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/phangorn"
 

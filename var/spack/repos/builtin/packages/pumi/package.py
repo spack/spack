@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
 class Pumi(CMakePackage):
@@ -39,17 +38,15 @@ class Pumi(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/pumi"
     url      = "https://github.com/SCOREC/core.git"
 
-    version('0.0.1', git='https://github.com/SCOREC/core.git',
-        commit='0c315e82b3f2478dc18bdd6cfa89f1cddb85cd6a')
+    version('2.1.0', git='https://github.com/SCOREC/core.git',
+        commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
     version('develop', git='https://github.com/SCOREC/core.git',
         branch='master')
-
-    if sys.platform == 'darwin':
-        patch('phiotimer.cc.darwin.patch', level=0)  # !clock_gettime
 
     variant('zoltan', default=False, description='Enable Zoltan Features')
 
     depends_on('mpi')
+    depends_on('cmake@3:', type='build')
     depends_on('zoltan', when='+zoltan')
 
     def cmake_args(self):

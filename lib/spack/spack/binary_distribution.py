@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -416,7 +416,7 @@ def relocate_package(workdir, allow_root):
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
-    if new_path == old_path and not rel:
+    if rel:
         return
 
     tty.msg("Relocating package from",

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -77,7 +77,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
-    variant('python',   default=True,
+    variant('python',   default=False,
             description='Compile with Python bindings')
     variant('int64',    default=False,
             description='Compile with 64 bit indices support')
@@ -95,12 +95,12 @@ class Dealii(CMakePackage, CudaPackage):
     # https://github.com/dealii/dealii/issues/5262
     # we take the patch from https://github.com/boostorg/serialization/pull/79
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
-    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams',
+    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
                patches=patch('boost_1.65.1_singleton.patch',
                        level=1,
                        when='@1.65.1'),
                when='~python')
-    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams+python',
+    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
                patches=patch('boost_1.65.1_singleton.patch',
                        level=1,
                        when='@1.65.1'),
@@ -159,6 +159,7 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+scalapack', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
     conflicts('+adol-c', when='@:8.5.1')
+    conflicts('+slepc', when='~petsc')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc', '+scalapack',
@@ -223,6 +224,15 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
                 ('ON' if '+python' in spec else 'OFF')
             ])
+            if '+python' in spec:
+                python_exe = spec['python'].command.path
+                python_library = spec['python'].libs[0]
+                python_include = spec['python'].headers.directories[0]
+                options.extend([
+                    '-DPYTHON_EXECUTABLE=%s' % python_exe,
+                    '-DPYTHON_INCLUDE_DIR=%s' % python_include,
+                    '-DPYTHON_LIBRARY=%s' % python_library
+                ])
 
         # Set directory structure:
         if spec.satisfies('@:8.2.1'):

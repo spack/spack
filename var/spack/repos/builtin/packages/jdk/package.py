@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -48,6 +48,8 @@ class Jdk(Package):
     # For instructions on how to find the magic URL, see:
     # https://gist.github.com/P7h/9741922
     # https://linuxconfig.org/how-to-install-java-se-development-kit-on-debian-linux
+    version('8u172-b11', 'eda2945e8c02b84adbf78f46c37b71c1', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/8u172-b11/a58eab1ec242421181065cdc37240b08/jdk-8u172-linux-x64.tar.gz')
     version('8u141-b15', '8cf4c4e00744bfafc023d770cb65328c', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz')
     version('8u131-b11', '75b2cb2249710d822a60f83e28860053', curl_options=curl_options,

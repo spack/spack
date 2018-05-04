@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -115,6 +115,14 @@ def get_module_cmd_from_bash(bashopts=''):
     return module_cmd
 
 
+def unload_module(mod):
+    """Takes a module name and unloads the module from the environment. It does
+    not check whether conflicts arise from the unloaded module"""
+    modulecmd = get_module_cmd()
+    exec(compile(modulecmd('unload', mod, output=str, error=str), '<string>',
+                 'exec'))
+
+
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the
@@ -130,8 +138,8 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
+            unload_module(text[i + 1])
+
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr
     load = modulecmd('load', mod, output=str, error='/dev/null')

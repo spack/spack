@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,7 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
+    version('18.4',  'b55461f9f0986acbd51902c51c2074b9')
     version('17.10', '85ad6506e7ada610ab11ddb35d697efa')
     version('17.4',  'a311d2756ddda657860bad8e5725597b')
     version('17.3',  '6eefc42f85e756cbaba76467ed640902')

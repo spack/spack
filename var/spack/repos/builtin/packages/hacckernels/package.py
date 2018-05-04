@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,7 +33,7 @@ class Hacckernels(CMakePackage):
     cores and beyond."""
 
     homepage = "https://xgitlab.cels.anl.gov/hacc/HACCKernels"
-    url      = "https://xgitlab.cels.anl.gov/hacc/HACCKernels.git"
+    url      = "https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FHACCKernels/repository/archive.tar.gz"
 
     tags = ['proxy-app']
 

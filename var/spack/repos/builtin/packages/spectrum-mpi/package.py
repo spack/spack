@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at International Business Machines Corporation
 #
 # This file is part of Spack.
@@ -46,6 +46,11 @@ class SpectrumMpi(Package):
             self.spec.mpicxx = join_path(self.prefix.bin, 'mpixlC')
             self.spec.mpif77 = join_path(self.prefix.bin, 'mpixlf')
             self.spec.mpifc = join_path(self.prefix.bin, 'mpixlf')
+        elif '%pgi' in dependent_spec:
+            self.spec.mpicc = join_path(self.prefix.bin, 'mpipgicc')
+            self.spec.mpicxx = join_path(self.prefix.bin, 'mpipgic++')
+            self.spec.mpif77 = join_path(self.prefix.bin, 'mpipgifort')
+            self.spec.mpifc = join_path(self.prefix.bin, 'mpipgifort')
         else:
             self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
             self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
@@ -58,6 +63,11 @@ class SpectrumMpi(Package):
             spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpixlC'))
             spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpixlf'))
             spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpixlf'))
+        elif '%pgi' in dependent_spec:
+            spack_env.set('MPICC', join_path(self.prefix.bin, 'mpipgicc'))
+            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpipgic++'))
+            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpipgifort'))
+            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpipgifort'))
         else:
             spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
             spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))

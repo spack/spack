@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -252,6 +252,9 @@ class Version(object):
 
     def __iter__(self):
         return iter(self.version)
+
+    def __len__(self):
+        return len(self.version)
 
     def __getitem__(self, idx):
         cls = type(self)

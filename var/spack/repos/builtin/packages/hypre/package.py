@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,6 +35,7 @@ class Hypre(Package):
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
+    version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1', url='https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz')
     version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b', url='https://github.com/LLNL/hypre/archive/v2.13.0.tar.gz')
     version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c', url='https://github.com/LLNL/hypre/archive/v2.12.1.tar.gz')
     version('2.11.2', 'd507943a1a3ce5681c3308e2f3a6dd34')

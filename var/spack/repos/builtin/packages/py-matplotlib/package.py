@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -76,6 +76,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-cycler@0.9:', type=('build', 'run'))
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='^python@2.7')
+    depends_on('py-kiwisolver', type=('build', 'run'), when='@2.2.0:')
 
     # ------ Optional GUI frameworks
     depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -59,6 +59,10 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+
+    # This patch adds '-lm' when linking libgraphblas and when using clang.
+    # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
+    patch('graphblas_libm_dep.patch', when='@5.2.0:%clang')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
