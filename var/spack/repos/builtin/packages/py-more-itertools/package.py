@@ -34,6 +34,5 @@ class PyMoreItertools(PythonPackage):
     version('4.1.0', '246f46686d95879fbad37855c115dc52')
     version('2.2', 'b8d328a33f966bf40bb829bcf8da35ce')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-six@1.0.0:1.999', type=('build', 'run'))
