@@ -87,4 +87,22 @@ Spack provides a ``setup`` command that is useful for the development of
 software outside of Spack. Unfortunately, this command no longer works.
 See https://github.com/spack/spack/issues/2597 and
 https://github.com/spack/spack/issues/2662 for details. This is expected
-to be fixed by https://github.com/spack/spack/pull/2664.
+to be fixed by https://github.com/spack/spack/pull/7846.
+
+
+----------------------------------------------
+Some Python3-based Software Stacks Don't Build
+----------------------------------------------
+
+**Status:** Work in progress
+
+Spack offers build-only dependencies (``type='build'``); but the
+concretizer is not currently able to treat them differently from other
+dependencies.  Therefore, DAGs that include `python@3` are not able to
+successfully concretize if any package in the DAG requires `python@2`
+as a build dependency.  This problem is expected to be fixed with an
+upcoming improved concretizer.
+
+In the meantime, for Python3 users who need it,
+https://github.com/spack/spack/pull/7926 offers a temporary way around
+this problem.
