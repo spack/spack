@@ -44,16 +44,17 @@ class Gdal(AutotoolsPackage):
     version('2.1.2', 'ae85b78888514c75e813d658cac9478e')
     version('2.0.2', '940208e737c87d31a90eaae43d0efd65')
 
-    extends('python')
+    extends('python', when='+python')
 
     variant('hdf5', default=False, description='Enable HDF5 support')
     variant('hdf', default=False, description='Enable HDF4 support')
     variant('openjpeg', default=False, description='Enable JPEG2000 support')
     variant('geos', default=False, description='Enable GEOS support')
     variant('kea', default=False, description='Enable KEA support')
-    variant('netcdf', default=False, description='Enable netcdf support')
+    variant('netcdf', default=False, description='Enable NetCDF support')
+    variant('python', default=False, description='Enable Python support')
 
-    depends_on('swig')
+    depends_on('swig', when='+python')
     depends_on("hdf5", when='+hdf5')
     depends_on("hdf", when='+hdf')
     depends_on("openjpeg", when='+openjpeg')
@@ -74,8 +75,12 @@ class Gdal(AutotoolsPackage):
         args = []
         args.append("--with-liblzma=yes")
         args.append("--with-zlib=%s" % spec['zlib'].prefix)
-        args.append("--with-python=%s" % spec['python'].command.path)
         args.append("--without-libtool")
+
+        if '+python' in spec:
+            args.append("--with-python=%s" % spec['python'].command.path)
+        else:
+            args.append("--with-python=no")
 
         if '+geos' in spec:
             args.append('--with-geos=yes')
