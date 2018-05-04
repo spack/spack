@@ -41,6 +41,9 @@ class Bcftools(AutotoolsPackage):
     version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
     version('1.2', '8044bed8fce62f7072fc6835420f0906')
 
+    depends_on('libzip', when='@1.8:')
+
+    depends_on('htslib@1.8', when='@1.8')
     depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')
     depends_on('htslib@1.4',   when='@1.4')
