@@ -113,7 +113,6 @@ class Wireshark(CMakePackage):
                            'Wireshark.app/Contents/MacOS/Wireshark'),
                  join_path(self.prefix.bin, 'wireshark'))
 
-
     @run_after('install')
     def install_headers(self):
         if self.spec.satisfies('+headers'):
