@@ -33,10 +33,6 @@ class Krb5(AutotoolsPackage):
 
     version('1.16.1', '848e9b80d6aaaa798e3f3df24b83c407')
 
-#    depends_on('m4')
-#    depends_on('autoconf')
-#    depends_on('automake')
-#    depends_on('libtool')
     depends_on('openssl')
 
     configure_directory = 'src'
