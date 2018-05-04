@@ -29,10 +29,11 @@ class Papyrus(CMakePackage):
     """Parallel Aggregate Persistent Storage"""
 
     homepage = "https://code.ornl.gov/eck/papyrus"
-    url      = "https://code.ornl.gov/eck/papyrus/repository/archive.tar.bz2?ref=v1.0.0"
+    url      = "https://code.ornl.gov/eck/papyrus" \
+               "/repository/archive.tar.bz2?ref=v1.0.0"
 
-    version('develop',
-            git='https://code.ornl.gov/eck/papyrus.git', branch='master')
+    version('develop', branch='master',
+            git='https://code.ornl.gov/eck/papyrus.git')
     version('1.0.0', 'fe0fca073c3604110f0507f375d71e64')
 
     depends_on('mpi')
