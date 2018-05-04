@@ -149,11 +149,13 @@ class PyNumpy(PythonPackage):
     def build_args(self, spec, prefix):
         args = []
 
-        # From NumPy 1.10.0 on it's possible to do a parallel build
-        # However, this does not always work in practice.
-        # See https://github.com/spack/spack/issues/7927
-        # if self.version >= Version('1.10.0'):
-        #     args = ['-j', str(make_jobs)]
+        # From NumPy 1.10.0 on it's possible to do a parallel build.
+        if self.version >= Version('1.10.0'):
+            # But Parallel build in Python 3.5+ is broken.  See:
+            # https://github.com/spack/spack/issues/7927
+            # https://github.com/scipy/scipy/issues/7112
+            if spec['python'].version < Version('3.5'):
+                args = ['-j', str(make_jobs)]
 
         return args
 
