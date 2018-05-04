@@ -36,7 +36,3 @@ class Papyrus(CMakePackage):
     version('1.0.0', 'b5ec3337271ebfda51637892fcedd86e')
 
     depends_on('mpi')
-
-    def cmake_args(self):
-        args = []
-        return args
