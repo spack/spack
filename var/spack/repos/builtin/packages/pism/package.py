@@ -29,7 +29,7 @@ class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
-    url      = "https://github.com/pism/pism/archive/v0.7.3.tar.gz
+    url      = "https://github.com/pism/pism/archive/v0.7.3.tar.gz"
 
     maintainers = ['citibeth']
 
