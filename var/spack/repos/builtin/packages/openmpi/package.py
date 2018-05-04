@@ -338,6 +338,11 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
         ]
 
+        # According to this comment on github:
+        #
+        # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
+        #
+        # adding --enable-static silently disables slurm support via pmi/pmi2
         if not spec.satisfies('schedulers=slurm'):
             config_args.append('--enable-static')
 
