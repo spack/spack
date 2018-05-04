@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class Stringtie(MakefilePackage):
     homepage = "https://ccb.jhu.edu/software/stringtie"
     url      = "https://github.com/gpertea/stringtie/archive/v1.3.3b.tar.gz"
 
+    version('1.3.4a', '2a191ef6512242a3a5778cf7718bb6af')
     version('1.3.3b', '11a43260b18e4272182380e922445d88')
 
     depends_on('samtools')

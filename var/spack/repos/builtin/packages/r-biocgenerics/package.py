@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,10 @@ from spack import *
 class RBiocgenerics(RPackage):
     """S4 generic functions needed by many Bioconductor packages."""
     homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/BiocGenerics"
     list_url = homepage
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    version('0.24.0', git='https://git.bioconductor.org/packages/BiocGenerics', commit='3db111e8c1f876267da89f4f0c5406a9d5c31cd1')
+    version('0.22.1', git='https://git.bioconductor.org/packages/BiocGenerics', commit='9c90bb8926885289d596a81ff318ee3745cbb6ad')
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    depends_on('r@3.4.0:3.4.9', when='@0.22.1:')

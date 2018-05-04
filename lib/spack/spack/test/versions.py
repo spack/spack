@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -486,6 +486,14 @@ def test_repr_and_str():
     check_repr_and_str('1.2.3')
     check_repr_and_str('R2016a')
     check_repr_and_str('R2016a.2-3_4')
+
+
+def test_len():
+    a = Version('1.2.3.4')
+    assert len(a) == len(a.version)
+    assert(len(a) == 4)
+    b = Version('2018.0')
+    assert(len(b) == 2)
 
 
 def test_get_item():

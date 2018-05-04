@@ -7,7 +7,7 @@
 # tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -113,6 +113,12 @@ class XlR(Compiler):
            older version of AIX and linux on power.
         """
         fver = get_compiler_version(fc, '-qversion', r'([0-9]?[0-9]\.[0-9])')
+        if fver >= 16:
+            """Starting with version 16.1, the XL C and Fortran compilers
+               have the same version.  So no need to downgrade the Fortran
+               compiler version to match that of the C compiler version.
+            """
+            return str(fver)
         cver = float(fver) - 2
         if cver < 10:
             cver = cver - 0.1

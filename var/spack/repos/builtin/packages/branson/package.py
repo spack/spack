@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,7 @@ class Branson(CMakePackage):
     version('develop', git='https://github.com/lanl/branson', branch='develop')
     version('1.01', 'cf7095a887a8dd7d417267615bd0452a')
 
-    depends_on('mpi')
+    depends_on('mpi@2:')
     depends_on('boost')
     depends_on('metis')
     depends_on('parmetis')

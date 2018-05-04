@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class Sniffles(CMakePackage):
     homepage = "https://github.com/fritzsedlazeck/Sniffles/wiki"
     url      = "https://github.com/fritzsedlazeck/Sniffles/archive/v1.0.5.tar.gz"
 
+    version('1.0.7', '83bd93c5ab5dad3a6dc776f11d3a880e')
     version('1.0.5', 'c2f2350d00418ba4d82c074e7f0b1832')
 
     # the build process doesn't actually install anything, do it by hand

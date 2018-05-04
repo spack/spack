@@ -787,7 +787,7 @@ for the ``mylib`` package (ellipses for brevity):
        depends_on('cmake', type='build')
        depends_on('doxygen', type='build')
 
-       def configure_args(self):
+       def cmake_args(self):
            spec = self.spec
            return [
                '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
@@ -1088,7 +1088,7 @@ The main points that are implemented below:
    install:
      - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
-         git clone --depth 50 https://github.com/llnl/spack.git $SPACK_ROOT &&
+         git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
          echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
@@ -1105,6 +1105,8 @@ The main points that are implemented below:
      - cmake $TRAVIS_BUILD_DIR
      - make -j 2
      - make test
+
+.. _workflow_create_docker_image:
 
 -----------------------------------
 Using Spack to Create Docker Images
@@ -1181,7 +1183,7 @@ In order to build and run the image, execute:
    #COPY       packages.yaml modules.yaml $SPACK_ROOT/etc/spack/
 
    # install spack
-   RUN        curl -s -L https://api.github.com/repos/llnl/spack/tarball \
+   RUN        curl -s -L https://api.github.com/repos/spack/spack/tarball \
               | tar xzC $SPACK_ROOT --strip 1
    # note: at this point one could also run ``spack bootstrap`` to avoid
    #       parts of the long apt-get install list above
@@ -1207,6 +1209,9 @@ MPI
 """
 Due to the dependency on Fortran for OpenMPI, which is the spack default
 implementation, consider adding ``gfortran`` to the ``apt-get install`` list.
+
+Recent versions of OpenMPI will require you to pass ``--allow-run-as-root``
+to your ``mpirun`` calls if started as root user inside Docker.
 
 For execution on HPC clusters, it can be helpful to import the docker
 image into Singularity in order to start a program with an *external*
@@ -1249,6 +1254,28 @@ Just use the `docker bootstraping mechanism <http://singularity.lbl.gov/quicksta
    %runscript
    exec /bin/bash -l
 
+""""""""""""""""""""""
+Docker for Development
+""""""""""""""""""""""
+
+For examples of how we use docker in development, see
+:ref:`docker_for_developers`.
+
+"""""""""""""""""""""""""
+Docker on Windows and OSX
+"""""""""""""""""""""""""
+
+On Mac OS and Windows, docker runs on a hypervisor that is not allocated much
+memory by default, and some spack packages may fail to build due to lack of
+memory. To work around this issue, consider configuring your docker installation
+to use more of your host memory. In some cases, you can also ease the memory
+pressure on parallel builds by limiting the parallelism in your config.yaml.
+
+.. code-block:: yaml
+
+   config:
+     build_jobs: 2
+
 ------------------
 Upstream Bug Fixes
 ------------------
@@ -1265,7 +1292,7 @@ Buggy New Version
 
 Sometimes, the old version of a package works fine, but a new version
 is buggy.  For example, it was once found that `Adios did not build
-with hdf5@1.10 <https://github.com/LLNL/spack/issues/1683>`_.  If the
+with hdf5@1.10 <https://github.com/spack/spack/issues/1683>`_.  If the
 old version of ``hdf5`` will work with ``adios``, the suggested
 procedure is:
 
@@ -1275,7 +1302,7 @@ procedure is:
    .. code-block:: python
 
       # Adios does not build with HDF5 1.10
-      # See: https://github.com/LLNL/spack/issues/1683
+      # See: https://github.com/spack/spack/issues/1683
       depends_on('hdf5@:1.9')
 
 #. Determine whether the problem is with ``hdf5`` or ``adios``, and
@@ -1288,7 +1315,7 @@ procedure is:
    .. code-block:: python
 
       # Adios up to v1.10.0 does not build with HDF5 1.10
-      # See: https://github.com/LLNL/spack/issues/1683
+      # See: https://github.com/spack/spack/issues/1683
       depends_on('hdf5@:1.9', when='@:1.10.0')
       depends_on('hdf5', when='@1.10.1:')
 

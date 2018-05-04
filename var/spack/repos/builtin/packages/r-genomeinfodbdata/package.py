@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ class RGenomeinfodbdata(RPackage):
     """for mapping between NCBI taxonomy ID and species. Used by functions
        in the GenomeInfoDb package."""
 
-    homepage = "http://www.example.co://bioconductor.org/packages/3.5/data/annotation/html/GenomeInfoDbData.html"
+    homepage = "https://bioconductor.org/packages/GenomeInfoDbData/"
     url      = "https://bioconductor.org/packages/3.5/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
 
     version('0.99.0', '85977b51061dd02a90153db887040d05')

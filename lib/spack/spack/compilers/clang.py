@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -126,14 +126,14 @@ class Clang(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        """The '--version' option works for clang compilers.
+        """The ``--version`` option works for clang compilers.
         On most platforms, output looks like this::
 
             clang version 3.1 (trunk 149096)
             Target: x86_64-unknown-linux-gnu
             Thread model: posix
 
-        On Mac OS X, it looks like this::
+        On macOS, it looks like this::
 
             Apple LLVM version 7.0.2 (clang-700.1.81)
             Target: x86_64-apple-darwin15.2.0

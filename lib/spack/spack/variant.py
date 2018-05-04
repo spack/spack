@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -67,11 +67,26 @@ class Variant(object):
         self.default = default
         self.description = str(description)
 
+        self.values = None
+        if values is any:
+            # 'any' is a special case to make it easy to say any value is ok
+            self.single_value_validator = lambda x: True
+
+        elif isinstance(values, type):
+            # supplying a type means any value *of that type*
+            def isa_type(v):
+                try:
+                    values(v)
+                    return True
+                except ValueError:
+                    return False
+            self.single_value_validator = isa_type
+
         if callable(values):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
-            self.values = None
+
         else:
             # Otherwise assume values is the set of allowed explicit values
             self.values = tuple(values)
@@ -114,7 +129,7 @@ class Variant(object):
 
         # Check and record the values that are not allowed
         not_allowed_values = [
-            x for x in value if not self.single_value_validator(x)
+            x for x in value if self.single_value_validator(x) is False
         ]
         if not_allowed_values:
             raise InvalidVariantValueError(self, not_allowed_values, pkg)

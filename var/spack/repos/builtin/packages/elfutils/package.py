@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,11 +46,19 @@ class Elfutils(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('gettext')
+    conflicts('%gcc@7.2.0:', when='@0.163')
 
     provides('elf@1')
 
+    # Elfutils uses nested functions in C code, which is implemented
+    # in gcc, but not in clang. C code compiled with gcc is
+    # binary-compatible with clang, so it should be possible to build
+    # elfutils with gcc, and then link it to clang-built libraries.
+    conflicts('%clang')
+
     def configure_args(self):
         # configure doesn't use LIBS correctly
+        gettext_lib = self.spec['gettext'].prefix.lib,
         return [
-            'LDFLAGS=-L%s -lintl' % self.spec['gettext'].prefix.lib,
+            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
             '--enable-maintainer-mode']

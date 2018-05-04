@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,11 +37,15 @@ class Laghos(MakefilePackage):
     git      = "https://github.com/CEED/Laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
 
-    version('1.0', '107c2f693936723e764a4d404d33d44a')
+    version('1.0', '4c091e115883c79bed81c557ef16baff')
     version('develop', git=git, branch='master')
 
-    depends_on('mpi')
-    depends_on('mfem@laghos-v1.0', when='@1.0')
+    variant('metis', default=True, description='Enable/disable METIS support')
+
+    depends_on('mfem@develop+mpi+metis', when='@develop+metis')
+    depends_on('mfem@develop+mpi~metis', when='@develop~metis')
+    depends_on('mfem@laghos-v1.0,3.3.2:+mpi+metis', when='@1.0+metis')
+    depends_on('mfem@laghos-v1.0,3.3.2:+mpi~metis', when='@1.0~metis')
 
     @property
     def build_targets(self):
@@ -49,12 +53,23 @@ class Laghos(MakefilePackage):
         spec = self.spec
 
         targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
-        targets.append('CONFIG_MK=%s' % join_path(spec['mfem'].prefix,
-                       'share/mfem/config.mk'))
-        targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
-                       'share/mfem/test.mk'))
+        targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
+        targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
+        targets.append('CXX=%s' % spec['mpi'].mpicxx)
 
         return targets
+
+    # See lib/spack/spack/build_systems/makefile.py
+    def check(self):
+        targets = []
+        spec = self.spec
+
+        targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
+        targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
+        targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
+
+        with working_dir(self.build_directory):
+            make('test', *targets)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

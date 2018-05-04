@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,13 +35,15 @@ class RHtmltable(RPackage):
     compatible with HTML/'LaTeX'."""
 
     homepage = "https://CRAN.R-project.org/package=htmlTable"
-    url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.9.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.11.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/htmlTable"
 
+    version('1.11.2', '473e6d486e7714f8dd7f16a31480c896')
     version('1.9', '08c62c19e1ffe570e7d8fa57db5094b9')
 
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-knitr@1.6:', type=('build', 'run'))
+    depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.6:', type=('build', 'run'), when="@1.11.0:")

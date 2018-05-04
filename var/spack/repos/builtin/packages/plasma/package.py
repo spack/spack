@@ -4,7 +4,7 @@
 #
 # Created by Piotr Luszczek, luszczek@icl.utk.edu, All rights reserved.
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 #
 ##############################################################################
 #
@@ -27,18 +27,25 @@ class Plasma(MakefilePackage):
 
     version("develop", hg="https://luszczek@bitbucket.org/icl/plasma")
 
+    variant('shared', default=True, description="Build shared library (disables static library)")
+
     depends_on("blas")
     depends_on("lapack")
 
     conflicts("atlas")  # does not have LAPACKE interface
-    conflicts("netlib-lapack@:2.999")  # missing LAPACKE features
+
+    # missing LAPACKE features and/or CBLAS headers
+    conflicts("netlib-lapack@:3.5.999")
+
     # clashes with OpenBLAS declarations and has a problem compiling on its own
     conflicts("cblas")
+
     conflicts("openblas-with-lapack")  # incomplete LAPACK implementation
     conflicts("veclibfort")
 
-    # only GCC 7+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:6.999")
+    # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
+    conflicts("%gcc@:4.8.99")
+
     conflicts("%cce")
     conflicts("%clang")
     conflicts("%intel")
@@ -48,6 +55,16 @@ class Plasma(MakefilePackage):
     conflicts("%xl_r")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
+    patch("add_netlib_lapacke_detection.patch", when="@17.1")
+
+    def getblaslapacklibs(self):
+        if '^netlib-lapack' in self.spec:
+            bl_attr = ':c,fortran'
+        else:
+            bl_attr = ''
+        return self.spec['lapack' + bl_attr].libs + \
+            self.spec['blas' + bl_attr].libs + \
+            find_system_libraries(['libm'])
 
     def edit(self, spec, prefix):
         # copy "make.inc.mkl-gcc" provided by default into "make.inc"
@@ -55,7 +72,10 @@ class Plasma(MakefilePackage):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^mkl"):
+        if '~shared' in self.spec:
+            make_inc.filter("-fPIC", "")  # not using fPIC
+
+        if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
 
         header_flags = ""
@@ -63,7 +83,7 @@ class Plasma(MakefilePackage):
         for dep in ("blas", "lapack"):
             try:  # in case the dependency does not provide header flags
                 header_flags += " " + spec[dep].headers.cpp_flags
-            except AttributeError:
+            except Exception:
                 pass
 
         make_inc.filter("CFLAGS +[+]=", "CFLAGS += " + header_flags + " ")
@@ -74,6 +94,9 @@ class Plasma(MakefilePackage):
         # make sure CC variable comes from build environment
         make_inc.filter("CC *[?]*= * .*cc", "")
 
+        make_inc.filter("LIBS *[?]*= * .*", "LIBS = " +
+                        self.getblaslapacklibs().ld_flags)
+
     @property
     def build_targets(self):
         targets = list()
@@ -81,10 +104,10 @@ class Plasma(MakefilePackage):
         # use $CC set by Spack
         targets.append("CC = {0}".format(self.compiler.cc))
 
-        if self.spec.satisfies("^mkl"):
-            targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
+        if "^mkl" in self.spec:
+            targets.append("MKLROOT = {0}".format(env["MKLROOT"]))
 
-        # pass BLAS library flags
-        targets.append("LIBS = {0}".format(self.spec["blas"].libs.ld_flags))
+        targets.append("LIBS = {0}".format(
+            self.getblaslapacklibs().ld_flags))
 
         return targets

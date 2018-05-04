@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,8 @@ class Slepc(Package):
     homepage = "http://www.grycap.upv.es/slepc"
     url = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
 
+    version('3.9.0', '1f3930db56b4065aaf214ea758ddff1a70bf19d45544cbdfd19d2787db4bfe0b')
+    version('3.8.2', '1e7d20d20eb26da307d36017461fe4a55f40e947e232739179dbe6412e22ed13')
     version('3.8.0', 'c58ccc4e852d1da01112466c48efa41f0839649f3a265925788237d76cd3d963')
     version('3.7.4', '2fb782844e3bc265a8d181c3c3e2632a4ca073111c874c654f1365d33ca2eb8a')
     version('3.7.3', '3ef9bcc645a10c1779d56b3500472ceb66df692e389d635087d30e7c46424df9')
@@ -48,6 +50,7 @@ class Slepc(Package):
     depends_on('python@2.6:2.8', type='build')
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@3.9:3.9.99', when='@3.9:3.9.99')
     depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')

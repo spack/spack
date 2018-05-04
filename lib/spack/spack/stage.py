@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -565,7 +565,7 @@ class ResourceStage(Stage):
         # Make the paths in the dictionary absolute and link
         for key, value in iteritems(placement):
             destination_path = join_path(target_root, value)
-            source_path = join_path(self.source_path, key)
+            source_path = os.path.realpath(join_path(self.source_path, key))
 
             dst_dir = os.path.dirname(destination_path)
             try:

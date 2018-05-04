@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ class RCirclize(RPackage):
 
     homepage = "https://cran.r-project.org/package=circlize"
     url      = "https://cran.r-project.org/src/contrib/circlize_0.4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/circlize"
 
     version('0.4.1', '6818830654f485abbdc8c74ec9087377')
     version('0.4.0', '0dbf1b481930a759d6f413d17f8ae1c4')

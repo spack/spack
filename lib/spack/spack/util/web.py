@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -196,7 +196,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
     except URLError as e:
         tty.debug(e)
 
-        if isinstance(e.reason, ssl.SSLError):
+        if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
             tty.warn("Spack was unable to fetch url list due to a certificate "
                      "verification problem. You can try running spack -k, "
                      "which will not check SSL certificates. Use this at your "

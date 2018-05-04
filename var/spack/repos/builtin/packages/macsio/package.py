@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -47,8 +47,7 @@ class Macsio(CMakePackage):
     variant('pdb', default=False, description="Build PDB plugin")
     variant('exodus', default=False, description="Build EXODUS plugin")
     variant('scr', default=False, description="Build with SCR support")
-    # TODO: typhonio not in spack
-    # variant('typhonio', default=False, description="Build TYPHONIO plugin")
+    variant('typhonio', default=False, description="Build TYPHONIO plugin")
 
     depends_on('json-cwx')
     depends_on('mpi', when="+mpi")
@@ -58,7 +57,7 @@ class Macsio(CMakePackage):
     depends_on('exodusii', when="+exodus")
     # pdb is packaged with silo
     depends_on('silo', when="+pdb")
-    # depends_on('typhonio', when="+typhonio")
+    depends_on('typhonio', when="+typhonio")
     depends_on('scr', when="+scr")
 
     def cmake_args(self):
@@ -101,11 +100,10 @@ class Macsio(CMakePackage):
             #     cmake_args.append("-DWITH_ZLIB_PREFIX={0}"
             #         .format(spec['silo'].prefix))
 
-        # TODO: typhonio not in spack
-        # if "+typhonio" in spec:
-        #     cmake_args.append("-DENABLE_TYPHONIO=ON")
-        #     cmake_args.append("-DWITH_TYPHONIO_PREFIX={0}"
-        #         .format(spec['typhonio'].prefix))
+        if "+typhonio" in spec:
+            cmake_args.append("-DENABLE_TYPHONIO_PLUGIN=ON")
+            cmake_args.append("-DWITH_TYPHONIO_PREFIX={0}"
+                              .format(spec['typhonio'].prefix))
 
         if "+exodus" in spec:
             cmake_args.append("-DENABLE_EXODUS_PLUGIN=ON")

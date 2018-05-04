@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,11 +24,24 @@
 ##############################################################################
 from spack.main import SpackCommand
 import os.path
+import pytest
 
 activate = SpackCommand('activate')
 extensions = SpackCommand('extensions')
 install = SpackCommand('install')
 view = SpackCommand('view')
+
+
+@pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add'])
+def test_view_link_type(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery, cmd):
+    install('libdwarf')
+    viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
+    view(cmd, viewpath, 'libdwarf')
+    package_prefix = os.path.join(viewpath, 'libdwarf')
+    assert os.path.exists(package_prefix)
+    assert os.path.islink(package_prefix) == (not cmd.startswith('hard'))
 
 
 def test_view_external(

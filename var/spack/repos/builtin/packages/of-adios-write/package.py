@@ -5,7 +5,7 @@
 # and is released as part of spack under the LGPL license.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
 #
 # License

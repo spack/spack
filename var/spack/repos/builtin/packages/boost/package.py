@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,10 @@ class Boost(Package):
             branch='develop',
             submodules=True)
 
+    version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae',
+            url='https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2')
+    version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
+            url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
             url='https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2')
     version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
@@ -53,9 +57,11 @@ class Boost(Package):
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
-    #       See: https://github.com/LLNL/spack/issues/3963
-    version('1.64.0', '93eecce2abed9d2442c9676914709349')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+    #       See: https://github.com/spack/spack/issues/3963
+    version('1.64.0', '93eecce2abed9d2442c9676914709349',
+            url='https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2')
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847',
+            url='https://dl.bintray.com/boostorg/release/1.63.0/source/boost_1_63_0.tar.bz2')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
@@ -91,6 +97,7 @@ class Boost(Package):
     default_install_libs = set(['atomic',
                                 'chrono',
                                 'date_time',
+                                'exception',
                                 'filesystem',
                                 'graph',
                                 'iostreams',
@@ -158,7 +165,7 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
-    patch('call_once_variadic.patch', when='@1.55.0:1.55.9999%gcc@5.0:5.9')
+    patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
@@ -189,6 +196,10 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
+        # avoid "ambiguous key" error
+        if spec.satisfies('@:1.58'):
+            return ''
+
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
             spec['python'].command.path,
@@ -339,11 +350,13 @@ class Boost(Package):
             withLibs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
+        if not spec.satisfies('@1.39.0:'):
+            withLibs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
-        env['BOOST_BUILD_PATH'] = './'
+        env['BOOST_BUILD_PATH'] = self.stage.source_path
 
         bootstrap = Executable('./bootstrap.sh')
 
@@ -360,7 +373,12 @@ class Boost(Package):
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
             jobs = 64
-        b2_options = ['-j', '%s' % jobs]
+
+        b2_options = [
+            '-j', '%s' % jobs,
+            '--user-config=%s' % os.path.join(
+                self.stage.source_path, 'user-config.jam')
+        ]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 

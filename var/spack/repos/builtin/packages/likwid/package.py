@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import glob
+import os
 
 
 class Likwid(Package):
@@ -36,7 +37,7 @@ class Likwid(Package):
 
     maintainers = ['davydden']
 
-    version('4.3.0', 'f6bdf12513af95bd6eefa9c68644e724')
+    version('4.3.0', '7f8f6981d7d341fce2621554323f8c8b')
     version('4.2.1', 'c408ddcf0317cdd894af4c580cd74294')
     version('4.2.0', 'e41ff334b8f032a323d941ce32907a75')
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
@@ -45,8 +46,7 @@ class Likwid(Package):
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
 
-    # TODO: how to specify those?
-    # depends_on('lua')
+    depends_on('lua', when='@4.2.0:')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -65,10 +65,11 @@ class Likwid(Package):
     @run_before('install')
     def filter_sbang(self):
         # Filter sbang before install so Spack's sbang hook can fix it up
-        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
         files = ['perl/feedGnuplot'] + glob.glob('filters/*')
 
-        filter_file('^#!/usr/bin/perl', '#!{0}'.format(perl), *files)
+        filter_file('^#!/usr/bin/perl',
+                    '#!{0}'.format(self.spec['perl'].command.path),
+                    *files)
 
     def install(self, spec, prefix):
         if self.compiler.name not in self.supported_compilers:
@@ -88,5 +89,23 @@ class Likwid(Package):
                     'INSTALL_CHOWN = -o $(USER)',
                     'config.mk')
 
+        if spec.satisfies('^lua'):
+            filter_file('^#LUA_INCLUDE_DIR.*',
+                        'LUA_INCLUDE_DIR = {0}'.format(
+                            spec['lua'].prefix.include),
+                        'config.mk')
+            filter_file('^#LUA_LIB_DIR.*',
+                        'LUA_LIB_DIR = {0}'.format(
+                            spec['lua'].prefix.lib),
+                        'config.mk')
+            filter_file('^#LUA_LIB_NAME.*',
+                        'LUA_LIB_NAME = lua',
+                        'config.mk')
+            filter_file('^#LUA_BIN.*',
+                        'LUA_BIN = {0}'.format(
+                            spec['lua'].prefix.bin),
+                        'config.mk')
+
+        env['PWD'] = os.getcwd()
         make()
         make('install')

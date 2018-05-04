@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,8 @@ class Lmod(AutotoolsPackage):
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
+    version('7.7.29', 'bd3f171995e6863505e8a958d158ced1')
+    version('7.7.13', 'e1d222fa04148707dceb08c82d7e9fa5')
     version('7.7',    '8ac594401716c6d1b40cac22bc1030ca')
     version('7.6.14', '60726c991038b6337fbb27b6a333a2d4')
     version('7.4.11', '70c55ba0ba3877b6d8df536ee7ea6d49')
@@ -52,7 +54,7 @@ class Lmod(AutotoolsPackage):
     version('6.3.7',  '0fa4d5a24c41cae03776f781aa2dedc1')
     version('6.0.1',  '91abf52fe5033bd419ffe2842ebe7af9')
 
-    depends_on('lua@5.2:')
+    depends_on('lua@5.1:')
     depends_on('lua-luaposix', type=('build', 'run'))
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'run'))
