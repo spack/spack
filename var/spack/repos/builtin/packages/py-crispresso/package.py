@@ -25,21 +25,22 @@
 from spack import *
 
 
-class PyCython(PythonPackage):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.io/packages/source/c/cython/Cython-0.25.2.tar.gz"
+class PyCrispresso(PythonPackage):
+    """Software pipeline for the analysis of CRISPR-Cas9 genome editing
+    outcomes from deep sequencing data."""
 
-    version('0.28.1', 'c549effadb52d90bdcb1affc1e5dbb97')
-    version('0.25.2', '642c81285e1bb833b14ab3f439964086')
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "https://github.com/lucapinello/CRISPResso"
+    url      = "https://pypi.io/packages/source/C/CRISPResso/CRISPResso-1.0.8.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('1.0.8', '2f9b52fe62cf49012a9525845f4aea45')
 
-    @property
-    def command(self):
-        """Returns the Cython command"""
-        return Executable(self.prefix.bin.cython)
+    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
+    depends_on('py-biopython@1.6.5:', type=('build', 'run'))
+    depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
+    depends_on('py-numpy@1.9:', type=('build', 'run'))
+    depends_on('py-pandas@0.15:', type=('build', 'run'))
+    depends_on('py-seaborn@0.7.1:', type=('build', 'run'))
+    depends_on('emboss@6:', type=('build', 'run'))
+    depends_on('flash', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))

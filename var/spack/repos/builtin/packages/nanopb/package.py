@@ -26,7 +26,8 @@ from spack import *
 
 
 class Nanopb(CMakePackage):
-    """Nanopb is a small code-size Protocol Buffers implementation in ansi C."""
+    """Nanopb is a small code-size Protocol Buffers implementation
+    in ansi C."""
 
     homepage = "https://jpa.kapsi.fi/nanopb/"
     url      = "https://github.com/nanopb/nanopb/archive/0.3.9.1.tar.gz"

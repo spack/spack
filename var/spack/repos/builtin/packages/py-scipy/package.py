@@ -62,6 +62,7 @@ class PyScipy(PythonPackage):
 
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-nose', type='test')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
@@ -69,17 +70,14 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-
     def build_args(self, spec, prefix):
         args = []
 
         # Build in parallel
-        # Known problems with Python 3
+        # Known problems with Python 3.5+
+        # https://github.com/spack/spack/issues/7927
         # https://github.com/scipy/scipy/issues/7112
-        if not spec.satisfies('^python@3:'):
+        if not spec.satisfies('^python@3.5:'):
             args.extend(['-j', str(make_jobs)])
 
         return args

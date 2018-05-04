@@ -25,21 +25,42 @@
 from spack import *
 
 
-class PyCython(PythonPackage):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.io/packages/source/c/cython/Cython-0.25.2.tar.gz"
+class BookleafCpp(CMakePackage):
+    """
+    BookLeaf is a 2D unstructured hydrodynamics mini-app.
+    """
 
-    version('0.28.1', 'c549effadb52d90bdcb1affc1e5dbb97')
-    version('0.25.2', '642c81285e1bb833b14ab3f439964086')
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "https://github.com/UK-MAC/BookLeaf_Cpp"
+    url      = "https://github.com/UK-MAC/BookLeaf_Cpp/archive/v2.0.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('2.0', '69819ebcbae5eaa63d1a4de2c77cac85')
 
-    @property
-    def command(self):
-        """Returns the Cython command"""
-        return Executable(self.prefix.bin.cython)
+    variant('typhon', default=True, description='Use Typhon')
+    variant('parmetis', default=False, description='Use ParMETIS')
+    variant('silo', default=False, description='Use Silo')
+    variant('caliper', default=False, description='Use Caliper')
+
+    depends_on('caliper', when='+caliper')
+    depends_on('parmetis', when='+parmetis')
+    depends_on('silo', when='+silo')
+    depends_on('typhon', when='+typhon')
+    depends_on('mpi', when='+typhon')
+    depends_on('yaml-cpp@0.6.0:')
+
+    def cmake_args(self):
+        spec = self.spec
+        cmake_args = []
+
+        if '+typhon' in spec:
+            cmake_args.append('-DENABLE_TYPHON=ON')
+
+        if '+parmetis' in spec:
+            cmake_args.append('-DENABLE_PARMETIS=ON')
+
+        if '+silo' in spec:
+            cmake_args.append('-DENABLE_SILO=ON')
+
+        if '+caliper' in spec:
+            cmake_args.append('-DENABLE_CALIPER=ON')
+
+        return cmake_args

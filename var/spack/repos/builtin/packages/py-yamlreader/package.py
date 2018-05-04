@@ -25,21 +25,15 @@
 from spack import *
 
 
-class PyCython(PythonPackage):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.io/packages/source/c/cython/Cython-0.25.2.tar.gz"
+class PyYamlreader(PythonPackage):
+    """Yamlreader merges YAML data from a directory, a list of files or a
+    file glob."""
 
-    version('0.28.1', 'c549effadb52d90bdcb1affc1e5dbb97')
-    version('0.25.2', '642c81285e1bb833b14ab3f439964086')
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "http://pyyaml.org/wiki/PyYAML"
+    url      = "https://pypi.io/packages/source/y/yamlreader/yamlreader-3.0.4.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('3.0.4', '542179b5b5bedae941245b8b673119db')
 
-    @property
-    def command(self):
-        """Returns the Cython command"""
-        return Executable(self.prefix.bin.cython)
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
