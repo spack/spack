@@ -336,8 +336,11 @@ class Openmpi(AutotoolsPackage):
         spec = self.spec
         config_args = [
             '--enable-shared',
-            '--enable-static'
         ]
+
+        if not spec.satisfies('schedulers=slurm'):
+            config_args.append('--enable-static')
+
         if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
