@@ -42,7 +42,8 @@ class Metabat(SConsPackage):
     def install_args(self, spec, prefix):
         return ["PREFIX={}".format(prefix)]
 
-    def install(self, spec, prefix):
+    @run_after('build')
+    def fix_perl_scripts(self):
         filter_file(r'#!/usr/bin/perl',
                     '#!/usr/bin/env perl',
                     'aggregateBinDepths.pl')
@@ -50,5 +51,3 @@ class Metabat(SConsPackage):
         filter_file(r'#!/usr/bin/perl',
                     '#!/usr/bin/env perl',
                     'aggregateContigOverlapsByBin.pl')
-
-        super(Metabat, self).install(spec, prefix)
