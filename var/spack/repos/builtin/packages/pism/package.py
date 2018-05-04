@@ -140,8 +140,6 @@ class Pism(CMakePackage):
             ('YES' if '+everytrace' in spec else 'NO')]
 
     def setup_environment(self, spack_env, env):
-        """Add <prefix>/bin to the module; this is not the default if we
-        extend python."""
         env.set('PISM_PREFIX', self.prefix)
         env.set('PISM_BIN', self.prefix.bin)
 
