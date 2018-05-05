@@ -33,14 +33,10 @@ class Libmaxminddb(AutotoolsPackage):
 
     version('1.3.2', '67a861965b30d045bf29a2126bcc05ed')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-
-    def autoreconf(self, spec, prefix):
-        # FIXME: Modify the autoreconf method as necessary
-        autoreconf('--install', '--verbose', '--force')
+#    depends_on('autoconf', type='build')
+#    depends_on('automake', type='build')
+#    depends_on('libtool',  type='build')
+#    depends_on('m4',       type='build')
 
     def configure_args(self):
         args = ['--disable-debug',
