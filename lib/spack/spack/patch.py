@@ -164,7 +164,7 @@ class UrlPatch(Patch):
         with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
             patch_stage.fetch()
             patch_stage.check()
-            patch_stage.cache_local()
+            # patch_stage.cache_local()
             patch_stage.setup_source()
             root = patch_stage.source_path
 
