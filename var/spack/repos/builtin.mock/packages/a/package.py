@@ -66,7 +66,9 @@ class A(AutotoolsPackage):
         pass
 
     def build(self, spec, prefix):
-        pass
+        mkdirp(self.build_directory)
+        config_log = join_path(self.build_directory, 'config.log')
+        touch(config_log)
 
     def install(self, spec, prefix):
-        pass
+        touch(join_path(prefix, 'deleteme'))

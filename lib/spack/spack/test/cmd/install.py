@@ -376,3 +376,18 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+def test_extra_files_are_archived():
+    s = Spec('a foobar=baz')
+    s.concretize()
+
+    install('a foobar=baz')
+
+    config_log = os.path.join(
+        s.prefix, '.spack', 'archived-files', 'config.log'
+    )
+    assert os.path.exists(config_log)
