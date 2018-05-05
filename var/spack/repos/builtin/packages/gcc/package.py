@@ -160,7 +160,7 @@ class Gcc(AutotoolsPackage):
         if macOS_version() >= Version('10.13'):
             patch('darwin/apfs.patch', when='@6.1:6.4,7.1:7.3')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
-        patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
+        patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
