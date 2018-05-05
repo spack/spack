@@ -44,5 +44,4 @@ class PyPysam(PythonPackage):
     depends_on('htslib')
     depends_on('samtools')
 
-    # py-pysam@0.13 doesn't work with htslib@1.7
-    conflicts('htslib@1.7:', when='@:0.13')
+    depends_on('htslib@:1.6', when='@:0.13')
