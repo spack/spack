@@ -65,5 +65,5 @@ udunits2_xml_path = %s
             spec['udunits2'].prefix, 'share', 'udunits', 'udunits2.xml')
 
         with open(cfg, 'w') as fout:
-            fout.write(
-                self.site_cfg_template % (spec['udunits2'].libs, udunits2_xml_path))
+            fout.write(self.site_cfg_template %
+                       (spec['udunits2'].libs, udunits2_xml_path))
