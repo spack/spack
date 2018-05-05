@@ -54,6 +54,10 @@ class A(AutotoolsPackage):
 
     depends_on('b', when='foobar=bar')
 
+    @property
+    def archive_files(self):
+        return super(A, self).archive_files + ['../../outside.log']
+
     def with_or_without_fee(self, activated):
         if not activated:
             return '--no-fee'

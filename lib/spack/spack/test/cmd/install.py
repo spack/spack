@@ -387,7 +387,11 @@ def test_extra_files_are_archived():
 
     install('a foobar=baz')
 
-    config_log = os.path.join(
-        s.prefix, '.spack', 'archived-files', 'config.log'
+    archive_dir = os.path.join(
+        spack.store.layout.metadata_path(s), 'archived-files'
     )
+    config_log = os.path.join(archive_dir, 'config.log')
     assert os.path.exists(config_log)
+
+    errors_txt = os.path.join(archive_dir, 'errors.txt')
+    assert os.path.exists(errors_txt)
