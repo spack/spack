@@ -80,7 +80,7 @@ class LinkTree(object):
                 if os.path.exists(dest) and not os.path.isdir(dest):
                     conflicts.append("File blocks directory: %s" % dest)
             elif os.path.exists(dest) and os.path.isdir(dest):
-                conflicts.append("File blocks directory: %s" % dest)
+                conflicts.append("Directory blocks directory: %s" % dest)
         return conflicts
 
     def get_file_map(self, dest_root, ignore):

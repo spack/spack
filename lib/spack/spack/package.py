@@ -1949,15 +1949,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         Add the extension to the specified view.
 
-        Package authors can override this method to support other
-        extension mechanisms.  Spack internals (commands, hooks, etc.)
-        should call do_activate() method so that proper checks are
-        always executed.
+        Package authors can override this function to maintain some
+        centralized state related to the set of activated extensions
+        for a package.
+
+        Spack internals (commands, hooks, etc.) should call
+        do_activate() method so that proper checks are always executed.
         """
         view.merge(extension.spec, ignore=kwargs.get('ignore', None))
 
     def do_deactivate(self, view=None, **kwargs):
-        """Called on the extension to invoke extendee's deactivate() method.
+        """Remove this extension package from the specified view. Called
+        on the extension to invoke extendee's deactivate() method.
 
         `remove_dependents=True` deactivates extensions depending on this
         package instead of raising an error.

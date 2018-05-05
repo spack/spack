@@ -95,9 +95,7 @@ def deactivate(parser, args):
                 espec = index[name]
                 epkg = espec.package
                 if epkg.extends(pkg.extendee_spec):
-                    if epkg.is_activated(view) or \
-                       args.force:
-
+                    if epkg.is_activated(view) or args.force:
                         epkg.do_deactivate(view, force=args.force)
 
         else:

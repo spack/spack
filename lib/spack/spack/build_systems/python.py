@@ -409,6 +409,10 @@ class PythonPackage(PackageBase):
     run_after('install')(PackageBase.sanity_check_prefix)
 
     def view_file_conflicts(self, view, merge_map):
+        """Report all file conflicts, excepting special cases for python.
+           Specifically, this does not report errors for duplicate
+           __init__.py files for packages in the same namespace.
+        """
         conflicts = list(dst for src, dst in merge_map.items()
                          if os.path.exists(dst))
 
