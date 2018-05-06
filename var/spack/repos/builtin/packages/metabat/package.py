@@ -35,12 +35,13 @@ class Metabat(SConsPackage):
     version('2.12.1', 'c032f47a8b24e58a5a9fefe52cb6e0f8')
 
     depends_on('boost@1.55.0:', type=('build', 'run'))
+    depends_on('perl', type='run')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
     def install_args(self, spec, prefix):
-        return ["PREFIX={}".format(prefix)]
+        return ["PREFIX={0}".format(prefix)]
 
     @run_after('build')
     def fix_perl_scripts(self):
