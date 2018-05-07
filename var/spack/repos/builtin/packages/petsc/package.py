@@ -301,7 +301,8 @@ class Petsc(Package):
                 # process slot allocation is one per core. On systems with
                 # many cores, the number of processes can exceed the size of
                 # the grid specified when the testcase is run and the test case
-                # fails. Specify a small number of processes to prevent failure.
+                # fails. Specify a small number of processes to prevent
+                # failure.
                 # For more information about Spectrum MPI invocation, see URL
                 # https://www.ibm.com/support/knowledgecenter/en/SSZTET_10.1.0/smpi02/smpi02_mpirun_options.html
                 if ('spectrum-mpi' in spec):
