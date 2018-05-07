@@ -56,6 +56,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
 
     # Misc releases that people need
+    version('5.22.4', '31a71821682e02378fcdadeed85688b8')
     version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
     version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
