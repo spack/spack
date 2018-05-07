@@ -33,7 +33,7 @@ class Manta(CMakePackage):
 
     depends_on('boost@1.58.0:')
     depends_on('cmake@2.8.12:')
-    depends_on('python@2.7.0:2.7.999', type='run')
+    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
 
     version('1.4.0', '582d10f3bc56aecfa5c24931af3742b4')
     version('1.3.2', '83f43fe1a12605c1e9803d1020b24bd1')
