@@ -49,7 +49,7 @@ import os
 import os.path
 
 
-class Openspeedshop(CMakePackage):
+class OpenspeedshopUtils(CMakePackage):
     """OpenSpeedShop is a community effort by The Krell Institute with
        current direct funding from DOEs NNSA.  It builds on top of a
        broad list of community infrastructures, most notably Dyninst
@@ -81,10 +81,6 @@ class Openspeedshop(CMakePackage):
                          to point to target build.")
     variant('cuda', default=False,
             description="build with cuda packages included.")
-
-    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
-            description='Build or not build a GUI of choice'
-    )
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
@@ -139,7 +135,8 @@ class Openspeedshop(CMakePackage):
     depends_on("libxml2", when='@develop')
     depends_on("libxml2@2.9.4", when='@2.3.1.3')
 
-    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    #depends_on('qt@4.8.6:', when='@develop')
+    #depends_on('qt@5.10.0', when='@2.3.1.3')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')
@@ -237,7 +234,6 @@ class Openspeedshop(CMakePackage):
 
             # Appends base options to cmake_args
             self.set_defaultbase_cmakeOptions(spec, cmake_args)
-            guitype = self.spec.variants['gui'].value
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
                  '-DCMAKE_C_FLAGS=%s' % compile_flags,
@@ -247,16 +243,7 @@ class Openspeedshop(CMakePackage):
                  '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
                  '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
-            if guitype == 'none':
-                cmake_args.extend(
-                    ['-DBUILD_QT3_GUI=FALSE'])
-            elif guitype == 'qt4':
-                cmake_args.extend(
-                    ['-DBUILD_QT3_GUI=FALSE'])
-            elif guitype == 'qt3':
-                cmake_args.extend(
-                    ['-DQTLIB_DIR=%s'
-                        % spec['qt'].prefix])
+            cmake_args.extend(['-DBUILD_QT3_GUI=FALSE'])
 
             if spec.satisfies('+crayfe'):
                 # We need to build target/compute node
@@ -339,7 +326,7 @@ class Openspeedshop(CMakePackage):
 
         # Find openspeedshop library path
         oss_libdir = find_libraries('libopenss-framework',
-                                    root=self.spec['openspeedshop'].prefix,
+                                    root=self.spec['openspeedshop-utils'].prefix,
                                     shared=True, recursive=True)
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
