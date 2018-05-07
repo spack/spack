@@ -15,6 +15,7 @@ RUN apt-get -yqq update && apt-get -yqq install \
         gfortran            \
         git                 \
         gnupg2              \
+        iproute2            \
         lmod                \
         make                \
         openssh-server      \
