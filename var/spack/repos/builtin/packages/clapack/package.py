@@ -47,8 +47,8 @@ class Clapack(MakefilePackage):
 
     def edit(self, spec, prefix):
         install('make.inc.example', 'make.inc')
-        make_inc = FileFilter('make.inc')
         if '+external-blas' in spec:
+            make_inc = FileFilter('make.inc')
             make_inc.filter(r'^BLASLIB.*',
                             'BLASLIB = ../../libcblaswr.a -lcblas -latlas')
             makefile.filter(r'^lib.*',
@@ -56,10 +56,7 @@ class Clapack(MakefilePackage):
 
     def build(self, spec, prefix):
         make('f2clib')
-        if '~external-blas' in spec:
-            make('blaslib')
-        elif '+external-blas' in spec:
-            make('cblaswrap')
+        make('cblaswrap' if '+external-blas' in spec else 'blaslib')
         make('lib')
 
     def install(self, spec, prefix):
