@@ -68,7 +68,7 @@ class HicPro(MakefilePackage):
     def install(self, spec, prefix):
         # Patch INSTALLPATH in config-system.txt
         config = FileFilter('config-system.txt')
-        config.filter('/HiC-Pro_%s' % version, '')
+        config.filter('/HiC-Pro_%s' % self.version, '')
         # Install
         install('config-hicpro.txt', prefix)
         install('config-install.txt', prefix)
