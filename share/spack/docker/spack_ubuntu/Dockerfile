@@ -23,6 +23,8 @@ RUN apt-get -yqq update && apt-get -yqq install \
     git clone --depth 1 git://github.com/spack/spack.git /spack && \
     rm -rf /spack/.git && rm -rf /var/lib/apt/lists/*
 
+RUN ln -s /usr/lib/x86_64-linux-gnu/lua/5.2/posix_c.so \
+    /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
 RUN echo "source /usr/share/lmod/lmod/init/bash" \
     > /etc/profile.d/spack.sh
 RUN echo "source /spack/share/spack/setup-env.sh" \
