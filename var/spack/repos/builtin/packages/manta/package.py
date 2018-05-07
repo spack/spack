@@ -31,8 +31,8 @@ class Manta(CMakePackage):
     homepage = "https://github.com/Illumina/manta"
     url      = "https://github.com/Illumina/manta/releases/download/v1.3.2/manta-1.3.2.release_src.tar.bz2"
 
-    depends_on('boost@1.58.0:')
-    depends_on('cmake@2.8.12:')
+    depends_on('boost@1.58.0:', type='build')
+    depends_on('cmake@2.8.12:', type='build')
     depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
 
     version('1.4.0', '582d10f3bc56aecfa5c24931af3742b4')
