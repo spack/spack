@@ -13,6 +13,7 @@ check_dependencies ${coverage} git hg svn
 
 # Fetch the sources in a mirror, and add it to Spack
 mkdir -p ~/.mirror
+rm  -rf ~/.mirror/ncurses/
 bin/spack mirror add travis ~/.mirror
 bin/spack mirror create -D -d ~/.mirror ${SPEC}
 
