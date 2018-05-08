@@ -67,6 +67,12 @@ class IntelTbb(Package):
     variant('shared', default=True,
             description='Builds a shared version of TBB libraries')
 
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
     # Deactivate use of RTM with GCC when building against an old binutils.
     patch("tbb_gcc_rtm_key.patch", level=0, when='^binutils@:2.23')
 
@@ -125,6 +131,10 @@ class IntelTbb(Package):
         # Lore states this file must be handed to make before other options
         if '+shared' not in self.spec:
             make_opts.append("extra_inc=big_iron.inc")
+
+        if spec.variants['cxxstd'].value != 'default':
+            make_opts.append('stdver=c++{0}'.
+                             format(spec.variants['cxxstd'].value))
 
         #
         # tbb does not have a configure script or make install target
