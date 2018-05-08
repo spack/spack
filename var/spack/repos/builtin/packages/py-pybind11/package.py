@@ -50,6 +50,11 @@ class PyPybind11(CMakePackage):
 
     extends('python')
 
+    # compiler support
+    conflicts('%gcc@:4.7')
+    conflicts('%clang@:3.2')
+    conflicts('%intel@:16')
+
     def cmake_args(self):
         args = []
         args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
