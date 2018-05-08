@@ -264,8 +264,8 @@ class Dealii(CMakePackage, CudaPackage):
                     )
                 flags = '-arch=sm_{0}'.format(cuda_arch[0])
                 # FIXME: there are some compiler errors in dealii
-                # with flags below. Stick with -arch=sm_xy for now.
-                # flags = ' '.join(self.cuda_flags(cuda_arch))
+                # with: flags = ' '.join(self.cuda_flags(cuda_arch))
+                # Stick with -arch=sm_xy for now.
                 options.append(
                     '-DDEAL_II_CUDA_FLAGS={0}'.format(flags)
                 )
