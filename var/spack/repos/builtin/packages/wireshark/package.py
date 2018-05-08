@@ -45,12 +45,14 @@ class Wireshark(CMakePackage):
     depends_on('cares')
     depends_on('doxygen',   type='build')
     depends_on('flex',      type='build')
+    depends_on('git',       type='build')
     depends_on('glib')
     depends_on('gnutls')
     depends_on('libgcrypt@1.4.2:')
     depends_on('libmaxminddb')
     depends_on('lua')
     depends_on('krb5')
+    depends_on('pkg-config', type='build')
     depends_on('libsmi',    when='+smi')
     depends_on('libssh',    when='+libssh')
     depends_on('nghttp2',   when='+nghttp2')
@@ -65,7 +67,9 @@ class Wireshark(CMakePackage):
         args = ['-DENEABLE_CARES=ON',
                 '-DENABLE_GNUTLS=ON',
                 '-DENABLE_LUA=ON',
-                '-DENABLE_MAXMINDDB=ON']
+                '-DENABLE_MAXMINDDB=ON',
+                '-DYACC_EXECUTABLE=' + self.spec['bison'].prefix.bin.yacc,
+                '-DGIT_EXECUTABLE=' + self.spec['git'].prefix.bin.git]
         if self.spec.satisfies('+qt'):
             args.append('-DBUILD_wireshark=ON')
             args.append('-DENABLE_APPLICATION_BUNDLE=ON')
