@@ -36,6 +36,33 @@ def temp_env():
     os.environ = old_env
 
 
+@pytest.fixture()
+def patch_intel_mpi(monkeypatch):
+    """Patch the IntelMpi class to avoid assertion errors during tests"""
+    import inspect
+
+    def _setup_dependent_package(self, module, dep_spec):
+        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
+        if self.compiler.name == 'intel':
+            self.spec.mpicc  = bindir.mpiicc
+            self.spec.mpicxx = bindir.mpiicpc
+            self.spec.mpifc  = bindir.mpiifort
+            self.spec.mpif77 = bindir.mpiifort
+        else:
+            self.spec.mpicc  = bindir.mpicc
+            self.spec.mpicxx = bindir.mpicxx
+            self.spec.mpifc  = bindir.mpif90
+            self.spec.mpif77 = bindir.mpif77
+
+    s = spack.spec.Spec('intel-mpi')
+    intel_mpi_module = inspect.getmodule(s.package)
+    monkeypatch.setattr(
+        intel_mpi_module.IntelMpi,
+        'setup_dependent_package',
+        _setup_dependent_package
+    )
+
+
 def add_O3_to_build_system_cflags(pkg, name, flags):
     build_system_flags = []
     if name == 'cflags':
@@ -43,7 +70,7 @@ def add_O3_to_build_system_cflags(pkg, name, flags):
     return (flags, None, build_system_flags)
 
 
-@pytest.mark.usefixtures('config')
+@pytest.mark.usefixtures('config', 'patch_intel_mpi')
 class TestFlagHandlers(object):
     def test_no_build_system_flags(self, temp_env):
         # Test that both autotools and cmake work getting no build_system flags

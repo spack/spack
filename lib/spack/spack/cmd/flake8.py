@@ -212,7 +212,7 @@ def filter_file(source, dest, output=False):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-b', '--base', action='store', default='develop',
+        '-b', '--base', action='store', default='releases/paien',
         help="select base branch for collecting list of modified files")
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',

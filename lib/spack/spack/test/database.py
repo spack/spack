@@ -34,6 +34,7 @@ import pytest
 from llnl.util.tty.colify import colify
 
 import spack
+import spack.spec
 import spack.store
 from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
@@ -462,3 +463,16 @@ def test_external_entries_in_db(database):
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True
+
+
+@pytest.mark.regression('8036')
+def test_regression_issue_8036(database, refresh_db_on_exit):
+    # This version should not be installed on entry, but it points to /usr
+    # which is a directory that most likely exists everywhere (see #8036)
+    s = spack.spec.Spec('externaltool@0.9')
+    s.concretize()
+    assert not s.package.installed
+
+    # Now install the external package and check again the `installed` property
+    database.install('externaltool@0.9')
+    assert s.package.installed

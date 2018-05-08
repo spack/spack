@@ -963,7 +963,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def installed(self):
-        return os.path.isdir(self.prefix)
+
+        has_prefix = os.path.isdir(self.prefix)
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            rec = spack.store.db.get_record(self.spec)
+            db_says_installed = rec.installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            db_says_installed = False
+
+        return has_prefix and db_says_installed
 
     @property
     def prefix(self):
