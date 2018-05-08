@@ -23,37 +23,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class Libmaxminddb(AutotoolsPackage):
+    """C library for the MaxMind DB file format"""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "https://github.com/maxmind/libmaxminddb"
+    url      = "https://github.com/maxmind/libmaxminddb/releases/download/1.3.2/libmaxminddb-1.3.2.tar.gz"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
-
-    depends_on('pkgconfig', type='build')
-    depends_on('libpng')
-
-    # As discussed here:
-    # https://bugs.freedesktop.org/show_bug.cgi?id=104886
-    # __builtin_shuffle was removed in clang 5.0.
-    # From version 9.1 apple-clang is based on clang 5.0.
-    # Patch is obtained from above link.
-    patch('clang.patch', when='%clang@9.1.0-apple:')
+    version('1.3.2', '67a861965b30d045bf29a2126bcc05ed')
 
     def configure_args(self):
-        args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
-
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
-
+        args = ['--disable-debug',
+                '--disable-dependency-tracking',
+                '--disable-silent-rules']
         return args

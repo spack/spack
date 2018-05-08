@@ -23,37 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class Krb5(AutotoolsPackage):
+    """Network authentication protocol"""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "https://kerberos.org"
+    url      = "https://kerberos.org/dist/krb5/1.16/krb5-1.16.1.tar.gz"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    version('1.16.1', '848e9b80d6aaaa798e3f3df24b83c407')
 
-    depends_on('pkgconfig', type='build')
-    depends_on('libpng')
+    depends_on('openssl')
 
-    # As discussed here:
-    # https://bugs.freedesktop.org/show_bug.cgi?id=104886
-    # __builtin_shuffle was removed in clang 5.0.
-    # From version 9.1 apple-clang is based on clang 5.0.
-    # Patch is obtained from above link.
-    patch('clang.patch', when='%clang@9.1.0-apple:')
+    configure_directory = 'src'
+    build_directory = 'src'
 
     def configure_args(self):
-        args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
-
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
-
+        args = ['--disable-debug',
+                '--disable-dependency-tracking',
+                '--disable-silent-rules',
+                '--without-system-verto']
         return args

@@ -23,37 +23,32 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class Metabat(SConsPackage):
+    """MetaBAT, an efficient tool for accurately reconstructing single
+    genomes from complex microbial communities."""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "https://bitbucket.org/berkeleylab/metabat"
+    url      = "https://bitbucket.org/berkeleylab/metabat/get/v2.12.1.tar.gz"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    version('2.12.1', 'c032f47a8b24e58a5a9fefe52cb6e0f8')
 
-    depends_on('pkgconfig', type='build')
-    depends_on('libpng')
+    depends_on('boost@1.55.0:', type=('build', 'run'))
+    depends_on('perl', type='run')
 
-    # As discussed here:
-    # https://bugs.freedesktop.org/show_bug.cgi?id=104886
-    # __builtin_shuffle was removed in clang 5.0.
-    # From version 9.1 apple-clang is based on clang 5.0.
-    # Patch is obtained from above link.
-    patch('clang.patch', when='%clang@9.1.0-apple:')
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
-    def configure_args(self):
-        args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
+    def install_args(self, spec, prefix):
+        return ["PREFIX={0}".format(prefix)]
 
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
+    @run_after('build')
+    def fix_perl_scripts(self):
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl',
+                    'aggregateBinDepths.pl')
 
-        return args
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl',
+                    'aggregateContigOverlapsByBin.pl')

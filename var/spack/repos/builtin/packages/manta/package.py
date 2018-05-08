@@ -23,37 +23,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class Manta(CMakePackage):
+    """Structural variant and indel caller for mapped sequencing data"""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "https://github.com/Illumina/manta"
+    url      = "https://github.com/Illumina/manta/releases/download/v1.3.2/manta-1.3.2.release_src.tar.bz2"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    depends_on('boost@1.58.0:', type='build')
+    depends_on('cmake@2.8.12:', type='build')
+    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
 
-    depends_on('pkgconfig', type='build')
-    depends_on('libpng')
-
-    # As discussed here:
-    # https://bugs.freedesktop.org/show_bug.cgi?id=104886
-    # __builtin_shuffle was removed in clang 5.0.
-    # From version 9.1 apple-clang is based on clang 5.0.
-    # Patch is obtained from above link.
-    patch('clang.patch', when='%clang@9.1.0-apple:')
-
-    def configure_args(self):
-        args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
-
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
-
-        return args
+    version('1.4.0', '582d10f3bc56aecfa5c24931af3742b4')
+    version('1.3.2', '83f43fe1a12605c1e9803d1020b24bd1')
+    version('1.3.1', 'e315caff775878872ee300ed34e8adae')
+    version('1.3.0', '1243e2bb58ca7c9d69bbfbe528f492ec')

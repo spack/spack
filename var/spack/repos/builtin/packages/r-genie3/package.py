@@ -23,37 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class RGenie3(RPackage):
+    """This package implements the GENIE3 algorithm for inferring gene
+    regulatory networks from expression data."""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "https://bioconductor.org/packages/GENIE3/"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    version('1.2.0', git='https://git.bioconductor.org/packages/GENIE3',
+            commit='cafe6a1a85095cda6cc3c812eb6f53501fcbaf93')
 
-    depends_on('pkgconfig', type='build')
-    depends_on('libpng')
-
-    # As discussed here:
-    # https://bugs.freedesktop.org/show_bug.cgi?id=104886
-    # __builtin_shuffle was removed in clang 5.0.
-    # From version 9.1 apple-clang is based on clang 5.0.
-    # Patch is obtained from above link.
-    patch('clang.patch', when='%clang@9.1.0-apple:')
-
-    def configure_args(self):
-        args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
-
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
-
-        return args
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@1.2.0')
