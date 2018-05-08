@@ -73,7 +73,7 @@ class Wireshark(CMakePackage):
                 '-DYACC_EXECUTABLE=' + self.spec['bison'].prefix.bin.yacc,
                 '-DGIT_EXECUTABLE=' + self.spec['git'].prefix.bin.git,
                 '-DPCAP_INCLUDE_DIR=' + self.spec['libpcap'].prefix.include,
-                '-DPCAP_LIB=' + self.spec['libpcap'].prefix.lib + '/libpcap.so']
+                '-DPCAP_LIB=' + self.spec['libpcap'].prefix.libs]
         if self.spec.satisfies('+qt'):
             args.append('-DBUILD_wireshark=ON')
             args.append('-DENABLE_APPLICATION_BUNDLE=ON')
