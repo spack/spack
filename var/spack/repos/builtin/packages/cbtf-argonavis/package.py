@@ -72,6 +72,11 @@ class CbtfArgonavis(CMakePackage):
 
     depends_on("cmake@3.0.2:", type='build')
 
+    # To specify ^elfutils@0.170 on the command line spack
+    # apparently needs/wants this dependency explicity here
+    # even though it is referenced downstream
+    depends_on("elf", type="link")
+
     # For boost
     depends_on("boost@1.50.0:", when='@develop')
     depends_on("boost@1.66.0", when='@1.9.1.0')

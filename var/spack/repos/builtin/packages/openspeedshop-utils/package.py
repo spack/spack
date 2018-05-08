@@ -135,9 +135,6 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("libxml2", when='@develop')
     depends_on("libxml2@2.9.4", when='@2.3.1.3')
 
-    #depends_on('qt@4.8.6:', when='@develop')
-    #depends_on('qt@5.10.0', when='@2.3.1.3')
-
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')
     depends_on("cbtf@1.9.1.0", when='@2.3.1.3')
@@ -151,26 +148,26 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on('cbtf-krell@develop+cti', when='@develop+cti')
     depends_on('cbtf-krell@1.9.1.0+cti', when='@2.3.1.3+cti')
 
-    depends_on('cbtf-krell@develop+mpich', when='@develop+cbtf+mpich')
-    depends_on('cbtf-krell@1.9.1.0+mpich', when='@2.3.1.3+cbtf+mpich')
+    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich')
+    depends_on('cbtf-krell@1.9.1.0+mpich', when='@2.3.1.3+mpich')
 
-    depends_on('cbtf-krell@develop+mpich2', when='@develop+cbtf+mpich2')
-    depends_on('cbtf-krell@1.9.1.0+mpich2', when='@2.3.1.3+cbtf+mpich2')
+    depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2')
+    depends_on('cbtf-krell@1.9.1.0+mpich2', when='@2.3.1.3+mpich2')
 
-    depends_on('cbtf-krell@develop+mpt', when='@develop+cbtf+mpt')
-    depends_on('cbtf-krell@1.9.1.0+mpt', when='@2.3.1.3+cbtf+mpt')
+    depends_on('cbtf-krell@develop+mpt', when='@develop+mpt')
+    depends_on('cbtf-krell@1.9.1.0+mpt', when='@2.3.1.3+mpt')
 
-    depends_on('cbtf-krell@develop+mvapich', when='@develop+cbtf+mvapich')
-    depends_on('cbtf-krell@1.9.1.0+mvapich', when='@2.3.1.3+cbtf+mvapich')
+    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich')
+    depends_on('cbtf-krell@1.9.1.0+mvapich', when='@2.3.1.3+mvapich')
 
-    depends_on('cbtf-krell@develop+mvapich2', when='@develop+cbtf+mvapich2')
-    depends_on('cbtf-krell@1.9.1.0+mvapich2', when='@2.3.1.3+cbtf+mvapich2')
+    depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2')
+    depends_on('cbtf-krell@1.9.1.0+mvapich2', when='@2.3.1.3+mvapich2')
 
-    depends_on('cbtf-krell@develop+openmpi', when='@develop+cbtf+openmpi')
-    depends_on('cbtf-krell@1.9.1.0+openmpi', when='@2.3.1.3+cbtf+openmpi')
+    depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi')
+    depends_on('cbtf-krell@1.9.1.0+openmpi', when='@2.3.1.3+openmpi')
 
-    depends_on("cbtf-argonavis@develop", when='@develop+cbtf+cuda')
-    depends_on("cbtf-argonavis@1.9.1.0", when='@2.3.1.3+cbtf+cuda')
+    depends_on("cbtf-argonavis@develop", when='@develop+cuda')
+    depends_on("cbtf-argonavis@1.9.1.0", when='@2.3.1.3+cuda')
 
    # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
