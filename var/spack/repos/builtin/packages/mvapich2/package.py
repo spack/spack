@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,26 +41,26 @@ class Mvapich2(AutotoolsPackage):
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
-    # Newer alpha release
+    version('2.3rc2', '6fcf22fe2a16023b462ef57614daa357')
+    version('2.3rc1', '386d79ae36b2136d203826465ad8b6cc')
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
 
     # Prefer the latest stable release
     version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e', preferred=True)
     version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
     version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
-    version('1.9', '5dc58ed08fd3142c260b70fe297e127c')
-
-    patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
     provides('mpi')
-    provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
-    provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
+    provides('mpi@:3.0')
 
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
 
     variant('cuda', default=False,
             description='Enable CUDA extension')
+
+    variant('regcache', default=True,
+            description='Enable memory registration cache')
 
     # Accepted values are:
     #   single      - No threads (MPI_THREAD_SINGLE)
@@ -103,6 +103,19 @@ class Mvapich2(AutotoolsPackage):
         )
     )
 
+    variant(
+        'alloca',
+        default=False,
+        description='Use alloca to allocate temporary memory if available'
+    )
+
+    variant(
+        'file_systems',
+        description='List of the ROMIO file systems to activate',
+        values=('lustre', 'gpfs', 'nfs', 'ufs'),
+        multi=True
+    )
+
     depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
@@ -110,13 +123,6 @@ class Mvapich2(AutotoolsPackage):
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
-
-    def url_for_version(self, version):
-        base_url = "http://mvapich.cse.ohio-state.edu/download"
-        if version < Version('2.0'):
-            return "%s/mvapich2/mv2/mvapich2-%s.tar.gz" % (base_url, version)
-        else:
-            return "%s/mvapich/mv2/mvapich2-%s.tar.gz"  % (base_url, version)
 
     @property
     def process_manager_options(self):
@@ -126,20 +132,17 @@ class Mvapich2(AutotoolsPackage):
         for x in ('hydra', 'gforker', 'remshell'):
             if 'process_managers={0}'.format(x) in spec:
                 other_pms.append(x)
-        opts = ['--with-pm=%s' % ':'.join(other_pms)]
+
+        opts = []
+        if len(other_pms) > 0:
+            opts = ['--with-pm=%s' % ':'.join(other_pms)]
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
-            if self.version > Version('2.0'):
-                opts = [
-                    '--with-pmi=pmi2',
-                    '--with-pm=slurm'
-                ]
-            else:
-                opts = [
-                    '--with-pmi=slurm',
-                    '--with-pm=no'
-                ]
+            opts = [
+                '--with-pmi=pmi2',
+                '--with-pm=slurm'
+            ]
 
         return opts
 
@@ -163,9 +166,24 @@ class Mvapich2(AutotoolsPackage):
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
         return opts
 
+    @property
+    def file_system_options(self):
+        spec = self.spec
+
+        fs = []
+        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
+            if 'file_systems={0}'.format(x) in spec:
+                fs.append(x)
+
+        opts = []
+        if len(fs) > 0:
+            opts.append('--with-file-system=%s' % '+'.join(fs))
+
+        return opts
+
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        if 'process_managers=slurm' in spec and spec.satisfies('@2.0:'):
+        if 'process_managers=slurm' in spec:
             run_env.set('SLURM_MPI_TYPE', 'pmi2')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -205,12 +223,15 @@ class Mvapich2(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-romio',
-            '-disable-silent-rules',
+            '--disable-silent-rules',
+            '--disable-new-dtags',
             '--enable-fortran=all',
             "--enable-threads={0}".format(spec.variants['threads'].value),
             "--with-ch3-rank-bits={0}".format(
                 spec.variants['ch3_rank_bits'].value),
         ]
+
+        args.extend(self.enable_or_disable('alloca'))
 
         if '+debug' in self.spec:
             args.extend([
@@ -232,6 +253,12 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append('--disable-cuda')
 
+        if '+regcache' in self.spec:
+            args.append('--enable-registration-cache')
+        else:
+            args.append('--disable-registration-cache')
+
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
+        args.extend(self.file_system_options)
         return args

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ from llnl.util.filesystem import force_remove
 
 import spack
 from spack import *
+from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 import spack.util.spack_json as sjson
 
@@ -46,6 +47,8 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
+    version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
     version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
     version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
@@ -84,6 +87,17 @@ class Python(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
+    variant('dbm', default=True, description='Provide support for dbm')
+    variant(
+        'optimizations',
+        default=False,
+        description='Enable expensive build-time optimizations, if available'
+    )
+    # See https://legacy.python.org/dev/peps/pep-0394/
+    variant('pythoncmd', default=True,
+            description="Symlink 'python3' executable to 'python' "
+            "(not PEP 394 compliant)")
+
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -92,6 +106,7 @@ class Python(AutotoolsPackage):
     depends_on("zlib")
     depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
+    depends_on("gdbm", when='+dbm')
 
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
@@ -100,9 +115,20 @@ class Python(AutotoolsPackage):
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
     patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
 
+    # For more information refer to this bug report:
+    # https://bugs.python.org/issue29712
+    conflicts(
+        '@:2.8 +shared',
+        when='+optimizations',
+        msg='+optimizations is incompatible with +shared in python@2.X'
+    )
+
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
+
+    # An in-source build with --enable-optimizations fails for python@3.X
+    build_directory = 'spack-build'
 
     @when('@2.7:2.8,3.4:')
     def patch(self):
@@ -118,7 +144,6 @@ class Python(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        prefix = self.prefix
 
         # TODO: The '--no-user-cfg' option for Python installation is only in
         # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
@@ -129,8 +154,6 @@ class Python(AutotoolsPackage):
                       'user configurations are present.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
-        spack_env.set('PYTHONHOME', prefix)
-        spack_env.set('PYTHONPATH', prefix)
         spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
     def configure_args(self):
@@ -144,8 +167,17 @@ class Python(AutotoolsPackage):
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
+
+        if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
+                and '+optimizations' in spec:
+            config_args.append('--enable-optimizations')
+
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
+
+        if spec.satisfies('%intel', strict=True) and \
+                spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
+            config_args.append('--with-icc')
 
         if '+shared' in spec:
             config_args.append('--enable-shared')
@@ -203,7 +235,7 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:'):
+        if spec.satisfies('@3:') and spec.satisfies('+pythoncmd'):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
@@ -516,7 +548,10 @@ class Python(AutotoolsPackage):
         # where a system provided python is run against the standard libraries
         # of a Spack built python. See issue #7128
         spack_env.set('PYTHONHOME', self.home)
-        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
+
+        path = os.path.dirname(self.command.path)
+        if not is_system_path(path):
+            spack_env.prepend_path('PATH', path)
 
         python_paths = []
         for d in dependent_spec.traverse(

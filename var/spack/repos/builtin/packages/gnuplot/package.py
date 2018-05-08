@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -45,6 +45,7 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.2.2', '60aedd08998160593199459dea8467fe')
     version('5.2.0', '0bd8f9af84c0ad2fa9de16772c366416')
     version('5.0.7', '8eaafddb0b12795f82ed6dd2a6ebbe80')
     version('5.0.6', '8ec46520a86a61163a701b00404faf1a')

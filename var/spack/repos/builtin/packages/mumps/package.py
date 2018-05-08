@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -85,16 +85,26 @@ class Mumps(Package):
             raise RuntimeError(
                 'You cannot use the variants parmetis or ptscotch without mpi')
 
-        lapack_blas = (self.spec['lapack'].libs +
-                       self.spec['blas'].libs)
-        makefile_conf = ["LIBBLAS = %s" % lapack_blas.ld_flags]
+        # The makefile variables LIBBLAS, LSCOTCH, LMETIS, and SCALAP are only
+        # used to link the examples, so if building '+shared' there is no need
+        # to explicitly link with the respective libraries because we make sure
+        # the mumps shared libraries are already linked with them. See also the
+        # comment below about 'inject_libs'. This behaviour may cause problems
+        # if building '+shared' and the used libraries were build static
+        # without the PIC option.
+        shared = '+shared' in self.spec
+
+        lapack_blas = (self.spec['lapack'].libs + self.spec['blas'].libs)
+        makefile_conf = ["LIBBLAS = %s" %
+                         lapack_blas.ld_flags if not shared else '']
 
         orderings = ['-Dpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             makefile_conf.extend([
                 "ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
-                "LSCOTCH = {0}".format(self.spec['scotch'].libs.ld_flags)
+                "LSCOTCH = {0}".format(
+                    self.spec['scotch'].libs.ld_flags if not shared else '')
             ])
 
             orderings.append('-Dscotch')
@@ -104,16 +114,19 @@ class Mumps(Package):
         if '+parmetis' in self.spec and '+metis' in self.spec:
             makefile_conf.extend([
                 "IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
-                "LMETIS = -L%s -l%s -L%s -l%s" % (
+                ("LMETIS = -L%s -l%s -L%s -l%s" % (
                     self.spec['parmetis'].prefix.lib, 'parmetis',
-                    self.spec['metis'].prefix.lib, 'metis')
+                    self.spec['metis'].prefix.lib, 'metis')) if not shared
+                else 'LMETIS ='
             ])
 
             orderings.append('-Dparmetis')
         elif '+metis' in self.spec:
             makefile_conf.extend([
                 "IMETIS = -I%s" % self.spec['metis'].prefix.include,
-                "LMETIS = -L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')
+                ("LMETIS = -L%s -l%s" % (
+                    self.spec['metis'].prefix.lib, 'metis')) if not shared
+                else 'LMETIS ='
             ])
 
             orderings.append('-Dmetis')
@@ -127,6 +140,7 @@ class Mumps(Package):
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
+        using_xl = self.compiler.name in ['xl', 'xl_r']
         if '+int64' in self.spec:
             if self.compiler.name == "xl" or self.compiler.name == "xl_r":
                 makefile_conf.extend(
@@ -142,7 +156,7 @@ class Mumps(Package):
                      'OPTL    = %s -O ' % fpic,
                      'OPTC    = %s -O -DINTSIZE64' % fpic])
         else:
-            if self.compiler.name == "xl" or self.compiler.name == "xl_r":
+            if using_xl:
                 makefile_conf.extend(
                     ['OPTF    = -O3 -qfixed',
                      'OPTL    = %s -O3' % fpic,
@@ -154,13 +168,16 @@ class Mumps(Package):
                      'OPTC    = %s -O ' % fpic])
 
         if '+mpi' in self.spec:
-            scalapack = self.spec['scalapack'].libs
+            scalapack = self.spec['scalapack'].libs if not shared \
+                else LibraryList([])
             makefile_conf.extend(
                 ['CC = {0}'.format(self.spec['mpi'].mpicc),
                  'FC = {0}'.format(self.spec['mpi'].mpifc),
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
-            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'):  # noqa
+            # The FL makefile variable is used for linking the examples and
+            # linking the shared mumps libraries (in some cases).
+            if using_xl and self.spec.satisfies('^spectrum-mpi'):
                 makefile_conf.extend(
                     ['FL = {0}'.format(self.spec['mpi'].mpicc)])
             else:
@@ -181,28 +198,59 @@ class Mumps(Package):
             # hack defined by _DMAIN_COMP (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
         else:
-            if self.compiler.name != "xl" and self.compiler.name != "xl_r":
+            if not using_xl:
                 makefile_conf.append("CDEFS   = -DAdd_")
 
         if '+shared' in self.spec:
+            # All Mumps libraries will be linked with 'inject_libs'.
+            inject_libs = []
+            if '+mpi' in self.spec:
+                inject_libs += [self.spec['scalapack'].libs.ld_flags]
+            if '+ptscotch' in self.spec or '+scotch' in self.spec:
+                inject_libs += [self.spec['scotch'].libs.ld_flags]
+            if '+parmetis' in self.spec and '+metis' in self.spec:
+                inject_libs += [
+                    "-L%s -l%s -L%s -l%s" % (
+                        self.spec['parmetis'].prefix.lib, 'parmetis',
+                        self.spec['metis'].prefix.lib, 'metis')]
+            elif '+metis' in self.spec:
+                inject_libs += [
+                    "-L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')]
+            inject_libs += [lapack_blas.ld_flags]
+            inject_libs = ' '.join(inject_libs)
+
             if sys.platform == 'darwin':
                 # Building dylibs with mpif90 causes segfaults on 10.8 and
                 # 10.10. Use gfortran. (Homebrew)
                 makefile_conf.extend([
                     'LIBEXT=.dylib',
-                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'], prefix.lib),  # noqa
+                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@)'
+                    ' -undefined dynamic_lookup %s -o ' %
+                    (os.environ['FC'], prefix.lib, inject_libs),
                     'RANLIB=echo'
                 ])
             else:
                 makefile_conf.extend([
                     'LIBEXT=.so',
-                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,  # noqa
-                    'RANLIB=echo'
+                    'AR=link_cmd() { $(FL) -shared -Wl,-soname '
+                    '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
+                    (prefix.lib, inject_libs),
+                    'RANLIB=ls'
                 ])
+                # When building libpord, read AR from Makefile.inc instead of
+                # going through the make command line - this prevents various
+                # problems with the substring "$$@".
+                filter_file(' AR="\$\(AR\)"', '', 'Makefile')
+                filter_file('^(INCLUDES = -I../include)',
+                            '\\1\ninclude ../../Makefile.inc',
+                            join_path('PORD', 'lib', 'Makefile'))
 
-                if self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
+                if using_xl:
+                    # The patches for xl + spectrum-mpi use SAR for linking
+                    # libpord.
                     makefile_conf.extend([
-                        'SAR=/bin/xlc -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib  # noqa
+                        'SAR=%s -shared -Wl,-soname -Wl,%s/$(notdir $@) %s -o'
+                        % (env['CC'], prefix.lib, inject_libs)
                     ])
         else:
             makefile_conf.extend([
@@ -222,24 +270,17 @@ class Mumps(Package):
                 fh.write(makefile_inc)
 
     def install(self, spec, prefix):
-        make_libs = []
-
-        # the choice to compile ?examples is to have kind of a sanity
-        # check on the libraries generated.
-        if '+float' in spec:
-            make_libs.append('sexamples')
-            if '+complex' in spec:
-                make_libs.append('cexamples')
-
-        if '+double' in spec:
-            make_libs.append('dexamples')
-            if '+complex' in spec:
-                make_libs.append('zexamples')
-
         self.write_makefile_inc()
 
         # Build fails in parallel
-        make(*make_libs, parallel=False)
+        # That is why we split the builds of 's', 'c', 'd', and/or 'z' which
+        # can be build one after the other, each using a parallel build.
+        letters_variants = [
+            ['s', '+float'], ['c', '+complex+float'],
+            ['d', '+double'], ['z', '+complex+double']]
+        for l, v in letters_variants:
+            if v in spec:
+                make(l + 'examples')
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
@@ -253,12 +294,28 @@ class Mumps(Package):
 
         # FIXME: extend the tests to mpirun -np 2 when build with MPI
         # FIXME: use something like numdiff to compare output files
-        with working_dir('examples'):
-            if '+float' in spec:
-                os.system('./ssimpletest < input_simpletest_real')
-                if '+complex' in spec:
-                    os.system('./csimpletest < input_simpletest_real')
-            if '+double' in spec:
-                os.system('./dsimpletest < input_simpletest_real')
-                if '+complex' in spec:
-                    os.system('./zsimpletest < input_simpletest_cmplx')
+        # Note: In some cases, when 'mpi' is enabled, the examples below cannot
+        # be run without 'mpirun', so we enabled the tests only if explicitly
+        # requested with the Spack '--test' option.
+        if self.run_tests:
+            with working_dir('examples'):
+                if '+float' in spec:
+                    ssimpletest = Executable('./ssimpletest')
+                    ssimpletest(input='input_simpletest_real')
+                    if '+complex' in spec:
+                        csimpletest = Executable('./csimpletest')
+                        csimpletest(input='input_simpletest_cmplx')
+                if '+double' in spec:
+                    dsimpletest = Executable('./dsimpletest')
+                    dsimpletest(input='input_simpletest_real')
+                    if '+complex' in spec:
+                        zsimpletest = Executable('./zsimpletest')
+                        zsimpletest(input='input_simpletest_cmplx')
+
+    @property
+    def libs(self):
+        component_libs = ['*mumps*', 'pord']
+        return find_libraries(['lib' + comp for comp in component_libs],
+                              root=self.prefix.lib,
+                              shared=('+shared' in self.spec),
+                              recursive=False) or None

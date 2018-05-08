@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -167,6 +167,7 @@ def test_url_strip_name_suffixes(url, version, expected):
     ('libxc', 58, '2.2.2', 64, 'http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz'),
     # Version in suffix
     ('swiftsim', 36, '0.3.0', 76, 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    ('swiftsim', 55, '0.3.0', 95, 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     ('sionlib', 30, '1.7.1', 59, 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
     # Regex in name
     ('voro++', 40, '0.4.6', 47, 'http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz'),
@@ -207,14 +208,21 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     ('git', '2.7.1', 'https://github.com/git/git/tarball/v2.7.1'),
     # name/zipball/vver.ver
     ('git', '2.7.1', 'https://github.com/git/git/zipball/v2.7.1'),
+
     # Common Repositories - gitlab downloads
 
     # name/repository/archive.ext?ref=vver.ver
     ('swiftsim', '0.3.0',
      'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    # /api/v4/projects/NAMESPACE%2Fname/repository/archive.ext?sha=vver.ver
+    ('swiftsim', '0.3.0',
+     'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     # name/repository/archive.ext?ref=name-ver.ver
     ('icet', '1.2.3',
      'https://gitlab.kitware.com/icet/icet/repository/archive.tar.gz?ref=IceT-1.2.3'),
+    # /api/v4/projects/NAMESPACE%2Fname/repository/archive.ext?sha=name-ver.ver
+    ('icet', '1.2.3',
+     'https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-1.2.3'),
 
     # Common Repositories - bitbucket downloads
 
@@ -370,6 +378,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     ('nextflow', '0.20.1', 'https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow'),
     # suffix queries
     ('swiftsim', '0.3.0', 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    ('swiftsim', '0.3.0', 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     ('sionlib', '1.7.1', 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
     # stem queries
     ('slepc', '3.6.2', 'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz'),

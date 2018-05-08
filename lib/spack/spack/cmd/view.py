@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -172,6 +172,7 @@ def setup_parser(sp):
 def view(parser, args):
     'Produce a view of a set of packages.'
 
+    specs = spack.cmd.parse_specs(args.specs)
     path = args.path[0]
 
     view = YamlFilesystemView(
@@ -189,18 +190,18 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        specs = [spack.cmd.disambiguate_spec(s) for s in args.specs]
+        specs = [spack.cmd.disambiguate_spec(s) for s in specs]
 
     elif args.action in actions_status:
         # no specs implies all
-        if len(args.specs) == 0:
+        if len(specs) == 0:
             specs = view.get_all_specs()
         else:
-            specs = relaxed_disambiguate(args.specs, view)
+            specs = relaxed_disambiguate(specs, view)
 
     else:
         # status and remove can map the name to packages in view
-        specs = relaxed_disambiguate(args.specs, view)
+        specs = relaxed_disambiguate(specs, view)
 
     with_dependencies = args.dependencies.lower() in ['true', 'yes']
 

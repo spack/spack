@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,6 +42,7 @@ class Spark(Package):
     depends_on('java', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
+    version('2.3.0', 'db21021b8e877b219ab886097ef42344')
     version('2.1.0', '21d4471e78250775b1fa7c0e6c3a1326')
     version('2.0.2', '32110c1bb8f081359738742bd26bced1')
     version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')

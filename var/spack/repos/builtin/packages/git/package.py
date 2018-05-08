@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,6 +43,11 @@ class Git(AutotoolsPackage):
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
 
     releases = [
+        {
+            'version': '2.17.0',
+            'md5': '8e0f5253eef3abeb76bd9c55386d3bee',
+            'md5_manpages': '1ce1ae78a559032810af8b455535935f'
+        },
         {
             'version': '2.15.1',
             'md5': 'da59fc6baa55ab44684011e369af397d',

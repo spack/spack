@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,8 +35,6 @@ class Openmc(MakefilePackage):
 
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/openmc.git"
-
-    tags = ['proxy-app']
 
     version('develop', git='https://github.com/ANL-CESAR/openmc.git')
 

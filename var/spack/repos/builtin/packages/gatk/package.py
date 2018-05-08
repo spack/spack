@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,22 +33,30 @@ class Gatk(Package):
     """Genome Analysis Toolkit
        Variant Discovery in High-Throughput Sequencing Data
     """
-    homepage = "http://broadinstitute.github.io/gatk/"
-    url      = "https://software.broadinstitute.org/gatk/download/auth?package=GATK"
-    _urlfmt  = "https://github.com/broadgsa/gatk-protected/archive/{0}.tar.gz"
+    homepage = "https://software.broadinstitute.org/gatk/"
+    url      = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip"
 
+    version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
+            url="https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
     version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
             url="https://software.broadinstitute.org/gatk/download/auth?package=GATK")
 
     depends_on('java@8:', type='run')
+    depends_on('python@2.6:2.8,3.6:', type='run', when='@4.0:')
+    depends_on('r@3.2:', type='run', when='@4.0:')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         # The list of files to install varies with release...
-        # ... but skip the spack-{build.env}.out files.
-        files = [x for x in glob.glob("*") if not re.match("^spack-", x)]
+        # ... but skip the spack-{build.env}.out files and gatkdoc directory.
+        files = [x for x in glob.glob("*")
+                 if not re.match("^spack-", x) and not re.match("^gatkdoc", x)]
         for f in files:
             install(f, prefix.bin)
+
+        # Skip helper script settings
+        if spec.satisfies('@:4.0'):
+            return
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.

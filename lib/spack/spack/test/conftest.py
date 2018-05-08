@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -707,5 +707,16 @@ class MockPackageMultiRepo(object):
 def conflict_spec(request):
     """Specs which violate constraints specified with the "conflicts"
     directive in the "conflict" package.
+    """
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        'conflict%~'
+    ]
+)
+def invalid_spec(request):
+    """Specs that do not parse cleanly due to invalid formatting.
     """
     return request.param

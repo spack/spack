@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,3 +44,7 @@ class Freetype(AutotoolsPackage):
 
     def configure_args(self):
         return ['--with-harfbuzz=no']
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('CPATH', self.prefix.include.freetype2)
+        run_env.prepend_path('CPATH', self.prefix.include.freetype2)

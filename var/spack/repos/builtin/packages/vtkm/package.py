@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,7 +36,7 @@ class Vtkm(Package):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    url      = "https://gitlab.kitware.com/vtk/vtk-m/repository/v1.1.0/archive.tar.gz"
+    url      = "https://gitlab.kitware.com/api/v4/projects/vtk%2Fvtk-m/repository/archive.tar.gz?sha=v1.1.0"
 
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
 

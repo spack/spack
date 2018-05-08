@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,6 +37,10 @@ class Cppcheck(Package):
     version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
     version('1.68', 'c015195f5d61a542f350269030150708')
 
+    variant('htmlreport', default=False, description="Install cppcheck-htmlreport")
+
+    depends_on('py-pygments', when='+htmlreport', type='run')
+
     def install(self, spec, prefix):
         # cppcheck does not have a configure script
         make("CFGDIR=%s" % os.path.join(prefix, 'cfg'))
@@ -44,3 +48,5 @@ class Cppcheck(Package):
         mkdirp(prefix.bin)
         install('cppcheck', prefix.bin)
         shutil.copytree('cfg', os.path.join(prefix, 'cfg'))
+        if spec.satisfies('+htmlreport'):
+            install('htmlreport/cppcheck-htmlreport', prefix.bin)

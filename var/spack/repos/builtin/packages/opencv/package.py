@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,6 +43,7 @@ class Opencv(CMakePackage):
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
     version('master', git="https://github.com/opencv/opencv.git", branch="master")
+    version('3.4.1',    'a0b7a47899e67b3490ea31edc4f6e8e6')
     version('3.3.0',    '98a4e4c6f23ec725e808a891dc11eec4')
     version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
     version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
@@ -234,5 +235,5 @@ class Opencv(CMakePackage):
     def libs(self):
         shared = "+shared" in self.spec
         return find_libraries(
-            "libopencv_*", root=self.prefix, shared=shared, recurse=True
+            "libopencv_*", root=self.prefix, shared=shared, recursive=True
         )

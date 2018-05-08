@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -258,7 +258,7 @@ class IntelParallelStudio(IntelPackage):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recursive=True
         )
 
     @property
@@ -266,7 +266,7 @@ class IntelParallelStudio(IntelPackage):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
+        return find_headers('mpi', root=mpi_root, recursive=False)
 
     @property
     def components(self):

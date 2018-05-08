@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,6 +43,8 @@ class Cube(AutotoolsPackage):
     version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20')
 
     variant('gui', default=False, description='Build CUBE GUI')
+
+    patch('qt-version.patch', when='@4.3.0:4.3.999 +gui')
 
     depends_on('zlib')
 
