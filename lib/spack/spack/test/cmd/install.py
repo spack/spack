@@ -382,10 +382,10 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
     'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
 )
 def test_extra_files_are_archived():
-    s = Spec('a foobar=baz')
+    s = Spec('archive-files')
     s.concretize()
 
-    install('a foobar=baz')
+    install('archive-files')
 
     archive_dir = os.path.join(
         spack.store.layout.metadata_path(s), 'archived-files'

@@ -25,39 +25,18 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
+class ArchiveFiles(AutotoolsPackage):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
     version('2.0', '2.0_a_hash')
 
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
-
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
-
-    variant('bvv', default=True, description='The good old BV variant')
-
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
+    @property
+    def archive_files(self):
+        return super(ArchiveFiles, self).archive_files + ['../../outside.log']
 
     def autoreconf(self, spec, prefix):
         pass
@@ -66,7 +45,9 @@ class A(AutotoolsPackage):
         pass
 
     def build(self, spec, prefix):
-        pass
+        mkdirp(self.build_directory)
+        config_log = join_path(self.build_directory, 'config.log')
+        touch(config_log)
 
     def install(self, spec, prefix):
-        pass
+        touch(join_path(prefix, 'deleteme'))
