@@ -61,7 +61,7 @@ class Lbann(CMakePackage):
     depends_on('hwloc ~pci ~libxml2')
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib '
-               '+fast-math +powerpc +vsx', when='+opencv')
+               '+fast-math +powerpc +vsx ~eigen', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')

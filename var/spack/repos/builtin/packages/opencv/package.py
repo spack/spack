@@ -87,10 +87,10 @@ class Opencv(CMakePackage):
 
     # Optional 3rd party components
     variant('cuda', default=False, description='Activates support for CUDA')
-    variant('eigen', default=False, description='Activates support for eigen')
-    variant('ipp', default=False, description='Activates support for IPP')
+    variant('eigen', default=True, description='Activates support for eigen')
+    variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=False, description='Build IPP IW from source')
-    variant('jasper', default=False, description='Activates support for JasPer')
+    variant('jasper', default=True, description='Activates support for JasPer')
     variant('jpeg', default=False, description='Include JPEG support')
     variant('opencl', default=False, description='Include OpenCL Runtime support')
     variant('opencl_svm', default=False, description='Include OpenCL Shared Virtual Memory support')
