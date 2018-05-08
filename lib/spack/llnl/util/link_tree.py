@@ -46,16 +46,12 @@ class LinkTree(object):
     Trees comprise symlinks only to files; directries are never
     symlinked to, to prevent the source directory from ever being
     modified.
-
     """
-
-    def __init__(self, source_root, merge_file=None, check_conflict=None,
-                 remove_file=None):
+    def __init__(self, source_root):
         if not os.path.exists(source_root):
             raise IOError("No such file or directory: '%s'", source_root)
 
         self._root = source_root
-        self.check_conflict = check_conflict or (lambda x: os.path.exists(x))
 
     def find_conflict(self, dest_root, ignore=None,
                       ignore_file_conflicts=False):
