@@ -40,6 +40,8 @@ class RRcpp(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/Rcpp_0.12.13.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/Rcpp"
 
+    version('0.12.16', 'ab5107766c63d66065ed1a92a4cab1b7')
+    version('0.12.15', 'bebac0782862c15c2944764343e55582')
     version('0.12.14', '89a3dbad0aa3e345b9d0b862fa1fc56a')
     version('0.12.13', '5186d119132bfe07f66da74c50b190a4')
     version('0.12.12', '97b36a3b567e3438067c4a7d0075fd90')
