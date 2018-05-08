@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,6 +38,7 @@ class Lmod(AutotoolsPackage):
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
+    version('7.7.29', 'bd3f171995e6863505e8a958d158ced1')
     version('7.7.13', 'e1d222fa04148707dceb08c82d7e9fa5')
     version('7.7',    '8ac594401716c6d1b40cac22bc1030ca')
     version('7.6.14', '60726c991038b6337fbb27b6a333a2d4')

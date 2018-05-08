@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,8 @@ class Aspell(AutotoolsPackage):
     extendable = True           # support activating dictionaries
 
     version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
+
+    patch('darwin.patch', when='platform=darwin')
 
     # The dictionaries install all their bits into their prefix.lib dir,
     # we want to link them into aspell's dict-dir.

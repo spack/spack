@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -141,6 +141,10 @@ _arguments['long'] = Args(
 _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
+
+_arguments['jobs'] = Args(
+    '-j', '--jobs', action='store', type=int, dest='jobs',
+    help="explicitely set number of make jobs. default is #cpus")
 
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',

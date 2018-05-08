@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,7 @@ class Automake(AutotoolsPackage):
     homepage = 'http://www.gnu.org/software/automake/'
     url      = 'http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz'
 
+    version('1.16.1', '83cc2463a4080efd46a72ba2c9f6b8f5')
     version('1.15.1', '95df3f2d6eb8f81e70b8cb63a93c8853')
     version('1.15',   '716946a105ca228ab545fc37a70df3a3')
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
@@ -43,10 +44,14 @@ class Automake(AutotoolsPackage):
 
     def patch(self):
         # The full perl shebang might be too long
+        files_to_be_patched_fmt = 'bin/{0}.in'
+        if '@:1.15.1' in self.spec:
+            files_to_be_patched_fmt = 't/wrap/{0}.in'
+
         for file in ('aclocal', 'automake'):
             filter_file('^#!@PERL@ -w',
                         '#!/usr/bin/env perl',
-                        't/wrap/{0}.in'.format(file))
+                        files_to_be_patched_fmt.format(file))
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

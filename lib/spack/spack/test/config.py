@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -165,6 +165,50 @@ config_merge_list = {
 config_override_list = {
     'config': {
         'build_stage:': ['patha', 'pathb']}}
+
+
+packages_merge_low = {
+    'packages': {
+        'foo': {
+            'variants': ['+v1']
+        },
+        'bar': {
+            'variants': ['+v2']
+        }
+    }
+}
+
+packages_merge_high = {
+    'packages': {
+        'foo': {
+            'version': ['a']
+        },
+        'bar': {
+            'version': ['b'],
+            'variants': ['+v3']
+        },
+        'baz': {
+            'version': ['c']
+        }
+    }
+}
+
+
+@pytest.mark.regression('7924')
+def test_merge_with_defaults(config, write_config_file):
+    """This ensures that specified preferences merge with defaults as
+       expected. Originally all defaults were initialized with the
+       exact same object, which led to aliasing problems. Therefore
+       the test configs used here leave 'version' blank for multiple
+       packages in 'packages_merge_low'.
+    """
+    write_config_file('packages', packages_merge_low, 'low')
+    write_config_file('packages', packages_merge_high, 'high')
+    cfg = spack.config.get_config('packages')
+
+    assert cfg['foo']['version'] == ['a']
+    assert cfg['bar']['version'] == ['b']
+    assert cfg['baz']['version'] == ['c']
 
 
 def check_compiler_config(comps, *compiler_names):

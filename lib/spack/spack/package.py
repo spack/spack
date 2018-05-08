@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,10 +33,13 @@ Homebrew makes it very easy to create packages.  For a complete
 rundown on spack and how it differs from homebrew, look at the
 README.
 """
+import base64
 import contextlib
 import copy
 import functools
+import hashlib
 import inspect
+import itertools
 import os
 import re
 import shutil
@@ -73,6 +76,7 @@ from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
+from spack.util.package_hash import package_hash
 from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
@@ -563,6 +567,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
+    #: List of attributes which affect do not affect a package's content.
+    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
+                      'make_jobs']
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -627,31 +635,40 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         super(PackageBase, self).__init__()
 
-    def possible_dependencies(self, transitive=True, visited=None):
-        """Return set of possible transitive dependencies of this package.
+    def possible_dependencies(
+            self, transitive=True, expand_virtuals=True, visited=None):
+        """Return set of possible dependencies of this package.
+
+        Note: the set returned *includes* the package itself.
 
         Args:
-            transitive (bool): include all transitive dependencies if True,
+            transitive (bool): return all transitive dependencies if True,
                 only direct dependencies if False.
+            expand_virtuals (bool): expand virtual dependencies into all
+                possible implementations.
+            visited (set): set of names of dependencies visited so far.
         """
         if visited is None:
-            visited = set()
+            visited = set([self.name])
 
-        visited.add(self.name)
-        for name in self.dependencies:
-            spec = spack.spec.Spec(name)
-
-            if not spec.virtual:
-                visited.add(name)
-                if transitive:
-                    pkg = spack.repo.get(name)
-                    pkg.possible_dependencies(transitive, visited)
+        for i, name in enumerate(self.dependencies):
+            if spack.repo.is_virtual(name):
+                if expand_virtuals:
+                    providers = spack.repo.providers_for(name)
+                    dep_names = [spec.name for spec in providers]
+                else:
+                    visited.add(name)
+                    continue
             else:
-                for provider in spack.repo.providers_for(spec):
-                    visited.add(provider.name)
+                dep_names = [name]
+
+            for dep_name in dep_names:
+                if dep_name not in visited:
+                    visited.add(dep_name)
                     if transitive:
-                        pkg = spack.repo.get(provider.name)
-                        pkg.possible_dependencies(transitive, visited)
+                        pkg = spack.repo.get(dep_name)
+                        pkg.possible_dependencies(
+                            transitive, expand_virtuals, visited)
 
         return visited
 
@@ -803,11 +820,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def env_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.env')
+        if self.stage.source_path is None:
+            return None
+        else:
+            return os.path.join(self.stage.source_path, 'spack-build.env')
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.out')
+        if self.stage.source_path is None:
+            return None
+        else:
+            return os.path.join(self.stage.source_path, 'spack-build.out')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -926,7 +949,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         True if this package provides a virtual package with the specified name
         """
-        return any(s.name == vpkg_name for s in self.provided)
+        return any(
+            any(self.spec.satisfies(c) for c in constraints)
+            for s, constraints in self.provided.items() if s.name == vpkg_name
+        )
 
     @property
     def installed(self):
@@ -1094,7 +1120,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for patch in patches:
+        for patch in self.patches_to_apply():
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
@@ -1138,6 +1164,37 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             touch(no_patches_file)
 
+    def patches_to_apply(self):
+        """If the patch set does not change between two invocations of spack,
+           then all patches in the set will be applied in the same order"""
+        patchesToApply = itertools.chain.from_iterable(
+            patch_list
+            for spec, patch_list in self.patches.items()
+            if self.spec.satisfies(spec))
+        return list(patchesToApply)
+
+    def content_hash(self, content=None):
+        """Create a hash based on the sources and logic used to build the
+        package. This includes the contents of all applied patches and the
+        contents of applicable functions in the package subclass."""
+        hashContent = list()
+        source_id = fs.for_package_version(self, self.version).source_id()
+        if not source_id:
+            # TODO? in cases where a digest or source_id isn't available,
+            # should this attempt to download the source and set one? This
+            # probably only happens for source repositories which are
+            # referenced by branch name rather than tag or commit ID.
+            message = 'Missing a source id for {s.name}@{s.version}'
+            tty.warn(message.format(s=self))
+            hashContent.append(''.encode('utf-8'))
+        else:
+            hashContent.append(source_id.encode('utf-8'))
+        hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
+                           for p in self.patches_to_apply())
+        hashContent.append(package_hash(self.spec, content))
+        return base64.b32encode(
+            hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()
+
     @property
     def namespace(self):
         namespace, dot, module = self.__module__.rpartition('.')
@@ -1147,22 +1204,32 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Make a fake install directory containing fake executables,
         headers, and libraries."""
 
-        name = self.name
-        library_name = 'lib' + self.name
+        command = self.name
+        header = self.name
+        library = self.name
+
+        # Avoid double 'lib' for packages whose names already start with lib
+        if not self.name.startswith('lib'):
+            library = 'lib' + library
+
         dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
         chmod = which('chmod')
 
+        # Install fake command
         mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, name))
-        chmod('+x', join_path(self.prefix.bin, name))
+        touch(join_path(self.prefix.bin, command))
+        chmod('+x', join_path(self.prefix.bin, command))
 
+        # Install fake header file
         mkdirp(self.prefix.include)
-        touch(join_path(self.prefix.include, name + '.h'))
+        touch(join_path(self.prefix.include, header + '.h'))
 
+        # Install fake shared and static libraries
         mkdirp(self.prefix.lib)
-        touch(join_path(self.prefix.lib, library_name + dso_suffix))
-        touch(join_path(self.prefix.lib, library_name + '.a'))
+        for suffix in [dso_suffix, '.a']:
+            touch(join_path(self.prefix.lib, library + suffix))
 
+        # Install fake man page
         mkdirp(self.prefix.man.man1)
 
         packages_dir = spack.store.layout.build_packages_path(self.spec)

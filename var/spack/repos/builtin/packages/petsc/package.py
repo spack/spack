@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,11 +37,13 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
-    maintainers = ['balay', 'barrysmith']
+    maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
+    version('3.8.4', 'd7767fe2919536aa393eb22841899306')
     version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
     version('3.8.2', '00666e1c4cbfa8dd6eebf91ff8180f79')
     version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
@@ -87,6 +89,8 @@ class Petsc(Package):
     variant('clanguage', default='C', values=('C', 'C++'),
             description='Specify C (recommended) or C++ to compile PETSc',
             multi=False)
+    variant('suite-sparse', default=False,
+            description='Activates support for SuiteSparse')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -97,6 +101,7 @@ class Petsc(Package):
     if sys.platform == "darwin":
         patch('macos-clang-8.1.0.diff',
               when='@3.7.5%clang@8.1.0:')
+    patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -128,12 +133,14 @@ class Petsc(Package):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre~internal-superlu~int64', when='+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13.99~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13.99~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:~internal-superlu~int64', when='@3.9:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
     depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
-    depends_on('hypre~internal-superlu+int64', when='+hypre+mpi~complex+int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
@@ -149,6 +156,7 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('suite-sparse', when='+suite-sparse')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -225,7 +233,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos', 'zlib'):
+                        'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
@@ -250,6 +258,29 @@ class Petsc(Package):
             options.append(
                 '--with-superlu_dist=0'
             )
+        # SuiteSparse: configuring using '--with-suitesparse-dir=...' has some
+        # issues, so specify directly the include path and the libraries.
+        if '+suite-sparse' in spec:
+            ss_spec = 'suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,' \
+                'camd,amd,suitesparseconfig'
+            options.extend([
+                '--with-suitesparse-include=%s' % spec[ss_spec].prefix.include,
+                '--with-suitesparse-lib=%s' % spec[ss_spec].libs.ld_flags,
+                '--with-suitesparse=1'
+            ])
+        else:
+            options.append('--with-suitesparse=0')
+
+        # zlib: configuring using '--with-zlib-dir=...' has some issues with
+        # SuiteSparse so specify directly the include path and the libraries.
+        if 'zlib' in spec:
+            options.extend([
+                '--with-zlib-include=%s' % spec['zlib'].prefix.include,
+                '--with-zlib-lib=%s'     % spec['zlib'].libs.ld_flags,
+                '--with-zlib=1'
+            ])
+        else:
+            options.append('--with-zlib=0')
 
         python('configure', '--prefix=%s' % prefix, *options)
 
@@ -300,3 +331,10 @@ class Petsc(Package):
         # Set up PETSC_DIR for everyone using PETSc package
         spack_env.set('PETSC_DIR', self.prefix)
         spack_env.unset('PETSC_ARCH')
+
+    @property
+    def headers(self):
+        return find_headers('petsc', self.prefix.include, recursive=False) \
+            or None  # return None to indicate failure
+
+    # For the 'libs' property - use the default handler.

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,10 +38,11 @@ class Pandaseq(AutotoolsPackage):
 
     depends_on('autoconf',    type='build')
     depends_on('automake',    type='build')
-    depends_on('libtool',     type='build')
+    depends_on('libtool',     type=('build', 'link'))
     depends_on('m4',          type='build')
     depends_on('zlib',        type='build')
     depends_on('pkg-config',  type='build')
+    depends_on('bzip2',       type='link')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

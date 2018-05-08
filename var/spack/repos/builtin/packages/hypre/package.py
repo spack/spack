@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,6 +35,7 @@ class Hypre(Package):
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
+    version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1', url='https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz')
     version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b', url='https://github.com/LLNL/hypre/archive/v2.13.0.tar.gz')
     version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c', url='https://github.com/LLNL/hypre/archive/v2.12.1.tar.gz')
     version('2.11.2', 'd507943a1a3ce5681c3308e2f3a6dd34')
@@ -111,7 +112,25 @@ class Hypre(Package):
             make("install")
 
     @property
+    def headers(self):
+        """Export the main hypre header, HYPRE.h; all other headers can be found
+        in the same directory.
+        Sample usage: spec['hypre'].headers.cpp_flags
+        """
+        hdrs = find_headers('HYPRE', self.prefix.include, recursive=False)
+        return hdrs or None
+
+    @property
     def libs(self):
-        is_shared = self.spec.satisfies('+shared')
-        return find_libraries('libHYPRE', root=self.prefix,
-                              shared=is_shared, recursive=True)
+        """Export the hypre library.
+        Sample usage: spec['hypre'].libs.ld_flags
+        """
+        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
+                        [self.prefix, True]]
+        is_shared = '+shared' in self.spec
+        for path, recursive in search_paths:
+            libs = find_libraries('libHYPRE', root=path,
+                                  shared=is_shared, recursive=recursive)
+            if libs:
+                return libs
+        return None

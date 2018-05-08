@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,4 +37,8 @@ class PyBsddb3(PythonPackage):
     version('6.2.5', '610267c189964c905a931990e1ba438c')
 
     depends_on('python@2.6:')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
+    depends_on('berkeley-db')
+
+    # For testing... see here for an example that uses BerkeleyDB
+    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,7 +32,7 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.10.tar.xz"
+    url      = "http://distfiles.alpinelinux.org/distfiles/pkgconf-1.3.10.tar.xz"
 
     version('1.4.0', 'c509c0dad5a70aa4bc3210557b7eafce')
     version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
@@ -41,17 +41,9 @@ class Pkgconf(AutotoolsPackage):
     provides('pkgconfig')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """spack built pkg-config on cray's requires adding /usr/local/
-        and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
-        files.
-        Adds the ACLOCAL path for autotools."""
+        """Adds the ACLOCAL path for autotools."""
         spack_env.append_path('ACLOCAL_PATH',
                               join_path(self.prefix.share, 'aclocal'))
-        if 'platform=cray' in self.spec:
-            spack_env.append_path('PKG_CONFIG_PATH',
-                                  '/usr/lib64/pkgconfig')
-            spack_env.append_path('PKG_CONFIG_PATH',
-                                  '/usr/local/lib64/pkgconfig')
 
     @run_after('install')
     def link_pkg_config(self):

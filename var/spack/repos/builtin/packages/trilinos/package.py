@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -72,100 +72,111 @@ class Trilinos(CMakePackage):
 
     # ###################### Variants ##########################
 
-    variant('alloptpkgs',   default=False,
-            description='Compile with all optional packages')
-    variant('xsdkflags',    default=False,
-            description='Compile using the default xSDK configuration')
-    variant('metis',        default=True,
-            description='Compile with METIS and ParMETIS')
-    variant('mumps',        default=True,
-            description='Compile with support for MUMPS solvers')
-    variant('superlu-dist', default=True,
-            description='Compile with SuperluDist solvers')
-    variant('superlu',      default=False,
-            description='Compile with SuperLU solvers')
-    variant('hypre',        default=True,
-            description='Compile with Hypre preconditioner')
-    variant('hdf5',         default=True,
-            description='Compile with HDF5')
-    variant('suite-sparse', default=True,
-            description='Compile with SuiteSparse solvers')
+    # Other
     # not everyone has py-numpy activated, keep it disabled by default to avoid
     # configure errors
     variant('python',       default=False,
             description='Build python wrappers')
+
+    # Build options
+    variant('fortran',      default=True,
+            description='Compile with Fortran support')
+    variant('instantiate',  default=True,
+            description='Compile with explicit instantiation')
+    variant('instantiate_cmplx', default=False,
+            description='Compile with explicit instantiation for complex')
+    variant('openmp',       default=False,
+            description='Enable OpenMP')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
+    variant('xsdkflags',    default=False,
+            description='Compile using the default xSDK configuration')
+
+    # TPLs (alphabet order)
     variant('boost',        default=True,
             description='Compile with Boost')
-    variant('tpetra',       default=True,
-            description='Compile with Tpetra')
-    variant('epetra',       default=True,
-            description='Compile with Epetra')
-    variant('epetraext',    default=True,
-            description='Compile with EpetraExt')
+    variant('cgns',         default=False,
+            description='Enable CGNS')
     variant('exodus',       default=True,
             description='Compile with Exodus from SEACAS')
+    variant('gtest',        default=True,
+            description='Compile with Gtest')
+    variant('hdf5',         default=True,
+            description='Compile with HDF5')
+    variant('hypre',        default=True,
+            description='Compile with Hypre preconditioner')
+    variant('metis',        default=True,
+            description='Compile with METIS and ParMETIS')
+    variant('mumps',        default=True,
+            description='Compile with support for MUMPS solvers')
     variant('pnetcdf',      default=False,
             description='Compile with parallel-netcdf')
+    variant('suite-sparse', default=True,
+            description='Compile with SuiteSparse solvers')
+    variant('superlu-dist', default=True,
+            description='Compile with SuperluDist solvers')
+    variant('superlu',      default=False,
+            description='Compile with SuperLU solvers')
+    variant('x11',          default=False,
+            description='Compile with X11')
     variant('zlib',         default=False,
             description='Compile with zlib')
-    variant('stk',          default=False,
-            description='Compile with STK')
-    variant('teuchos',      default=True,
-            description='Compile with Teuchos')
-    variant('belos',        default=True,
-            description='Compile with Belos')
-    variant('zoltan',       default=True,
-            description='Compile with Zoltan')
-    variant('zoltan2',      default=True,
-            description='Compile with Zoltan2')
+
+    # Package options (alphabet order)
+    variant('alloptpkgs',   default=False,
+            description='Compile with all optional packages')
     variant('amesos',       default=True,
             description='Compile with Amesos')
     variant('amesos2',      default=True,
             description='Compile with Amesos2')
     variant('anasazi',      default=True,
             description='Compile with Anasazi')
+    variant('aztec',        default=True,
+            description='Compile with Aztec')
+    variant('belos',        default=True,
+            description='Compile with Belos')
+    variant('epetra',       default=True,
+            description='Compile with Epetra')
+    variant('epetraext',    default=True,
+            description='Compile with EpetraExt')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
     variant('ifpack2',      default=True,
             description='Compile with Ifpack2')
-    variant('muelu',        default=True,
-            description='Compile with Muelu')
-    variant('fortran',      default=True,
-            description='Compile with Fortran support')
-    variant('ml',           default=True,
-            description='Compile with ML')
-    variant('gtest',        default=True,
-            description='Compile with Gtest')
-    variant('aztec',        default=True,
-            description='Compile with Aztec')
-    variant('sacado',       default=True,
-            description='Compile with Sacado')
-    variant('x11',          default=False,
-            description='Compile with X11')
-    variant('instantiate',  default=True,
-            description='Compile with explicit instantiation')
-    variant('instantiate_cmplx', default=False,
-            description='Compile with explicit instantiation for complex')
-    variant('dtk',          default=False,
-            description='Enable DataTransferKit')
-    variant('fortrilinos',  default=False,
-            description='Enable ForTrilinos')
-    variant('openmp',       default=False,
-            description='Enable OpenMP')
-    variant('rol',          default=False,
-            description='Enable ROL')
-    variant('nox',          default=False,
-            description='Enable NOX')
-    variant('shards',       default=False,
-            description='Enable Shards')
     variant('intrepid',     default=False,
             description='Enable Intrepid')
     variant('intrepid2',    default=False,
             description='Enable Intrepid2')
-    variant('cgns',         default=False,
-            description='Enable CGNS')
+    variant('kokkos',       default=True,
+            description='Compile with Kokkos')
+    variant('ml',           default=True,
+            description='Compile with ML')
+    variant('muelu',        default=True,
+            description='Compile with Muelu')
+    variant('nox',          default=False,
+            description='Enable NOX')
+    variant('rol',          default=False,
+            description='Enable ROL')
+    variant('sacado',       default=True,
+            description='Compile with Sacado')
+    variant('stk',          default=False,
+            description='Compile with STK')
+    variant('shards',       default=False,
+            description='Enable Shards')
+    variant('teuchos',      default=True,
+            description='Compile with Teuchos')
+    variant('tpetra',       default=True,
+            description='Compile with Tpetra')
+    variant('zoltan',       default=True,
+            description='Compile with Zoltan')
+    variant('zoltan2',      default=True,
+            description='Compile with Zoltan2')
+
+    # External package options
+    variant('dtk',          default=False,
+            description='Enable DataTransferKit')
+    variant('fortrilinos',  default=False,
+            description='Enable ForTrilinos')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -177,6 +188,12 @@ class Trilinos(CMakePackage):
              tag='develop',
              placement='packages/ForTrilinos',
              when='+fortrilinos')
+
+    conflicts('+tpetra', when='~kokkos')
+    conflicts('+intrepid2', when='~kokkos')
+    conflicts('+amesos2', when='~tpetra')
+    conflicts('+ifpack2', when='~tpetra')
+    conflicts('+zoltan2', when='~tpetra')
 
     conflicts('+dtk', when='~tpetra')
     conflicts('+fortrilinos', when='~fortran')
@@ -281,50 +298,52 @@ class Trilinos(CMakePackage):
         options.extend([
             '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=%s' % (
                 'ON' if '+alloptpkgs' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
-                'ON' if '+tpetra' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
-                'ON' if '+epetra' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_EpetraExt:BOOL=%s' % (
-                'ON' if '+epetraext' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_ML:BOOL=%s' % (
-                'ON' if '+ml' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_AztecOO:BOOL=%s' % (
-                'ON' if '+aztec' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Sacado:BOOL=%s' % (
-                'ON' if '+sacado' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Belos:BOOL=%s' % (
-                'ON' if '+belos' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Zoltan:BOOL=%s' % (
-                'ON' if '+zoltan' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Zoltan2:BOOL=%s' % (
-                'ON' if '+zoltan2' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Amesos:BOOL=%s' % (
                 'ON' if '+amesos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Amesos2:BOOL=%s' % (
                 'ON' if '+amesos2' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_MueLu:BOOL=%s' % (
-                'ON' if '+muelu' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
+                'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_AztecOO:BOOL=%s' % (
+                'ON' if '+aztec' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Belos:BOOL=%s' % (
+                'ON' if '+belos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
+                'ON' if '+epetra' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_EpetraExt:BOOL=%s' % (
+                'ON' if '+epetraext' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Ifpack:BOOL=%s' % (
                 'ON' if '+ifpack' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Ifpack2:BOOL=%s' % (
                 'ON' if '+ifpack2' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Gtest:BOOL=%s' % (
-                'ON' if '+gtest' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
-                'ON' if '+teuchos' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
-                'ON' if '+anasazi' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
-                'ON' if '+rol' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
-                'ON' if '+nox' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_Shards=%s' % (
-                'ON' if '+shards' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Intrepid=%s' % (
                 'ON' if '+intrepid' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Intrepid2=%s' % (
                 'ON' if '+intrepid2' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Kokkos:BOOL=%s' % (
+                'ON' if '+kokkos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ML:BOOL=%s' % (
+                'ON' if '+ml' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_MueLu:BOOL=%s' % (
+                'ON' if '+muelu' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
+                'ON' if '+nox' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_PyTrilinos:BOOL=%s' % (
+                'ON' if '+python' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
+                'ON' if '+rol' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Sacado:BOOL=%s' % (
+                'ON' if '+sacado' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Shards=%s' % (
+                'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
+                'ON' if '+teuchos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
+                'ON' if '+tpetra' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Zoltan:BOOL=%s' % (
+                'ON' if '+zoltan' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Zoltan2:BOOL=%s' % (
+                'ON' if '+zoltan2' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
@@ -388,8 +407,8 @@ class Trilinos(CMakePackage):
             '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
             '-DTPL_ENABLE_X11:BOOL=%s' % (
                 'ON' if '+x11' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_PyTrilinos:BOOL=%s' % (
-                'ON' if '+python' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Gtest:BOOL=%s' % (
+                'ON' if '+gtest' in spec else 'OFF'),
         ])
 
         if '+hypre' in spec:
@@ -610,7 +629,8 @@ class Trilinos(CMakePackage):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
-            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' % prefix.lib)
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' %
+                           self.prefix.lib)
 
         if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
             # Panzer uses some std:chrono that is not recognized by Intel

@@ -22,6 +22,9 @@ config:
   template_dirs:
     - $spack/templates
 
+  # default directory layout
+  directory_layout: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+
   # Locations where different types of modules should be installed.
   module_roots:
     tcl:    $spack/share/spack/modules
@@ -39,7 +42,7 @@ config:
   # builds directly inside its install directory without staging them in
   # temporary space.
   #
-  # The build stage can be purged with `spack purge --stage`.
+  # The build stage can be purged with `spack clean --stage`.
   build_stage:
     - $tempdir
     - /nfs/tmp2/$user
@@ -47,12 +50,12 @@ config:
 
 
   # Cache directory already downloaded source tarballs and archived
-  # repositories. This can be purged with `spack purge --downloads`.
+  # repositories. This can be purged with `spack clean --downloads`.
   source_cache: $spack/var/spack/cache
 
 
   # Cache directory for miscellaneous files, like the package index.
-  # This can be purged with `spack purge --misc-cache`
+  # This can be purged with `spack clean --misc-cache`
   misc_cache: ~/.spack/cache
 
 
