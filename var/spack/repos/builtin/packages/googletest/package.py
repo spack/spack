@@ -37,6 +37,9 @@ class Googletest(CMakePackage):
     variant('gmock', default=False, description='Build with gmock')
     conflicts('+gmock', when='@:1.7.0')
 
+    variant('pthreads', default=True,
+            description='Build multithreaded version with pthreads')
+
     def cmake_args(self):
         spec = self.spec
         if '@1.8.0:' in spec:
@@ -49,6 +52,9 @@ class Googletest(CMakePackage):
         else:
             # Old style (contains only GTest)
             options = []
+
+        options.append('-Dgtest_disable_pthreads={0}'.format(
+            'ON' if '+pthreads' in spec else 'OFF'))
         return options
 
     @when('@:1.7.0')
