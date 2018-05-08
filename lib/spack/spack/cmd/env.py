@@ -511,7 +511,7 @@ def environment_add(args):
         # Add list of specs from env.yaml file
         for user_spec, attrs in yaml_specs.items():    # OrderedDict
             setup = set(attrs['setup'])
-            environment.add(str(spec), setup, report_existing=False)
+            environment.add(str(user_spec), setup, report_existing=False)
     else:
         for spec in parsed_specs:
             environment.add(str(spec), setup)
