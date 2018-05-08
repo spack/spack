@@ -50,6 +50,7 @@ class Wireshark(CMakePackage):
     depends_on('gnutls')
     depends_on('libgcrypt@1.4.2:')
     depends_on('libmaxminddb')
+    depends_on('libtool@2.2.2:', type='build')
     depends_on('libpcap')
     depends_on('lua')
     depends_on('krb5')
