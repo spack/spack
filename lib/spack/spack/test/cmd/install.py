@@ -376,3 +376,22 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+def test_extra_files_are_archived():
+    s = Spec('archive-files')
+    s.concretize()
+
+    install('archive-files')
+
+    archive_dir = os.path.join(
+        spack.store.layout.metadata_path(s), 'archived-files'
+    )
+    config_log = os.path.join(archive_dir, 'config.log')
+    assert os.path.exists(config_log)
+
+    errors_txt = os.path.join(archive_dir, 'errors.txt')
+    assert os.path.exists(errors_txt)
