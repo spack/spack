@@ -167,8 +167,8 @@ class Sundials(CMakePackage):
     # ==========================================================================
 
     # Build dependencies
+    depends_on('cmake@2.8.1:', type='build')
     depends_on('cmake@3.0.2:', type='build', when='@develop')
-    depends_on('cmake@2.8.1:', type='build', when='@:3.1.1')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
