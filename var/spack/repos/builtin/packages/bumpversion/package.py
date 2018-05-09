@@ -25,13 +25,12 @@
 from spack import *
 
 
-class PyBumpversion(PythonPackage):
+class Bumpversion(PythonPackage):
     """Version-bump your software with a single command."""
 
     homepage = "https://pypi.python.org/pypi/bumpversion"
-    url      = "https://github.com/peritus/bumpversion"
+    url      = "https://pypi.io/packages/source/b/bumpversion/bumpversion-0.5.0.tar.gz"
 
-    version('0.5.0', git='https://github.com/peritus/bumpversion',
-            commit='8cb123237fbe2b13a1108fa7b876c9ad0c12a3b1')
+    version('0.5.0', '222ba619283d6408ce1bfbb0b5b542f3')
 
     depends_on('py-setuptools', type='build')
