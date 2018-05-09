@@ -26,33 +26,25 @@
 import codecs
 import collections
 import functools
-import hashlib
-import itertools
-import os.path
-import platform
-import re
-import socket
 import time
 import traceback
-import xml.sax.saxutils
-from six import text_type
-from six.moves.urllib.request import build_opener, HTTPHandler, Request
 
 import llnl.util.lang
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
-from spack.util.crypto import checksum
-from spack.util.log_parse import parse_log_events
+from spack.reporter import Reporter
+from spack.reporters.cdash import CDash
+from spack.reporters.junit import JUnit
 
-
-templates = {
-    'junit': os.path.join('reports', 'junit.xml'),
-    'cdash': os.path.join('reports', 'cdash')
+report_writers = {
+    None: Reporter,
+    'junit': JUnit,
+    'cdash': CDash
 }
 
 #: Allowed report formats
-valid_formats = list(templates.keys())
+valid_formats = list(report_writers.keys())
 
 __all__ = [
     'valid_formats',
@@ -261,176 +253,23 @@ class collect_info(object):
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
     def __init__(self, format_name, install_command, cdash_upload_url):
-        self.format_name = format_name
         self.filename = None
-        self.install_command = install_command
-        self.cdash_upload_url = cdash_upload_url
-        self.hostname = socket.gethostname()
-        self.osname = platform.system()
-        self.starttime = int(time.time())
-        # TODO: remove hardcoded use of Experimental here.
-        #       Make the submission model configurable.
-        self.buildstamp = time.strftime("%Y%m%d-%H%M-Experimental",
-                                        time.localtime(self.starttime))
+        self.format_name = format_name
+        # Check that the format is valid.
+        if self.format_name not in valid_formats:
+            raise ValueError('invalid report type: {0}'
+                             .format(self.format_name))
+        self.report_writer = report_writers[self.format_name](
+            install_command, cdash_upload_url)
 
-        # Check that the format is valid
-        if format_name not in itertools.chain(valid_formats, [None]):
-            raise ValueError('invalid report type: {0}'.format(format_name))
+    def concretization_report(self, msg):
+        self.report_writer.concretization_report(self.filename, msg)
 
     def __enter__(self):
         if self.format_name:
             # Start the collector and patch PackageBase.do_install
             self.collector = InfoCollector(self.specs)
             self.collector.__enter__()
-
-    def cdash_initialize_report(self, report_data):
-        if not os.path.exists(self.filename):
-            os.mkdir(self.filename)
-        report_data['install_command'] = self.install_command
-        report_data['buildstamp'] = self.buildstamp
-        report_data['hostname'] = self.hostname
-        report_data['osname'] = self.osname
-
-    def cdash_build_report(self, report_data):
-        self.cdash_initialize_report(report_data)
-
-        # Mapping Spack phases to the corresponding CTest/CDash phase.
-        map_phases_to_cdash = {
-            'autoreconf': 'configure',
-            'cmake':      'configure',
-            'configure':  'configure',
-            'edit':       'configure',
-            'build':      'build',
-            'install':    'build'
-        }
-
-        # Initialize data structures common to each phase's report.
-        cdash_phases = set(map_phases_to_cdash.values())
-        for phase in cdash_phases:
-            report_data[phase] = {}
-            report_data[phase]['log'] = ""
-            report_data[phase]['status'] = 0
-            report_data[phase]['starttime'] = self.starttime
-            report_data[phase]['endtime'] = self.starttime
-
-        # Track the phases we perform so we know what reports to create.
-        phases_encountered = []
-
-        # Parse output phase-by-phase.
-        phase_regexp = re.compile(r"Executing phase: '(.*)'")
-        for spec in self.collector.specs:
-            for package in spec['packages']:
-                if 'stdout' in package:
-                    current_phase = ''
-                    for line in package['stdout'].splitlines():
-                        match = phase_regexp.search(line)
-                        if match:
-                            current_phase = match.group(1)
-                            if current_phase not in map_phases_to_cdash:
-                                current_phase = ''
-                                continue
-                            beginning_of_phase = True
-                        else:
-                            if beginning_of_phase:
-                                cdash_phase = \
-                                    map_phases_to_cdash[current_phase]
-                                if cdash_phase not in phases_encountered:
-                                    phases_encountered.append(cdash_phase)
-                                report_data[cdash_phase]['log'] += \
-                                    text_type("{0} output for {1}:\n".format(
-                                        cdash_phase, package['name']))
-                                beginning_of_phase = False
-                            report_data[cdash_phase]['log'] += \
-                                xml.sax.saxutils.escape(line) + "\n"
-
-        for phase in phases_encountered:
-            errors, warnings = parse_log_events(
-                report_data[phase]['log'].splitlines())
-            nerrors = len(errors)
-
-            if phase == 'configure' and nerrors > 0:
-                report_data[phase]['status'] = 1
-
-            if phase == 'build':
-                # Convert log output from ASCII to Unicode and escape for XML.
-                def clean_log_event(event):
-                    event = vars(event)
-                    event['text'] = xml.sax.saxutils.escape(event['text'])
-                    event['pre_context'] = xml.sax.saxutils.escape(
-                        '\n'.join(event['pre_context']))
-                    event['post_context'] = xml.sax.saxutils.escape(
-                        '\n'.join(event['post_context']))
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event['source_file'][0] is None:
-                        event['source_file'] = ''
-                        event['source_line_no'] = ''
-                    else:
-                        event['source_file'] = xml.sax.saxutils.escape(
-                            event['source_file'])
-                    return event
-
-                report_data[phase]['errors'] = []
-                report_data[phase]['warnings'] = []
-                for error in errors:
-                    report_data[phase]['errors'].append(clean_log_event(error))
-                for warning in warnings:
-                    report_data[phase]['warnings'].append(
-                        clean_log_event(warning))
-
-            # Write the report.
-            report_name = phase.capitalize() + ".xml"
-            phase_report = os.path.join(self.filename, report_name)
-
-            with codecs.open(phase_report, 'w', 'utf-8') as f:
-                env = spack.tengine.make_environment()
-                site_template = os.path.join(templates[self.format_name],
-                                             'Site.xml')
-                t = env.get_template(site_template)
-                f.write(t.render(report_data))
-
-                phase_template = os.path.join(templates[self.format_name],
-                                              report_name)
-                t = env.get_template(phase_template)
-                f.write(t.render(report_data))
-            self.upload_to_cdash(phase_report)
-
-    def concretization_report(self, msg):
-        if not self.format_name == 'cdash':
-            return
-
-        report_data = {}
-        report_data['starttime'] = self.starttime
-        report_data['endtime'] = self.starttime
-        self.cdash_initialize_report(report_data)
-
-        report_data['msg'] = msg
-        env = spack.tengine.make_environment()
-        update_template = os.path.join(templates[self.format_name],
-                                       'Update.xml')
-        t = env.get_template(update_template)
-        output_filename = os.path.join(self.filename, 'Update.xml')
-        with open(output_filename, 'w') as f:
-            f.write(t.render(report_data))
-        self.upload_to_cdash(output_filename)
-
-    def upload_to_cdash(self, filename):
-        if not self.cdash_upload_url:
-            return
-
-        # Compute md5 checksum for the contents of this file.
-        md5sum = checksum(hashlib.md5, filename, block_size=8192)
-
-        opener = build_opener(HTTPHandler)
-        with open(filename, 'rb') as f:
-            url = "{0}&MD5={1}".format(self.cdash_upload_url, md5sum)
-            request = Request(url, data=f)
-            request.add_header('Content-Type', 'text/xml')
-            request.add_header('Content-Length', os.path.getsize(filename))
-            # By default, urllib2 only support GET and POST.
-            # CDash needs expects this file to be uploaded via PUT.
-            request.get_method = lambda: 'PUT'
-            url = opener.open(request)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
@@ -439,13 +278,4 @@ class collect_info(object):
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
             report_data = {'specs': self.collector.specs}
-
-            if self.format_name == 'cdash':
-                # CDash reporting results are split across multiple files.
-                self.cdash_build_report(report_data)
-            else:
-                # Write the report
-                with open(self.filename, 'w') as f:
-                    env = spack.tengine.make_environment()
-                    t = env.get_template(templates[self.format_name])
-                    f.write(t.render(report_data))
+            self.report_writer.build_report(self.filename, report_data)
