@@ -42,6 +42,7 @@ class Wireshark(CMakePackage):
     variant('gtk',      default=False, description='Build with gtk')
     variant('headers',  default=True, description='Install headers')
 
+    depends_on('bison',     type='build')
     depends_on('cares')
     depends_on('doxygen',   type='build')
     depends_on('flex',      type='build')
