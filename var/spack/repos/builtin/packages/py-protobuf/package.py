@@ -36,7 +36,6 @@ class PyProtobuf(PythonPackage):
     homepage = 'https://developers.google.com/protocol-buffers/'
     url      = 'https://pypi.io/packages/source/p/protobuf/protobuf-3.0.0b2.tar.gz'
 
-
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
