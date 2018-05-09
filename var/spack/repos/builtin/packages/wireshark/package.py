@@ -74,9 +74,9 @@ class Wireshark(CMakePackage):
                 '-DYACC_EXECUTABLE=' + self.spec['bison'].prefix.bin.yacc,
                 '-DGIT_EXECUTABLE=' + self.spec['git'].prefix.bin.git,
                 '-DPCAP_INCLUDE_DIR=' + self.spec['libpcap'].prefix.include,
-                '-DPCAP_LIB=' + self.spec['libpcap'].prefix.libs,
+                '-DPCAP_LIB=' + str(self.spec['libpcap'].libs),
                 '-DLUA_INCLUDE_DIR=' + self.spec['lua'].prefix.include,
-                '-DLUA_LIBRARY=' + self.spec['lua'].prefix.lib + '/liblua.so.5.2'
+                '-DLUA_LIBRARY=' + str(self.spec['lua'].libs)
                 ]
         if self.spec.satisfies('+qt'):
             args.append('-DBUILD_wireshark=ON')
