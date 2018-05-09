@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack.package_extensions
 
 
 class Pkgconf(AutotoolsPackage):
@@ -50,22 +51,4 @@ class Pkgconf(AutotoolsPackage):
         symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))
         symlink('pkgconf.1',
                 '{0}/pkg-config.1'.format(self.prefix.share.man.man1))
-        self.write_wrapper()
-
-    def write_wrapper(self):
-        pkgconf_exe = join_path(self.prefix.bin, 'pkg-config')
-        pkgconf_relocate = join_path(self.prefix.bin, 'pkg-config.orig')
-        move(pkgconf_exe, pkgconf_relocate)
-
-        script = """#!/bin/sh
-if [ "$SPACK_DIRTY" = "1" ]; then
-    cpath_val=$CPATH
-else
-    cpath_val=
-fi
-CPATH=$cpath_val {0} "$@"
-""".format(pkgconf_relocate)
-        with open(pkgconf_exe, 'w') as F:
-            F.write(script)
-        chmod = which('chmod')
-        chmod('+x', pkgconf_exe)
+        spack.package_extensions.write_pkgconfig_wrapper(self)

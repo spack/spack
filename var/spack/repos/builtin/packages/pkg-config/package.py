@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack.package_extensions
 
 
 class PkgConfig(AutotoolsPackage):
@@ -61,3 +62,7 @@ class PkgConfig(AutotoolsPackage):
             config_args.append('--with-internal-glib')
 
         return config_args
+
+    @run_after('install')
+    def create_pkgconfig_wrapper(self):
+        spack.package_extensions.write_pkgconfig_wrapper(self)
