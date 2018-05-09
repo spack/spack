@@ -323,10 +323,9 @@ class OpenspeedshopUtils(CMakePackage):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir =
-            find_libraries('libopenss-framework',
-                           root=self.spec['openspeedshop-utils'].prefix,
-                           shared=True, recursive=True)
+        oss_libdir = find_libraries('libopenss-framework',
+            root=self.spec['openspeedshop-utils'].prefix,
+            shared=True, recursive=True)
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 
