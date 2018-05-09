@@ -46,8 +46,8 @@ class Texlive(Package):
     # itself is stable.  Don't let that fool you though, it's still
     # installing TeX **LIVE** from e.g. ctan.math.... below, which is
     # not reproducible.
-    version('live', '8f8fc301514c08a89a2e97197369c648',
-            url='ftp://tug.org/historic/systems/texlive/2017/install-tl-unx.tar.gz')
+    version('live', '946701aa28ca1f93e55e8310ce63fbf8',
+            url='ftp://tug.org/historic/systems/texlive/2018/install-tl-unx.tar.gz')
 
     # There does not seem to be a complete list of schemes.
     # Examples include:
