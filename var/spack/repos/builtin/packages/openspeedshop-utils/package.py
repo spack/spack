@@ -61,6 +61,11 @@ class OpenspeedshopUtils(CMakePackage):
        Cray platforms.  OpenSpeedShop development is hosted by the Krell
        Institute. The infrastructure and base components of OpenSpeedShop
        are released as open source code primarily under LGPL.
+       openspeedshop-utils is a package that does not have the
+       qt3 gui.  It was created to avoid a conflict between
+       openspeedshop and cbtf-argonavis-gui based on the fact
+       that spack will not allow a qt3 and qt4/qt5 dependency in a packages
+       dependency tree.
     """
 
     homepage = "http://www.openspeedshop.org"
@@ -322,9 +327,10 @@ class OpenspeedshopUtils(CMakePackage):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = find_libraries('libopenss-framework',
-                             root=self.spec['openspeedshop-utils'].prefix,
-                             shared=True, recursive=True)
+        oss_libdir = 
+            find_libraries('libopenss-framework',
+                           root=self.spec['openspeedshop-utils'].prefix,
+                           shared=True, recursive=True)
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 
