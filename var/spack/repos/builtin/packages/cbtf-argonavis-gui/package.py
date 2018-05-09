@@ -120,8 +120,8 @@ class CbtfArgonavisGui(QMakePackage):
         # paths in a non-conventional way.  We reflect that here.
         run_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
-                 self.spec['qtgraph'].prefix.lib64,
-                 '{0}'.format(self.spec['qt'].version.up_to(3))))
+                self.spec['qtgraph'].prefix.lib64,
+                '{0}'.format(self.spec['qt'].version.up_to(3))))
         # The openspeedshop libraries are needed to actually load the
         # performance information into the GUI.
         run_env.prepend_path(
