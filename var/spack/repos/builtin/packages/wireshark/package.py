@@ -53,7 +53,7 @@ class Wireshark(CMakePackage):
     depends_on('libmaxminddb')
     depends_on('libtool@2.2.2:', type='build')
     depends_on('libpcap')
-    depends_on('lua')
+    depends_on('lua@:5.2.99')
     depends_on('krb5')
     depends_on('pkg-config', type='build')
     depends_on('libsmi',    when='+smi')
@@ -74,7 +74,10 @@ class Wireshark(CMakePackage):
                 '-DYACC_EXECUTABLE=' + self.spec['bison'].prefix.bin.yacc,
                 '-DGIT_EXECUTABLE=' + self.spec['git'].prefix.bin.git,
                 '-DPCAP_INCLUDE_DIR=' + self.spec['libpcap'].prefix.include,
-                '-DPCAP_LIB=' + self.spec['libpcap'].prefix.libs]
+                '-DPCAP_LIB=' + self.spec['libpcap'].prefix.libs,
+                '-DLUA_INCLUDE_DIR=' + self.spec['lua'].prefix.include,
+                '-DLUA_LIBRARY=' + self.spec['lua'].prefix.lib + '/liblua.so.5.2'
+                ]
         if self.spec.satisfies('+qt'):
             args.append('-DBUILD_wireshark=ON')
             args.append('-DENABLE_APPLICATION_BUNDLE=ON')
