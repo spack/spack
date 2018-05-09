@@ -61,18 +61,18 @@ class CbtfArgonavisGui(QMakePackage):
     depends_on("cmake@3.0.2:", when='@develop', type='build')
     depends_on("cmake@3.11.1", when='@1.3.0.0', type='build')
 
-    # To specify ^elfutils@0.170 on the command line spack 
+    # To specify ^elfutils@0.170 on the command line spack
     # apparently needs/wants this dependency explicity here
     # even though it is referenced downstream
     depends_on("elf", type="link")
-    
+
     depends_on('qt@4.8.6:', when='@develop')
     depends_on('qt@5.10.0', when='@1.3.0.0')
 
     depends_on("boost@1.50.0:", when='@develop')
     depends_on("boost@1.66.0", when='@1.3.0.0')
 
-   # For MRNet
+    # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@1.3.0.0')
 
@@ -119,7 +119,7 @@ class CbtfArgonavisGui(QMakePackage):
         # The implementor of qtgraph has set up the library and include
         # paths in a non-conventional way.  We reflect that here.
         run_env.prepend_path(
-             'LD_LIBRARY_PATH', join_path(
+            'LD_LIBRARY_PATH', join_path(
                  self.spec['qtgraph'].prefix.lib64,
                  '{0}'.format(self.spec['qt'].version.up_to(3))))
         # The openspeedshop libraries are needed to actually load the

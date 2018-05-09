@@ -51,7 +51,6 @@ class CbtfLanl(CMakePackage):
     version('1.9.1.0', branch='1.9.1.0',
             git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
 
-
     version('1.9.1', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
 
@@ -91,7 +90,7 @@ class CbtfLanl(CMakePackage):
     depends_on("cbtf@develop+runtime", when='@develop+runtime')
     depends_on("cbtf@1.9.1.0+runtime", when='@1.9.1.0+runtime')
 
-   # For CBTF-KRELL
+    # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when='@develop')
     depends_on("cbtf-krell@1.9.1.0", when='@1.9.1.0')
 

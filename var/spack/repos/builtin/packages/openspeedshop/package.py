@@ -175,7 +175,7 @@ class Openspeedshop(CMakePackage):
     depends_on("cbtf-argonavis@develop", when='@develop+cuda')
     depends_on("cbtf-argonavis@1.9.1.0", when='@2.3.1.3+cuda')
 
-   # For MRNet
+    # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
 

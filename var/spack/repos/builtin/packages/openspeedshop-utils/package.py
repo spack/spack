@@ -169,7 +169,7 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("cbtf-argonavis@develop", when='@develop+cuda')
     depends_on("cbtf-argonavis@1.9.1.0", when='@2.3.1.3+cuda')
 
-   # For MRNet
+    # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
 
@@ -323,8 +323,8 @@ class OpenspeedshopUtils(CMakePackage):
 
         # Find openspeedshop library path
         oss_libdir = find_libraries('libopenss-framework',
-                                    root=self.spec['openspeedshop-utils'].prefix,
-                                    shared=True, recursive=True)
+                         root=self.spec['openspeedshop-utils'].prefix,
+                         shared=True, recursive=True)
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 
