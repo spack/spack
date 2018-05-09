@@ -50,3 +50,17 @@ class Pkgconf(AutotoolsPackage):
         symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))
         symlink('pkgconf.1',
                 '{0}/pkg-config.1'.format(self.prefix.share.man.man1))
+        self.write_wrapper()
+
+    def write_wrapper(self):
+        pkgconf_exe = join_path(self.prefix.bin, 'pkg-config')
+        pkgconf_relocate = join_path(self.prefix.bin, 'pkg-config.orig')
+        move(pkgconf_exe, pkgconf_relocate)
+
+        script = """#!/bin/sh
+CPATH= {0} "$@"
+""".format(pkgconf_relocate)
+        with open(pkgconf_exe, 'w') as F:
+            F.write(script)
+        chmod = which('chmod')
+        chmod('+x', pkgconf_exe)
