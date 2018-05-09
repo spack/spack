@@ -311,10 +311,6 @@ class OpenspeedshopUtils(CMakePackage):
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
 
-        # Common settings to both offline and cbtf versions
-        # of OpenSpeedShop
-        run_env.prepend_path('PATH', self.prefix.bin)
-
         # Find Dyninst library path, this is needed to
         # set the DYNINSTAPI_RT_LIB library which is
         # required for OpenSpeedShop to find loop level
@@ -327,7 +323,7 @@ class OpenspeedshopUtils(CMakePackage):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = 
+        oss_libdir =
             find_libraries('libopenss-framework',
                            root=self.spec['openspeedshop-utils'].prefix,
                            shared=True, recursive=True)
