@@ -94,6 +94,7 @@ SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
+SPACK_DIRTY = 'SPACK_DIRTY'
 
 
 # Platform-specific library suffix.
@@ -255,6 +256,8 @@ def set_build_environment_variables(pkg, env, dirty):
 
     # Install root prefix
     env.set(SPACK_INSTALL, spack.store.root)
+
+    env.set(SPACK_DIRTY, '1' if dirty else '0')
 
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere.

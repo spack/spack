@@ -58,7 +58,12 @@ class Pkgconf(AutotoolsPackage):
         move(pkgconf_exe, pkgconf_relocate)
 
         script = """#!/bin/sh
-CPATH= {0} "$@"
+if [ "$SPACK_DIRTY" = "1" ]; then
+    cpath_val=$CPATH
+else
+    cpath_val=
+fi
+CPATH=$cpath_val {0} "$@"
 """.format(pkgconf_relocate)
         with open(pkgconf_exe, 'w') as F:
             F.write(script)
