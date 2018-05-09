@@ -57,4 +57,5 @@ class PyProtobuf(PythonPackage):
 
     @when('+cpp')
     def install_args(self, spec, prefix):
-        return ['--cpp_implementation']
+        args = super(PyProtobuf, self).install_args(spec, prefix)
+        return args + ['--cpp_implementation']
