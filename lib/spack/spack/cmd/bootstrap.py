@@ -68,7 +68,7 @@ def bootstrap(parser, args, **kwargs):
     requirement_dict = {'environment-modules': 'environment-modules~X'}
 
     for requirement in requirement_dict:
-        installed_specs = spack.store.db.query(requirement)
+        installed_specs = spack.store.store().db.query(requirement)
         if(len(installed_specs) > 0):
             tty.msg("Requirement %s is satisfied with installed "
                     "package %s" % (requirement, installed_specs[0]))

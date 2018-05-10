@@ -244,7 +244,7 @@ def install(parser, args, **kwargs):
                 "only one spec is allowed when overwriting an installation"
 
             spec = specs[0]
-            t = spack.store.db.query(spec)
+            t = spack.store.store().db.query(spec)
             assert len(t) == 1, "to overwrite a spec you must install it first"
 
             # Give the user a last chance to think about overwriting an already

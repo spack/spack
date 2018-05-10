@@ -103,7 +103,7 @@ def dependents(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0])
 
         tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
-        deps = spack.store.db.installed_relatives(
+        deps = spack.store.store().db.installed_relatives(
             spec, 'parents', args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)

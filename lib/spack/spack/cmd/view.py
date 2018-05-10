@@ -93,7 +93,7 @@ def relaxed_disambiguate(specs, view):
             return matching_specs[0]
 
     # make function always return a list to keep consistency between py2/3
-    return list(map(squash, map(spack.store.db.query, specs)))
+    return list(map(squash, map(spack.store.store().db.query, specs)))
 
 
 def setup_parser(sp):
@@ -176,7 +176,7 @@ def view(parser, args):
     path = args.path[0]
 
     view = YamlFilesystemView(
-        path, spack.store.layout,
+        path, spack.store.store().layout,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
         link=os.link if args.action in ["hardlink", "hard"]
         else os.symlink,

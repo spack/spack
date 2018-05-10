@@ -320,7 +320,7 @@ class Python(AutotoolsPackage):
             output_filename = None
             try:
                 output_filename = join_path(
-                    spack.store.layout.metadata_path(self.spec),
+                    spack.store.store().layout.metadata_path(self.spec),
                     Python._DISTUTIL_CACHE_FILENAME)
                 with open(output_filename, 'w') as output_file:
                     sjson.dump(self._distutil_vars, output_file)
@@ -342,7 +342,7 @@ class Python(AutotoolsPackage):
         if not self._distutil_vars and self.installed:
             try:
                 input_filename = join_path(
-                    spack.store.layout.metadata_path(self.spec),
+                    spack.store.store().layout.metadata_path(self.spec),
                     Python._DISTUTIL_CACHE_FILENAME)
                 if os.path.isfile(input_filename):
                     with open(input_filename) as input_file:
@@ -680,7 +680,7 @@ class Python(AutotoolsPackage):
         args.update(ignore=ignore)
 
         extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+                                     spack.store.store().extensions)
 
         super(Python, self).activate(ext_pkg, **args)
 
@@ -696,7 +696,7 @@ class Python(AutotoolsPackage):
         super(Python, self).deactivate(ext_pkg, **args)
 
         extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+                                     spack.store.store().extensions)
 
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent

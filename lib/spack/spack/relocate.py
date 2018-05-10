@@ -110,7 +110,7 @@ def get_placeholder_rpaths(path_name, orig_rpaths):
     Replaces original layout root dir with a placeholder string in all rpaths.
     """
     rel_rpaths = []
-    orig_dir = spack.store.layout.root
+    orig_dir = spack.store.store().layout.root
     for rpath in orig_rpaths:
         if re.match(orig_dir, rpath):
             placeholder = set_placeholder(orig_dir)
@@ -186,7 +186,7 @@ def macho_make_paths_placeholder(rpaths, deps, idpath):
     replacement are returned.
     """
     new_idpath = None
-    old_dir = spack.store.layout.root
+    old_dir = spack.store.store().layout.root
     placeholder = set_placeholder(old_dir)
     if idpath:
         new_idpath = re.sub(old_dir, placeholder, idpath)
@@ -425,9 +425,9 @@ def make_binary_placeholder(cur_path_names, allow_root):
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
                 strings_contains_installroot(cur_path,
-                                             spack.store.layout.root)):
-                raise InstallRootStringException(cur_path,
-                                                 spack.store.layout.root)
+                                             spack.store.store().layout.root)):
+                raise InstallRootStringException(
+                    cur_path, spack.store.store().layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -435,10 +435,10 @@ def make_binary_placeholder(cur_path_names, allow_root):
                 new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if (not allow_root and
-                    strings_contains_installroot(cur_path,
-                                                 spack.store.layout.root)):
-                    raise InstallRootStringException(cur_path,
-                                                     spack.store.layout.root)
+                    strings_contains_installroot(
+                        cur_path, spack.store.store().layout.root)):
+                    raise InstallRootStringException(
+                        cur_path, spack.store.store().layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
 

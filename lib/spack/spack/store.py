@@ -45,32 +45,59 @@ configuration.
 import os
 import spack.paths
 import spack.config
-from spack.util.path import canonicalize_path
-from spack.database import Database
-from spack.directory_layout import YamlDirectoryLayout
-from spack.directory_layout import YamlExtensionsLayout
+import spack.util.path
+import spack.database
+import spack.directory_layout
 
-__author__ = "Benedikt Hegner (CERN)"
-__all__ = ['db', 'extensions', 'layout', 'root']
+#: default installation root, relative to the Spack install path
+default_root = os.path.join(spack.paths.opt_path, 'spack')
 
-#
-# Set up the install path
-#
-root = canonicalize_path(spack.config.get(
-    'config:install_tree', os.path.join(spack.paths.opt_path, 'spack')))
 
-#
-# Set up the installed packages database
-#
-db = Database(root)
+class Store(object):
+    """A store is a path full of installed Spack packages.
 
-#
-# This controls how spack lays out install prefixes and
-# stage directories.
-#
-layout = YamlDirectoryLayout(
-    root,
-    hash_len=spack.config.get('config:install_hash_length'),
-    path_scheme=spack.config.get('config:install_path_scheme'))
+    Stores consist of packages installed according to a
+    ``DirectoryLayout``, along with an index, or _database_ of their
+    contents.  The directory layout controls what paths look like and how
+    Spack ensures that each uniqe spec gets its own unique directory (or
+    not, though we don't recommend that). The database is a signle file
+    that caches metadata for the entire Spack installation.  It prevents
+    us from having to spider the install tree to figure out what's there.
 
-extensions = YamlExtensionsLayout(root, layout)
+    Args:
+        root (str): path to the root of the install tree
+        path_scheme (str): expression according to guidelines in
+            ``spack.util.path`` that describes how to construct a path to
+            a package prefix in this store
+        hash_length (int): length of the hashes used in the directory
+            layout; spec hash suffixes will be truncated to this length
+    """
+    def __init__(self, root, path_scheme, hash_length):
+        self.root = root
+        self.db = spack.database.Database(root)
+        self.layout = spack.directory_layout.YamlDirectoryLayout(
+            root, hash_len=hash_length, path_scheme=path_scheme)
+        self.extensions = spack.directory_layout.YamlExtensionsLayout(
+            root, self.layout)
+
+    def reindex(self):
+        """Convenience function to reindex the store DB with its own layout."""
+        return self.db.reindex(self.layout)
+
+
+#: Singleton store instance
+_store = None
+
+
+def store():
+    """Get the singleton store instance."""
+    global _store
+
+    if _store is None:
+        root = spack.config.get('config:install_tree', default_root)
+        root = spack.util.path.canonicalize_path(root)
+
+        _store = Store(root,
+                       spack.config.get('config:install_path_scheme'),
+                       spack.config.get('config:install_hash_length'))
+    return _store
