@@ -26,13 +26,13 @@ approach of building and loading individual Spack modules:
    Now the ``spack load mypackage`` command will fail because more
    than one version of ``mypackage`` is installed.  Thus, ``spack
    load`` is non-deterministic, and not a reliable way to load
-   specific sets of modules one whishes to build and load.
+   specific sets of modules one wishes to build and load.
    Environments solve this problem by creating a localized context
    that is immune to what other versions of packages might be
-   installed on the system.
+   installed in the global Spack prefix.
 #. Environments separate the steps of (a) choosing what to
    install, (b) concretizing, and (c) installing.  This allows
-   Environments to remain stable and repeatble, even if Spack packages
+   Environments to remain stable and repeatable, even if Spack packages
    are upgraded: specs are only re-concretized when the user
    explicitly asks for it.  It should even be possible to reliably
    transport environments between different computers running
