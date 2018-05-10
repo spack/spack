@@ -82,13 +82,6 @@ class Environment(object):
         self.concretized_order = list()
         self.specs_by_hash = dict()
 
-        # Libs in this set must always appear as the dependency traced from any
-        # root of link deps
-        self.common_libs = dict()  # name -> hash
-        # Packages in this set must always appear as the dependency traced from
-        # any root of run deps
-        self.common_bins = dict()  # name -> hash
-
     def __init__(self, name):
         self.name = name
         self.clear()
@@ -223,23 +216,12 @@ class Environment(object):
                 stream.write(concretized_spec.tree(**kwargs))
 
     def upgrade_dependency(self, dep_name, dry_run=False):
-        """
-        Note: if you have
-
-        w -> x -> y
-
-        and
-
-        v -> x -> y
-
-        Then if you upgrade y, you will start by re-concretizing w (and x).
-        This should make sure that v uses the same x as w if this environment
-        is supposed to reuse dependencies where possible. The difference
-        compared to 'normal' concretization is that you want to keep things as
-        similar as possible. I think the approach would be to go through all
-        the common_libs and common_bins, recognize the first time they get
-        re-concretized, and then replace them manually where encountered later.
-        """
+        # TODO: if you have
+        # w -> x -> y
+        # and
+        # v -> x -> y
+        # then it would be desirable to ensure that w and v refer to the
+        # same x after upgrading y. This is not currently guaranteed.
         new_order = list()
         new_deps = list()
         for i, spec_hash in enumerate(self.concretized_order):
