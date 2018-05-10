@@ -273,6 +273,7 @@ An example ``env.yaml`` file:
       ``env.yaml``:
 
       .. code-block:: yaml
+
          env:
              configs:
                  - config
