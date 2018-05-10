@@ -524,3 +524,16 @@ class TestConcretize(object):
         s.concretize()
 
         assert not s.package.provides('lapack')
+
+    @pytest.mark.regression('7941')
+    def test_regression_issue_7941(self):
+        # The string representation of a spec containing
+        # an explicit multi-valued variant and a dependency
+        # might be parsed differently than the originating spec
+        s = Spec('a foobar=bar ^b')
+        t = Spec(str(s))
+
+        s.concretize()
+        t.concretize()
+
+        assert s.dag_hash() == t.dag_hash()
