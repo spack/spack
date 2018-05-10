@@ -25,24 +25,30 @@
 from spack import *
 
 
-class PyCnvkit(PythonPackage):
-    """A command-line toolkit and Python library for detecting copy number
-       variants and alterations genome-wide from high-throughput sequencing."""
+class Metabat(SConsPackage):
+    """MetaBAT, an efficient tool for accurately reconstructing single
+    genomes from complex microbial communities."""
 
-    homepage = "http://cnvkit.readthedocs.io/en/stable/"
-    url      = "https://github.com/etal/cnvkit/archive/v0.9.2.tar.gz"
+    homepage = "https://bitbucket.org/berkeleylab/metabat"
+    url      = "https://bitbucket.org/berkeleylab/metabat/get/v2.12.1.tar.gz"
 
-    version('0.9.2', '16612c4dcc9570f6ef9fecc42caf1745')
+    version('2.12.1', 'c032f47a8b24e58a5a9fefe52cb6e0f8')
 
-    depends_on('py-setuptools',        type='build')
-    depends_on('py-biopython@1.62:',   type=('build', 'run'))
-    depends_on('py-future@0.15.2:',    type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
-    depends_on('py-numpy@1.9:',        type=('build', 'run'))
-    depends_on('py-pandas@0.18.1:',    type=('build', 'run'))
-    depends_on('py-pyfaidx@0.4.7:',    type=('build', 'run'))
-    depends_on('py-pysam@0.10.0:0.13', type=('build', 'run'))
-    depends_on('py-reportlab@3.0:',    type=('build', 'run'))
-    depends_on('py-scipy@0.15.0:',     type=('build', 'run'))
-    depends_on('bcftools@1.6',         type=('build', 'run'))
-    depends_on('samtools@1.6',         type=('build', 'run'))
+    depends_on('boost@1.55.0:', type=('build', 'run'))
+    depends_on('perl', type='run')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
+
+    def install_args(self, spec, prefix):
+        return ["PREFIX={0}".format(prefix)]
+
+    @run_after('build')
+    def fix_perl_scripts(self):
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl',
+                    'aggregateBinDepths.pl')
+
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl',
+                    'aggregateContigOverlapsByBin.pl')

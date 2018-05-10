@@ -59,7 +59,16 @@ class Lbann(CMakePackage):
     depends_on('cub', when='+gpu')
     depends_on('mpi')
     depends_on('hwloc ~pci ~libxml2')
-    depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib ~eigen', when='+opencv')
+    # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
+    # Additionally disable video related options, they incorrectly link in a
+    # bad OpenMP library when building with clang or Intel compilers
+    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib '
+               '+fast-math +powerpc +vsx ~calib3d ~cuda ~dnn ~eigen'
+               '~features2d ~flann ~gtk ~ipp ~ipp_iw ~jasper ~java ~lapack ~ml'
+               '~openmp ~opencl ~opencl_svm ~openclamdblas ~openclamdfft'
+               '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
+               '~videostab ~videoio ~vtk', when='+opencv')
+
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')

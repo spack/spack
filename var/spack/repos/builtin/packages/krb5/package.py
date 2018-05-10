@@ -25,24 +25,22 @@
 from spack import *
 
 
-class PyCnvkit(PythonPackage):
-    """A command-line toolkit and Python library for detecting copy number
-       variants and alterations genome-wide from high-throughput sequencing."""
+class Krb5(AutotoolsPackage):
+    """Network authentication protocol"""
 
-    homepage = "http://cnvkit.readthedocs.io/en/stable/"
-    url      = "https://github.com/etal/cnvkit/archive/v0.9.2.tar.gz"
+    homepage = "https://kerberos.org"
+    url      = "https://kerberos.org/dist/krb5/1.16/krb5-1.16.1.tar.gz"
 
-    version('0.9.2', '16612c4dcc9570f6ef9fecc42caf1745')
+    version('1.16.1', '848e9b80d6aaaa798e3f3df24b83c407')
 
-    depends_on('py-setuptools',        type='build')
-    depends_on('py-biopython@1.62:',   type=('build', 'run'))
-    depends_on('py-future@0.15.2:',    type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
-    depends_on('py-numpy@1.9:',        type=('build', 'run'))
-    depends_on('py-pandas@0.18.1:',    type=('build', 'run'))
-    depends_on('py-pyfaidx@0.4.7:',    type=('build', 'run'))
-    depends_on('py-pysam@0.10.0:0.13', type=('build', 'run'))
-    depends_on('py-reportlab@3.0:',    type=('build', 'run'))
-    depends_on('py-scipy@0.15.0:',     type=('build', 'run'))
-    depends_on('bcftools@1.6',         type=('build', 'run'))
-    depends_on('samtools@1.6',         type=('build', 'run'))
+    depends_on('openssl')
+
+    configure_directory = 'src'
+    build_directory = 'src'
+
+    def configure_args(self):
+        args = ['--disable-debug',
+                '--disable-dependency-tracking',
+                '--disable-silent-rules',
+                '--without-system-verto']
+        return args
