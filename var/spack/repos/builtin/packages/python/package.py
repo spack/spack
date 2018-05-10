@@ -93,6 +93,10 @@ class Python(AutotoolsPackage):
         default=False,
         description='Enable expensive build-time optimizations, if available'
     )
+    # See https://legacy.python.org/dev/peps/pep-0394/
+    variant('pythoncmd', default=True,
+            description="Symlink 'python3' executable to 'python' "
+            "(not PEP 394 compliant)")
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -231,7 +235,7 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:'):
+        if spec.satisfies('@3:') and spec.satisfies('+pythoncmd'):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),

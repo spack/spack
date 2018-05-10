@@ -3160,7 +3160,7 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def dep_string(self):
-        return ''.join("^" + dep.format() for dep in self.sorted_deps())
+        return ''.join(" ^" + dep.format() for dep in self.sorted_deps())
 
     def __str__(self):
         ret = self.format() + self.dep_string()
