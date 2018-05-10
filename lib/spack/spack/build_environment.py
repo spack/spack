@@ -65,6 +65,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
+import spack.build_systems.cmake
 import spack.config
 import spack.main
 import spack.paths
@@ -374,7 +375,7 @@ def set_module_variables_for_package(pkg, module):
     m.ctest = Executable('ctest')
 
     # Standard CMake arguments
-    m.std_cmake_args = spack.CMakePackage._std_args(pkg)
+    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -540,7 +541,7 @@ def get_std_cmake_args(pkg):
     Returns:
         list of str: arguments for cmake
     """
-    return spack.CMakePackage._std_args(pkg)
+    return spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
 
 def parent_class_modules(cls):
