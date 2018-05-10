@@ -120,7 +120,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
-    depends_on('gmsh+tetgen+netgen', when='@9.0:+gmsh', type=('build', 'run'))
+    depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
     depends_on('cuda@8:',          when='+cuda')
