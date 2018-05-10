@@ -26,7 +26,8 @@ from spack import *
 
 
 class PerlIoCompress(PerlPackage):
-    """A perl library for uncompressing gzip, zip, bzip2 or lzop file/buffer."""
+    """A perl library for uncompressing gzip, zip, bzip2
+    or lzop file/buffer."""
 
     homepage = "http://search.cpan.org/~pmqs/IO-Compress-2.070/lib/IO/Uncompress/AnyUncompress.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/IO-Compress-2.070.tar.gz"
