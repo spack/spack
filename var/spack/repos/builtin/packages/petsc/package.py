@@ -296,6 +296,18 @@ class Petsc(Package):
                 cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
                    '-lpetsc', '-lm', '-o', 'ex50')
                 run = Executable(join_path(spec['mpi'].prefix.bin, 'mpirun'))
+                # For Spectrum MPI, if -np is omitted, the default behavior is
+                # to assign one process per process slot, where the default
+                # process slot allocation is one per core. On systems with
+                # many cores, the number of processes can exceed the size of
+                # the grid specified when the testcase is run and the test case
+                # fails. Specify a small number of processes to prevent
+                # failure.
+                # For more information about Spectrum MPI invocation, see URL
+                # https://www.ibm.com/support/knowledgecenter/en/SSZTET_10.1.0/smpi02/smpi02_mpirun_options.html
+                if ('spectrum-mpi' in spec):
+                    run.add_default_arg('-np')
+                    run.add_default_arg('4')
                 run('ex50', '-da_grid_x', '4', '-da_grid_y', '4')
                 if 'superlu-dist' in spec:
                     run('ex50',
