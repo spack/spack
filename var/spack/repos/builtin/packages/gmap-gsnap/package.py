@@ -48,7 +48,7 @@ class GmapGsnap(AutotoolsPackage):
         pass
 
     def build(self, spec, prefix):
-        binaries=[]
+        binaries = []
 
         if "+avx2" in self.spec:
             binaries.append("avx2")
@@ -63,7 +63,8 @@ class GmapGsnap(AutotoolsPackage):
             binaries.append("sse2")
 
         for var in binaries:
-            configure('--with-simd-level={0}' .format(var), '--prefix={0}'.format(prefix))
+            configure('--with-simd-level={0}' .format(var),
+                      '--prefix={0}'.format(prefix))
             make()
             make('install')
             make('distclean')
