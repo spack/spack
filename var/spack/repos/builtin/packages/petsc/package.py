@@ -102,6 +102,8 @@ class Petsc(Package):
         patch('macos-clang-8.1.0.diff',
               when='@3.7.5%clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
+    patch('xlc-test-3.9.0.diff', when='@3.9: %xl')
+    patch('xlc-test-3.9.0.diff', when='@3.9: %xl_r')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
