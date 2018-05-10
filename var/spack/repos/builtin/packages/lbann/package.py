@@ -51,13 +51,20 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
-    depends_on('elemental +openmp_blas +shared +int64')
+    depends_on('hydrogen +openmp_blas +shared +int64', when=('@:0.91'))
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
+               when=('build_type=Debug' '@:0.91'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', when=('+gpu' '@:0.91'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
+               when=('build_type=Debug' '@:0.91' '+gpu'))
+    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.93'))
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug'))
+               when=('build_type=Debug' '@0.91:0.93'))
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi')
+    depends_on('mpi', when='~gpu')
+    depends_on('mpi +cuda', when='+gpu')
     depends_on('hwloc ~pci ~libxml2')
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
@@ -99,10 +106,17 @@ class Lbann(CMakePackage):
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE=OFF',
-            '-DElemental_DIR={0}/CMake/elemental'.format(
-                spec['elemental'].prefix),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
+
+        if ('@:0.91'):
+            args.extend([
+                '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
+                    spec['hydrogen'].prefix)])
+        elif ('@0.94:'):
+            args.extend([
+                '-DElemental_DIR={0}/CMake/elemental'.format(
+                    spec['elemental'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
