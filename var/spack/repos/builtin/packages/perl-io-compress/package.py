@@ -33,3 +33,6 @@ class PerlIoCompress(PerlPackage):
     url      = "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/IO-Compress-2.070.tar.gz"
 
     version('2.081', '379932c1b9428b873ed7ad3c1db15872')
+
+    depends_on('perl-compress-raw-zlib', type='run')
+    depends_on('perl-compress-raw-bzip2', type='run')
