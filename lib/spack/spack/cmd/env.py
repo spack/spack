@@ -513,7 +513,7 @@ def environment_remove(args):
 
 def environment_spec(args):
     environment = read(args.environment)
-    prepare_repository(environment)
+    prepare_repository(environment, use_repo=args.use_repo)
     prepare_config_scope(environment)
     spack.cmd.spec.spec(None, args)
 
@@ -521,14 +521,15 @@ def environment_spec(args):
 def environment_concretize(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
-    _environment_concretize(environment, force=args.force)
+    _environment_concretize(
+        environment, use_repo=args.use_repo, force=args.force)
 
 
-def _environment_concretize(environment, force=False):
+def _environment_concretize(environment, use_repo=False, force=False):
     """Function body separated out to aid in testing."""
 
     # Change global search paths
-    repo = prepare_repository(environment)
+    repo = prepare_repository(environment, use_repo=use_repo)
     prepare_config_scope(environment)
 
     new_specs = environment.concretize(force=force)
@@ -546,7 +547,7 @@ def _environment_concretize(environment, force=False):
 def environment_install(args):
     check_consistent_env(get_env_root(args.environment))
     environment = read(args.environment)
-    prepare_repository(environment)
+    prepare_repository(environment, use_repo=args.use_repo)
     environment.install(args)
 
 
@@ -615,7 +616,7 @@ def prepare_config_scope(environment):
 
 def environment_relocate(args):
     environment = read(args.environment)
-    prepare_repository(environment)
+    prepare_repository(environment, use_repo=args.use_repo)
     environment.reset_os_and_compiler(compiler=args.compiler)
     write(environment)
 
@@ -633,7 +634,7 @@ def environment_list(args):
 
 def environment_stage(args):
     environment = read(args.environment)
-    prepare_repository(environment)
+    prepare_repository(environment, use_repo=args.use_repo)
     for spec in environment.specs_by_hash.values():
         for dep in spec.traverse():
             dep.package.do_stage()
@@ -687,11 +688,19 @@ def environment_loads(args):
 
 def environment_upgrade_dependency(args):
     environment = read(args.environment)
-    repo = prepare_repository(environment, [args.dep_name])
+    repo = prepare_repository(
+        environment, use_repo=args.use_repo, remove=[args.dep_name])
     new_dep = environment.upgrade_dependency(args.dep_name, args.dry_run)
     if not args.dry_run and new_dep:
         dump_to_environment_repo(new_dep, repo)
         write(environment, repo)
+
+
+def add_use_repo_argument(cmd_parser):
+    cmd_parser.add_argument(
+        '--use-env-repo', action='store_true', dest='use_repo',
+        help='Use package definitions stored in the environment'
+    )
 
 
 def setup_parser(subparser):
@@ -733,12 +742,14 @@ def setup_parser(subparser):
     spec_parser = sp.add_parser(
         'spec', help='Concretize sample spec')
     spack.cmd.spec.add_common_arguments(spec_parser)
+    add_use_repo_argument(spec_parser)
 
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')
     concretize_parser.add_argument(
         '-f', '--force', action='store_true',
         help="Re-concretize even if already concretized.")
+    add_use_repo_argument(concretize_parser)
 
     relocate_parser = sp.add_parser(
         'relocate',
@@ -747,6 +758,7 @@ def setup_parser(subparser):
         '--compiler',
         help="Compiler spec to use"
     )
+    add_use_repo_argument(relocate_parser)
 
     list_parser = sp.add_parser('list', help='List specs in an environment')
     arguments.add_common_arguments(
@@ -759,7 +771,7 @@ def setup_parser(subparser):
         '(see spack module loads)')
     spack.cmd.module.add_loads_arguments(loads_parser)
 
-    loads_parser = sp.add_parser(
+    sp.add_parser(
         'location',
         help='Print the root directory of the environment')
 
@@ -772,11 +784,12 @@ version''')
     upgrade_parser.add_argument(
         '--dry-run', action='store_true', dest='dry_run',
         help="Just show the updates that would take place")
+    add_use_repo_argument(upgrade_parser)
 
-    # stage_parser =
-    sp.add_parser(
+    stage_parser = sp.add_parser(
         'stage',
         help='Download all source files for all packages in an environment')
+    add_use_repo_argument(stage_parser)
 
     config_update_parser = sp.add_parser(
         'update-config',
@@ -791,6 +804,7 @@ version''')
         'install',
         help='Install all concretized specs in an environment')
     spack.cmd.install.add_common_arguments(install_parser)
+    add_use_repo_argument(install_parser)
 
     uninstall_parser = sp.add_parser(
         'uninstall',
