@@ -153,7 +153,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
-
     # check that the combination of variants makes sense
     conflicts('^openblas+ilp64', when='@:8.5.1')
     conflicts('^intel-mkl+ilp64', when='@:8.5.1')
