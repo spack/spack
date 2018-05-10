@@ -48,8 +48,6 @@ class Hydrogen(CMakePackage):
             description='Build C interface')
     variant('python', default=False,
             description='Install Python interface')
-    variant('parmetis', default=False,
-            description='Enable ParMETIS')
     variant('quad', default=False,
             description='Enable quad precision')
     variant('int64', default=False,
@@ -120,83 +118,6 @@ class Hydrogen(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
-    @when('@0.87.6:')
-    def cmake_args(self):
-        spec = self.spec
-
-        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
-            raise UnsupportedCompilerError(
-                "Elemental {0} has a known bug with compiler: {1} {2}".format(
-                    spec.version, spec.compiler.name, spec.compiler.version))
-
-        args = [
-            '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
-            '-DEL_DISABLE_SCALAPACK:BOOL=%s'   % ('~scalapack' in spec),
-            '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
-            '-DEL_HYBRID:BOOL=%s'              % ('+hybrid' in spec),
-            '-DEL_C_INTERFACE:BOOL=%s'         % ('+c' in spec),
-            '-DINSTALL_PYTHON_PACKAGE:BOOL=%s' % ('+python' in spec),
-            '-DEL_DISABLE_PARMETIS:BOOL=%s'    % ('~parmetis' in spec),
-            '-DEL_DISABLE_QUAD:BOOL=%s'        % ('~quad' in spec),
-            '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
-            '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
-            '-DEL_DISABLE_MPFR:BOOL=%s'        % ('~mpfr' in spec),
-            '-DHYDROGEN_Hydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec)]
-
-        if self.spec.satisfies('%intel'):
-            ifort = env['SPACK_F77']
-            intel_bin = os.path.dirname(ifort)
-            intel_root = os.path.dirname(intel_bin)
-            libfortran = LibraryList('{0}/lib/intel64/libifcoremt.{1}'
-                                     .format(intel_root, dso_suffix))
-        elif self.spec.satisfies('%gcc'):
-            # see <stage_folder>/debian/rules as an example:
-            mpif77 = Executable(spec['mpi'].mpif77)
-            libfortran = LibraryList(mpif77('--print-file-name',
-                                            'libgfortran.%s' % dso_suffix,
-                                            output=str))
-        elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
-            xl_fort = env['SPACK_F77']
-            xl_bin = os.path.dirname(xl_fort)
-            xl_root = os.path.dirname(xl_bin)
-            libfortran = LibraryList('{0}/lib/libxlf90_r.{1}.1'
-                                     .format(xl_root, dso_suffix))
-        else:
-            libfortran = None
-
-        if libfortran:
-            args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
-
-        # If using 64bit int BLAS libraries, elemental has to build
-        # them internally
-        if '+int64_blas' in spec:
-            args.extend(['-DEL_BLAS_SUFFIX:STRING={0}'.format((
-                '_64_' if '+int64_blas' in spec else '_')),
-                '-DCUSTOM_BLAS_SUFFIX:BOOL=TRUE']),
-            if '+scalapack' in spec:
-                args.extend(['-DEL_LAPACK_SUFFIX:STRING={0}'.format((
-                    '_64_' if '+int64_blas' in spec else '_')),
-                    '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
-        else:
-            math_libs = (spec['lapack'].libs +
-                         spec['blas'].libs)
-
-            if '+scalapack' in spec:
-                math_libs = spec['scalapack'].libs + math_libs
-
-            args.extend([
-                '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)])
-
-        if '+python' in spec:
-            args.extend([
-                '-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
-
-        return args
-
     @when('@:0.87.6')
     def cmake_args(self):
         spec = self.spec
@@ -218,6 +139,7 @@ class Hydrogen(CMakePackage):
             '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
+            '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec)
         ]
 
         # Add support for OS X to find OpenMP
