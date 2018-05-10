@@ -134,21 +134,6 @@ conflicting versions of packages.  For example:
    $ spack env myenv add mpileaks
    $ spack env myenv add python
 
-.. note::
-
-   Currently, only "bare" user specs may be added to an environment,
-   i.e. just the package name without modifiers.  For example, the
-   following commands currently do NOT work.
-
-   .. code-block:: console
-
-      $ spack env myenv add python@3.2
-      $ spack env myenv add netcdf^hdf5@1.13
-
-   This is a bug that is slated to be fixed.  In most cases, use of an
-   environment ``packages.yaml`` file can in conjunction with bare
-   specs is sufficient.
-
 Concretizing
 ^^^^^^^^^^^^
 
