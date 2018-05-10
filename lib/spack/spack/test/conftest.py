@@ -283,18 +283,18 @@ def database(tmpdir_factory, mock_packages, config):
 
     # Make a fake install directory
     install_path = tmpdir_factory.mktemp('install_for_database')
-    spack_install_path = spack.store.root
+    spack_install_path = spack.store.store().root
 
-    spack.store.root = str(install_path)
+    spack.store.store().root = str(install_path)
     install_layout = spack.directory_layout.YamlDirectoryLayout(
         str(install_path))
-    spack_install_layout = spack.store.layout
-    spack.store.layout = install_layout
+    spack_install_layout = spack.store.store().layout
+    spack.store.store().layout = install_layout
 
     # Make fake database and fake install directory.
     install_db = spack.database.Database(str(install_path))
-    spack_install_db = spack.store.db
-    spack.store.db = install_db
+    spack_install_db = spack.store.store().db
+    spack.store.store().db = install_db
 
     Entry = collections.namedtuple('Entry', ['path', 'layout', 'db'])
     Database = collections.namedtuple(
@@ -316,8 +316,8 @@ def database(tmpdir_factory, mock_packages, config):
         spec.package.do_uninstall(spec)
 
     def _refresh():
-        with spack.store.db.write_transaction():
-            for spec in spack.store.db.query():
+        with spack.store.store().db.write_transaction():
+            for spec in spack.store.store().db.query():
                 _uninstall(spec)
             _install('mpileaks ^mpich')
             _install('mpileaks ^mpich2')
@@ -332,7 +332,7 @@ def database(tmpdir_factory, mock_packages, config):
         refresh=_refresh)
 
     # Transaction used to avoid repeated writes.
-    with spack.store.db.write_transaction():
+    with spack.store.store().db.write_transaction():
         t.install('mpileaks ^mpich')
         t.install('mpileaks ^mpich2')
         t.install('mpileaks ^zmpi')
@@ -340,17 +340,17 @@ def database(tmpdir_factory, mock_packages, config):
 
     yield t
 
-    with spack.store.db.write_transaction():
-        for spec in spack.store.db.query():
+    with spack.store.store().db.write_transaction():
+        for spec in spack.store.store().db.query():
             if spec.package.installed:
                 t.uninstall(spec)
             else:
-                spack.store.db.remove(spec)
+                spack.store.store().db.remove(spec)
 
     install_path.remove(rec=1)
-    spack.store.root = spack_install_path
-    spack.store.layout = spack_install_layout
-    spack.store.db = spack_install_db
+    spack.store.store().root = spack_install_path
+    spack.store.store().layout = spack_install_layout
+    spack.store.store().db = spack_install_db
 
 
 @pytest.fixture()
@@ -363,26 +363,27 @@ def refresh_db_on_exit(database):
 @pytest.fixture()
 def install_mockery(tmpdir, config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    layout = spack.store.layout
-    extensions = spack.store.extensions
-    db = spack.store.db
+    layout = spack.store.store().layout
+    extensions = spack.store.store().extensions
+    db = spack.store.store().db
     new_opt = str(tmpdir.join('opt'))
 
     # Use a fake install directory to avoid conflicts bt/w
     # installed pkgs and mock packages.
-    spack.store.layout = spack.directory_layout.YamlDirectoryLayout(new_opt)
-    spack.store.extensions = spack.directory_layout.YamlExtensionsLayout(
-        new_opt, spack.store.layout)
-    spack.store.db = spack.database.Database(new_opt)
+    store = spack.store.store()
+    store.layout = spack.directory_layout.YamlDirectoryLayout(new_opt)
+    store.extensions = spack.directory_layout.YamlExtensionsLayout(
+        new_opt, spack.store.store().layout)
+    store.db = spack.database.Database(new_opt)
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
 
     # Restore Spack's layout.
-    spack.store.layout = layout
-    spack.store.extensions = extensions
-    spack.store.db = db
+    store.layout = layout
+    store.extensions = extensions
+    store.db = db
 
 
 @pytest.fixture()

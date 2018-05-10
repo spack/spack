@@ -60,7 +60,7 @@ def dependencies(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0])
 
         tty.msg("Dependencies of %s" % spec.format('$_$@$%@$/', color=True))
-        deps = spack.store.db.installed_relatives(
+        deps = spack.store.store().db.installed_relatives(
             spec, 'children', args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)

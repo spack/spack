@@ -77,7 +77,7 @@ def graph(parser, args):
         if args.specs:
             tty.die("Can't specify specs with --installed")
         args.dot = True
-        specs = spack.store.db.query()
+        specs = spack.store.store().db.query()
 
     else:
         specs = spack.cmd.parse_specs(

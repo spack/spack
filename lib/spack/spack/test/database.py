@@ -47,16 +47,16 @@ def _print_ref_counts():
     recs = []
 
     def add_rec(spec):
-        cspecs = spack.store.db.query(spec, installed=any)
+        cspecs = spack.store.store().db.query(spec, installed=any)
 
         if not cspecs:
             recs.append("[ %-7s ] %-20s-" % ('', spec))
         else:
             key = cspecs[0].dag_hash()
-            rec = spack.store.db.get_record(cspecs[0])
+            rec = spack.store.store().db.get_record(cspecs[0])
             recs.append("[ %-7s ] %-20s%d" % (key[:7], spec, rec.ref_count))
 
-    with spack.store.db.read_transaction():
+    with spack.store.store().db.read_transaction():
         add_rec('mpileaks ^mpich')
         add_rec('callpath ^mpich')
         add_rec('mpich')
@@ -79,7 +79,7 @@ def _print_ref_counts():
 
 def _check_merkleiness():
     """Ensure the spack database is a valid merkle graph."""
-    all_specs = spack.store.db.query(installed=any)
+    all_specs = spack.store.store().db.query(installed=any)
 
     seen = {}
     for spec in all_specs:
@@ -93,7 +93,7 @@ def _check_merkleiness():
 
 def _check_db_sanity(install_db):
     """Utiilty function to check db against install layout."""
-    pkg_in_layout = sorted(spack.store.layout.all_specs())
+    pkg_in_layout = sorted(spack.store.store().layout.all_specs())
     actual = sorted(install_db.query())
 
     externals = sorted([x for x in actual if x.external])
@@ -129,7 +129,7 @@ def _check_remove_and_add_package(install_db, spec):
     assert concrete_spec not in remaining
 
     # add it back and make sure everything is ok.
-    install_db.add(concrete_spec, spack.store.layout)
+    install_db.add(concrete_spec, spack.store.store().layout)
     installed = install_db.query()
     assert concrete_spec in installed
     assert installed == original
@@ -147,7 +147,7 @@ def _mock_install(spec):
 
 
 def _mock_remove(spec):
-    specs = spack.store.db.query(spec)
+    specs = spack.store.store().db.query(spec)
     assert len(specs) == 1
     spec = specs[0]
     spec.package.do_uninstall(spec)
@@ -206,7 +206,7 @@ def test_005_db_exists(database):
 
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.store().layout.all_specs()
     assert len(all_specs) == 14
 
     # Query specs with multiple configurations
@@ -241,12 +241,12 @@ def test_010_all_install_sanity(database):
 
 def test_015_write_and_read(database):
     # write and read DB
-    with spack.store.db.write_transaction():
-        specs = spack.store.db.query()
-        recs = [spack.store.db.get_record(s) for s in specs]
+    with spack.store.store().db.write_transaction():
+        specs = spack.store.store().db.query()
+        recs = [spack.store.store().db.get_record(s) for s in specs]
 
     for spec, rec in zip(specs, recs):
-        new_rec = spack.store.db.get_record(spec)
+        new_rec = spack.store.store().db.get_record(spec)
         assert new_rec.ref_count == rec.ref_count
         assert new_rec.spec == rec.spec
         assert new_rec.path == rec.path
@@ -262,7 +262,7 @@ def test_020_db_sanity(database):
 def test_025_reindex(database):
     """Make sure reindex works and ref counts are valid."""
     install_db = database.mock.db
-    spack.store.db.reindex(spack.store.layout)
+    spack.store.store().reindex()
     _check_db_sanity(install_db)
 
 
@@ -293,7 +293,7 @@ def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     install_db = database.mock.db
     # query everything
-    assert len(spack.store.db.query()) == 16
+    assert len(spack.store.store().db.query()) == 16
 
     # query specs with multiple configurations
     mpileaks_specs = install_db.query('mpileaks')
@@ -350,7 +350,7 @@ def test_080_root_ref_counts(database):
     assert install_db.get_record('mpich').ref_count == 1
 
     # Put the spec back
-    install_db.add(rec.spec, spack.store.layout)
+    install_db.add(rec.spec, spack.store.store().layout)
 
     # record is present again
     assert len(install_db.query('mpileaks ^mpich', installed=any)) == 1
@@ -436,7 +436,7 @@ def test_115_reindex_with_packages_not_in_repo(database, refresh_db_on_exit):
     # packages should not have to be defined in the repository once they
     # are installed
     with spack.repo.swap(MockPackageMultiRepo([])):
-        spack.store.db.reindex(spack.store.layout)
+        spack.store.store().reindex()
         _check_db_sanity(install_db)
 
 

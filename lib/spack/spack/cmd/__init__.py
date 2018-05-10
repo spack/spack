@@ -182,7 +182,7 @@ def elide_list(line_list, max_num=10):
 
 
 def disambiguate_spec(spec):
-    matching_specs = spack.store.db.query(spec)
+    matching_specs = spack.store.store().db.query(spec)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 

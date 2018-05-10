@@ -387,7 +387,7 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
     install('archive-files')
 
     archive_dir = os.path.join(
-        spack.store.layout.metadata_path(s), 'archived-files'
+        spack.store.store().layout.metadata_path(s), 'archived-files'
     )
     config_log = os.path.join(archive_dir, 'config.log')
     assert os.path.exists(config_log)

@@ -60,14 +60,15 @@ def deactivate(parser, args):
     spec = spack.cmd.disambiguate_spec(specs[0])
     pkg = spec.package
 
-    layout = spack.store.extensions
+    layout = spack.store.store().extensions
     if args.view is not None:
-        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+        layout = YamlViewExtensionsLayout(
+            args.view, spack.store.store().layout)
 
     if args.all:
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
-            ext_pkgs = spack.store.db.activated_extensions_for(
+            ext_pkgs = spack.store.store().db.activated_extensions_for(
                 spec, extensions_layout=layout)
 
             for ext_pkg in ext_pkgs:

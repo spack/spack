@@ -135,7 +135,7 @@ def setup(self, args):
         tty.die("spack setup only takes one spec.")
 
     # Take a write lock before checking for existence.
-    with spack.store.db.write_transaction():
+    with spack.store.store().db.write_transaction():
         spec = specs[0]
         if not spack.repo.path().exists(spec.name):
             tty.die("No package for '{0}' was found.".format(spec.name),

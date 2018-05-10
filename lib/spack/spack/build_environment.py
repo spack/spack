@@ -256,7 +256,7 @@ def set_build_environment_variables(pkg, env, dirty):
     env.set(SPACK_PREFIX, pkg.prefix)
 
     # Install root prefix
-    env.set(SPACK_INSTALL, spack.store.root)
+    env.set(SPACK_INSTALL, spack.store.store().root)
 
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere.

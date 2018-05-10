@@ -336,8 +336,8 @@ class TestSpecSyntax(object):
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
-        database.mock.db.add(x1, spack.store.layout)
-        database.mock.db.add(x2, spack.store.layout)
+        database.mock.db.add(x1, spack.store.store().layout)
+        database.mock.db.add(x2, spack.store.store().layout)
 
         # ambiguity in first hash character
         self._check_raises(AmbiguousHashError, ['/x'])
