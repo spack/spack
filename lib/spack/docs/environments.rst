@@ -281,6 +281,10 @@ An example ``env.yaml`` file:
    #. The effect of configs on concretization can be tested using the
       ``spack env <env> spec`` command.
 
+   #. As shown above, the syntax ``{X}`` in config paths will
+      substitute the system environent variable named ``X``.  This
+      allows configs to be referenced either relative to the
+      environment directory, or somewhere else on the filesystem.
 
 
 Loading Specs from env.yaml
