@@ -292,3 +292,26 @@ Similarly, all user specs may be removed from the environment with:
 In this way, the list of user specs associated with an environment can
 be kept in the environment; rather than in a separate script
 elsewhere.
+
+
+Initializing an Environment from a Template
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When creating an environment with ``spack env <env> create`` a user can
+provide a template file with the ``--init-file`` option which will
+add a set of pre-specified specs and initialize the environment's
+configuration. The file has the following format:
+
+.. code-block:: yaml
+
+  user_specs:
+    - python
+    - mpileaks
+  packages:
+    ...
+  compilers:
+    ...
+
+Each of the configuration sections (after ``user_specs``) will be
+extracted into a corresponding configuration file in the environment;
+Spack will not make further edits to the environment configuration.
