@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class GmapGsnap(AutotoolsPackage):
@@ -37,3 +38,35 @@ class GmapGsnap(AutotoolsPackage):
     version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
     version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
     version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
+
+    variant('avx2', default=True, description="Build with avx2.")
+    variant('sse42', default=False, description="Build with sse42.")
+    variant('avx512', default=False, description="Build with avx512.")
+    variant('sse2', default=False, description="Build with sse2.")
+
+    def configure(self, spec, prefix):
+        pass
+
+    def build(self, spec, prefix):
+        binaries=[]
+
+        if "+avx2" in self.spec:
+            binaries.append("avx2")
+
+        if "+sse42" in self.spec:
+            binaries.append("sse42")
+
+        if "+avx512" in self.spec:
+            binaries.append("avx512")
+
+        if "+sse2" in self.spec:
+            binaries.append("sse2")
+
+        for var in binaries:
+            configure('--with-simd-level={0}' .format(var), '--prefix={0}'.format(prefix))
+            make()
+            make('install')
+            make('distclean')
+
+    def install(self, spec, prefix):
+        pass
