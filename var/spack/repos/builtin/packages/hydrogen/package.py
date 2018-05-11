@@ -33,10 +33,10 @@ class Hydrogen(CMakePackage):
        and optimization library. Based on the Elemental library."""
 
     homepage = "http://libelemental.org"
-    url      = "https://github.com/LLNL/Elemental/archive/v0.87.6.tar.gz"
+    url      = "https://github.com/LLNL/Elemental/archive/0.99.tar.gz"
 
-    version('hydrogen-develop', git='https://github.com/LLNL/Elemental.git', branch='hydrogen')
     version('develop', git='https://github.com/LLNL/Elemental.git', branch='hydrogen')
+    version('0.99', 'b678433ab1d498da47acf3dc5e056c23')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -44,18 +44,10 @@ class Hydrogen(CMakePackage):
             description='Make use of OpenMP within MPI packing/unpacking')
     variant('openmp_blas', default=False,
             description='Use OpenMP for threading in the BLAS library')
-    variant('c', default=False,
-            description='Build C interface')
-    variant('python', default=False,
-            description='Install Python interface')
     variant('quad', default=False,
             description='Enable quad precision')
     variant('int64', default=False,
             description='Use 64bit integers')
-#    variant('cublas', default=False,
-#            description='Enable cuBLAS for local BLAS operations')
-    # When this variant is set remove the normal dependencies since
-    # Elemental has to build BLAS and ScaLAPACK internally
     variant('int64_blas', default=False,
             description='Use 64bit integers for BLAS.'
             ' Requires local build of BLAS library.')
@@ -71,36 +63,35 @@ class Hydrogen(CMakePackage):
             'arbitrary-precision floating-point arithmetic')
     variant('cuda', default=False, 
             description='Builds with support for GPUs via CUDA and cuDNN')
+    variant('test', default=False, 
+            description='Builds test suite')
 
     # Note that #1712 forces us to enumerate the different blas variants
-    depends_on('blas', when='~openmp_blas ~int64_blas')
-    # Hack to forward variant to openblas package
     depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
-    # Allow Elemental to build internally when using 8-byte ints
+    depends_on('openblas +ilp64', when='blas=openblas ~openmp_blas +int64_blas')
     depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
+    depends_on('openblas threads=openmp +lip64', when='blas=openblas +openmp_blas +int64_blas')
 
     depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
+    depends_on('intel-mkl +ilp64', when="blas=mkl ~openmp_blas +int64_blas")
     depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
     depends_on('veclibfort', when='blas=accelerate')
 
     depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl -cuda +ilp64', when='blas=essl -openmp_blas +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+    depends_on('essl threads=openmp +ilp64', when='blas=essl +openmp_blas +int64_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
-    depends_on('metis')
-    depends_on('metis +int64', when='+int64')
     depends_on('mpi', when='~cuda')
     depends_on('mpi +cuda', when='+cuda')
-#    depends_on('mpi')
-    # Allow Elemental to build internally when using 8-byte ints
-    depends_on('scalapack', when='+scalapack ~int64_blas')
-    extends('python', when='+python')
-    depends_on('python@:2.8', when='+python')
+
+    depends_on('scalapack', when='+scalapack')
     depends_on('gmp', when='+mpfr')
     depends_on('mpc', when='+mpfr')
     depends_on('mpfr', when='+mpfr')
@@ -109,8 +100,6 @@ class Hydrogen(CMakePackage):
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
 
-#    patch('cmake_0.87.7.patch', when='@0.87.7')
-
     @property
     def libs(self):
         shared = True if '+shared' in self.spec else False
@@ -118,7 +107,7 @@ class Hydrogen(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
-    @when('@:0.87.6')
+    @when('@:0.84' or '@0.99:')
     def cmake_args(self):
         spec = self.spec
 
@@ -139,7 +128,8 @@ class Hydrogen(CMakePackage):
             '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
-            '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec)
+            '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
+            '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
         ]
 
         # Add support for OS X to find OpenMP
