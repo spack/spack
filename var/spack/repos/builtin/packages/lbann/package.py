@@ -51,15 +51,25 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
-    depends_on('hydrogen +openmp_blas +shared +int64', when=('@:0.91'))
+    # It seems that there is a need for one statement per version bounds
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@0.95:')
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.91')
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
+               when=('build_type=Debug' '@0.95:'))
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug' '@:0.91'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', when=('+gpu' '@:0.91'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+               when=('+gpu' '@0.95:'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+               when=('+gpu' '@:0.91'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
+               when=('build_type=Debug' '@0.95:' '+gpu'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
                when=('build_type=Debug' '@:0.91' '+gpu'))
-    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.93'))
+    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@0.91:0.93'))
+               when=('build_type=Debug' '@0.91:0.94'))
+
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
