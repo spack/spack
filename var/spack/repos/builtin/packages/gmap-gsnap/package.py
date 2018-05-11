@@ -25,7 +25,7 @@
 from spack import *
 
 
-class GmapGsnap(AutotoolsPackage):
+class GmapGsnap(Package):
     """GMAP: A Genomic Mapping and Alignment Program for
        mRNA and EST Sequences, and GSNAP: Genomic Short-read
        Nucleotide Alignment Program"""
@@ -38,35 +38,18 @@ class GmapGsnap(AutotoolsPackage):
     version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
     version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
 
-    variant('avx2', default=True, description="Build with avx2.")
-    variant('sse42', default=False, description="Build with sse42.")
-    variant('avx512', default=False, description="Build with avx512.")
-    variant('sse2', default=False, description="Build with sse2.")
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        binaries = []
-
-        if "+avx2" in self.spec:
-            binaries.append("avx2")
-
-        if "+sse42" in self.spec:
-            binaries.append("sse42")
-
-        if "+avx512" in self.spec:
-            binaries.append("avx512")
-
-        if "+sse2" in self.spec:
-            binaries.append("sse2")
-
-        for var in binaries:
-            configure('--with-simd-level={0}' .format(var),
-                      '--prefix={0}'.format(prefix))
-            make()
-            make('install')
-            make('distclean')
+    variant(
+        'binaries',
+        description='CPU support.',
+        values=('avx2', 'sse42', 'avx512', 'sse2'),
+        multi=True
+    )
 
     def install(self, spec, prefix):
-        pass
+        for x in ('avx2', 'sse42', 'avx512', 'sse2'):
+            if 'binaries={0}'.format(x) in self.spec:
+                configure('--with-simd-level={0}' .format(x),
+                          '--prefix={0}'.format(prefix))
+                make()
+                make('install')
+                make('distclean')
