@@ -35,6 +35,7 @@ class Masurca(Package):
     url      = "ftp://ftp.genome.umd.edu/pub/MaSuRCA/latest/MaSuRCA-3.2.3.tar.gz"
 
     version('3.2.3', 'd9b4419adfe6b64e42ce986253a50ff5')
+    version('3.2.6', 'f068f91e33fd7381de406a7a954bfe01')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('boost')
