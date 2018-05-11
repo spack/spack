@@ -47,5 +47,5 @@ class RCdcfluview(RPackage):
     depends_on('r-purrr', type=('build', 'run'))
     depends_on('r-readr', type=('build', 'run'))
     depends_on('r-mmwrweek', type=('build', 'run'))
-    depends_on('r-units', type=('build', 'run'))
-    depends_on('r@3.2.0:')
+    depends_on('r-units@0.4-6:', type=('build', 'run'))
+    depends_on('r@3.2.0:', type=('build', 'run'))
