@@ -49,8 +49,7 @@ class Hydrogen(CMakePackage):
     variant('int64', default=False,
             description='Use 64bit integers')
     variant('int64_blas', default=False,
-            description='Use 64bit integers for BLAS.'
-            ' Requires local build of BLAS library.')
+            description='Use 64bit integers for BLAS.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
     variant('build_type', default='Release',
@@ -78,15 +77,16 @@ class Hydrogen(CMakePackage):
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
     depends_on('veclibfort', when='blas=accelerate')
+    conflicts('blas=accelerate +openmp_blas')
 
     depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
     depends_on('essl -cuda +ilp64', when='blas=essl -openmp_blas +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
     depends_on('essl threads=openmp +ilp64', when='blas=essl +openmp_blas +int64_blas')
+    depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
-    depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     depends_on('mpi', when='~cuda')
     depends_on('mpi +cuda', when='+cuda')
