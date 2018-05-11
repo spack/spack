@@ -415,9 +415,10 @@ class Llvm(CMakePackage):
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
 
-    @when('+lldb platform=darwin')
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
+        if not self.spec.satisfies('+lldb platform=darwin'):
+            return
         codesign = which('codesign')
         cp = which('cp')
         mkdir('tmp')
