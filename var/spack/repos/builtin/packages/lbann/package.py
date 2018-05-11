@@ -53,19 +53,19 @@ class Lbann(CMakePackage):
 
     # It seems that there is a need for one statement per version bounds
     depends_on('hydrogen +openmp_blas +shared +int64', when='@0.95:')
-    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.91')
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90')
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug' '@0.95:'))
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@:0.91'))
+               when=('build_type=Debug' '@:0.90'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
                when=('+gpu' '@0.95:'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
-               when=('+gpu' '@:0.91'))
+               when=('+gpu' '@:0.90'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
                when=('build_type=Debug' '@0.95:' '+gpu'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when=('build_type=Debug' '@:0.91' '+gpu'))
+               when=('build_type=Debug' '@:0.90' '+gpu'))
     depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug' '@0.91:0.94'))
@@ -106,7 +106,7 @@ class Lbann(CMakePackage):
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
-    @when('@:0.91' or '@0.94:')
+    @when('@:0.90' or '@0.94:')
     def cmake_args(self):
         spec = self.spec
         args = self.common_config_args
@@ -119,7 +119,7 @@ class Lbann(CMakePackage):
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
 
-        if ('@:0.91' or '@0.95:'):
+        if ('@:0.90' or '@0.95:'):
             args.extend([
                 '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
                     spec['hydrogen'].prefix)])
