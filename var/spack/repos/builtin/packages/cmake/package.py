@@ -35,7 +35,7 @@ class Cmake(Package):
 
     version('3.11.1',   '12a3177477e4e2c7bc514193d421dafe')
     version('3.11.0',   'f3ebc79b5dec85b49abe75958ffa1a03')
-    version('3.10.2',   '732808e17fc14dc8cee50d51518c34eb')
+    version('3.10.2',   '732808e17fc14dc8cee50d51518c34eb', preferred=True)
     version('3.10.1',   '9a726e5ec69618b172aa4b06d18c3998')
     version('3.10.0',   'f3f8e70ca3055f3cd288f89ff233057e')
     version('3.9.4',    '33769e001bdcd788f565bf378692e5ae')
