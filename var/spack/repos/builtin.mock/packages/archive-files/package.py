@@ -25,24 +25,29 @@
 from spack import *
 
 
-class PyCnvkit(PythonPackage):
-    """A command-line toolkit and Python library for detecting copy number
-       variants and alterations genome-wide from high-throughput sequencing."""
+class ArchiveFiles(AutotoolsPackage):
+    """Simple package with one optional dependency"""
 
-    homepage = "http://cnvkit.readthedocs.io/en/stable/"
-    url      = "https://github.com/etal/cnvkit/archive/v0.9.2.tar.gz"
+    homepage = "http://www.example.com"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('0.9.2', '16612c4dcc9570f6ef9fecc42caf1745')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', '2.0_a_hash')
 
-    depends_on('py-setuptools',        type='build')
-    depends_on('py-biopython@1.62:',   type=('build', 'run'))
-    depends_on('py-future@0.15.2:',    type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
-    depends_on('py-numpy@1.9:',        type=('build', 'run'))
-    depends_on('py-pandas@0.18.1:',    type=('build', 'run'))
-    depends_on('py-pyfaidx@0.4.7:',    type=('build', 'run'))
-    depends_on('py-pysam@0.10.0:0.13', type=('build', 'run'))
-    depends_on('py-reportlab@3.0:',    type=('build', 'run'))
-    depends_on('py-scipy@0.15.0:',     type=('build', 'run'))
-    depends_on('bcftools@1.6',         type=('build', 'run'))
-    depends_on('samtools@1.6',         type=('build', 'run'))
+    @property
+    def archive_files(self):
+        return super(ArchiveFiles, self).archive_files + ['../../outside.log']
+
+    def autoreconf(self, spec, prefix):
+        pass
+
+    def configure(self, spec, prefix):
+        pass
+
+    def build(self, spec, prefix):
+        mkdirp(self.build_directory)
+        config_log = join_path(self.build_directory, 'config.log')
+        touch(config_log)
+
+    def install(self, spec, prefix):
+        touch(join_path(prefix, 'deleteme'))

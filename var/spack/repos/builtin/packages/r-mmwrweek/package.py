@@ -25,24 +25,16 @@
 from spack import *
 
 
-class PyCnvkit(PythonPackage):
-    """A command-line toolkit and Python library for detecting copy number
-       variants and alterations genome-wide from high-throughput sequencing."""
+class RMmwrweek(RPackage):
+    """The first day of any MMWR week is Sunday. MMWR week numbering is
+    sequential beginning with 1 and incrementing with each week to a maximum
+    of 52 or 53. MMWR week #1 of an MMWR year is the first week of the year
+    that has at least four days in the calendar year. This package provides
+    functionality to convert Dates to MMWR day, week, and year and the
+    reverse."""
 
-    homepage = "http://cnvkit.readthedocs.io/en/stable/"
-    url      = "https://github.com/etal/cnvkit/archive/v0.9.2.tar.gz"
+    homepage = "https://cran.r-project.org/package=MMWRweek"
+    url      = "https://cran.r-project.org/src/contrib/MMWRweek_0.1.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/MMWRweek"
 
-    version('0.9.2', '16612c4dcc9570f6ef9fecc42caf1745')
-
-    depends_on('py-setuptools',        type='build')
-    depends_on('py-biopython@1.62:',   type=('build', 'run'))
-    depends_on('py-future@0.15.2:',    type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
-    depends_on('py-numpy@1.9:',        type=('build', 'run'))
-    depends_on('py-pandas@0.18.1:',    type=('build', 'run'))
-    depends_on('py-pyfaidx@0.4.7:',    type=('build', 'run'))
-    depends_on('py-pysam@0.10.0:0.13', type=('build', 'run'))
-    depends_on('py-reportlab@3.0:',    type=('build', 'run'))
-    depends_on('py-scipy@0.15.0:',     type=('build', 'run'))
-    depends_on('bcftools@1.6',         type=('build', 'run'))
-    depends_on('samtools@1.6',         type=('build', 'run'))
+    version('0.1.1', 'a1245025126f8a96c72be8f7b06b0499')
