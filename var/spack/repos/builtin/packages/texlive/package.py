@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import sys
 import platform
 
 
@@ -68,7 +67,7 @@ class Texlive(Package):
     depends_on('perl', type='build')
 
     def setup_environment(self, spack_env, run_env):
-        suffix = "%s-%s" % (platform.machine(), sys.platform)
+        suffix = "%s-%s" % (platform.machine(), platform.system().lower())
         run_env.prepend_path('PATH', join_path(self.prefix.bin, suffix))
 
     def install(self, spec, prefix):
