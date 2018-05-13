@@ -24,21 +24,20 @@
 ##############################################################################
 from spack import *
 
-#https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
 
 class LibjpegTurbo(Package):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
        accelerate baseline JPEG compression and decompression. libjpeg is a
        library that implements JPEG image encoding, decoding and
        transcoding."""
-
+    #https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://github.com/libjpeg-turbo/libjpeg-turbo"
     url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
 
     version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
-    version('1.5.3' , '7c82f0f6a3130ec06b8a4d0b321cbca3')
-    version('1.5.0' , '3fc5d9b6a8bce96161659ae7a9939257')
-    version('1.3.1' , '2c3a68129dac443a72815ff5bb374b05')
+    version('1.5.3', '7c82f0f6a3130ec06b8a4d0b321cbca3')
+    version('1.5.0', '3fc5d9b6a8bce96161659ae7a9939257')
+    version('1.3.1', '2c3a68129dac443a72815ff5bb374b05')
 
     provides('jpeg')
 
@@ -48,12 +47,13 @@ class LibjpegTurbo(Package):
     # TODO: Implement the selection between two supported assemblers.
     # depends_on("yasm", type='build')
     depends_on("nasm", type='build')
-    depends_on('cmake',type= 'build', when="@1.5.90:")
+    depends_on('cmake',type='build',when="@1.5.90:")
     
-    @when('@:1.5.3')	
+
+    @when('@:1.5.3')
     def install(self, spec, prefix):
 	configure('--prefix=%s' % prefix)
-        make
+	make
 	make('install')
 
     @when('@1.5.90:')
@@ -63,4 +63,4 @@ class LibjpegTurbo(Package):
     	with working_dir('spack-build', create=True):
     		cmake('..', *cmake_args)
     	        make
-		make('install')
+		make('install')			
