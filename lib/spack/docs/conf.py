@@ -77,7 +77,8 @@ with open('package_list.html', 'w') as plist_file:
 # Find all the `cmd-spack-*` references and add them to a command index
 #
 import spack
-command_names = spack.cmd.all_commands
+import spack.cmd
+command_names = spack.cmd.all_commands()
 documented_commands = set()
 for filename in glob('*rst'):
     with open(filename) as f:
