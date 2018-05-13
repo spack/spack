@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+#https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
 
 class LibjpegTurbo(Package):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
@@ -63,4 +64,3 @@ class LibjpegTurbo(Package):
     		cmake('..', *cmake_args)
     	        make
 		make('install')
-
