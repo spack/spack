@@ -51,15 +51,15 @@ class LibjpegTurbo(Package):
 
     @when('@:1.5.3')
     def install(self, spec, prefix):
-	configure('--prefix=%s' % prefix)
-	make
-	make('install')
-	
+        configure('--prefix=%s' % prefix)
+        make
+        make('install')
+
     @when('@1.5.90:')
     def install(self, spec, prefix):
-    	cmake_args = ['-GUnix Makefiles']
-    	cmake_args.extend(std_cmake_args)
-    	with working_dir('spack-build', create=True):
-    		cmake('..', *cmake_args)
-    	        make
-		make('install')
+        cmake_args = ['-GUnix Makefiles']
+        cmake_args.extend(std_cmake_args)
+        with working_dir('spack-build', create=True):
+            cmake('..', *cmake_args)
+            make
+            make('install')
