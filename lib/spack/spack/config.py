@@ -59,9 +59,7 @@ from six import string_types
 from six import iteritems
 
 import yaml
-import jsonschema
 from yaml.error import MarkedYAMLError
-from jsonschema import Draft4Validator, validators
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -71,7 +69,6 @@ import spack.architecture
 import spack.schema
 from spack.error import SpackError
 from spack.util.ordereddict import OrderedDict
-
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -132,6 +129,7 @@ def _extend_with_default(validator_class):
        commented out.
 
     """
+    import jsonschema
     validate_properties = validator_class.VALIDATORS["properties"]
     validate_pattern_properties = validator_class.VALIDATORS[
         "patternProperties"]
@@ -157,14 +155,10 @@ def _extend_with_default(validator_class):
                 validator, properties, instance, schema):
             yield err
 
-    return validators.extend(validator_class, {
+    return jsonschema.validators.extend(validator_class, {
         "properties": set_defaults,
         "patternProperties": set_pp_defaults
     })
-
-
-#: the validator we use for Spack config files
-DefaultSettingValidator = _extend_with_default(Draft4Validator)
 
 
 class ConfigScope(object):
@@ -192,6 +186,7 @@ class ConfigScope(object):
         return self.sections[section]
 
     def write_section(self, section):
+        import jsonschema
         filename = self.get_section_filename(section)
         data = self.get_section(section)
         try:
@@ -545,8 +540,14 @@ def _validate_section(data, schema):
     on Spack YAML structures.
 
     """
+    import jsonschema
+    if not hasattr(_validate_section, 'validator'):
+        DefaultSettingValidator = _extend_with_default(
+            jsonschema.Draft4Validator)
+        _validate_section.validator = DefaultSettingValidator
+
     try:
-        DefaultSettingValidator(schema).validate(data)
+        _validate_section.validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
