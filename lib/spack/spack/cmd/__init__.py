@@ -83,11 +83,26 @@ def cmd_name(python_name):
     return python_name.replace('_', '-')
 
 
-for file in os.listdir(spack.paths.command_path):
-    if file.endswith(".py") and not re.search(ignore_files, file):
-        cmd = re.sub(r'.py$', '', file)
-        all_commands.append(cmd_name(cmd))
-all_commands.sort()
+#: global, cached list of all commands -- access through all_commands()
+_all_commands = None
+
+
+def all_commands():
+    """Get a sorted list of all spack commands.
+
+    This will list the lib/spack/spack/cmd directory and find the
+    commands there to construct the list.  It does not actually import
+    the python files -- just gets the names.
+    """
+    global _all_commands
+    if _all_commands is None:
+        _all_commands = []
+        for file in os.listdir(spack.paths.command_path):
+            if file.endswith(".py") and not re.search(ignore_files, file):
+                cmd = re.sub(r'.py$', '', file)
+                _all_commands.append(cmd_name(cmd))
+        _all_commands.sort()
+    return _all_commands
 
 
 def remove_options(parser, *options):
