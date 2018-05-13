@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,9 +31,9 @@ class Mirdeep(Package):
        by analyzing sequenced RNAs."""
 
     homepage = "https://www.mdc-berlin.de/8551903/en/"
-    url      = "https://www.mdc-berlin.de/45995549/en/research/research_teams/systems_biology_of_gene_regulatory_elements/projects/miRDeep/mirdeep2_0_0_8.zip"
+    url      = "https://www.mdc-berlin.de/media/16193"
 
-    version('2.0.0.8', 'a707f7d7ad4a2975fb8b2e78c5bcf483')
+    version('2.0.0.8', 'a707f7d7ad4a2975fb8b2e78c5bcf483', extension='.zip')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-pdf-api2', type=('build', 'run'))
@@ -43,8 +43,8 @@ class Mirdeep(Package):
     depends_on('randfold')
 
     def url_for_version(self, version):
-        url = 'https://www.mdc-berlin.de/45995549/en/research/research_teams/systems_biology_of_gene_regulatory_elements/projects/miRDeep/mirdeep{0}.zip'
-        return url.format(version.underscored)
+        url = "https://www.mdc-berlin.de/media/16193"
+        return url
 
     def patch(self):
         with working_dir('src'):
