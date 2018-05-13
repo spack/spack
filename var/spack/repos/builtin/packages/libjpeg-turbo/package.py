@@ -30,7 +30,7 @@ class LibjpegTurbo(Package):
        accelerate baseline JPEG compression and decompression. libjpeg is a
        library that implements JPEG image encoding, decoding and
        transcoding."""
-    #https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
+    # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://github.com/libjpeg-turbo/libjpeg-turbo"
     url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
 
@@ -47,15 +47,14 @@ class LibjpegTurbo(Package):
     # TODO: Implement the selection between two supported assemblers.
     # depends_on("yasm", type='build')
     depends_on("nasm", type='build')
-    depends_on('cmake',type='build',when="@1.5.90:")
-    
+    depends_on('cmake', type='build', when="@1.5.90:")
 
     @when('@:1.5.3')
     def install(self, spec, prefix):
 	configure('--prefix=%s' % prefix)
 	make
 	make('install')
-
+	
     @when('@1.5.90:')
     def install(self, spec, prefix):
     	cmake_args = ['-GUnix Makefiles']
@@ -63,4 +62,4 @@ class LibjpegTurbo(Package):
     	with working_dir('spack-build', create=True):
     		cmake('..', *cmake_args)
     	        make
-		make('install')			
+		make('install')
