@@ -152,7 +152,7 @@ class Boost(Package):
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
-    depends_on('py-numpy', when='+numpy')
+    depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
