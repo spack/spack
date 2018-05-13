@@ -218,34 +218,27 @@ if ! _spack_fn_exists use && ! _spack_fn_exists module; then
 	need_module="yes"
 fi;
 
+
 #
-# build and make available environment-modules
+# make available environment-modules
 #
 if [ "${need_module}" = "yes" ]; then
-    #check if environment-modules is installed
-    module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
-    module_prefix=$(echo "${module_prefix}" | tail -n 1)
-    if [ "${module_prefix}" != "not_installed" ]; then
+    eval `spack --print-shell-vars sh,modules`
+
+    # _sp_module_prefix is set by spack --print-sh-vars
+    if [ "${_sp_module_prefix}" != "not_installed" ]; then
         #activate it!
-        export MODULE_PREFIX=${module_prefix}
+        export MODULE_PREFIX=${_sp_module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
         module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
     fi;
+else
+    eval `spack --print-shell-vars sh`
 fi;
 
 #
-# Set up modules and dotkit search paths in the user environment
+# set module system roots
 #
-
-_python_command=$(printf  "%s\\\n%s\\\n%s" \
-"print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))" \
-"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get(\'config:module_roots\', {}).get(\'dotkit\'))))" \
-"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get(\'config:module_roots\', {}).get(\'tcl\'))))"
-)
-
-_assignment_command=$(spack-python -c "exec('${_python_command}')")
-eval ${_assignment_command}
-
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 

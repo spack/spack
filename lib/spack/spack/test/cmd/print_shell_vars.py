@@ -22,30 +22,44 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.main import print_setup_info
 
-#
-# This file is part of Spack and sets up the spack environment for
-# csh and tcsh.  This includes dotkit support, module support, and
-# it also puts spack in your path.  Source it like this:
-#
-#    setenv SPACK_ROOT /path/to/spack
-#    source $SPACK_ROOT/share/spack/setup-env.csh
-#
-if ($?SPACK_ROOT) then
-    set _spack_source_file = $SPACK_ROOT/share/spack/setup-env.csh
-    set _spack_share_dir   = $SPACK_ROOT/share/spack
 
-    # Command aliases point at separate source files
-    alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
-    alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
+def test_print_shell_vars_sh(capsys):
+    print_setup_info('sh')
+    out, _ = capsys.readouterr()
 
-    # Set variables needed by this script
-    eval `spack --print-shell-vars csh`
+    assert "_sp_sys_type=" in out
+    assert "_sp_tcl_root=" in out
+    assert "_sp_lmod_root=" in out
+    assert "module_prefix" not in out
 
-    # Set up modules and dotkit search paths in the user environment
-    _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
-    _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-    _spack_pathadd PATH       "$SPACK_ROOT/bin"
-else
-    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
-endif
+
+def test_print_shell_vars_csh(capsys):
+    print_setup_info('csh')
+    out, _ = capsys.readouterr()
+
+    assert "set _sp_sys_type = " in out
+    assert "set _sp_tcl_root = " in out
+    assert "set _sp_lmod_root = " in out
+    assert "set module_prefix = " not in out
+
+
+def test_print_shell_vars_sh_modules(capsys):
+    print_setup_info('sh', 'modules')
+    out, _ = capsys.readouterr()
+
+    assert "_sp_sys_type=" in out
+    assert "_sp_tcl_root=" in out
+    assert "_sp_lmod_root=" in out
+    assert "module_prefix=" in out
+
+
+def test_print_shell_vars_csh_modules(capsys):
+    print_setup_info('csh', 'modules')
+    out, _ = capsys.readouterr()
+
+    assert "set _sp_sys_type = " in out
+    assert "set _sp_tcl_root = " in out
+    assert "set _sp_lmod_root = " in out
+    assert "set module_prefix = " in out
