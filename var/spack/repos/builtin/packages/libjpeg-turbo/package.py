@@ -31,7 +31,7 @@ class LibjpegTurbo(Package):
        library that implements JPEG image encoding, decoding and
        transcoding."""
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
-    homepage = "https://github.com/libjpeg-turbo/libjpeg-turbo"
+    homepage = "https://libjpeg-turbo.org/"
     url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
 
     version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
