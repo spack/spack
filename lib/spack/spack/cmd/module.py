@@ -173,7 +173,8 @@ def loads(module_types, specs, args):
     module_cls = spack.modules.module_types[module_type]
     modules = [
         (spec, module_cls(spec).layout.use_name)
-        for spec in specs if os.path.exists(module_cls(spec).layout.existing_filename)
+        for spec in specs 
+        if os.path.exists(module_cls(spec).layout.existing_filename)
     ]
 
     module_commands = {
