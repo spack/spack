@@ -45,7 +45,7 @@ in the Makefile. If a ``check:`` target exists and the user runs:
 
 .. code-block:: console
 
-   $ spack install --run-tests <qmake-package>
+   $ spack install --test=root <qmake-package>
 
 
 Spack will run ``make check`` after the build phase.
