@@ -37,7 +37,7 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
-    version('9.0.0', 'a714efc1979c55f69152d2742864bfaf')
+    version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
     version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
     version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
