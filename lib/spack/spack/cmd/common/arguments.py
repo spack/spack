@@ -50,6 +50,7 @@ def add_common_arguments(parser, list_of_arguments):
         x = _arguments[argument]
         parser.add_argument(*x.flags, **x.kwargs)
 
+
 class ConstraintAction(argparse.Action):
     """Constructs a list of specs based on a constraint given on the command line
 
