@@ -119,11 +119,11 @@ class Lbann(CMakePackage):
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
 
-        if ('@:0.90' or '@0.95:'):
+        if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
             args.extend([
                 '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
                     spec['hydrogen'].prefix)])
-        elif ('@0.94'):
+        elif self.spec.satisfies('@0.94'):
             args.extend([
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
