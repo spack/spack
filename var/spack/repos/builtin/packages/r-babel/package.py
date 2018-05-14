@@ -25,12 +25,15 @@
 from spack import *
 
 
-class RSquash(RPackage):
-    """Color-Based Plots for Multivariate Visualization"""
+class RBabel(RPackage):
+    """Ribosome Profiling Data Analysis"""
 
-    homepage = "https://cran.r-project.org/package=squash"
-    url      = "https://cran.r-project.org/src/contrib/squash_1.0.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/squash"
+    homepage = "https://cran.r-project.org/package=babel"
+    url      = "https://cran.r-project.org/src/contrib/babel_0.3-0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/babel"
 
-    version('1.0.8', '50d5743d306fa11cfa1a3c4daa75e508')
-    version('1.0.7', '4ac381b17d4d7b77bdaa6f824fbb03ab')
+    version('0.3-0', '3a3bd668de7bf8f508b70fded934b0c5')
+    version('0.2-6', 'e8588ea9d6bf679c6987932fcb021b0f')
+
+    depends_on('r@2.14.0:', type=('build', 'run'))
+    depends_on('r-edger', type=('build', 'run'))
