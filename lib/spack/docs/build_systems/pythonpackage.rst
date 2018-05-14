@@ -56,14 +56,15 @@ Each phase provides a function ``<phase>`` that runs:
 
 .. code-block:: console
 
-   $ python setup.py --no-user-cfg <phase>
+   $ python -s setup.py --no-user-cfg <phase>
 
 
 Each phase also has a ``<phase_args>`` function that can pass arguments to
 this call. All of these functions are empty except for the ``install_args``
-function, which passes ``--prefix=/path/to/installation/prefix``.
+function, which passes ``--prefix=/path/to/installation/prefix``. There is
+also some additional logic specific to setuptools and eggs.
 
-If you need to run a phase which is not a standard ``setup.py`` command,
+If you need to run a phase that is not a standard ``setup.py`` command,
 you'll need to define a function for it like so:
 
 .. code-block:: python
@@ -82,7 +83,7 @@ Python packages can be identified by the presence of a ``setup.py`` file.
 This file is used by package managers like ``pip`` to determine a
 package's dependencies and the version of dependencies required, so if
 the ``setup.py`` file is not accurate, the package will not build properly.
-For this reason, the ``setup.py`` file should be fairly accurate. If the
+For this reason, the ``setup.py`` file should be fairly reliable. If the
 documentation and ``setup.py`` disagree on something, the ``setup.py``
 file should be considered to be the truth. As dependencies are added or
 removed, the documentation is much more likely to become outdated than
@@ -97,9 +98,9 @@ Package Index. ``pip`` only supports packages hosted on PyPI, making
 it the only option for developers who want a simple installation.
 Search for "PyPI <package-name>" to find the download page. Note that
 some pages are versioned, and the first result may not be the newest
-version. Search for text like "Latest Version" to see if a newer version
-is available. The download page is usually at:
-https://pypi.python.org/pypi/<package-name>
+version. Click on the "Latest Version" button to the top right to see
+if a newer version is available. The download page is usually at:
+https://pypi.org/project/<package-name>
 
 ^^^^^^^^^^^
 Description
@@ -107,7 +108,7 @@ Description
 
 The top of the PyPI downloads page contains a description of the
 package. The first line is usually a short description, while there
-may be a several line long description that follows. Choose whichever
+may be a several line "Project Description" that follows. Choose whichever
 is more useful. You can also get these descriptions on the command-line
 using:
 
@@ -123,10 +124,10 @@ Homepage
 
 Package developers use ``setup.py`` to upload new versions to PyPI.
 The ``setup`` method often passes metadata like ``homepage`` to PyPI.
-This metadata is displayed at the bottom of the download page. Search
-for the text "Home Page" to find it. You should use this page instead
-of the PyPI page if they differ. You can also get the homepage on the
-command-line by running:
+This metadata is displayed on the left side of the download page.
+Search for the text "Homepage" under "Project links" to find it. You
+should use this page instead of the PyPI page if they differ. You can
+also get the homepage on the command-line by running:
 
 .. code-block:: console
 
@@ -154,18 +155,23 @@ capable of performing this calculation.
 However, PyPI switched to a new download URL format:
 https://pypi.python.org/packages/c0/3a/40967d9f5675fbb097ffec170f59c2ba19fc96373e73ad47c2cae9a30aed/numpy-1.13.1.zip#md5=2c3c0f4edf720c3a7b525dacc825b9ae
 
+and more recently:
+https://files.pythonhosted.org/packages/b0/2b/497c2bb7c660b2606d4a96e2035e92554429e139c6c71cdff67af66b58d2/numpy-1.14.3.zip
+
 As you can imagine, it is impossible for Spack to guess what URL to
 use to download version 1.12.0 given this URL. There is a solution,
 however. PyPI offers a pre-production interface for downloading
 Python packages that does not include a hash in the URL:
 https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip
 
-This URL redirects to the pypi.python.org URL. The general syntax for
+This URL redirects to the files.pythonhosted.org URL. The general syntax for
 this pypi.io URL is:
 https://pypi.io/packages/source/<first-letter-of-name>/<name>/<name>-<version>.<extension>
 
 Please use the pypi.io URL instead of the pypi.python.org URL. If both
 ``.tar.gz`` and ``.zip`` versions are available, ``.tar.gz`` is preferred.
+If some releases offer both ``.tar.gz`` and ``.zip`` versions, but some
+only offer ``.zip`` versions, use ``.zip``.
 
 """""""""""""""
 PyPI vs. GitHub
@@ -212,6 +218,24 @@ following reasons:
    PyPI is nice because it makes it physically impossible to
    re-release the same version of a package with a different checksum.
 
+There are some reasons to prefer downloading from GitHub:
+
+#. The GitHub tarball may contain unit tests
+
+   As previously mentioned, the PyPI tarball contains the bare minimum
+   of files to install the package. Unless explicitly specified by the
+   developers, it will not contain development files like unit tests.
+   If you desire to run the unit tests during installation, you should
+   use the GitHub tarball instead.
+
+#. Spack does not yet support ``spack versions`` and ``spack checksum``
+   with PyPI URLs
+
+   These commands work just fine with GitHub URLs. This is a minor
+   annoyance, not a reason to prefer GitHub over PyPI.
+
+If you really want to run these unit tests, no one will stop you from
+submitting a PR for a new package that downloads from GitHub.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
@@ -239,14 +263,14 @@ If Python 2 is required, this would look like:
 
 .. code-block:: python
 
-   depends_on('python@:2.999', type=('build', 'run')
+   depends_on('python@:2', type=('build', 'run')
 
 
 If Python 2.7 is the only version that works, you can use:
 
 .. code-block:: python
 
-   depends_on('python@2.7:2.999', type=('build', 'run')
+   depends_on('python@2.7:2.8', type=('build', 'run')
 
 
 The documentation may not always specify supported Python versions.
@@ -266,11 +290,11 @@ More commonly, you will find a version check at the top of the file:
        raise RuntimeError("Python version 2.7 or >= 3.4 required.")
 
 
-This can be converted to Spack form like so:
+This can be converted to Spack's spec notation like so:
 
 .. code-block:: python
 
-   depends_on('python@2.7:2.999,3.4:', type=('build', 'run'))
+   depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
 
 """"""""""
@@ -317,10 +341,7 @@ so you may find something like:
 
 This uses setuptools if available, and falls back to distutils if not.
 In this case, you would still want to add a setuptools dependency, as
-it offers us more control over the installation. A notable exception
-to this rule are packages that setuptools depends on, like packaging
-and six. To avoid circular dependencies, these packages do not depend
-on setuptools.
+it offers us more control over the installation.
 
 Unless specified otherwise, setuptools is usually a build-only dependency.
 That is, it is needed to install the software, but is not needed at
@@ -349,7 +370,7 @@ need to add a build dependency on cython:
 Look for references to "cython" in the ``setup.py`` to determine
 whether or not this is necessary. Cython may be optional, but
 even then you should list it as a required dependency. Spack is
-designed to compiler software, and is meant for HPC facilities
+designed to compile software, and is meant for HPC facilities
 where speed is crucial. There is no reason why someone would not
 want an optimized version of a library instead of the pure-Python
 version.
@@ -364,7 +385,7 @@ If the dependencies are not yet installed, ``pip`` downloads them
 and installs them for you. This may sound convenient, but Spack
 cannot rely on this behavior for 2 reasons:
 
-#. Spack needs to be able to install packages on an air-gapped cluster.
+#. Spack needs to be able to install packages on air-gapped networks.
 
    If there is no internet connection, ``pip`` can't download the
    package dependencies. By explicitly listing every dependency in
@@ -413,9 +434,8 @@ If the package uses ``setuptools``, check for the following clues:
 * test_requires
 
   These are packages that are required to run the unit tests for the
-  package. Spack does not currently support test-only dependencies.
-  For now, don't add these dependencies to the package. See
-  https://github.com/LLNL/spack/issues/1279 for more information.
+  package. These dependencies can be specified using the
+  ``type='test'`` dependency type.
 
 In the root directory of the package, you may notice a
 ``requirements.txt`` file. It may look like this file contains a list
@@ -447,8 +467,7 @@ add run-time dependencies if they aren't needed, so you need to
 determine whether or not setuptools is needed. Grep the installation
 directory for any files containing a reference to ``setuptools`` or
 ``pkg_resources``. Both modules come from ``py-setuptools``.
-``pkg_resources`` is particularly common in the scripts in
-``prefix/bin``.
+``pkg_resources`` is particularly common in scripts in ``prefix/bin``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to setup.py
@@ -473,9 +492,13 @@ pass arguments to that phase. For example, ``py-numpy`` adds:
    def build_args(self, spec, prefix):
        args = []
 
-       # From NumPy 1.10.0 on it's possible to do a parallel build
+       # From NumPy 1.10.0 on it's possible to do a parallel build.
        if self.version >= Version('1.10.0'):
-           args = ['-j', str(make_jobs)]
+           # But Parallel build in Python 3.5+ is broken.  See:
+           # https://github.com/spack/spack/issues/7927
+           # https://github.com/scipy/scipy/issues/7112
+           if spec['python'].version < Version('3.5'):
+               args = ['-j', str(make_jobs)]
 
        return args
 
@@ -484,7 +507,7 @@ pass arguments to that phase. For example, ``py-numpy`` adds:
 Testing
 ^^^^^^^
 
-``PythonPackage`` provides a couple options for testing packages.
+``PythonPackage`` provides a couple of options for testing packages.
 
 """"""""""""
 Import tests
@@ -526,7 +549,7 @@ package like so:
    import_modules = ['six']
 
 
-When you run ``spack install --run-tests py-six``, Spack will attempt
+When you run ``spack install --test=root py-six``, Spack will attempt
 to import the ``six`` module after installation.
 
 These tests most often catch missing dependencies and non-RPATHed
@@ -579,9 +602,9 @@ Alternate names for setup.py
 
 As previously mentioned, packages need to call their setup script ``setup.py``
 in order to be compatible with package managers like ``pip``. However, some
-packages like ``py-meep`` come with multiple setup scripts, one for a serial
-build and another for a parallel build. You can override the default name
-to use like so:
+packages like ``py-meep`` and ``py-adios`` come with multiple setup scripts,
+one for a serial build and another for a parallel build. You can override the
+default name to use like so:
 
 .. code-block:: python
 
@@ -603,8 +626,7 @@ Choosing a build system
 First of all, you need to select a build system. ``spack create`` usually
 does this for you, but if for whatever reason you need to do this manually,
 choose PythonPackage if and only if the package contains a ``setup.py``
-file. As a rule, this file must exist in the root of the tarball, so don't
-bother searching sub-directories.
+file.
 
 """""""""""""""""""""""
 Choosing a package name
@@ -685,15 +707,15 @@ don't use ``extends``, as symlinking the package wouldn't be useful.
 Alternatives to Spack
 ^^^^^^^^^^^^^^^^^^^^^
 
-PyPI has thousands of packages that are not yet in Spack, and ``pip``
-may be a perfectly valid alternative to using Spack. The main advantage
-of Spack over ``pip`` is its ability to compile non-Python dependencies.
-It can also build cythonized versions of a package or link to an
-optimized BLAS/LAPACK library like MKL, resulting in calculations that
-run orders of magnitude faster. If you only need Python tools like
-flake8 and sphinx, don't waste your time on Spack. But if you need
-packages with non-Python dependencies like numpy and scipy, Spack will
-be very valuable to you.
+PyPI has hundreds of thousands of packages that are not yet in Spack,
+and ``pip`` may be a perfectly valid alternative to using Spack. The
+main advantage of Spack over ``pip`` is its ability to compile
+non-Python dependencies. It can also build cythonized versions of a
+package or link to an optimized BLAS/LAPACK library like MKL,
+resulting in calculations that run orders of magnitude faster. If you
+only need Python tools like flake8 and sphinx, don't waste your time
+on Spack. But if you need packages with non-Python dependencies like
+numpy and scipy, Spack will be very valuable to you.
 
 Anaconda is another great alternative to Spack, and comes with its own
 ``conda`` package manager. Like Spack, Anaconda is capable of compiling
