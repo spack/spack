@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyNumexpr(PythonPackage):
+class PyNumexpr3(PythonPackage):
     """Numexpr3 is a fast numerical expression evaluator for NumPy. With it,
     expressions that operate on arrays (like "3*a+4*b") are accelerated and
     use less memory than doing the same calculation in Python.
