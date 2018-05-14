@@ -23,22 +23,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
 class Fermisciencetools(Package):
     """The Fermi Science Tools consists of the basic tools necessary to
-    analyze Fermi data."""
+    analyze Fermi data. 
+    
+    This is the binary version for Linux x86_64 with libc-2.17."""
 
     homepage = "https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/"
-    url      = "https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/v11r5p3/ScienceTools-v11r5p3-fssc-20180124-source.tar.gz"
+    url      = "https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/v11r5p3/ScienceTools-v11r5p3-fssc-20180124-x86_64-unknown-linux-gnu-libc2.17.tar.gz"
 
-    version('11r5p3-fssc-20180124', '99d3c624969006704e7fc78ca0a9020c')
-
+    version('11r5p3', 'cf050ddddfe9251b6ebe8d3fd7de3c3f')
 
     def install(self, spec, prefix):
-        with working_dir('BUILD_DIR'):
-            configure()
-            hmake = Executable('./hmake')
-            hmake()
-            hmake('install')
-            
+        copy_tree('x86_64-unknown-linux-gnu-libc2.17', prefix)
+
