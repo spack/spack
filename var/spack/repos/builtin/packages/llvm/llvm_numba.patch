@@ -1,7 +1,6 @@
 --- a/lib/Transforms/InstCombine/InstructionCombining.cpp
 +++ b/lib/Transforms/InstCombine/InstructionCombining.cpp
 @@ -34,6 +34,7 @@
-//===----------------------------------------------------------------------===//
  
 #include "InstCombineInternal.h"
 +#include "llvm-c/Initialization.h"
