@@ -1408,7 +1408,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return self._process_external_package(explicit)
 
         restage = kwargs.get('restage', False)
- 
+
         # do not search spack chain for unfinished installations
         self.spec.set_new(True)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
