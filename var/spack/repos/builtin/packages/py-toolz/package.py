@@ -25,12 +25,13 @@
 from spack import *
 
 
-class PyDask(PythonPackage):
-    """Minimal task scheduling abstraction"""
-    homepage = "https://github.com/dask/dask/"
-    url      = "https://pypi.io/packages/source/d/dask/dask-0.8.1.tar.gz"
+class PyToolz(PythonPackage):
+    """A set of utility functions for iterators, functions, and dictionaries.
+    """
 
-    version('0.8.1', '5dd8e3a3823b3bc62c9a6d192e2cb5b4')
+    homepage = "https://github.com/pytoolz/toolz"
+    url      = "https://pypi.io/packages/source/t/toolz/toolz-0.9.0.tar.gz"
+
+    version('0.9.0', '6fd07249389dd0b3bfe71d4282314328')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-toolz', type=('build', 'run'))
