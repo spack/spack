@@ -39,17 +39,16 @@ class GmapGsnap(Package):
     version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
 
     variant(
-        'binaries',
+        'simd',
         description='CPU support.',
         values=('avx2', 'sse42', 'avx512', 'sse2'),
         multi=True
     )
 
     def install(self, spec, prefix):
-        for x in ('avx2', 'sse42', 'avx512', 'sse2'):
-            if 'binaries={0}'.format(x) in self.spec:
-                configure('--with-simd-level={0}' .format(x),
-                          '--prefix={0}'.format(prefix))
-                make()
-                make('install')
-                make('distclean')
+        for binary in spec.variants['simd'].value:
+            configure('--with-simd-level={0}' .format(binary),
+                      '--prefix={0}'.format(prefix))
+            make()
+            make('install')
+            make('distclean')
