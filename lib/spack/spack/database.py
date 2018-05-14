@@ -616,7 +616,7 @@ class Database(object):
 
     def query_hash(self, hash):
         return hash in self._data
-    
+ 
     def _add(
             self,
             spec,
@@ -919,8 +919,8 @@ class Database(object):
                     return [self._data[hash_key].spec]
                 else:
                     if self.parent_db and include_parents:
-                        return self.parent_db.query(query_spec, known, installed,
-                                                    explicit)
+                        return self.parent_db.query(query_spec, known, 
+                                                    installed, explicit)
                     else:
                         return []
 
