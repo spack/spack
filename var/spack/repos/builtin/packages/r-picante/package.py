@@ -35,7 +35,6 @@ class RPicante(RPackage):
     version('1.6-2', 'e3eba6ef254068d2cfa9e96760bcd7a3')
     version('1.6-1', '73d86b90eceda582654e995d47236d6e')
 
-    depends_on('r', type=('build', 'run'))
     depends_on('r-ape', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-vegan', type=('build', 'run'))
