@@ -414,6 +414,7 @@ class Llvm(CMakePackage):
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
+    patch('llvm_numba.patch', when='@6.0: %gcc@7.0:')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
