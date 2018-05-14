@@ -39,5 +39,10 @@ class Kaiju(MakefilePackage):
     depends_on('perl-io-compress', type='run')
     depends_on('py-htseq', type='run')
 
+    def edit(self, spec, prefix):
+        # Replace ftp:// with https://
+        makedb = FileFilter('util/makeDB.sh')
+        makedb.filter('ftp://', 'https://', string=True)
+
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
