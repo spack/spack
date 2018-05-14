@@ -41,7 +41,6 @@
 ##########################################################################
 
 from spack import *
-import os
 
 
 class CbtfArgonavis(CMakePackage):
@@ -83,9 +82,9 @@ class CbtfArgonavis(CMakePackage):
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3:+cti", when='@1.9.1.0+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@1.9.1.0')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop~cti')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0~cti')
 
     # For CBTF
     depends_on("cbtf@develop", when='@develop')
@@ -149,12 +148,6 @@ class CbtfArgonavis(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
-
-        cupti_path = self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
-        if os.environ.get('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] += cupti_path
-        else:
-            os.environ['LD_LIBRARY_PATH'] = cupti_path
 
         run_env.prepend_path(
             'LD_LIBRARY_PATH',

@@ -74,7 +74,7 @@ class CbtfArgonavisGui(QMakePackage):
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@1.3.0.0')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.3.0.0')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')

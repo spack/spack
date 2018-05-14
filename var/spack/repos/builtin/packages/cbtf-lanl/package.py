@@ -71,8 +71,8 @@ class CbtfLanl(CMakePackage):
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3:+cti", when='@1.9.1.0+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@1.9.1.0')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0')
 
     # For Xerces-C
     depends_on("xerces-c@3.1.1:", when='@develop')

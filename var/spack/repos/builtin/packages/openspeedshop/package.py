@@ -118,8 +118,8 @@ class Openspeedshop(CMakePackage):
     depends_on("flex", type='build')
 
     # For binutils
-    depends_on("binutils", when='@develop')
-    depends_on("binutils@2.29.1", when='@2.3.1.3')
+    depends_on("binutils", when='@develop', type='build')
+    depends_on("binutils@2.29.1", when='@2.3.1.3', type='build')
 
     depends_on("elf", type="link")
     depends_on("libdwarf")

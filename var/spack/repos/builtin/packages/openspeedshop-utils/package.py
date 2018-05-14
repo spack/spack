@@ -119,8 +119,8 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("flex", type='build')
 
     # For binutils
-    depends_on("binutils", when='@develop')
-    depends_on("binutils@2.29.1", when='@2.3.1.3')
+    depends_on("binutils", when='@develop', type='build')
+    depends_on("binutils@2.29.1", when='@2.3.1.3', type='build')
 
     depends_on("elf", type="link")
     depends_on("libdwarf")
@@ -210,7 +210,7 @@ class OpenspeedshopUtils(CMakePackage):
         cmakeOptions.extend(CrayLoginNodeOptions)
 
     def cmake_args(self):
-
+        # Appends base options to cmake_args
         spec = self.spec
 
         compile_flags = "-O2 -g"
@@ -221,7 +221,6 @@ class OpenspeedshopUtils(CMakePackage):
         instrumentor_setting = "cbtf"
 
         if spec.satisfies('+runtime'):
-            # Appends base options to cmake_args
             self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
             cmake_args.extend(
@@ -245,14 +244,14 @@ class OpenspeedshopUtils(CMakePackage):
                  '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
                  '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
-            cmake_args.extend(['-DBUILD_QT3_GUI=FALSE'])
-
             if spec.satisfies('+crayfe'):
                 # We need to build target/compute node
                 # components/libraries first then pass
                 # those libraries to the openspeedshop
                 # login node build
                 self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
+
+        cmake_args.extend(['-DBUILD_QT3_GUI=FALSE'])
 
         return cmake_args
 
