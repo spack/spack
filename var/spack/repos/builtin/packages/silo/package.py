@@ -42,7 +42,7 @@ class Silo(Package):
             description='Builds Silex, a GUI for viewing Silo files')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
-    variant('mpi', default=False,
+    variant('mpi', default=True,
             description='Compile with MPI Compatibility')
 
     depends_on('hdf5~mpi', when='~mpi')
