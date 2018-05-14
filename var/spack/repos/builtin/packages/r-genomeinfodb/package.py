@@ -43,4 +43,4 @@ class RGenomeinfodb(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-genomeinfodbdata', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.3:')
+    depends_on('r@3.4.0:', when='@1.12.3:')
