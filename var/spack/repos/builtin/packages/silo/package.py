@@ -74,7 +74,7 @@ class Silo(Package):
 
         if '+mpi' in spec:
             config_args.append('CC=%s' % spec['mpi'].mpicc)
-            config_args.append('CXX=%s' %spec['mpi'].mpicxx)
+            config_args.append('CXX=%s' % spec['mpi'].mpicxx)
             config_args.append('FC=%s' % spec['mpi'].mpifc)
 
         configure(
