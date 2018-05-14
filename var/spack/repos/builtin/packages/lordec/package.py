@@ -36,7 +36,7 @@ class Lordec(MakefilePackage):
     version('0.8', 'd5a57db681d1cd31c516aa780ce53f9d')
 
     depends_on('boost')
-    depends_on('cmake@3.1.0:')
+    depends_on('cmake@3.1.0:', type='build')
 
     build_targets = ['clean', 'all']
 
