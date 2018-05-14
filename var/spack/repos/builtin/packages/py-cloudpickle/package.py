@@ -25,22 +25,18 @@
 from spack import *
 
 
-class PyAttrs(PythonPackage):
-    """Classes Without Boilerplate"""
+class PyCloudpickle(PythonPackage):
+    """Extended pickling support for Python objects."""
 
-    homepage = "http://attrs.org/"
-    url      = "https://pypi.io/packages/source/a/attrs/attrs-18.1.0.tar.gz"
+    homepage = "https://github.com/cloudpipe/cloudpickle"
+    url      = "https://pypi.io/packages/source/c/cloudpickle/cloudpickle-0.5.2.tar.gz"
 
-    import_modules = ['attr']
+    import_modules = ['cloudpickle']
 
-    version('18.1.0', '3f3f3e0750dab74cfa1dc8b0fd7a5f86')
-    version('16.3.0', '4ec003c49360853cf935113d1ae56151')
+    version('0.5.2', 'd0f6fc27882f865f2eb185fb0a32c84b')
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-coverage', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-pympler', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-six', type='test')
-    depends_on('py-zope-interface', type='test')
+    def test(self):
+        # PyPI tarball does not come with unit tests
+        pass

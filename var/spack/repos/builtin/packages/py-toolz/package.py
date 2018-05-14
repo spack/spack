@@ -25,22 +25,14 @@
 from spack import *
 
 
-class PyAttrs(PythonPackage):
-    """Classes Without Boilerplate"""
+class PyToolz(PythonPackage):
+    """A set of utility functions for iterators, functions, and dictionaries"""
 
-    homepage = "http://attrs.org/"
-    url      = "https://pypi.io/packages/source/a/attrs/attrs-18.1.0.tar.gz"
+    homepage = "http://github.com/pytoolz/toolz/"
+    url      = "https://pypi.io/packages/source/t/toolz/toolz-0.9.0.tar.gz"
 
-    import_modules = ['attr']
+    import_modules = ['toolz', 'tlz', 'toolz.curried', 'toolz.sandbox']
 
-    version('18.1.0', '3f3f3e0750dab74cfa1dc8b0fd7a5f86')
-    version('16.3.0', '4ec003c49360853cf935113d1ae56151')
+    version('0.9.0', '6fd07249389dd0b3bfe71d4282314328')
 
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-coverage', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-pympler', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-six', type='test')
-    depends_on('py-zope-interface', type='test')
