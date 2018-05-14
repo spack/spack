@@ -157,7 +157,7 @@ and list all of their dependencies in the following sections:
 As far as Spack is concerned, all 3 of these dependency types
 correspond to ``type=('build', 'run')``, so you don't have to worry
 about them. If you are curious what they mean,
-https://github.com/LLNL/spack/issues/2951 has a pretty good summary:
+https://github.com/spack/spack/issues/2951 has a pretty good summary:
 
    ``Depends`` is required and will cause those R packages to be *attached*,
    that is, their APIs are exposed to the user. ``Imports`` *loads* packages

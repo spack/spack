@@ -9,4 +9,5 @@ same basic steps for configuring and installing, as well as license
 management.
 
 This build system is a work-in-progress. See
-https://github.com/LLNL/spack/pull/4300 for more information.
+https://github.com/spack/spack/pull/4300 and
+https://github.com/spack/spack/pull/7469 for more information.
