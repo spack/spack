@@ -31,6 +31,7 @@ class YamlCpp(CMakePackage):
     homepage = "https://github.com/jbeder/yaml-cpp"
     url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
 
+    version('0.6.2', '5b943e9af0060d0811148b037449ef82')
     version('0.5.3', '2bba14e6a7f12c7272f87d044e4a7211')
     version('develop', git='https://github.com/jbeder/yaml-cpp', branch='master')
 
@@ -39,7 +40,16 @@ class YamlCpp(CMakePackage):
     variant('pic',   default=True,
             description='Build with position independent code')
 
-    depends_on('boost', when='@:0.5.3')
+    depends_on('boost@:1.66.99', when='@:0.5.3')
+
+    conflicts('%gcc@:4.8', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%clang@:3.3.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    # currently we can't check for apple-clang's version
+    # conflicts('%clang@:4.0.0-apple', when='@0.6.0:',
+    # msg="versions 0.6.0: require c++11 support")
+    conflicts('%intel@:11.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%xl@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%xl_r@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
 
     def cmake_args(self):
         spec = self.spec
