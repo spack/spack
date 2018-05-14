@@ -25,25 +25,24 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class Kaiju(MakefilePackage):
+    """Kaiju is a program for the taxonomic classification
+    of high-throughput sequencing reads."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://github.com/bioinformatics-centre/kaiju"
+    url      = "https://github.com/bioinformatics-centre/kaiju/archive/v1.6.2.zip"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('1.6.2', '0bd85368954837aa31f3de8b87ea410b')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
+    build_directory = 'src'
 
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on('perl-io-compress', type='run')
+    depends_on('py-htseq', type='run')
 
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    def edit(self, spec, prefix):
+        # Replace ftp:// with https://
+        makedb = FileFilter('util/makeDB.sh')
+        makedb.filter('ftp://', 'https://', string=True)
+
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)

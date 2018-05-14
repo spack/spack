@@ -25,25 +25,16 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class RPicante(RPackage):
+    """R tools for integrating phylogenies and ecology"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://cran.r-project.org/package=picante"
+    url      = "https://cran.r-project.org/src/contrib/picante_1.6-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/picante"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('1.6-2', 'e3eba6ef254068d2cfa9e96760bcd7a3')
+    version('1.6-1', '73d86b90eceda582654e995d47236d6e')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    depends_on('r-ape', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-vegan', type=('build', 'run'))

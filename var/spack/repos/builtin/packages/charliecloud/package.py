@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2018, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,25 +25,14 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class Charliecloud(MakefilePackage):
+    """Lightweight user-defined software stacks for HPC."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://hpc.github.io/charliecloud"
+    url      = "https://github.com/hpc/charliecloud/archive/v0.2.4.tar.gz"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
-
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    version('0.2.4', 'b112de661c2c360174b42c99022c1967')
 
     @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    def install_targets(self):
+        return ['install', 'PREFIX=%s' % self.prefix]

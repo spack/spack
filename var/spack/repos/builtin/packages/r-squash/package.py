@@ -25,25 +25,12 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class RSquash(RPackage):
+    """Color-Based Plots for Multivariate Visualization"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://cran.r-project.org/package=squash"
+    url      = "https://cran.r-project.org/src/contrib/squash_1.0.8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/squash"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
-
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    version('1.0.8', '50d5743d306fa11cfa1a3c4daa75e508')
+    version('1.0.7', '4ac381b17d4d7b77bdaa6f824fbb03ab')

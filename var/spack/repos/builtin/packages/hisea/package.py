@@ -25,25 +25,19 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class Hisea(MakefilePackage):
+    """HISEA is an efficient all-vs-all long read aligner for SMRT sequencing
+       data. Its algorithm is designed to produce highest alignment sensitivity
+       among others."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://doi.org/10.1186/s12859-017-1953-9"
+    url      = "https://github.com/lucian-ilie/HISEA"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('2017.12.26', '54211bdc33b7ce52a8f1e76845935eb8',
+            url='https://github.com/lucian-ilie/HISEA/tarball/39e01e98caa0f2101da806ca59306296effe789c')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
+    depends_on('boost')
 
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('hisea', prefix.bin)

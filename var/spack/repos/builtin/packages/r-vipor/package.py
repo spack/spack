@@ -25,25 +25,14 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class RVipor(RPackage):
+    """Plot Categorical Data Using Quasirandom Noise and Density Estimates"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://cran.r-project.org/package=vipor"
+    url      = "https://cran.r-project.org/src/contrib/vipor_0.4.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/vipor"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('0.4.5', 'd08bc95b3aaf1574bf41b7eb41b67ce4')
+    version('0.4.4', '834212e3971787809ba9737744d54dee')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    depends_on('r@3.0.0:', type=('build', 'run'))

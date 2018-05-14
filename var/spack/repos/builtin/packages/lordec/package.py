@@ -25,25 +25,20 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class Lordec(MakefilePackage):
+    """LoRDEC is a program to correct sequencing errors in long reads from
+    3rd generation sequencing with high error rate, and is especially
+    intended for PacBio reads."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "http://www.atgc-montpellier.fr/lordec/"
+    url      = "https://gite.lirmm.fr/lordec/lordec-releases/uploads/e3116a5f251e46e47f7a3b7ddb2bd7f6/lordec-src_0.8.tar.gz"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('0.8', 'd5a57db681d1cd31c516aa780ce53f9d')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
+    depends_on('boost')
+    depends_on('cmake@3.1.0:', type='build')
 
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    build_targets = ['clean', 'all']
 
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    def install(self, spec, prefix):
+        install_tree('.', prefix.bin)

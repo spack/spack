@@ -25,25 +25,14 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class RFitModels(RPackage):
+    """Compare Fitted Models"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://cran.r-project.org/package=fit.models"
+    url      = "https://cran.r-project.org/src/contrib/fit.models_0.5-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fit.models"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('0.5-14', '159b5c57953db4c917bc186ddacdff51')
+    version('0.5-13', 'c9ff87e98189bcc3be597e3833408497')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    depends_on('r-lattice', type=('build', 'run'))

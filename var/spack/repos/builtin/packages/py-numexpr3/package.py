@@ -25,25 +25,24 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class PyNumexpr3(PythonPackage):
+    """Numexpr3 is a fast numerical expression evaluator for NumPy. With it,
+    expressions that operate on arrays (like "3*a+4*b") are accelerated and
+    use less memory than doing the same calculation in Python.
+    In addition, its multi-threaded capabilities can make use of all your
+    cores, which may accelerate computations, most specially if they are not
+    memory-bounded (e.g. those using transcendental functions).
+    Compared to NumExpr 2.6, functions have been re-written in a fashion such
+    that gcc can auto-vectorize them with SIMD instruction sets such as
+    SSE2 or AVX2, if your processor supports them. Use of a newer version of
+    gcc such as 5.4 is strongly recommended."""
+    homepage = "https://github.com/pydata/numexpr/tree/numexpr-3.0"
+    url = "https://pypi.io/packages/source/n/numexpr3/numexpr3-3.0.1a1.tar.gz"
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    version('3.0.1.a1', '9fa8dc59b149aa1956fc755f982a78ad')
+    # TODO: Add CMake build system for better control of passing flags related
+    # to CPU ISA.
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
-
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('py-setuptools@18.2:', type='build')

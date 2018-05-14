@@ -25,25 +25,19 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class Aegean(MakefilePackage):
+    """The AEGeAn Toolkit is designed for the Analysis and Evaluation of
+       Genome Annotations. The toolkit includes a variety of analysis programs
+       as well as a C library whose API provides access to AEGeAn's core
+       functions and data structures."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "http://brendelgroup.github.io/AEGeAn/"
+    url      = "https://github.com/BrendelGroup/AEGeAn/archive/v0.15.2.tar.gz"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('0.15.2', 'd7d73f5f132ff52340975b636564e949')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
+    depends_on('genometools')
 
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('/usr/local', prefix)

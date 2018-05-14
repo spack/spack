@@ -25,25 +25,13 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class Bumpversion(PythonPackage):
+    """Version-bump your software with a single command."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://pypi.python.org/pypi/bumpversion"
+    url      = "https://pypi.io/packages/source/b/bumpversion/bumpversion-0.5.0.tar.gz"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('0.5.3', 'c66a3492eafcf5ad4b024be9fca29820')
+    version('0.5.0', '222ba619283d6408ce1bfbb0b5b542f3')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    depends_on('py-setuptools', type='build')

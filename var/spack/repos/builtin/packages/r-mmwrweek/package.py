@@ -25,25 +25,16 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class RMmwrweek(RPackage):
+    """The first day of any MMWR week is Sunday. MMWR week numbering is
+    sequential beginning with 1 and incrementing with each week to a maximum
+    of 52 or 53. MMWR week #1 of an MMWR year is the first week of the year
+    that has at least four days in the calendar year. This package provides
+    functionality to convert Dates to MMWR day, week, and year and the
+    reverse."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://cran.r-project.org/package=MMWRweek"
+    url      = "https://cran.r-project.org/src/contrib/MMWRweek_0.1.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/MMWRweek"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
-
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    version('0.1.1', 'a1245025126f8a96c72be8f7b06b0499')

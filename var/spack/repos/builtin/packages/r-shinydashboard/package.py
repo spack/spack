@@ -25,25 +25,16 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
-    """libXt - X Toolkit Intrinsics library."""
+class RShinydashboard(RPackage):
+    """Create Dashboards with 'Shiny'"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    homepage = "https://cran.r-project.org/package=shinydashboard"
+    url      = "https://cran.r-project.org/src/contrib/shinydashboard_0.7.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/shinydashboard"
 
-    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+    version('0.7.0', 'a572695884e3b45320b0ab5a7b364ffd')
+    version('0.6.1', '0f6ad0448237e10d53d4d27ade1c6863')
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
-
-    depends_on('xproto', type='build')
-    depends_on('kbproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
-
-    @property
-    def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r-htmltools@0.2.6:', type=('build', 'run'))
+    depends_on('r-shiny@1.0.0:', type=('build', 'run'))

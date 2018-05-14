@@ -35,6 +35,7 @@ class Swiftsim(AutotoolsPackage):
     homepage = 'http://icc.dur.ac.uk/swift/'
     url = 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'
 
+    version('0.7.0', '1c703d7e20a31a3896e1c291bddd71ab')
     version('0.3.0', '162ec2bdfdf44a31a08b3fcee23a886a')
 
     variant('mpi', default=True,
