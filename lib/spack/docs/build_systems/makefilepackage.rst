@@ -238,7 +238,7 @@ The following is a list of common variables to watch out for:
 * **Platform flags**
 
   These flags control the type of architecture that the executable
-  is compiler for. Watch out for variables like ``PLAT``, ``ARCH``,
+  is compiler for. Watch out for variables like ``PLAT`` or ``ARCH``.
 
 * **Dependencies**
 
