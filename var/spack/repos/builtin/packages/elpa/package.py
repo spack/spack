@@ -31,6 +31,7 @@ class Elpa(AutotoolsPackage):
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
+    version('2017.11.001', '4a437be40cc966efb07aaab84c20cd6e')
     version('2017.05.003', '7c8e5e58cafab212badaf4216695700f')
     version('2017.05.002', 'd0abc1ac1f493f93bf5e30ec8ab155dc')
     version('2016.11.001.pre', '5656fd066cf0dcd071dbcaf20a639b37')
@@ -80,14 +81,28 @@ class Elpa(AutotoolsPackage):
         # https://src.fedoraproject.org/cgit/rpms/elpa.git/
         # https://packages.qa.debian.org/e/elpa.html
         options = []
+        spec = self.spec
         # without -march=native there is configure error for 2017.05.02
         # Could not compile test program, try with --disable-sse, or
         # adjust the C compiler or CFLAGS
-        if '+optflags' in self.spec:
-            options.extend([
-                'FCFLAGS=-O2 -march=native -ffree-line-length-none',
-                'CFLAGS=-O2 -march=native'
-            ])
+
+        optflags = ['-O2', '-march=native'] if '+optflags' in spec else []
+        fcflags = ['-free'] if '%intel' in spec else [
+            '-ffree-line-length-none'
+        ]
+
+        if 'target=x86_E5v2_IntelIB' in spec and '@2017.11.001' in spec:
+            options.append('--disable-avx2')
+
+        if 'target=x86_S6g1_Mellanox' in spec and '@2017.11.001' in spec:
+            options.append('--enable-avx512')
+
+        options.extend([
+            'FCFLAGS={0}'.format(' '.join(optflags + fcflags)),
+            'CFLAGS={0}'.format(' '.join(optflags))
+        ])
+
         if '+openmp' in self.spec:
             options.append('--enable-openmp')
+
         return options

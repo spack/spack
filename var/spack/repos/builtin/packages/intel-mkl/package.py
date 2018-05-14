@@ -168,7 +168,7 @@ class IntelMkl(IntelPackage):
 
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
         mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
-            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+            self.prefix.lib.intel64
 
         shared = True if '+shared' in self.spec else False
 
