@@ -65,10 +65,10 @@ class HicPro(MakefilePackage):
         make('readstrimming')
         make('iced')
 
-    def install(sefl, spec, prefix):
+    def install(self, spec, prefix):
         # Patch INSTALLPATH in config-system.txt
         config = FileFilter('config-system.txt')
-        config.filter('/HiC-Pro_2.10.0', '')
+        config.filter('/HiC-Pro_%s' % self.version, '')
         # Install
         install('config-hicpro.txt', prefix)
         install('config-install.txt', prefix)

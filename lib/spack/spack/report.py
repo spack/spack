@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Tools to produce reports of spec installations"""
+import codecs
 import collections
 import functools
-import itertools
-import os.path
 import time
 import traceback
 
@@ -34,13 +33,18 @@ import llnl.util.lang
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
+from spack.reporter import Reporter
+from spack.reporters.cdash import CDash
+from spack.reporters.junit import JUnit
 
-templates = {
-    'junit': os.path.join('reports', 'junit.xml')
+report_writers = {
+    None: Reporter,
+    'junit': JUnit,
+    'cdash': CDash
 }
 
 #: Allowed report formats
-valid_formats = list(templates.keys())
+valid_formats = list(report_writers.keys())
 
 __all__ = [
     'valid_formats',
@@ -50,7 +54,7 @@ __all__ = [
 
 def fetch_package_log(pkg):
     try:
-        with open(pkg.build_log_path, 'r') as f:
+        with codecs.open(pkg.build_log_path, 'r', 'utf-8') as f:
             return ''.join(f.readlines())
     except Exception:
         return 'Cannot open build log for {0}'.format(
@@ -64,7 +68,7 @@ class InfoCollector(object):
 
     When exiting the context this change will be rolled-back.
 
-    The data collected is available through the ``test_suites``
+    The data collected is available through the ``specs``
     attribute once exited, and it's organized as a list where
     each item represents the installation of one of the spec.
 
@@ -77,49 +81,51 @@ class InfoCollector(object):
 
     def __init__(self, specs):
         #: Specs that will be installed
-        self.specs = specs
-        #: Context that will be used to stamp the report from
-        #: the template file
-        self.test_suites = []
+        self.input_specs = specs
+        #: This is where we record the data that will be included
+        #: in our report.
+        self.specs = []
 
     def __enter__(self):
-        # Initialize the test suites with the data that
-        # is available upfront
-        for spec in self.specs:
+        # Initialize the spec report with the data that is available upfront.
+        for input_spec in self.input_specs:
             name_fmt = '{0}_{1}'
-            name = name_fmt.format(spec.name, spec.dag_hash(length=7))
+            name = name_fmt.format(input_spec.name,
+                                   input_spec.dag_hash(length=7))
 
-            suite = {
+            spec = {
                 'name': name,
                 'nerrors': None,
                 'nfailures': None,
-                'ntests': None,
+                'npackages': None,
                 'time': None,
                 'timestamp': time.strftime(
                     "%a, %d %b %Y %H:%M:%S", time.gmtime()
                 ),
                 'properties': [],
-                'testcases': []
+                'packages': []
             }
 
-            self.test_suites.append(suite)
+            self.specs.append(spec)
 
             Property = collections.namedtuple('Property', ['name', 'value'])
-            suite['properties'].append(
-                Property('architecture', spec.architecture)
+            spec['properties'].append(
+                Property('architecture', input_spec.architecture)
             )
-            suite['properties'].append(Property('compiler', spec.compiler))
+            spec['properties'].append(
+                Property('compiler', input_spec.compiler))
 
             # Check which specs are already installed and mark them as skipped
-            for dep in filter(lambda x: x.package.installed, spec.traverse()):
-                test_case = {
+            for dep in filter(lambda x: x.package.installed,
+                              input_spec.traverse()):
+                package = {
                     'name': dep.name,
                     'id': dep.dag_hash(),
                     'elapsed_time': '0.0',
                     'result': 'skipped',
                     'message': 'Spec already installed'
                 }
-                suite['testcases'].append(test_case)
+                spec['packages'].append(package)
 
         def gather_info(do_install):
             """Decorates do_install to gather useful information for
@@ -134,7 +140,7 @@ class InfoCollector(object):
                 # We accounted before for what is already installed
                 installed_on_entry = pkg.installed
 
-                test_case = {
+                package = {
                     'name': pkg.name,
                     'id': pkg.spec.dag_hash(),
                     'elapsed_time': None,
@@ -147,42 +153,42 @@ class InfoCollector(object):
                 try:
 
                     value = do_install(pkg, *args, **kwargs)
-                    test_case['result'] = 'success'
+                    package['result'] = 'success'
                     if installed_on_entry:
                         return
 
                 except spack.build_environment.InstallError as e:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
-                    test_case['result'] = 'failure'
-                    test_case['stdout'] = fetch_package_log(pkg)
-                    test_case['message'] = e.message or 'Installation failure'
-                    test_case['exception'] = e.traceback
+                    package['result'] = 'failure'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['message'] = e.message or 'Installation failure'
+                    package['exception'] = e.traceback
 
                 except (Exception, BaseException) as e:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
-                    test_case['result'] = 'error'
-                    test_case['stdout'] = fetch_package_log(pkg)
-                    test_case['message'] = str(e) or 'Unknown error'
-                    test_case['exception'] = traceback.format_exc()
+                    package['result'] = 'error'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['message'] = str(e) or 'Unknown error'
+                    package['exception'] = traceback.format_exc()
 
                 finally:
-                    test_case['elapsed_time'] = time.time() - start_time
+                    package['elapsed_time'] = time.time() - start_time
 
-                # Append the case to the correct test suites. In some
+                # Append the package to the correct spec report. In some
                 # cases it may happen that a spec that is asked to be
                 # installed explicitly will also be installed as a
                 # dependency of another spec. In this case append to both
-                # test suites.
+                # spec reports.
                 for s in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
                     name = name_fmt.format(s.name, s.dag_hash(length=7))
                     try:
                         item = next((
-                            x for x in self.test_suites
+                            x for x in self.specs
                             if x['name'] == name
                         ))
-                        item['testcases'].append(test_case)
+                        item['packages'].append(package)
                     except StopIteration:
                         pass
 
@@ -199,16 +205,16 @@ class InfoCollector(object):
         # Restore the original method in PackageBase
         spack.package.PackageBase.do_install = InfoCollector._backup_do_install
 
-        for suite in self.test_suites:
-            suite['ntests'] = len(suite['testcases'])
-            suite['nfailures'] = len(
-                [x for x in suite['testcases'] if x['result'] == 'failure']
+        for spec in self.specs:
+            spec['npackages'] = len(spec['packages'])
+            spec['nfailures'] = len(
+                [x for x in spec['packages'] if x['result'] == 'failure']
             )
-            suite['nerrors'] = len(
-                [x for x in suite['testcases'] if x['result'] == 'error']
+            spec['nerrors'] = len(
+                [x for x in spec['packages'] if x['result'] == 'error']
             )
-            suite['time'] = sum([
-                float(x['elapsed_time']) for x in suite['testcases']
+            spec['time'] = sum([
+                float(x['elapsed_time']) for x in spec['packages']
             ])
 
 
@@ -239,28 +245,30 @@ class collect_info(object):
                 Spec('zlib').concretized().do_install()
 
     Args:
-        specs (list of Spec): specs to be installed
         format_name (str or None): one of the supported formats
-        filename (str or None): name of the file where the report wil
-            be eventually written
+        install_command (str): the command line passed to spack
+        cdash_upload_url (str or None): where to upload the report
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, specs, format_name, filename):
-        self.specs = specs
+    def __init__(self, format_name, install_command, cdash_upload_url):
+        self.filename = None
         self.format_name = format_name
+        # Check that the format is valid.
+        if self.format_name not in valid_formats:
+            raise ValueError('invalid report type: {0}'
+                             .format(self.format_name))
+        self.report_writer = report_writers[self.format_name](
+            install_command, cdash_upload_url)
 
-        # Check that the format is valid
-        if format_name not in itertools.chain(valid_formats, [None]):
-            raise ValueError('invalid report type: {0}'.format(format_name))
-
-        self.filename = filename
-        self.collector = InfoCollector(specs) if self.format_name else None
+    def concretization_report(self, msg):
+        self.report_writer.concretization_report(self.filename, msg)
 
     def __enter__(self):
         if self.format_name:
             # Start the collector and patch PackageBase.do_install
+            self.collector = InfoCollector(self.specs)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -269,8 +277,5 @@ class collect_info(object):
             # original PackageBase.do_install
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
-            # Write the report
-            with open(self.filename, 'w') as f:
-                env = spack.tengine.make_environment()
-                t = env.get_template(templates[self.format_name])
-                f.write(t.render({'test_suites': self.collector.test_suites}))
+            report_data = {'specs': self.collector.specs}
+            self.report_writer.build_report(self.filename, report_data)

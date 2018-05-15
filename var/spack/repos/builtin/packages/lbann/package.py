@@ -51,15 +51,41 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
-    depends_on('elemental +openmp_blas +shared +int64')
+    # It seems that there is a need for one statement per version bounds
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@0.95:')
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90')
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
+               when=('build_type=Debug' '@0.95:'))
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
+               when=('build_type=Debug' '@:0.90'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+               when=('+gpu' '@0.95:'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+               when=('+gpu' '@:0.90'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
+               when=('build_type=Debug' '@0.95:' '+gpu'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
+               when=('build_type=Debug' '@:0.90' '+gpu'))
+    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug'))
+               when=('build_type=Debug' '@0.91:0.94'))
+
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi')
+    depends_on('mpi', when='~gpu')
+    depends_on('mpi +cuda', when='+gpu')
     depends_on('hwloc ~pci ~libxml2')
-    depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib ~eigen', when='+opencv')
+    # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
+    # Additionally disable video related options, they incorrectly link in a
+    # bad OpenMP library when building with clang or Intel compilers
+    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib '
+               '+fast-math +powerpc +vsx ~calib3d ~cuda ~dnn ~eigen'
+               '~features2d ~flann ~gtk ~ipp ~ipp_iw ~jasper ~java ~lapack ~ml'
+               '~openmp ~opencl ~opencl_svm ~openclamdblas ~openclamdfft'
+               '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
+               '~videostab ~videoio ~vtk', when='+opencv')
+
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')
@@ -80,7 +106,7 @@ class Lbann(CMakePackage):
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
-    @when('@:0.91' or '@0.94:')
+    @when('@:0.90' or '@0.94:')
     def cmake_args(self):
         spec = self.spec
         args = self.common_config_args
@@ -90,10 +116,17 @@ class Lbann(CMakePackage):
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE=OFF',
-            '-DElemental_DIR={0}/CMake/elemental'.format(
-                spec['elemental'].prefix),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
+
+        if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
+            args.extend([
+                '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
+                    spec['hydrogen'].prefix)])
+        elif self.spec.satisfies('@0.94'):
+            args.extend([
+                '-DElemental_DIR={0}/CMake/elemental'.format(
+                    spec['elemental'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):

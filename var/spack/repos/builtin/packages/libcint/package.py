@@ -35,6 +35,7 @@ class Libcint(CMakePackage):
     #
     # Versions
     #
+    version('3.0.12', 'e69117782ff9f443373f30c80ecb6ab7')
     version('3.0.11', '1fb1db5a426280d38cddbb0098f6c678')
     version('3.0.10', 'b368e257dba99febf1cdd1391f2e58a3')
     version('3.0.8',  '61f415ad9c7854963136c6bba7a661eb')
