@@ -38,4 +38,4 @@ class RBiocparallel(RPackage):
 
     depends_on('r-futile-logger', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1')
+    depends_on('r@3.4.0:', when='@1.10.1')
