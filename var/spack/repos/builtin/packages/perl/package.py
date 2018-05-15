@@ -84,6 +84,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     variant('shared', default=True,
             description='Build a shared libperl.so library')
 
+    variant('threads', default=True,
+            description='Build perl with threads support')
+
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
@@ -130,6 +133,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         if '+shared' in spec:
             config_args.append('-Duseshrplib')
+
+        if '+threads' in spec:
+            config_args.append('-Dusethreads')
 
         return config_args
 
