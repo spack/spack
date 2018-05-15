@@ -97,6 +97,13 @@ tests, run:
 A more detailed list of available unit tests can be found by running
 ``spack test --long-list``.
 
+By default, ``pytest`` captures the output of all unit tests. If you add print
+statements to a unit test and want to see the output, simply run:
+
+.. code-block:: console
+
+   $ spack test -s -k architecture
+
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider
 adding new unit tests or strengthening existing tests.
