@@ -50,7 +50,7 @@ class Gdbm(AutotoolsPackage):
         # GDBM uses some non-standard GNU extensions,
         # enabled with -D_GNU_SOURCE.  See:
         #   https://patchwork.ozlabs.org/patch/771300/
-        #   https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+        #   https://stackoverflow.com/questions/5582211
         #   https://www.gnu.org/software/automake/manual/html_node/Flag-Variables-Ordering.html
         return [
             '--enable-libgdbm-compat',
