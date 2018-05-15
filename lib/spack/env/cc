@@ -63,8 +63,6 @@ parameters=(
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
-# Dependencies can be empty for pkgs with no deps:
-#   SPACK_DEPENDENCIES
 
 # die()
 # Prints a message and exits with error 1.
@@ -267,62 +265,37 @@ case "$mode" in cc|ccld)
 esac
 
 # Read spack dependencies from the path environment variable
-IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
-for dep in "${deps[@]}"; do
+IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
+for include_dir in "${include_dirs[@]}"; do
     # Prepend include directories
-    if [[ -d $dep/include ]]; then
+    if [[ -d $include_dir ]]; then
         if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
-            args=("-I$dep/include" "${args[@]}")
-        fi
-    fi
-
-    # Prepend lib and RPATH directories
-    if [[ -d $dep/lib ]]; then
-        if [[ $mode == ccld ]]; then
-            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-                $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
-            fi
-            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-                args=("-L$dep/lib" "${args[@]}")
-            fi
-        elif [[ $mode == ld ]]; then
-            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-                $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
-            fi
-            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-                args=("-L$dep/lib" "${args[@]}")
-            fi
-        fi
-    fi
-
-    # Prepend lib64 and RPATH directories
-    if [[ -d $dep/lib64 ]]; then
-        if [[ $mode == ccld ]]; then
-            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-                $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
-            fi
-            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-                args=("-L$dep/lib64" "${args[@]}")
-            fi
-        elif [[ $mode == ld ]]; then
-            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-                $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
-            fi
-            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-                args=("-L$dep/lib64" "${args[@]}")
-            fi
+            args=("-I$include_dir" "${args[@]}")
         fi
     fi
 done
 
-# Include all -L's and prefix/whatever dirs in rpath
-if [[ $mode == ccld ]]; then
-    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib64" "${args[@]}")
-    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib"   "${args[@]}")
-elif [[ $mode == ld ]]; then
-    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
-    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
-fi
+IFS=':' read -ra rpath_dirs <<< "$SPACK_RPATH_DIRS"
+for rpath_dir in "${rpath_dirs[@]}"; do
+    # Prepend lib and RPATH directories. Note that in the case of the
+    # top-level package these directories may not exist yet. For dependencies
+    # it is assumed that paths have already been confirmed.
+    if [[ $mode == ccld ]]; then
+        $add_rpaths && args=("$rpath$rpath_dir" "${args[@]}")
+    elif [[ $mode == ld ]]; then
+        $add_rpaths && args=("-rpath" "$rpath_dir" "${args[@]}")
+    fi
+done
+
+IFS=':' read -ra link_dirs <<< "$SPACK_LINK_DIRS"
+for link_dir in "${link_dirs[@]}"; do
+    # Prepend lib and RPATH directories
+    if [[ -d $link_dir ]]; then
+        if [[ $mode == ccld || $mode == ld ]]; then
+            args=("-L$link_dir" "${args[@]}")
+        fi
+    fi
+done
 
 # Set extra RPATHs
 IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
