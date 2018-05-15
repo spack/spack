@@ -454,10 +454,13 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_var; '
         cmd += self.print_string("get_config_var('{0}')".format(key))
 
-        # Spack-installed Python works best without other env vars polluting it.
-        # https://askubuntu.com/questions/640010/fatal-python-error-py-initialize-unable-to-get-the-locale-encoding-syntaxe?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-        return self.command('-c', cmd, output=str, env={}).strip()
-
+        # Spack-installed Python works best
+        # without other env vars polluting it.
+        # https://askubuntu.com/questions/640010
+        pythoncmd = self.command('-c', cmd, output=str).strip()
+        pythoncmd.add_default_env('PYTHONPATH', '')
+        return pythoncmd
+        
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
         Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
