@@ -37,7 +37,7 @@ class SwapAssembler(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter('$(CC) -O2', '$(CC) -pthread -O2', string = True)
+        makefile.filter('$(CC) -O2', '$(CC) -pthread -O2', string=True)
 
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)
