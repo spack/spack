@@ -236,14 +236,18 @@ def set_build_environment_variables(pkg, env, dirty):
         # are external may place libraries in nonstandard directories, so
         # there should be a check for that
         query = pkg.spec[dep.name]
-        link_dirs.extend(query.libs.directories)
-        include_dirs.extend(query.headers.directories)
+        try:
+            dep_link_dirs = list(query.libs.directories)
+            link_dirs.extend(dep_link_dirs)
+            if dep in rpath_deps:
+                rpath_dirs.extend(dep_link_dirs)
+        except spack.spec.NoLibrariesError:
+            tty.debug("No libraries found for {0}".format(dep.name))
 
-    for dep in list(rpath_deps):
-        if is_system_path(dep.prefix):
-            continue
-        query = pkg.spec[dep.name]
-        rpath_dirs.extend(query.libs.directories)
+        try:
+            include_dirs.extend(query.headers.directories)
+        except spack.spec.NoHeadersError:
+            tty.debug("No headers found for {0}".format(dep.name))
 
     # The top-level package is always RPATHed. It hasn't been installed yet
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
