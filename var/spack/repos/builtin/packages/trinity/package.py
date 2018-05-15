@@ -48,6 +48,7 @@ class Trinity(MakefilePackage):
     depends_on("bowtie2")
     depends_on("jellyfish")
     depends_on("salmon")
+    depends_on("perl+threads")
 
     def build(self, spec, prefix):
         make
