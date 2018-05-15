@@ -12,7 +12,7 @@ with the package, you can generate a platform-dependent Makefile.
 Phases
 ^^^^^^
 
-Spack's ``AutotoolsPackage`` comes with the following phases:
+The ``AutotoolsPackage`` base class comes with the following phases:
 
 #. ``autoreconf`` - generate the configure script
 #. ``configure`` - generate the Makefiles
