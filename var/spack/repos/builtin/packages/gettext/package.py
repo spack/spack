@@ -84,7 +84,9 @@ class Gettext(AutotoolsPackage):
             config_args.append('--disable-curses')
 
         if '+libxml2' in spec:
-            config_args.append('--with-libxml2-prefix={0}'.format(
+            config_args.append('CPPFLAGS=-I{0}/include'.format(
+                spec['libxml2'].prefix))
+            config_args.append('LDFLAGS=-L{0}/lib -Wl,-rpath,{0}/lib'.format(
                 spec['libxml2'].prefix))
         else:
             config_args.append('--with-included-libxml')
