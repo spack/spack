@@ -25,19 +25,19 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class Hisea(MakefilePackage):
+    """HISEA is an efficient all-vs-all long read aligner for SMRT sequencing
+       data. Its algorithm is designed to produce highest alignment sensitivity
+       among others."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://doi.org/10.1186/s12859-017-1953-9"
+    url      = "https://github.com/lucian-ilie/HISEA"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('2017.12.26', '54211bdc33b7ce52a8f1e76845935eb8',
+            url='https://github.com/lucian-ilie/HISEA/tarball/39e01e98caa0f2101da806ca59306296effe789c')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
+    depends_on('boost')
 
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('hisea', prefix.bin)

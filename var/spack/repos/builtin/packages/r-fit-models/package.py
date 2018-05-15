@@ -25,19 +25,14 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class RFitModels(RPackage):
+    """Compare Fitted Models"""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://cran.r-project.org/package=fit.models"
+    url      = "https://cran.r-project.org/src/contrib/fit.models_0.5-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fit.models"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.5-14', '159b5c57953db4c917bc186ddacdff51')
+    version('0.5-13', 'c9ff87e98189bcc3be597e3833408497')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    depends_on('r-lattice', type=('build', 'run'))

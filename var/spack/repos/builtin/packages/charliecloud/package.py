@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2018, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,19 +25,14 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class Charliecloud(MakefilePackage):
+    """Lightweight user-defined software stacks for HPC."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://hpc.github.io/charliecloud"
+    url      = "https://github.com/hpc/charliecloud/archive/v0.2.4.tar.gz"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.2.4', 'b112de661c2c360174b42c99022c1967')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    @property
+    def install_targets(self):
+        return ['install', 'PREFIX=%s' % self.prefix]

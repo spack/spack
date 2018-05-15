@@ -25,19 +25,27 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class RCdcfluview(RPackage):
+    """The 'U.S.' Centers for Disease Control ('CDC') maintains a portal
+    <http://gis.cdc.gov/grasp/fluview/fluportaldashboard.html> for accessing
+    state, regional and national influenza statistics as well as Mortality
+    Surveillance Data. The web interface makes it difficult and time-consuming
+    to select and retrieve influenza data. Tools are provided to access the
+    data provided by the portal's underlying 'API'."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://cran.r-project.org/package=cdcfluview"
+    url      = "https://cran.r-project.org/src/contrib/cdcfluview_0.7.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/cdcfluview"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.7.0', 'd592606fab3da3536f39a15c0fdbcd17')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-sf', type=('build', 'run'))
+    depends_on('r-xml2', type=('build', 'run'))
+    depends_on('r-purrr', type=('build', 'run'))
+    depends_on('r-readr', type=('build', 'run'))
+    depends_on('r-mmwrweek', type=('build', 'run'))
+    depends_on('r-units@0.4-6:', type=('build', 'run'))
+    depends_on('r@3.2.0:', type=('build', 'run'))

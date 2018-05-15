@@ -25,19 +25,19 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class Aegean(MakefilePackage):
+    """The AEGeAn Toolkit is designed for the Analysis and Evaluation of
+       Genome Annotations. The toolkit includes a variety of analysis programs
+       as well as a C library whose API provides access to AEGeAn's core
+       functions and data structures."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "http://brendelgroup.github.io/AEGeAn/"
+    url      = "https://github.com/BrendelGroup/AEGeAn/archive/v0.15.2.tar.gz"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.15.2', 'd7d73f5f132ff52340975b636564e949')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
+    depends_on('genometools')
 
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('/usr/local', prefix)

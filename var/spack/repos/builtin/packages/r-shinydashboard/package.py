@@ -25,19 +25,16 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class RShinydashboard(RPackage):
+    """Create Dashboards with 'Shiny'"""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://cran.r-project.org/package=shinydashboard"
+    url      = "https://cran.r-project.org/src/contrib/shinydashboard_0.7.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/shinydashboard"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.7.0', 'a572695884e3b45320b0ab5a7b364ffd')
+    version('0.6.1', '0f6ad0448237e10d53d4d27ade1c6863')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r-htmltools@0.2.6:', type=('build', 'run'))
+    depends_on('r-shiny@1.0.0:', type=('build', 'run'))

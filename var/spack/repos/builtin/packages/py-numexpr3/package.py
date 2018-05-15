@@ -25,19 +25,24 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class PyNumexpr3(PythonPackage):
+    """Numexpr3 is a fast numerical expression evaluator for NumPy. With it,
+    expressions that operate on arrays (like "3*a+4*b") are accelerated and
+    use less memory than doing the same calculation in Python.
+    In addition, its multi-threaded capabilities can make use of all your
+    cores, which may accelerate computations, most specially if they are not
+    memory-bounded (e.g. those using transcendental functions).
+    Compared to NumExpr 2.6, functions have been re-written in a fashion such
+    that gcc can auto-vectorize them with SIMD instruction sets such as
+    SSE2 or AVX2, if your processor supports them. Use of a newer version of
+    gcc such as 5.4 is strongly recommended."""
+    homepage = "https://github.com/pydata/numexpr/tree/numexpr-3.0"
+    url = "https://pypi.io/packages/source/n/numexpr3/numexpr3-3.0.1a1.tar.gz"
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    version('3.0.1.a1', '9fa8dc59b149aa1956fc755f982a78ad')
+    # TODO: Add CMake build system for better control of passing flags related
+    # to CPU ISA.
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
-
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('py-setuptools@18.2:', type='build')

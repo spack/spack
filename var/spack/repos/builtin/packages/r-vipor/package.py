@@ -25,19 +25,14 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class RVipor(RPackage):
+    """Plot Categorical Data Using Quasirandom Noise and Density Estimates"""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://cran.r-project.org/package=vipor"
+    url      = "https://cran.r-project.org/src/contrib/vipor_0.4.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/vipor"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.4.5', 'd08bc95b3aaf1574bf41b7eb41b67ce4')
+    version('0.4.4', '834212e3971787809ba9737744d54dee')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    depends_on('r@3.0.0:', type=('build', 'run'))

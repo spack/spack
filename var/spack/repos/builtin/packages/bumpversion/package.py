@@ -25,19 +25,13 @@
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class Bumpversion(PythonPackage):
+    """Version-bump your software with a single command."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://pypi.python.org/pypi/bumpversion"
+    url      = "https://pypi.io/packages/source/b/bumpversion/bumpversion-0.5.0.tar.gz"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.5.3', 'c66a3492eafcf5ad4b024be9fca29820')
+    version('0.5.0', '222ba619283d6408ce1bfbb0b5b542f3')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    depends_on('py-setuptools', type='build')
