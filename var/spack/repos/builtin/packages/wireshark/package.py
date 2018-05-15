@@ -42,15 +42,20 @@ class Wireshark(CMakePackage):
     variant('gtk',      default=False, description='Build with gtk')
     variant('headers',  default=True, description='Install headers')
 
+    depends_on('bison',     type='build')
     depends_on('cares')
     depends_on('doxygen',   type='build')
     depends_on('flex',      type='build')
+    depends_on('git',       type='build')
     depends_on('glib')
     depends_on('gnutls')
     depends_on('libgcrypt@1.4.2:')
     depends_on('libmaxminddb')
-    depends_on('lua')
+    depends_on('libtool@2.2.2:', type='build')
+    depends_on('libpcap')
+    depends_on('lua@5.0.0:5.2.99')
     depends_on('krb5')
+    depends_on('pkg-config', type='build')
     depends_on('libsmi',    when='+smi')
     depends_on('libssh',    when='+libssh')
     depends_on('nghttp2',   when='+nghttp2')
@@ -65,7 +70,14 @@ class Wireshark(CMakePackage):
         args = ['-DENEABLE_CARES=ON',
                 '-DENABLE_GNUTLS=ON',
                 '-DENABLE_LUA=ON',
-                '-DENABLE_MAXMINDDB=ON']
+                '-DENABLE_MAXMINDDB=ON',
+                '-DYACC_EXECUTABLE=' + self.spec['bison'].prefix.bin.yacc,
+                '-DGIT_EXECUTABLE=' + self.spec['git'].prefix.bin.git,
+                '-DPCAP_INCLUDE_DIR=' + self.spec['libpcap'].prefix.include,
+                '-DPCAP_LIB=' + str(self.spec['libpcap'].libs),
+                '-DLUA_INCLUDE_DIR=' + self.spec['lua'].prefix.include,
+                '-DLUA_LIBRARY=' + str(self.spec['lua'].libs)
+                ]
         if self.spec.satisfies('+qt'):
             args.append('-DBUILD_wireshark=ON')
             args.append('-DENABLE_APPLICATION_BUNDLE=ON')
