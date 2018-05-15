@@ -261,6 +261,17 @@ class EnvironmentModifications(object):
             modifications[item.name].append(item)
         return modifications
 
+    def variable_is_possibly_set(self, var_name):
+        modifications = self.group_by_name()
+        if var_name not in modifications:
+            # We did not explicitly unset it
+            return True
+
+        var_updates = modifications[var_name]
+        # If there were no modifications, or if the last modification does
+        # not unset the variable, then it is possibly set
+        return (not var_updates) or (type(var_updates[-1]) != UnsetEnv)
+
     def clear(self):
         """
         Clears the current list of modifications

@@ -628,6 +628,11 @@ def setup_package(pkg, dirty):
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
+    if (not dirty) and spack_env.variable_is_possibly_set('CPATH'):
+        tty.warn("A dependency has updated CPATH, this may lead pkg-config"
+                 " to assume that the package is part of the system"
+                 " includes and omit it when invoked with '--cflags'.")
+
     set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
 
