@@ -86,8 +86,8 @@ class Gettext(AutotoolsPackage):
         if '+libxml2' in spec:
             config_args.append('CPPFLAGS=-I{0}/include'.format(
                 spec['libxml2'].prefix))
-            config_args.append('LDFLAGS=-L{0}/lib -Wl,-rpath,{0}/lib'.format(
-                spec['libxml2'].prefix))
+            config_args.append('LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(
+                spec['libxml2'].libs))
         else:
             config_args.append('--with-included-libxml')
 
