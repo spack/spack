@@ -55,4 +55,3 @@ class Gdbm(AutotoolsPackage):
         return [
             '--enable-libgdbm-compat',
             'CPPFLAGS=-D_GNU_SOURCE']
-
