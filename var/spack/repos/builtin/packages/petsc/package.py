@@ -327,7 +327,7 @@ class Petsc(Package):
         spack_env.unset('PETSC_ARCH')
 
         # Avoid polluting system Python with Spack-built Python3
-        if 'python3' in spec:
+        if '+python3' in spec:
             spack_env.unset('PYTHONPATH')
             spack_env.unset('PYTHONHOME')
 
