@@ -1825,8 +1825,10 @@ class Spec(object):
         changed = True
         force = False
 
+        user_spec_deps = self.flat_dependencies(copy=False)
+
         while changed:
-            changes = (self.normalize(force),
+            changes = (self.normalize(force, user_spec_deps=user_spec_deps),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
             changed = any(changes)
@@ -2175,7 +2177,7 @@ class Spec(object):
 
         return any_change
 
-    def normalize(self, force=False):
+    def normalize(self, force=False, user_spec_deps=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2207,16 +2209,23 @@ class Spec(object):
         # Get all the dependencies into one DependencyMap
         spec_deps = self.flat_dependencies(copy=False)
 
+        full_spec_deps = dict(spec_deps)
+        if user_spec_deps:
+            for name, spec in user_spec_deps.items():
+                if name not in full_spec_deps:
+                    full_spec_deps[name] = spec
+
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            [s for s in spec_deps.values()], restrict=True)
+            [s for s in full_spec_deps.values()], restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
 
-        any_change = self._normalize_helper(visited, spec_deps, provider_index)
+        any_change = self._normalize_helper(
+            visited, full_spec_deps, provider_index)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
