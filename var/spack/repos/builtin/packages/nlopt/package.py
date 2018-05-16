@@ -32,7 +32,7 @@ class Nlopt(Package):
     other algorithms."""
 
     homepage = "https://nlopt.readthedocs.io"
-    url      = "https://github.com/stevengj/nlopt/releases/download/nlopt-2.4.2/nlopt-2.4.2.tar.gz"
+    url      = "http://ab-initio.mit.edu/nlopt/nlopt-2.4.2.tar.gz"
 
     version('develop', git='https://github.com/stevengj/nlopt.git', branch='master')
     version('2.4.2', 'd0b8f139a4acf29b76dbae69ade8ac54')
