@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Nlopt(CMakePackage):
+class Nlopt(Package):
     """NLopt is a free/open-source library for nonlinear optimization,
     providing a common interface for a number of different free optimization
     routines available online as well as original implementations of various
@@ -47,6 +47,7 @@ class Nlopt(CMakePackage):
     variant("matlab", default=False, description="Build the Matlab bindings.")
 
     depends_on('cmake@3.0:', type='build', when='@develop')
+    depends_on('libtool', type='build', when='@2.4.2')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
@@ -54,27 +55,26 @@ class Nlopt(CMakePackage):
     depends_on('octave', when='+octave')
     depends_on('matlab', when='+matlab')
 
-    def cmake_args(self):
-        # Add arguments other than
-        # CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        spec = self.spec
-        args = []
+    def install(self, spec, prefix):
+        if spec.satisfies('@2.4.2'):
+            options = ['--enable-shared']
+            configure('--prefix=%s' % prefix, *options)
+            make
+            make('install')
+            return
 
-        # Specify on command line to alter defaults:
-        # eg: spack install nlopt@develop +guile -octave +cxx
-
-        # Spack should locate python by default - but to point to a build
+        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
         if '+python' in spec:
-            args.append("-DPYTHON_EXECUTABLE=%s" % spec['python'].command.path)
-
-        # On is default
+            cmake_args.append("-DPYTHON_EXECUTABLE=%s" % spec['python'].command.path)
         if '-shared' in spec:
-            args.append('-DBUILD_SHARED_LIBS:Bool=OFF')
-
+            cmake_args.append('-DBUILD_SHARED_LIBS:Bool=OFF')
         if '+cxx' in spec:
-            args.append('-DNLOPT_CXX:BOOL=ON')
-
+            cmake_args.append('-DNLOPT_CXX:BOOL=ON')
         if '+matlab' in spec:
-            args.append("-DMatlab_ROOT_DIR=%s" % spec['matlab'].command.path)
+            cmake_args.append("-DMatlab_ROOT_DIR=%s" % spec['matlab'].command.path)
+        cmake_args.extend(std_cmake_args)
 
-        return args
+        with working_dir('spack-build', create=True):
+            cmake('.', *cmake_args)
+            make
+            make('install')
