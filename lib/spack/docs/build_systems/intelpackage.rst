@@ -183,7 +183,7 @@ copy, should be needed only once.
 **TODO:**
 
 * Code this specific behavior (2018-05-16)
-* Note `PR #6534 "Intel v18 License File Format Issue"<https://github.com/spack/spack/issues/6534>`_.
+* Note `PR #6534 "Intel v18 License File Format Issue" <https://github.com/spack/spack/issues/6534>`_.
 
 
 **************************************************
