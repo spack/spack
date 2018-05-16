@@ -85,8 +85,6 @@ class Tcl(AutotoolsPackage):
         with working_dir(join_path(installed_src, self.configure_directory)):
             make('clean')
 
-
-
     @run_after('install')
     def symlink_tclsh(self):
         with working_dir(self.prefix.bin):
