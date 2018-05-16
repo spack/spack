@@ -34,7 +34,7 @@ class Tophat(AutotoolsPackage):
     version('2.1.1', 'ffd18de2f893a95eb7e9d0c5283d241f')
 
     depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
+    depends_on('automake@1.15.1', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
