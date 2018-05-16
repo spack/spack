@@ -371,6 +371,15 @@ of the Spack documentation.
 
 See also: `Concretization Preferences <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
 
+Example: ``etc/spack/packages.yaml`` might contain:
+
+.. code-block:: yaml
+
+  packages:
+    all:
+      compiler: [ intel@18, intel@17, gcc@4.4.7, gcc@4.9.3, gcc@7.3.0, ]
+
+
 
 Using Intel packages as virtual packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
