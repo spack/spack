@@ -39,6 +39,8 @@ from functools_backport import reverse_order
 from contextlib import contextmanager
 from six import iteritems
 
+import llnl.util.lang
+
 import spack.repo
 import spack.abi
 import spack.spec
@@ -54,27 +56,11 @@ check_for_compiler_existence = True
 
 
 #: Concretizer singleton
-_concretizer = None
+concretizer = llnl.util.lang.Singleton(lambda: Concretizer())
 
 
 #: impements rudimentary logic for ABI compatibility
-_abi_checker = None
-
-
-def _abi():
-    """Get an ABI checker object."""
-    global _abi_checker
-    if _abi_checker is None:
-        _abi_checker = spack.abi.ABI()
-    return _abi_checker
-
-
-def concretizer():
-    """Get concretizer singleton."""
-    global _concretizer
-    if _concretizer is None:
-        _concretizer = Concretizer()
-    return _concretizer
+_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
 
 
 @contextmanager
@@ -102,7 +88,7 @@ class Concretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.path().providers_for(spec)
+            candidates = spack.repo.path.providers_for(spec)
             if not candidates:
                 raise spack.spec.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
@@ -163,8 +149,8 @@ class Concretizer(object):
         return sorted(candidates,
                       reverse=True,
                       key=lambda spec: (
-                          _abi().compatible(spec, abi_exemplar, loose=True),
-                          _abi().compatible(spec, abi_exemplar)))
+                          _abi.compatible(spec, abi_exemplar, loose=True),
+                          _abi.compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take

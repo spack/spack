@@ -115,7 +115,7 @@ def compiler_find(args):
         n = len(new_compilers)
         s = 's' if n > 1 else ''
 
-        config = spack.config.config()
+        config = spack.config.config
         filename = config.get_config_filename(args.scope, 'compilers')
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)

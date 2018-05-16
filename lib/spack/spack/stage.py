@@ -408,7 +408,7 @@ class Stage(object):
                         url, digest, expand=expand, extension=extension))
             if self.default_fetcher.cachable:
                 fetchers.insert(
-                    0, spack.caches.fetch_cache().fetcher(
+                    0, spack.caches.fetch_cache.fetcher(
                         self.mirror_path, digest, expand=expand,
                         extension=extension))
 
@@ -455,7 +455,7 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache().store(self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded

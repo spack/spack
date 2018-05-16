@@ -65,7 +65,7 @@ def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
     defaults = spack.config.get('packages', scope='defaults')
     default_providers = defaults['all']['providers']
-    providers = spack.repo.path().provider_index.providers
+    providers = spack.repo.path.provider_index.providers
 
     for provider in providers:
         assert provider in default_providers

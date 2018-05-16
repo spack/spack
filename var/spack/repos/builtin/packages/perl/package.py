@@ -264,7 +264,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         super(Perl, self).activate(ext_pkg, **args)
 
         extensions_layout = args.get("extensions_layout",
-                                     spack.store.store().extensions)
+                                     spack.store.extensions)
 
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
@@ -276,7 +276,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         super(Perl, self).deactivate(ext_pkg, **args)
 
         extensions_layout = args.get("extensions_layout",
-                                     spack.store.store().extensions)
+                                     spack.store.extensions)
 
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent

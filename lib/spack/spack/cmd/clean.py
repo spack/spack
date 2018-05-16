@@ -83,8 +83,8 @@ def clean(parser, args):
 
     if args.downloads:
         tty.msg('Removing cached downloads')
-        spack.caches.fetch_cache().destroy()
+        spack.caches.fetch_cache.destroy()
 
     if args.misc_cache:
         tty.msg('Removing cached information on repositories')
-        spack.caches.misc_cache().destroy()
+        spack.caches.misc_cache.destroy()

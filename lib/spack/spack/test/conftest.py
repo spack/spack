@@ -155,7 +155,7 @@ def mock_fetch_cache(monkeypatch):
         def __str__(self):
             return "[mock fetch cache]"
 
-    monkeypatch.setattr(spack.caches, '_fetch_cache', MockCache())
+    monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
 # FIXME: The lines below should better be added to a fixture with
@@ -242,18 +242,50 @@ def config(configuration_dir):
     # Set up a mock config scope
     spack.package_prefs.PackagePrefs.clear_caches()
 
-    real_configuration = spack.config._configuration
+    real_configuration = spack.config.config
 
-    scopes = [
-        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-        for name in ['site', 'system', 'user']]
-    config = spack.config.Configuration(*scopes)
-    spack.config._configuration = config
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+          for name in ['site', 'system', 'user']])
 
-    yield config
+    yield spack.config.config
 
-    spack.config._configuration = real_configuration
+    spack.config.config = real_configuration
     spack.package_prefs.PackagePrefs.clear_caches()
+
+
+def _populate(mock_db):
+    """Populate a mock database with packages.
+
+    Here is what the mock DB looks like:
+
+    o  mpileaks     o  mpileaks'    o  mpileaks''
+    |\              |\              |\
+    | o  callpath   | o  callpath'  | o  callpath''
+    |/|             |/|             |/|
+    o |  mpich      o |  mpich2     o |  zmpi
+      |               |             o |  fake
+      |               |               |
+      |               |______________/
+      | .____________/
+      |/
+      o  dyninst
+      |\
+      | o  libdwarf
+      |/
+      o  libelf
+    """
+    def _install(spec):
+        s = spack.spec.Spec(spec).concretized()
+        pkg = spack.repo.get(s)
+        pkg.do_install(fake=True)
+
+    # Transaction used to avoid repeated writes.
+    with mock_db.write_transaction():
+        _install('mpileaks ^mpich')
+        _install('mpileaks ^mpich2')
+        _install('mpileaks ^zmpi')
+        _install('externaltest')
 
 
 @pytest.fixture(scope='module')
@@ -262,128 +294,52 @@ def database(tmpdir_factory, mock_packages, config):
     the ref count for dyninst here will be 3, as it's recycled
     across each install.
     """
-
-    # Here is what the mock DB looks like:
-    #
-    # o  mpileaks     o  mpileaks'    o  mpileaks''
-    # |\              |\              |\
-    # | o  callpath   | o  callpath'  | o  callpath''
-    # |/|             |/|             |/|
-    # o |  mpich      o |  mpich2     o |  zmpi
-    #   |               |             o |  fake
-    #   |               |               |
-    #   |               |______________/
-    #   | .____________/
-    #   |/
-    #   o  dyninst
-    #   |\
-    #   | o  libdwarf
-    #   |/
-    #   o  libelf
+    # save the real store
+    real_store = spack.store.store
 
     # Make a fake install directory
     install_path = tmpdir_factory.mktemp('install_for_database')
-    spack_install_path = spack.store.store().root
 
-    spack.store.store().root = str(install_path)
-    install_layout = spack.directory_layout.YamlDirectoryLayout(
-        str(install_path))
-    spack_install_layout = spack.store.store().layout
-    spack.store.store().layout = install_layout
+    # Make fake store (database and install layout)
+    tmp_store = spack.store.Store(str(install_path))
+    spack.store.store = tmp_store
 
-    # Make fake database and fake install directory.
-    install_db = spack.database.Database(str(install_path))
-    spack_install_db = spack.store.store().db
-    spack.store.store().db = install_db
+    _populate(tmp_store.db)
 
-    Entry = collections.namedtuple('Entry', ['path', 'layout', 'db'])
-    Database = collections.namedtuple(
-        'Database', ['real', 'mock', 'install', 'uninstall', 'refresh'])
+    yield tmp_store.db
 
-    real = Entry(
-        path=spack_install_path,
-        layout=spack_install_layout,
-        db=spack_install_db)
-    mock = Entry(path=install_path, layout=install_layout, db=install_db)
-
-    def _install(spec):
-        s = spack.spec.Spec(spec)
-        s.concretize()
-        pkg = spack.repo.get(s)
-        pkg.do_install(fake=True)
-
-    def _uninstall(spec):
-        spec.package.do_uninstall(spec)
-
-    def _refresh():
-        with spack.store.store().db.write_transaction():
-            for spec in spack.store.store().db.query():
-                _uninstall(spec)
-            _install('mpileaks ^mpich')
-            _install('mpileaks ^mpich2')
-            _install('mpileaks ^zmpi')
-            _install('externaltest')
-
-    t = Database(
-        real=real,
-        mock=mock,
-        install=_install,
-        uninstall=_uninstall,
-        refresh=_refresh)
-
-    # Transaction used to avoid repeated writes.
-    with spack.store.store().db.write_transaction():
-        t.install('mpileaks ^mpich')
-        t.install('mpileaks ^mpich2')
-        t.install('mpileaks ^zmpi')
-        t.install('externaltest')
-
-    yield t
-
-    with spack.store.store().db.write_transaction():
-        for spec in spack.store.store().db.query():
+    with tmp_store.db.write_transaction():
+        for spec in tmp_store.db.query():
             if spec.package.installed:
-                t.uninstall(spec)
+                PackageBase.uninstall_by_spec(spec, force=True)
             else:
-                spack.store.store().db.remove(spec)
+                tmp_store.db.remove(spec)
 
     install_path.remove(rec=1)
-    spack.store.store().root = spack_install_path
-    spack.store.store().layout = spack_install_layout
-    spack.store.store().db = spack_install_db
+    spack.store.store = real_store
 
 
-@pytest.fixture()
-def refresh_db_on_exit(database):
-    """"Restores the state of the database after a test."""
-    yield
-    database.refresh()
+@pytest.fixture(scope='function')
+def mutable_database(database):
+    """For tests that need to modify the database instance."""
+    yield database
+    with database.write_transaction():
+        for spec in spack.store.db.query():
+            PackageBase.uninstall_by_spec(spec, force=True)
+    _populate(database)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def install_mockery(tmpdir, config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    layout = spack.store.store().layout
-    extensions = spack.store.store().extensions
-    db = spack.store.store().db
-    new_opt = str(tmpdir.join('opt'))
-
-    # Use a fake install directory to avoid conflicts bt/w
-    # installed pkgs and mock packages.
-    store = spack.store.store()
-    store.layout = spack.directory_layout.YamlDirectoryLayout(new_opt)
-    store.extensions = spack.directory_layout.YamlExtensionsLayout(
-        new_opt, spack.store.store().layout)
-    store.db = spack.database.Database(new_opt)
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
 
-    # Restore Spack's layout.
-    store.layout = layout
-    store.extensions = extensions
-    store.db = db
+    spack.store.store = real_store
 
 
 @pytest.fixture()

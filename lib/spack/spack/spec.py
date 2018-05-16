@@ -1228,7 +1228,7 @@ class Spec(object):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.path().get_pkg_class(self.fullname)
+        return spack.repo.path.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -1244,7 +1244,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return (name is not None) and (not spack.repo.path().exists(name))
+        return (name is not None) and (not spack.repo.path.exists(name))
 
     @property
     def concrete(self):
@@ -1402,7 +1402,7 @@ class Spec(object):
     @property
     def prefix(self):
         if self._prefix is None:
-            self.prefix = spack.store.store().layout.path_for_spec(self)
+            self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -1675,7 +1675,7 @@ class Spec(object):
             # still need to select a concrete package later.
             if not self.virtual:
                 import spack.concretize
-                concretizer = spack.concretize.concretizer()
+                concretizer = spack.concretize.concretizer
                 changed |= any(
                     (concretizer.concretize_architecture(self),
                      concretizer.concretize_compiler(self),
@@ -1744,7 +1744,7 @@ class Spec(object):
                     # Get a list of possible replacements in order of
                     # preference.
                     import spack.concretize
-                    concretizer = spack.concretize.concretizer()
+                    concretizer = spack.concretize.concretizer
                     candidates = concretizer.choose_virtual_or_external(spec)
 
                     # Try the replacements in order, skipping any that cause
@@ -1849,7 +1849,7 @@ class Spec(object):
             # we can do it as late as possible to allow as much
             # compatibility across repositories as possible.
             if s.namespace is None:
-                s.namespace = spack.repo.path().repo_for_pkg(s.name).namespace
+                s.namespace = spack.repo.path.repo_for_pkg(s.name).namespace
 
             if s.concrete:
                 continue
@@ -3107,7 +3107,7 @@ class Spec(object):
                 elif named_str == 'SPACK_ROOT':
                     out.write(fmt % token_transform(spack.paths.prefix))
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % token_transform(spack.store.store().root))
+                    out.write(fmt % token_transform(spack.store.root))
                 elif named_str == 'PREFIX':
                     out.write(fmt % token_transform(self.prefix))
                 elif named_str.startswith('HASH'):
@@ -3149,7 +3149,7 @@ class Spec(object):
         if not self.concrete:
             return None
         try:
-            record = spack.store.store().db.get_record(self)
+            record = spack.store.db.get_record(self)
             return record.installed
         except KeyError:
             return None
@@ -3159,7 +3159,7 @@ class Spec(object):
         if not self.concrete:
             return None
         try:
-            record = spack.store.store().db.get_record(self)
+            record = spack.store.db.get_record(self)
             return record.explicit
         except KeyError:
             return None
@@ -3382,7 +3382,7 @@ class SpecParser(spack.parse.Parser):
     def spec_by_hash(self):
         self.expect(ID)
 
-        specs = spack.store.store().db.query()
+        specs = spack.store.db.query()
         matches = [spec for spec in specs if
                    spec.dag_hash()[:len(self.token.value)] == self.token.value]
 

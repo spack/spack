@@ -42,7 +42,7 @@ def concretize_scope(config, tmpdir):
 
     config.pop_scope()
     spack.package_prefs.PackagePrefs.clear_caches()
-    spack.repo.path()._provider_index = None
+    spack.repo.path._provider_index = None
 
 
 def concretize(abstract_spec):

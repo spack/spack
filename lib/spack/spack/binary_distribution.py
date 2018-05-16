@@ -149,7 +149,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
             if relocate.strings_contains_installroot(
-                    path_name, spack.store.store().layout.root):
+                    path_name, spack.store.layout.root):
                 filetype = relocate.get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
                     rel_path_name = os.path.relpath(path_name, prefix)
@@ -161,9 +161,9 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     # Create buildinfo data and write it to disk
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
-    buildinfo['buildpath'] = spack.store.store().layout.root
+    buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['relative_prefix'] = os.path.relpath(
-        prefix, spack.store.store().layout.root)
+        prefix, spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -334,7 +334,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
     buildinfo['relative_prefix'] = os.path.relpath(
-        spec.prefix, spack.store.store().layout.root)
+        spec.prefix, spack.store.layout.root)
     spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
@@ -414,7 +414,7 @@ def relocate_package(workdir, allow_root):
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(workdir)
-    new_path = spack.store.store().layout.root
+    new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
     if rel:
@@ -493,7 +493,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             "It cannot be installed.")
 
     new_relative_prefix = str(os.path.relpath(spec.prefix,
-                                              spack.store.store().layout.root))
+                                              spack.store.layout.root))
     # if the original relative prefix is in the spec file use it
     buildinfo = spec_dict.get('buildinfo', {})
     old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)

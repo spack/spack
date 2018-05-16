@@ -57,14 +57,14 @@ def inverted_dependencies():
        actual dependents.
     """
     dag = {}
-    for pkg in spack.repo.path().all_packages():
+    for pkg in spack.repo.path.all_packages():
         dag.setdefault(pkg.name, set())
         for dep in pkg.dependencies:
             deps = [dep]
 
             # expand virtuals if necessary
-            if spack.repo.path().is_virtual(dep):
-                deps += [s.name for s in spack.repo.path().providers_for(dep)]
+            if spack.repo.path.is_virtual(dep):
+                deps += [s.name for s in spack.repo.path.providers_for(dep)]
 
             for d in deps:
                 dag.setdefault(d, set()).add(pkg.name)
@@ -103,7 +103,7 @@ def dependents(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0])
 
         tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
-        deps = spack.store.store().db.installed_relatives(
+        deps = spack.store.db.installed_relatives(
             spec, 'parents', args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)

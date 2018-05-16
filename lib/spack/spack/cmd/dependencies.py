@@ -60,7 +60,7 @@ def dependencies(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0])
 
         tty.msg("Dependencies of %s" % spec.format('$_$@$%@$/', color=True))
-        deps = spack.store.store().db.installed_relatives(
+        deps = spack.store.db.installed_relatives(
             spec, 'children', args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)
@@ -75,7 +75,7 @@ def dependencies(parser, args):
         else:
             packages = [
                 spack.repo.get(s.name)
-                for s in spack.repo.path().providers_for(spec)]
+                for s in spack.repo.path.providers_for(spec)]
 
         dependencies = set()
         for pkg in packages:

@@ -223,7 +223,7 @@ class Database(object):
 
         Prefix lock is a byte range lock on the nth byte of a file.
 
-        The lock file is ``spack.store.store().db.prefix_lock`` -- the DB
+        The lock file is ``spack.store.db.prefix_lock`` -- the DB
         tells us what to call it and it lives alongside the install DB.
 
         n is the sys.maxsize-bit prefix of the DAG hash.  This makes
@@ -366,7 +366,7 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.store.store().layout)
+            self.reindex(spack.store.layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
         def invalid_record(hash_key, error):
@@ -499,7 +499,7 @@ class Database(object):
                     tty.debug(
                         'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                     try:
-                        layout = spack.store.store().layout
+                        layout = spack.store.layout
                         if entry.spec.external:
                             layout = None
                             install_check = True
@@ -609,7 +609,7 @@ class Database(object):
             # reindex() takes its own write lock, so no lock here.
             with WriteTransaction(self.lock, timeout=_db_lock_timeout):
                 self._write(None, None, None)
-            self.reindex(spack.store.store().layout)
+            self.reindex(spack.store.layout)
 
     def _add(
             self,
@@ -823,7 +823,7 @@ class Database(object):
         the given spec
         """
         if extensions_layout is None:
-            extensions_layout = spack.store.store().extensions
+            extensions_layout = spack.store.extensions
         for spec in self.query():
             try:
                 extensions_layout.check_activated(extendee_spec, spec)
@@ -903,7 +903,7 @@ class Database(object):
                 if explicit is not any and rec.explicit != explicit:
                     continue
 
-                if known is not any and spack.repo.path().exists(
+                if known is not any and spack.repo.path.exists(
                         rec.spec.name) != known:
                     continue
 

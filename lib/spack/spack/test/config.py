@@ -61,15 +61,15 @@ config_override_list = {
 @pytest.fixture()
 def config(tmpdir):
     """Mocks the configuration scope."""
-    real_configuration = spack.config._configuration
-    scopes = [spack.config.ConfigScope(name, str(tmpdir.join(name)))
-              for name in ['low', 'high']]
-    config = spack.config.Configuration(*scopes)
-    spack.config._configuration = config
+    real_configuration = spack.config.config
 
-    yield config
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
+          for name in ['low', 'high']])
 
-    spack.config._configuration = real_configuration
+    yield spack.config.config
+
+    spack.config.config = real_configuration
 
 
 @pytest.fixture()
@@ -242,7 +242,7 @@ def test_write_key_to_disk(config, compiler_specs):
     spack.config.set('compilers', b_comps['compilers'], scope='high')
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config().clear_caches()
+    spack.config.config.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps['compilers'], *compiler_specs.a)
@@ -255,7 +255,7 @@ def test_write_to_same_priority_file(config, compiler_specs):
     spack.config.set('compilers', b_comps['compilers'], scope='low')
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config().clear_caches()
+    spack.config.config.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps['compilers'], *compiler_specs.a)

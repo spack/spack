@@ -162,7 +162,7 @@ class TestConcretize(object):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo.path()
+        repo = spack.repo.path
         assert not any(
             s.satisfies('mpich2@:1.0') for s in repo.providers_for('mpi@2.1')
         )
@@ -182,7 +182,7 @@ class TestConcretize(object):
     def test_provides_handles_multiple_providers_of_same_vesrion(self):
         """
         """
-        providers = spack.repo.path().providers_for('mpi@3.0')
+        providers = spack.repo.path.providers_for('mpi@3.0')
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can

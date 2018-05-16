@@ -44,9 +44,9 @@ def mock_calls_for_clean(monkeypatch):
     monkeypatch.setattr(spack.package.PackageBase, 'do_clean', Counter())
     monkeypatch.setattr(spack.stage, 'purge', Counter())
     monkeypatch.setattr(
-        spack.caches._fetch_cache, 'destroy', Counter(), raising=False)
+        spack.caches.fetch_cache, 'destroy', Counter(), raising=False)
     monkeypatch.setattr(
-        spack.caches._misc_cache, 'destroy', Counter())
+        spack.caches.misc_cache, 'destroy', Counter())
 
 
 @pytest.mark.usefixtures(
@@ -69,5 +69,5 @@ def test_function_calls(command_line, counters):
     # number of times
     assert spack.package.PackageBase.do_clean.call_count == counters[0]
     assert spack.stage.purge.call_count == counters[1]
-    assert spack.caches.fetch_cache().destroy.call_count == counters[2]
-    assert spack.caches.misc_cache().destroy.call_count == counters[3]
+    assert spack.caches.fetch_cache.destroy.call_count == counters[2]
+    assert spack.caches.misc_cache.destroy.call_count == counters[3]

@@ -131,7 +131,7 @@ def package_hash(spec, content=None):
 def package_ast(spec):
     spec = Spec(spec)
 
-    filename = spack.repo.path().filename_for_package_name(spec.name)
+    filename = spack.repo.path.filename_for_package_name(spec.name)
     with open(filename) as f:
         text = f.read()
         root = ast.parse(text)

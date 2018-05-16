@@ -283,7 +283,7 @@ def refresh(module_types, specs, args):
         # skip unknown packages.
         writers = [
             cls(spec) for spec in specs
-            if spack.repo.path().exists(spec.name)]
+            if spack.repo.path.exists(spec.name)]
 
         # Filter blacklisted packages early
         writers = [x for x in writers if not x.conf.blacklisted]

@@ -50,8 +50,8 @@ class Aspell(AutotoolsPackage):
     #   - dest_dir instead of self.prefix in tree.(find_conflict|merge)()
     def activate(self, extension, **kwargs):
         extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.store().extensions)
-        if extensions_layout is not spack.store.store().extensions:
+                                       spack.store.extensions)
+        if extensions_layout is not spack.store.extensions:
             raise ExtensionError(
                 'aspell does not support non-global extensions')
 
@@ -60,7 +60,7 @@ class Aspell(AutotoolsPackage):
         tree = LinkTree(extension.prefix.lib)
 
         def ignore(filename):
-            return (filename in spack.store.store().layout.hidden_file_paths or
+            return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         conflict = tree.find_conflict(dest_dir, ignore=ignore)
@@ -71,8 +71,8 @@ class Aspell(AutotoolsPackage):
 
     def deactivate(self, extension, **kwargs):
         extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.store().extensions)
-        if extensions_layout is not spack.store.store().extensions:
+                                       spack.store.extensions)
+        if extensions_layout is not spack.store.extensions:
             raise ExtensionError(
                 'aspell does not support non-global extensions')
 
@@ -80,7 +80,7 @@ class Aspell(AutotoolsPackage):
         dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
 
         def ignore(filename):
-            return (filename in spack.store.store().layout.hidden_file_paths or
+            return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix.lib)

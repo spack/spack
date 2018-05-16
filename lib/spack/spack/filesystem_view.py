@@ -267,7 +267,7 @@ class YamlFilesystemView(FilesystemView):
             # Check for globally activated extensions in the extendee that
             # we're looking at.
             activated = [p.spec for p in
-                         spack.store.store().db.activated_extensions_for(spec)]
+                         spack.store.db.activated_extensions_for(spec)]
             if activated:
                 tty.error("Globally activated extensions cannot be used in "
                           "conjunction with filesystem views. "
@@ -391,7 +391,7 @@ class YamlFilesystemView(FilesystemView):
 
     def get_all_specs(self):
         dotspack = join_path(self.root,
-                             spack.store.store().layout.metadata_dir)
+                             spack.store.layout.metadata_dir)
         if os.path.exists(dotspack):
             return list(filter(None, map(self.get_spec, os.listdir(dotspack))))
         else:
@@ -409,13 +409,13 @@ class YamlFilesystemView(FilesystemView):
     def get_path_meta_folder(self, spec):
         "Get path to meta folder for either spec or spec name."
         return join_path(self.root,
-                         spack.store.store().layout.metadata_dir,
+                         spack.store.layout.metadata_dir,
                          getattr(spec, "name", spec))
 
     def get_spec(self, spec):
         dotspack = self.get_path_meta_folder(spec)
         filename = join_path(dotspack,
-                             spack.store.store().layout.spec_file_name)
+                             spack.store.layout.spec_file_name)
 
         try:
             with open(filename, "r") as f:
@@ -424,7 +424,7 @@ class YamlFilesystemView(FilesystemView):
             return None
 
     def link_meta_folder(self, spec):
-        src = spack.store.store().layout.metadata_path(spec)
+        src = spack.store.layout.metadata_path(spec)
         tgt = self.get_path_meta_folder(spec)
 
         tree = LinkTree(src)
@@ -550,4 +550,4 @@ def get_dependencies(specs):
 
 
 def ignore_metadata_dir(f):
-    return f in spack.store.store().layout.hidden_file_paths
+    return f in spack.store.layout.hidden_file_paths

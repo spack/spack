@@ -93,7 +93,7 @@ def find_matching_specs(specs, allow_multiple_matches=False, force=False):
     specs_from_cli = []
     has_errors = False
     for spec in specs:
-        matching = spack.store.store().db.query(spec)
+        matching = spack.store.db.query(spec)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -128,7 +128,7 @@ def installed_dependents(specs):
     """
     dependents = {}
     for item in specs:
-        installed = spack.store.store().db.installed_relatives(
+        installed = spack.store.db.installed_relatives(
             item, 'parents', True)
         lst = [x for x in installed if x not in specs]
         if lst:
@@ -158,7 +158,7 @@ def do_uninstall(specs, force):
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order
     def num_installed_deps(pkg):
-        dependents = spack.store.store().db.installed_relatives(
+        dependents = spack.store.db.installed_relatives(
             pkg.spec, 'parents', True)
         return len(dependents)
 
