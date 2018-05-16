@@ -1,6 +1,12 @@
-========================
-Notes on Intel Packages
-========================
+====================================
+Development Notes on Intel Packages
+====================================
+
+These are notes for concepts and development of
+lib/spack/spack/build_systems/intel.py .
+
+For documentation on how to *use* ``IntelPackage``, see
+lib/spack/docs/build_systems/intelpackage.rst .
 
 -------------------------------------------------------------------------------
 Installation and path handling as implemented in ./intel.py
@@ -28,10 +34,10 @@ package families that use a common vendor-style installer.
 Description
 ~~~~~~~~~~~~
 
-Spack makes packages available through two routes: 
+Spack makes packages available through two routes, let's call them A and B:
 
-A. Packages pre-installed external to Spack and configured *for Spack*
-B. Packages built and installed *by Spack*.
+A. Packages pre-installed external to Spack and configured *for* Spack
+B. Packages built and installed *by* Spack.
 
 For a user who is interested in building end-user applications, it should not
 matter through which route any of its dependent packages has been installed.
@@ -86,24 +92,25 @@ Solution
 ~~~~~~~~~
 
 Introduce a series of functions which will return the appropriate
-directory levels, regardless of the route under which .prefix has been set:
+directories, regardless of whether the Intel package has been installed
+external or internal to Spack:
 
-==================  ============================================================
-Function            Example return values
-------------------  ------------------------------------------------------------
-product_dir()       /opt/intel/compilers_and_libraries_2018.1.163
-                    {self.prefix}/compilers_and_libraries_2018.1.163
-------------------  ------------------------------------------------------------
-compilers_dir()     {product_dir}/linux
-------------------  ------------------------------------------------------------
-component_dir()     {compilers_dir}/mkl
-component_bin_dir() {compilers_dir}/mkl/bin
-component_lib_dir() {compilers_dir}/mkl/lib/intel64
-------------------  ------------------------------------------------------------
-component_dir()     {compilers_dir}/mpi
-component_bin_dir() {compilers_dir}/mpi/intel64/bin
-component_lib_dir() {compilers_dir}/mpi/intel64/lib
-==================  ============================================================
+==========================  ==================================================
+Function                    Example return values
+--------------------------  --------------------------------------------------
+normalize_suite_dir()       Spack-external installation:
+                                /opt/intel/compilers_and_libraries_2018.1.163
+                            Spack-internal installation:
+                                $SPACK_ROOT/...<HASH>/compilers_and_libraries_2018.1.163
+--------------------------  --------------------------------------------------
+normalize_path('mkl')       <suite_dir>/linux/mkl
+component_bin_dir()         <suite_dir>/linux/mkl/bin
+component_lib_dir()         <suite_dir>/linux/mkl/lib/intel64
+--------------------------  --------------------------------------------------
+normalize_path('mpi')       <suite_dir>/linux/mpi
+component_bin_dir('mpi')    <suite_dir>/linux/mpi/intel64/bin
+component_lib_dir('mpi')    <suite_dir>/linux/mpi/intel64/lib
+==========================  ==================================================
 
 
 *********************************
@@ -254,11 +261,13 @@ validator are::
       .../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk
 
 The tokens that are accepted in the configuration file vary between packages.
-Tokens not supported for a given package are **will cause the installer to stop
+Tokens not supported for a given package **will cause the installer to stop
 and fail.** This is particularly relevant for license-related tokens, which are
 accepted only for packages that actually require a license.
 
 Reference: [Intel's documentation](https://software.intel.com/en-us/articles/configuration-file-format)
+
+See also:  https://software.intel.com/en-us/articles/silent-installation-guide-for-intel-parallel-studio-xe-composer-edition-for-os-x
 
 The following is from ``.../parallel_studio_xe_2018_update1_cluster_edition/pset/check.awk``:
 
@@ -622,8 +631,8 @@ For reference, here's the wrapper's builtin help output::
     ----------------------------------------------------------------------------
 
 
-Some version divergence
-~~~~~~~~~~~~~~~~~~~~~~~~
+Side Note: MPI version divergence in 2015 release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The package `intel-parallel-studio@cluster.2015.6` contains both a full MPI
 development version in `$prefix/impi` and an MPI Runtime under the
@@ -637,6 +646,8 @@ with a release date nearly 1 year apart::
     $ $SPACK_ROOT/...uaxaw7/composer_xe_2015.6.233/mpirt/bin/intel64/mpiexec --version
     Intel(R) MPI Library for Linux* OS, Version 5.0 Update 1 Build 20140709
     Copyright (C) 2003-2014, Intel Corporation. All rights reserved.
+
+I'm not sure what to make of it.
 
 
 **************
