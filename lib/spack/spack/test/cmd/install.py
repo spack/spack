@@ -25,6 +25,7 @@
 import argparse
 import os
 import filecmp
+from six.moves import builtins
 
 import pytest
 
@@ -316,28 +317,23 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.usefixtures(
-    'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
-)
 @pytest.mark.parametrize('exc_typename,msg', [
-    ('RuntimeError', 'something weird happened'),
+#    ('RuntimeError', 'something weird happened'),
     ('KeyboardInterrupt', 'Ctrl-C strikes again')
 ])
-def test_junit_output_with_errors(tmpdir, monkeypatch, exc_typename, msg):
+def test_junit_output_with_errors(
+        exc_typename, msg,
+        mock_packages, mock_archive, mock_fetch, install_mockery,
+        config, tmpdir, monkeypatch):
 
     def just_throw(*args, **kwargs):
-        from six.moves import builtins
         exc_type = getattr(builtins, exc_typename)
         raise exc_type(msg)
 
     monkeypatch.setattr(spack.package.PackageBase, 'do_install', just_throw)
 
     with tmpdir.as_cwd():
-        install(
-            '--log-format=junit', '--log-file=test.xml',
-            'libdwarf',
-            fail_on_error=False
-        )
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -387,7 +383,7 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
     install('archive-files')
 
     archive_dir = os.path.join(
-        spack.store.store().layout.metadata_path(s), 'archived-files'
+        spack.store.layout.metadata_path(s), 'archived-files'
     )
     config_log = os.path.join(archive_dir, 'config.log')
     assert os.path.exists(config_log)

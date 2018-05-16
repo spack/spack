@@ -224,7 +224,7 @@ class TagIndex(Mapping):
             pkg_name (str): name of the package to be removed from the index
 
         """
-        package = path().get(pkg_name)
+        package = path.get(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():
@@ -255,7 +255,7 @@ def make_provider_index_cache(packages_path, namespace):
     cache_filename = 'providers/{0}-index.yaml'.format(namespace)
 
     # Compute which packages needs to be updated in the cache
-    misc_cache = spack.caches.misc_cache()
+    misc_cache = spack.caches.misc_cache
     index_mtime = misc_cache.mtime(cache_filename)
 
     needs_update = [
@@ -309,7 +309,7 @@ def make_tag_index_cache(packages_path, namespace):
     cache_filename = 'tags/{0}-index.json'.format(namespace)
 
     # Compute which packages needs to be updated in the cache
-    misc_cache = spack.caches.misc_cache()
+    misc_cache = spack.caches.misc_cache
     index_mtime = misc_cache.mtime(cache_filename)
 
     needs_update = [
@@ -1079,60 +1079,60 @@ def create_repo(root, namespace=None):
     return full_path, namespace
 
 
-#: Singleton repo path instance
-_path = None
-
-
-def set_path(repo):
-    """Set the path() singleton to a specific value.
-
-    Overwrite _path and register it as an importer in sys.meta_path if
-    it is a ``Repo`` or ``RepoPath``.
-    """
-    global _path
-    _path = repo
-
-    # make the new repo_path an importer if needed
-    append = isinstance(repo, (Repo, RepoPath))
-    if append:
-        sys.meta_path.append(_path)
-    return append
-
-
-def path():
+def _path():
     """Get the singleton RepoPath instance for Spack.
 
     Create a RepoPath, add it to sys.meta_path, and return it.
 
     TODO: consider not making this a singleton.
     """
-    if _path is None:
-        repo_dirs = spack.config.get('repos')
-        if not repo_dirs:
-            raise NoRepoConfiguredError(
-                "Spack configuration contains no package repositories.")
-        set_path(RepoPath(*repo_dirs))
+    repo_dirs = spack.config.get('repos')
+    if not repo_dirs:
+        raise NoRepoConfiguredError(
+            "Spack configuration contains no package repositories.")
 
-    return _path
+    path = RepoPath(*repo_dirs)
+    sys.meta_path.append(path)
+    return path
+
+
+#: Singleton repo path instance
+path = llnl.util.lang.Singleton(_path)
 
 
 def get(spec):
     """Convenience wrapper around ``spack.repo.get()``."""
-    return path().get(spec)
+    return path.get(spec)
 
 
 def all_package_names():
     """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return path().all_package_names()
+    return path.all_package_names()
+
+
+def set_path(repo):
+    """Set the path singleton to a specific value.
+
+    Overwrite ``path`` and register it as an importer in
+    ``sys.meta_path`` if it is a ``Repo`` or ``RepoPath``.
+    """
+    global path
+    path = repo
+
+    # make the new repo_path an importer if needed
+    append = isinstance(repo, (Repo, RepoPath))
+    if append:
+        sys.meta_path.append(repo)
+    return append
 
 
 @contextmanager
 def swap(repo_path):
     """Temporarily use another RepoPath."""
-    global _path
+    global path
 
     # swap out _path for repo_path
-    saved = _path
+    saved = path
     remove_from_meta = set_path(repo_path)
 
     yield
@@ -1140,7 +1140,7 @@ def swap(repo_path):
     # restore _path and sys.meta_path
     if remove_from_meta:
         sys.meta_path.remove(repo_path)
-    _path = saved
+    path = saved
 
 
 class RepoError(spack.error.SpackError):

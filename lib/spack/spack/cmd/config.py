@@ -56,7 +56,7 @@ def setup_parser(subparser):
 
 
 def config_get(args):
-    spack.config.config().print_section(args.section)
+    spack.config.config.print_section(args.section)
 
 
 def config_edit(args):
@@ -68,7 +68,7 @@ def config_edit(args):
     if not args.section:
         args.section = None
 
-    config = spack.config.config()
+    config = spack.config.config
     config_file = config.get_config_filename(args.scope, args.section)
     spack.editor(config_file)
 

@@ -193,7 +193,7 @@ class CbtfKrell(CMakePackage):
         # the login node components with this spack invocation. We
         # need these paths to be the ones created in the CNL
         # spack invocation.
-        store = spack.store.store()
+        store = spack.store
         be_cbtf = store.db.query_one('cbtf arch=cray-CNL-haswell')
         be_cbtfk = store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
         be_papi = store.db.query_one('papi arch=cray-CNL-haswell')

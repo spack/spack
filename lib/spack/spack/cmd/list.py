@@ -303,7 +303,7 @@ def list(parser, args):
     # Filter by tags
     if args.tags:
         packages_with_tags = set(
-            spack.repo.path().packages_with_tags(*args.tags))
+            spack.repo.path.packages_with_tags(*args.tags))
         sorted_packages = set(sorted_packages) & packages_with_tags
         sorted_packages = sorted(sorted_packages)
 

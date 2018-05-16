@@ -104,7 +104,7 @@ def test_read_and_write_spec(
     layout.
     """
     layout, tmpdir = layout_and_dir
-    packages = list(spack.repo.path().all_packages())[:max_packages]
+    packages = list(spack.repo.path.all_packages())[:max_packages]
 
     for pkg in packages:
         if pkg.name.startswith('external'):
@@ -226,7 +226,7 @@ def test_handle_unknown_package(
 def test_find(layout_and_dir, config, mock_packages):
     """Test that finding specs within an install layout works."""
     layout, _ = layout_and_dir
-    packages = list(spack.repo.path().all_packages())[:max_packages]
+    packages = list(spack.repo.path.all_packages())[:max_packages]
 
     # Create install prefixes for all packages in the list
     installed_specs = {}

@@ -116,7 +116,7 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     has_errors = False
     specs = spack.cmd.parse_specs(pkgs)
     for spec in specs:
-        matching = spack.store.store().db.query(spec)
+        matching = spack.store.db.query(spec)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -254,7 +254,7 @@ def install_tarball(spec, args):
             tty.msg('Installing buildcache for spec %s' % spec.format())
             bindist.extract_tarball(spec, tarball, args.allow_root,
                                     args.unsigned, args.force)
-            spack.store.store().reindex()
+            spack.store.store.reindex()
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
                     spec.format())

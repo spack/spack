@@ -73,12 +73,12 @@ class ConstraintAction(argparse.Action):
 
         # return everything for an empty query.
         if not qspecs:
-            return spack.store.store().db.query(**kwargs)
+            return spack.store.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
         specs = set()
         for spec in qspecs:
-            for s in spack.store.store().db.query(spec, **kwargs):
+            for s in spack.store.db.query(spec, **kwargs):
                 specs.add(s)
         return sorted(specs)
 

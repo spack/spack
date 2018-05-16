@@ -31,4 +31,4 @@ level = "long"
 
 
 def reindex(parser, args):
-    spack.store.store().reindex()
+    spack.store.store.reindex()

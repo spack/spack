@@ -116,7 +116,7 @@ def get_compiler_config(scope=None, init_config=True):
 
 def compiler_config_files():
     config_files = list()
-    config = spack.config.config()
+    config = spack.config.config
     for scope in config.file_scopes:
         name = scope.name
         compiler_config = config.get('compilers', scope=name)
@@ -339,7 +339,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
 @_auto_compiler_spec
 def get_compiler_duplicates(compiler_spec, arch_spec):
-    config = spack.config.config()
+    config = spack.config.config
 
     scope_to_compilers = {}
     for scope in config.scopes:

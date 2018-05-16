@@ -105,7 +105,7 @@ def extensions(parser, args):
     if show_packages:
         #
         # List package names of extensions
-        extensions = spack.repo.path().extensions_for(spec)
+        extensions = spack.repo.path.extensions_for(spec)
         if not extensions:
             tty.msg("%s has no extensions." % spec.cshort_spec)
         else:
@@ -113,17 +113,17 @@ def extensions(parser, args):
             tty.msg("%d extensions:" % len(extensions))
             colify(ext.name for ext in extensions)
 
-    layout = spack.store.store().extensions
+    layout = spack.store.extensions
     if args.view is not None:
         layout = YamlViewExtensionsLayout(
-            args.view, spack.store.store().layout)
+            args.view, spack.store.layout)
 
     if show_installed:
         #
         # List specs of installed extensions.
         #
-        store = spack.store.store()
-        installed = [s.spec for s in store.db.installed_extensions_for(spec)]
+        installed = [
+            s.spec for s in spack.store.db.installed_extensions_for(spec)]
 
         if show_all:
             print

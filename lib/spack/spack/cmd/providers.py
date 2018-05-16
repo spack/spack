@@ -46,7 +46,7 @@ def setup_parser(subparser):
 
 
 def providers(parser, args):
-    valid_virtuals = sorted(spack.repo.path().provider_index.providers.keys())
+    valid_virtuals = sorted(spack.repo.path.provider_index.providers.keys())
 
     buffer = six.StringIO()
     isatty = sys.stdout.isatty()
@@ -77,5 +77,5 @@ def providers(parser, args):
     for spec in specs:
         if sys.stdout.isatty():
             print("{0}:".format(spec))
-        spack.cmd.display_specs(sorted(spack.repo.path().providers_for(spec)))
+        spack.cmd.display_specs(sorted(spack.repo.path.providers_for(spec)))
         print('')

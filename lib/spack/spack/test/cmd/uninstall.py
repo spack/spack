@@ -61,7 +61,7 @@ def test_recursive_uninstall():
     """Test recursive uninstall."""
     uninstall('-y', '-a', '--dependents', 'callpath')
 
-    all_specs = spack.store.store().layout.all_specs()
+    all_specs = spack.store.layout.all_specs()
     assert len(all_specs) == 8
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]

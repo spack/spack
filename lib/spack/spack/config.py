@@ -61,6 +61,7 @@ from six import iteritems
 import yaml
 from yaml.error import MarkedYAMLError
 
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -456,17 +457,16 @@ def override(path, value):
     """Simple way to override config settings within a context."""
     overrides = InternalConfigScope('overrides')
 
-    cfg = config()
-    cfg.push_scope(overrides)
-    cfg.set(path, value, scope='overrides')
+    config.push_scope(overrides)
+    config.set(path, value, scope='overrides')
 
-    yield cfg
+    yield config
 
-    scope = cfg.pop_scope()
+    scope = config.pop_scope()
     assert scope is overrides
 
 
-def config():
+def _config():
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
@@ -477,40 +477,37 @@ def config():
         (Configuration): object for accessing spack configuration
 
     """
-    global _configuration
-    if not _configuration:
-        _configuration = Configuration()
+    cfg = Configuration()
 
-        # first do the builtin, hardcoded defaults
-        defaults = InternalConfigScope('_builtin', config_defaults)
-        _configuration.push_scope(defaults)
+    # first do the builtin, hardcoded defaults
+    defaults = InternalConfigScope('_builtin', config_defaults)
+    cfg.push_scope(defaults)
 
-        # Each scope can have per-platfom overrides in subdirectories
-        platform = spack.architecture.platform().name
+    # Each scope can have per-platfom overrides in subdirectories
+    platform = spack.architecture.platform().name
 
-        # add each scope and its platform-specific directory
-        for name, path in configuration_paths:
-            _configuration.push_scope(ConfigScope(name, path))
+    # add each scope and its platform-specific directory
+    for name, path in configuration_paths:
+        cfg.push_scope(ConfigScope(name, path))
 
-            plat_name = '%s/%s' % (name, platform)
-            plat_path = os.path.join(path, platform)
-            _configuration.push_scope(ConfigScope(plat_name, plat_path))
+        plat_name = '%s/%s' % (name, platform)
+        plat_path = os.path.join(path, platform)
+        cfg.push_scope(ConfigScope(plat_name, plat_path))
 
-        # we make a special scope for spack commands so that they can
-        # override configuration options.
-        _configuration.push_scope(InternalConfigScope('command_line'))
+    # we make a special scope for spack commands so that they can
+    # override configuration options.
+    cfg.push_scope(InternalConfigScope('command_line'))
 
-    return _configuration
+    return cfg
 
 
-#: This is the global singleton configuration for Spack.
-#: TODO: consider making this NOT global and associate it with a spack instance
-_configuration = None
+#: This is the singleton configuration instance for Spack.
+config = llnl.util.lang.Singleton(_config)
 
 
 def get(path, default=None, scope=None):
     """Module-level wrapper for ``Configuration.get()``."""
-    return config().get(path, default, scope)
+    return config.get(path, default, scope)
 
 
 def set(path, value, scope=None):
@@ -518,12 +515,12 @@ def set(path, value, scope=None):
 
     Accepts the path syntax described in ``get()``.
     """
-    return config().set(path, value, scope)
+    return config.set(path, value, scope)
 
 
 def scopes():
     """Convenience function to get list of configuration scopes."""
-    return config().scopes
+    return config.scopes
 
 
 def _validate_section_name(section):

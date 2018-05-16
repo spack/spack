@@ -43,6 +43,9 @@ configuration.
 
 """
 import os
+
+import llnl.util.lang
+
 import spack.paths
 import spack.config
 import spack.util.path
@@ -72,7 +75,7 @@ class Store(object):
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
     """
-    def __init__(self, root, path_scheme, hash_length):
+    def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
         self.db = spack.database.Database(root)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
@@ -85,19 +88,21 @@ class Store(object):
         return self.db.reindex(self.layout)
 
 
-#: Singleton store instance
-_store = None
-
-
-def store():
+def _store():
     """Get the singleton store instance."""
-    global _store
+    root = spack.config.get('config:install_tree', default_root)
+    root = spack.util.path.canonicalize_path(root)
 
-    if _store is None:
-        root = spack.config.get('config:install_tree', default_root)
-        root = spack.util.path.canonicalize_path(root)
+    return Store(root,
+                 spack.config.get('config:install_path_scheme'),
+                 spack.config.get('config:install_hash_length'))
 
-        _store = Store(root,
-                       spack.config.get('config:install_path_scheme'),
-                       spack.config.get('config:install_hash_length'))
-    return _store
+
+#: Singleton store instance
+store = llnl.util.lang.Singleton(_store)
+
+# convenience accessors for parts of the singleton store
+root = llnl.util.lang.LazyReference(lambda: store.root)
+db = llnl.util.lang.LazyReference(lambda: store.db)
+layout = llnl.util.lang.LazyReference(lambda: store.layout)
+extensions = llnl.util.lang.LazyReference(lambda: store.extensions)
