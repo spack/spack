@@ -49,4 +49,5 @@ class RRstan(RPackage):
     depends_on('r-gridextra', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
+    depends_on('r-rcppeigen@0.3.3.3.0:', type=('build', 'run'), when='@2.17.2:')
     depends_on('r-bh', type=('build', 'run'))
