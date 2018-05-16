@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,8 @@
 
 import re
 
+import pytest
+
 import spack
 from spack.repository import RepoPath
 
@@ -36,6 +38,7 @@ def check_db():
         spack.repo.get(name)
 
 
+@pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
     check_db()
@@ -57,3 +60,13 @@ def test_all_versions_are_lowercase():
             errors.append(name)
 
     assert len(errors) == 0
+
+
+def test_all_virtual_packages_have_default_providers():
+    """All virtual packages must have a default provider explicitly set."""
+    defaults = spack.config.get_config('packages', scope='defaults')
+    default_providers = defaults['all']['providers']
+    providers = spack.repo.provider_index.providers
+
+    for provider in providers:
+        assert provider in default_providers

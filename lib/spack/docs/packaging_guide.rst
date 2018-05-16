@@ -490,6 +490,21 @@ version.joined       123
    Python properties don't need parentheses. ``version.dashed`` is correct.
    ``version.dashed()`` is incorrect.
 
+In addition, these version properties can be combined with ``up_to()``.
+For example:
+
+.. code-block:: python
+
+   >>> version = Version('1.2.3')
+   >>> version.up_to(2).dashed
+   Version('1-2')
+   >>> version.underscored.up_to(2)
+   Version('1_2')
+
+
+As you can see, order is not important. Just keep in mind that ``up_to()`` and
+the other version properties return ``Version`` objects, not strings.
+
 If a URL cannot be derived systematically, or there is a special URL for one
 of its versions, you can add an explicit URL for a particular version:
 
@@ -637,34 +652,6 @@ use:
 #. If all else fails and ``@develop`` is the only matching version, it
    will be used.
 
-^^^^^^^^^^^^^
-``spack md5``
-^^^^^^^^^^^^^
-
-If you have one or more files to checksum, you can use the ``spack md5``
-command to do it:
-
-.. code-block:: console
-
-   $ spack md5 foo-8.2.1.tar.gz foo-8.2.2.tar.gz
-   ==> 2 MD5 checksums:
-   4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
-   1586b70a49dfe05da5fcc29ef239dce0  foo-8.2.2.tar.gz
-
-``spack md5`` also accepts one or more URLs and automatically downloads
-the files for you:
-
-.. code-block:: console
-
-   $ spack md5 http://example.com/foo-8.2.1.tar.gz
-   ==> Trying to fetch from http://example.com/foo-8.2.1.tar.gz
-   ######################################################################## 100.0%
-   ==> 1 MD5 checksum:
-   4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
-
-Doing this for lots of files, or whenever a new package version is
-released, is tedious.  See ``spack checksum`` below for an automated
-version of this process.
 
 .. _cmd-spack-checksum:
 
@@ -925,7 +912,7 @@ Submodules
   .. code-block:: python
 
      version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1', submdoules=True)
+             tag='v1.0.1', submodules=True)
 
 
 .. _github-fetch:
@@ -1197,27 +1184,47 @@ structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, you need to supply a checksum,
-like this:
+If you supply a URL instead of a filename, you need to supply a
+``sha256`` checksum, like this:
+
+.. code-block:: python
+
+   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch',
+         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866')
+
+Spack includes the hashes of patches in its versioning information, so
+that the same package with different patches applied will have different
+hash identifiers.  To ensure that the hashing scheme is consistent, you
+must use a ``sha256`` checksum for the patch.  Patches will be fetched
+from their URLs, checked, and applied to your source code.  You can use
+the ``spack sha256`` command to generate a checksum for a patch file or
+URL.
+
+Spack can also handle compressed patches.  If you use these, Spack needs
+a little more help.  Specifically, it needs *two* checksums: the
+``sha256`` of the patch and ``archive_sha256`` for the compressed
+archive.  ``archive_sha256`` helps Spack ensure that the downloaded
+file is not corrupted or malicious, before running it through a tool like
+``tar`` or ``zip``.  The ``sha256`` of the patch is still required so
+that it can be included in specs.  Providing it in the package file
+ensures that Spack won't have to download and decompress patches it won't
+end up using at install time.  Both the archive and patch checksum are
+checked when patch archives are downloaded.
 
 .. code-block:: python
 
    patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
-         md5='f91c6a04df56e228fe946291d2f38c9a')
+         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
+         archive_sha256='4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e')
 
-This directive provides an ``md5`` checksum.  You can use other hashing
-algorihtms like ``sha256`` as well.  The patch will be fetched from the
-URL, checked, and applied to your source code.  You can use the ``spack
-md5`` command to generate a checksum for a patch file.
+``patch`` keyword arguments are described below.
 
-``patch`` can take two options keyword arguments.  They are:
+""""""""""""""""""""""""""""""
+``sha256``, ``archive_sha256``
+""""""""""""""""""""""""""""""
 
-""""""""""""""""""""""""""""""""""""""
-``md5``, ``sha256``, ``sha512``, etc.
-""""""""""""""""""""""""""""""""""""""
-
-Use one of these when you supply a patch to be downloaded from a remote
-site. The downloaded file will be validated using the given checksum.
+Hashes of downloaded patch and compressed archive, respectively.  Only
+needed for patches fetched from URLs.
 
 """"""""
 ``when``
@@ -1269,6 +1276,36 @@ It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a patch you didn't
 create yourself, ``level`` can be handy.
 
+"""""""""""""""
+``working_dir``
+"""""""""""""""
+
+This tells spack where to run the ``patch`` command.  By default,
+the working directory is the source path of the stage (``.``).
+However, sometimes patches are made with respect to a subdirectory
+and this is where the working directory comes in handy. Internally,
+the working directory is given to ``patch`` via the ``-d`` option.
+Let's take the example patch from above and assume for some reason,
+it can only be downloaded in the following form:
+
+.. code-block:: diff
+   :linenos:
+
+   --- a/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 12:05:44.806417000 -0800
+   +++ b/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 11:53:03.295622000 -0800
+   @@ -8,7 +8,7 @@
+     *   Copyright (C) 2008 Sun Microsystems, Lustre group
+     \*/
+
+   -#define _XOPEN_SOURCE 600
+   +//#define _XOPEN_SOURCE 600
+    #include <stdlib.h>
+    #include <malloc.h>
+    #include "ad_lustre.h"
+
+Hence, the patch needs to applied in the ``src/mpi`` subdirectory, and the
+``working_dir='src/mpi'`` option would exactly do that.
+
 ^^^^^^^^^^^^^^^^^^^^^
 Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1293,6 +1330,21 @@ function gives you some benefits.  First, spack ensures that the
 if you run install, hit ctrl-C, and run install again, the code in the
 patch function is only run once.  Also, you can tell Spack to run only
 the patching part of the build using the :ref:`cmd-spack-patch` command.
+
+.. _patch_dependency_patching:
+
+^^^^^^^^^^^^^^^^^^^
+Dependency patching
+^^^^^^^^^^^^^^^^^^^
+
+So far we've covered how the ``patch`` directive can be used by a package
+to patch *its own* source code. Packages can *also* specify patches to be
+applied to their dependencies, if they require special modifications.  As
+with all packages in Spack, a patched dependency library can coexist with
+other versions of that library.  See the `section on depends_on
+<dependency_dependency_patching_>`_ for more details.
+
+.. _handling_rpaths:
 
 ---------------
 Handling RPATHs
@@ -1467,7 +1519,7 @@ particular constraints, and package authors can use specs to describe
 relationships between packages.
 
 ^^^^^^^^^^^^^^
-Version Ranges
+Version ranges
 ^^^^^^^^^^^^^^
 
 Although some packages require a specific version for their dependencies,
@@ -1515,7 +1567,7 @@ correct way to specify this would be:
 
 
 ^^^^^^^^^^^^^^^^
-Dependency Types
+Dependency types
 ^^^^^^^^^^^^^^^^
 
 Not all dependencies are created equal, and Spack allows you to specify
@@ -1551,6 +1603,91 @@ inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
 
+.. _dependency_dependency_patching:
+
+^^^^^^^^^^^^^^^^^^^
+Dependency patching
+^^^^^^^^^^^^^^^^^^^
+
+Some packages maintain special patches on their dependencies, either to
+add new features or to fix bugs.  This typically makes a package harder
+to maintain, and we encourage developers to upstream (contribute back)
+their changes rather than maintaining patches.  However, in some cases
+it's not possible to upstream. Maybe the dependency's developers don't
+accept changes, or maybe they just haven't had time to integrate them.
+
+For times like these, Spack's ``depends_on`` directive can optionally
+take a patch or list of patches:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on('binutils', patches='special-binutils-feature.patch')
+        ...
+
+Here, the ``special-tool`` package requires a special feature in
+``binutils``, so it provides an extra ``patches=<filename>`` keyword
+argument.  This is similar to the `patch directive <patching_>`_, with
+one small difference.  Here, ``special-tool`` is responsible for the
+patch, so it should live in ``special-tool``'s directory in the package
+repository, not the ``binutils`` directory.
+
+If you need something more sophisticated than this, you can simply nest a
+``patch()`` directive inside of ``depends_on``:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on(
+            'binutils',
+            patches=patch('special-binutils-feature.patch',
+                          level=3,
+                          when='@:1.3'),   # condition on binutils
+            when='@2.0:')                  # condition on special-tool
+        ...
+
+Note that there are two optional ``when`` conditions here -- one on the
+``patch`` directive and the other on ``depends_on``.  The condition in
+the ``patch`` directive applies to ``binutils`` (the package being
+patched), while the condition in ``depends_on`` applies to
+``special-tool``.  See `patch directive <patching_>`_ for details on all
+the arguments the ``patch`` directive can take.
+
+Finally, if you need *multiple* patches on a dependency, you can provide
+a list for ``patches``, e.g.:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on(
+            'binutils',
+            patches=[
+                'binutils-bugfix1.patch',
+                'binutils-bugfix2.patch',
+                patch('https://example.com/special-binutils-feature.patch',
+                      sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
+                      when='@:1.3')],
+            when='@2.0:')
+        ...
+
+As with ``patch`` directives, patches are applied in the order they
+appear in the package file (or in this case, in the list).
+
+.. note::
+
+   You may wonder whether dependency patching will interfere with other
+   packages that depend on ``binutils``.  It won't.
+
+   As described in patching_, Patching a package adds the ``sha256`` of
+   the patch to the package's spec, which means it will have a
+   *different* unique hash than other versions without the patch.  The
+   patched version coexists with unpatched versions, and Spack's support
+   for handling_rpaths_ guarantees that each installation finds the
+   right version. If two packages depend on ``binutils`` patched *the
+   same* way, they can both use a single installation of ``binutils``.
 
 .. _setup-dependent-environment:
 
@@ -2103,17 +2240,33 @@ The classes that are currently provided by Spack are:
     | :py:class:`.CMakePackage`     | Specialized class for packages   |
     |                               | built using CMake                |
     +-------------------------------+----------------------------------+
-    | :py:class:`.WafPackage`       | Specialize class for packages    |
+    | :py:class:`.CudaPackage`      | A helper class for packages that |
+    |                               | use CUDA. It is intended to be   |
+    |                               | used in combination with others  |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.QMakePackage`     | Specialized class for packages   |
+    |                               | build using QMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.SConsPackage`     | Specialized class for packages   |
+    |                               | built using SCons                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.WafPackage`       | Specialized class for packages   |
     |                               | built using Waf                  |
     +-------------------------------+----------------------------------+
     | :py:class:`.RPackage`         | Specialized class for            |
     |                               | :py:class:`.R` extensions        |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.OctavePackage`    | Specialized class for            |
+    |                               | :py:class:`.Octave` packages     |
     +-------------------------------+----------------------------------+
     | :py:class:`.PythonPackage`    | Specialized class for            |
     |                               | :py:class:`.Python` extensions   |
     +-------------------------------+----------------------------------+
     | :py:class:`.PerlPackage`      | Specialized class for            |
     |                               | :py:class:`.Perl` extensions     |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.IntelPackage`     | Specialized class for licensed   |
+    |                               | Intel software                   |
     +-------------------------------+----------------------------------+
 
 
@@ -2390,6 +2543,105 @@ build system.
 Compiler flags
 ^^^^^^^^^^^^^^
 
+Compiler flags set by the user through the Spec object can be passed
+to the build in one of three ways. By default, the build environment
+injects these flags directly into the compiler commands using Spack's
+compiler wrappers. In cases where the build system requires knowledge
+of the compiler flags, they can be registered with the build system by
+alternatively passing them through environment variables or as build
+system arguments. The flag_handler method can be used to change this
+behavior.
+
+Packages can override the flag_handler method with one of three
+built-in flag_handlers. The built-in flag_handlers are named
+``inject_flags``, ``env_flags``, and ``build_system_flags``. The
+``inject_flags`` method is the default. The ``env_flags`` method puts
+all of the flags into the environment variables that ``make`` uses as
+implicit variables ('CFLAGS', 'CXXFLAGS', etc.). The
+``build_system_flags`` method adds the flags as
+arguments to the invocation of ``configure`` or ``cmake``,
+respectively.
+
+.. warning::
+
+   Passing compiler flags using build system arguments is only
+   supported for CMake and Autotools packages. Individual packages may
+   also differ in whether they properly respect these arguments.
+
+Individual packages may also define their own ``flag_handler``
+methods. The ``flag_handler`` method takes the package instance
+(``self``), the name of the flag, and a list of the values of the
+flag. It will be called on each of the six compiler flags supported in
+Spack. It should return a triple of ``(injf, envf, bsf)`` where
+``injf`` is a list of flags to inject via the Spack compiler wrappers,
+``envf`` is a list of flags to set in the appropriate environment
+variables, and ``bsf`` is a list of flags to pass to the build system
+as arguments.
+
+.. warning::
+
+   Passing a non-empty list of flags to ``bsf`` for a build system
+   that does not support build system arguments will result in an
+   error.
+
+Here are the definitions of the three built-in flag handlers:
+
+.. code-block:: python
+
+   def inject_flags(self, name, flags):
+       return (flags, None, None)
+
+   def env_flags(self, name, flags):
+       return (None, flags, None)
+
+   def build_system_flags(self, name, flags):
+       return (None, None, flags)
+
+.. note::
+
+   Returning ``[]`` and ``None`` are equivalent in a ``flag_handler``
+   method.
+
+Packages can override the default behavior either by specifying one of
+the built-in flag handlers,
+
+.. code-block:: python
+
+   flag_handler = <PackageClass>.env_flags
+
+where ``<PackageClass>`` can be any of the subclasses of PackageBase
+discussed in :ref:`installation_procedure`,
+
+or by implementing the flag_handler method. Suppose for a package
+``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
+through the environment, the rest of the flags through compiler
+wrapper injection, and we need to add ``-lbar`` to ``ldlibs``. The
+following flag handler method accomplishes that.
+
+.. code-block:: python
+
+   def flag_handler(self, name, flags):
+       if name in ['cflags', 'cxxflags', 'cppflags']:
+           return (None, flags, None)
+       elif name == 'ldlibs':
+           flags.append('-lbar')
+       return (flags, None, None)
+
+Because these methods can pass values through environment variables,
+it is important not to override these variables unnecessarily
+(E.g. setting ``env['CFLAGS']``) in other package methods when using
+non-default flag handlers. In the ``setup_environment`` and
+``setup_dependent_environment`` methods, use the ``append_flags``
+method of the ``EnvironmentModifications`` class to append values to a
+list of flags whenever the flag handler is ``env_flags``. If the
+package passes flags through the environment or the build system
+manually (in the install method, for example), we recommend using the
+default flag handler, or removind manual references and implementing a
+custom flag handler method that adds the desired flags to export as
+environment variables or pass to the build system. Manual flag passing
+is likely to interfere with the ``env_flags`` and
+``build_system_flags`` methods.
+
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
@@ -2406,25 +2658,54 @@ is handy when a package supports additional variants like
 
    variant('openmp', default=True, description="Enable OpenMP support.")
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Blas and Lapack libraries
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Blas, Lapack and ScaLapack libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Multiple packages provide implementations of ``Blas`` and ``Lapack``
+Multiple packages provide implementations of ``Blas``, ``Lapack`` and ``ScaLapack``
 routines.  The names of the resulting static and/or shared libraries
 differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
-provides it sets up ``self.spec.blas_libs`` to point to the correct
-``Blas`` libraries.  The same applies to packages which provide
-``Lapack``. Package developers are advised to use these variables, for
-example ``spec['blas'].blas_libs.joined()`` instead of hard-coding them:
+provides it implements ``@property def blas_libs(self):`` to return an object
+of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+type which simplifies usage of a set of libraries.
+The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
+Package developers are requested to use this interface. Common usage cases are:
+
+1. Space separated list of full paths
 
 .. code-block:: python
 
-   if 'openblas' in spec:
-       libs = join_path(spec['blas'].prefix.lib, 'libopenblas.so')
-   elif 'intel-mkl' in spec:
-       ...
+   lapack_blas = spec['lapack'].libs + spec['blas'].libs
+   options.append(
+      '--with-blas-lapack-lib={0}'.format(lapack_blas.joined())
+   )
+
+2. Names of libraries and directories which contain them
+
+.. code-block:: python
+
+   blas = spec['blas'].libs
+   options.extend([
+     '-DBLAS_LIBRARY_NAMES={0}'.format(';'.join(blas.names)),
+     '-DBLAS_LIBRARY_DIRS={0}'.format(';'.join(blas.directories))
+   ])
+
+3. Search and link flags
+
+.. code-block:: python
+
+   math_libs = spec['scalapack'].libs + spec['lapack'].libs + spec['blas'].libs
+   options.append(
+     '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)
+   )
+
+
+For more information, see documentation of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+class.
+
 
 .. _prefix-objects:
 
@@ -3323,24 +3604,12 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up temporary files for a particular package, by deleting the
-expanded/checked out source code *and* any downloaded archive.  If
-``fetch``, ``stage``, or ``install`` are run again after this, Spack's
-build process will start from scratch.
-
-.. _cmd-spack-purge:
-
-^^^^^^^^^^^^^^^
-``spack purge``
-^^^^^^^^^^^^^^^
-
 Cleans up all of Spack's temporary and cached files.  This can be used to
 recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
 When called with ``--stage`` or without arguments this removes all staged
-files and will be equivalent to running ``spack clean`` for every package
-you have fetched or staged.
+files.
 
 When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
@@ -3349,6 +3618,11 @@ When called with ``--user-cache`` this will remove caches in the user home
 directory, including cached virtual indices.
 
 To remove all of the above, the command can be called with ``--all``.
+
+When called with positional arguments, cleans up temporary files only
+for a particular package. If ``fetch``, ``stage``, or ``install``
+are run again after this, Spack's build process will start from scratch.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
@@ -3363,7 +3637,7 @@ package has been successfully built and installed.  Use
    $ spack install --keep-stage <spec>
 
 This allows you to inspect the build directory and potentially debug
-the build.  You can use ``purge`` or ``clean`` later to get rid of the
+the build.  You can use ``clean`` later to get rid of the
 unwanted temporary files.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

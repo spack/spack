@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,11 @@ class LinuxDistro(OperatingSystem):
         # grab the first legal identifier in the version field.  On
         # debian you get things like 'wheezy/sid'; sid means unstable.
         # We just record 'wheezy' and don't get quite so detailed.
-        version = re.split(r'[^\w-]', version)[0]
+        version = re.split(r'[^\w-]', version)
+
+        if 'ubuntu' in distname:
+            version = '.'.join(version[0:2])
+        else:
+            version = version[0]
 
         super(LinuxDistro, self).__init__(distname, version)

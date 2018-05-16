@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ class Udunits2(AutotoolsPackage):
     """Automated units conversion"""
 
     homepage = "http://www.unidata.ucar.edu/software/udunits"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.24.tar.gz"
+    url      = "https://www.gfd-dennou.org/arch/ucar/unidata/pub/udunits/udunits-2.2.24.tar.gz"
 
     version('2.2.24', '898b90dc1890f172c493406d0f26f531')
     version('2.2.23', '9f66006accecd621a4c3eda4ba9fa7c9')

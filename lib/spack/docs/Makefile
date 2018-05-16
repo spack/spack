@@ -17,7 +17,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext apidoc
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext apidoc dashdoc
 
 all: html
 
@@ -83,7 +83,7 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -f package_list.rst command_index.rst
+	-rm -f command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
 html:
@@ -196,3 +196,9 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+dashdoc:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/dashdoc
+	doc2dash -A -v -n spack -d $(BUILDDIR)/ -f -I index.html -j $(BUILDDIR)/dashdoc
+	@echo
+	@echo "Build finished. The Docset is in $(BUILDDIR)/dashdoc."

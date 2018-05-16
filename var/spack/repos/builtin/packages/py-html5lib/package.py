@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ class PyHtml5lib(PythonPackage):
     """HTML parser based on the WHATWG HTML specification."""
 
     homepage = "https://github.com/html5lib/html5lib-python"
-    url      = "https://pypi.python.org/packages/ae/ae/bcb60402c60932b32dfaf19bb53870b29eda2cd17551ba5639219fb5ebf9/html5lib-0.9999999.tar.gz"
+    url      = "https://pypi.io/packages/source/h/html5lib/html5lib-0.9999999.tar.gz"
 
     version('0.9999999', 'ef43cb05e9e799f25d65d1135838a96f')
 

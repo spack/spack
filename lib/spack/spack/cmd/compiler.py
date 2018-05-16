@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,6 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec, ArchSpec
-from spack.util.environment import get_path
 
 description = "manage compilers"
 section = "system"
@@ -55,7 +54,8 @@ def setup_parser(subparser):
         help='search the system for compilers to add to Spack configuration')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # Remove
@@ -66,20 +66,23 @@ def setup_parser(subparser):
         help='remove ALL compilers that match spec')
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_modify_scope,
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
     # Info
     info_parser = sp.add_parser('info', help='show compiler paths')
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        default=spack.cmd.default_list_scope,
         help="configuration scope to read from")
 
 
@@ -89,8 +92,6 @@ def compiler_find(args):
 
     """
     paths = args.add_paths
-    if not paths:
-        paths = get_path('PATH')
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the

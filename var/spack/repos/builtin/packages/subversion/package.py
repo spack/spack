@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,8 @@ class Subversion(Package):
     homepage = 'https://subversion.apache.org/'
     url = 'http://archive.apache.org/dist/subversion/subversion-1.8.13.tar.gz'
 
+    version('1.9.7',     '1a5f48acf9d0faa60e8c7aea96a9b29ab1d4dcac')
+    version('1.9.6',     '89e1b3f9d79422c094ccb95769360d5fe7df2bb1')
     version('1.9.5',     'ac9f8ee235f1b667dd6506864af8035aaedfc2d9')
     version('1.9.3',     'a92bcfaec4e5038f82c74a7b5bbd2f46')
     version('1.8.17',    'd1f8d45f97168d6271c58c5b25421cc32954c81b')

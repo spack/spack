@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -64,11 +64,10 @@ class Libint(AutotoolsPackage):
     @property
     def optflags(self):
         flags = '-O2'
-
         # Optimizations for the Intel compiler, suggested by CP2K
+        # See ../libxc/package.py for rationale and doc.
         if '%intel' in self.spec:
-            # -xSSE2 will make it usable on old architecture
-            flags += ' -xSSE2 -xAVX -axCORE-AVX2 -ipo'
+            flags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
 
         return flags
 
@@ -85,6 +84,7 @@ class Libint(AutotoolsPackage):
     def configure_args(self):
 
         config_args = ['--enable-shared']
+
         optflags = self.optflags
 
         # Optimization flag names have changed in libint 2

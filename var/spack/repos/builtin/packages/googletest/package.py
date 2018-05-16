@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,14 +34,27 @@ class Googletest(CMakePackage):
     version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
     version('1.6.0', '90407321648ab25b067fcd798caf8c78')
 
+    variant('gmock', default=False, description='Build with gmock')
+    conflicts('+gmock', when='@:1.7.0')
+
+    variant('pthreads', default=True,
+            description='Build multithreaded version with pthreads')
+
     def cmake_args(self):
         spec = self.spec
         if '@1.8.0:' in spec:
             # New style (contains both Google Mock and Google Test)
-            options = ['-DBUILD_GMOCK=OFF', '-DBUILD_GTEST=ON']
+            options = ['-DBUILD_GTEST=ON']
+            if '+gmock' in spec:
+                options.append('-DBUILD_GMOCK=ON')
+            else:
+                options.append('-DBUILD_GMOCK=OFF')
         else:
             # Old style (contains only GTest)
             options = []
+
+        options.append('-Dgtest_disable_pthreads={0}'.format(
+            'ON' if '+pthreads' in spec else 'OFF'))
         return options
 
     @when('@:1.7.0')

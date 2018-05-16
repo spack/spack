@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@ class RColorspace(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/colorspace/index.html"
     url      = "https://cran.r-project.org/src/contrib/colorspace_1.3-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/colorspace"
 
     version('1.3-2', '63000bab81d995ff167df76fb97b2984')
     version('1.2-6', 'a30191e9caf66f77ff4e99c062e9dce1')

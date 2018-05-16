@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,12 +39,3 @@ class Pegtl(CMakePackage):
     version('develop', git='https://github.com/taocpp/PEGTL', branch='master')
     version('2.1.4', 'e5288b6968e6e910287fce93dc5557bf')
     version('2.0.0', 'c772828e7188459338a920c21f9896db')
-
-    variant('debug', default=False, description='Build debug version')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'

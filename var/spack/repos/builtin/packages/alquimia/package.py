@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,18 +31,19 @@ class Alquimia(CMakePackage):
 
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
 
+    version('xsdk-0.3.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.3.0')
     version('xsdk-0.2.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.2.0')
     version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug',  default=False,
-            description='Builds a debug version of the libraries')
 
     depends_on('mpi')
     depends_on('hdf5')
+    depends_on('pflotran@xsdk-0.3.0', when='@xsdk-0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
+    depends_on('petsc@3.8.0:', when='@xsdk-0.3.0')
     depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('petsc@develop', when='@develop')
 
@@ -52,10 +53,6 @@ class Alquimia(CMakePackage):
         options = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
                    '-DUSE_XSDK_DEFAULTS=YES',
-                   '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                       'DEBUG' if '+debug' in spec else 'RELEASE'),
-                   '-DXSDK_ENABLE_DEBUG:STRING=%s' % (
-                       'YES' if '+debug' in spec else 'NO'),
                    '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                        'ON' if '+shared' in spec else 'OFF'),
                    '-DTPL_ENABLE_MPI:BOOL=ON',

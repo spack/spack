@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,8 +31,9 @@ class Cfitsio(AutotoolsPackage):
     """
 
     homepage = 'http://heasarc.gsfc.nasa.gov/fitsio/'
-    url      = 'http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3410.tar.gz'
+    url      = 'http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3420.tar.gz'
 
+    version('3.420', '26e5c0dfb85b8d00f536e706305caa13')
     version('3.410', '8a4a66fcdd816aae41768baa0b025552')
     version('3.370', 'abebd2d02ba5b0503c633581e3bfa116')
 

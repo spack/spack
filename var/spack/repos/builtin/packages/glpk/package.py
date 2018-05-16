@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,10 @@ class Glpk(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/glpk"
-    url = "http://ftp.gnu.org/gnu/glpk/glpk-4.57.tar.gz"
+    url = "http://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz"
 
-    version('4.61', '3ce3e224a8b6e75a1a0b378445830f21')    
+    version('4.65', '470a984a8b1c0e027bdb6d5859063fe8')
+    version('4.61', '3ce3e224a8b6e75a1a0b378445830f21')
     version('4.57', '237531a54f73155842f8defe51aedb0f')
 
     variant(

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -240,8 +240,8 @@ class OperatingSystem(object):
     """
 
     def __init__(self, name, version):
-        self.name = name
-        self.version = version
+        self.name = name.replace('-', '_')
+        self.version = str(version).replace('-', '_')
 
     def __str__(self):
         return "%s%s" % (self.name, self.version)
@@ -254,7 +254,7 @@ class OperatingSystem(object):
 
     def find_compilers(self, *paths):
         """
-        Return a list of compilers found in the suppied paths.
+        Return a list of compilers found in the supplied paths.
         This invokes the find() method for each Compiler class,
         and appends the compilers detected to a list.
         """

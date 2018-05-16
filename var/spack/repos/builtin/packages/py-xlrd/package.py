@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,6 @@ class PyXlrd(PythonPackage):
     spreadsheet files"""
 
     homepage = 'http://www.python-excel.org/'
-    url      = "https://pypi.python.org/packages/source/x/xlrd/xlrd-0.9.4.tar.gz"
+    url      = "https://pypi.io/packages/source/x/xlrd/xlrd-0.9.4.tar.gz"
 
     version('0.9.4', '911839f534d29fe04525ef8cd88fe865')

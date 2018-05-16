@@ -29,12 +29,12 @@ maintain a single file for many different builds of the same package.
 See the :doc:`features` for examples and highlights.
 
 Get spack from the `github repository
-<https://github.com/llnl/spack>`_ and install your first
+<https://github.com/spack/spack>`_ and install your first
 package:
 
 .. code-block:: console
 
-   $ git clone https://github.com/llnl/spack.git
+   $ git clone https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
@@ -63,6 +63,7 @@ or refer to the full manual below.
    mirrors
    module_file_support
    repositories
+   binary_caches
    command_index
    package_list
 
@@ -73,6 +74,7 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide
    developer_guide
+   docker_for_developers
    Spack API Docs <spack>
    LLNL API Docs <llnl>
 

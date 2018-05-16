@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,8 @@ class PkgConfig(AutotoolsPackage):
     version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
     version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
 
+    provides('pkgconfig')
+
     variant('internal_glib', default=True,
             description='Builds with internal glib')
 
@@ -44,13 +46,8 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
-    @when('platform=cray')
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """spack built pkg-config on cray's requires adding /usr/local/
-        and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
-        files."""
-        spack_env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
-        spack_env.append_path('PKG_CONFIG_PATH', '/usr/local/lib64/pkgconfig')
+        """Adds the ACLOCAL path for autotools."""
         spack_env.append_path('ACLOCAL_PATH',
                               join_path(self.prefix.share, 'aclocal'))
 

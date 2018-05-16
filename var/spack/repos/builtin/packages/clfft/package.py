@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,10 +31,6 @@ class Clfft(CMakePackage):
     homepage = "https://github.com/clMathLibraries/clFFT"
     url      = "https://github.com/clMathLibraries/clFFT/archive/v2.12.2.tar.gz"
 
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'src')
-
     version('2.12.2', '9104d85f9f2f3c58dd8efc0e4b06496f')
 
     variant('client', default=True,
@@ -42,6 +38,8 @@ class Clfft(CMakePackage):
 
     depends_on('opencl@1.2:')
     depends_on('boost@1.33.0:', when='+client')
+
+    root_cmakelists_dir = 'src'
 
     def cmake_args(self):
         spec = self.spec

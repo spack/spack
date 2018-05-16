@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,10 +33,14 @@ class Mpip(AutotoolsPackage):
 
     version("3.4.1", "1168adc83777ac31d6ebd385823aabbd")
 
-    depends_on("libelf", type="build")
-    depends_on("libdwarf", type="build")
-    depends_on('libunwind', when=os.uname()[4] == "x86_64", type="build")
-    depends_on("mpi", type="build")
+    depends_on("libelf")
+    depends_on("libdwarf")
+    depends_on('libunwind', when=os.uname()[4] == "x86_64")
+    depends_on("mpi")
 
     def configure_args(self):
-        return ['--without-f77']
+        config_args = ['--without-f77']
+        config_args.append("--with-cc=%s" % self.spec['mpi'].mpicc)
+        config_args.append("--with-cxx=%s" % self.spec['mpi'].mpicxx)
+
+        return config_args

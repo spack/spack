@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,8 +45,10 @@ class RGdata(RPackage):
     both scalar and vector arguments ('resample')."""
 
     homepage = "https://cran.r-project.org/package=gdata"
-    url      = "https://cran.r-project.org/src/contrib/gdata_2.17.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/gdata_2.18.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gdata"
 
+    version('2.18.0', 'f831019aa743fe11dcf0a051e4280921')
     version('2.17.0', 'c716b663b9dc16ad8cafe6acc781a75f')
 
     depends_on('r-gtools', type=('build', 'run'))

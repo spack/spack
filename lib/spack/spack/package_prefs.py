@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ from llnl.util.lang import classproperty
 import spack
 import spack.error
 from spack.util.path import canonicalize_path
-from spack.version import *
+from spack.version import VersionList
 
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
@@ -112,9 +112,17 @@ class PackagePrefs(object):
 
         # integer is the index of the first spec in order that satisfies
         # spec, or it's a number larger than any position in the order.
-        return next(
+        match_index = next(
             (i for i, s in enumerate(spec_order) if spec.satisfies(s)),
             len(spec_order))
+        if match_index < len(spec_order) and spec_order[match_index] == spec:
+            # If this is called with multiple specs that all satisfy the same
+            # minimum index in spec_order, the one which matches that element
+            # of spec_order exactly is considered slightly better. Note
+            # that because this decreases the value by less than 1, it is not
+            # better than a match which occurs at an earlier index.
+            match_index -= 0.5
+        return match_index
 
     @classproperty
     @classmethod
@@ -194,6 +202,25 @@ class PackagePrefs(object):
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict((name, variant) for name, variant in spec.variants.items()
                     if name in pkg.variants)
+
+
+class PackageTesting(object):
+    def __init__(self):
+        self.packages_to_test = set()
+        self._test_all = False
+
+    def test(self, package_name):
+        self.packages_to_test.add(package_name)
+
+    def test_all(self):
+        self._test_all = True
+
+    def clear(self):
+        self._test_all = False
+        self.packages_to_test.clear()
+
+    def check(self, package_name):
+        return self._test_all or (package_name in self.packages_to_test)
 
 
 def spec_externals(spec):

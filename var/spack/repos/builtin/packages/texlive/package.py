@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,25 +24,29 @@
 ##############################################################################
 from spack import *
 import os
+import platform
 
 
 class Texlive(Package):
     """TeX Live is a free software distribution for the TeX typesetting
-       system"""
+       system.  Heads up, it's is not a reproducible installation."""
 
     homepage = "http://www.tug.org/texlive"
 
-    # Pull from specific site because the texlive mirrors do not all
-    # update in synchrony.
+    # Install from specific site because the texlive mirrors do not
+    # all update in synchrony.
     #
     # BEWARE: TexLive updates their installs frequently (probably why
     # they call it *Live*...).  There is no good way to provide a
-    # repeatable install of the package.  We try to keep up with the
-    # digest values, but don't be surprised if this package is
-    # briefly unbuildable.
+    # repeatable install of the package.
     #
-    version('live', '8925a175d2b69f5328003893b284a008',
-            url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
+    # We're now pulling the installation bits from tug.org's repo of
+    # historic bits.  This means that the checksum for the installer
+    # itself is stable.  Don't let that fool you though, it's still
+    # installing TeX **LIVE** from e.g. ctan.math.... below, which is
+    # not reproducible.
+    version('live', '946701aa28ca1f93e55e8310ce63fbf8',
+            url='ftp://tug.org/historic/systems/texlive/2018/install-tl-unx.tar.gz')
 
     # There does not seem to be a complete list of schemes.
     # Examples include:
@@ -61,6 +65,10 @@ class Texlive(Package):
     )
 
     depends_on('perl', type='build')
+
+    def setup_environment(self, spack_env, run_env):
+        suffix = "%s-%s" % (platform.machine(), platform.system().lower())
+        run_env.prepend_path('PATH', join_path(self.prefix.bin, suffix))
 
     def install(self, spec, prefix):
         # Using texlive's mirror system leads to mysterious problems,

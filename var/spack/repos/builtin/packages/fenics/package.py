@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -55,10 +55,12 @@ class Fenics(CMakePackage):
             description='Enables the shared memory support')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('debug',        default=False,
-            description='Builds a debug version of the libraries')
     variant('doc',          default=False,
             description='Builds the documentation')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Developer'))
 
     # not part of spack list for now
     # variant('petsc4py',     default=True,  description='Uses PETSc4py')
@@ -75,7 +77,7 @@ class Fenics(CMakePackage):
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5+hl', when='+hdf5')
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
     depends_on('scotch+mpi~metis', when='+scotch+mpi')
@@ -144,11 +146,7 @@ class Fenics(CMakePackage):
         return 'ON' if option in self.spec else 'OFF'
 
     def cmake_args(self):
-        spec = self.spec
-
         return [
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format(
-                'Debug' if '+debug' in spec else 'RelWithDebInfo'),
             '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(
                 self.cmake_is_on('+doc')),
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(

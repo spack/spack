@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bear(Package):
+class Bear(CMakePackage):
     """Bear is a tool that generates a compilation database for clang tooling
     from non-cmake build systems."""
     homepage = "https://github.com/rizsotto/Bear"
@@ -34,11 +34,5 @@ class Bear(Package):
     version('2.2.0', '87250cc3a9a697e7d1e8972253a35259')
     version('2.0.4', 'fd8afb5e8e18f8737ba06f90bd77d011')
 
-    depends_on('cmake', type='build')
-    depends_on("python")
-
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-
-        make("all")
-        make("install")
+    depends_on('python')
+    depends_on('cmake@2.8:', type='build')

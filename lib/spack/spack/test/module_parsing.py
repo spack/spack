@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,11 @@
 import pytest
 import subprocess
 import os
-from spack.util.module_cmd import *
+from spack.util.module_cmd import get_path_from_module
+from spack.util.module_cmd import get_argument_from_module_line
+from spack.util.module_cmd import get_module_cmd_from_bash
+from spack.util.module_cmd import get_module_cmd, ModuleError
+
 
 typeset_func = subprocess.Popen('module avail',
                                 stdout=subprocess.PIPE,
@@ -53,7 +57,8 @@ def test_get_path_from_module(save_env):
     lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
              'setenv MOD_DIR /path/to',
              'setenv LDFLAGS -Wl,-rpath/path/to/lib',
-             'setenv LDFLAGS -L/path/to/lib']
+             'setenv LDFLAGS -L/path/to/lib',
+             'prepend-path PATH /path/to/bin']
 
     for line in lines:
         module_func = '() { eval `echo ' + line + ' bash filler`\n}'
@@ -112,7 +117,7 @@ def test_get_module_cmd_from_bash_ticks(save_env):
 
 
 def test_get_module_cmd_from_bash_parens(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
+    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill sh $*)\n}'
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str, error=str)

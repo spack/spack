@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,15 +29,18 @@ class Everytrace(CMakePackage):
     """Get stack trace EVERY time a program exits."""
 
     homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
+    url = "https://github.com/citibeth/everytrace/archive/0.2.2.tar.gz"
 
-    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
+    maintainers = ['citibeth']
+
+    version('0.2.2', 'dd60b8bf68cbf3dc2be305a040f2fe3e')
     version('develop',
             git='https://github.com/citibeth/everytrace.git', branch='develop')
 
     variant('mpi', default=True, description='Enables MPI parallelism')
     variant('fortran', default=True,
             description='Enable use with Fortran programs')
+    variant('cxx', default=True, description='Enable C++ Exception-based features')
 
     depends_on('mpi', when='+mpi')
 
@@ -45,7 +48,8 @@ class Everytrace(CMakePackage):
         spec = self.spec
         return [
             '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
+            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO'),
+            '-DUSE_CXX=%s' % ('YES' if '+cxx' in spec else 'NO')]
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))

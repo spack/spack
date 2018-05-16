@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,8 @@ class Postgresql(AutotoolsPackage):
     homepage = "http://www.postgresql.org/"
     url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
 
+    version('10.3', '506498796a314c549388cafb3d5c717a')
+    version('10.2', 'e97c3cc72bdf661441f29069299b260a')
     version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
     version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
 

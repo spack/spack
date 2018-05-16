@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 from spack import *
 import os
 import shutil
+import glob
 import llnl.util.tty as tty
 
 
@@ -36,9 +37,10 @@ class Bcl2fastq2(Package):
        call (BCL) files from a sequencing run into FASTQ
        files."""
 
-    homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html"
-    url      = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v2-18-0-12-tar.zip"
+    homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-20.html"
 
+    version('2.20.0.422', '4dc99f1af208498b7279b66556329488')
+    version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
     version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
     # 2.17.1.14 is no longer distributed.  If you have a copy of the
     # source tarball, you can drop it into a local mirror w/ the name
@@ -59,11 +61,17 @@ class Bcl2fastq2(Package):
     # libexslt bits.
     patch('cxxConfigure-cmake.patch')
 
-    root_cmakelists_dir = '../src'
+    root_cmakelists_dir = 'src'
 
+    # v2.17.1.14 and v2.18.0.12 were available via HTTP.
+    # v2.19.1.403 is only available via ftp.
+    # who knows what the future will hold.
     def url_for_version(self, version):
-        url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
-        return url.format(version.dashed)
+        url = "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
+        if version.string == '2.19.1.403':
+            return url.format(version.up_to(3).dotted)
+        else:
+            return url.format(version.up_to(3).dashed)
 
     # Illumina tucks the source inside a gzipped tarball inside a zip
     # file.  We let the normal Spack expansion bit unzip the zip file,
@@ -78,16 +86,20 @@ class Bcl2fastq2(Package):
     def unpack_it(self, f):
         def wrap():
             f()                 # call the original expand_archive()
-            if os.path.isdir('bcl2fastq'):
-                tty.msg("The tarball has already been unpacked")
-            else:
-                tty.msg("Unpacking bcl2fastq2 tarball")
-                tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
-                shutil.move(join_path('spack-expanded-archive', tarball), '.')
-                os.rmdir('spack-expanded-archive')
-                tar = which('tar')
-                tar('-xf', tarball)
-                tty.msg("Finished unpacking bcl2fastq2 tarball")
+            with working_dir(self.stage.path):
+                if os.path.isdir('bcl2fastq'):
+                    tty.msg("The tarball has already been unpacked")
+                else:
+                    tty.msg("Unpacking bcl2fastq2 tarball")
+                    tty.msg("cwd sez: {0}".format(os.getcwd()))
+                    tarball = glob.glob(join_path('spack-expanded-archive',
+                                        'bcl2fastq2*.tar.gz'))[0]
+                    shutil.move(tarball, '.')
+                    os.rmdir('spack-expanded-archive')
+                    tar = which('tar')
+                    tarball = os.path.basename(tarball)
+                    tar('-xf', tarball)
+                    tty.msg("Finished unpacking bcl2fastq2 tarball")
         return wrap
 
     def install(self, spec, prefix):

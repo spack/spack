@@ -1,9 +1,0 @@
-diff --git a/cmake-exodus b/cmake-exodus
-index 67ccd34..9b749e3 100755
---- a/cmake-exodus
-+++ b/cmake-exodus
-@@ -1,3 +1,4 @@
-+#!/bin/bash
- EXTRA_ARGS=$@
- 
- ### The following assumes you are building in a subdirectory of ACCESS Root

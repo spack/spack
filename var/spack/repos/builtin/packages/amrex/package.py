@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,8 +33,9 @@ class Amrex(CMakePackage):
     homepage = "https://ccse.lbl.gov/AMReX/index.html"
     url      = "https://github.com/AMReX-Codes/amrex.git"
 
-    version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='master')
     version('17.06', git='https://github.com/AMReX-Codes/amrex.git', commit='836d3c7')
+    version('master', git='https://github.com/AMReX-Codes/amrex.git', tag='master')
+    version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='development')
 
     variant('dims',
         default='3',

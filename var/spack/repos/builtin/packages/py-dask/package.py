@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@ from spack import *
 class PyDask(PythonPackage):
     """Minimal task scheduling abstraction"""
     homepage = "https://github.com/dask/dask/"
-    url      = "https://pypi.python.org/packages/source/d/dask/dask-0.8.1.tar.gz"
+    url      = "https://pypi.io/packages/source/d/dask/dask-0.8.1.tar.gz"
 
     version('0.8.1', '5dd8e3a3823b3bc62c9a6d192e2cb5b4')
 

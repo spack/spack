@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class NodeJs(Package):
     homepage = "https://nodejs.org/"
     url      = "https://nodejs.org/download/release/v6.3.0/node-v6.3.0.tar.gz"
 
+    version('8.9.1', '7482b2523f72000d1b6060c38945026b')
     version('7.1.0', '1db5df2cb025f9c70e83d9cf21c4266a')
     version('6.3.0', '8c14e5c89d66d4d060c91b3ba15dfd31')
     version('6.2.2', '1120e8bf191fdaee42206d031935210d')
@@ -46,11 +47,11 @@ class NodeJs(Package):
     variant('zlib', default=True,  description='Build with Spacks zlib instead of the bundled version')
 
     depends_on('libtool', type='build', when=sys.platform != 'darwin')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python@2.7:2.8', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
-    depends_on('openssl', when='+openssl')
+    depends_on('openssl@1.0.2d:', when='+openssl')
 
     def install(self, spec, prefix):
         options = []

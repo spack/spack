@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ class PyTappy(PythonPackage):
     """Python TAP interface module for unit tests"""
     homepage = "https://github.com/mblayman/tappy"
     # base https://pypi.python.org/pypi/cffi
-    url      = "https://pypi.python.org/packages/source/t/tap.py/tap.py-1.6.tar.gz"
+    url      = "https://pypi.io/packages/source/t/tap.py/tap.py-1.6.tar.gz"
 
     version('1.6', 'c8bdb93ad66e05f939905172a301bedf')
 

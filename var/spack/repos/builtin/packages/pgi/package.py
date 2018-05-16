@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,8 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
+    version('18.4',  'b55461f9f0986acbd51902c51c2074b9')
+    version('17.10', '85ad6506e7ada610ab11ddb35d697efa')
     version('17.4',  'a311d2756ddda657860bad8e5725597b')
     version('17.3',  '6eefc42f85e756cbaba76467ed640902')
     version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')

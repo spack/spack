@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,21 +35,24 @@ class Nalu(CMakePackage):
     homepage = "https://github.com/NaluCFD/Nalu"
     url      = "https://github.com/NaluCFD/Nalu.git"
 
+    maintainers = ['jrood-nrel']
+
+    variant('openfast', default=False,
+            description='Compile with OpenFAST support')
+    variant('tioga', default=False,
+            description='Compile with Tioga support')
+    variant('hypre', default=False,
+            description='Compile with Hypre support')
+
     version('master',
             git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
-    variant('debug', default=False,
-            description='Builds a debug version')
-
-    # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    # Currently Nalu only builds with certain libraries statically
+    depends_on('yaml-cpp+pic~shared@develop')
+    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards@master,12.12.1:')
+    depends_on('openfast+cxx', when='+openfast')
+    depends_on('tioga', when='+tioga')
+    depends_on('hypre+mpi+int64~shared', when='+hypre')
 
     def cmake_args(self):
         spec = self.spec
@@ -57,8 +60,25 @@ class Nalu(CMakePackage):
 
         options.extend([
             '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
+            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix
         ])
+
+        if '+openfast' in spec:
+            options.extend([
+                '-DENABLE_OPENFAST:BOOL=ON',
+                '-DOpenFAST_DIR:PATH=%s' % spec['openfast'].prefix
+            ])
+
+        if '+tioga' in spec:
+            options.extend([
+                '-DENABLE_TIOGA:BOOL=ON',
+                '-DTIOGA_DIR:PATH=%s' % spec['tioga'].prefix
+            ])
+
+        if '+hypre' in spec:
+            options.extend([
+                '-DENABLE_HYPRE:BOOL=ON',
+                '-DHYPRE_DIR:PATH=%s' % spec['hypre'].prefix
+            ])
 
         return options

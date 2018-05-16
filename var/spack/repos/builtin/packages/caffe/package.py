@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,7 +39,7 @@ class Caffe(CMakePackage):
     version('rc3', '84e39223115753b48312a8bf48c31f59')
     version('rc2', 'c331932e34b5e2f5022fcc34c419080f')
 
-    variant('gpu', default=False,
+    variant('cuda', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
     variant('opencv', default=True,
             description='Build with OpenCV support')
@@ -54,7 +54,7 @@ class Caffe(CMakePackage):
 
     depends_on('boost')
     depends_on('boost +python', when='+python')
-    depends_on('cuda', when='+gpu')
+    depends_on('cuda', when='+cuda')
     depends_on('blas')
     depends_on('protobuf')
     depends_on('glog')
@@ -62,7 +62,7 @@ class Caffe(CMakePackage):
     depends_on('hdf5')
 
     # Optional dependencies
-    depends_on('opencv@3.2.0', when='+opencv')
+    depends_on('opencv@3.2.0+core+highgui+imgproc', when='+opencv')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('python@2.7:', when='+python')
@@ -75,13 +75,29 @@ class Caffe(CMakePackage):
         spec = self.spec
         args = ['-DBLAS={0}'.format('open' if spec['blas'].name == 'openblas'
                 else spec['blas'].name),
-                '-DCPU_ONLY=%s' % ('~gpu' in spec),
-                '-DUSE_CUDNN=%s' % ('+gpu' in spec),
+                '-DCPU_ONLY=%s' % ('~cuda' in spec),
+                '-DUSE_CUDNN=%s' % ('+cuda' in spec),
                 '-DBUILD_python=%s' % ('+python' in spec),
                 '-DBUILD_python_layer=%s' % ('+python' in spec),
                 '-DBUILD_matlab=%s' % ('+matlab' in spec),
                 '-DUSE_OPENCV=%s' % ('+opencv' in spec),
                 '-DUSE_LEVELDB=%s' % ('+leveldb' in spec),
-                '-DUSE_LMDB=%s' % ('+lmdb' in spec)]
+                '-DUSE_LMDB=%s' % ('+lmdb' in spec),
+                '-DGFLAGS_ROOT_DIR=%s' % spec['gflags'].prefix,
+                '-DGLOG_ROOT_DIR=%s' % spec['glog'].prefix,
+                ]
+
+        if spec.satisfies('^openblas'):
+            env['OpenBLAS_HOME'] = spec['openblas'].prefix
+
+        if spec.satisfies('+lmdb'):
+            env['LMDB_DIR'] = spec['lmdb'].prefix
+
+        if spec.satisfies('+leveldb'):
+            env['LEVELDB_ROOT'] = spec['leveldb'].prefix
+
+        if spec.satisfies('+python'):
+            version = spec['python'].version.up_to(1)
+            args.append('-Dpython_version=%s' % version)
 
         return args

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -61,19 +61,21 @@ Note that ``graph_ascii`` assumes a single spec while ``graph_dot``
 can take a number of specs as input.
 
 """
+import sys
 
-from heapq import *
+from heapq import heapify, heappop, heappush
 from six import iteritems
 
-from llnl.util.lang import *
-from llnl.util.tty.color import *
+from llnl.util.tty.color import ColorStream
 
-from spack.spec import *
+from spack.spec import Spec
+from spack.dependency import all_deptypes, canonical_deptype
+
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
-def topological_sort(spec, reverse=False, deptype=None):
+def topological_sort(spec, reverse=False, deptype='all'):
     """Topological sort for specs.
 
     Return a list of dependency specs sorted topologically.  The spec
@@ -142,7 +144,7 @@ class AsciiGraph(object):
         self.node_character = 'o'
         self.debug = False
         self.indent = 0
-        self.deptype = alldeps
+        self.deptype = all_deptypes
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -494,7 +496,7 @@ class AsciiGraph(object):
 
 
 def graph_ascii(spec, node='o', out=None, debug=False,
-                indent=0, color=None, deptype=None):
+                indent=0, color=None, deptype='all'):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
@@ -505,7 +507,7 @@ def graph_ascii(spec, node='o', out=None, debug=False,
     graph.write(spec, color=color, out=out)
 
 
-def graph_dot(specs, deptype=None, static=False, out=None):
+def graph_dot(specs, deptype='all', static=False, out=None):
     """Generate a graph in dot format of all provided specs.
 
     Print out a dot formatted graph of all the dependencies between
@@ -516,9 +518,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
     """
     if out is None:
         out = sys.stdout
-
-    if deptype is None:
-        deptype = alldeps
+    deptype = canonical_deptype(deptype)
 
     out.write('digraph G {\n')
     out.write('  labelloc = "b"\n')
@@ -543,7 +543,9 @@ def graph_dot(specs, deptype=None, static=False, out=None):
 
     # Static graph includes anything a package COULD depend on.
     if static:
-        names = set.union(*[s.package.possible_dependencies() for s in specs])
+        names = set.union(*[
+            s.package.possible_dependencies(expand_virtuals=False)
+            for s in specs])
         specs = [Spec(name) for name in names]
 
     labeled = set()

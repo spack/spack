@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,6 +41,7 @@ class RRgl(RPackage):
     depends_on('r@3.2:3.9')
     depends_on('zlib', type=('link'))
     depends_on('libpng', type=('link'))
+    depends_on('libx11')
     depends_on('freetype', type=('link'))
     depends_on('mesa', type=('link'))
     depends_on('mesa-glu', type=('link'))
@@ -50,3 +51,11 @@ class RRgl(RPackage):
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
+
+    def configure_args(self):
+        args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,
+                '--x-libraries=%s' % self.spec['libx11'].prefix.lib,
+                '--with-gl-includes=%s' % self.spec['mesa'].prefix.include,
+                '--with-gl-libraries=%s' % self.spec['mesa'].prefix.lib,
+                '--with-gl-prefix=%s' % self.spec['mesa'].prefix]
+        return args

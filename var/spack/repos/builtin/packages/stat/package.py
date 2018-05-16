@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,8 @@ class Stat(AutotoolsPackage):
     homepage = "http://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/lee218llnl/stat/archive/v2.0.0.tar.gz"
 
+    version('4.0.0', 'b357160662ced251bc55cb1b884c3407',
+            url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz')
     version('3.0.1', 'dac6f23c3639a0b21f923dc6219ba385',
             url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip')
     version('3.0.0', 'a97cb235c266371c4a26329112de48a2',

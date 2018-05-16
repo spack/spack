@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,8 @@ class Ack(Package):
     homepage = "http://beyondgrep.com/"
     url      = "http://beyondgrep.com/ack-2.14-single-file"
 
+    version('2.22', 'eea9d4daef7c262751f15ca9b3b70317', expand=False)
+    version('2.18', 'e8ebfd7a7ec8476bffd4686bf7b14fd7', expand=False)
     version('2.16', '7085b5a5c76fda43ff049410870c8535', expand=False)
     version('2.14', 'e74150a1609d28a70b450ef9cc2ed56b', expand=False)
 

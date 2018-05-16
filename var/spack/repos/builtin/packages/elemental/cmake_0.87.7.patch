@@ -1,0 +1,22 @@
+diff --git a/cmake/configure_files/ElementalConfig.cmake.in b/cmake/configure_files/ElementalConfig.cmake.in
+index d37649f..8511d81 100644
+--- a/cmake/configure_files/ElementalConfig.cmake.in
++++ b/cmake/configure_files/ElementalConfig.cmake.in
+@@ -1,6 +1,8 @@
+ set(Elemental_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
+ set(Elemental_INCLUDE_DIRS "${Elemental_INCLUDE_DIRS};@MPI_CXX_INCLUDE_PATH@")
+-set(Elemental_INCLUDE_DIRS "${Elemental_INCLUDE_DIRS};@QD_INCLUDES@")
++IF(@QD_FOUND@)
++  set(Elemental_INCLUDE_DIRS "${Elemental_INCLUDE_DIRS};@QD_INCLUDES@")
++ENDIF()
+ set(Elemental_INCLUDE_DIRS "${Elemental_INCLUDE_DIRS};@MPC_INCLUDES@")
+ set(Elemental_INCLUDE_DIRS "${Elemental_INCLUDE_DIRS};@MPFR_INCLUDES@")
+ set(Elemental_INCLUDE_DIRS "${Elemental_INCLUDE_DIRS};@GMP_INCLUDES@")
+@@ -13,6 +15,6 @@ set(Elemental_LINK_FLAGS "@EL_LINK_FLAGS@")
+ set(Elemental_DEFINITIONS "@Qt5Widgets_DEFINITIONS@")
+
+ # Our library dependencies (contains definitions for IMPORTED targets)
+-include("@CMAKE_INSTALL_PREFIX@/CMake/ElementalTargets.cmake")
++include("${CMAKE_CURRENT_LIST_DIR}/ElementalTargets.cmake")
+
+ set(Elemental_LIBRARIES El)

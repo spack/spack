@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,9 @@ class Gnupg(AutotoolsPackage):
        standard as defined by RFC4880 """
 
     homepage = "https://gnupg.org/index.html"
-    url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.1.21.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.3.tar.bz2"
 
+    version('2.2.3', '6911c0127e4231ce52d60f26029dba68')
     version('2.1.21', '685ebf4c3a7134ba0209c96b18b2f064')
 
     depends_on('libgcrypt')

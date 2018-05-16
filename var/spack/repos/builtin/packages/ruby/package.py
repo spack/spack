@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,32 +25,53 @@
 from spack import *
 
 
-class Ruby(Package):
+class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
     url      = "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
 
+    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+
+    variant('openssl', default=True, description="Enable OpenSSL support")
+    variant('readline', default=False, description="Enable Readline support")
+
     extendable = True
 
-    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+    depends_on('pkgconfig', type=('build'))
     depends_on('libffi')
     depends_on('zlib')
-    variant('openssl', default=False, description="Enable OpenSSL support")
+    depends_on('libx11')
+    depends_on('tcl')
+    depends_on('tk')
     depends_on('openssl', when='+openssl')
-    variant('readline', default=False, description="Enable Readline support")
     depends_on('readline', when='+readline')
 
-    def install(self, spec, prefix):
-        options = ["--prefix=%s" % prefix]
-        if '+openssl' in spec:
-            options.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
-        if '+readline' in spec:
-            options.append("--with-readline-dir=%s" % spec['readline'].prefix)
-        configure(*options)
-        make()
-        make("install")
+    # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
+    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
+    patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
+    patch('ruby_24_gcc7.patch', level=1, when='@2.4.0 %gcc@7:')
+
+    resource(
+        name='rubygems-updated-ssl-cert',
+        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/index.rubygems.org/GlobalSignRootCA.pem',
+        sha256='df68841998b7fd098a9517fe971e97890be0fc93bbe1b2a1ef63ebdea3111c80',
+        when='+openssl',
+        destination='',
+        placement='rubygems-updated-ssl-cert',
+        expand=False
+    )
+
+    def configure_args(self):
+        args = []
+        if '+openssl' in self.spec:
+            args.append("--with-openssl-dir=%s" % self.spec['openssl'].prefix)
+        if '+readline' in self.spec:
+            args.append("--with-readline-dir=%s"
+                        % self.spec['readline'].prefix)
+        args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        return args
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # TODO: do this only for actual extensions.
@@ -76,3 +97,21 @@ class Ruby(Package):
         # Ruby extension builds have global ruby and gem functions
         module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+
+    @run_after('install')
+    def post_install(self):
+        """ RubyGems updated their SSL certificates at some point, so
+        new certificates must be installed after Ruby is installed
+        in order to download gems; see
+        http://guides.rubygems.org/ssl-certificate-update/
+        for details.
+        """
+        rubygems_updated_cert_path = join_path(self.stage.source_path,
+                                               'rubygems-updated-ssl-cert',
+                                               'GlobalSignRootCA.pem')
+        rubygems_certs_path = join_path(self.spec.prefix.lib,
+                                        'ruby',
+                                        '{0}'.format(self.spec.version.dotted),
+                                        'rubygems',
+                                        'ssl_certs')
+        install(rubygems_updated_cert_path, rubygems_certs_path)

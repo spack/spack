@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class PyReadmeRenderer(PythonPackage):
     for Warehouse."""
 
     homepage = "https://github.com/pypa/readme_renderer"
-    url      = "https://pypi.python.org/packages/f2/6e/ef1bc3a24eb14e14574aba9dc1bd50bc9a5e7cc880e8ff9cadd385b4fb37/readme_renderer-16.0.tar.gz"
+    url      = "https://pypi.io/packages/source/r/readme_renderer/readme_renderer-16.0.tar.gz"
 
     version('16.0', '70321cea986956bcf2deef9981569f39')
 

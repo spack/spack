@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,8 @@ class EnvironmentModules(Package):
     url = "http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz"
 
     version('3.2.10', '8b097fdcb90c514d7540bb55a3cb90fb')
+
+    variant('X', default=True, description='Build with X functionality')
 
     # Dependencies:
     depends_on('tcl', type=('build', 'link', 'run'))
@@ -74,6 +76,9 @@ class EnvironmentModules(Package):
             '--datarootdir=' + prefix.share,
             'CPPFLAGS=' + ' '.join(cpp_flags)
         ]
+
+        if '~X' in spec:
+            config_args = ['--without-x'] + config_args
 
         configure(*config_args)
         make()

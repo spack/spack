@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,7 +39,7 @@ class XorgServer(AutotoolsPackage):
     depends_on('libxshmfence@1.1:')
     depends_on('libdrm@2.3.0:')
     depends_on('libx11')
-    # depends_on('gl@9.2.0:')
+    depends_on('mesa+hwrender', type='build')
 
     depends_on('dri2proto@2.8:', type='build')
     depends_on('dri3proto@1.0:', type='build')
@@ -47,56 +47,33 @@ class XorgServer(AutotoolsPackage):
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
-
-    # TODO: add missing dependencies
-    # $LIBSELINUX $REQUIRED_MODULES $REQUIRED_LIBS
-    # $LIBPCIACCESS $DGAPROTO $XORG_MODULES epoxy xdmcp xau xfixes x11-xcb
-    # xcb-aux xcb-image xcb-ewmh xcb-icccm $WINDOWSWMPROTO windowsdriproto
-    # khronos-opengl-registry
-    # $APPLEWMPROTO $LIBAPPLEWM xfixes $LIBDMX $LIBXEXT $LIBDMX xmu $LIBXEXT
-    # $LIBDMX $LIBXI $LIBXEXT $LIBXTST $LIBXEXT xres $LIBXEXT $LIBXEXT
-    # $XEPHYR_REQUIRED_LIBS
-
-    # VIDEOPROTO="videoproto"
-    # COMPOSITEPROTO="compositeproto >= 0.4"
-    # RECORDPROTO="recordproto >= 1.13.99.1"
-    # SCRNSAVERPROTO="scrnsaverproto >= 1.1"
-    # RESOURCEPROTO="resourceproto >= 1.2.0"
-    # DRIPROTO="xf86driproto >= 2.1.0"
-    # XINERAMAPROTO="xineramaproto"
-    # BIGFONTPROTO="xf86bigfontproto >= 1.2.0"
-    # DGAPROTO="xf86dgaproto >= 2.0.99.1"
-    # DMXPROTO="dmxproto >= 2.2.99.1"
-    # VIDMODEPROTO="xf86vidmodeproto >= 2.2.99.1"
-    # WINDOWSWMPROTO="windowswmproto"
-    # APPLEWMPROTO="applewmproto >= 1.4"
-
-    # XPROTO="xproto >= 7.0.28"
-    # RANDRPROTO="randrproto >= 1.5.0"
-    # RENDERPROTO="renderproto >= 0.11"
-    # XEXTPROTO="xextproto >= 7.2.99.901"
-    # INPUTPROTO="inputproto >= 2.3"
-    # KBPROTO="kbproto >= 1.0.3"
-    # FONTSPROTO="fontsproto >= 2.1.3"
-    # FIXESPROTO="fixesproto >= 5.0"
-    # DAMAGEPROTO="damageproto >= 1.1"
-    # XCMISCPROTO="xcmiscproto >= 1.2.0"
-    # BIGREQSPROTO="bigreqsproto >= 1.1.0"
-    # XTRANS="xtrans >= 1.3.5"
-    # PRESENTPROTO="presentproto >= 1.0"
-
-    # LIBAPPLEWM="applewm >= 1.4"
-    # LIBDMX="dmx >= 1.0.99.1"
-    # LIBDRI="dri >= 7.8.0"
-    # LIBEGL="egl"
-    # LIBGBM="gbm >= 10.2.0"
-    # LIBXEXT="xext >= 1.0.99.4"
-    # LIBXFONT="xfont2 >= 2.0.0"
-    # LIBXI="xi >= 1.2.99.1"
-    # LIBXTST="xtst >= 1.0.99.2"
-    # LIBPCIACCESS="pciaccess >= 0.12.901"
-    # LIBUDEV="libudev >= 143"
-    # LIBSELINUX="libselinux >= 2.0.86"
-    # LIBDBUS="dbus-1 >= 1.0"
+    depends_on('fixesproto@5.0:')
+    depends_on('damageproto@1.1:')
+    depends_on('xcmiscproto@1.2.0:')
+    depends_on('xtrans@1.3.5:')
+    depends_on('bigreqsproto@1.1.0:')
+    depends_on('xproto@7.0.28:')
+    depends_on('randrproto@1.5.0:')
+    depends_on('renderproto@0.11:')
+    depends_on('xextproto@7.2.99.901:')
+    depends_on('inputproto@2.3:')
+    depends_on('kbproto@1.0.3:')
+    depends_on('fontsproto@2.1.3:')
+    depends_on('pixman@0.27.2:')
+    depends_on('videoproto')
+    depends_on('compositeproto@0.4:')
+    depends_on('recordproto@1.13.99.1:')
+    depends_on('scrnsaverproto@1.1:')
+    depends_on('resourceproto@1.2.0:')
+    depends_on('xf86driproto@2.1.0:')
+    depends_on('glproto@1.4.17:')
+    depends_on('presentproto@1.0:')
+    depends_on('xineramaproto')
+    depends_on('libxkbfile')
+    depends_on('libxfont2')
+    depends_on('libxext')
+    depends_on('libxdamage')
+    depends_on('libxfixes')
+    depends_on('libepoxy')

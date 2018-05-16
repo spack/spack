@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -43,8 +42,10 @@ class RRinside(RPackage):
     available at the 'RInside' website as well."""
 
     homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
-    url      = "https://cran.r-project.org/src/contrib/RInside_0.2.13.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/RInside_0.2.14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RInside"
 
+    version('0.2.14', 'fc72761e22b1f597433eb53d6eb122ff')
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

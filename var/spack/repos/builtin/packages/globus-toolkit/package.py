@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,9 @@ class GlobusToolkit(AutotoolsPackage):
        grids"""
 
     homepage = "http://toolkit.globus.org"
-    url      = "http://toolkit.globus.org/ftppub/gt6/installers/src/globus_toolkit-6.0.1470089956.tar.gz"
+    url      = "http://toolkit.globus.org/ftppub/gt6/installers/src/globus_toolkit-6.0.1506371041.tar.gz"
 
-    version('6.0.1470089956', 'b77fe3cc5a5844df995688b0e630d077')
+    version('6.0.1506371041', 'e17146f68e03b3482aaea3874d4087a5')
+    version('6.0.1493989444', '9e9298b61d045e65732e12c9727ceaa8')
+
+    depends_on('openssl')

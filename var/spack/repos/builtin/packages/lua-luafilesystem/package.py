@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,12 @@ class LuaLuafilesystem(Package):
 
     version('1_6_3', 'bed11874cfded8b4beed7dd054127b24')
 
-    depends_on('git@2.9.3:', type='build')
+    # The version constraint here comes from this post:
+    #
+    # https://www.perforce.com/blog/git-beyond-basics-using-shallow-clones
+    #
+    # where it is claimed that full shallow clone support was added @1.9
+    depends_on('git@1.9.0:', type='build')
     extends('lua')
 
     def install(self, spec, prefix):

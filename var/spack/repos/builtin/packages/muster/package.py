@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Muster(Package):
+class Muster(CMakePackage):
     """The Muster library provides implementations of sequential and
        parallel K-Medoids clustering algorithms. It is intended as a
        general framework for parallel cluster analysis, particularly
@@ -38,11 +38,6 @@ class Muster(Package):
     version('1.0.1', 'd709787db7e080447afb6571ac17723c')
     version('1.0',   '2eec6979a4a36d3a65a792d12969be16')
 
-    depends_on("boost")
-    depends_on("mpi")
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        cmake(".", *std_cmake_args)
-        make()
-        make("install")
+    depends_on('boost')
+    depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')

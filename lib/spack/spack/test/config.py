@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@ import getpass
 import os
 import tempfile
 
-import ordereddict_backport
+import spack.util.ordereddict
 import pytest
 import spack
 import spack.config
@@ -167,6 +167,50 @@ config_override_list = {
         'build_stage:': ['patha', 'pathb']}}
 
 
+packages_merge_low = {
+    'packages': {
+        'foo': {
+            'variants': ['+v1']
+        },
+        'bar': {
+            'variants': ['+v2']
+        }
+    }
+}
+
+packages_merge_high = {
+    'packages': {
+        'foo': {
+            'version': ['a']
+        },
+        'bar': {
+            'version': ['b'],
+            'variants': ['+v3']
+        },
+        'baz': {
+            'version': ['c']
+        }
+    }
+}
+
+
+@pytest.mark.regression('7924')
+def test_merge_with_defaults(config, write_config_file):
+    """This ensures that specified preferences merge with defaults as
+       expected. Originally all defaults were initialized with the
+       exact same object, which led to aliasing problems. Therefore
+       the test configs used here leave 'version' blank for multiple
+       packages in 'packages_merge_low'.
+    """
+    write_config_file('packages', packages_merge_low, 'low')
+    write_config_file('packages', packages_merge_high, 'high')
+    cfg = spack.config.get_config('packages')
+
+    assert cfg['foo']['version'] == ['a']
+    assert cfg['bar']['version'] == ['b']
+    assert cfg['baz']['version'] == ['c']
+
+
 def check_compiler_config(comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
     config = spack.config.get_config('compilers')
@@ -198,7 +242,7 @@ def config(tmpdir):
     """Mocks the configuration scope."""
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
-    spack.config.config_scopes = ordereddict_backport.OrderedDict()
+    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
     for priority in ['low', 'high']:
         spack.config.ConfigScope(priority, str(tmpdir.join(priority)))
     Config = collections.namedtuple('Config', ['real', 'mock'])
@@ -369,3 +413,31 @@ class TestConfig(object):
             'install_tree': 'install_tree_path',
             'build_stage': ['patha', 'pathb']
         }
+
+
+def test_keys_are_ordered():
+
+    expected_order = (
+        'bin',
+        'man',
+        'share/man',
+        'share/aclocal',
+        'lib',
+        'lib64',
+        'include',
+        'lib/pkgconfig',
+        'lib64/pkgconfig',
+        ''
+    )
+
+    config_scope = spack.config.ConfigScope(
+        'modules',
+        os.path.join(spack.test_path, 'data', 'config')
+    )
+
+    data = config_scope.get_section('modules')
+
+    prefix_inspections = data['modules']['prefix_inspections']
+
+    for actual, expected in zip(prefix_inspections, expected_order):
+        assert actual == expected

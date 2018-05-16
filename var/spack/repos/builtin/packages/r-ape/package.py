@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,12 @@ class RApe(RPackage):
 
     homepage = "http://ape-package.ird.fr/"
     url      = "https://cran.r-project.org/src/contrib/ape_4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ape"
 
+    version('5.0', '82fd2786a502f070ca020797f7b19fa4')
     version('4.1', 'a9ed416d6d172d4b9682556cf692d7c2')
 
     depends_on('r@3.2:')
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,11 +32,12 @@ class Hadoop(Package):
     """
 
     homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.6.4/hadoop-2.6.4.tar.gz"
+    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
 
-    version('2.6.4', '37019f13d7dcd819727be158440b9442')
+    version('3.1.0', 'f036ebd3fa0ef66ee1819e351d15b6cb')
+    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     def install(self, spec, prefix):
 

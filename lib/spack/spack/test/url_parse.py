@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,9 +27,13 @@ based on its URL.
 """
 
 import os
-
 import pytest
-from spack.url import *
+
+from spack.url import parse_name_offset, parse_version_offset
+from spack.url import parse_name_and_version, substitute_version
+from spack.url import strip_name_suffixes, strip_version_suffixes
+from spack.url import UndetectableVersionError
+from spack.version import Version
 
 
 @pytest.mark.parametrize('url,expected', [
@@ -57,6 +61,8 @@ from spack.url import *
     ('gromacs-4.6.1-tar', 'gromacs-4.6.1'),
     # Download type - sh
     ('Miniconda2-4.3.11-Linux-x86_64.sh', 'Miniconda2-4.3.11'),
+    # Download version - release
+    ('v1.0.4-release', 'v1.0.4'),
     # Download version - stable
     ('libevent-2.0.21-stable', 'libevent-2.0.21'),
     # Download version - final
@@ -105,7 +111,9 @@ from spack.url import *
     # Combinations of multiple patterns - public
     ('dakota-6.3-public.src', 'dakota-6.3'),
     # Combinations of multiple patterns - universal
-    ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2')
+    ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2'),
+    # Combinations of multiple patterns - dynamic
+    ('snptest_v2.5.2_linux_x86_64_dynamic', 'snptest_v2.5.2'),
 ])
 def test_url_strip_version_suffixes(url, expected):
     stripped = strip_version_suffixes(url)
@@ -120,6 +128,8 @@ def test_url_strip_version_suffixes(url, expected):
     ('converge_install_2.3.16', '2.3.16', 'converge'),
     # Download type - src
     ('jpegsrc.v9b', '9b', 'jpeg'),
+    # Download type - archive
+    ('coinhsl-archive-2014.01.17', '2014.01.17', 'coinhsl'),
     # Download type - std
     ('ghostscript-fonts-std-8.11', '8.11', 'ghostscript-fonts'),
     # Download version - release
@@ -157,6 +167,7 @@ def test_url_strip_name_suffixes(url, version, expected):
     ('libxc', 58, '2.2.2', 64, 'http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz'),
     # Version in suffix
     ('swiftsim', 36, '0.3.0', 76, 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    ('swiftsim', 55, '0.3.0', 95, 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     ('sionlib', 30, '1.7.1', 59, 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
     # Regex in name
     ('voro++', 40, '0.4.6', 47, 'http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz'),
@@ -197,14 +208,21 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     ('git', '2.7.1', 'https://github.com/git/git/tarball/v2.7.1'),
     # name/zipball/vver.ver
     ('git', '2.7.1', 'https://github.com/git/git/zipball/v2.7.1'),
+
     # Common Repositories - gitlab downloads
 
     # name/repository/archive.ext?ref=vver.ver
     ('swiftsim', '0.3.0',
      'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    # /api/v4/projects/NAMESPACE%2Fname/repository/archive.ext?sha=vver.ver
+    ('swiftsim', '0.3.0',
+     'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     # name/repository/archive.ext?ref=name-ver.ver
     ('icet', '1.2.3',
      'https://gitlab.kitware.com/icet/icet/repository/archive.tar.gz?ref=IceT-1.2.3'),
+    # /api/v4/projects/NAMESPACE%2Fname/repository/archive.ext?sha=name-ver.ver
+    ('icet', '1.2.3',
+     'https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-1.2.3'),
 
     # Common Repositories - bitbucket downloads
 
@@ -360,6 +378,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     ('nextflow', '0.20.1', 'https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow'),
     # suffix queries
     ('swiftsim', '0.3.0', 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
+    ('swiftsim', '0.3.0', 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     ('sionlib', '1.7.1', 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
     # stem queries
     ('slepc', '3.6.2', 'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz'),

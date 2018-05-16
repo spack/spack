@@ -1,0 +1,26 @@
+From 3706bf758012daebadef83d6575c477aeff9c89b Mon Sep 17 00:00:00 2001
+From: Walter Spector <wws@sgi.com>
+Date: Fri, 29 Apr 2016 12:57:16 -0700
+Subject: [PATCH] Fix a file open test in the Moab I/O code that gcc 6.1
+ noticed.
+
+---
+ src/Infrastructure/Mesh/src/Moab/io/ReadABAQUS.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Infrastructure/Mesh/src/Moab/io/ReadABAQUS.cpp b/src/Infrastructure/Mesh/src/Moab/io/ReadABAQUS.cpp
+index 1c44057..89e5f23 100644
+--- a/src/Infrastructure/Mesh/src/Moab/io/ReadABAQUS.cpp
++++ b/src/Infrastructure/Mesh/src/Moab/io/ReadABAQUS.cpp
+@@ -105,7 +105,7 @@ void ReadABAQUS::reset()
+ ReadABAQUS::~ReadABAQUS() 
+ {
+   mdbImpl->release_interface(readMeshIface);
+-  if (NULL != abFile)
++  if (abFile.is_open())
+     abFile.close();
+ }
+ 
+-- 
+2.7.4
+

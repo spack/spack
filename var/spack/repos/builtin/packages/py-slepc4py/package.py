@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ class PySlepc4py(PythonPackage):
     """This package provides Python bindings for the SLEPc package.
     """
     homepage = "https://pypi.python.org/pypi/slepc4py"
-    url      = "https://pypi.python.org/packages/b4/dd/116fbdf865f6f9eda779c5d31bc5b68f37ef3dd5dbfc3feb4aaba1565560/slepc4py-3.7.0.tar.gz"
+    url      = "https://pypi.io/packages/source/s/slepc4py/slepc4py-3.7.0.tar.gz"
 
     version('3.7.0', 'c4775e88b0825c7313629c01de60ecb2')
 

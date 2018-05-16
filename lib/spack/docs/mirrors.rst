@@ -69,7 +69,7 @@ packages from the internet and checksumming them.
 The other three commands are for managing mirror configuration.  They
 control the URL(s) from which Spack downloads its packages.
 
-.. _spack-mirror-create:
+.. _cmd-spack-mirror-create:
 
 -----------------------
 ``spack mirror create``
@@ -154,7 +154,7 @@ can supply a file with specs in it, one per line:
 This is useful if there is a specific suite of software managed by
 your site.
 
-.. _spack-mirror-add:
+.. _cmd-spack-mirror-add:
 
 --------------------
 ``spack mirror add``
@@ -162,11 +162,11 @@ your site.
 
 Once you have a mirror, you need to let spack know about it.  This is
 relatively simple.  First, figure out the URL for the mirror.  If it's
-a file, you can use a file URL like this one:
+a directory, you can use a file URL like this one:
 
 .. code-block:: none
 
-   file://~/spack-mirror-2014-06-24
+   file://$HOME/spack-mirror-2014-06-24
 
 That points to the directory on the local filesystem.  If it were on a
 web server, you could use a URL like this one:
@@ -178,11 +178,11 @@ You can tell your Spack installation to use that mirror like this:
 
 .. code-block:: console
 
-   $ spack mirror add local_filesystem file://~/spack-mirror-2014-06-24
+   $ spack mirror add local_filesystem file://$HOME/spack-mirror-2014-06-24
 
 Each mirror has a name so that you can refer to it again later.
 
-.. _spack-mirror-list:
+.. _cmd-spack-mirror-list:
 
 ---------------------
 ``spack mirror list``
@@ -193,9 +193,9 @@ To see all the mirrors Spack knows about, run ``spack mirror list``:
 .. code-block:: console
 
    $ spack mirror list
-   local_filesystem    file://~/spack-mirror-2014-06-24
+   local_filesystem    file:///home/username/spack-mirror-2014-06-24
 
-.. _spack-mirror-remove:
+.. _cmd-spack-mirror-remove:
 
 -----------------------
 ``spack mirror remove``
@@ -218,7 +218,7 @@ Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``:
 .. code-block:: yaml
 
    mirrors:
-     local_filesystem: file://~/spack-mirror-2014-06-24
+     local_filesystem: file:///home/username/spack-mirror-2014-06-24
      remote_server: https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
 
 If you want to change the order in which mirrors are searched for
@@ -237,7 +237,7 @@ as other Spack mirrors (so it can be copied anywhere and referenced with a URL
 like other mirrors). The mirror is maintained locally (within the Spack
 installation directory) at :file:`var/spack/cache/`. It is always enabled (and
 is always searched first when attempting to retrieve files for an installation)
-but can be cleared with :ref:`purge <cmd-spack-purge>`; the cache directory can also
+but can be cleared with :ref:`clean <cmd-spack-clean>`; the cache directory can also
 be deleted manually without issue.
 
 Caching includes retrieved tarball archives and source control repositories, but

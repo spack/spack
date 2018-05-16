@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,8 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
+    version('1.7.4', '95f3b83f521314600e5b09e99cf32c46')
+    version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')
     version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
     version('1.5.5', 'f9581b3556df9722143c47290273bcf8')
     version('1.4.5', '5c2cd2dac45dfa6123d067e32a89e89a')
@@ -49,6 +51,9 @@ class PySphinx(PythonPackage):
 
     # Sphinx requires at least Python 2.7 or 3.4 to run
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+
+    # See here for upstream list of dependencies:
+    # https://github.com/sphinx-doc/sphinx/blob/master/setup.py
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-sphinx requires py-setuptools during runtime as well.
@@ -63,9 +68,21 @@ class PySphinx(PythonPackage):
     depends_on('py-alabaster@0.7.0:0.7.999',  type=('build', 'run'))
     depends_on('py-imagesize', when='@1.4:',  type=('build', 'run'))
     depends_on('py-requests@2.0.0:',          type=('build', 'run'))
-    depends_on('py-typing',                   type=('build', 'run'))
-    depends_on('py-sphinxcontrib-websupport', type=('build', 'run'))
     depends_on('py-sphinx-rtd-theme@0.1:',    type=('build', 'run'))  # optional as of 1.4
+    # See: https://github.com/sphinx-doc/sphinx/commit/854a227501a7582510eba41a208d25816f754e0c
+    depends_on('py-packaging', type=('build', 'run'), when='@1.7.4:')
+
+    # Sphinx v1.6+ no longer includes websupport by default:
+    # http://www.sphinx-doc.org/en/stable/changes.html
+    depends_on('py-sphinxcontrib-websupport', when='@1.6:',
+               type=('build', 'run'))
+    # TODO: incorporate the proper dependencies when concretizer is capable
+    # Build dep for 1.6.1 all python (bug), see:
+    # https://github.com/sphinx-doc/sphinx/pull/3789
+    # depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
+    # depends_on('py-typing', when='@1.6.2:^python@2.7:3.4',
+    #            type=('build', 'run'))
+    depends_on('py-typing', when='@1.6:', type=('build', 'run'))
 
     # TODO: Add a 'test' deptype
     # depends_on('py-pytest',     type='test')

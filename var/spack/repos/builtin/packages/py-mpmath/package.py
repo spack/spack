@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,6 @@ from spack import *
 class PyMpmath(PythonPackage):
     """A Python library for arbitrary-precision floating-point arithmetic."""
     homepage = "http://mpmath.org"
-    url      = "https://pypi.python.org/packages/source/m/mpmath/mpmath-all-0.19.tar.gz"
+    url      = "https://pypi.io/packages/source/m/mpmath/mpmath-all-0.19.tar.gz"
 
     version('0.19', 'd1b7e19dd6830d0d7b5e1bc93d46c02c')

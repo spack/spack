@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,3 +34,6 @@ class Unixodbc(AutotoolsPackage):
     url      = "http://www.unixodbc.org/unixODBC-2.3.4.tar.gz"
 
     version('2.3.4', 'bd25d261ca1808c947cb687e2034be81')
+
+    depends_on('libiconv')
+    depends_on('libtool')

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,9 @@ from spack import *
 class PyDateutil(PythonPackage):
     """Extensions to the standard Python datetime module."""
     homepage = "https://pypi.python.org/pypi/dateutil"
-    url      = "https://pypi.python.org/packages/source/p/python-dateutil/python-dateutil-2.4.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-dateutil/python-dateutil-2.4.0.tar.gz"
 
+    version('2.2',   'c1f654d0ff7e33999380a8ba9783fd5c')
     version('2.4.0', '75714163bb96bedd07685cdb2071b8bc')
     version('2.4.2', '4ef68e1c485b09e9f034e10473e5add2')
     version('2.5.2', 'eafe168e8f404bf384514f5116eedbb6')

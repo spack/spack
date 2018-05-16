@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@ from spack import *
 import sys
 
 
-class OsuMicroBenchmarks(Package):
+class OsuMicroBenchmarks(AutotoolsPackage):
     """The Ohio MicroBenchmark suite is a collection of independent MPI
     message passing performance microbenchmarks developed and written at
     The Ohio State University. It includes traditional benchmarks and
@@ -36,6 +36,7 @@ class OsuMicroBenchmarks(Package):
     homepage = "http://mvapich.cse.ohio-state.edu/benchmarks/"
     url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.3.tar.gz"
 
+    version('5.4', '7e7551879b944d71b7cc60d476d5403b')
     version('5.3', '42e22b931d451e8bec31a7424e4adfc2')
 
     variant('cuda', default=False, description="Enable CUDA support")
@@ -43,11 +44,11 @@ class OsuMicroBenchmarks(Package):
     depends_on('mpi')
     depends_on('cuda', when='+cuda')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         config_args = [
-            'CC=%s'  % spec['mpi'].prefix.bin + '/mpicc',
-            'CXX=%s' % spec['mpi'].prefix.bin + '/mpicxx',
-            '--prefix=%s' % prefix
+            'CC=%s'  % spec['mpi'].mpicc,
+            'CXX=%s' % spec['mpi'].mpicxx
         ]
 
         if '+cuda' in spec:
@@ -60,7 +61,4 @@ class OsuMicroBenchmarks(Package):
         if not sys.platform == 'darwin':
             config_args.append('LDFLAGS=-lrt')
 
-        configure(*config_args)
-
-        make()
-        make('install')
+        return config_args

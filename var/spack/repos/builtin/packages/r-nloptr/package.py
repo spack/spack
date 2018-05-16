@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,15 +26,19 @@ from spack import *
 
 
 class RNloptr(RPackage):
-    """nloptr is an R interface to NLopt. NLopt is a free/open-source library
-    for nonlinear optimization, providing a common interface for a number of
-    different free optimization routines available online as well as original
-    implementations of various other algorithms. See
-    http://ab-initio.mit.edu/wiki/index.php/NLopt_Introduction for more
-    information on the available algorithms. During installation on Unix the
-    NLopt code is downloaded and compiled from the NLopt website."""
+    """nloptr is an R interface to NLopt. NLopt is a free/open-source
+    library for nonlinear optimization, providing a common interface
+    for a number of different free optimization routines available
+    online as well as original implementations of various other
+    algorithms. See http://ab-initio.mit.edu/wiki/index.php/NLopt
+    _Introduction for more information on the available algorithms.
+    During installation on Unix the NLopt code is downloaded and
+    compiled from the NLopt website."""
 
     homepage = "https://cran.r-project.org/package=nloptr"
-    url      = "https://cran.r-project.org/src/contrib/nloptr_1.0.4.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/nloptr_1.0.4.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/nloptr"
 
-    version('1.0.4', '9af69a613349b236fd377d0a107f484c')
+    version('1.0.4', 'f2775dfb4f7f5552d46937a04c062b0d')
+
+    depends_on('r-testthat', type=('build', 'run'))

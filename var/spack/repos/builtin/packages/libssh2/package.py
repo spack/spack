@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class Libssh2(CMakePackage):
     homepage = "https://www.libssh2.org/"
     url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
 
+    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
     version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
     version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
 

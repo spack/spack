@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@ class RXlconnectjars(RPackage):
 
     homepage = "http://miraisolutions.wordpress.com/"
     url      = "https://cran.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnectJars"
 
     version('0.2-12', '6984e5140cd1c887c017ef6f88cbba81')
     version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')

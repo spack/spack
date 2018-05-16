@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -76,7 +76,7 @@ class Octave(AutotoolsPackage):
     # Octave does not configure with sed from darwin:
     depends_on('sed', when=sys.platform == 'darwin', type='build')
     depends_on('pcre')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     # Strongly recommended dependencies
     depends_on('readline',     when='+readline')
@@ -93,13 +93,13 @@ class Octave(AutotoolsPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('image-magick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('jdk',          when='+jdk')        # TODO: requires Java 6 ?
+    depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
     # depends_on('opengl',      when='+opengl')    # TODO: add package
     depends_on('qhull',        when='+qhull')
     depends_on('qrupdate',     when='+qrupdate')
     # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
-    depends_on('qt',           when='+qt')
+    depends_on('qt+opengl',    when='+qt')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
 
@@ -186,9 +186,9 @@ class Octave(AutotoolsPackage):
 
         if '+jdk' in spec:
             config_args.extend([
-                "--with-java-homedir=%s"    % spec['jdk'].prefix,
-                "--with-java-includedir=%s" % spec['jdk'].prefix.include,
-                "--with-java-libdir=%s"     % spec['jdk'].prefix.lib
+                "--with-java-homedir=%s"    % spec['java'].prefix,
+                "--with-java-includedir=%s" % spec['java'].prefix.include,
+                "--with-java-libdir=%s"     % spec['java'].prefix.lib
             ])
         else:
             config_args.append("--disable-java")

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Psi4(Package):
+class Psi4(CMakePackage):
     """Psi4 is an open-source suite of ab initio quantum chemistry
     programs designed for efficient, high-accuracy simulations of
     a variety of molecular properties."""
@@ -36,20 +36,16 @@ class Psi4(Package):
 
     version('0.5', '53041b8a9be3958384171d0d22f9fdd0')
 
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
+
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost'
-               '+chrono'
-               '+filesystem'
-               '+python'
-               '+regex'
-               '+serialization'
-               '+system'
-               '+timer'
-               '+thread')
+    depends_on('boost+chrono+filesystem+python+regex+serialization+system+timer+thread')
     depends_on('python')
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.3:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
 
     # Optional dependencies
@@ -59,8 +55,10 @@ class Psi4(Package):
     # depends_on('pcm-solver')
     # depends_on('chemps2')
 
-    def install(self, spec, prefix):
-        cmake_args = [
+    def cmake_args(self):
+        spec = self.spec
+
+        return [
             '-DBLAS_TYPE={0}'.format(spec['blas'].name.upper()),
             '-DBLAS_LIBRARIES={0}'.format(spec['blas'].libs.joined()),
             '-DLAPACK_TYPE={0}'.format(spec['lapack'].name.upper()),
@@ -71,16 +69,7 @@ class Psi4(Package):
             '-DENABLE_CHEMPS2=OFF'
         ]
 
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-
-            make()
-            make('install')
-
-        self.filter_compilers(spec, prefix)
-
+    @run_after('install')
     def filter_compilers(self, spec, prefix):
         """Run after install to tell the configuration files to
         use the compilers that Spack built the package with.

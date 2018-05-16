@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class Httpie(PythonPackage):
     homepage = "https://httpie.org/"
     url      = "https://pypi.io/packages/source/h/httpie/httpie-0.9.8.tar.gz"
 
+    version('0.9.9', '13ed0b79b65e793eb288e563db38b2a2')
     version('0.9.8', 'e0d1af07d0959a2e081e7954797ce260')
 
     variant('socks', default=True,
@@ -41,7 +42,7 @@ class Httpie(PythonPackage):
     depends_on('py-requests@2.11.0:', type=('build', 'run'))
     depends_on('py-pysocks', type=('build', 'run'), when="+socks")
     # Concretization problem breaks this.  Unconditional for now...
-    # https://github.com/LLNL/spack/issues/3628
+    # https://github.com/spack/spack/issues/3628
     # depends_on('py-argparse@1.2.1:', type=('build', 'run'),
     #            when='^python@:2.6,3.0:3.1')
     depends_on('py-argparse@1.2.1:', type=('build', 'run'))

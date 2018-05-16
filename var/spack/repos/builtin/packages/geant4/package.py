@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,30 +36,46 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
 
+    version('10.04', 'b84beeb756821d0c61f7c6c93a2b83de')
+    version('10.03.p03', 'ccae9fd18e3908be78784dc207f2d73b')
+    version('10.02.p03', '2b887e66f0d41174016160707662a77b')
     version('10.02.p02', '6aae1d0fc743b0edc358c5c8fbe48657')
     version('10.02.p01', 'b81f7082a15f6a34b720b6f15c6289cfe4ddbbbdcef0dc52719f71fac95f7f1c')
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
-    variant('qt', default=True, description='Enable Qt support')
-    variant('debug', default=False, description='Build debug version')
+    variant('qt', default=False, description='Enable Qt support')
+    variant('vecgeom', default=False, description='Enable vecgeom support')
+    variant('cxx11', default=True, description='Enable CXX11 support')
+    variant('cxx14', default=False, description='Enable CXX14 support')
+    variant('opengl', default=False, description='Optional OpenGL support')
+    variant('x11', default=False, description='Optional X11 support')
+    variant('motif', default=False, description='Optional motif support')
 
     depends_on('cmake@3.5:', type='build')
 
-    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02")
-    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01")
-    depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03")
+    # C++11 support
+    depends_on("clhep@2.4.0.0+cxx11~cxx14", when="@10.04+cxx11~cxx14")
+    depends_on("clhep@2.3.4.3+cxx11~cxx14", when="@10.03.p03+cxx11~cxx14")
+    depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
+    depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
+    depends_on("clhep@2.2.0.4+cxx11~cxx14", when="@10.01.p03+cxx11~cxx14")
+
+    # C++14 support
+    depends_on("clhep@2.4.0.0+cxx11~cxx14", when="@10.04~cxx11+cxx14")
+    depends_on("clhep@2.3.4.3+cxx11~cxx14", when="@10.03.p03~cxx11+cxx14")
+    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02~cxx11+cxx14")
+    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01~cxx11+cxx14")
+    depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03~cxx11+cxx14")
+
     depends_on("expat")
     depends_on("zlib")
-    depends_on("vecgeom")
     depends_on("xerces-c")
-    depends_on("qt@4.8:", when="+qt")
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    depends_on("mesa", when='+opengl')
+    depends_on("libx11", when='+x11')
+    depends_on("libxmu", when='+x11')
+    depends_on("motif", when='+motif')
+    depends_on("vecgeom", when="+vecgeom")
+    depends_on("qt@4.8:4.999", when="+qt")
 
     def cmake_args(self):
         spec = self.spec
@@ -71,19 +87,19 @@ class Geant4(CMakePackage):
             '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
             '-DGEANT4_BUILD_MULTITHREADED=ON',
-            '-DGEANT4_USE_USOLIDS=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
-            spec['xerces-c'].prefix,
-            '-DUSolids_DIR=%s' %
-            join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids')]
+            spec['xerces-c'].prefix, ]
 
         arch = platform.system().lower()
         if arch is not 'darwin':
-            options.append('-DGEANT4_USE_OPENGL_X11=ON')
-            options.append('-DGEANT4_USE_XM=ON')
-            options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
+            if "+x11" in spec and "+opengl" in spec:
+                options.append('-DGEANT4_USE_OPENGL_X11=ON')
+            if "+motif" in spec and "+opengl" in spec:
+                options.append('-DGEANT4_USE_XM=ON')
+            if "+x11" in spec:
+                options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
 
         if '+cxx11' in spec:
             options.append('-DGEANT4_BUILD_CXXSTD=c++11')
@@ -94,8 +110,12 @@ class Geant4(CMakePackage):
             options.append('-DGEANT4_USE_QT=ON')
             options.append(
                 '-DQT_QMAKE_EXECUTABLE=%s' %
-                spec['qt'].prefix + '/bin/qmake'
-            )
+                spec['qt'].prefix.bin.qmake)
+
+        if '+vecgeom' in spec:
+            options.append('-DGEANT4_USE_USOLIDS=ON')
+            options.append('-DUSolids_DIR=%s' % spec[
+                'vecgeom'].prefix.lib.CMake.USolids)
 
         return options
 

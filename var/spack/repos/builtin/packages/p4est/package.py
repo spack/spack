@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,8 @@ class P4est(AutotoolsPackage):
     parallel"""
     homepage = "http://www.p4est.org"
     url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
+
+    maintainers = ['davydden']
 
     version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')

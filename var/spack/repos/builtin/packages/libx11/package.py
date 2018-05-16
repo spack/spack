@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,9 +37,19 @@ class Libx11(AutotoolsPackage):
     depends_on('libxcb@1.1.92:')
 
     depends_on('xproto@7.0.17:', type='build')
-    depends_on('xextproto', type='build')
+    depends_on('xextproto', type=('build', 'link'))
     depends_on('xtrans', type='build')
-    depends_on('kbproto', type='build')
+    depends_on('kbproto', type=('build', 'link'))
     depends_on('inputproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('perl', type='build')
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libX11', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs
+        return None

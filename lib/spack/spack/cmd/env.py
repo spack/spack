@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,12 +24,13 @@
 ##############################################################################
 from __future__ import print_function
 
-import os
 import argparse
+import os
 
 import llnl.util.tty as tty
-import spack.cmd
 import spack.build_environment as build_env
+import spack.cmd
+import spack.cmd.common.arguments as arguments
 
 description = "show install environment for a spec, and run commands"
 section = "build"
@@ -37,6 +38,7 @@ level = "long"
 
 
 def setup_parser(subparser):
+    arguments.add_common_arguments(subparser, ['clean', 'dirty'])
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs of package environment to emulate")
@@ -54,17 +56,17 @@ def env(parser, args):
     if sep in args.spec:
         s = args.spec.index(sep)
         spec = args.spec[:s]
-        cmd  = args.spec[s + 1:]
+        cmd = args.spec[s + 1:]
     else:
         spec = args.spec[0]
-        cmd  = args.spec[1:]
+        cmd = args.spec[1:]
 
     specs = spack.cmd.parse_specs(spec, concretize=True)
     if len(specs) > 1:
         tty.die("spack env only takes one spec.")
     spec = specs[0]
 
-    build_env.setup_package(spec.package)
+    build_env.setup_package(spec.package, args.dirty)
 
     if not cmd:
         # If no command act like the "env" command and print out env vars.

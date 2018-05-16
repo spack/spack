@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class Cmor(AutotoolsPackage):
     homepage = "http://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.1.2.tar.gz"
 
+    version('3.3.0', 'cfdeeddab1aedb823e26ec38723bd67e')
     version('3.2.0', 'b48105105d4261012c19cd65e89ff7a6')
     version('3.1.2', '72f7227159c901e4bcf80d2c73a8ce77')
 
@@ -43,7 +44,7 @@ class Cmor(AutotoolsPackage):
     depends_on('uuid')
     depends_on('netcdf')
     depends_on('udunits2')
-    depends_on('hdf5@:1.8')
+    depends_on('hdf5@:1.8.19')
 
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')

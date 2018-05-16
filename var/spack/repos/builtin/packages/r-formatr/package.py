@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,11 @@ class RFormatr(RPackage):
     human-readable and tidy. There is also a Shiny app as a user interface in
     this package."""
 
-    homepage = "http://yihui.name/formatR"
-    url      = "https://cran.r-project.org/src/contrib/formatR_1.4.tar.gz"
+    homepage = "https://cran.r-project.org/package=formatR"
+    url      = "https://cran.r-project.org/src/contrib/formatR_1.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/formatR"
 
+    version('1.5', 'ac735515b8e4c32097154f1b68c5ecc7')
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 
     depends_on('r-codetools', type=('build', 'run'))

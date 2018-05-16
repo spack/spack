@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,15 +30,13 @@ class IsaacServer(CMakePackage):
 
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
-
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'server')
+    maintainers = ['ax3l']
 
     version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('1.3.2', 'c557daa74de52fd79e734c9758fca38b')
     version('1.3.1', '7fe075f9af68d05355eaba0e224f20ca')
     version('1.3.0', 'c8a794da9bb998ef0e75449bfece1a12')
 
@@ -46,8 +44,13 @@ class IsaacServer(CMakePackage):
     #         'Support for RTP streams, e.g. to Twitch or Youtube')
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('libjpeg-turbo', type='link')
+    depends_on('jpeg', type='link')
     depends_on('jansson', type='link')
-    depends_on('boost@1.56:', type='link')
-    depends_on('libwebsockets', type='link')
+    depends_on('boost@1.56.0:', type='link')
+    depends_on('libwebsockets@2.1.1:', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')
+
+    # Until the pull request is merged: https://github.com/ComputationalRadiationPhysics/isaac/pull/70
+    patch('jpeg.patch', when='@:1.3.1')
+
+    root_cmakelists_dir = 'server'

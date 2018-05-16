@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -91,7 +91,7 @@ class Scotch(Package):
             libraries = ['libesmumps'] + libraries
 
         scotchlibs = find_libraries(
-            libraries, root=self.prefix, recurse=True, shared=shared
+            libraries, root=self.prefix, recursive=True, shared=shared
         )
         if '+compression' in self.spec:
             zlibs = self.spec['zlib'].libs
@@ -129,7 +129,9 @@ class Scotch(Package):
             if self.spec.satisfies('platform=darwin'):
                 makefile_inc.extend([
                     'LIB       = .dylib',
-                    'CLIBFLAGS = -dynamiclib -fPIC',
+                    'CLIBFLAGS = -dynamiclib {0}'.format(
+                        self.compiler.pic_flag
+                    ),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -dynamiclib $(LDFLAGS) -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % prefix.lib  # noqa
@@ -137,12 +139,12 @@ class Scotch(Package):
             else:
                 makefile_inc.extend([
                     'LIB       = .so',
-                    'CLIBFLAGS = -shared -fPIC',
+                    'CLIBFLAGS = -shared {0}'.format(self.compiler.pic_flag),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -shared $(LDFLAGS) -o'
                 ])
-            cflags.append('-fPIC')
+            cflags.append(self.compiler.pic_flag)
         else:
             makefile_inc.extend([
                 'LIB       = .a',
@@ -157,7 +159,7 @@ class Scotch(Package):
         if self.compiler.name == 'gcc':
             cflags.append('-Drestrict=__restrict')
         elif self.compiler.name == 'intel':
-            cflags.append('-restrict')
+            cflags.append('-Drestrict=')
 
         mpicc_path = self.spec['mpi'].mpicc if '+mpi' in self.spec else 'mpicc'
         makefile_inc.append('CCS       = $(CC)')

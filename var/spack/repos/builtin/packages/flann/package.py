@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,11 +46,18 @@ class Flann(CMakePackage):
     version('1.8.1', '1f51500e172f5e11fbda05f033858eb6')
     version('1.8.0', '473150f592c2997e32d5ce31fd3c19a2')
 
+    def url_for_version(self, version):
+        if version > Version('1.8.1'):
+            return "https://github.com/mariusmuja/flann/archive/{0}.tar.gz".format(version)
+        else:
+            return "https://github.com/mariusmuja/flann/archive/{0}-src.tar.gz".format(version)
+
     # Options available in the CMakeLists.txt
     # Language bindings
     variant("python",   default=False,
             description="Build the Python bindings. "
                         "Module: pyflann.")
+    extends('python', when='+python')
     variant("matlab",   default=False, description="Build the Matlab bindings.")
     # default to true for C because it's a C++ library, nothing extra needed
     variant("c",        default=True,  description="Build the C bindings.")
@@ -93,15 +100,16 @@ class Flann(CMakePackage):
                     ),
                     "src/python/CMakeLists.txt")
         # Fix the install location so that spack activate works
-        filter_file("share/flann/python",
-                    site_packages_dir,
-                    "src/python/CMakeLists.txt")
+        if '+python' in self.spec:
+            filter_file("share/flann/python",
+                        site_packages_dir,
+                        "src/python/CMakeLists.txt")
         # Hack. Don't install setup.py
         filter_file("install( FILES",
                     "# install( FILES",
                     "src/python/CMakeLists.txt", string=True)
 
-    # TODO: revisit after https://github.com/LLNL/spack/issues/1279
+    # TODO: revisit after https://github.com/spack/spack/issues/1279
     # depends_on('hdf5', type='test')
     # depends_on('gtest', type='test')
 

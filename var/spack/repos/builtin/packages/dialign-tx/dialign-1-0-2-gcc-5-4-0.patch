@@ -1,0 +1,80 @@
+--- a/source/alig.c	2008-12-06 04:10:05.000000000 -0800
++++ b/source/alig.c	2017-11-21 10:58:31.000000000 -0800
+@@ -520,7 +520,7 @@
+  * datastructure (i.e. frontiers). The given diag must be consistent
+  * to the given alignment !
+  */
+-inline char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg) {
++char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg) {
+ 
+   char alignedSomething = 0;
+   int i,j,k;
+diff -Naur a/source/assemble.c b/source/assemble.c
+--- a/source/assemble.c	2008-12-06 04:10:05.000000000 -0800
++++ b/source/assemble.c	2017-11-21 10:57:55.000000000 -0800
+@@ -10,7 +10,7 @@
+ 
+ extern void error(char *message);
+ extern void merror(char *msg1, char *msg2);
+-extern inline void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
++extern void calc_weight(struct diag* dg, struct scr_matrix* smatrix, 
+ 			struct prob_dist *pdist);
+ extern inline void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix, 
+ 		    struct prob_dist *pdist);
+@@ -37,7 +37,7 @@
+ extern inline struct algn_pos *find_eqc(struct algn_pos **ap, int seqnum, int pos);
+ extern struct alignment* copy_alignment( struct alignment *o_algn, struct alignment *algn, char doDgc);
+ //extern char adapt_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
+-extern inline char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
++extern char align_diag(struct alignment *algn, struct scr_matrix *smatrix, struct diag* dg);
+ //extern inline struct diag_cont* enter_sorted(struct diag_cont* backlog_diags, struct diag_cont *cand);
+ //extern inline char fit_fpos_diag(struct alignment *algn, struct diag* dg);
+ 
+@@ -574,7 +574,7 @@
+  * returns a value <0 if there is an non-conflicting overlap
+  * returns 0 in all other non-conflicting cases
+  */
+-inline char confl_diag(struct alignment *algn, char *layer, struct diag *dg1, struct diag *dg2) {
++static inline char confl_diag(struct alignment *algn, char *layer, struct diag *dg1, struct diag *dg2) {
+   //  if(dg1->multi_dg || dg2->multi_dg) error(" confl_diag(): cannot accept multi dgs!");
+   int s1_1 = dg1->seq_p1.num;
+   int s1_2 = dg1->seq_p2.num;
+diff -Naur a/source/diag.c b/source/diag.c
+--- a/source/diag.c	2008-12-06 04:10:05.000000000 -0800
++++ b/source/diag.c	2017-11-21 10:55:43.000000000 -0800
+@@ -183,7 +183,7 @@
+  * omitScore = 0:  normal 
+  * omitScore = 1:  no score calculation 
+  */ 
+-inline void real_calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
++static inline void real_calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
+ 		 struct prob_dist *pdist, char omitScore, long double **tmp_dist, struct alignment *algn ) { 
+    
+   if(dg->multi_dg) {
+@@ -302,7 +302,7 @@
+   } 
+ } 
+  
+-inline void calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
++void calc_weight(struct diag* dg, struct scr_matrix* smatrix,  
+ 		 struct prob_dist *pdist) { 
+   real_calc_weight(dg, smatrix, pdist, 0,NULL,NULL); 
+ } 
+@@ -312,7 +312,7 @@
+ /** 
+  * calculates the overlap weight for the given diag 
+  */ 
+-inline void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix,  
++static inline void calc_ov_weight(struct diag* dg, struct diag_col *dcol, struct scr_matrix* smatrix,  
+ 		    struct prob_dist *pdist) { 
+   int sn1 = dg->seq_p1.num; 
+   int sn2 = dg->seq_p2.num; 
+@@ -958,7 +958,7 @@
+  * The pointer returned (and the ones included in the struct)  
+  * has to be deallocted explicitely from memory. 
+  */ 
+-inline struct simple_diag_col* find_diags_dialign(struct scr_matrix *smatrix,  
++static inline struct simple_diag_col* find_diags_dialign(struct scr_matrix *smatrix,  
+ 				struct prob_dist *pdist, struct seq* seq1,  
+ 				struct seq* seq2, struct alignment *algn, 
+ 				 long double **tmp_dist, int round) { 

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,9 @@ class Tut(WafPackage):
 
     version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
 
-    def build_args(self, spec, prefix):
+    patch('python3-octal.patch', when='@2016-12-19')
+
+    def build_args(self):
         args = []
 
         if self.run_tests:

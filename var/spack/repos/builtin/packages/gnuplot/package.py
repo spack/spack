@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,9 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.2.2', '60aedd08998160593199459dea8467fe')
+    version('5.2.0', '0bd8f9af84c0ad2fa9de16772c366416')
+    version('5.0.7', '8eaafddb0b12795f82ed6dd2a6ebbe80')
     version('5.0.6', '8ec46520a86a61163a701b00404faf1a')
     version('5.0.5', 'c5e96fca73afbee4f57cbc1bfce6b3b8')
     version('5.0.1', '79b4f9e203728f76b60b28bcd402d3c7')
@@ -64,7 +67,7 @@ class Gnuplot(AutotoolsPackage):
 
     # required dependencies
     depends_on('readline')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libxpm')
     depends_on('libiconv')
 

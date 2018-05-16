@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class Highfive(CMakePackage):
     homepage = "https://github.com/BlueBrain/HighFive"
     url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
 
+    version('1.5', '5e631c91d2ea7f3677e99d6bb6db8167')
     version('1.2', '030728d53519c7e13b5a522d34240301')
     version('1.1', '986f0bd18c5264709688a536c02d2b2a')
     version('1.0', 'e44e548560ea92afdb244c223b7655b6')

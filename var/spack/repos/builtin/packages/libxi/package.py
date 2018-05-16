@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,13 @@ class Libxi(AutotoolsPackage):
 
     version('1.7.6', 'f3828f9d7893068f6f6f10fe15b31afa')
 
+    depends_on('pkgconfig', type='build')
     depends_on('libx11@1.6:')
     depends_on('libxext@1.0.99.1:')
     depends_on('libxfixes@5:')
+
+    # transient build dependency (from libxfixes), i.e. shouldn't be needed?
+    depends_on('fixesproto@5.0:', type='build')
 
     depends_on('xproto@7.0.13:', type='build')
     depends_on('xextproto@7.0.3:', type='build')

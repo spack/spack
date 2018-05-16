@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,9 @@ class Clhep(CMakePackage):
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    version('2.4.0.1', 'f06aa2924abbfee0afd5a9beaaa883cf')
+    version('2.4.0.0', '9af6644e4e04d6807f53956512b7396a')
+    version('2.3.4.5', '31b4785b40706ff7503bb9ffd412487a')
     version('2.3.4.4', '8b8a33d0d19213b60d6c22ce5fc93761')
     version('2.3.4.3', '6941279f70d69492fff1aa955f3f2562')
     version('2.3.4.2', '1e7a9046c9ad0b347d6812f8031191da')
@@ -50,7 +53,6 @@ class Clhep(CMakePackage):
     version('2.2.0.5', '1584e8ce6ebf395821aed377df315c7c')
     version('2.2.0.4', '71d2c7c2e39d86a0262e555148de01c1')
 
-    variant('debug', default=False, description="Switch to the debug version of CLHEP.")
     variant('cxx11', default=True, description="Compile using c++11 dialect.")
     variant('cxx14', default=False, description="Compile using c++14 dialect.")
 
@@ -63,27 +65,25 @@ class Clhep(CMakePackage):
                     '%s/%s/CLHEP/CMakeLists.txt'
                     % (self.stage.path, self.spec.version))
 
-    root_cmakelists_dir = '../CLHEP'
-
-    def build_type(self):
-        spec = self.spec
-
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'MinSizeRel'
+    root_cmakelists_dir = 'CLHEP'
 
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
 
         if '+cxx11' in spec:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx11_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx11_flag)
 
         if '+cxx14' in spec:
-            env['CXXFLAGS'] = self.compiler.cxx14_flag
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx14_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx14_flag)
 

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,12 +32,13 @@ class Octopus(Package):
     homepage = "http://www.tddft.org/programs/octopus/"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=6.0/octopus-6.0.tar.gz"
 
+    version('7.3', '87e51fa4a3a999706ea4ea5e9136996f')
     version('6.0', '5d1168c2a8d7fd9cb9492eaebaa7182e')
     version('5.0.1', '2b6392ab67b843f9d4ca7413fc07e822')
 
     variant('scalapack', default=False,
             description='Compile with Scalapack')
-    variant('metis', default=True,
+    variant('metis', default=False,
             description='Compile with METIS')
     variant('parmetis', default=False,
             description='Compile with ParMETIS')
@@ -47,11 +48,11 @@ class Octopus(Package):
             description='Compile with ARPACK')
 
     depends_on('blas')
-    depends_on('gsl')
+    depends_on('gsl@1.9:')
     depends_on('lapack')
     depends_on('libxc')
     depends_on('mpi')
-    depends_on('fftw+mpi')
+    depends_on('fftw@3:+mpi+openmp')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
@@ -59,7 +60,7 @@ class Octopus(Package):
     depends_on('arpack-ng', when='+arpack')
 
     # optional dependencies:
-    # TODO: parmetis, etsf-io, sparskit,
+    # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft
 
     def install(self, spec, prefix):
@@ -75,7 +76,7 @@ class Octopus(Package):
             'CC=%s' % spec['mpi'].mpicc,
             'FC=%s' % spec['mpi'].mpifc,
             '--enable-mpi',
-            '--with-fft-lib=-L%s -lfftw3' % spec['fftw'].prefix.lib,
+            '--with-fftw-prefix==%s' % spec['fftw'].prefix,
         ])
         if '+metis' in spec:
             args.extend([

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,20 +30,34 @@ class Bml(CMakePackage):
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
 
-    homepage = "https://github.com/qmmd/bml"
-    url      = "https://github.com/qmmd/bml"
+    homepage = "http://lanl.github.io/bml/"
+    url      = "https://github.com/lanl/bml/tarball/v1.2.2"
 
-    version('develop', git='https://github.com/qmmd/bml', branch='master')
-    version('1.1.0', git='https://github.com/qmmd/bml', tag='v1.1.0')
+    version('1.2.3', '8133137fb56a27fade44d1588449c2ac')
+    version('1.2.2', 'c86959cb0188e9d0a9a2cbad03b2782d')
+    version('1.1.0', '271adecee08aee678be9eeceee06b6fb')
+    version('develop', git='https://github.com/lanl/bml', branch='master')
 
-    variant('debug', default=False, description='Build debug version')
+    variant('shared', default=True, description='Build shared libs')
+    variant('mpi', default=True, description='Build with MPI Support')
+
+    conflicts('+mpi', when='@:1.2.2')
 
     depends_on("blas")
     depends_on("lapack")
+    depends_on('mpi', when='+mpi')
 
-    def build_type(self):
+    def cmake_args(self):
+        args = [
+            '-DBUILD_SHARED_LIBS={0}'.format(
+                'ON' if '+shared' in self.spec else 'OFF')
+        ]
         spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
+        if '+mpi' in spec:
+            args.append('-DBML_MPI=True')
+            args.append('-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc)
+            args.append('-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
+            args.append('-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc)
         else:
-            return 'Release'
+            args.append('-DBML_MPI=False')
+        return args

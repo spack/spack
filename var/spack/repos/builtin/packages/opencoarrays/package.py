@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,6 +41,11 @@ class Opencoarrays(CMakePackage):
     version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
     version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
     version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'CodeCoverage'))
 
     depends_on('mpi')
 

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class RSparsem(RPackage):
 
     homepage = "http://www.econ.uiuc.edu/~roger/research/sparse/sparse.html"
     url      = "https://cran.r-project.org/src/contrib/SparseM_1.74.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/SparseM"
 
     version('1.74', 'a16c9b7db172dfd2b7b6508c48e81a5d')
     version('1.7',  '7b5b0ab166a0929ef6dcfe1d97643601')

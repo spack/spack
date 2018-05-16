@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,28 +25,31 @@
 from spack import *
 
 
-class Callpath(Package):
+class Callpath(CMakePackage):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""
 
     homepage = "https://github.com/llnl/callpath"
     url      = "https://github.com/llnl/callpath/archive/v1.0.1.tar.gz"
 
+    version('1.0.4', '39d2e06bfa316dec1085b874092e4b08')
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on('cmake', type='build')
+    depends_on('elf', type='link')
+    depends_on('libdwarf')
+    depends_on('dyninst')
+    depends_on('adept-utils')
+    depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
         # TODO: offer options for the walker used.
-        cmake_args = std_cmake_args
-        if spec.satisfies("^dyninst@9.3.0:"):
-            cmake_args.append("-DCMAKE_CXX_FLAGS='-std=c++11 -fpermissive'")
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *cmake_args)
-        make()
-        make("install")
+        args = ["-DCALLPATH_WALKER=dyninst"]
+
+        if self.spec.satisfies("^dyninst@9.3.0:"):
+            std_flag = self.compiler.cxx11_flag
+            args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
+                std_flag))
+
+        return args

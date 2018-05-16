@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,32 +25,23 @@
 from spack import *
 
 
-class Mpibash(Package):
+class Mpibash(AutotoolsPackage):
     """Parallel scripting right from the Bourne-Again Shell (Bash)"""
-    homepage = "http://www.ccs3.lanl.gov/~pakin/software/mpibash-4.3.html"
 
-    version('4.3', '81348932d5da294953e15d4814c74dd1',
-            url="http://ftp.gnu.org/gnu/bash/bash-4.3.tar.gz")
+    homepage = "https://github.com/lanl/MPI-Bash"
+    url      = "https://github.com/lanl/MPI-Bash/releases/download/v1.2/mpibash-1.2.tar.gz"
 
-    # patch -p1 < ../mpibash-4.3.patch
-    patch('mpibash-4.3.patch', level=1, when='@4.3')
+    version('1.2', 'b81001fb234ed79c4e5bf2f7efee3529')
 
-    # above patch modifies configure.ac
-    depends_on('autoconf', type='build')
-
+    depends_on('bash@4.4:')
     # uses MPI_Exscan which is in MPI-1.2 and later
     depends_on('mpi@1.2:')
 
     depends_on('libcircle')
 
-    def install(self, spec, prefix):
-        # run autoconf to rebuild configure
-        autoconf = which('autoconf')
-        autoconf()
-
-        configure("--prefix=" + prefix,
-                  "CC=mpicc")
-
-        make(parallel=False)
-
-        make("install")
+    def configure_args(self):
+        args = [
+            "--with-bashdir={0}".format(self.spec['bash'].prefix.include.bash),
+            "CC={0}".format(self.spec['mpi'].mpicc)
+        ]
+        return args

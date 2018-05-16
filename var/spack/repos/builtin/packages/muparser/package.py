@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,15 @@ class Muparser(Package):
 
     version('2.2.5', '02dae671aa5ad955fdcbcd3fee313fb7')
 
+    # Replace std::auto_ptr by std::unique_ptr
+    # https://github.com/beltoforion/muparser/pull/46
+    patch('auto_ptr.patch',
+          when='@2.2.5')
+
     def install(self, spec, prefix):
         options = ['--disable-debug',
                    '--disable-dependency-tracking',
+                   'CXXFLAGS=-std=c++11',
                    '--prefix=%s' % prefix]
 
         configure(*options)

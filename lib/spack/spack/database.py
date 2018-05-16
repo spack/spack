@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,8 @@ provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 
 """
+import datetime
+import time
 import os
 import sys
 import socket
@@ -49,8 +51,8 @@ from six import iteritems
 from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-from llnl.util.lock import *
+from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
 
 import spack.store
 import spack.repository
@@ -74,6 +76,11 @@ _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
+
+
+def _now():
+    """Returns the time since the epoch"""
+    return time.time()
 
 
 def _autospec(function):
@@ -103,14 +110,31 @@ class InstallRecord(object):
     actually remove from the database until a spec has no installed
     dependents left.
 
+    Args:
+        spec (Spec): spec tracked by the install record
+        path (str): path where the spec has been installed
+        installed (bool): whether or not the spec is currently installed
+        ref_count (int): number of specs that depend on this one
+        explicit (bool, optional): whether or not this spec was explicitly
+            installed, or pulled-in as a dependency of something else
+        installation_time (time, optional): time of the installation
     """
 
-    def __init__(self, spec, path, installed, ref_count=0, explicit=False):
+    def __init__(
+            self,
+            spec,
+            path,
+            installed,
+            ref_count=0,
+            explicit=False,
+            installation_time=None
+    ):
         self.spec = spec
         self.path = str(path)
         self.installed = bool(installed)
         self.ref_count = ref_count
         self.explicit = explicit
+        self.installation_time = installation_time or _now()
 
     def to_dict(self):
         return {
@@ -118,14 +142,15 @@ class InstallRecord(object):
             'path': self.path,
             'installed': self.installed,
             'ref_count': self.ref_count,
-            'explicit': self.explicit
+            'explicit': self.explicit,
+            'installation_time': self.installation_time
         }
 
     @classmethod
     def from_dict(cls, spec, dictionary):
-        d = dictionary
-        return InstallRecord(spec, d['path'], d['installed'], d['ref_count'],
-                             d.get('explicit', False))
+        d = dict(dictionary.items())
+        d.pop('spec', None)
+        return InstallRecord(spec, **d)
 
 
 class Database(object):
@@ -288,7 +313,7 @@ class Database(object):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
-                                 spec.format('$_$/'), dname, dhash[:7]))
+                                 spec.cformat('$_$/'), dname, dhash[:7]))
                     continue
 
                 child = data[dhash].spec
@@ -347,7 +372,7 @@ class Database(object):
         def invalid_record(hash_key, error):
             msg = ("Invalid record in Spack database: "
                    "hash: %s, cause: %s: %s")
-            msg %= (hash_key, type(e).__name__, str(e))
+            msg %= (hash_key, type(error).__name__, str(error))
             raise CorruptDatabaseError(msg, self._index_path)
 
         # Build up the database in three passes:
@@ -440,15 +465,20 @@ class Database(object):
                     # just to be conservative in case a command like
                     # "autoremove" is run by the user after a reindex.
                     tty.debug(
-                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec)
-                    )
+                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
                     explicit = True
+                    inst_time = os.stat(spec.prefix).st_ctime
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
                         if old_info is not None:
                             explicit = old_info.explicit
+                            inst_time = old_info.installation_time
 
-                    self._add(spec, directory_layout, explicit=explicit)
+                    extra_args = {
+                        'explicit': explicit,
+                        'installation_time': inst_time
+                    }
+                    self._add(spec, directory_layout, **extra_args)
 
                     processed_specs.add(spec)
 
@@ -467,8 +497,7 @@ class Database(object):
                     # installed compilers or externally installed
                     # applications.
                     tty.debug(
-                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec)
-                    )
+                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                     try:
                         layout = spack.store.layout
                         if entry.spec.external:
@@ -481,7 +510,8 @@ class Database(object):
                             kwargs = {
                                 'spec': entry.spec,
                                 'directory_layout': layout,
-                                'explicit': entry.explicit
+                                'explicit': entry.explicit,
+                                'installation_time': entry.installation_time  # noqa: E501
                             }
                             self._add(**kwargs)
                             processed_specs.add(entry.spec)
@@ -493,7 +523,7 @@ class Database(object):
 
                 self._check_ref_counts()
 
-            except:
+            except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
@@ -546,7 +576,7 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
-        except:
+        except BaseException:
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
                 os.remove(temp_file)
@@ -581,23 +611,52 @@ class Database(object):
                 self._write(None, None, None)
             self.reindex(spack.store.layout)
 
-    def _add(self, spec, directory_layout=None, explicit=False):
+    def _add(
+            self,
+            spec,
+            directory_layout=None,
+            explicit=False,
+            installation_time=None
+    ):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``layout.path_for_spec(spec)``.
 
         Also ensures dependencies are present and updated in the DB as
-        either intsalled or missing.
+        either installed or missing.
+
+        Args:
+            spec: spec to be added
+            directory_layout: layout of the spec installation
+            **kwargs:
+
+                explicit
+                    Possible values: True, False, any
+
+                    A spec that was installed following a specific user
+                    request is marked as explicit. If instead it was
+                    pulled-in as a dependency of a user requested spec
+                    it's considered implicit.
+
+                installation_time
+                    Date and time of installation
 
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
+        # Retrieve optional arguments
+        installation_time = installation_time or _now()
+
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
             if dkey not in self._data:
-                self._add(dep, directory_layout, explicit=False)
+                extra_args = {
+                    'explicit': False,
+                    'installation_time': installation_time
+                }
+                self._add(dep, directory_layout, **extra_args)
 
         key = spec.dag_hash()
         if key not in self._data:
@@ -615,8 +674,13 @@ class Database(object):
 
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
+            extra_args = {
+                'explicit': explicit,
+                'installation_time': installation_time
+            }
             self._data[key] = InstallRecord(
-                new_spec, path, installed, ref_count=0, explicit=explicit)
+                new_spec, path, installed, ref_count=0, **extra_args
+            )
 
             # Connect dependencies from the DB to the new copy.
             for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
@@ -713,13 +777,34 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
-    def installed_dependents(self, spec):
-        """List the installed specs that depend on this one."""
-        dependents = set()
+    def installed_relatives(self, spec, direction='children', transitive=True):
+        """Return installed specs related to this one."""
+        if direction not in ('parents', 'children'):
+            raise ValueError("Invalid direction: %s" % direction)
+
+        relatives = set()
         for spec in self.query(spec):
-            for dependent in spec.traverse(direction='parents', root=False):
-                dependents.add(dependent)
-        return dependents
+            if transitive:
+                to_add = spec.traverse(direction=direction, root=False)
+            elif direction == 'parents':
+                to_add = spec.dependents()
+            else:  # direction == 'children'
+                to_add = spec.dependencies()
+
+            for relative in to_add:
+                hash_key = relative.dag_hash()
+                if hash_key not in self._data:
+                    reltype = ('Dependent' if direction == 'parents'
+                               else 'Dependency')
+                    tty.warn("Inconsistent state! %s %s of %s not in DB"
+                             % (reltype, hash_key, spec.dag_hash()))
+                    continue
+
+                if not self._data[hash_key].installed:
+                    continue
+
+                relatives.add(relative)
+        return relatives
 
     @_autospec
     def installed_extensions_for(self, extendee_spec):
@@ -728,52 +813,76 @@ class Database(object):
         the given spec
         """
         for spec in self.query():
+            if spec.package.extends(extendee_spec):
+                yield spec.package
+
+    @_autospec
+    def activated_extensions_for(self, extendee_spec, extensions_layout=None):
+        """
+        Return the specs of all packages that extend
+        the given spec
+        """
+        if extensions_layout is None:
+            extensions_layout = spack.store.extensions
+        for spec in self.query():
             try:
-                spack.store.layout.check_activated(extendee_spec, spec)
+                extensions_layout.check_activated(extendee_spec, spec)
                 yield spec.package
             except spack.directory_layout.NoSuchExtensionError:
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(self, query_spec=any, known=any, installed=True, explicit=any):
-        """Run a query on the database.
+    def query(
+            self,
+            query_spec=any,
+            known=any,
+            installed=True,
+            explicit=any,
+            start_date=None,
+            end_date=None
+    ):
+        """Run a query on the database
 
-        ``query_spec``
-            Queries iterate through specs in the database and return
-            those that satisfy the supplied ``query_spec``.  If
-            query_spec is `any`, This will match all specs in the
-            database.  If it is a spec, we'll evaluate
-            ``spec.satisfies(query_spec)``.
+        Args:
+            query_spec: queries iterate through specs in the database and
+                return those that satisfy the supplied ``query_spec``. If
+                query_spec is `any`, This will match all specs in the
+                database.  If it is a spec, we'll evaluate
+                ``spec.satisfies(query_spec)``
 
-        The query can be constrained by two additional attributes:
+            known (bool or any, optional): Specs that are "known" are those
+                for which Spack can locate a ``package.py`` file -- i.e.,
+                Spack "knows" how to install them.  Specs that are unknown may
+                represent packages that existed in a previous version of
+                Spack, but have since either changed their name or
+                been removed
 
-        ``known``
-            Possible values: True, False, any
+            installed (bool or any, optional): Specs for which a prefix exists
+                are "installed". A spec that is NOT installed will be in the
+                database if some other spec depends on it but its installation
+                has gone away since Spack installed it.
 
-            Specs that are "known" are those for which Spack can
-            locate a ``package.py`` file -- i.e., Spack "knows" how to
-            install them.  Specs that are unknown may represent
-            packages that existed in a previous version of Spack, but
-            have since either changed their name or been removed.
+            explicit (bool or any, optional): A spec that was installed
+                following a specific user request is marked as explicit. If
+                instead it was pulled-in as a dependency of a user requested
+                spec it's considered implicit.
 
-        ``installed``
-            Possible values: True, False, any
+            start_date (datetime, optional): filters the query discarding
+                specs that have been installed before ``start_date``.
 
-            Specs for which a prefix exists are "installed". A spec
-            that is NOT installed will be in the database if some
-            other spec depends on it but its installation has gone
-            away since Spack installed it.
+            end_date (datetime, optional): filters the query discarding
+                specs that have been installed after ``end_date``.
 
-        TODO: Specs are a lot like queries.  Should there be a
-              wildcard spec object, and should specs have attributes
-              like installed and known that can be queried?  Or are
-              these really special cases that only belong here?
-
+        Returns:
+            list of specs that match the query
         """
+        # TODO: Specs are a lot like queries.  Should there be a
+        # TODO: wildcard spec object, and should specs have attributes
+        # TODO: like installed and known that can be queried?  Or are
+        # TODO: these really special cases that only belong here?
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
-            if (isinstance(query_spec, spack.spec.Spec) and
-                query_spec._concrete):
+            if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
 
                 hash_key = query_spec.dag_hash()
                 if hash_key in self._data:
@@ -784,14 +893,26 @@ class Database(object):
             # Abstract specs require more work -- currently we test
             # against everything.
             results = []
+            start_date = start_date or datetime.datetime.min
+            end_date = end_date or datetime.datetime.max
+
             for key, rec in self._data.items():
                 if installed is not any and rec.installed != installed:
                     continue
+
                 if explicit is not any and rec.explicit != explicit:
                     continue
+
                 if known is not any and spack.repo.exists(
                         rec.spec.name) != known:
                     continue
+
+                inst_date = datetime.datetime.fromtimestamp(
+                    rec.installation_time
+                )
+                if not (start_date < inst_date < end_date):
+                    continue
+
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     results.append(rec.spec)
 
@@ -804,7 +925,8 @@ class Database(object):
         query. Returns None if no installed package matches.
 
         """
-        concrete_specs = self.query(query_spec, known, installed)
+        concrete_specs = self.query(
+            query_spec, known=known, installed=installed)
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 

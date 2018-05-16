@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,11 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import division
+
 import os
 import re
 import functools
 import collections
 import inspect
+from datetime import datetime, timedelta
 from six import string_types
 
 # Ignore emacs backups when listing modules
@@ -101,21 +104,6 @@ def index_by(objects, *funcs):
         result[key] = index_by(objects, *funcs[1:])
 
     return result
-
-
-def partition_list(elements, predicate):
-    """Partition a list into two lists, the first containing elements
-       for which the predicate evaluates to true, the second containing
-       those for which it is false.
-    """
-    trues = []
-    falses = []
-    for elt in elements:
-        if predicate(elt):
-            trues.append(elt)
-        else:
-            falses.append(elt)
-    return trues, falses
 
 
 def caller_locals():
@@ -385,23 +373,138 @@ def dedupe(sequence):
             seen.add(x)
 
 
+def pretty_date(time, now=None):
+    """Convert a datetime or timestamp to a pretty, relative date.
+
+    Args:
+        time (datetime or int): date to print prettily
+        now (datetime): dateimte for 'now', i.e. the date the pretty date
+            is relative to (default is datetime.now())
+
+    Returns:
+        (str): pretty string like 'an hour ago', 'Yesterday',
+            '3 months ago', 'just now', etc.
+
+    Adapted from https://stackoverflow.com/questions/1551382.
+
+    """
+    if now is None:
+        now = datetime.now()
+
+    if type(time) is int:
+        diff = now - datetime.fromtimestamp(time)
+    elif isinstance(time, datetime):
+        diff = now - time
+    else:
+        raise ValueError("pretty_date requires a timestamp or datetime")
+
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + " seconds ago"
+        if second_diff < 120:
+            return "a minute ago"
+        if second_diff < 3600:
+            return str(second_diff // 60) + " minutes ago"
+        if second_diff < 7200:
+            return "an hour ago"
+        if second_diff < 86400:
+            return str(second_diff // 3600) + " hours ago"
+    if day_diff == 1:
+        return "yesterday"
+    if day_diff < 7:
+        return str(day_diff) + " days ago"
+    if day_diff < 28:
+        weeks = day_diff // 7
+        if weeks == 1:
+            return "a week ago"
+        else:
+            return str(day_diff // 7) + " weeks ago"
+    if day_diff < 365:
+        months = day_diff // 30
+        if months == 1:
+            return "a month ago"
+        elif months == 12:
+            months -= 1
+        return str(months) + " months ago"
+
+    diff = day_diff // 365
+    if diff == 1:
+        return "a year ago"
+    else:
+        return str(diff) + " years ago"
+
+
+def pretty_string_to_date(date_str, now=None):
+    """Parses a string representing a date and returns a datetime object.
+
+    Args:
+        date_str (str): string representing a date. This string might be
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            or be a *pretty date* (like ``yesterday`` or ``two months ago``)
+
+    Returns:
+        (datetime): datetime object corresponding to ``date_str``
+    """
+
+    pattern = {}
+
+    now = now or datetime.now()
+
+    # datetime formats
+    pattern[re.compile('^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile('^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m'
+    )
+    pattern[re.compile('^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m-%d'
+    )
+
+    pretty_regex = re.compile(
+        r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
+
+    def _n_xxx_ago(x):
+        how_many, time_period = pretty_regex.search(x).groups()
+
+        how_many = 1 if how_many == 'a' else int(how_many)
+
+        # timedelta natively supports time periods up to 'weeks'.
+        # To apply month or year we convert to 30 and 365 days
+        if time_period == 'month':
+            how_many *= 30
+            time_period = 'day'
+        elif time_period == 'year':
+            how_many *= 365
+            time_period = 'day'
+
+        kwargs = {(time_period + 's'): how_many}
+        return now - timedelta(**kwargs)
+
+    pattern[pretty_regex] = _n_xxx_ago
+
+    # yesterday
+    callback = lambda x: now - timedelta(days=1)
+    pattern[re.compile('^yesterday$')] = callback
+
+    for regexp, parser in pattern.items():
+        if bool(regexp.match(date_str)):
+            return parser(date_str)
+
+    msg = 'date "{0}" does not match any valid format'.format(date_str)
+    raise ValueError(msg)
+
+
 class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
-
-
-def duplicate_stream(original):
-    """Duplicates a stream  at the os level.
-
-    Args:
-        original (stream): original stream to be duplicated. Must have a
-            ``fileno`` callable attribute.
-
-    Returns:
-        file like object: duplicate of the original stream
-    """
-    return os.fdopen(os.dup(original.fileno()))
 
 
 class ObjectWrapper(object):
@@ -414,5 +517,17 @@ class ObjectWrapper(object):
     def __init__(self, wrapped_object):
         wrapped_cls = type(wrapped_object)
         wrapped_name = wrapped_cls.__name__
-        self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+
+        # If the wrapped object is already an ObjectWrapper, or a derived class
+        # of it, adding type(self) in front of type(wrapped_object)
+        # results in an inconsistent MRO.
+        #
+        # TODO: the implementation below doesn't account for the case where we
+        # TODO: have different base classes of ObjectWrapper, say A and B, and
+        # TODO: we want to wrap an instance of A with B.
+        if type(self) not in wrapped_cls.__mro__:
+            self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+        else:
+            self.__class__ = type(wrapped_name, (wrapped_cls,), {})
+
         self.__dict__ = wrapped_object.__dict__

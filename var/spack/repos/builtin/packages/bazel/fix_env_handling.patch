@@ -1,7 +1,7 @@
 diff -pu bazel-0.3.1/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java bazel-0.3.1/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java 
 --- bazel-0.3.1/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java 2016-09-14 11:56:01.565756979 +0200
 +++ bazel-0.3.1/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java	2016-09-14 12:04:13.292839801 +0200
-@@ -92,5 +92,115 @@ public class BazelConfiguration extends
+@@ -92,5 +92,120 @@ public class BazelConfiguration extends
      if (tmpdir != null) {
        builder.put("TMPDIR", tmpdir);
      }
@@ -14,6 +14,11 @@ diff -pu bazel-0.3.1/src/main/java/com/google/devtools/build/lib/bazel/rules/Baz
 +    String spack_env_path = System.getenv("SPACK_ENV_PATH");
 +    if (spack_env_path != null) {
 +      builder.put("SPACK_ENV_PATH", spack_env_path);
++    }
++
++    String spack_debug_log_id = System.getenv("SPACK_DEBUG_LOG_ID");
++    if (spack_debug_log_id != null) {
++      builder.put("SPACK_DEBUG_LOG_ID", spack_debug_log_id);
 +    }
 +
 +    String spack_debug_log_dir = System.getenv("SPACK_DEBUG_LOG_DIR");

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class PySncosmo(PythonPackage):
     analysis."""
 
     homepage = "http://sncosmo.readthedocs.io/"
-    url = "https://pypi.python.org/packages/source/s/sncosmo/sncosmo-1.2.0.tar.gz"
+    url = "https://pypi.io/packages/source/s/sncosmo/sncosmo-1.2.0.tar.gz"
 
     version('1.2.0', '028e6d1dc84ab1c17d2f3b6378b2cb1e')
 

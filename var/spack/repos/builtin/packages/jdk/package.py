@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,10 @@ class Jdk(Package):
     # For instructions on how to find the magic URL, see:
     # https://gist.github.com/P7h/9741922
     # https://linuxconfig.org/how-to-install-java-se-development-kit-on-debian-linux
+    version('8u172-b11', 'eda2945e8c02b84adbf78f46c37b71c1', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/8u172-b11/a58eab1ec242421181065cdc37240b08/jdk-8u172-linux-x64.tar.gz')
+    version('8u141-b15', '8cf4c4e00744bfafc023d770cb65328c', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz')
     version('8u131-b11', '75b2cb2249710d822a60f83e28860053', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
     version('8u92-b14',  '65a1cc17ea362453a6e0eb4f13be76e4', curl_options=curl_options)
@@ -57,6 +61,9 @@ class Jdk(Package):
     # the tarball, add it to your mirror as mirror/jdk/jdk-7u80.tar.gz and
     # away you go.
     version('7u80-b0', '6152f8a7561acf795ca4701daa10a965')
+
+    provides('java@8', when='@8u0:8u999')
+    provides('java@7', when='@7u0:7u999')
 
     def url_for_version(self, version):
         url = "http://download.oracle.com/otn-pub/java/jdk/{0}/jdk-{1}-linux-x64.tar.gz"

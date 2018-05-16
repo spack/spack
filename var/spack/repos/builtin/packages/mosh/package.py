@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class Mosh(AutotoolsPackage):
     homepage = "https://mosh.org/"
     url      = "https://mosh.org/mosh-1.2.6.tar.gz"
 
+    version('1.3.2', '5122f4d2b973ab7c38dcdac8c35cb61e')
     version('1.3.0', 'd961276995936953bf2d5a794068b076')
     version('1.2.6', 'bb4e24795bb135a754558176a981ee9e')
 
@@ -43,6 +44,7 @@ class Mosh(AutotoolsPackage):
     depends_on('zlib')
     depends_on('openssl')
 
+    depends_on('pkgconfig', type='build')
     depends_on('perl', type='run')
 
     build_directory = 'spack-build'

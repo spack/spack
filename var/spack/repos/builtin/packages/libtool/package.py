@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,8 +46,25 @@ class Libtool(AutotoolsPackage):
                               join_path(self.prefix.share, 'aclocal'))
 
     def setup_dependent_package(self, module, dependent_spec):
-        # Automake is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = ['libtoolize', 'libtool']
+        # Automake is very likely to be a build dependency, so we add
+        # the tools it provides to the dependent module. Some build
+        # systems differentiate between BSD libtool (e.g., Darwin) and
+        # GNU libtool, so also add 'glibtool' and 'glibtoolize' to the
+        # list of executables. See Homebrew:
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/libtool.rb
+        executables = ['libtoolize', 'libtool', 'glibtoolize', 'glibtool']
         for name in executables:
             setattr(module, name, self._make_executable(name))
+
+    @run_after('install')
+    def post_install(self):
+        # Some platforms name GNU libtool and GNU libtoolize
+        # 'glibtool' and 'glibtoolize', respectively, to differentiate
+        # them from BSD libtool and BSD libtoolize. On these BSD
+        # platforms, build systems sometimes expect to use the assumed
+        # GNU commands glibtool and glibtoolize instead of the BSD
+        # variant; this happens frequently, for instance, on Darwin
+        symlink(join_path(self.prefix.bin, 'libtool'),
+                join_path(self.prefix.bin, 'glibtool'))
+        symlink(join_path(self.prefix.bin, 'libtoolize'),
+                join_path(self.prefix.bin, 'glibtoolize'))

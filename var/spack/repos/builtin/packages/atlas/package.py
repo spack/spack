@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
-from spack.package_test import *
-from spack.util.executable import Executable
-import os.path
+from spack.package_test import compile_c_and_execute, compare_output_file
 
 
 class Atlas(Package):
@@ -36,6 +36,12 @@ class Atlas(Package):
     (BLAS), and a subset of the linear algebra routines in the LAPACK library.
     """
     homepage = "http://math-atlas.sourceforge.net/"
+
+    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2',
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.39/atlas3.11.39.tar.bz2')
+
+    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
             url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
@@ -50,11 +56,14 @@ class Atlas(Package):
              destination='spack-resource-lapack',
              when='@3:')
 
-    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
-
     variant('shared', default=True, description='Builds shared library')
-    variant('pthread', default=False, description='Use multithreaded libraries')
+
+    variant(
+        'threads', default='none',
+        description='Multithreading support',
+        values=('pthreads', 'none'),
+        multi=False
+    )
 
     provides('blas')
     provides('lapack')
@@ -118,7 +127,7 @@ class Atlas(Package):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
         # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
-        is_threaded = '+pthread' in self.spec
+        is_threaded = self.spec.satisfies('threads=pthreads')
         if '+shared' in self.spec:
             to_find = ['libtatlas'] if is_threaded else ['libsatlas']
             shared = True
@@ -133,7 +142,7 @@ class Atlas(Package):
             to_find = ['liblapack'] + interfaces + ['libatlas']
             shared = False
         return find_libraries(
-            to_find, root=self.prefix, shared=shared, recurse=True
+            to_find, root=self.prefix, shared=shared, recursive=True
         )
 
     def install_test(self):
