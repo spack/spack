@@ -25,13 +25,15 @@
 from spack import *
 
 
-class RLambdaR(RPackage):
-    """A language extension to efficiently write functional programs in R.
-       Syntax extensions include multi-part function definitions, pattern
-       matching, guard statements, built-in (optional) type safety."""
+class RRcppcnpy(RPackage):
+    """Rcpp bindings for NumPy files."""
 
-    homepage = "https://cran.rstudio.com/web/packages/lambda.r/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/lambda.r_1.2.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/lambda.r"
+    homepage = "https://github.com/eddelbuettel/rcppcnpy"
+    url      = "https://cran.r-project.org/src/contrib/RcppCNPy_0.2.9.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/RcppCNPy"
 
-    version('1.2', 'bda49898b85ad5902880a31f43b432e2')
+    version('0.2.9', '7f63354d15928b6716830c2975b3baf0')
+
+    depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on('cnpy')
+    depends_on('r-rcpp', type=('build', 'run'))
