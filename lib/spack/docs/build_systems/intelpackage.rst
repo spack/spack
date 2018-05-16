@@ -12,13 +12,25 @@ This build system is a work-in-progress. See
 https://github.com/spack/spack/pull/4300 and
 https://github.com/spack/spack/pull/7469 for more information.
 
+Introduction
+~~~~~~~~~~~~
 
-Spack interacts with Intel packages in three ways: (1) as external tools, (2)
-as tools to install within Spack, and (3) as tools to use to compile other
-packages, also within Spack.
+Spack interacts with Intel packages in three ways:
+
+(1) Integrating as *external* tools,
+(2) Installing as tools *internal* to Spack, and
+(3) *Using* the tools to compile what we'll call *client packages* within Spack.
+
+Conceivably, there is an auxiliary way that follows naturally from 2. like
+any other regular Spack package, namely:
+
+(4) Making the Spack-installed Intel tools available *external to Spack* for ad-hoc use.
+
+This document aims to clarify the different ways and to document how to go about
+using the tools in each way, focusing on 1. through 3.
 
 
-Integration of Intel packages *external* to Spack
+Integration of Intel tools *external* to Spack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A site that already uses Intel tools, especially licensed ones, will likely
@@ -26,25 +38,27 @@ have some versions already installed on the system, especially at a time when
 Spack is just being introduced. It will be useful to make such previously
 installed tools available for use by Spack as they are.
 
-External Intel *compilers*, like all compilers that Spack is to use, are
+External Intel *compilers*, like all compilers that Spack is to use, are to be
 configured in ``compilers.yaml`` files located in ``$SPACK_ROOT/etc/spack/`` or
 the user's own ``~/.spack/`` directory. Specifics for the Intel compilers are
 discussed at
 http://spack.readthedocs.io/en/latest/getting_started.html#intel-compilers .
 
-External *library-type* packages (as opposed to compilers) are configured for
+External *library-type* packages (as opposed to compilers) are to be configured for
 Spack in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
 ``~/.spack/packages.yaml``, as documented at
 http://spack.readthedocs.io/en/latest/build_settings.html#external-packages .
 
 These ``packages.yaml`` files resolve a Spack spec via either ``paths`` or
-``modules`` tokens to specific pre-installed package versions on the system
+``modules`` tokens to specific pre-installed package versions already on the system
 that you wish to integrate.  Since Intel tools generally need environment
-variables to interoperate, the ``modules`` token will be preferable.  Its
+variables to interoperate, which cannot be conveyd alongside a bare ``paths``
+specification, the ``modules`` token will be preferable.  Its
 named modulefile, generated and managed outside of Spack's purview, will be
-loaded when the corresponding spec is required.
+loaded when the corresponding spec is required within Spack when
+compiling client packages.
 
-The following exampleintegrates the packages activated by the external
+The following example integrates the packages activated by the external
 ``intel-mkl/18/18.0.1`` and ``intel-mkl/18/18.0.2`` modulefiles as Spack
 packages ``intel-mkl@2018.1.163`` and ``intel-mkl@2018.2.199``, respectively:
 
@@ -76,9 +90,11 @@ packages through its normal internal mechanism.
          intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.2
        buildable: False
 
+TODO: confirm
 
-Installing within Spack
-~~~~~~~~~~~~~~~~~~~~~~~
+
+Installing Intel tools *within* Spack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Installation of Intel compilers and libraries *within* Spack.
 
@@ -87,15 +103,15 @@ Compilers always require a license - see Section Licenses below.
 ...
 
 
-Using within Spack
-~~~~~~~~~~~~~~~~~~
+Using Intel tools to compile client packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once Intel packages are integrated as external package or installed within
-Spack, they can be used as intended for installing what we'll call *client
-packages* within Spack.  There are actually three different routes for using
+Spack, they can be used as intended for installing *client packages* within
+Spack.  There are actually three different routes for using
 Intel packages:
 
-* Compilers, as explicitly named the client spec.
+* Compilers, as explicitly named the client spec in the form ``%intel@version``
 
     Needs editing ``compilers.yaml`` and always requires a license.
     ...
@@ -116,10 +132,10 @@ Licenses
 
 Some of Intel's software products require a license, in particular
 the core development packages of compilers, analyzers, and optimizers.
-These are available in Spack as:
+These are available in Spack as two packages:
 
-* ``intel-parallel-studio`` - entire suite
-* ``intel`` - compilers-only subset
+* ``intel-parallel-studio`` - the entire suite,
+* ``intel`` - a compilers-only subset.
 
 Note that from 2017 onwards Intel made many of its performance libraries,
 notably MPI and MKL, available for use without purchasing a license.
