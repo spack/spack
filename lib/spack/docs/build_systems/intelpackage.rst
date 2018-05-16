@@ -12,8 +12,9 @@ This build system is a work-in-progress. See
 https://github.com/spack/spack/pull/4300 and
 https://github.com/spack/spack/pull/7469 for more information.
 
+************
 Introduction
-~~~~~~~~~~~~
+************
 
 Spack interacts with Intel packages in three ways:
 
@@ -30,37 +31,225 @@ This document aims to clarify the different ways and to document how to go about
 using the tools in each way, focusing on 1. through 3.
 
 
+***********
+Licenses
+***********
+
+Some of Intel's software products require a license, in particular
+the core development packages of compilers, analyzers, and optimizers.
+As of 2018, these are available in Spack as two packages:
+
+* ``intel-parallel-studio`` - the entire suite,
+* ``intel`` - a compilers-only subset.
+
+For these packages, a valid license is needed to *install* them and to
+*compile* client packages, but never to *run* client packages.  If you plan on
+having Spack install those packages, the Intel installer that Spack will run
+for you must be able to find your license, according to the given below.
+
+From 2017 onwards Intel made many of its performance libraries, notably MPI
+and MKL (which provides BLAS, Lapack, ScaLapack, and FFT), available for use
+without purchasing a license. Earlier versions of these library packages, like
+compilers, do require a license for *installation* of the packages themselves,
+during *compilation* of client packages, but never at runtime of client
+packages.
+
+For more, see:
+
+* https://software.intel.com/en-us/faq/licensing
+* https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
+
+To install a licensed package within Spack, provide the license by one of the
+following means *before* executing ``spack install intelfoo``:
+
+
+License Server
+~~~~~~~~~~~~~~~~
+
+Setting up a license server as such is outside the scope of Spack. We assume
+your system administrator has a license server running and has installed
+network licenses for Intel packages.
+
+To use an Intel license server client-side, e.g., by an Intel installer to
+install licensed library packages or compilers, each such client application
+needs to know the host name(s) and port number(s) of the license server.
+This can be done by three methods, all described at
+https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license .
+
+Ideally, your license administrator will *already have installed* the necessary
+files to tell clients where to reach the server.
+
+Notably, any files under ``/opt/intel/licenses/foo.lic`` that have the form::
+
+  SERVER  hostname  hostid_or_ANY  portnum
+  USE_SERVER
+
+will be found automatically by client applications like installers and
+eventually compilers and require no further action to reach the license server.
+While not particularly recommended, even the actual network license files
+containing full PACKAGE and INCREMENT data could be placed this way, as long as
+the ``SERVER`` and ``USE_SERVER`` tokens are present or have been added in the
+header.
+
+According to Intel's documentation, there is a way to install a licensed
+product even when a FlexLM server process is *not running*: That is when the
+license server is specified via the ``INTEL_LICENSE_FILE`` environment
+variable in the form ``port@serverhost``. All other means of configuring
+a network license for a client require the license server to be up.
+
+
+License File
+~~~~~~~~~~~~~~~~
+
+If you purchased a single-user license, then obtain your license file as
+instructed by Intel. If needed, request that the file be re-sent to you
+`following Intel's instructions
+<https://software.intel.com/en-us/articles/resend-license-file>`_.
+
+License files are plain text files containing license tokens in FlexLM format
+and whose name ends in ``.lic``.  Intel installers and compilers look for
+license files in several different locations when they run, first in a
+Intel-defined default directory, then the contents of the environment variable
+``INTEL_LICENSE_FILE`` [1]_, and finally their own directory.
+
+.. [1]  Despite the name, ``INTEL_LICENSE_FILE`` is actually a "PATH"-style
+   variable that can hold a list of directories (presumed to contain ``*.lic``
+   files), file names, or network locations in the form ``port@host`` (on Linux
+   and Mac), with all items separated by ":" (on Linux and Mac).
+
+Place your license by one of the following means, in order of decreasing
+preference:
+
+* Default directory
+
+    Install your license file in the directory ``/opt/intel/licenses/`` if you
+    have write permission to it. This directory is inspected by all Intel tools
+    and is therefore preferred as no further configuration steps are needed.
+
+    Create the directory if it does not yet exist.  For the file name, either
+    keep the downloaded name or use another suitably plain yet descriptive
+    name that ends in ``.lic``. Set permissions such that the license file is
+    accessible to the licensed users only.
+
+
+* Environment variable
+
+    If you cannot use the default directory, but your system already has set
+    the environment variable ``INTEL_LICENSE_FILE`` outside of Spack, then, if
+    you have the necessary write permission, place your license file in one of
+    the directories mentioned in this environment variable. Make the license
+    file accessible to the licensed users only.
+
+    If your system has not yet set and used the environment variable
+    ``INTEL_LICENSE_FILE``, you would be responsible to set it consistently
+    and repeatedly, being stable across updates and re-installations.  As this
+    may be difficult in the long run, we recommend that you do *not* attempt
+    to start using the variable solely for Spack.  Instead, try the next
+    option.
+
+* Spack-managed file
+
+    If you cannot install your license file in Intel's default directory or a
+    location within a pre-existing ``INTEL_LICENSE_FILE`` variable, use the
+    concept of a *Spack-global Intel license file*.
+
+    To initialize this file, *copy* your downloaded license file to
+    ``$SPACK_ROOT/etc/spack/licenses/intel/license.lic``; create the ``intel``
+    directory if it does not yet exist.  This is a one-time action.  Once
+    Spack's global Intel license file has been populated, no further action
+    from you should be needed.
+
+    Spack will use this file for Intel tools installed within Spack only (i.e.,
+    under route 2 above), as follows: at the end of ``spack install
+    intelfoo``, symbolic links to the global Intel license file will be placed
+    in each directory where licensed Intel binaries were installed.
+
+When you run ``spack install intelfoo``, Spack inspects the license locations
+given above. If Spack cannot find a license, it will bring up an editor to
+populate the global Intel license file,
+``$SPACK_ROOT/etc/spack/licenses/intel/license.lic``. At this point, you can
+copy&paste the contents of *your* license file into this Spack-global Intel
+license file.  This is an alternative way to initialize the latter, and, like
+initialization by copy, should be needed only once.
+
+
+**TODO:**
+* Code this specific behavior (2018-05-16)
+* Note PR #6534 "Intel v18 License File Format Issue"
+
+
+**************************************************
 Integration of Intel tools *external* to Spack
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**************************************************
 
 A site that already uses Intel tools, especially licensed ones, will likely
 have some versions already installed on the system, especially at a time when
 Spack is just being introduced. It will be useful to make such previously
-installed tools available for use by Spack as they are.
+installed tools available for use by Spack as they are. Integration varies
+depending on the nature of the tools:
 
-External Intel *compilers*, like all compilers that Spack is to use, are to be
-configured in ``compilers.yaml`` files located in ``$SPACK_ROOT/etc/spack/`` or
-the user's own ``~/.spack/`` directory. Specifics for the Intel compilers are
-discussed at
-http://spack.readthedocs.io/en/latest/getting_started.html#intel-compilers .
+Compilers
+~~~~~~~~~~~
 
-External *library-type* packages (as opposed to compilers) are to be configured for
-Spack in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
-``~/.spack/packages.yaml``, as documented at
-http://spack.readthedocs.io/en/latest/build_settings.html#external-packages .
+Configure external Intel *compilers*, like all compilers that Spack is to use,
+in ``compilers.yaml`` files located in
+``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
+Follow the `specifics for the Intel compilers
+<http://spack.readthedocs.io/en/latest/getting_started.html#intel-compilers>`_
+in the Spack documentation.
 
-These ``packages.yaml`` files resolve a Spack spec via either ``paths`` or
-``modules`` tokens to specific pre-installed package versions already on the system
-that you wish to integrate.  Since Intel tools generally need environment
-variables to interoperate, which cannot be conveyd alongside a bare ``paths``
-specification, the ``modules`` token will be preferable.  Its
-named modulefile, generated and managed outside of Spack's purview, will be
-loaded when the corresponding spec is required within Spack when
-compiling client packages.
+The ``compilers.yaml`` files combine a set of C and Fortran compilers and
+define that set as a Spack spec of the form ``intel@version``.  The
+configuration file entry then determines how this spec is resolved, via either
+a ``paths`` or ``modules`` tokens, to a specific pre-installed package version
+on the system.
 
-The following example integrates the packages activated by the external
-``intel-mkl/18/18.0.1`` and ``intel-mkl/18/18.0.2`` modulefiles as Spack
-packages ``intel-mkl@2018.1.163`` and ``intel-mkl@2018.2.199``, respectively:
+The following example illustrates how to integrate the 2017 Intel compiler
+suite, which normally was activated by users of the example system as ``module
+load intel/17``. Since Spack must be rather more picky about versions,
+we must specify full versions and complete modulefile names in the relevant
+``compilers.yaml`` entry:
+
+.. code-block:: yaml
+
+    compilers:
+    ...
+    - compiler:
+        target:     x86_64
+        operating_system:   centos6
+        modules:    [intel/17/17.0.6]
+        spec:       intel@17.0.6
+        paths:
+          cc:       /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/icc
+          cxx:      /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/icpc
+          f77:      /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/ifort
+          fc:       /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/ifort
+    ...
+
+
+Libraries
+~~~~~~~~~~~
+
+Configure external *library-type* packages (as opposed to compilers)
+in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
+``~/.spack/packages.yaml``, as documented in the `Build settings Spack
+documentation
+<http://spack.readthedocs.io/en/latest/build_settings.html#external-packages>`_.
+
+Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
+external to Spack in terms of a Spack spec and resolve each such spec via
+either the ``paths`` or ``modules`` tokens to a specific pre-installed package
+version on the system.  Since Intel tools generally need environment variables
+to interoperate, which cannot be conveyed in a mere ``paths`` specification,
+the ``modules`` token will be more sensible to use. It resolves the Spack-side
+spec to a modulefile that is generated and managed outside of Spack's purview,
+and which will be loaded when the corresponding spec is called upon within
+Spack to compile client packages.
+
+The following example integrates two packages embodied by hypothetical
+external modulefiles ``intel-mkl/18/18.0.1`` and ``intel-mkl/18/18.0.2``, as
+Spack packages ``intel-mkl@2018.1.163`` and ``intel-mkl@2018.2.199``,
+respectively:
 
 .. code-block:: yaml
 
@@ -70,16 +259,23 @@ packages ``intel-mkl@2018.1.163`` and ``intel-mkl@2018.2.199``, respectively:
          intel-mkl@2018.1.163  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.1
          intel-mkl@2018.2.199  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.2
 
-If your system administrator did not provide modules for the Intel tools
-available, you could do well to ask for them, because installing multiple
-copies of the Intel tools is bound to stretch disk space and patience thin. If
-you *are* the system administrator and are still new to modules, then perhaps
-it's best to follow the next section and install the Intel tools solely within
-Spack.
+Note that the Spack spec does intentionally not contain a compiler
+specification. This is intentional, as the Intel library packages can be used
+unmodified with different compilers.
 
-A more advanced version follows, illustrating how to provide variants
-and using the ``buildable: False`` declaration to disallow Spack to install
-packages through its normal internal mechanism.
+**TODO:** Confirm how the compiler-less spec is handled.
+
+If your system administrator did not provide modules for pre-installed Intel
+tools, you could do well to ask for them, because installing multiple copies
+of the Intel tools, as is wont to happen once Spack is in the picture, is
+bound to stretch disk space and patience thin. If you *are* the system
+administrator and are still new to modules, then perhaps it's best to follow
+the next section and install the Intel tools solely within Spack.
+
+A more advanced version follows, illustrating how to provide variants and
+using the ``buildable:`` directive to prevent Spack from installing other
+versions or variants of the named package through its normal internal
+mechanism.
 
 .. code-block:: yaml
 
@@ -90,153 +286,115 @@ packages through its normal internal mechanism.
          intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.2
        buildable: False
 
-TODO: confirm
+**TODO:** Confirm variant handling.
 
 
+*************************************
 Installing Intel tools *within* Spack
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*************************************
 
-Installation of Intel compilers and libraries *within* Spack.
+When a system does not yet have Intel tools installed already, or the
+installed versions are too old, Spack can install Intel tools as normal Spack
+packages for you and then use them, with the appropriate configuration, to
+compile further client packages.
 
-Compilers always require a license - see Section Licenses below.
+As stated in the previous section `Integration of Intel tools *external* to
+Spack`_, Intel compilers and some early library-type Intel packages require a
+license for *installing* and *running* them. Follow the section `Licenses`_ on
+how to make your license accessible to Spack and to the Intel installer that
+Spack will run for you.
 
-...
+Compiler components
+~~~~~~~~~~~~~~~~~~~~~
+
+Follow the same basic steps as shown under `Compilers`_ in the previous
+section to configure entries in ``compilers.yaml``, with the following
+considerations:
+
+* Under ``paths:``, use the full paths to the actual compiler binaries (``icc``,
+``ifort``, etc.) located within the Spack installation tree, in all their
+unpleasant length.
+
+* Use the ``modules:`` or ``cflags:`` tokens to specify a suitable accompanying
+``gcc`` version to help pacify picky C++ client packages which may require C++
+standards that are more recent than the ones that your system-provided ``gcc``
+and its ``libstdc++.so`` can support.
 
 
+That's all there's to say for the mere installation of the Intel tools by
+Spack.  To use those tools for client packages, additional configuration steps
+are neeeded, shown the the next section
+`Using Intel tools to compile client packages`_.
+
+
+*********************************************
 Using Intel tools to compile client packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*********************************************
 
-Once Intel packages are integrated as external package or installed within
-Spack, they can be used as intended for installing *client packages* within
-Spack.  There are actually three different routes for using
-Intel packages:
+Once Intel packages are integrated into Spack as either external package or
+installed within Spack, they can be used as intended for installing *client
+packages* within Spack.  There are three different routes for doing so,
+depending on the type of the Intel component needed:
 
-* Compilers, as explicitly named the client spec in the form ``%intel@version``
+Using Intel compilers
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Needs editing ``compilers.yaml`` and always requires a license.
-    ...
+To select Intel compilers to compile client packages, use one of the following
+means:
 
-* Implicitly as virtual packages that satisfy a requirement for a library that
-  is available in different flavors, namely BLAS, Lapack, and MPI.
+* Request the Intel compilers expliclity in the client spec, e.g.:
 
-  Intel packages can be selected either in the client package spec or by
-  ``providers`` settings in ``packages.yaml``.
-  ...
+.. code-block:: sh
 
-* As explicit dependency (DAAL, IPP – TBD).
-  ...
+   spack install libxc@3.0.0%intel
 
 
-Licenses
-~~~~~~~~~
+* Alternatively, you can request Intel compilers by so-called concretization preference.
+To do so, configure the order in the appropriate ``packages.yaml`` file, under
+either an ``all:`` or client-package-specific entry, in a  ``compiler:`` list; see section
+`Configuring Package Preferences
+<http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_.
+of the Spack documentation.
 
-Some of Intel's software products require a license, in particular
-the core development packages of compilers, analyzers, and optimizers.
-These are available in Spack as two packages:
-
-* ``intel-parallel-studio`` - the entire suite,
-* ``intel`` - a compilers-only subset.
-
-Note that from 2017 onwards Intel made many of its performance libraries,
-notably MPI and MKL, available for use without purchasing a license.
-
-For packages that do require a license, it is needed not only during use, but
-typically already at installation time.  If you plan on having Spack install
-any such package, the Intel installer that Spack will run for you must be able
-to find your license.
-
-Therefore, *before* executing ``spack install intel-<pkg>``, provide the
-license by one of the following means:
+See also: `Concretization Preferences
+<http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
 
 
-**License Server**
+Using Intel packages as virtual packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Setting up a license server as such is outside the scope of Spack. We assume
-your system administrator has a license server running and has installed
-network licenses for Intel packages.
+Intel packages, whether integrated into Spack as external packages or
+installed within Spack, can be called upon to satisfy the requirement of a
+client package for a library that is available from different providers.
+The relevant virtual packages for Intel are ``blas``, ``lapack``,
+``scalapack``, and ``mpi``.
 
-To use an Intel license server client-side, e.g., by an Intel installer to
-install licensed library packages or compilers, the client needs to find out or
-be told the host name(s) and port number(s) of the license server, which can be
-done by three methods, all described at
-https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license .
+In both kinds of installation, Intel packages have optional *variants*
+which may alter the list of virtual packages provided, depending on the
+variants that were active for each externally declared or internally
+installed package.
 
-Note, that ideally, your license administrator will *already have installed*
-the necessary files to tell clients where to reach the server.
+To have Intel packages used by default for all client packages or a specific
+client one, edit the ``packages.yaml`` file.
+Customize, either under the ``all:`` entry or a client package entry, a new
+``providers:`` dictionary entry whose keys are the virtual packages and whose
+values are the Spack specs that satisfy the virtual package, in order of
+decreasing preference.
 
-Notably, any files under ``/opt/intel/licenses/foo.lic`` that have the form::
+As for choosing compiler preferences, see the Spack documentation at
 
-  SERVER  hostname  hostid_or_ANY  portnum
-  USE_SERVER
+* Tutorial for `Configuring Package Preferences
+<http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_.
 
-will be found automatically by client processess like installers and eventually
-compilers and require no further action to use them.  While not particularly
-recommended, even the actual network license files containing full PACKAGE and
-INCREMENT data could be placed this way, as long as the ``USE_SERVER`` token is
-present or has been added in the header.
-
-Note that you can *install* a licensed product even when the actual FlexLM
-server process is not running, by specifying the license server as ``export
-INTEL_LICENSE_FILE=port@serverhost``.
-
-...
+* `Concretization Preferences
+<http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
 
 
-**License File**
+Explicit dependency
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you purchased a single-user license, obtain your license file as instructed
-by Intel. You can request that the license file be re-sent to you `following
-Intel's instructions
-<https://software.intel.com/en-us/articles/resend-license-file>`_.
+With the proper installation as detailed above, no special steps should be
+required when a client package specifically requests an Intel package as
+dependency, this being one of the target use cases for Spack.
 
-For more, see:
-
-* https://software.intel.com/en-us/faq/licensing
-* https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
-
-The license file is always a plain text file whose name ends in ``.lic``.
-Intel installers and compilers look for license files in several different
-locations when they run:
-
-** Default Intel location
-
-If you can, i.e., you have write permission, create the directory
-``/opt/intel/licenses/`` if it does not yet exist, and install your license
-file with either the downloaded name or another suitably plain name that ends
-in ``.lic`` in that directory.  This is the location that all Intel tools
-inspect, and therefore preferred as no further action is needed.
-
-** Alternative Intel location
-
-If you cannot write to the default directory, but your system already has set
-and manages the environment variable ``INTEL_LICENSE_FILE`` outside of Spack,
-try to place your license file in a directory mentioned in this environment
-variable if you have the necessary write permission. Make the license file
-accessible to the licensed users only.
-
-The Intel installer and compilers will search the default directory, then the
-contents of the environment variable ``INTEL_LICENSE_FILE``.  Despite its name,
-this is actually a PATH style variable that can hold a list of directories
-(presumed to contain ``*.lic`` files), file names, or network locations in the
-form ``port@host``, all separated by ":" (on Linux and Mac).
-
-** Spack-managed location
-
-If you cannot install your license file in Intel's default directory or a
-location within a pre-existing ``INTEL_LICENSE_FILE`` variable, then Spack will
-pursue a different approach: Spack will keep the license for you as a *global
-license* under its own purview, specifically in the file
-``$SPACK_ROOT/etc/spack/licenses/intel/license.lic``. After installing Intel
-tools under Spack (route 2 above), Spack will place symbolic links to this file
-in each directory where licensed Intel binaries are located.
-
-Once Spack's global license file has been populated, no futher action from you
-should be needed. To initialize the global license, *copy* your license file to
-``$SPACK_ROOT/etc/spack/licenses/intel/license.lic``; create the ``intel``
-directory if it does not yet exist.
-
-...
-
-When you run ``spack install intel-foo``, Spack will attempt to use the license locations
-indicated above. If Spack cannot find a license, it will bring up an editor for a new
-``$SPACK_ROOT/etc/spack/licenses/intel/license.lic`` and ask you to populate the file.
+**TODO:** confirm for DAAL, IPP
