@@ -1,5 +1,8 @@
 .. _intelpackage:
 
+.. sectnum::
+.. contents::
+
 ------------
 IntelPackage
 ------------
