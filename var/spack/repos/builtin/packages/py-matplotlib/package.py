@@ -56,6 +56,8 @@ class PyMatplotlib(PythonPackage):
             description='Enable LaTeX text rendering support')
     variant('animation', default=False,
             description='Enable animation support')
+    variant('python3', default=False,
+        description='Enable if you are building a stack with Python3')
 
     # Python 2.7, 3.4, or 3.5
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
@@ -74,8 +76,10 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-cycler@0.9:', type=('build', 'run'))
-    depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
-    depends_on('py-functools32', type=('build', 'run'), when='^python@2.7')
+#    depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
+#    depends_on('py-functools32', type=('build', 'run'), when='^python@2.7')
+    depends_on('py-subprocess32', type=('build', 'run'), when='~python3')
+    depends_on('py-functools32', type=('build', 'run'), when='~python3')
     depends_on('py-kiwisolver', type=('build', 'run'), when='@2.2.0:')
 
     # ------ Optional GUI frameworks

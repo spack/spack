@@ -49,3 +49,12 @@ class Doxygen(CMakePackage):
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')
+
+    # Doxygen has an undeclared depenendency on a System-installed
+    # Python2 at /usr/bin/python.  Avoid polluting this with any
+    # Spack-installed Pythons in our tree.
+    def setup_environment(self, spack_env, run_env):
+        spack_env.unset('PYTHONPATH')
+        spack_env.unset('PYTHONHOME')
+        spack_env.unset('PYTHONSTARTUP')
+

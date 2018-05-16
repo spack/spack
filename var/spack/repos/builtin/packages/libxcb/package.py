@@ -39,6 +39,9 @@ class Libxcb(AutotoolsPackage):
     version('1.11.1', '118623c15a96b08622603a71d8789bf3')
     version('1.11',   '1698dd837d7e6e94d029dbe8b3a82deb')
 
+    variant('python3', default=False,
+       description='Enable if you are building a stack with Python3')
+
     depends_on('libpthread-stubs')
     depends_on('libxau@0.99.2:')
     depends_on('libxdmcp')
@@ -57,9 +60,19 @@ class Libxcb(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('python@2.6:2.8', type='build', when='~python3')
 
     def patch(self):
         filter_file(
             'typedef struct xcb_auth_info_t {',
             'typedef struct {',
             'src/xcb.h')
+
+    def setup_environment(self, spack_env, run_env):
+        # Our Spack-installed Python3 breaks the build;
+        # Remove it from the environment and hope the System
+        # Python2 works for us.
+        if '+python3' in self.spec:
+            spack_env.unset('PYTHONPATH')
+            spack_env.unset('PYTHONHOME')
+            spack_env.unset('PYTHONSTARTUP')

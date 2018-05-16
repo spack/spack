@@ -41,3 +41,17 @@ class XcbProto(AutotoolsPackage):
     # extends('python')
 
     patch('xcb-proto-1.12-schema-1.patch', when='@1.12')
+
+    variant('python3', default=False,
+       description='Enable if you are building a stack with Python3')
+
+    depends_on('python@2.6:2.8', type='build', when='~python3')
+
+    def setup_environment(self, spack_env, run_env):
+        # Our Spack-installed Python3 breaks the build;
+        # Remove it from the environment and hope the System
+        # Python2 works for us.
+        if '+python3' in self.spec:
+            spack_env.unset('PYTHONPATH')
+            spack_env.unset('PYTHONHOME')
+            spack_env.unset('PYTHONSTARTUP')
