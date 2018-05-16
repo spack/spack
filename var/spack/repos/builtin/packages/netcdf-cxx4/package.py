@@ -52,7 +52,6 @@ class NetcdfCxx4(AutotoolsPackage):
         args.append('CPPFLAGS=' + ' '.join(CPPFLAGS))
         return args
 
-
     @property
     def libs(self):
         shared = True
