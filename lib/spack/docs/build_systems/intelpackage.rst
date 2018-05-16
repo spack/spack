@@ -72,8 +72,8 @@ To install a licensed Intel package within Spack, provide the license by one of
 the following means *before* executing ``spack install intelfoo``:
 
 
-License Server
-~~~~~~~~~~~~~~~~
+Using a License Server
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Setting up a license server as such is outside the scope of Spack. We assume
 your system administrator has a license server running and has installed
@@ -106,8 +106,8 @@ and has the form ``port@serverhost``. All other means of configuring a network
 license for a client require the license server to be up.
 
 
-License File
-~~~~~~~~~~~~~~~~
+Using a Standalone License File
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you purchased a single-user license, be sure to obtain your license file as
 instructed by Intel. If needed, request that the file be re-sent to you
