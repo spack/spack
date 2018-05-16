@@ -40,7 +40,7 @@ class Libhio(AutotoolsPackage):
     # We don't include older versions since they are missing features
     # needed by current and future consumers of libhio
     #
-    version('1.4.1.0', '6ef566fd8cf31fdcd05fab01dd3fae44')
+    version('1.4.1.2', '38c7d33210155e5796b16d536d1b5cfe')
 
     #
     # main users of libhio thru spack will want to use HFDF5 plugin,
@@ -58,16 +58,6 @@ class Libhio(AutotoolsPackage):
     # autodetects the presence of an MPI and/or uses mpicc by default to build
     depends_on('hdf5+mpi', when='+hdf5')
 
-    #
-    # wow, we need to patch libhio
-    #
-    patch('0001-configury-fix-a-problem-with-bz2-configury.patch', when="@1.4.1.0")
-    patch('0001-hdf5-make-docs-optional.patch', when="@1.4.1.0")
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which('autoreconf')
-        autoreconf('-ifv')
-
     def configure_args(self):
         spec = self.spec
         args = []
@@ -75,4 +65,5 @@ class Libhio(AutotoolsPackage):
         args.append('--with-external_bz2={0}'.format(spec['bzip2'].prefix))
         if '+hdf5' in spec:
             args.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
+        args.append('CC={0}'.format(spec['mpi'].mpicc))
         return args
