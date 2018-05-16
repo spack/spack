@@ -308,18 +308,19 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
+    @pytest.mark.usefixtures('config')
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.concretize()
 
         spec = Spec('libelf ^libdwarf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.concretize()
 
         spec = Spec('mpich ^dyninst ^libelf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.concretize()
 
     def test_equal(self):
         # Different spec structures to test for equality

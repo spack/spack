@@ -1834,6 +1834,16 @@ class Spec(object):
             changed = any(changes)
             force = True
 
+        visited_user_specs = set()
+        for dep in self.traverse():
+            visited_user_specs.add(dep.name)
+            visited_user_specs.update(x.name for x in dep.package.provided)
+
+        extra = set(user_spec_deps.keys()).difference(visited_user_specs)
+        if extra:
+            raise InvalidDependencyError(
+                self.name + " does not depend on " + comma_or(extra))
+
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
@@ -2226,13 +2236,6 @@ class Spec(object):
 
         any_change = self._normalize_helper(
             visited, full_spec_deps, provider_index)
-
-        # If there are deps specified but not visited, they're not
-        # actually deps of this package.  Raise an error.
-        extra = set(spec_deps.keys()).difference(visited)
-        if extra:
-            raise InvalidDependencyError(
-                self.name + " does not depend on " + comma_or(extra))
 
         # Mark the spec as normal once done.
         self._normal = True
