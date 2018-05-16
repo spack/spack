@@ -46,9 +46,33 @@ class GmapGsnap(Package):
     )
 
     def install(self, spec, prefix):
-        for binary in spec.variants['simd'].value:
-            configure('--with-simd-level={0}' .format(binary),
-                      '--prefix={0}'.format(prefix))
-            make()
-            make('install')
-            make('distclean')
+        configure = Executable('../configure')
+
+        if 'simd=avx2' in self.spec:
+            with working_dir('avx2', create=True):
+                configure('--with-simd-level=avx2',
+                          '--prefix={0}'.format(prefix))
+                make()
+                make('install')
+                make('distclean')
+        if 'simd=sse42' in self.spec:
+            with working_dir('sse42', create=True):
+                configure('--with-simd-level=sse42',
+                          '--prefix={0}'.format(prefix))
+                make()
+                make('install')
+                make('distclean')
+        if 'simd=avx512' in self.spec:
+            with working_dir('avx512', create=True):
+                configure('--with-simd-level=avx512',
+                          '--prefix={0}'.format(prefix))
+                make()
+                make('install')
+                make('distclean')
+        if 'simd=sse2' in self.spec:
+            with working_dir('sse2', create=True):
+                configure('--with-simd-level=sse2',
+                          '--prefix={0}'.format(prefix))
+                make()
+                make('install')
+                make('distclean')
