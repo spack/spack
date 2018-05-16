@@ -52,12 +52,6 @@ class Tcl(AutotoolsPackage):
 
     configure_directory = 'unix'
 
-#    def configure_args(self):
-#        spec = self.spec
-#        # https://github.com/spack/spack/issues/8151
-#        # https://groups.google.com/forum/#!topic/comp.lang.tcl/VJ1vFhcPmVg
-#        return ['--exec-prefix={0}'.format(self.spec.prefix)]
-
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
