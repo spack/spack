@@ -204,19 +204,19 @@ Compilers
 Configure external Intel *compilers*, like all compilers that Spack is to use,
 in ``compilers.yaml`` files located in
 ``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
-Follow the `specifics for the Intel compilers
-<http://spack.readthedocs.io/en/latest/getting_started.html#intel-compilers>`_
-in the Spack documentation.
+See `Vendor-Specific Compiler Configuration
+<http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_
+in the Spack documentation and follow the specifics for Intel Compilers.
 
-The ``compilers.yaml`` files combine a set of C and Fortran compilers and
-define that set as a Spack spec of the form ``intel@version``.  The
-configuration file entry then determines how this spec is resolved, via either
-a ``paths`` or ``modules`` tokens, to a specific pre-installed package version
-on the system.
+Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
+specific vendor release and define each such set as a Spack spec that in this
+case has the form ``intel@version``.  The entry then determines how this spec
+is resolved, via either a ``paths`` or ``modules`` tokens, to the specific
+pre-installed compiler version on the system.
 
 The following example illustrates how to integrate the 2017 Intel compiler
-suite, which normally was activated by users of the example system as ``module
-load intel/17``. Since Spack must be rather more picky about versions,
+suite, which outside of Spack is activated by users of the example system as
+``module load intel/17``. Since Spack must be rather more picky about versions,
 we must specify full versions and complete modulefile names in the relevant
 ``compilers.yaml`` entry:
 
