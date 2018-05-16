@@ -1,3 +1,4 @@
+
 ##############################################################################
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -37,7 +38,7 @@ class RAer(RPackage):
 
     version('1.2-5', '419df9dc8ee6e5edd79678fee06719ae')
 
-    depends_on('r@2.13.0:')
+    depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r-car@2.0-19:', type=('build', 'run'))
     depends_on('r-lmtest', type=('build', 'run'))
     depends_on('r-sandwich', type=('build', 'run'))
