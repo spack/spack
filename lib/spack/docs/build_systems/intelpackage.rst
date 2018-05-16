@@ -155,7 +155,7 @@ Setting up a license server as such is outside the scope of Spack. We assume
 your system administrator has a license server running and has installed
 network licenses for Intel packages.
 
-To use an Intel license server client-side, i.e., by an Intel installer to
+To use an Intel license server client-side, e.g., by an Intel installer to
 install licensed library packages or compilers, the client needs to find out or
 be told the host name(s) and port number(s) of the license server, which can be
 done by three methods, all described at
@@ -189,28 +189,54 @@ by Intel. You can request that the license file be re-sent to you `following
 Intel's instructions
 <https://software.intel.com/en-us/articles/resend-license-file>`_.
 
-The license file is a plain text file. Install the file in one of the following
-directories, creating them if necessary, and using either the downloaded name
-or another suitably plain name that ends in ``.lic``:
-
-1. ``/opt/intel/licenses/``. This is the preferred and default location. Use it
-   if you have write access there.
-
-2. Any other suitable directory you can write to, preferably used to hold
-   licenses only.  A recommended user-specific location is: ``~/intel/licenses/``.
-
-   Specify that directory and optionally the file name in an environment
-   variable ``export INTEL_LICENSE_FILE="/path/to/downloaded_name.lic"``.
-
-The Intel installer will search both the default directory and the contents of
-the environment variable ``INTEL_LICENSE_FILE``.  Despite its name, this is
-actually a PATH style variable that can hold a list drectories (optionally with
-file names), all separated by ":" (on Linux and Mac). The installer will try
-all ``*.lic`` files named or reachable in the given directories.
-
 For more, see:
 
 * https://software.intel.com/en-us/faq/licensing
 * https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
 
+The license file is always a plain text file whose name ends in ``.lic``.
+Intel installers and compilers look for license files in several different
+locations when they run:
+
+** Default Intel location
+
+If you can, i.e., you have write permission, create the directory
+``/opt/intel/licenses/`` if it does not yet exist, and install your license
+file with either the downloaded name or another suitably plain name that ends
+in ``.lic`` in that directory.  This is the location that all Intel tools
+inspect, and therefore preferred as no further action is needed.
+
+** Alternative Intel location
+
+If you cannot write to the default directory, but your system already has set
+and manages the environment variable ``INTEL_LICENSE_FILE`` outside of Spack,
+try to place your license file in a directory mentioned in this environment
+variable if you have the necessary write permission. Make the license file
+accessible to the licensed users only.
+
+The Intel installer and compilers will search the default directory, then the
+contents of the environment variable ``INTEL_LICENSE_FILE``.  Despite its name,
+this is actually a PATH style variable that can hold a list of directories
+(presumed to contain ``*.lic`` files), file names, or network locations in the
+form ``port@host``, all separated by ":" (on Linux and Mac).
+
+** Spack-managed location
+
+If you cannot install your license file in Intel's default directory or a
+location within a pre-existing ``INTEL_LICENSE_FILE`` variable, then Spack will
+pursue a different approach: Spack will keep the license for you as a *global
+license* under its own purview, specifically in the file
+``$SPACK_ROOT/etc/spack/licenses/intel/license.lic``. After installing Intel
+tools under Spack (route 2 above), Spack will place symbolic links to this file
+in each directory where licensed Intel binaries are located.
+
+Once Spack's global license file has been populated, no futher action from you
+should be needed. To initialize the global license, *copy* your license file to
+``$SPACK_ROOT/etc/spack/licenses/intel/license.lic``; create the ``intel``
+directory if it does not yet exist.
+
 ...
+
+When you run ``spack install intel-foo``, Spack will attempt to use the license locations
+indicated above. If Spack cannot find a license, it will bring up an editor for a new
+``$SPACK_ROOT/etc/spack/licenses/intel/license.lic`` and ask you to populate the file.
