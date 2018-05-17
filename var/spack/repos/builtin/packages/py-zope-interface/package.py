@@ -25,22 +25,24 @@
 from spack import *
 
 
-class PyAttrs(PythonPackage):
-    """Classes Without Boilerplate"""
+class PyZopeInterface(PythonPackage):
+    """This package provides an implementation of "object interfaces" for
+    Python. Interfaces are a mechanism for labeling objects as conforming to a
+    given API or contract. So, this package can be considered as implementation
+    of the Design By Contract methodology support in Python."""
 
-    homepage = "http://attrs.org/"
-    url      = "https://pypi.io/packages/source/a/attrs/attrs-18.1.0.tar.gz"
+    homepage = "https://github.com/zopefoundation/zope.interface"
+    url      = "https://pypi.io/packages/source/z/zope.interface/zope.interface-4.5.0.tar.gz"
 
-    import_modules = ['attr']
+    # FIXME: No idea why these import tests fail.
+    # Maybe some kind of namespace issue?
+    # import_modules = ['zope.interface', 'zope.interface.common']
 
-    version('18.1.0', '3f3f3e0750dab74cfa1dc8b0fd7a5f86')
-    version('16.3.0', '4ec003c49360853cf935113d1ae56151')
+    version('4.5.0', '7b669cd692d817772c61d2e3ad0f1e71')
+
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-
+    depends_on('py-zope-event', type='test')
+    depends_on('py-nose', type='test')
     depends_on('py-coverage', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-pympler', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-six', type='test')
-    depends_on('py-zope-interface', type='test')

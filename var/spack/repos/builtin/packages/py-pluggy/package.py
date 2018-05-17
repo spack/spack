@@ -25,22 +25,16 @@
 from spack import *
 
 
-class PyAttrs(PythonPackage):
-    """Classes Without Boilerplate"""
+class PyPluggy(PythonPackage):
+    """Plugin and hook calling mechanisms for python."""
 
-    homepage = "http://attrs.org/"
-    url      = "https://pypi.io/packages/source/a/attrs/attrs-18.1.0.tar.gz"
+    homepage = "https://github.com/pytest-dev/pluggy"
+    url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.6.0.tar.gz"
 
-    import_modules = ['attr']
+    import_modules = ['pluggy']
 
-    version('18.1.0', '3f3f3e0750dab74cfa1dc8b0fd7a5f86')
-    version('16.3.0', '4ec003c49360853cf935113d1ae56151')
+    version('0.6.0', 'ffdde7c3a5ba9a440404570366ffb6d5')
+
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-coverage', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-pympler', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-six', type='test')
-    depends_on('py-zope-interface', type='test')
