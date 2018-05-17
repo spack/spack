@@ -72,7 +72,7 @@ from multiprocessing import Process
 
 import pytest
 
-from llnl.util.filesystem import join_path, touch
+from llnl.util.filesystem import touch
 from spack.util.multiproc import Barrier
 from llnl.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
@@ -180,7 +180,7 @@ def private_lock_path(lock_dir):
 
     For other modes, it is the same as a shared lock.
     """
-    lock_file = join_path(lock_dir, 'lockfile')
+    lock_file = os.path.join(lock_dir, 'lockfile')
     if mpi:
         lock_file += '.%s' % comm.rank
     yield lock_file
@@ -189,7 +189,7 @@ def private_lock_path(lock_dir):
 @pytest.fixture
 def lock_path(lock_dir):
     """This lock is shared among all processes in a multiproc test."""
-    lock_file = join_path(lock_dir, 'lockfile')
+    lock_file = os.path.join(lock_dir, 'lockfile')
     yield lock_file
 
 

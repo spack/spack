@@ -49,7 +49,7 @@ from functools import wraps
 from six import string_types, with_metaclass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, mkdirp, join_path
+from llnl.util.filesystem import working_dir, mkdirp
 
 import spack.config
 import spack.error
@@ -1035,12 +1035,12 @@ class FsCache(object):
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = join_path(self.root, relativeDst)
+        dst = os.path.join(self.root, relativeDst)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
     def fetcher(self, targetPath, digest, **kwargs):
-        path = join_path(self.root, targetPath)
+        path = os.path.join(self.root, targetPath)
         return CacheURLFetchStrategy(path, digest, **kwargs)
 
     def destroy(self):

@@ -54,7 +54,6 @@ import re
 from six import string_types
 
 import llnl.util.lang
-from llnl.util.filesystem import join_path
 
 import spack
 import spack.error
@@ -530,7 +529,7 @@ def resource(**kwargs):
         # Check if the path falls within the main package stage area
         test_path = 'stage_folder_root'
         normalized_destination = os.path.normpath(
-            join_path(test_path, destination)
+            os.path.join(test_path, destination)
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:

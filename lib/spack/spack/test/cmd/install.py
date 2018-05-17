@@ -318,7 +318,7 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize('exc_typename,msg', [
-#    ('RuntimeError', 'something weird happened'),
+    ('RuntimeError', 'something weird happened'),
     ('KeyboardInterrupt', 'Ctrl-C strikes again')
 ])
 def test_junit_output_with_errors(

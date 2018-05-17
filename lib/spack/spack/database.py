@@ -51,7 +51,7 @@ from six import iteritems
 from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import mkdirp
 from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
 
 import spack.store
@@ -184,18 +184,18 @@ class Database(object):
 
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
-            self._db_dir = join_path(self.root, _db_dirname)
+            self._db_dir = os.path.join(self.root, _db_dirname)
         else:
             # Allow customizing the database directory location for testing.
             self._db_dir = db_dir
 
         # Set up layout of database files within the db dir
-        self._old_yaml_index_path = join_path(self._db_dir, 'index.yaml')
-        self._index_path = join_path(self._db_dir, 'index.json')
-        self._lock_path = join_path(self._db_dir, 'lock')
+        self._old_yaml_index_path = os.path.join(self._db_dir, 'index.yaml')
+        self._index_path = os.path.join(self._db_dir, 'index.json')
+        self._lock_path = os.path.join(self._db_dir, 'lock')
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = join_path(self._db_dir, 'prefix_lock')
+        self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
 
         # Create needed directories and files
         if not os.path.exists(self._db_dir):

@@ -26,8 +26,6 @@ import filecmp
 import os
 import pytest
 
-from llnl.util.filesystem import join_path
-
 import spack.repo
 import spack.mirror
 import spack.util.executable
@@ -66,7 +64,7 @@ def set_up_package(name, repository, url_attr):
 
 def check_mirror():
     with Stage('spack-mirror-test') as stage:
-        mirror_root = join_path(stage.path, 'test-mirror')
+        mirror_root = os.path.join(stage.path, 'test-mirror')
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.set('mirrors', mirrors)
@@ -77,7 +75,7 @@ def check_mirror():
 
         # check that there are subdirs for each package
         for name in repos:
-            subdir = join_path(mirror_root, name)
+            subdir = os.path.join(mirror_root, name)
             assert os.path.isdir(subdir)
 
             files = os.listdir(subdir)
@@ -96,7 +94,7 @@ def check_mirror():
                         original_path = mock_repo.path
                         if 'svn' in name:
                             # have to check out the svn repo to compare.
-                            original_path = join_path(
+                            original_path = os.path.join(
                                 mock_repo.path, 'checked_out')
 
                             svn = which('svn', required=True)

@@ -35,7 +35,7 @@ from contextlib import closing
 import yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, join_path, install_tree
+from llnl.util.filesystem import mkdirp, install_tree
 
 import spack
 import spack.cmd
@@ -264,9 +264,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     """
     # set up some paths
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_dir = join_path(outdir, "build_cache",
-                            tarball_directory_name(spec))
-    tarfile_path = join_path(tarfile_dir, tarfile_name)
+    tarfile_dir = os.path.join(outdir, "build_cache",
+                               tarball_directory_name(spec))
+    tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     mkdirp(tarfile_dir)
     spackfile_path = os.path.join(
         outdir, "build_cache", tarball_path_name(spec, '.spack'))
@@ -278,18 +278,18 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
-    spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
+    spec_file = os.path.join(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.realpath(
-        join_path(outdir, "build_cache", specfile_name))
-    indexfile_path = join_path(outdir, "build_cache", "index.html")
+        os.path.join(outdir, "build_cache", specfile_name))
+    indexfile_path = os.path.join(outdir, "build_cache", "index.html")
     if os.path.exists(specfile_path):
         if force:
             os.remove(specfile_path)
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(tempfile.mkdtemp(), os.path.basename(spec.prefix))
+    workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
@@ -512,7 +512,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # the base of the install prefix is used when creating the tarball
     # so the pathname should be the same now that the directory layout
     # is confirmed
-    workdir = join_path(tmpdir, os.path.basename(spec.prefix))
+    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
 
     # cleanup
     os.remove(tarfile_path)
