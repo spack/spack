@@ -62,16 +62,16 @@ Currently in Spack, these core components can be provided by two packages:
 * ``intel-parallel-studio`` – the entire suite,
 * ``intel`` – a compilers-only subset.
 
-For the core tools, a valid license is always needed at product *installation*
-time and to *compile* client packages, but never to *run* the resulting client
+For the core tools, a valid license is always needed at product installation
+time and to compile client packages, but never to run the resulting client
 packages.
 
-From 2017 onwards, Intel made many of its performance libraries, notably MPI
-and MKL (which provides BLAS, Lapack, ScaLapack, and FFT), available for use
-without purchasing a license. The libraries are included in the omnibus
-``intel-parallel-studio`` package, though some are optional variants as far as
-Spack is concerned. The performance libraries are also available as standalone
-Spack packages, which at the time of writing are:
+From 2017 onwards, Intel made many of its standalone performance library
+products, notably MPI and MKL (which provides BLAS, Lapack, ScaLapack, and
+FFT), available for use `under a no-cost license
+<https://software.intel.com/en-us/license/intel-simplified-software-license>`_.
+These performance libraries are available as the following standalone Spack
+packages (at the time of writing):
 
 * ``intel-mkl`` – Math Kernel Library,
 * ``intel-mpi`` – Intel's MPI implementation (which is based on MPICH),
@@ -79,9 +79,14 @@ Spack packages, which at the time of writing are:
 * ``intel-daal`` – Machine learning and data analytics library.
 
 Pre-2017 versions [fn1]_ of the performance library products do require, like
-compilers, the license at *installation* time of the products and during
-*compilation* of client packages.
+compilers, the license at installation time of the products and during
+compilation of client packages.
 
+The performance libraries are also provided by the omnibus
+``intel-parallel-studio`` package in Spack, which always requires a license.
+To complicate matters a bit, that package comes in 3 editions,
+of which only the uppermost ``cluster`` edition contains the MPI components,
+and hence only that edition will provide the ``mpi`` virtual package.
 
 """"""""""""""""""""""""""""""""""""""""""""""""""
 What must you do in Spack to use Intel licenses?
@@ -209,7 +214,7 @@ When you run ``spack install intelfoo``, Spack inspects the license locations
 given above. If Spack cannot find a license after all, it will bring up an
 editor for the Spack-global Intel license file, with the expectation and
 instructions for you to populate the file.  This should not happen, but if it
-does, copy&paste the contents of *your* license file into the editor [fn4]_,
+does, copy&paste the contents of your downloaded license file into the editor [fn4]_,
 save the file, and quit the editor.  You will recognize these steps as an
 alternative means to initialize the file. Either way, once populated, you
 should not have to touch this file again until your license status changes.
@@ -218,7 +223,7 @@ should not have to touch this file again until your license status changes.
 **TODO:**
 
 * Code this specific behavior (2018-05-16)  Use SGILF path explicitly in
-  ``silent.cfg``, or convey it via a *temporary* INTEL_LICENSE_FILE setting!?
+  ``silent.cfg``, or convey it via a temporary INTEL_LICENSE_FILE setting!?
 
 * Note `PR #6534 "Intel v18 License File Format Issue" <https://github.com/spack/spack/issues/6534>`_.
 
@@ -437,9 +442,9 @@ Example: ``etc/spack/packages.yaml`` might contain:
 
 
 
-""""""""""""""""""""""""""""""""""""""""
-Using Intel packages as virtual packages
-""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""
+Using Intel packages to satisfy virtual packages
+""""""""""""""""""""""""""""""""""""""""""""""""
 
 Intel packages, whether integrated into Spack as external packages or
 installed within Spack, can be called upon to satisfy the requirement of a
@@ -447,10 +452,15 @@ client package for a library that is available from different providers.
 The relevant virtual packages for Intel are ``blas``, ``lapack``,
 ``scalapack``, and ``mpi``.
 
-In both kinds of installation, Intel packages have optional *variants*
-which may alter the list of virtual packages provided, depending on the
-variants that were active for each externally declared or internally
-installed package.
+In both kinds of installation, Intel packages have optional `variants
+<http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_ which alter
+the list of virtual packages they can satisfy.  For Spack-external packages,
+the active variants are a combination of the defaults declared in Spack's
+package repository and the relevant declaration in ``packages.yaml``.
+Likewise, for Spack-internal packages, the set of active variants is a
+combination of the defaults from the package definition in the Spack repository
+and the spec used with ``spack install intelfoo [variant ...]``. The variants
+are permanently tied to the package so installed.
 
 To have Intel packages used by default for all client packages or a specific
 client one, edit the ``packages.yaml`` file.
@@ -465,20 +475,20 @@ For specifics on the ``providers:`` settings, see the Spack documentation at
 
 * `Concretization Preferences <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
 
-Example: ``~/.spack/packages.yaml`` might contain:
+Example: The following fairly minimal example for ``packages.yaml`` shows how
+to exclusively use the standalone ``intel-mkl`` for all the linear algebra
+virtual packages in Spack, and ``intel-mpi`` as preferred MPI implementation,
+but leaving the door open to use other implementations if desired.
 
 .. code-block:: yaml
 
   packages:
     all:
       providers:
-        mpi: [intel-mpi, intel-parallel-studio, openmpi, mpich, ]
+        mpi: [intel-mpi, openmpi, mpich, ]
         blas: [intel-mkl, ]
         lapack: [intel-mkl, ]
         scalapack: [intel-mkl, ]
-
-
-**TODO:** confirm this is clean and sensible.
 
 
 """"""""""""""""""""""""
