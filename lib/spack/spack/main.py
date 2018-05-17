@@ -41,28 +41,32 @@ import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
 
 import spack
+import spack.config
+import spack.paths
+import spack.repo
+import spack.util.debug
 from spack.error import SpackError
 
 
-# names of profile statistics
+#: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
 
-# help levels in order of detail (i.e., number of commands shown)
+#: help levels in order of detail (i.e., number of commands shown)
 levels = ['short', 'long']
 
-# intro text for help at different levels
+#: intro text for help at different levels
 intro_by_level = {
     'short': 'These are common spack commands:',
     'long':  'Complete list of spack commands:',
 }
 
-# control top-level spack options shown in basic vs. advanced help
+#: control top-level spack options shown in basic vs. advanced help
 options_by_level = {
     'short': ['h', 'k', 'V', 'color'],
     'long': 'all'
 }
 
-# Longer text for each section, to show in help
+#: Longer text for each section, to show in help
 section_descriptions = {
     'admin':       'administration',
     'basic':       'query packages',
@@ -76,8 +80,8 @@ section_descriptions = {
     'system':      'system',
 }
 
-# preferential command order for some sections (e.g., build pipeline is
-# in execution order, not alphabetical)
+#: preferential command order for some sections (e.g., build pipeline is
+#: in execution order, not alphabetical)
 section_order = {
     'basic': ['list', 'info', 'find'],
     'build': ['fetch', 'stage', 'patch', 'configure', 'build', 'restage',
@@ -85,29 +89,33 @@ section_order = {
     'packaging': ['create', 'edit']
 }
 
-# Properties that commands are required to set.
+#: Properties that commands are required to set.
 required_command_properties = ['level', 'section', 'description']
+
+#: Recorded directory where spack command was originally invoked
+spack_working_dir = None
 
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
+    global spack_working_dir
     try:
-        spack.spack_working_dir = os.getcwd()
+        spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(spack.spack_prefix)
-        spack.spack_working_dir = spack.spack_prefix
+        os.chdir(spack.paths.prefix)
+        spack_working_dir = spack.paths.prefix
 
 
 def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
-    for cmd in spack.cmd.all_commands:
+    for cmd in spack.cmd.all_commands():
         parser.add_command(cmd)
 
 
 def index_commands():
     """create an index of commands by section for this help level"""
     index = {}
-    for command in spack.cmd.all_commands:
+    for command in spack.cmd.all_commands():
         cmd_module = spack.cmd.get_module(command)
 
         # make sure command modules have required properties
@@ -166,7 +174,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             self.actions = self._subparsers._actions[-1]._get_subactions()
 
         # make a set of commands not yet added.
-        remaining = set(spack.cmd.all_commands)
+        remaining = set(spack.cmd.all_commands())
 
         def add_group(group):
             formatter.start_section(group.title)
@@ -339,20 +347,19 @@ def setup_main_options(args):
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
-    spack.debug = args.debug
 
-    if spack.debug:
-        import spack.util.debug as debug
-        debug.register_interrupt_handler()
+    if args.debug:
+        spack.util.debug.register_interrupt_handler()
+        spack.config.set('config:debug', True, scope='command_line')
 
     if args.mock:
-        from spack.repository import RepoPath
-        spack.repo.swap(RepoPath(spack.mock_packages_path))
+        rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
+        spack.repo.set_path(rp)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
-        spack.insecure = True
+        spack.config.set('config:verify_ssl', False, scope='command_line')
 
     # when to use color (takes always, auto, or never)
     tty.color.set_color_when(args.color)
@@ -470,7 +477,7 @@ def _main(command, parser, args, unknown_args):
     except SpackError as e:
         e.die()  # gracefully die on any SpackErrors
     except Exception as e:
-        if spack.debug:
+        if spack.config.get('config:debug'):
             raise
         tty.die(str(e))
     except KeyboardInterrupt:
@@ -548,7 +555,7 @@ def main(argv=None):
     try:
         parser.add_command(cmd_name)
     except ImportError:
-        if spack.debug:
+        if spack.config.get('config:debug'):
             raise
         tty.die("Unknown command: %s" % args.command[0])
 

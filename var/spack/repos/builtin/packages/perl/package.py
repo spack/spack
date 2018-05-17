@@ -30,10 +30,13 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-from spack import *
 import os
 from contextlib import contextmanager
+
 from llnl.util.lang import match_predicate
+
+import spack.store
+from spack import *
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -44,19 +47,22 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
-    # Development releases
+    # see http://www.cpan.org/src/README.html for
+    # explanation of version numbering scheme
+
+    # Development releases (odd numbers)
     version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
 
-    # Maintenance releases (recommended)
-    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c', preferred=True)
-    version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
+    # Maintenance releases (even numbers, recommended)
+    version('5.26.2', 'dc0fea097f3992a8cd53f8ac0810d523', preferred=True)
+    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
 
-    # Misc releases that people need
+    # End of life releases
+    version('5.22.4', '31a71821682e02378fcdadeed85688b8')
+    version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
     version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
     version('5.22.0', 'e32cb6a8dda0084f2a43dac76318d68d')
-
-    # End of life releases
     version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
     version('5.18.4', '1f9334ff730adc05acd3dd7130d295db')
     version('5.16.3', 'eb5c40f2575df6c155bc99e3fe0a9d82')

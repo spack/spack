@@ -24,7 +24,7 @@
 ##############################################################################
 import llnl.util.tty as tty
 
-import spack
+import spack.compilers.clang
 from spack.compiler import Compiler, get_compiler_version
 from spack.version import ver
 
@@ -47,7 +47,7 @@ class Gcc(Compiler):
     # Old compatibility versions may contain XY suffixes.
     suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
                   'cxx': 'gcc/g++',
                   'f77': 'gcc/gfortran',

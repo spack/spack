@@ -22,18 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+import pytest
+import sys
 
 import spack
-from llnl.util.filesystem import join_path
 from llnl.util.link_tree import MergeConflictError
 from spack.build_systems.python import PythonPackage
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.prefix import Prefix
-
-import os
-import pytest
-import sys
 
 
 class FakeExtensionPackage(object):
@@ -134,7 +132,7 @@ def python_and_extension_dirs(tmpdir):
     create_dir_structure(ext_prefix, ext_dirs)
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(join_path(ext_prefix, easy_install_location), 'w') as F:
+    with open(str(ext_prefix.join(easy_install_location)), 'w') as F:
         F.write("""path/to/ext1.egg
 path/to/setuptools.egg""")
 
@@ -219,10 +217,10 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, python_pkg.view())
 
-    assert os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
+    assert os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(join_path(python_prefix, easy_install_location), 'r') as F:
+    with open(os.path.join(python_prefix, easy_install_location), 'r') as F:
         easy_install_contents = F.read()
 
     assert 'ext1.egg' in easy_install_contents
@@ -245,9 +243,9 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, view)
 
-    assert not os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
+    assert not os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
-    assert os.path.exists(join_path(view_dir, 'bin/py-ext-tool'))
+    assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
 
 
 def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions):
@@ -278,9 +276,9 @@ def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions):
     f2 = 'lib/python2.7/site-packages/examplenamespace/ext2_sample.py'
     init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
 
-    assert os.path.exists(join_path(view_dir, f1))
-    assert os.path.exists(join_path(view_dir, f2))
-    assert os.path.exists(join_path(view_dir, init_file))
+    assert os.path.exists(os.path.join(view_dir, f1))
+    assert os.path.exists(os.path.join(view_dir, f2))
+    assert os.path.exists(os.path.join(view_dir, init_file))
 
 
 def test_python_keep_namespace_init(tmpdir, namespace_extensions):
@@ -315,13 +313,13 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions):
     python_pkg.deactivate(ext1_pkg, view)
     view.extensions_layout.remove_extension(python_spec, ext1_pkg.spec)
 
-    assert not os.path.exists(join_path(view_dir, f1))
-    assert os.path.exists(join_path(view_dir, init_file))
+    assert not os.path.exists(os.path.join(view_dir, f1))
+    assert os.path.exists(os.path.join(view_dir, init_file))
 
     python_pkg.deactivate(ext2_pkg, view)
     view.extensions_layout.remove_extension(python_spec, ext2_pkg.spec)
 
-    assert not os.path.exists(join_path(view_dir, init_file))
+    assert not os.path.exists(os.path.join(view_dir, init_file))
 
 
 # TODO: is this redundant? it makes sure that under circumstances where the
@@ -430,7 +428,7 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, perl_pkg.view())
 
-    assert os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+    assert os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
 
 def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
@@ -449,6 +447,6 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, view)
 
-    assert not os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+    assert not os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
-    assert os.path.exists(join_path(view_dir, 'bin/perl-ext-tool'))
+    assert os.path.exists(os.path.join(view_dir, 'bin/perl-ext-tool'))

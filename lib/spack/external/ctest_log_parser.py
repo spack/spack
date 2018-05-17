@@ -379,7 +379,7 @@ def _parse(lines, offset, profile):
         for flm in file_line_matches:
             match = flm.search(line)
             if match:
-                event.source_file, source_line_no = match.groups()
+                event.source_file, event.source_line_no = match.groups()
 
     return errors, warnings, timings
 
@@ -422,7 +422,7 @@ class CTestLogParser(object):
             context (int): lines of context to extract around each log event
 
         Returns:
-            (tuple): two lists containig ``BuildError`` and
+            (tuple): two lists containing ``BuildError`` and
                 ``BuildWarning`` objects.
         """
         if isinstance(stream, string_types):

@@ -415,6 +415,27 @@ class Llvm(CMakePackage):
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
 
+    @run_before('cmake')
+    def check_darwin_lldb_codesign_requirement(self):
+        if not self.spec.satisfies('+lldb platform=darwin'):
+            return
+        codesign = which('codesign')
+        cp = which('cp')
+        mkdir('tmp')
+        llvm_check_file = join_path('tmp', 'llvm_check')
+        cp('/usr/bin/false', llvm_check_file)
+
+        try:
+            codesign('-f', '-s', 'lldb_codesign', '--dryrun',
+                     llvm_check_file)
+
+        except ProcessError:
+            explanation = ('The "lldb_codesign" identity must be available'
+                           ' to build LLVM with LLDB. See https://llvm.org/'
+                           'svn/llvm-project/lldb/trunk/docs/code-signing'
+                           '.txt for details on how to create this identity.')
+            raise RuntimeError(explanation)
+
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
