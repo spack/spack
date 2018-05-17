@@ -30,7 +30,7 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -67,9 +67,7 @@ def add_common_arguments(subparser):
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true',
-        help="do not check packages against checksum")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
@@ -165,9 +163,9 @@ def default_log_file(spec):
     """
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
-    dirname = fs.join_path(spack.var_path, 'junit-report')
+    dirname = fs.os.path.join(spack.paths.var_path, 'junit-report')
     fs.mkdirp(dirname)
-    return fs.join_path(dirname, basename)
+    return fs.os.path.join(dirname, basename)
 
 
 def install_spec(cli_args, kwargs, spec):
@@ -204,7 +202,7 @@ def install(parser, args, **kwargs):
             tty.die("The -j option must be a positive integer!")
 
     if args.no_checksum:
-        spack.do_checksum = False  # TODO: remove this global.
+        spack.config.set('config:checksum', False, scope='command_line')
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
@@ -225,14 +223,16 @@ def install(parser, args, **kwargs):
         reporter.filename = args.log_file
 
     specs = spack.cmd.parse_specs(args.package)
+    tests = False
     if args.test == 'all' or args.run_tests:
-        spack.package_testing.test_all()
+        tests = True
     elif args.test == 'root':
-        for spec in specs:
-            spack.package_testing.test(spec.name)
+        tests = [spec.name for spec in specs]
+    kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(args.package, concretize=True)
+        specs = spack.cmd.parse_specs(
+            args.package, concretize=True, tests=tests)
     except SpackError as e:
         reporter.concretization_report(e.message)
         raise

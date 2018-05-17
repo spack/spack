@@ -29,8 +29,8 @@ import argparse
 import spack
 import spack.cmd
 import spack.store
-import spack.repository
 import spack.cmd.common.arguments as arguments
+import spack.repo
 
 from llnl.util import tty
 
@@ -125,7 +125,8 @@ def installed_dependents(specs):
     """
     dependents = {}
     for item in specs:
-        installed = spack.store.db.installed_relatives(item, 'parents', True)
+        installed = spack.store.db.installed_relatives(
+            item, 'parents', True)
         lst = [x for x in installed if x not in specs]
         if lst:
             lst = list(set(lst))
@@ -146,7 +147,7 @@ def do_uninstall(specs, force):
         try:
             # should work if package is known to spack
             packages.append(item.package)
-        except spack.repository.UnknownEntityError:
+        except spack.repo.UnknownEntityError:
             # The package.py file has gone away -- but still
             # want to uninstall.
             spack.Package.uninstall_by_spec(item, force=True)

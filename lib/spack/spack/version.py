@@ -51,6 +51,7 @@ from six import string_types
 
 from spack.util.spack_yaml import syaml_dict
 
+
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
 # Valid version characters
