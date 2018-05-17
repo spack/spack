@@ -27,7 +27,6 @@ import re
 import itertools
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
 
 import spack.error
 import spack.spec
@@ -270,7 +269,7 @@ class Compiler(object):
 
             files = os.listdir(directory)
             for exe in files:
-                full_path = join_path(directory, exe)
+                full_path = os.path.join(directory, exe)
 
                 prod = itertools.product(prefixes, compiler_names, suffixes)
                 for pre, name, suf in prod:

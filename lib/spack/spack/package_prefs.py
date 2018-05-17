@@ -27,7 +27,7 @@ from six import iteritems
 
 from llnl.util.lang import classproperty
 
-import spack
+import spack.repo
 import spack.error
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
@@ -44,14 +44,14 @@ def _spec_type(component):
 
 def get_packages_config():
     """Wrapper around get_packages_config() to validate semantics."""
-    config = spack.config.get_config('packages')
+    config = spack.config.get('packages')
 
     # Get a list of virtuals from packages.yaml.  Note that because we
     # check spack.repo, this collects virtuals that are actually provided
     # by sometihng, not just packages/names that don't exist.
     # So, this won't include, e.g., 'all'.
     virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-                if spack.repo.is_virtual(pkg_name)]
+                if spack.repo.path.is_virtual(pkg_name)]
 
     # die if there are virtuals in `packages.py`
     if virtuals:
@@ -202,25 +202,6 @@ class PackagePrefs(object):
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict((name, variant) for name, variant in spec.variants.items()
                     if name in pkg.variants)
-
-
-class PackageTesting(object):
-    def __init__(self):
-        self.packages_to_test = set()
-        self._test_all = False
-
-    def test(self, package_name):
-        self.packages_to_test.add(package_name)
-
-    def test_all(self):
-        self._test_all = True
-
-    def clear(self):
-        self._test_all = False
-        self.packages_to_test.clear()
-
-    def check(self, package_name):
-        return self._test_all or (package_name in self.packages_to_test)
 
 
 def spec_externals(spec):

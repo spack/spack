@@ -32,7 +32,6 @@ import shutil
 import tempfile
 import unittest
 
-from llnl.util.filesystem import join_path
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
@@ -42,7 +41,7 @@ class MakeExecutableTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
 
-        make_exe = join_path(self.tmpdir, 'make')
+        make_exe = os.path.join(self.tmpdir, 'make')
         with open(make_exe, 'w') as f:
             f.write('#!/bin/sh\n')
             f.write('echo "$@"')

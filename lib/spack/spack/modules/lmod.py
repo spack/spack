@@ -22,21 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os.path
+
 import llnl.util.lang as lang
+import itertools
+import collections
+
+import spack.config
 import spack.compilers
 import spack.spec
 import spack.error
-import itertools
-import collections
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseFileLayout
-from .common import BaseContext, BaseModuleFileWriter, configuration
+from .common import BaseContext, BaseModuleFileWriter
 
-#: LMOD specific part of the configuration
-configuration = configuration.get('lmod', {})
+#: TCL specific part of the configuration
+configuration = spack.config.get('modules:lmod', {})
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}

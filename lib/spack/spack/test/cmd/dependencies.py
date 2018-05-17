@@ -37,14 +37,14 @@ mpis = ['mpich', 'mpich2', 'multi-provider-mpi', 'zmpi']
 mpi_deps = ['fake']
 
 
-def test_immediate_dependencies(builtin_mock):
+def test_immediate_dependencies(mock_packages):
     out = dependencies('mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(['callpath'] + mpis)
     assert expected == actual
 
 
-def test_transitive_dependencies(builtin_mock):
+def test_transitive_dependencies(mock_packages):
     out = dependencies('--transitive', 'mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(
@@ -53,7 +53,7 @@ def test_transitive_dependencies(builtin_mock):
 
 
 @pytest.mark.db
-def test_immediate_installed_dependencies(builtin_mock, database):
+def test_immediate_installed_dependencies(mock_packages, database):
     with color_when(False):
         out = dependencies('--installed', 'mpileaks^mpich')
 
@@ -67,7 +67,7 @@ def test_immediate_installed_dependencies(builtin_mock, database):
 
 
 @pytest.mark.db
-def test_transitive_installed_dependencies(builtin_mock, database):
+def test_transitive_installed_dependencies(mock_packages, database):
     with color_when(False):
         out = dependencies('--installed', '--transitive', 'mpileaks^zmpi')
 

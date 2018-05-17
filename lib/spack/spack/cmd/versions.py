@@ -26,7 +26,8 @@ from __future__ import print_function
 
 from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
-import spack
+
+import spack.repo
 
 description = "list available versions of a package"
 section = "packaging"
