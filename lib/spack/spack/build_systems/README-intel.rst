@@ -298,10 +298,6 @@ The following is from ``.../parallel_studio_xe_2018_update1_cluster_edition/pset
     PHONEHOME_SEND_USAGE_DATA                    {yes, no}
                                                  serial_number}
 
-NB: The [documentation page](https://software.intel.com/en-us/articles/configuration-file-format)
-has a slip-up: Instead of the correct ``ACTIVATION_TYPE`` token, it references
-``ACTIVATION``, which was used only until about 2012.
-
 * Only for Amplifier (obviously)::
 
     AMPLIFIER_SAMPLING_DRIVER_INSTALL_TYPE       {build, kit}
@@ -334,9 +330,12 @@ Quoted from
 https://software.intel.com/en-us/articles/configuration-file-format,
 for reference:
 
+[ed. note: As of 2018-05, the page incorrectly references ``ACTIVATION``, which
+was used only until about 2012; this is corrected to ``ACTIVATION_TYPE`` here.]
+
     ...
 
-    ``ACTIVATION=exist_lic``
+    ``ACTIVATION_TYPE=exist_lic``
        This directive tells the install program to look for an existing
        license during the install process.  This is the preferred method for
        silent installs.  Take the time to register your serial number and get
@@ -351,7 +350,7 @@ for reference:
        configuration file directive ``ACTIVATION_LICENSE_FILE`` to specify the
        full pathname to the license file.
     
-       Options for ``ACTIVATION`` are ``{ exist_lic, license_file, server_lic,
+       Options for ``ACTIVATION_TYPE`` are ``{ exist_lic, license_file, server_lic,
        serial_number, trial_lic }``
     
     ``exist_lic``
