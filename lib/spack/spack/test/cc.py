@@ -28,11 +28,9 @@ arguments correctly.
 """
 import os
 import unittest
-import tempfile
-import shutil
 
 import spack
-from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.filesystem import join_path
 from spack.util.executable import Executable
 
 # Complicated compiler test command
@@ -80,23 +78,6 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
         os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
 
-        # Make some fake dependencies
-        self.tmp_deps = tempfile.mkdtemp()
-        self.dep1 = join_path(self.tmp_deps, 'dep1')
-        self.dep2 = join_path(self.tmp_deps, 'dep2')
-        self.dep3 = join_path(self.tmp_deps, 'dep3')
-        self.dep4 = join_path(self.tmp_deps, 'dep4')
-
-        mkdirp(join_path(self.dep1, 'include'))
-        mkdirp(join_path(self.dep1, 'lib'))
-
-        mkdirp(join_path(self.dep2, 'lib64'))
-
-        mkdirp(join_path(self.dep3, 'include'))
-        mkdirp(join_path(self.dep3, 'lib64'))
-
-        mkdirp(join_path(self.dep4, 'include'))
-
         self.path1 = '/x/y/z1/'
         self.path2 = '/x/y/z2/'
         self.path3 = '/x/y/z3/'
@@ -109,9 +90,6 @@ class CompilerWrapperTest(unittest.TestCase):
 
         if 'SPACK_INCLUDE_DIRS' in os.environ:
             del os.environ['SPACK_INCLUDE_DIRS']
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp_deps, True)
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
@@ -174,53 +152,52 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_CXXFLAGS'] = '-Werror'
         os.environ['SPACK_FFLAGS'] = '-w'
 
-        # Test ldflags added properly in ld mode
-        self.check_ld('dump-args', test_command,
-                      "ld " +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
+        try:
+            # Test ldflags added properly in ld mode
+            self.check_ld('dump-args', test_command,
+                          "ld " +
+                          '-L foo ' +
+                          ' '.join(test_command) + ' ' +
+                          '-lfoo')
 
-        # Test cppflags added properly in cpp mode
-        self.check_cpp('dump-args', test_command,
-                       "cpp " +
-                       '-g -O1 ' +
-                       ' '.join(test_command))
+            # Test cppflags added properly in cpp mode
+            self.check_cpp('dump-args', test_command,
+                           "cpp " +
+                           '-g -O1 ' +
+                           ' '.join(test_command))
 
-        # Test ldflags, cppflags, and language specific flags are added in
-        # proper order
-        self.check_cc('dump-args', test_command,
-                      self.realcc + ' ' +
-                      '-g -O1 ' +
-                      '-Wall ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
+            # Test ldflags, cppflags, and language specific flags are added in
+            # proper order
+            self.check_cc('dump-args', test_command,
+                          self.realcc + ' ' +
+                          '-g -O1 ' +
+                          '-Wall ' +
+                          '-L foo ' +
+                          ' '.join(test_command) + ' ' +
+                          '-lfoo')
 
-        self.check_cxx('dump-args', test_command,
-                       self.realcc + ' ' +
-                       '-g -O1 ' +
-                       '-Werror ' +
-                       '-L foo ' +
-                       ' '.join(test_command) + ' ' +
-                       '-lfoo')
+            self.check_cxx('dump-args', test_command,
+                           self.realcc + ' ' +
+                           '-g -O1 ' +
+                           '-Werror ' +
+                           '-L foo ' +
+                           ' '.join(test_command) + ' ' +
+                           '-lfoo')
 
-        self.check_fc('dump-args', test_command,
-                      self.realcc + ' ' +
-                      '-w ' +
-                      '-g -O1 ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
-
-        del os.environ['SPACK_CFLAGS']
-        del os.environ['SPACK_CXXFLAGS']
-        del os.environ['SPACK_FFLAGS']
-        del os.environ['SPACK_CPPFLAGS']
-        del os.environ['SPACK_LDFLAGS']
-        del os.environ['SPACK_LDLIBS']
+            self.check_fc('dump-args', test_command,
+                          self.realcc + ' ' +
+                          '-w ' +
+                          '-g -O1 ' +
+                          '-L foo ' +
+                          ' '.join(test_command) + ' ' +
+                          '-lfoo')
+        finally:
+            del os.environ['SPACK_CFLAGS']
+            del os.environ['SPACK_CXXFLAGS']
+            del os.environ['SPACK_FFLAGS']
+            del os.environ['SPACK_CPPFLAGS']
+            del os.environ['SPACK_LDFLAGS']
+            del os.environ['SPACK_LDLIBS']
 
     def test_dep_include(self):
         """Ensure a single dependency include directory is added."""
@@ -232,7 +209,7 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def test_dep_lib_no_rpath(self):
         """Ensure a single dependency link flag is added with no dep RPATH."""
-        os.environ['SPACK_RPATH_DIRS'] = ':'.join([self.path1])
+        os.environ['SPACK_LINK_DIRS'] = ':'.join([self.path1])
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-L' + self.path1 + ' ' +
@@ -259,7 +236,7 @@ class CompilerWrapperTest(unittest.TestCase):
                       self.realcc + ' ' +
                       '-L' + self.path2 + ' ' +
                       '-L' + self.path1 + ' ' +
-                      
+
                       '-Wl,-rpath,' + self.path2 + ' ' +
 
                       '-I' + self.path3 + ' ' +
@@ -275,7 +252,7 @@ class CompilerWrapperTest(unittest.TestCase):
                       'ld ' +
                       '-L' + self.path2 + ' ' +
                       '-L' + self.path1 + ' ' +
-                      
+
                       '-rpath ' + self.path2 + ' ' +
 
                       ' '.join(test_command))
