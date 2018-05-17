@@ -220,9 +220,9 @@ class Opencv(CMakePackage):
             args.extend([
                 '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(zlib.prefix.lib,
-                              'libz.{0}'.format(dso_suffix))),
-                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
+                    zlib.libs[0]),
+                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(
+                    zlib.headers.directories[0])
             ])
 
         if '+png' in spec:
@@ -230,19 +230,18 @@ class Opencv(CMakePackage):
             args.extend([
                 '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(libpng.prefix.lib,
-                              'libpng.{0}'.format(dso_suffix))),
-                '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
+                    libpng.libs[0]),
+                '-DPNG_INCLUDE_DIR:PATH={0}'.format(
+                    libpng.headers.directories[0])
             ])
 
         if '+jpeg' in spec:
             libjpeg = spec['jpeg']
             args.extend([
                 '-DBUILD_JPEG:BOOL=OFF',
-                '-DJPEG_LIBRARY:FILEPATH={0}'.format(
-                    join_path(libjpeg.prefix.lib,
-                              'libjpeg.{0}'.format(dso_suffix))),
-                '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
+                '-DJPEG_LIBRARY:FILEPATH={0}'.format(libjpeg.libs[0]),
+                '-DJPEG_INCLUDE_DIR:PATH={0}'.format(
+                    libjpeg.headers.directories[0])
             ])
 
         if '+tiff' in spec:
@@ -250,9 +249,9 @@ class Opencv(CMakePackage):
             args.extend([
                 '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(libtiff.prefix.lib,
-                              'libtiff.{0}'.format(dso_suffix))),
-                '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
+                    libtiff.libs[0]),
+                '-DTIFF_INCLUDE_DIR:PATH={0}'.format(
+                    libtiff.headers.directories[0])
             ])
 
         if '+jasper' in spec:
@@ -260,9 +259,9 @@ class Opencv(CMakePackage):
             args.extend([
                 '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(jasper.prefix.lib,
-                              'libjasper.{0}'.format(dso_suffix))),
-                '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
+                    jasper.libs[0]),
+                '-DJASPER_INCLUDE_DIR:PATH={0}'.format(
+                    jasper.headers.directories[0])
             ])
 
         # GUI
