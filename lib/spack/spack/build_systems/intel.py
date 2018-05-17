@@ -158,7 +158,7 @@ class IntelPackage(PackageBase):
 
     @property
     def _global_intel_license_file(self):
-        '''Return the path to a Spack-global Intel license file.
+        '''Return the path to a Spack-global Intel-specific license file.
 
         All Intel software can use the same license, so we store it centrally
         in Spack under a common 'intel' directory.
@@ -168,7 +168,7 @@ class IntelPackage(PackageBase):
     @property
     def _intel_license_files(self):
         '''Return a list of files that should contain licenses.
-        They will be symlinked to global_license_file.
+        These files will be symlinked to global_license_file.
         '''
         dirs = ['Licenses']
 
@@ -1009,14 +1009,44 @@ class IntelPackage(PackageBase):
         # See:
         #   ./README-intel.rst, section "Details for licensing tokens".
         #   ./build_systems/README-intel.rst, section "Licenses"
+        #
+        # Try to avoid bothering the user with filling in a license file if it
+        # looks like the system already has licensing established, to wit:
+        #
+        # Look around like the installer would. If we find files or env vars,
+        # assume they are valid and pass them on sight unseen since we don't
+        # have an easy way to programmatically validate them.
+        #
+        # * If the files are valid - congratulations, mission accomplished!
+        # * If the files are invalid (e.g. have insufficient coverage, are
+        #   expired, or simply corrupt) the installer will complain and stop.
+        #
+        # The offending files should then be corrected. If that's not
+        # applicable or doable for any reason (e.g. permissions or legacy
+        # software), we need a way to tell Spack to ignore those sirens still
+        # singing and instead use the Spack-global Intel license file instead.
+        #
+        # ## Suggestion - possibly too "meta": Overload INTEL_LICENSE_FILE ##
+        #
+        #   INTEL_LICENSE_FILE=SPACK  spack install intelfoo
+        #
+        # Developer's Goedel gotcha: Even though we start with just "SPACK",
+        # that value might get modified by the time it arrives here, as modules
+        # may get loaded for a defined Intel compiler that is implied or set by
+        # the compiler component in the client package's *spec*. Thus, borrow a
+        # sh(1) idiom for a more comprehensive test.
 
         # --------------------------------------------------------------------
-        # Get our ducks in a row.
+        # Get our ducks in a row
         # --------------------------------------------------------------------
-        # The default license dir is always consulted, regardless of
-        # $INTEL_LICENSE_FILE.  We normally assume that any files that are
-        # present (and readable) there do in fact contain a valid and
+        # The default license dir is always consulted by Intel tools,
+        # regardless of INTEL_LICENSE_FILE.  Let's assume that any files that
+        # are present (and readable) therein do in fact contain a valid and
         # sufficient license, local or networked.
+        #
+        # https://software.intel.com/en-us/faq/licensing#manual-license-install
+        # https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license
+        #
         lic_d = '/opt/intel/licenses'
         if 'darwin' in sys.platform:
             lic_d = '/Users/Shared/Library/Application Support/Intel/Licenses'
@@ -1028,35 +1058,20 @@ class IntelPackage(PackageBase):
         lic_vars_present = [
             v for v in self.license_vars if v in os.environ]
 
-        # To avoid bothering the user with filling in a license file
-        # if it looks like the system already has licensing configured:
-        #
-        # Look for license files like the installer would. If we find them, use
-        # them sight unseen since we don't have an easy way to programmatically
-        # validate them.
-        #
-        # If those files are valid - congratulations, mission accomplished!
-        # If the files are invalid (e.g. have insufficient coverage, are
-        # expired, or simply corrupt), they SHOULD be fixed on the system
-        # level, and the user should re-run "spack instal ..."
-        #
-        # If that's inapplicable or the Spack user cannot correct the files for
-        # any reason, tell Spack to ignore all defaults and use its global
-        # Intel license file instead, as follows:
-        #
-        #   INTEL_LICENSE_FILE=SPACK spack install intelfoo
-        #
-        # Gotcha: Even though we start with just "SPACK", that value might get
-        # modified by the time it arrives here, by modules being loaded for an
-        # old compiler as implied or set by the compiler component in the
-        # client package spec.
+        try:
+            debug_print("lic_default_files_present: %s" %
+                        lic_default_files_present)
+            debug_print("lic_vars_present: %s" %
+                        lic_vars_present)
+            debug_print("INTEL_LICENSE_FILE: %s" %
+                        os.environ['INTEL_LICENSE_FILE'])
+        except KeyError:
+            pass
 
-        debug_print(lic_vars_present, lic_default_files_present)
-        debug_print(os.environ['INTEL_LICENSE_FILE'])
-
-        if (lic_vars_present == ['INTEL_LICENSE_FILE'] and
+        # Ignore the sirens?
+        if (lic_vars_present == ['INTEL_LICENSE_FILE'] and  # list comparison
                 ':SPACK:' in ':%s:' % os.environ['INTEL_LICENSE_FILE']):
-            #
+            tty.warn('Forcing Spack-managed Intel license file.')
             os.unsetenv('INTEL_LICENSE_FILE')
             lic_default_files_present = []
             lic_vars_present = []
@@ -1072,28 +1087,25 @@ class IntelPackage(PackageBase):
         else:
             # Use Spack's internal standalone license file for installation,
             # and later have it sprinkled as symlinks deep into the
-            # installation's bin/ dirs for the compilers and other tools to
-            # access it.
+            # installation's bin/ dirs next to the compilers and other tools.
             #
-            # To have global_license_file be created if it does not yet exist,
-            # and to provision the Intel tool at runtime later, the following
-            # vars must be populated. They will be used in
+            # To request that, and have the global_license_file be created if
+            # it does not yet exist, set the triggering vars used in
             # ../hooks/licensing.py:pre_install() .
+            #
             self.global_license_file = self._global_intel_license_file
             self.license_files = self._intel_license_files
+            #
+            # Wah wah wah: pre_install() is currently run *before all*
+            # self.phases, not *between* "configure" and "install" where
+            # we'd need it - see ../package.py:build_process()
+            #
 
-            # To provision the installer:
+            # Provision the installer:
             license_type = {
                 'ACTIVATION_TYPE': 'license_file',
                 'ACTIVATION_LICENSE_FILE': self.global_license_file
             }
-        # --------------------------------------------------------------------
-
-        ## Others?
-        # anythingpat - any string
-        # filepat     - the file location pattern (/path/to/license.lic)
-        # lspat       - the license server address pattern (0123@hostname)
-        # snpat       - the serial number pattern (ABCD-01234567)
 
         debug_print(license_type)
         return license_type
