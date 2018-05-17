@@ -26,7 +26,7 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import join_path, touch, working_dir
+from llnl.util.filesystem import touch, working_dir
 
 import spack.repo
 import spack.config
@@ -75,7 +75,7 @@ def test_fetch(
         with working_dir(pkg.stage.source_path):
             assert h() == t.revision
 
-            file_path = join_path(pkg.stage.source_path, t.file)
+            file_path = os.path.join(pkg.stage.source_path, t.file)
             assert os.path.isdir(pkg.stage.source_path)
             assert os.path.isfile(file_path)
 

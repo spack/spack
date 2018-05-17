@@ -28,8 +28,6 @@ This test verifies that the Spack directory layout works properly.
 import os
 import pytest
 
-from llnl.util.filesystem import join_path
-
 import spack.paths
 import spack.repo
 from spack.directory_layout import YamlDirectoryLayout
@@ -213,7 +211,7 @@ def test_handle_unknown_package(
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
             spec_from_file = layout.read_spec(
-                join_path(path, '.spack', 'spec.yaml'))
+                os.path.join(path, '.spack', 'spec.yaml'))
 
             # To satisfy these conditions, directory layouts need to
             # read in concrete specs from their install dirs somehow.

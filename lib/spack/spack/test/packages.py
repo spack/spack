@@ -22,9 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os.path
 import pytest
-
-from llnl.util.filesystem import join_path
 
 import spack.repo
 from spack.paths import mock_packages_path
@@ -45,7 +44,7 @@ class TestPackage(object):
     def test_package_filename(self):
         repo = spack.repo.Repo(mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
-        assert filename == join_path(
+        assert filename == os.path.join(
             mock_packages_path,
             'packages',
             'mpich',
@@ -55,7 +54,7 @@ class TestPackage(object):
     def test_nonexisting_package_filename(self):
         repo = spack.repo.Repo(mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
-        assert filename == join_path(
+        assert filename == os.path.join(
             mock_packages_path,
             'packages',
             'some-nonexisting-package',

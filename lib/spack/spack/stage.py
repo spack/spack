@@ -35,7 +35,7 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 import llnl.util.lock
-from llnl.util.filesystem import mkdirp, join_path, can_access
+from llnl.util.filesystem import mkdirp, can_access
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack.paths
@@ -216,7 +216,7 @@ class Stage(object):
         if path is not None:
             self.path = path
         else:
-            self.path = join_path(spack.paths.stage_path, self.name)
+            self.path = os.path.join(spack.paths.stage_path, self.name)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
@@ -229,7 +229,7 @@ class Stage(object):
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = join_path(spack.paths.stage_path, '.lock')
+                stage_lock_path = os.path.join(spack.paths.stage_path, '.lock')
 
                 Stage.stage_locks[self.name] = llnl.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
@@ -546,7 +546,7 @@ class ResourceStage(Stage):
         if not isinstance(placement, dict):
             placement = {'': placement}
 
-        target_path = join_path(
+        target_path = os.path.join(
             root_stage.source_path, resource.destination)
 
         try:
@@ -558,8 +558,8 @@ class ResourceStage(Stage):
                 raise
 
         for key, value in iteritems(placement):
-            destination_path = join_path(target_path, value)
-            source_path = join_path(self.source_path, key)
+            destination_path = os.path.join(target_path, value)
+            source_path = os.path.join(self.source_path, key)
 
             if not os.path.exists(destination_path):
                 tty.info('Moving resource stage\n\tsource : '
@@ -665,7 +665,7 @@ def purge():
     """Remove all build directories in the top-level stage path."""
     if os.path.isdir(spack.paths.stage_path):
         for stage_dir in os.listdir(spack.paths.stage_path):
-            stage_path = join_path(spack.paths.stage_path, stage_dir)
+            stage_path = os.path.join(spack.paths.stage_path, stage_dir)
             remove_linked_tree(stage_path)
 
 

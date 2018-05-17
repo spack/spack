@@ -28,7 +28,7 @@ import collections
 
 import pytest
 
-from llnl.util.filesystem import join_path, working_dir
+from llnl.util.filesystem import working_dir
 
 import spack.paths
 import spack.stage
@@ -43,9 +43,9 @@ def check_expand_archive(stage, stage_name, mock_archive):
     assert archive_name in os.listdir(stage_path)
     assert archive_dir in os.listdir(stage_path)
 
-    assert join_path(stage_path, archive_dir) == stage.source_path
+    assert os.path.join(stage_path, archive_dir) == stage.source_path
 
-    readme = join_path(stage_path, archive_dir, 'README.txt')
+    readme = os.path.join(stage_path, archive_dir, 'README.txt')
     assert os.path.isfile(readme)
     with open(readme) as file:
         'hello world!\n' == file.read()
@@ -55,7 +55,7 @@ def check_fetch(stage, stage_name):
     archive_name = 'test-files.tar.gz'
     stage_path = get_stage_path(stage, stage_name)
     assert archive_name in os.listdir(stage_path)
-    assert join_path(stage_path, archive_name) == stage.fetcher.archive_file
+    assert os.path.join(stage_path, archive_name) == stage.fetcher.archive_file
 
 
 def check_destroy(stage, stage_name):

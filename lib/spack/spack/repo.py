@@ -47,7 +47,7 @@ import yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, join_path, install
+from llnl.util.filesystem import mkdirp, install
 
 import spack
 import spack.config
@@ -142,7 +142,7 @@ class FastPackageChecker(Mapping):
         cache = {}
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
-            pkg_dir = join_path(self.packages_path, pkg_name)
+            pkg_dir = os.path.join(self.packages_path, pkg_name)
 
             # Warn about invalid names that look like packages.
             if not valid_module_name(pkg_name):
@@ -635,18 +635,18 @@ class Repo(object):
                 raise BadRepoError(msg)
 
         # Validate repository layout.
-        self.config_file = join_path(self.root, repo_config_name)
+        self.config_file = os.path.join(self.root, repo_config_name)
         check(os.path.isfile(self.config_file),
               "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = join_path(self.root, packages_dir_name)
+        self.packages_path = os.path.join(self.root, packages_dir_name)
         check(os.path.isdir(self.packages_path),
               "No directory '%s' found in '%s'" % (repo_config_name, root))
 
         # Read configuration and validate namespace
         config = self._read_config()
         check('namespace' in config, '%s must define a namespace.'
-              % join_path(root, repo_config_name))
+              % os.path.join(root, repo_config_name))
 
         self.namespace = config['namespace']
         check(re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', self.namespace),
@@ -899,7 +899,7 @@ class Repo(object):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
         self._check_namespace(spec)
-        return join_path(self.packages_path, spec.name)
+        return os.path.join(self.packages_path, spec.name)
 
     @_autospec
     def filename_for_package_name(self, spec):
@@ -913,7 +913,7 @@ class Repo(object):
         """
         self._check_namespace(spec)
         pkg_dir = self.dirname_for_package_name(spec.name)
-        return join_path(pkg_dir, package_file_name)
+        return os.path.join(pkg_dir, package_file_name)
 
     @property
     def _pkg_checker(self):

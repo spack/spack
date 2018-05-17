@@ -80,7 +80,6 @@ import inspect
 import platform as py_platform
 
 from llnl.util.lang import memoized, list_modules, key_ordering
-from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 
 import spack.paths
@@ -271,7 +270,7 @@ class OperatingSystem(object):
             filtered_path.append(p)
 
             # Check for a bin directory, add it if it exists
-            bin = join_path(p, 'bin')
+            bin = os.path.join(p, 'bin')
             if os.path.isdir(bin):
                 filtered_path.append(os.path.realpath(bin))
 

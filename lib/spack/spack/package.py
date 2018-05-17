@@ -69,7 +69,7 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, join_path, touch
+from llnl.util.filesystem import mkdirp, touch
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
@@ -1226,17 +1226,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Install fake command
         mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, command))
-        chmod('+x', join_path(self.prefix.bin, command))
+        touch(os.path.join(self.prefix.bin, command))
+        chmod('+x', os.path.join(self.prefix.bin, command))
 
         # Install fake header file
         mkdirp(self.prefix.include)
-        touch(join_path(self.prefix.include, header + '.h'))
+        touch(os.path.join(self.prefix.include, header + '.h'))
 
         # Install fake shared and static libraries
         mkdirp(self.prefix.lib)
         for suffix in [dso_suffix, '.a']:
-            touch(join_path(self.prefix.lib, library + suffix))
+            touch(os.path.join(self.prefix.lib, library + suffix))
 
         # Install fake man page
         mkdirp(self.prefix.man.man1)
@@ -1516,7 +1516,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 else:
                     source_path = self.stage.source_path
                     if install_source and os.path.isdir(source_path):
-                        src_target = join_path(
+                        src_target = os.path.join(
                             self.spec.prefix, 'share', self.name, 'src')
                         tty.msg('Copying source to {0}'.format(src_target))
                         install_tree(self.stage.source_path, src_target)
@@ -1762,7 +1762,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return join_path(self.stage.source_path, 'spack-build.out')
+            return os.path.join(self.stage.source_path, 'spack-build.out')
 
     @property
     def module(self):
@@ -2305,7 +2305,7 @@ def dump_packages(spec, path):
             # Locate the dependency package in the install tree and find
             # its provenance information.
             source = spack.store.layout.build_packages_path(node)
-            source_repo_root = join_path(source, node.namespace)
+            source_repo_root = os.path.join(source, node.namespace)
 
             # There's no provenance installed for the source package.  Skip it.
             # User can always get something current from the builtin repo.
@@ -2322,7 +2322,7 @@ def dump_packages(spec, path):
                          node.name)
 
         # Create a destination repository
-        dest_repo_root = join_path(path, node.namespace)
+        dest_repo_root = os.path.join(path, node.namespace)
         if not os.path.exists(dest_repo_root):
             spack.repo.create_repo(dest_repo_root)
         repo = spack.repo.Repo(dest_repo_root)

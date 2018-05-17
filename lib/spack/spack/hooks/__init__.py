@@ -42,9 +42,9 @@
    features.
 """
 import imp
+import os.path
 
 import spack.paths
-from llnl.util.filesystem import join_path
 from llnl.util.lang import memoized, list_modules
 
 
@@ -53,7 +53,7 @@ def all_hook_modules():
     modules = []
     for name in list_modules(spack.paths.hooks_path):
         mod_name = __name__ + '.' + name
-        path = join_path(spack.paths.hooks_path, name) + ".py"
+        path = os.path.join(spack.paths.hooks_path, name) + ".py"
         mod = imp.load_source(mod_name, path)
         modules.append(mod)
 

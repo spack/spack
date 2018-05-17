@@ -33,7 +33,7 @@ to download packages directly from a mirror (e.g., on an intranet).
 import sys
 import os
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.error
@@ -97,7 +97,7 @@ Spack not to expand it with the following syntax:
 
 def mirror_archive_path(spec, fetcher, resourceId=None):
     """Get the relative path to the spec's archive within a mirror."""
-    return join_path(
+    return os.path.join(
         spec.name, mirror_archive_filename(spec, fetcher, resourceId))
 
 
@@ -222,12 +222,12 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 fetcher = stage.fetcher
                 if ii == 0:
                     # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(join_path(
+                    archive_path = os.path.abspath(os.path.join(
                         mirror_root, mirror_archive_path(spec, fetcher)))
                     name = spec.cformat("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = os.path.abspath(join_path(
+                    archive_path = os.path.abspath(os.path.join(
                         mirror_root,
                         mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
