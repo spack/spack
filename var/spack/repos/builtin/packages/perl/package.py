@@ -35,7 +35,6 @@ from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
 
-import spack.store
 from spack import *
 
 
