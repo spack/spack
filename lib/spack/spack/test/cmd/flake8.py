@@ -29,9 +29,9 @@ import sys
 
 from llnl.util.filesystem import FileFilter
 
-import spack
+import spack.paths
 from spack.cmd.flake8 import flake8, setup_parser, changed_files
-from spack.repository import Repo
+from spack.repo import Repo
 from spack.util.executable import which
 
 
@@ -50,7 +50,7 @@ def flake8_package():
     mock package, yields the filename, then undoes the
     change on cleanup.
     """
-    repo = Repo(spack.mock_packages_path)
+    repo = Repo(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name('flake8')
     package = FileFilter(filename)
 
@@ -69,7 +69,7 @@ def test_changed_files(parser, flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
     files = changed_files(args)
-    files = [os.path.join(spack.spack_root, path) for path in files]
+    files = [os.path.join(spack.paths.prefix, path) for path in files]
 
     # There will likely be other files that have changed
     # when these tests are run

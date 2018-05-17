@@ -22,14 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
 
-import spack
+import spack.paths
 from spack.util.executable import Executable
 
 
-GNUPGHOME = spack.gpg_path
+GNUPGHOME = spack.paths.gpg_path
 
 
 class Gpg(object):

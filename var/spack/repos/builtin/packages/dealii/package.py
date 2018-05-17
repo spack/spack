@@ -37,6 +37,7 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
     version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
     version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
@@ -48,20 +49,20 @@ class Dealii(CMakePackage, CudaPackage):
     version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
-    variant('assimp',   default=False,
+    variant('assimp',   default=True,
             description='Compile with Assimp')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
-    variant('adol-c',   default=False,
+    variant('adol-c',   default=True,
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
-    variant('gmsh',     default=False,  description='Compile with GMSH')
+    variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
-    variant('nanoflann', default=False, description='Compile with Nanoflann')
+    variant('nanoflann', default=True, description='Compile with Nanoflann')
     variant('netcdf',   default=True,
             description='Compile with Netcdf (only with MPI)')
     variant('oce',      default=True,  description='Compile with OCE')
@@ -69,9 +70,9 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with P4est (only with MPI)')
     variant('petsc',    default=True,
             description='Compile with Petsc (only with MPI)')
-    variant('scalapack', default=False,
+    variant('scalapack', default=True,
             description='Compile with ScaLAPACK (only with MPI)')
-    variant('sundials', default=False,
+    variant('sundials', default=True,
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
@@ -120,7 +121,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
-    depends_on('gmsh',             when='@9.0:+gmsh', type=('build', 'run'))
+    depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
     depends_on('cuda@8:',          when='+cuda')
@@ -146,8 +147,12 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials~pthread', when='@9.0:+sundials')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
+    # FIXME: temporary disable Tpetra when using CUDA due to
+    # namespace "Kokkos::Impl" has no member "cuda_abort"
+    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
+    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
     # check that the combination of variants makes sense
     conflicts('^openblas+ilp64', when='@:8.5.1')
@@ -252,15 +257,15 @@ class Dealii(CMakePackage, CudaPackage):
             if not spec.satisfies('^cuda@9:'):
                 options.append('-DDEAL_II_WITH_CXX14=OFF')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None:
+            if cuda_arch is not None and cuda_arch[0] is not '':
                 if len(cuda_arch) > 1:
                     raise InstallError(
                         'deal.II only supports compilation for a single GPU!'
                     )
                 flags = '-arch=sm_{0}'.format(cuda_arch[0])
                 # FIXME: there are some compiler errors in dealii
-                # with flags below. Stick with -arch=sm_xy for now.
-                # flags = ' '.join(self.cuda_flags(cuda_arch))
+                # with: flags = ' '.join(self.cuda_flags(cuda_arch))
+                # Stick with -arch=sm_xy for now.
                 options.append(
                     '-DDEAL_II_CUDA_FLAGS={0}'.format(flags)
                 )
