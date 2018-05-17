@@ -153,7 +153,7 @@ class TestConcretize(object):
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
             check_concretize('dttop %gcc@100.100')
 
-        with spack.concretize.disable_compiler_existence_check():
+        with spack.concretize.concretizer.disable_compiler_existence_check():
             spec = check_concretize('dttop %gcc@100.100')
             assert spec.satisfies('%gcc@100.100')
             assert spec['dtlink3'].satisfies('%gcc@100.100')
