@@ -290,7 +290,7 @@ class TestStage(object):
         composite_stage.fetch()
         composite_stage.setup_source()
         assert os.path.exists(
-            join_path(composite_stage.source_path, resource_dst_name))
+            os.path.join(composite_stage.source_path, resource_dst_name))
 
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.usefixtures('tmpdir_for_stage')
@@ -303,11 +303,11 @@ class TestStage(object):
         composite_stage.create()
         composite_stage.fetch()
         root_stage.setup_source()
-        os.mkdir(join_path(root_stage.source_path, 'resource-dir'))
+        os.mkdir(os.path.join(root_stage.source_path, 'resource-dir'))
 
         resource_stage.setup_source()
         for fname in mock_expand_resource.files:
-            file_path = join_path(
+            file_path = os.path.join(
                 root_stage.source_path, 'resource-dir', fname)
             assert os.path.exists(file_path)
 
@@ -322,15 +322,15 @@ class TestStage(object):
         composite_stage.create()
         composite_stage.fetch()
         root_stage.setup_source()
-        os.mkdir(join_path(root_stage.source_path, 'resource-dir'))
-        preexisting_file = join_path(
+        os.mkdir(os.path.join(root_stage.source_path, 'resource-dir'))
+        preexisting_file = os.path.join(
             root_stage.source_path, 'resource-dir/foo')
         with open(preexisting_file, 'w'):
             pass
 
         resource_stage.setup_source()
         for fname in mock_expand_resource.files:
-            file_path = join_path(
+            file_path = os.path.join(
                 root_stage.source_path, 'resource-dir', fname)
             assert not os.path.exists(file_path)
 
@@ -421,7 +421,7 @@ class TestStage(object):
         composite_stage.fetch()
         composite_stage.setup_source()
 
-        resource_file = join_path(
+        resource_file = os.path.join(
             root_stage.source_path, 'resource-dir', 'resource-file.txt')
         assert os.path.exists(resource_file)
 
