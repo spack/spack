@@ -23,8 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import subprocess
-import glob
+
 
 class Platypus(Package):
     """A Haplotype-Based Variant Caller For Next Generation Sequence Data"""
@@ -39,15 +38,6 @@ class Platypus(Package):
     depends_on('htslib')
 
     def install(self, spec, prefix):
-        subprocess.call(['./buildPlatypus.sh'])
-        mkdirp(prefix.bin)
-        mkdirp(prefix.lib)
-        files = glob.iglob("*.py")
-        for file in files:
-            install(file, prefix.bin)
-        files = glob.iglob("*.so")
-        for file in files:
-            install(file, prefix.lib)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix.lib)
+        buildPlatypus = Executable('./buildPlatypus.sh')
+        buildPlatypus()
+        install_tree('.', prefix.bin)
