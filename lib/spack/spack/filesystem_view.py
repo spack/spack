@@ -28,7 +28,6 @@ import re
 import shutil
 import sys
 
-from llnl.util.filesystem import join_path
 from llnl.util.link_tree import LinkTree
 from llnl.util import tty
 
@@ -390,7 +389,8 @@ class YamlFilesystemView(FilesystemView):
             tty.info(self._croot + 'Removed package: %s' % colorize_spec(spec))
 
     def get_all_specs(self):
-        dotspack = join_path(self.root, spack.store.layout.metadata_dir)
+        dotspack = os.path.join(self.root,
+                                spack.store.layout.metadata_dir)
         if os.path.exists(dotspack):
             return list(filter(None, map(self.get_spec, os.listdir(dotspack))))
         else:
@@ -407,12 +407,14 @@ class YamlFilesystemView(FilesystemView):
 
     def get_path_meta_folder(self, spec):
         "Get path to meta folder for either spec or spec name."
-        return join_path(self.root, spack.store.layout.metadata_dir,
-                         getattr(spec, "name", spec))
+        return os.path.join(self.root,
+                            spack.store.layout.metadata_dir,
+                            getattr(spec, "name", spec))
 
     def get_spec(self, spec):
         dotspack = self.get_path_meta_folder(spec)
-        filename = join_path(dotspack, spack.store.layout.spec_file_name)
+        filename = os.path.join(dotspack,
+                                spack.store.layout.spec_file_name)
 
         try:
             with open(filename, "r") as f:

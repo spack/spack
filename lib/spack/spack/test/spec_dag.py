@@ -86,8 +86,6 @@ packages in the following spec DAG::
 w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 """
-    saved_repo = spack.repo
-
     default = ('build', 'link')
     test_only = ('test',)
 
@@ -97,20 +95,15 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     w = MockPackage('w', [x, y], [test_only, default])
 
     mock_repo = MockPackageMultiRepo([w, x, y, z])
-    try:
-        spack.package_testing.test(w.name)
-        spack.repo = mock_repo
+    with spack.repo.swap(mock_repo):
         spec = Spec('w')
-        spec.concretize()
+        spec.concretize(tests=(w.name,))
 
         assert ('x' in spec)
         assert ('z' not in spec)
-    finally:
-        spack.repo = saved_repo
-        spack.package_testing.clear()
 
 
-@pytest.mark.usefixtures('refresh_builtin_mock')
+@pytest.mark.usefixtures('mutable_mock_packages')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):

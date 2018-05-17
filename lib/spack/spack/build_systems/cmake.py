@@ -28,7 +28,7 @@ import os
 import platform
 
 import spack.build_environment
-from llnl.util.filesystem import working_dir, join_path
+from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
@@ -208,7 +208,7 @@ class CMakePackage(PackageBase):
 
         :return: directory where to build the package
         """
-        return join_path(self.stage.source_path, 'spack-build')
+        return os.path.join(self.stage.source_path, 'spack-build')
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to

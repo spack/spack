@@ -56,7 +56,8 @@ import re
 import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-import spack
+
+import spack.paths
 import spack.build_environment as build_environment
 import spack.environment
 import spack.tengine as tengine
@@ -64,14 +65,14 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 
-#: Root folders where the various module files should be written
-roots = spack.config.get_config('config').get('module_roots', {})
+#: config section for this file
+configuration = spack.config.get('modules')
 
-#: Merged modules.yaml as a dictionary
-configuration = spack.config.get_config('modules')
+#: Root folders where the various module files should be written
+roots = spack.config.get('config:module_roots', {})
 
 #: Inspections that needs to be done on spec prefixes
-prefix_inspections = configuration.get('prefix_inspections', {})
+prefix_inspections = spack.config.get('modules:prefix_inspections', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -229,7 +230,7 @@ def root_path(name):
     Returns:
         root folder for module file installation
     """
-    path = roots.get(name, os.path.join(spack.share_path, name))
+    path = roots.get(name, os.path.join(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
 
