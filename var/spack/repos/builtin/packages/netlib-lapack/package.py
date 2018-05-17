@@ -59,8 +59,8 @@ class NetlibLapack(Package):
     variant('xblas', default=False,
             description='Builds extended precision routines using XBLAS')
 
-    patch('ibm-xl.patch', when='@3:6%xl')
-    patch('ibm-xl.patch', when='@3:6%xl_r')
+    patch('ibm-xl.patch', when='@3.7: %xl')
+    patch('ibm-xl.patch', when='@3.7: %xl_r')
 
     # virtual dependency
     provides('blas', when='~external-blas')
