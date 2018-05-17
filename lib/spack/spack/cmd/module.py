@@ -27,10 +27,12 @@ from __future__ import print_function
 import collections
 import os
 import shutil
-import spack.modules
+
+from llnl.util import filesystem, tty
 
 import spack.cmd
-from llnl.util import filesystem, tty
+import spack.modules
+import spack.repo
 from spack.cmd.common import arguments
 
 description = "manipulate module files"
@@ -278,9 +280,10 @@ def refresh(module_types, specs, args):
 
         cls = spack.modules.module_types[module_type]
 
+        # skip unknown packages.
         writers = [
-            cls(spec) for spec in specs if spack.repo.exists(spec.name)
-        ]  # skip unknown packages.
+            cls(spec) for spec in specs
+            if spack.repo.path.exists(spec.name)]
 
         # Filter blacklisted packages early
         writers = [x for x in writers if not x.conf.blacklisted]

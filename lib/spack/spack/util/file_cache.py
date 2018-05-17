@@ -25,7 +25,7 @@
 import os
 import shutil
 
-from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.filesystem import mkdirp
 from llnl.util.lock import Lock, ReadTransaction, WriteTransaction
 
 from spack.error import SpackError
@@ -57,7 +57,7 @@ class FileCache(object):
     def destroy(self):
         """Remove all files under the cache root."""
         for f in os.listdir(self.root):
-            path = join_path(self.root, f)
+            path = os.path.join(self.root, f)
             if os.path.isdir(path):
                 shutil.rmtree(path, True)
             else:
@@ -65,14 +65,14 @@ class FileCache(object):
 
     def cache_path(self, key):
         """Path to the file in the cache for a particular key."""
-        return join_path(self.root, key)
+        return os.path.join(self.root, key)
 
     def _lock_path(self, key):
         """Path to the file in the cache for a particular key."""
         keyfile = os.path.basename(key)
         keydir = os.path.dirname(key)
 
-        return join_path(self.root, keydir, '.' + keyfile + '.lock')
+        return os.path.join(self.root, keydir, '.' + keyfile + '.lock')
 
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""

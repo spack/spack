@@ -26,7 +26,7 @@
 import os
 
 import pytest
-from spack.file_cache import FileCache
+from spack.util.file_cache import FileCache
 
 
 @pytest.fixture()

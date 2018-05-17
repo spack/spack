@@ -239,8 +239,8 @@ fi;
 
 _python_command=$(printf  "%s\\\n%s\\\n%s" \
 "print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))" \
-"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))" \
-"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))"
+"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get(\'config:module_roots\', {}).get(\'dotkit\'))))" \
+"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get(\'config:module_roots\', {}).get(\'tcl\'))))"
 )
 
 _assignment_command=$(spack-python -c "exec('${_python_command}')")
