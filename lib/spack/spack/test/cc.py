@@ -30,7 +30,6 @@ import os
 import unittest
 
 from spack.paths import build_env_path
-from llnl.util.filesystem import mkdirp
 from spack.util.executable import Executable
 
 # Complicated compiler test command
