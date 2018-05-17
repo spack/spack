@@ -169,7 +169,7 @@ def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
-    with spack.concretize.disable_compiler_existence_check():
+    with spack.concretize.concretizer.disable_compiler_existence_check():
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
 
         # If there is a file, parse each line as a spec and add it to the list.
