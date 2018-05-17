@@ -153,7 +153,7 @@ class NetlibLapack(Package):
             # use F77 compiler if IBM XL
             cmake_args.extend([
                 '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
-                '-DCMAKE_Fortran_FLAGS=-qzerosize'
+                '-DCMAKE_Fortran_FLAGS=%s' % (' '.join(self.spec.compiler_flags['fflags'])),
             ])
 
         # deprecated routines are commonly needed by, for example, suitesparse
