@@ -22,37 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Yaml Version Check is a module for ensuring that config file
-formats are compatible with the current version of Spack."""
-import os.path
+"""Module for finding the user's preferred text editor.
+
+Defines one variable: ``editor``, which is a
+``spack.util.executable.Executable`` object that can be called to invoke
+the editor.
+
+If no ``editor`` is found, an ``EnvironmentError`` is raised when
+``editor`` is invoked.
+"""
 import os
-import llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
-import spack.config
 
+from spack.util.executable import Executable, which
 
-def pre_run():
-    check_compiler_yaml_version()
+# Set up the user's editor
+# $EDITOR environment variable has the highest precedence
+editor = os.environ.get('EDITOR')
 
+# if editor is not set, use some sensible defaults
+if editor is not None:
+    editor = Executable(editor)
+else:
+    editor = which('vim', 'vi', 'emacs', 'nano')
 
-def check_compiler_yaml_version():
-    config = spack.config.config
-
-    for scope in config.file_scopes:
-        file_name = os.path.join(scope.path, 'compilers.yaml')
-        data = None
-        if os.path.isfile(file_name):
-            with open(file_name) as f:
-                data = syaml.load(f)
-
-        if data:
-            compilers = data['compilers']
-            if len(compilers) > 0:
-                if (not isinstance(compilers, list) or
-                    'operating_system' not in compilers[0]['compiler']):
-                    new_file = os.path.join(scope.path, '_old_compilers.yaml')
-                    tty.warn('%s in out of date compilers format. '
-                             'Moved to %s. Spack automatically generate '
-                             'a compilers config file '
-                             % (file_name, new_file))
-                    os.rename(file_name, new_file)
+# If there is no editor, only raise an error if we actually try to use it.
+if not editor:
+    def editor_not_found(*args, **kwargs):
+        raise EnvironmentError(
+            'No text editor found! Please set the EDITOR environment variable '
+            'to your preferred text editor.')
+    editor = editor_not_found

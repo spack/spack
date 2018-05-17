@@ -42,7 +42,6 @@
 
 from spack import *
 
-import spack
 import spack.store
 
 import os
@@ -198,7 +197,8 @@ class Openspeedshop(CMakePackage):
         # spec['cbtf'].prefix is the login node value for this build, as
         # we only get here when building the login node components and
         # that is all that is known to spack.
-        be_ck = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+        store = spack.store
+        be_ck = store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
 
         # Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'

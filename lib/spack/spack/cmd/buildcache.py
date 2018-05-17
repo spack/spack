@@ -26,8 +26,10 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.repo
+import spack.store
+import spack.spec
 import spack.binary_distribution as bindist
 
 description = "create, download and install binary packages"
@@ -252,7 +254,7 @@ def install_tarball(spec, args):
             tty.msg('Installing buildcache for spec %s' % spec.format())
             bindist.extract_tarball(spec, tarball, args.allow_root,
                                     args.unsigned, args.force)
-            spack.store.db.reindex(spack.store.layout)
+            spack.store.store.reindex()
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
                     spec.format())
