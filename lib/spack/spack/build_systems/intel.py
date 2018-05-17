@@ -32,7 +32,7 @@ import xml.etree.ElementTree as ET
 import llnl.util.tty as tty
 
 from llnl.util.filesystem import \
-    install, join_path, ancestor, filter_file, \
+    install, ancestor, filter_file, \
     HeaderList, find_headers, \
     LibraryList, find_libraries, find_system_libraries
 
@@ -149,9 +149,27 @@ class IntelPackage(PackageBase):
     #: URL providing information on how to acquire a license key
     license_url = 'https://software.intel.com/en-us/articles/intel-license-manager-faq'
 
-    #: Location where Intel searches for a license file
+    #: Paths to standalone license files that Intel tools are to consult.
+    #: When set, all of these will be symlinked to global_license_file.
+    license_files = []
+
+    #: Actual file to hold the license when license_files are used.
+    global_license_file = None
+
     @property
-    def license_files(self):
+    def _global_intel_license_file(self):
+        '''Return the path to a Spack-global Intel license file.
+
+        All Intel software can use the same license, so we store it centrally
+        in Spack under a common 'intel' directory.
+        '''
+        return os.path.join(self.global_license_dir, 'intel', 'license.lic')
+
+    @property
+    def _intel_license_files(self):
+        '''Return a list of files that should contain licenses.
+        They will be symlinked to global_license_file.
+        '''
         dirs = ['Licenses']
 
         if self._has_compilers:
@@ -167,7 +185,8 @@ class IntelPackage(PackageBase):
                     dirs.append(self.normalize_path(
                         'licenses', component_suite_dir, relative=True))
 
-        return [os.path.join(d, 'license.lic') for d in dirs]
+        files = [os.path.join(d, 'license.lic') for d in dirs]
+        return files
 
     #: Components to install (list of name patterns from pset/mediaconfig.xml)
     # NB: Renamed from plain components() for coding and maintainability.
@@ -421,7 +440,7 @@ class IntelPackage(PackageBase):
             #  So, we can't have it quite as easy as:
             # d = Prefix(d.append('compilers_and_libraries_' + self.version))
             #  Alright, let's see what we can find instead:
-            unversioned_dirname = join_path(d, suite_dir_name)
+            unversioned_dirname = os.path.join(d, suite_dir_name)
 
         if unversioned_dirname:
             matching_dirs = glob.glob(unversioned_dirname + version_glob)
@@ -522,7 +541,7 @@ class IntelPackage(PackageBase):
 
         reparent_as = {}
         if cs == 'compilers_and_libraries':     # must qualify further
-            d = join_path(d, _expand_fields('{platform}'))
+            d = os.path.join(d, _expand_fields('{platform}'))
         elif cs == 'composer_xe':
             reparent_as = {'mpi': 'impi'}
             # ignore 'imb' (MPI Benchmarks)
@@ -530,7 +549,7 @@ class IntelPackage(PackageBase):
         for nominal_p, actual_p in reparent_as.items():
             if component_path.startswith(nominal_p):
                 dirs = glob.glob(
-                    join_path(parent_dir, actual_p, standalone_glob))
+                    os.path.join(parent_dir, actual_p, standalone_glob))
                 debug_print('reparent dirs: %s' % dirs)
                 # Brazenly assume last match is the most recent version;
                 # convert back to relative of parent_dir, and re-assemble.
@@ -538,7 +557,7 @@ class IntelPackage(PackageBase):
                 component_path = component_path.replace(nominal_p, rel_dir, 1)
                 d = parent_dir
 
-        d = join_path(d, component_path)
+        d = os.path.join(d, component_path)
 
         if relative:
             d = os.path.relpath(os.path.realpath(d), parent_dir)
@@ -550,14 +569,14 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'compiler':     # bin dir is always under PARENT
-            d = join_path(ancestor(d), 'bin', _expand_fields('{libarch}'))
+            d = os.path.join(ancestor(d), 'bin', _expand_fields('{libarch}'))
             d = d.rstrip(os.sep)        # cosmetics, when {libarch} is empty
             # NB: Works fine even with relative=True, e.g.:
             #   composer_xe/compiler -> composer_xe/bin/intel64
         elif component == 'mpi':
-            d = join_path(d, _expand_fields('{libarch}'), 'bin')
+            d = os.path.join(d, _expand_fields('{libarch}'), 'bin')
         else:
-            d = join_path(d, 'bin')
+            d = os.path.join(d, 'bin')
         debug_print(d)
         return d
 
@@ -568,13 +587,13 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'mpi':
-            d = join_path(d, _expand_fields('{libarch}'), 'lib')
+            d = os.path.join(d, _expand_fields('{libarch}'), 'lib')
         else:
-            d = join_path(d, 'lib', _expand_fields('{libarch}'))
+            d = os.path.join(d, 'lib', _expand_fields('{libarch}'))
             d = d.rstrip(os.sep)        # cosmetics, when {libarch} is empty
 
         if component == 'tbb':      # must qualify further for abi
-            d = join_path(d, self._tbb_abi)
+            d = os.path.join(d, self._tbb_abi)
 
         debug_print(d)
         return d
@@ -583,9 +602,9 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'mpi':
-            d = join_path(d, _expand_fields('{libarch}'), 'include')
+            d = os.path.join(d, _expand_fields('{libarch}'), 'include')
         else:
-            d = join_path(d, 'include')
+            d = os.path.join(d, 'include')
 
         debug_print(d)
         return d
@@ -983,57 +1002,98 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # Specifics for installation phase
     # ---------------------------------------------------------------------
-    @property
-    def global_license_file(self):
-        """Returns the path where a Spack-global license file should be stored.
-
-        All Intel software shares the same license, so we store it in a
-        common 'intel' directory."""
-        return join_path(self.global_license_dir, 'intel',
-                         os.path.basename(self.license_files[0]))
 
     @property
     def _determine_license_type(self):
         '''Provide license-related tokens for silent.cfg.'''
-        # For license-related tokens, the following patters are relevant:
+        # See:
+        #   ./README-intel.rst, section "Details for licensing tokens".
+        #   ./build_systems/README-intel.rst, section "Licenses"
+
+        # --------------------------------------------------------------------
+        # Get our ducks in a row.
+        # --------------------------------------------------------------------
+        # The default license dir is always consulted, regardless of
+        # $INTEL_LICENSE_FILE.  We normally assume that any files that are
+        # present (and readable) there do in fact contain a valid and
+        # sufficient license, local or networked.
+        lic_d = '/opt/intel/licenses'
+        if 'darwin' in sys.platform:
+            lic_d = '/Users/Shared/Library/Application Support/Intel/Licenses'
+
+        lic_default_files_present = [
+            f for f in glob.glob(lic_d + '/*.lic') if os.access(f, os.R_OK)]
+
+        # If INTEL_LICENSE_FILE is set normally, believe it as well.
+        lic_vars_present = [
+            v for v in self.license_vars if v in os.environ]
+
+        # To avoid bothering the user with filling in a license file
+        # if it looks like the system already has licensing configured:
         #
+        # Look for license files like the installer would. If we find them, use
+        # them sight unseen since we don't have an easy way to programmatically
+        # validate them.
+        #
+        # If those files are valid - congratulations, mission accomplished!
+        # If the files are invalid (e.g. have insufficient coverage, are
+        # expired, or simply corrupt), they SHOULD be fixed on the system
+        # level, and the user should re-run "spack instal ..."
+        #
+        # If that's inapplicable or the Spack user cannot correct the files for
+        # any reason, tell Spack to ignore all defaults and use its global
+        # Intel license file instead, as follows:
+        #
+        #   INTEL_LICENSE_FILE=SPACK spack install intelfoo
+        #
+        # Gotcha: Even though we start with just "SPACK", that value might get
+        # modified by the time it arrives here, by modules being loaded for an
+        # old compiler as implied or set by the compiler component in the
+        # client package spec.
+
+        debug_print(lic_vars_present, lic_default_files_present)
+        debug_print(os.environ['INTEL_LICENSE_FILE'])
+
+        if (lic_vars_present == ['INTEL_LICENSE_FILE'] and
+                ':SPACK:' in ':%s:' % os.environ['INTEL_LICENSE_FILE']):
+            #
+            os.unsetenv('INTEL_LICENSE_FILE')
+            lic_default_files_present = []
+            lic_vars_present = []
+
+        # --------------------------------------------------------------------
+        # Main logic
+        # --------------------------------------------------------------------
+        license_type = {}
+        if lic_default_files_present or lic_vars_present:
+            license_type = {
+                'ACTIVATION_TYPE': 'exist_lic',
+            }
+        else:
+            # Use Spack's internal standalone license file for installation,
+            # and later have it sprinkled as symlinks deep into the
+            # installation's bin/ dirs for the compilers and other tools to
+            # access it.
+            #
+            # To have global_license_file be created if it does not yet exist,
+            # and to provision the Intel tool at runtime later, the following
+            # vars must be populated. They will be used in
+            # ../hooks/licensing.py:pre_install() .
+            self.global_license_file = self._global_intel_license_file
+            self.license_files = self._intel_license_files
+
+            # To provision the installer:
+            license_type = {
+                'ACTIVATION_TYPE': 'license_file',
+                'ACTIVATION_LICENSE_FILE': self.global_license_file
+            }
+        # --------------------------------------------------------------------
+
+        ## Others?
         # anythingpat - any string
         # filepat     - the file location pattern (/path/to/license.lic)
         # lspat       - the license server address pattern (0123@hostname)
         # snpat       - the serial number pattern (ABCD-01234567)
-        #
-        # For more, see: ./README-intel.rst, section "licensing tokens"
-
-        license_type = {}
-        f = self.global_license_file
-        if os.path.isfile(f):
-            # Consider the spack-internal Intel license store *only*
-            # when it has been populated.
-            #
-            # NB: Spack brings up $EDITOR in set_up_license() when
-            # self.license_files been defined, regardless of
-            # self.license_required. So, the "if" is usually True here.
-            #
-            # Reference:  lib/spack/spack/hooks/licensing.py
-            #
-            with open(f) as fh:
-                if re.search(r'^[ \t]*[^' + self.license_comment + '\n]',
-                             fh.read(), re.MULTILINE):
-                    license_type = {
-                        'ACTIVATION_TYPE': 'license_file',
-                        'ACTIVATION_LICENSE_FILE': f,
-                    }
-
-        if not license_type:
-            if [v for v in self.license_vars if v in os.environ]:
-                license_type = {
-                    'ACTIVATION_TYPE': 'exist_lic',
-                }
-            elif glob.glob('/opt/intel/licenses/*.lic'):
-                # Searched for by default ($INTEL_LICENSE_FILE not even needed)
-                license_type = {
-                    'ACTIVATION_TYPE': 'exist_lic',
-                }
 
         debug_print(license_type)
         return license_type
@@ -1066,7 +1126,7 @@ class IntelPackage(PackageBase):
         # NB: .cfg files generated with the "--duplicate filename" option have
         # the COMPONENTS string begin with a separator - do not worry about it.
         components_joined = ';'.join(self._filtered_components)
-        nonrpm_db_dir = join_path(prefix, 'nonrpm-db')
+        nonrpm_db_dir = os.path.join(prefix, 'nonrpm-db')
 
         config_draft = {
             # Basics first - these should be accepted in all products.
@@ -1143,7 +1203,7 @@ class IntelPackage(PackageBase):
     @run_after('install')
     def preserve_cfg(self):
         """Copies the silent.cfg configuration file to <prefix>/.spack."""
-        install('silent.cfg', join_path(self.prefix, '.spack'))
+        install('silent.cfg', os.path.join(self.prefix, '.spack'))
 
     @run_after('install')
     def uninstall_ism(self):
@@ -1156,7 +1216,7 @@ class IntelPackage(PackageBase):
         #  "... you can also uninstall the Intel(R) Software Manager
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
-        f = join_path(self.normalize_path('ism'), 'uninstall.sh')
+        f = os.path.join(self.normalize_path('ism'), 'uninstall.sh')
         if os.path.isfile(f):
             tty.warn('Uninstalling "Intel Software Improvement Program"'
                      'component')
