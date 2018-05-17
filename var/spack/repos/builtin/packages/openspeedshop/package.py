@@ -345,41 +345,6 @@ class Openspeedshop(CMakePackage):
                              os.path.dirname(oss_libdir.joined()))
 
         run_env.set('OPENSS_RAWDATA_DIR', '.')
-<<<<<<< HEAD
-        # Settings specific to the version, checking here
-        # for the offline instrumentor, otherwise use cbtf instrumentor
-        # settings. MPI for the cbtf instrumentor is setup in cbtf-krell
-        if '+offline' in self.spec:
-            # Had to use this form of syntax self.prefix.lib and
-            # self.prefix.lib64 returned None all the time
-            run_env.set('OPENSS_PLUGIN_PATH',
-                        join_path(oss_libdir + '/openspeedshop'))
-            run_env.prepend_path('PATH', self.spec['papi'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['libdwarf'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
-
-            if '+mpich' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich')
-            if '+mpich2' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich2')
-            if '+mvapich2' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mvapich2')
-            if '+openmpi' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'openmpi')
-        else:
-            cbtf_mc = '/sbin/cbtf_mrnet_commnode'
-            cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
-            run_env.set('XPLAT_RSH', 'ssh')
-            run_env.set('MRNET_COMM_PATH',
-                        join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
-            run_env.set('CBTF_MRNET_BACKEND_PATH',
-                        join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
-            run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
-            run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
-=======
-
         cbtf_mc = '/sbin/cbtf_mrnet_commnode'
         cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
         run_env.set('XPLAT_RSH', 'ssh')
@@ -391,4 +356,3 @@ class Openspeedshop(CMakePackage):
         run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
         run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
         run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
->>>>>>> a46f2b8e42852b3c51d31c9402328c82d5d1f78c
