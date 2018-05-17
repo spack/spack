@@ -38,6 +38,7 @@ class Adios(AutotoolsPackage):
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
+    version('1.13.1', '958aed11240d7f5a065ab5ee271ecb44')
     version('1.13.0', '68af36b821debbdf4748b20320a990ce')
     version('1.12.0', '84a1c71b6698009224f6f748c5257fc9')
     version('1.11.1', '5639bfc235e50bf17ba9dafb14ea4185')
@@ -97,7 +98,8 @@ class Adios(AutotoolsPackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
     depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
-    depends_on('sz@1.4.11.0:', when='@1.13.0: +sz')
+    depends_on('sz@1.4.11.0:', when='@1.13.0 +sz')
+    depends_on('sz@1.4.12.3:', when='@1.13.1: +sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     depends_on('lz4', when='+lz4')
     depends_on('c-blosc@1.12.0:', when='+blosc')

@@ -37,6 +37,8 @@ from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
 
+from six.moves.urllib.error import HTTPError, URLError
+
 install = SpackCommand('install')
 
 
@@ -376,3 +378,62 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+def test_extra_files_are_archived():
+    s = Spec('archive-files')
+    s.concretize()
+
+    install('archive-files')
+
+    archive_dir = os.path.join(
+        spack.store.layout.metadata_path(s), 'archived-files'
+    )
+    config_log = os.path.join(archive_dir, 'config.log')
+    assert os.path.exists(config_log)
+
+    errors_txt = os.path.join(archive_dir, 'errors.txt')
+    assert os.path.exists(errors_txt)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
+                                           capfd, conflict_spec):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with pytest.raises(SpackError):
+                install(
+                    '--log-format=cdash',
+                    '--log-file=cdash_reports',
+                    conflict_spec)
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Update.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert '<UpdateReturnStatus>Conflicts in concretized spec' \
+                in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
+                                  capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with pytest.raises((HTTPError, URLError)):
+                install(
+                    '--log-format=cdash',
+                    '--log-file=cdash_reports',
+                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
+                    'build-error')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert '<Text>configure: error: in /path/to/some/file:</Text>' in content

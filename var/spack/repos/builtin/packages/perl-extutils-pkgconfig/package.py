@@ -32,3 +32,5 @@ class PerlExtutilsPkgconfig(PerlPackage):
     url      = "http://search.cpan.org/CPAN/authors/id/X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz"
 
     version('1.16', 'b86318f2b6ac6af3ee985299e1e38fe5')
+
+    depends_on('pkg-config', type=('build', 'run'))

@@ -36,6 +36,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy
 import spack.report
+from spack.error import SpackError
 
 
 description = "build and install packages"
@@ -54,9 +55,7 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -123,6 +122,11 @@ packages. If neither are chosen, don't run tests for any packages."""
         '--log-file',
         default=None,
         help="filename for the log file. if not passed a default will be used"
+    )
+    subparser.add_argument(
+        '--cdash-upload-url',
+        default=None,
+        help="CDash URL where reports will be uploaded"
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
@@ -193,6 +197,12 @@ def install(parser, args, **kwargs):
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
+    reporter = spack.report.collect_info(args.log_format,
+                                         ' '.join(args.package),
+                                         args.cdash_upload_url)
+    if args.log_file:
+        reporter.filename = args.log_file
+
     specs = spack.cmd.parse_specs(args.package)
     if args.test == 'all' or args.run_tests:
         spack.package_testing.test_all()
@@ -200,7 +210,11 @@ def install(parser, args, **kwargs):
         for spec in specs:
             spack.package_testing.test(spec.name)
 
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    try:
+        specs = spack.cmd.parse_specs(args.package, concretize=True)
+    except SpackError as e:
+        reporter.concretization_report(e.message)
+        raise
 
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
@@ -218,41 +232,42 @@ def install(parser, args, **kwargs):
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
 
-    if args.overwrite:
-        # If we asked to overwrite an existing spec we must ensure that:
-        # 1. We have only one spec
-        # 2. The spec is already installed
-        assert len(specs) == 1, \
-            "only one spec is allowed when overwriting an installation"
+    if not args.log_file:
+        reporter.filename = default_log_file(specs[0])
+    reporter.specs = specs
+    with reporter:
+        if args.overwrite:
+            # If we asked to overwrite an existing spec we must ensure that:
+            # 1. We have only one spec
+            # 2. The spec is already installed
+            assert len(specs) == 1, \
+                "only one spec is allowed when overwriting an installation"
 
-        spec = specs[0]
-        t = spack.store.db.query(spec)
-        assert len(t) == 1, "to overwrite a spec you must install it first"
+            spec = specs[0]
+            t = spack.store.db.query(spec)
+            assert len(t) == 1, "to overwrite a spec you must install it first"
 
-        # Give the user a last chance to think about overwriting an already
-        # existing installation
-        if not args.yes_to_all:
-            tty.msg('The following package will be reinstalled:\n')
+            # Give the user a last chance to think about overwriting an already
+            # existing installation
+            if not args.yes_to_all:
+                tty.msg('The following package will be reinstalled:\n')
 
-            display_args = {
-                'long': True,
-                'show_flags': True,
-                'variants': True
-            }
+                display_args = {
+                    'long': True,
+                    'show_flags': True,
+                    'variants': True
+                }
 
-            spack.cmd.display_specs(t, **display_args)
-            answer = tty.get_yes_or_no(
-                'Do you want to proceed?', default=False
-            )
-            if not answer:
-                tty.die('Reinstallation aborted.')
+                spack.cmd.display_specs(t, **display_args)
+                answer = tty.get_yes_or_no(
+                    'Do you want to proceed?', default=False
+                )
+                if not answer:
+                    tty.die('Reinstallation aborted.')
 
-        with fs.replace_directory_transaction(specs[0].prefix):
-            install_spec(args, kwargs, specs[0])
+            with fs.replace_directory_transaction(specs[0].prefix):
+                install_spec(args, kwargs, specs[0])
 
-    else:
-
-        filename = args.log_file or default_log_file(specs[0])
-        with spack.report.collect_info(specs, args.log_format, filename):
+        else:
             for spec in specs:
                 install_spec(args, kwargs, spec)
