@@ -5,7 +5,13 @@ CMakePackage
 ------------
 
 Like Autotools, CMake is a build script generator. Designed by Kitware,
-CMake is a popular up-and-coming build system.
+CMake is a popular up-and-coming build system. It is becoming the
+dominant build system used by new projects, and many older projects are
+switching to it as well.
+
+Unlike Autotools, CMake can generate build scripts for builders other
+than Make: Ninja, Visual Studio, etc. It is therefore cross-platform,
+whereas Autotools is Unix-only.
 
 ^^^^^^
 Phases
@@ -52,6 +58,15 @@ One thing to look for is the ``cmake_minimum_required`` function:
 
 This means that CMake 2.8.12 is the earliest release that will work.
 You should specify this in a ``depends_on`` statement.
+
+CMake-based packages may also contain ``CMakeLists.txt`` in subdirectories.
+This modularization helps to manage complex builds in a hierarchical
+fashion. Sometimes these nested ``CMakeLists.txt`` require additional
+dependencies not mentioned in the top-level file.
+
+There's also usually a ``cmake`` or ``CMake`` directory containing
+additional macros, find scripts, etc. These may prove useful in
+determining dependency version requirements.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
@@ -128,9 +143,10 @@ To add additional flags to the ``cmake`` call, simply override the
 Generators
 ^^^^^^^^^^
 
-CMake actually supports multiple generators, not just Makefiles.
-Another common generator is Ninja. To switch to the Ninja
-generator, simply add:
+CMake and Autotools are build-script generation tools; they "generate"
+the Makefiles that are used to build a software package. CMake actually
+supports multiple generators, not just Makefiles. Another common
+generator is Ninja. To switch to the Ninja generator, simply add:
 
 .. code-block:: python
 

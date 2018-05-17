@@ -160,7 +160,7 @@ https://files.pythonhosted.org/packages/b0/2b/497c2bb7c660b2606d4a96e2035e925544
 
 As you can imagine, it is impossible for Spack to guess what URL to
 use to download version 1.12.0 given this URL. There is a solution,
-however. PyPI offers a pre-production interface for downloading
+however. PyPI offers a new hidden interface for downloading
 Python packages that does not include a hash in the URL:
 https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip
 
@@ -177,9 +177,9 @@ only offer ``.zip`` versions, use ``.zip``.
 PyPI vs. GitHub
 """""""""""""""
 
-Many packages are hosted on PyPI, but are developed on GitHub. The tarball
-can be downloaded from either location, but PyPI is preferred for the
-following reasons:
+Many packages are hosted on PyPI, but are developed on GitHub and other
+version control systems. The tarball can be downloaded from either
+location, but PyPI is preferred for the following reasons:
 
 #. PyPI contains the bare minimum of files to install the package.
 
@@ -241,13 +241,13 @@ submitting a PR for a new package that downloads from GitHub.
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are a few dependencies common to the PythonPackage build system.
+There are a few dependencies common to the ``PythonPackage`` build system.
 
 """"""
 Python
 """"""
 
-Obviously, every PythonPackage needs Python at build-time to run
+Obviously, every ``PythonPackage`` needs Python at build-time to run
 ``python setup.py build && python setup.py install``. Python is also
 needed at run-time if you want to import the module. Due to backwards
 incompatible changes between Python 2 and 3, it is very important to
@@ -617,7 +617,7 @@ PythonPackage vs. packages that use Python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are many packages that make use of Python, but packages that depend
-on Python are not necessarily PythonPackages.
+on Python are not necessarily ``PythonPackages``.
 
 """""""""""""""""""""""
 Choosing a build system
@@ -625,7 +625,7 @@ Choosing a build system
 
 First of all, you need to select a build system. ``spack create`` usually
 does this for you, but if for whatever reason you need to do this manually,
-choose PythonPackage if and only if the package contains a ``setup.py``
+choose ``PythonPackage`` if and only if the package contains a ``setup.py``
 file.
 
 """""""""""""""""""""""
@@ -635,8 +635,8 @@ Choosing a package name
 Selecting the appropriate package name is a little more complicated
 than choosing the build system. By default, ``spack create`` will
 prepend ``py-`` to the beginning of the package name if it detects
-that the package uses the PythonPackage build system. However, there
-are occasionally packages that use PythonPackage that shouldn't
+that the package uses the ``PythonPackage`` build system. However, there
+are occasionally packages that use ``PythonPackage`` that shouldn't
 start with ``py-``. For example:
 
 * busco
@@ -654,7 +654,7 @@ is called ``py-mercurial``. For this reason, we manually renamed the
 package to ``mercurial``.
 
 Likewise, there are occasionally packages that don't use the
-PythonPackage build system but should still be prepended with ``py-``.
+``PythonPackage`` build system but should still be prepended with ``py-``.
 For example:
 
 * py-genders

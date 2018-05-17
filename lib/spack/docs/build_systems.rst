@@ -72,7 +72,8 @@ packages. You can quickly find examples by running:
 
 You can then view these packages with ``spack edit``.
 
-This guide is intended to supplement the Build System API docs with
-examples of how to override commonly used methods. It also provides
-rules of thumb and suggestions for package developers who are unfamiliar
-with a particular build system.
+This guide is intended to supplement the
+:py:mod:`Build System API docs <spack.build_systems>` with examples of
+how to override commonly used methods. It also provides rules of thumb
+and suggestions for package developers who are unfamiliar with a
+particular build system.

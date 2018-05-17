@@ -50,7 +50,7 @@ the appropriate Makefile when run.
    Watch out for fake Autotools packages!
 
    Autotools is a very popular build system, and many people are used to the
-   classic:
+   classic steps to install a package:
 
    .. code-block:: console
 
@@ -59,10 +59,11 @@ the appropriate Makefile when run.
       $ make install
 
 
-   steps to install a package. For this reason, some developers will write
-   their own ``configure`` scripts that have nothing to do with Autotools.
-   These packages may not accept the same flags as other Autotools packages,
-   so it is better to create a custom build system. You can tell if a package
+   For this reason, some developers will write their own ``configure``
+   scripts that have nothing to do with Autotools. These packages may
+   not accept the same flags as other Autotools packages, so it is
+   better to use the ``Package`` base class and create a
+   :ref:`custom build system <custompackage>`. You can tell if a package
    uses Autotools by running ``./configure --help`` and comparing the output
    to other known Autotools packages. You should also look for files like:
 
@@ -83,15 +84,15 @@ necessary for installation. If this is the case, your package does not
 require any Autotools dependencies.
 
 However, a basic rule of version control systems is to never commit
-code that can be generated. The repository itself likely does not have
-a ``configure`` script. The way that Autotools works is that developers
-write (or auto-generate) a ``configure.ac`` script that contains
-configuration preferences and a ``Makefile.am`` script that contains
-build instructions. Then, ``autoconf`` is used to convert
-``configure.ac`` into ``configure``, while ``automake`` is used to
-convert ``Makefile.am`` into ``Makefile.in``. ``Makefile.in`` is used
-by ``configure`` to generate a platform-dependent ``Makefile`` for you.
-The following diagram provides a high-level overview of the process:
+code that can be generated. The source code repository itself likely
+does not have a ``configure`` script. Developers typically write
+(or auto-generate) a ``configure.ac`` script that contains configuration
+preferences and a ``Makefile.am`` script that contains build instructions.
+Then, ``autoconf`` is used to convert ``configure.ac`` into ``configure``,
+while ``automake`` is used to convert ``Makefile.am`` into ``Makefile.in``.
+``Makefile.in`` is used by ``configure`` to generate a platform-dependent
+``Makefile`` for you. The following diagram provides a high-level overview
+of the process:
 
 .. image:: Autoconf-automake-process.*
 
@@ -117,13 +118,17 @@ check out a commit from the ``develop`` branch, you would want to add:
    depends_on('libtool',  type='build', when='@develop')
    depends_on('m4',       type='build', when='@develop')
 
-Another reason for needing Autotools dependencies is if the developers
-distribute a patch that modifies one of the files used to generate
-``configure`` or ``Makefile.in``. If this is the case, these scripts
-will need to be regenerated. It is preferable to regenerate these
-manually using the patch, and then create a new patch that directly
-modifies ``configure``. That way, Spack can use the secondary patch
-and additional build system dependencies aren't necessary.
+In some cases, developers might need to distribute a patch that modifies
+one of the files used to generate ``configure`` or ``Makefile.in``.
+In this case, these scripts will need to be regenerated. It is
+preferable to regenerate these manually using the patch, and then
+create a new patch that directly modifies ``configure``. That way,
+Spack can use the secondary patch and additional build system
+dependencies aren't necessary.
+
+""""""""""""""""
+force_autoreconf
+""""""""""""""""
 
 If for whatever reason you really want to add the original patch
 and tell Spack to regenerate ``configure``, you can do so using the
@@ -134,7 +139,14 @@ following setting:
    force_autoreconf = True
 
 This line tells Spack to wipe away the existing ``configure`` script
-and generate a new one.
+and generate a new one. If you only need to do this for a single
+version, this can be done like so:
+
+.. code-block:: python
+
+   @property
+   def force_autoreconf(self):
+       return self.version == Version('1.2.3'):
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Finding configure flags
@@ -268,10 +280,10 @@ Testing
 
 Autotools-based packages typically provide unit testing via the
 ``check`` and ``installcheck`` targets. If you build your software
-with ``--test=root``, Spack will check for the presence of a ``check``
-or ``test`` target in the Makefile and run ``make check`` for you.
-After installation, it will check for an ``installcheck`` target and
-run ``make installcheck`` if it finds one.
+with ``spack install --test=root``, Spack will check for the presence
+of a ``check`` or ``test`` target in the Makefile and run
+``make check`` for you. After installation, it will check for an
+``installcheck`` target and run ``make installcheck`` if it finds one.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation
