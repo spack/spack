@@ -28,7 +28,7 @@ import os.path
 from spack import *
 
 
-class Espresso(Package):
+class QuantumEspresso(Package):
     """Quantum-ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
     nanoscale. It is based on density-functional theory, plane waves, and
@@ -36,20 +36,31 @@ class Espresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
-    url = 'http://www.qe-forge.org/gf/download/frsrelease/204/912/espresso-5.3.0.tar.gz'
+    url='https://github.com/QEF/q-e/archive/qe-5.3.tar.gz'
+
+    version(
+        '6.2.0',
+        '972176a58d16ae8cf0c9a308479e2b97',
+        url='https://github.com/QEF/q-e/archive/qe-6.2.0.tar.gz'
+    )
 
     version(
         '6.1.0',
-        'db398edcad76e085f8c8a3f6ecb7aaab',
-        url='http://www.qe-forge.org/gf/download/frsrelease/240/1075/qe-6.1.tar.gz'
+        '3fe861dcb5f6ec3d15f802319d5d801b',
+        url='https://github.com/QEF/q-e/archive/qe-6.1.0.tar.gz'
     )
 
     version(
         '5.4.0',
-        '8bb78181b39bd084ae5cb7a512c1cfe7',
-        url='http://www.qe-forge.org/gf/download/frsrelease/211/968/espresso-5.4.0.tar.gz'
+        '085f7e4de0952e266957bbc79563c54e',
+        url='https://github.com/QEF/q-e/archive/qe-5.4.tar.gz'
     )
-    version('5.3.0', '6848fcfaeb118587d6be36bd10b7f2c3')
+
+    version(
+        '5.3.0',
+        'be3f8778e302cffb89258a5f936a7592',
+        url='https://github.com/QEF/q-e/archive/qe-5.3.tar.gz'
+    )
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
