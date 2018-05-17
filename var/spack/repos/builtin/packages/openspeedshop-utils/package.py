@@ -49,7 +49,7 @@ import os
 import os.path
 
 
-class Openspeedshop(CMakePackage):
+class OpenspeedshopUtils(CMakePackage):
     """OpenSpeedShop is a community effort by The Krell Institute with
        current direct funding from DOEs NNSA.  It builds on top of a
        broad list of community infrastructures, most notably Dyninst
@@ -61,6 +61,11 @@ class Openspeedshop(CMakePackage):
        Cray platforms.  OpenSpeedShop development is hosted by the Krell
        Institute. The infrastructure and base components of OpenSpeedShop
        are released as open source code primarily under LGPL.
+       openspeedshop-utils is a package that does not have the
+       qt3 gui.  It was created to avoid a conflict between
+       openspeedshop and cbtf-argonavis-gui based on the fact
+       that spack will not allow a qt3 and qt4/qt5 dependency in a packages
+       dependency tree.
     """
 
     homepage = "http://www.openspeedshop.org"
@@ -81,10 +86,6 @@ class Openspeedshop(CMakePackage):
                          to point to target build.")
     variant('cuda', default=False,
             description="build with cuda packages included.")
-
-    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
-            description='Build or not build a GUI of choice'
-    )
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
@@ -138,8 +139,6 @@ class Openspeedshop(CMakePackage):
 
     depends_on("libxml2", when='@develop')
     depends_on("libxml2@2.9.4", when='@2.3.1.3')
-
-    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')
@@ -211,7 +210,7 @@ class Openspeedshop(CMakePackage):
         cmakeOptions.extend(CrayLoginNodeOptions)
 
     def cmake_args(self):
-
+        # Appends base options to cmake_args
         spec = self.spec
 
         compile_flags = "-O2 -g"
@@ -222,7 +221,6 @@ class Openspeedshop(CMakePackage):
         instrumentor_setting = "cbtf"
 
         if spec.satisfies('+runtime'):
-            # Appends base options to cmake_args
             self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
             cmake_args.extend(
@@ -237,7 +235,6 @@ class Openspeedshop(CMakePackage):
 
             # Appends base options to cmake_args
             self.set_defaultbase_cmakeOptions(spec, cmake_args)
-            guitype = self.spec.variants['gui'].value
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
                  '-DCMAKE_C_FLAGS=%s' % compile_flags,
@@ -247,23 +244,14 @@ class Openspeedshop(CMakePackage):
                  '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
                  '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
-            if guitype == 'none':
-                cmake_args.extend(
-                    ['-DBUILD_QT3_GUI=FALSE'])
-            elif guitype == 'qt4':
-                cmake_args.extend(
-                    ['-DBUILD_QT3_GUI=FALSE'])
-            elif guitype == 'qt3':
-                cmake_args.extend(
-                    ['-DQTLIB_DIR=%s'
-                        % spec['qt'].prefix])
-
             if spec.satisfies('+crayfe'):
                 # We need to build target/compute node
                 # components/libraries first then pass
                 # those libraries to the openspeedshop
                 # login node build
                 self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
+
+        cmake_args.extend(['-DBUILD_QT3_GUI=FALSE'])
 
         return cmake_args
 
@@ -322,10 +310,6 @@ class Openspeedshop(CMakePackage):
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
 
-        # Common settings to both offline and cbtf versions
-        # of OpenSpeedShop
-        run_env.prepend_path('PATH', self.prefix.bin)
-
         # Find Dyninst library path, this is needed to
         # set the DYNINSTAPI_RT_LIB library which is
         # required for OpenSpeedShop to find loop level
@@ -338,9 +322,10 @@ class Openspeedshop(CMakePackage):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = find_libraries('libopenss-framework',
-                                    root=self.spec['openspeedshop'].prefix,
-                                    shared=True, recursive=True)
+        oss_libdir = find_libraries(
+            'libopenss-framework',
+            root=self.spec['openspeedshop-utils'].prefix,
+            shared=True, recursive=True)
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 
