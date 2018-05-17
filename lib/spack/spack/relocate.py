@@ -26,7 +26,7 @@
 import os
 import platform
 import re
-import spack
+import spack.repo
 import spack.cmd
 from spack.util.executable import Executable, ProcessError
 from llnl.util.filesystem import filter_file
@@ -426,8 +426,8 @@ def make_binary_placeholder(cur_path_names, allow_root):
             if (not allow_root and
                 strings_contains_installroot(cur_path,
                                              spack.store.layout.root)):
-                raise InstallRootStringException(cur_path,
-                                                 spack.store.layout.root)
+                raise InstallRootStringException(
+                    cur_path, spack.store.layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -435,10 +435,10 @@ def make_binary_placeholder(cur_path_names, allow_root):
                 new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if (not allow_root and
-                    strings_contains_installroot(cur_path,
-                                                 spack.store.layout.root)):
-                    raise InstallRootStringException(cur_path,
-                                                     spack.store.layout.root)
+                    strings_contains_installroot(
+                        cur_path, spack.store.layout.root)):
+                    raise InstallRootStringException(
+                        cur_path, spack.store.layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
 
