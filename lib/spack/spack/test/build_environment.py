@@ -73,12 +73,10 @@ def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 
     expected = {
-        'linux': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
-                  ' -Wl,-rpath,/spack-test-prefix/lib64 -shared'
+        'linux': ('/bin/mycc -shared'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
-        'darwin': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
-                   ' -Wl,-rpath,/spack-test-prefix/lib64 -dynamiclib'
+        'darwin': ('/bin/mycc -dynamiclib'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }
 
