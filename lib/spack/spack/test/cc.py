@@ -29,8 +29,8 @@ arguments correctly.
 import os
 import unittest
 
-import spack
-from llnl.util.filesystem import join_path
+from spack.paths import build_env_path
+from llnl.util.filesystem import mkdirp
 from spack.util.executable import Executable
 
 # Complicated compiler test command
@@ -52,11 +52,11 @@ test_command = [
 class CompilerWrapperTest(unittest.TestCase):
 
     def setUp(self):
-        self.cc = Executable(join_path(spack.build_env_path, "cc"))
-        self.ld = Executable(join_path(spack.build_env_path, "ld"))
-        self.cpp = Executable(join_path(spack.build_env_path, "cpp"))
-        self.cxx = Executable(join_path(spack.build_env_path, "c++"))
-        self.fc = Executable(join_path(spack.build_env_path, "fc"))
+        self.cc = Executable(os.path.join(build_env_path, "cc"))
+        self.ld = Executable(os.path.join(build_env_path, "ld"))
+        self.cpp = Executable(os.path.join(build_env_path, "cpp"))
+        self.cxx = Executable(os.path.join(build_env_path, "c++"))
+        self.fc = Executable(os.path.join(build_env_path, "fc"))
 
         self.realcc = "/bin/mycc"
         self.prefix = "/spack-test-prefix"
