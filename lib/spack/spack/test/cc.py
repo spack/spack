@@ -97,8 +97,17 @@ class CompilerWrapperTest(unittest.TestCase):
 
         mkdirp(join_path(self.dep4, 'include'))
 
-        if 'SPACK_DEPENDENCIES' in os.environ:
-            del os.environ['SPACK_DEPENDENCIES']
+        self.path1 = '/x/y/z1/'
+        self.path2 = '/x/y/z2/'
+
+        if 'SPACK_LINK_DIRS' in os.environ:
+            del os.environ['SPACK_LINK_DIRS']
+
+        if 'SPACK_RPATH_DIRS' in os.environ:
+            del os.environ['SPACK_RPATH_DIRS']
+
+        if 'SPACK_INCLUDE_DIRS' in os.environ:
+            del os.environ['SPACK_INCLUDE_DIRS']
 
     def tearDown(self):
         shutil.rmtree(self.tmp_deps, True)
@@ -363,19 +372,16 @@ class CompilerWrapperTest(unittest.TestCase):
     def test_ld_deps_reentrant(self):
         """Make sure ld -r is handled correctly on OS's where it doesn't
            support rpaths."""
-        os.environ['SPACK_DEPENDENCIES'] = ':'.join([self.dep1])
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_LINK_DIRS'] = ':'.join([self.path1])
+        os.environ['SPACK_RPATH_DIRS'] = ':'.join([self.path1])
 
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
         reentrant_test_command = ['-r'] + test_command
         self.check_ld('dump-args', reentrant_test_command,
                       'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
 
-                      '-L' + self.dep1 + '/lib ' +
-                      '-rpath ' + self.dep1 + '/lib ' +
+                      '-L' + self.path1 + ' ' +
+                      '-rpath ' + self.path1 + ' '
 
                       '-r ' +
                       ' '.join(test_command))
@@ -383,6 +389,6 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
         self.check_ld('dump-args', reentrant_test_command,
                       'ld ' +
-                      '-L' + self.dep1 + '/lib ' +
+                      '-L' + self.path1 + ' ' +
                       '-r ' +
                       ' '.join(test_command))

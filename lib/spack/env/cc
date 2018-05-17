@@ -264,20 +264,17 @@ case "$mode" in cc|ccld)
         ;;
 esac
 
-# Read spack dependencies from the path environment variable
+# Prepend include directories
 IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
 for include_dir in "${include_dirs[@]}"; do
-    # Prepend include directories
-    if [[ -d $include_dir ]]; then
-        if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
-            args=("-I$include_dir" "${args[@]}")
-        fi
+    if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
+        args=("-I$include_dir" "${args[@]}")
     fi
 done
 
 IFS=':' read -ra rpath_dirs <<< "$SPACK_RPATH_DIRS"
 for rpath_dir in "${rpath_dirs[@]}"; do
-    # Prepend lib and RPATH directories. Note that in the case of the
+    # Prepend RPATH directories. Note that in the case of the
     # top-level package these directories may not exist yet. For dependencies
     # it is assumed that paths have already been confirmed.
     if [[ $mode == ccld ]]; then
@@ -289,11 +286,8 @@ done
 
 IFS=':' read -ra link_dirs <<< "$SPACK_LINK_DIRS"
 for link_dir in "${link_dirs[@]}"; do
-    # Prepend lib and RPATH directories
-    if [[ -d $link_dir ]]; then
-        if [[ $mode == ccld || $mode == ld ]]; then
-            args=("-L$link_dir" "${args[@]}")
-        fi
+    if [[ $mode == ccld || $mode == ld ]]; then
+        args=("-L$link_dir" "${args[@]}")
     fi
 done
 
