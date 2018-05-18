@@ -30,10 +30,13 @@ class Sbt(Package):
     """Scala Build Tool"""
 
     homepage = 'http://www.scala-sbt.org'
-    url = 'https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz'
+    url      = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
 
+    version('1.1.5', 'b771480feb07f98fa8cd6d787c8d4485')
     version('1.1.4', 'c71e5fa846164d14d4cd450520d66c6a')
     version('0.13.17', 'c52c6152cc7aadfd1f0736a1a5d0a5b8')
+    version('0.13.12', 'cec3071d46ef13334c8097cc3467ff28',
+            url="https://dl.bintray.com/sbt/native-packages/sbt/0.13.12/sbt-0.13.12.tgz")
 
     depends_on('java')
 
