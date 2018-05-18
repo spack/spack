@@ -36,7 +36,7 @@ class QuantumEspresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
-    url='https://github.com/QEF/q-e/archive/qe-5.3.tar.gz'
+    url = 'https://github.com/QEF/q-e/archive/qe-5.3.tar.gz'
 
     version(
         '6.2.0',
