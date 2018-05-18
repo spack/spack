@@ -219,7 +219,7 @@ class Opencv(CMakePackage):
             zlib = spec['zlib']
             args.extend([
                 '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
                     zlib.libs[0]),
                 '-DZLIB_INCLUDE_DIR:PATH={0}'.format(
                     zlib.headers.directories[0])
@@ -229,7 +229,7 @@ class Opencv(CMakePackage):
             libpng = spec['libpng']
             args.extend([
                 '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
                     libpng.libs[0]),
                 '-DPNG_INCLUDE_DIR:PATH={0}'.format(
                     libpng.headers.directories[0])
@@ -248,7 +248,7 @@ class Opencv(CMakePackage):
             libtiff = spec['libtiff']
             args.extend([
                 '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
                     libtiff.libs[0]),
                 '-DTIFF_INCLUDE_DIR:PATH={0}'.format(
                     libtiff.headers.directories[0])
@@ -258,7 +258,7 @@ class Opencv(CMakePackage):
             jasper = spec['jasper']
             args.extend([
                 '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
                     jasper.libs[0]),
                 '-DJASPER_INCLUDE_DIR:PATH={0}'.format(
                     jasper.headers.directories[0])
