@@ -50,11 +50,9 @@ class Antlr(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        E = 'enable'
-        D = 'disable'
         return [
-            '--{0}-cxx'.format(E if '+cxx' in spec else D),
-            '--{0}-java'.format(D if '+java' in spec else D),
-            '--{0}-python'.format(E if '+python' in spec else D),
+            '--{0}-cxx'.format('enable' if '+cxx' in spec else 'disable'),
+            '--{0}-java'.format('enable' if '+java' in spec else 'disable'),
+            '--{0}-python'.format('enable' if '+python' in spec else 'disable'),
             '--disable-csharp'
         ]
