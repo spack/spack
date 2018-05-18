@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
 
 
 class Libiconv(AutotoolsPackage):
@@ -46,6 +45,6 @@ class Libiconv(AutotoolsPackage):
         args = ['--enable-extra-encodings']
 
         # A hack to patch config.guess in the libcharset sub directory
-        shutil.copyfile('./build-aux/config.guess',
-                        'libcharset/build-aux/config.guess')
+        install('./build-aux/config.guess',
+                'libcharset/build-aux/config.guess')
         return args

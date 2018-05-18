@@ -38,7 +38,7 @@ class DocbookXml(Package):
             src = os.path.abspath(item)
             dst = os.path.join(prefix, item)
             if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
+                install_tree(src, dst, preserve_symlinks=True)
             else:
                 install(src, dst)
 
