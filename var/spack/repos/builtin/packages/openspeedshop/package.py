@@ -66,7 +66,11 @@ class Openspeedshop(CMakePackage):
     url = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     # Use when the git repository is available
-    version('2.3.1.3', git='https://github.com/OpenSpeedShop/openspeedshop.git', tag='2.3.1.3')
+    version('2.3.1.4', branch='2.3.1.4',
+            git='https://github.com/OpenSpeedShop/openspeedshop.git')
+
+    version('2.3.1.3', branch='2.3.1.3',
+            git='https://github.com/OpenSpeedShop/openspeedshop.git')
 
     version('develop', branch='master',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
@@ -108,7 +112,8 @@ class Openspeedshop(CMakePackage):
             description="Build mpi collector for mpich\
                          MPI when variant is enabled.")
 
-    depends_on("cmake@3.0.2:", type='build')
+    depends_on("cmake@3.11.1", when='@2.3.1.3:', type='build')
+    depends_on("cmake@3.0.2:", when='@develop', type='build')
 
     # Dependencies for openspeedshop that are common to all
     # the variants of the OpenSpeedShop build
@@ -118,7 +123,7 @@ class Openspeedshop(CMakePackage):
 
     # For binutils
     depends_on("binutils", when='@develop', type='build')
-    depends_on("binutils@2.29.1", when='@2.3.1.3', type='build')
+    depends_on("binutils@2.29.1", when='@2.3.1.3:', type='build')
 
     depends_on("elf", type="link")
     depends_on("libdwarf")
@@ -127,59 +132,59 @@ class Openspeedshop(CMakePackage):
 
     # For boost
     depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@2.3.1.3')
+    depends_on("boost@1.66.0", when='@2.3.1.3:')
 
     depends_on("dyninst@9.3.2:", when='@develop')
-    depends_on("dyninst@9.3.2", when='@2.3.1.3')
+    depends_on("dyninst@9.3.2", when='@2.3.1.3:')
 
     depends_on("python", when='@develop')
-    depends_on("python@2.7.14", when='@2.3.1.3')
+    depends_on("python@2.7.14", when='@2.3.1.3:')
 
     depends_on("libxml2", when='@develop')
-    depends_on("libxml2@2.9.4", when='@2.3.1.3')
+    depends_on("libxml2@2.9.4", when='@2.3.1.3:')
 
     depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0", when='@2.3.1.3')
+    depends_on("cbtf@1.9.1.0:", when='@2.3.1.3:')
 
     depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0", when='@2.3.1.3')
+    depends_on("cbtf-krell@1.9.1.0:", when='@2.3.1.3:')
 
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe')
-    depends_on('cbtf-krell@1.9.1.0+crayfe', when='@2.3.1.3+crayfe')
+    depends_on('cbtf-krell@1.9.1.0:+crayfe', when='@2.3.1.3:+crayfe')
 
     depends_on('cbtf-krell@develop+cti', when='@develop+cti')
-    depends_on('cbtf-krell@1.9.1.0+cti', when='@2.3.1.3+cti')
+    depends_on('cbtf-krell@1.9.1.0:+cti', when='@2.3.1.3:+cti')
 
     depends_on('cbtf-krell@develop+mpich', when='@develop+mpich')
-    depends_on('cbtf-krell@1.9.1.0+mpich', when='@2.3.1.3+mpich')
+    depends_on('cbtf-krell@1.9.1.0:+mpich', when='@2.3.1.3:+mpich')
 
     depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2')
-    depends_on('cbtf-krell@1.9.1.0+mpich2', when='@2.3.1.3+mpich2')
+    depends_on('cbtf-krell@1.9.1.0:+mpich2', when='@2.3.1.3:+mpich2')
 
     depends_on('cbtf-krell@develop+mpt', when='@develop+mpt')
-    depends_on('cbtf-krell@1.9.1.0+mpt', when='@2.3.1.3+mpt')
+    depends_on('cbtf-krell@1.9.1.0:+mpt', when='@2.3.1.3:+mpt')
 
     depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich')
-    depends_on('cbtf-krell@1.9.1.0+mvapich', when='@2.3.1.3+mvapich')
+    depends_on('cbtf-krell@1.9.1.0:+mvapich', when='@2.3.1.3:+mvapich')
 
     depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2')
-    depends_on('cbtf-krell@1.9.1.0+mvapich2', when='@2.3.1.3+mvapich2')
+    depends_on('cbtf-krell@1.9.1.0:+mvapich2', when='@2.3.1.3:+mvapich2')
 
     depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi')
-    depends_on('cbtf-krell@1.9.1.0+openmpi', when='@2.3.1.3+openmpi')
+    depends_on('cbtf-krell@1.9.1.0:+openmpi', when='@2.3.1.3:+openmpi')
 
     depends_on("cbtf-argonavis@develop", when='@develop+cuda')
-    depends_on("cbtf-argonavis@1.9.1.0", when='@2.3.1.3+cuda')
+    depends_on("cbtf-argonavis@1.9.1.0:", when='@2.3.1.3:+cuda')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
 
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3')
+    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:+cti')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:')
 
     parallel = False
 
