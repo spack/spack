@@ -9,7 +9,7 @@ import argparse
 import os
 
 import llnl.util.tty as tty
-import spack.build_environment as build_env
+import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
@@ -25,9 +25,9 @@ def setup_parser(subparser):
         help="specs of package environment to emulate")
 
 
-def env(parser, args):
+def build_env(parser, args):
     if not args.spec:
-        tty.die("spack env requires a spec.")
+        tty.die("spack build-env requires a spec.")
 
     # Specs may have spaces in them, so if they do, require that the
     # caller put a '--' between the spec and the command to be
@@ -44,10 +44,10 @@ def env(parser, args):
 
     specs = spack.cmd.parse_specs(spec, concretize=True)
     if len(specs) > 1:
-        tty.die("spack env only takes one spec.")
+        tty.die("spack build-env only takes one spec.")
     spec = specs[0]
 
-    build_env.setup_package(spec.package, args.dirty)
+    build_environment.setup_package(spec.package, args.dirty)
 
     if not cmd:
         # If no command act like the "env" command and print out env vars.
