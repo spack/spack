@@ -54,7 +54,7 @@ class TestEnvironment(unittest.TestCase):
         c.add('mpileaks')
         assert 'mpileaks' in c.user_specs
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_concretize(self):
         c = Environment('test')
         c.add('mpileaks')
@@ -62,7 +62,7 @@ class TestEnvironment(unittest.TestCase):
         env_specs = c._get_environment_specs()
         assert any(x.name == 'mpileaks' for x in env_specs)
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock',
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages',
                              'install_mockery', 'mock_fetch')
     def test_env_install(self):
         c = Environment('test')
@@ -73,7 +73,7 @@ class TestEnvironment(unittest.TestCase):
         spec = next(x for x in env_specs if x.name == 'cmake-client')
         assert spec.package.installed
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_remove_after_concretize(self):
         c = Environment('test')
         c.add('mpileaks')
@@ -84,7 +84,7 @@ class TestEnvironment(unittest.TestCase):
         env_specs = c._get_environment_specs()
         assert not any(x.name == 'mpileaks' for x in env_specs)
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_reset_compiler(self):
         c = Environment('test')
         c.add('mpileaks')
@@ -99,7 +99,7 @@ class TestEnvironment(unittest.TestCase):
         new_spec = c.specs_by_hash[c.concretized_order[0]]
         assert new_spec.compiler != first_spec.compiler
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_environment_list(self):
         c = Environment('test')
         c.add('mpileaks')
@@ -113,7 +113,7 @@ class TestEnvironment(unittest.TestCase):
         mpileaks_spec = c.specs_by_hash[c.concretized_order[0]]
         assert mpileaks_spec.format() in list_content
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_upgrade_dependency(self):
         c = Environment('test')
         c.add('mpileaks ^callpath@0.9')
@@ -126,7 +126,7 @@ class TestEnvironment(unittest.TestCase):
         for spec in callpath_dependents:
             assert spec['callpath'].version == Version('1.0')
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_init_config(self):
         test_config = """user_specs:
     - mpileaks
@@ -144,7 +144,7 @@ packages:
         assert any(x.satisfies('mpileaks@2.2')
                    for x in c._get_environment_specs())
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_to_dict(self):
         c = Environment('test')
         c.add('mpileaks')
@@ -153,7 +153,7 @@ packages:
         c_copy = Environment.from_dict('test_copy', context_dict)
         assert c.specs_by_hash == c_copy.specs_by_hash
 
-    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    @pytest.mark.usefixtures('config', 'mutable_mock_packages')
     def test_prepare_repo(self):
         c = Environment('testx')
         c.add('mpileaks')

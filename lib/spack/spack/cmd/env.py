@@ -54,7 +54,7 @@ description = "group a subset of packages"
 section = "environment"
 level = "long"
 
-_db_dirname = fs.join_path(spack.var_path, 'environments')
+_db_dirname = fs.join_path(spack.paths.var_path, 'environments')
 
 
 def get_env_root(name):
@@ -545,7 +545,7 @@ def environment_uninstall(args):
 def dump_to_environment_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
     if not os.path.exists(dest_pkg_dir):
-        spack.repo.dump_provenance(spec, dest_pkg_dir)
+        spack.repo.path.dump_provenance(spec, dest_pkg_dir)
 
 
 def prepare_repository(environment, remove=None, use_repo=False):
