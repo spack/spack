@@ -32,7 +32,9 @@ class Silo(Package):
     homepage = "http://wci.llnl.gov/simulation/computer-codes/silo"
     url      = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz"
 
-    version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8')
+    version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8', preferred=True)
+    version('4.10.2-bsd', '60fef9ce373daf1e9cc8320cfa509bc5',
+            url="https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2-bsd.tar.gz")
     version('4.9', 'a83eda4f06761a86726e918fc55e782a')
     version('4.8', 'b1cbc0e7ec435eb656dc4b53a23663c9')
 
