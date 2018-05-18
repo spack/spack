@@ -460,7 +460,7 @@ class Python(AutotoolsPackage):
         pythoncmd = self.command('-c', cmd, output=str).strip()
         pythoncmd.add_default_env('PYTHONPATH', '')
         return pythoncmd
-        
+
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
         Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
