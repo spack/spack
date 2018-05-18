@@ -37,7 +37,7 @@ import spack.cmd.module
 import spack.cmd.common.arguments as arguments
 from spack.config import ConfigScope
 from spack.spec import Spec, CompilerSpec, FlagMap
-from spack.repository import Repo
+from spack.repo import Repo
 from spack.version import VersionList
 from contextlib import contextmanager
 
@@ -556,7 +556,7 @@ def prepare_repository(environment, remove=None, use_repo=False):
     if os.path.exists(environment.repo_path()):
         shutil.copytree(environment.repo_path(), new_repo_dir)
     else:
-        spack.repository.create_repo(new_repo_dir, environment.name)
+        spack.repo.create_repo(new_repo_dir, environment.name)
     if remove:
         remove_dirs = []
         repo = Repo(new_repo_dir)
