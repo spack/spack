@@ -1005,26 +1005,44 @@ class IntelPackage(PackageBase):
 
     @property
     def _determine_license_type(self):
-        '''Provide license-related tokens for silent.cfg.'''
+        '''Provide appropriate license tokens for the installer (silent.cfg)
+        and, if needed, for later running package.
+        '''
         # See:
         #   ./README-intel.rst, section "Details for licensing tokens".
         #   ./build_systems/README-intel.rst, section "Licenses"
         #
-        # Try to avoid bothering the user with filling in a license file if it
-        # looks like the system already has licensing established, to wit:
+        # Goal:
+        #   If the system already has licensing established, use it.
+        #   Otherwise, have Spack install license files (or rather, symlinks)
+        #   under the package prefix. If an Intel license file is already
+        #   present in Spack's license directory, use it as the symlink target.
+        #   Otherwise, create a template and ask the user to fill it in.
         #
-        # Look around like the installer would. If we find files or env vars,
-        # assume they are valid and pass them on sight unseen since we don't
-        # have an easy way to programmatically validate them.
+        # Motivation:
+        #   Current behavior is that "spack install foo" will bring up an
+        #   editor when it encounters the need for a certain vendor license for
+        #   the first time. This is annoying if the system already has a
+        #   license known to work just fine: The installer is stalled requires
+        #   intervention, and the question arises what, if anything, to enter
+        #   in the template file. The correct response is to just save the file
+        #   as is (being inactive, consisting of comments only).
         #
-        # * If the files are valid - congratulations, mission accomplished!
-        # * If the files are invalid (e.g. have insufficient coverage, are
-        #   expired, or simply corrupt) the installer will complain and stop.
+        # Approach:
+        #   Look around like the installer would. If we find files or env vars,
+        #   assume they are valid and pass them on sight unseen since we don't
+        #   have an easy way to programmatically validate them.
         #
-        # The offending files should then be corrected. If that's not
-        # applicable or doable for any reason (e.g. permissions or legacy
-        # software), we need a way to tell Spack to ignore those sirens still
-        # singing and instead use the Spack-global Intel license file instead.
+        #   * If the files are valid - congratulations, mission accomplished!
+        #
+        #   * If the files are invalid (e.g. have insufficient coverage, are
+        #     expired, or simply corrupt) the installer will complain and stop.
+        #
+        # The offending files or env. vars on system should then be corrected.
+        # If that's not applicable or doable for any reason (e.g. permissions
+        # or legacy software requirements), we need a way to tell Spack to
+        # ignore those sirens still singing and instead use the Spack-global
+        # Intel license file after all.
         #
         # ## Suggestion - possibly too "meta": Overload INTEL_LICENSE_FILE ##
         #
