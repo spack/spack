@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Camellia(CMakePackage):
     """Camellia: user-friendly MPI-parallel adaptive finite element package,
        with support for DPG and other hybrid methods, built atop Trilinos.
@@ -37,7 +38,7 @@ class Camellia(CMakePackage):
     version('master',
             git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
 
-    depends_on('trilinos~shared+amesos+amesos2+anasazi+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+ml+muelu+sacado+shards+teuchos+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
+    depends_on('trilinos~shared+amesos+amesos2+anasazi+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
     depends_on('moab-metis-parmetis', when='+moab')
 
     def cmake_args(self):
