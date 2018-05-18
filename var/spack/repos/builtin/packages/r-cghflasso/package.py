@@ -33,5 +33,3 @@ class RCghflasso(RPackage):
     url      = "https://cran.r-project.org/src/contrib/cghFLasso_0.2-1.tar.gz"
 
     version('0.2-1', '9a714a6dda3de9e905d23dadfa5d37f1')
-
-    depends_on('r@3.2:', type=('build', 'run'))
