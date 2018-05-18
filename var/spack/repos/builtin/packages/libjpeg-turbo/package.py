@@ -49,6 +49,10 @@ class LibjpegTurbo(Package):
     depends_on("nasm", type='build')
     depends_on('cmake', type='build', when="@1.5.90:")
 
+    @property
+    def libs(self):
+        return find_libraries("libjpeg*", root=self.prefix, recursive=True)
+
     @when('@:1.5.3')
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

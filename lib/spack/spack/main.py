@@ -250,7 +250,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # epilog
         formatter.add_text("""\
 {help}:
-  spack help --all       list all available commands
+  spack help --all       list all commands and options
   spack help <command>   help on a specific command
   spack help --spec      help on the spec syntax
   spack docs             open http://spack.rtfd.io/ in a browser"""
@@ -311,33 +311,50 @@ def make_argument_parser(**kwargs):
     # stat names in groups of 7, for nice wrapping.
     stat_lines = list(zip(*(iter(stat_names),) * 7))
 
-    parser.add_argument('-h', '--help', action='store_true',
-                        help="show this help message and exit")
-    parser.add_argument('--color', action='store', default='auto',
-                        choices=('always', 'never', 'auto'),
-                        help="when to colorize output (default: auto)")
-    parser.add_argument('-d', '--debug', action='store_true',
-                        help="write out debug logs during compile")
-    parser.add_argument('-D', '--pdb', action='store_true',
-                        help="run spack under the pdb debugger")
-    parser.add_argument('-k', '--insecure', action='store_true',
-                        help="do not check ssl certificates when downloading")
-    parser.add_argument('-m', '--mock', action='store_true',
-                        help="use mock packages instead of real ones")
-    parser.add_argument('-p', '--profile', action='store_true',
-                        dest='spack_profile',
-                        help="profile execution using cProfile")
-    parser.add_argument('-P', '--sorted-profile', default=None, metavar="STAT",
-                        help="profile and sort by one or more of:\n[%s]" %
-                        ',\n '.join([', '.join(line) for line in stat_lines]))
-    parser.add_argument('--lines', default=20, action='store',
-                        help="lines of profile output or 'all' (default: 20)")
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help="print additional output during builds")
-    parser.add_argument('-s', '--stacktrace', action='store_true',
-                        help="add stacktraces to all printed statements")
-    parser.add_argument('-V', '--version', action='store_true',
-                        help='show version number and exit')
+    parser.add_argument(
+        '-h', '--help', action='store_true',
+        help="show this help message and exit")
+    parser.add_argument(
+        '--color', action='store', default='auto',
+        choices=('always', 'never', 'auto'),
+        help="when to colorize output (default: auto)")
+    parser.add_argument(
+        '-d', '--debug', action='store_true',
+        help="write out debug logs during compile")
+    parser.add_argument(
+        '-D', '--pdb', action='store_true',
+        help="run spack under the pdb debugger")
+    parser.add_argument(
+        '-k', '--insecure', action='store_true',
+        help="do not check ssl certificates when downloading")
+    parser.add_argument(
+        '-l', '--enable-locks', action='store_true', dest='locks',
+        default=None, help="use filesystem locking (default)")
+    parser.add_argument(
+        '-L', '--disable-locks', action='store_false', dest='locks',
+        help="do not use filesystem locking (unsafe)")
+    parser.add_argument(
+        '-m', '--mock', action='store_true',
+        help="use mock packages instead of real ones")
+    parser.add_argument(
+        '-p', '--profile', action='store_true', dest='spack_profile',
+        help="profile execution using cProfile")
+    parser.add_argument(
+        '-P', '--sorted-profile', default=None, metavar="STAT",
+        help="profile and sort by one or more of:\n[%s]" %
+        ',\n '.join([', '.join(line) for line in stat_lines]))
+    parser.add_argument(
+        '--lines', default=20, action='store',
+        help="lines of profile output or 'all' (default: 20)")
+    parser.add_argument(
+        '-v', '--verbose', action='store_true',
+        help="print additional output during builds")
+    parser.add_argument(
+        '-s', '--stacktrace', action='store_true',
+        help="add stacktraces to all printed statements")
+    parser.add_argument(
+        '-V', '--version', action='store_true',
+        help='show version number and exit')
     return parser
 
 
@@ -347,6 +364,11 @@ def setup_main_options(args):
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
+
+    # override lock configuration if passed on command line
+    if args.locks is not None:
+        spack.util.lock.check_lock_safety(spack.paths.prefix)
+        spack.config.set('config:locks', False, scope='command_line')
 
     if args.debug:
         spack.util.debug.register_interrupt_handler()
