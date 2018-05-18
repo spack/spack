@@ -54,7 +54,7 @@ class Antlr(AutotoolsPackage):
         D = 'disable'
         return [
             '--{0}-cxx'.format(E if '+cxx' in spec else D),
-            '--{0}-java'.format(E if '+java' in spec else D),
+            '--{0}-java'.format(D if '+java' in spec else D),
             '--{0}-python'.format(E if '+python' in spec else D),
             '--disable-csharp'
         ]
