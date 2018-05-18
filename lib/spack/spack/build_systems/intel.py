@@ -149,27 +149,9 @@ class IntelPackage(PackageBase):
     #: URL providing information on how to acquire a license key
     license_url = 'https://software.intel.com/en-us/articles/intel-license-manager-faq'
 
-    #: Paths to standalone license files that Intel tools are to consult.
-    #: When set, all of these will be symlinked to global_license_file.
-    license_files = []
-
-    #: Actual file to hold the license when license_files are used.
-    global_license_file = None
-
+    #: Location where Intel searches for a license file
     @property
-    def _global_intel_license_file(self):
-        '''Return the path to a Spack-global Intel-specific license file.
-
-        All Intel software can use the same license, so we store it centrally
-        in Spack under a common 'intel' directory.
-        '''
-        return os.path.join(self.global_license_dir, 'intel', 'license.lic')
-
-    @property
-    def _intel_license_files(self):
-        '''Return a list of files that should contain licenses.
-        These files will be symlinked to global_license_file.
-        '''
+    def license_files(self):
         dirs = ['Licenses']
 
         if self._has_compilers:
@@ -1002,128 +984,41 @@ class IntelPackage(PackageBase):
     # ---------------------------------------------------------------------
     # Specifics for installation phase
     # ---------------------------------------------------------------------
+    @property
+    def global_license_file(self):
+        """Returns the path where a Spack-global license file should be stored.
+
+        All Intel software shares the same license, so we store it in a
+        common 'intel' directory."""
+        return os.path.join(self.global_license_dir, 'intel', 'license.lic')
 
     @property
     def _determine_license_type(self):
-        '''Provide appropriate license tokens for the installer (silent.cfg)
-        and, if needed, for later running package.
+        '''Provide appropriate license tokens for the installer (silent.cfg).
         '''
         # See:
         #   ./README-intel.rst, section "Details for licensing tokens".
         #   ./build_systems/README-intel.rst, section "Licenses"
         #
-        # Goal:
-        #   If the system already has licensing established, use it.
-        #   Otherwise, have Spack install license files (or rather, symlinks)
-        #   under the package prefix. If an Intel license file is already
-        #   present in Spack's license directory, use it as the symlink target.
-        #   Otherwise, create a template and ask the user to fill it in.
-        #
-        # Motivation:
-        #   Current behavior is that "spack install foo" will bring up an
-        #   editor when it encounters the need for a certain vendor license for
-        #   the first time. This is annoying if the system already has a
-        #   license known to work just fine: The installer is stalled requires
-        #   intervention, and the question arises what, if anything, to enter
-        #   in the template file. The correct response is to just save the file
-        #   as is (being inactive, consisting of comments only).
-        #
-        # Approach:
-        #   Look around like the installer would. If we find files or env vars,
-        #   assume they are valid and pass them on sight unseen since we don't
-        #   have an easy way to programmatically validate them.
-        #
-        #   * If the files are valid - congratulations, mission accomplished!
-        #
-        #   * If the files are invalid (e.g. have insufficient coverage, are
-        #     expired, or simply corrupt) the installer will complain and stop.
-        #
-        # The offending files or env. vars on system should then be corrected.
-        # If that's not applicable or doable for any reason (e.g. permissions
-        # or legacy software requirements), we need a way to tell Spack to
-        # ignore those sirens still singing and instead use the Spack-global
-        # Intel license file after all.
-        #
-        # ## Suggestion - possibly too "meta": Overload INTEL_LICENSE_FILE ##
-        #
-        #   INTEL_LICENSE_FILE=SPACK  spack install intelfoo
-        #
-        # Developer's Goedel gotcha: Even though we start with just "SPACK",
-        # that value might get modified by the time it arrives here, as modules
-        # may get loaded for a defined Intel compiler that is implied or set by
-        # the compiler component in the client package's *spec*. Thus, borrow a
-        # sh(1) idiom for a more comprehensive test.
+        # Ideally, we just tell the installer to look around on the system.
+        # Thankfully, we neither need to care nor emulate where it looks:
+        license_type = { 'ACTIVATION_TYPE': 'exist_lic', }
 
-        # --------------------------------------------------------------------
-        # Get our ducks in a row
-        # --------------------------------------------------------------------
-        # The default license dir is always consulted by Intel tools,
-        # regardless of INTEL_LICENSE_FILE.  Let's assume that any files that
-        # are present (and readable) therein do in fact contain a valid and
-        # sufficient license, local or networked.
-        #
-        # https://software.intel.com/en-us/faq/licensing#manual-license-install
-        # https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license
-        #
-        lic_d = '/opt/intel/licenses'
-        if 'darwin' in sys.platform:
-            lic_d = '/Users/Shared/Library/Application Support/Intel/Licenses'
-
-        lic_default_files_present = [
-            f for f in glob.glob(lic_d + '/*.lic') if os.access(f, os.R_OK)]
-
-        # If INTEL_LICENSE_FILE is set normally, believe it as well.
-        lic_vars_present = [
-            v for v in self.license_vars if v in os.environ]
-
-        try:
-            debug_print("lic_default_files_present: %s" %
-                        lic_default_files_present)
-            debug_print("lic_vars_present: %s" %
-                        lic_vars_present)
-            debug_print("INTEL_LICENSE_FILE: %s" %
-                        os.environ['INTEL_LICENSE_FILE'])
-        except KeyError:
-            pass
-
-        # Ignore the sirens?
-        if (lic_vars_present == ['INTEL_LICENSE_FILE'] and  # list comparison
-                ':SPACK:' in ':%s:' % os.environ['INTEL_LICENSE_FILE']):
-            tty.warn('Forcing Spack-managed Intel license file.')
-            os.unsetenv('INTEL_LICENSE_FILE')
-            lic_default_files_present = []
-            lic_vars_present = []
-
-        # --------------------------------------------------------------------
-        # Main logic
-        # --------------------------------------------------------------------
-        license_type = {}
-        if lic_default_files_present or lic_vars_present:
-            license_type = {
-                'ACTIVATION_TYPE': 'exist_lic',
-            }
-        else:
-            # Use Spack's internal standalone license file for installation,
-            # and later have it sprinkled as symlinks deep into the
-            # installation's bin/ dirs next to the compilers and other tools.
-            #
-            # To request that, and have the global_license_file be created if
-            # it does not yet exist, set the triggering vars used in
-            # ../hooks/licensing.py:pre_install() .
-            #
-            self.global_license_file = self._global_intel_license_file
-            self.license_files = self._intel_license_files
-            #
-            # Wah wah wah: pre_install() is currently run *before all*
-            # self.phases, not *between* "configure" and "install" where
-            # we'd need it - see ../package.py:build_process()
-            #
-
-            # Provision the installer:
-            license_type = {
-                'ACTIVATION_TYPE': 'license_file',
-                'ACTIVATION_LICENSE_FILE': self.global_license_file
-            }
+        # However (and only), if the spack-internal Intel license file has been
+        # populated beyond its templated explanatory comments, proffer it to
+        # the installer instead:
+        f = self.global_license_file
+        if os.path.isfile(f):
+            # The file will have been created upon self.license_required AND
+            # self.license_files having been populated, so the "if" is usually
+            # true by the time the present function runs; ../hooks/licensing.py
+            with open(f) as fh:
+                if re.search(r'^[ \t]*[^' + self.license_comment + '\n]',
+                             fh.read(), re.MULTILINE):
+                    license_type = {
+                        'ACTIVATION_TYPE': 'license_file',
+                        'ACTIVATION_LICENSE_FILE': f,
+                    }
 
         debug_print(license_type)
         return license_type
