@@ -26,7 +26,7 @@ import pytest
 
 from spack.main import SpackCommand, SpackCommandError
 
-info = SpackCommand('env')
+info = SpackCommand('build-env')
 
 
 @pytest.mark.parametrize('pkg', [
