@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import shutil
-import glob
 import llnl.util.tty as tty
 from spack import *
 
@@ -100,15 +98,7 @@ class Go(Package):
         with working_dir('src'):
             bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
-        try:
-            os.makedirs(prefix)
-        except OSError:
-            pass
-        for f in glob.glob('*'):
-            if os.path.isdir(f):
-                shutil.copytree(f, os.path.join(prefix, f))
-            else:
-                shutil.copy2(f, os.path.join(prefix, f))
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
@@ -122,10 +112,9 @@ class Go(Package):
 
         In most cases, extensions will only need to set GOPATH and use go::
 
-        env = os.environ
         env['GOPATH'] = self.source_path + ':' + env['GOPATH']
         go('get', '<package>', env=env)
-        shutil.copytree('bin', os.path.join(prefix, '/bin'))
+        install_tree('bin', prefix.bin)
         """
         #  Add a go command/compiler for extensions
         module.go = self.spec['go'].command

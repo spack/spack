@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 from os.path import join
 from fnmatch import fnmatch
 import os
@@ -107,7 +106,7 @@ class Kaldi(Package):    # Does not use Autotools
                         install(join(root, name), prefix.bin)
 
             mkdir(prefix.lib)
-            copy_tree('lib', prefix.lib)
+            install_tree('lib', prefix.lib)
 
             for root, dirs, files in os.walk('.'):
                 for name in files:

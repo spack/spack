@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 import os
 
 
@@ -47,7 +46,7 @@ class Chlorop(Package):
 
     def install(self, spec, prefix):
         os.rename('chlorop', 'bin/chlorop')
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('CHLOROP', self.prefix)

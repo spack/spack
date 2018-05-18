@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os.path
-from shutil import copyfile
 
 
 class Snpeff(Package):
@@ -45,13 +44,13 @@ class Snpeff(Package):
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "snpEff.sh")
-        script = join_path(prefix.bin, "snpEff")
-        copyfile(script_sh, script)
+        script = prefix.bin.snpEff
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['java'].prefix.bin, 'java')
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'backup': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('snpEff.jar', join_path(prefix.bin, 'snpEff.jar'),

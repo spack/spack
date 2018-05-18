@@ -25,7 +25,6 @@
 from spack import *
 
 import os
-import shutil
 
 
 class Scr(CMakePackage):
@@ -150,4 +149,4 @@ class Scr(CMakePackage):
         if spec.variants['copy_config'].value:
             dest_path = self.get_abs_path_rel_prefix(
                 spec.variants['scr_config'].value)
-            shutil.copyfile(spec.variants['copy_config'].value, dest_path)
+            install(spec.variants['copy_config'].value, dest_path)

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import glob
 import os.path
 import re
@@ -62,7 +61,7 @@ class Gatk(Package):
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "gatk.sh")
         script = join_path(prefix.bin, "gatk")
-        copyfile(script_sh, script)
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the

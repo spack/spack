@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import shutil
 from spack import *
 
 
@@ -88,6 +86,6 @@ class Qbox(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.src)
         install('src/qb', prefix.src)
-        shutil.move('test', prefix)
-        shutil.move('xml', prefix)
-        shutil.move('util', prefix)
+        install_tree('test', prefix)
+        install_tree('xml', prefix)
+        install_tree('util', prefix)

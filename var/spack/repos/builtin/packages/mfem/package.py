@@ -417,7 +417,7 @@ class Mfem(Package):
             # installed shared mfem library:
             with working_dir('config'):
                 os.rename('config.mk', 'config.mk.orig')
-                shutil.copyfile(str(self.config_mk), 'config.mk')
+                install(str(self.config_mk), 'config.mk')
                 shutil.copystat('config.mk.orig', 'config.mk')
 
         if '+examples' in spec:

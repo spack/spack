@@ -28,7 +28,6 @@ from llnl.util import tty
 
 import glob
 import os
-import shutil
 import sys
 
 
@@ -192,7 +191,7 @@ class Gcc(AutotoolsPackage):
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 new_header = join_path(new_dispatch_dir, 'object.h')
-                shutil.copyfile('/usr/include/dispatch/object.h', new_header)
+                install('/usr/include/dispatch/object.h', new_header)
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t',
                             new_header)

@@ -229,7 +229,7 @@ class Charm(Package):
                     tmppath = filepath + ".tmp"
                     # Skip dangling symbolic links
                     try:
-                        shutil.copy2(filepath, tmppath)
+                        install(filepath, tmppath)
                         os.remove(filepath)
                         os.rename(tmppath, filepath)
                     except (IOError, OSError):

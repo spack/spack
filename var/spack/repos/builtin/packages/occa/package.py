@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
 class Occa(Package):
@@ -64,12 +62,7 @@ class Occa(Package):
     def install(self, spec, prefix):
         # The build environment is set by the 'setup_environment' method.
         # Copy the source to the installation directory and build OCCA there.
-        for file in os.listdir('.'):
-            dest = join_path(prefix, os.path.basename(file))
-            if os.path.isdir(file):
-                shutil.copytree(file, dest)
-            else:
-                shutil.copy2(file, dest)
+        install_tree('.', prefix)
         make('-C', prefix)
 
         if self.run_tests:

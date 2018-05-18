@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Masurca(Package):
@@ -44,4 +43,4 @@ class Masurca(Package):
     def install(self, spec, prefix):
         installer = Executable('./install.sh')
         installer()
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)

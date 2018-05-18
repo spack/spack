@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
+import distutils.dir_util
 import errno
 import hashlib
 import fileinput
@@ -250,9 +251,13 @@ def install(src, dest):
 
 
 def install_tree(src, dest, **kwargs):
-    """Manually install a directory tree to a particular location."""
+    """Manually install a directory tree to a particular location.
+
+    See https://docs.python.org/3.6/distutils/apiref.html#distutils.dir_util.copy_tree
+    for a list of accepted kwargs.
+    """
     tty.debug("Installing %s to %s" % (src, dest))
-    shutil.copytree(src, dest, **kwargs)
+    distutils.dir_util.copy_tree(src, dest, **kwargs)
 
     for s, d in traverse_tree(src, dest, follow_nonexisting=False):
         set_install_permissions(d)

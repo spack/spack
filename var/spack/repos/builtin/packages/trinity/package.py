@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Trinity(MakefilePackage):
@@ -55,7 +54,7 @@ class Trinity(MakefilePackage):
         make("plugins")
 
     def install(self, spec, prefix):
-        copy_tree('.', prefix.bin, preserve_symlinks=1)
+        install_tree('.', prefix.bin, preserve_symlinks=1)
         force_remove(join_path(prefix.bin, '.gitmodules'))
         force_remove(join_path(prefix.bin, 'Butterfly', '.err'))
         force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.classpath'))

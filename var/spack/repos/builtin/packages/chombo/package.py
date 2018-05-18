@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import glob
 
 
@@ -70,8 +69,8 @@ class Chombo(MakefilePackage):
         # Set remaining variables in Make.defs.local
         # Make.defs.local.template.patch ensures lines for USE_TIMER,
         # USE_LAPACK and lapackincflags are present
-        copyfile('./lib/mk/Make.defs.local.template',
-                 './lib/mk/Make.defs.local')
+        install('./lib/mk/Make.defs.local.template',
+                './lib/mk/Make.defs.local')
 
         defs_file = FileFilter('./lib/mk/Make.defs.local')
 

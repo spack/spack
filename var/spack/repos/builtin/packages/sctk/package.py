@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Sctk(Package):
@@ -50,4 +49,4 @@ class Sctk(Package):
         make('all')
         make('install')
         mkdirp(prefix.bin)
-        copy_tree('bin', prefix.bin)
+        install_tree('bin', prefix.bin)

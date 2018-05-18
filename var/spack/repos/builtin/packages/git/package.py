@@ -24,7 +24,6 @@
 ##############################################################################
 import sys
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Git(AutotoolsPackage):
@@ -218,7 +217,7 @@ class Git(AutotoolsPackage):
 
     @run_after('install')
     def install_completions(self):
-        copy_tree('contrib/completion', self.prefix.share)
+        install_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):

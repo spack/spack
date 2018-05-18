@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os.path
-from shutil import copyfile
 
 
 class Farmhash(CMakePackage):
@@ -34,9 +33,9 @@ class Farmhash(CMakePackage):
 
     homepage = "https://github.com/google/farmhash"
 
-    version('92e897', git='https://github.com/google/farmhash.git', 
+    version('92e897', git='https://github.com/google/farmhash.git',
             commit='92e897b282426729f4724d91a637596c7e2fe28f')
 
     def patch(self):
-        copyfile(join_path(os.path.dirname(__file__), "CMakeLists.txt"),
-                 "CMakeLists.txt")
+        install(join_path(os.path.dirname(__file__), "CMakeLists.txt"),
+                "CMakeLists.txt")

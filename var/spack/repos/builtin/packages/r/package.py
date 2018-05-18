@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import shutil
 
 from spack import *
 
@@ -136,7 +135,7 @@ class R(AutotoolsPackage):
         # dependencies in Spack.
         src_makeconf = join_path(self.etcdir, 'Makeconf')
         dst_makeconf = join_path(self.etcdir, 'Makeconf.spack')
-        shutil.copy(src_makeconf, dst_makeconf)
+        install(src_makeconf, dst_makeconf)
 
     # ========================================================================
     # Set up environment to make install easy for R extensions.

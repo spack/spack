@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
-import shutil
 
 from spack import *
 
@@ -64,7 +63,7 @@ class Spark(Package):
         install_dir('yarn')
 
         # required for spark to recognize binary distribution
-        shutil.copy('RELEASE', prefix)
+        install('RELEASE', prefix)
 
     @when('+hadoop')
     def setup_environment(self, spack_env, run_env):

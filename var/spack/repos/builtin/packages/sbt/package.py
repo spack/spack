@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
 
 
 class Sbt(Package):
@@ -38,5 +37,5 @@ class Sbt(Package):
     depends_on('java')
 
     def install(self, spec, prefix):
-        shutil.copytree('bin', join_path(prefix, 'bin'), symlinks=True)
-        shutil.copytree('conf', join_path(prefix, 'conf'), symlinks=True)
+        install_tree('bin',  prefix.bin,  preserve_symlinks=True)
+        install_tree('conf', prefix.conf, preserve_symlinks=True)

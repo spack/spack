@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
 class ThePlatinumSearcher(Package):
@@ -39,7 +37,6 @@ class ThePlatinumSearcher(Package):
     extends("go", deptypes='build')
 
     def install(self, spec, prefix):
-        env = os.environ
         env['GOPATH'] = self.stage.source_path + ':' + env['GOPATH']
         go('install', self.package, env=env)
-        shutil.copytree('bin', os.path.join(prefix, 'bin'))
+        install_tree('bin', prefix.bin)

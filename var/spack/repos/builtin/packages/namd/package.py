@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import platform
-import shutil
 import sys
 import os
 from spack import *
@@ -58,8 +57,8 @@ class Namd(MakefilePackage):
 
     def _copy_arch_file(self, lib):
         config_filename = 'arch/{0}.{1}'.format(self.arch, lib)
-        shutil.copy('arch/Linux-x86_64.{0}'.format(lib),
-                    config_filename)
+        install('arch/Linux-x86_64.{0}'.format(lib),
+                config_filename)
         if lib == 'tcl':
             filter_file(r'-ltcl8\.5',
                         '-ltcl{0}'.format(self.spec['tcl'].version.up_to(2)),

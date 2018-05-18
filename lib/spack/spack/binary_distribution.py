@@ -288,7 +288,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    install_tree(spec.prefix, workdir, symlinks=True)
+    install_tree(spec.prefix, workdir, preserve_symlinks=True)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -524,7 +524,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
     else:
-        install_tree(workdir, spec.prefix, symlinks=True)
+        install_tree(workdir, spec.prefix, preserve_symlinks=True)
     finally:
         shutil.rmtree(tmpdir)
 

@@ -24,8 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import shutil
-import glob
 
 
 class Yorick(Package):
@@ -75,13 +73,4 @@ class Yorick(Package):
         make()
         make("install")
 
-        try:
-            os.makedirs(prefix)
-        except OSError:
-            pass
-        os.chdir("relocate")
-        for f in glob.glob('*'):
-            if os.path.isdir(f):
-                shutil.copytree(f, os.path.join(prefix, f))
-            else:
-                shutil.copy2(f, os.path.join(prefix, f))
+        install_tree('relocate', prefix)
