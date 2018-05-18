@@ -73,3 +73,7 @@ class ParallelNetcdf(AutotoolsPackage):
             args.append('--disable-fortran')
 
         return args
+
+    def install(self, spec, prefix):
+        # Installation fails in parallel
+        make('install', parallel=False)
