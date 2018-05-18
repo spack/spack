@@ -34,7 +34,6 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
-import llnl.util.lock
 from llnl.util.filesystem import mkdirp, can_access
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
@@ -42,6 +41,7 @@ import spack.paths
 import spack.caches
 import spack.config
 import spack.error
+import spack.util.lock
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
@@ -231,7 +231,7 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(spack.paths.stage_path, '.lock')
 
-                Stage.stage_locks[self.name] = llnl.util.lock.Lock(
+                Stage.stage_locks[self.name] = spack.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
 
             self._lock = Stage.stage_locks[self.name]
