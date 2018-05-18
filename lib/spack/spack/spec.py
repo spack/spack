@@ -2709,17 +2709,17 @@ class Spec(object):
                 deptypes = deps
             self._dup_deps(other, deptypes, caches)
 
+        self._concrete = other._concrete
+
         if caches:
             self._hash = other._hash
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
-            self._concrete = other._concrete
             self._full_hash = other._full_hash
         else:
             self._hash = None
             self._cmp_key_cache = None
             self._normal = False
-            self._concrete = False
             self._full_hash = None
 
         return changed
