@@ -593,7 +593,7 @@ def prepare_config_scope(environment):
 
         tty.msg('Using Spack config %s scope at %s' %
                 (config_name, config_dir))
-        ConfigScope(config_name, config_dir)
+        spack.config.config.push_scope(ConfigScope(config_name, config_dir))
 
 
 def environment_relocate(args):
