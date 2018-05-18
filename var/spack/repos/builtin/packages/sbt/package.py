@@ -39,5 +39,5 @@ class Sbt(Package):
     depends_on('java')
 
     def install(self, spec, prefix):
-        install_tree('bin',  prefix.bin,  preserve_symlinks=True)
-        install_tree('conf', prefix.conf, preserve_symlinks=True)
+        install_tree('bin',  prefix.bin,  symlinks=True)
+        install_tree('conf', prefix.conf, symlinks=True)

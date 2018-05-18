@@ -67,4 +67,4 @@ class Pindel(MakefilePackage):
         install('src/pindel2vcf', prefix.bin)
         install('src/sam2pindel', prefix.bin)
         install('src/pindel2vcf4tcga', prefix.bin)
-        install_tree('demo', prefix.doc, preserve_symlinks=True)
+        install_tree('demo', prefix.doc, symlinks=True)

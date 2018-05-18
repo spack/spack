@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
-import distutils.dir_util
 import errno
 import hashlib
 import fileinput
@@ -278,16 +277,25 @@ def install(src, dest):
     copy_mode(src, dest)
 
 
-def install_tree(src, dest, **kwargs):
+def install_tree(src, dest, symlinks=False):
     """Manually install a directory tree to a particular location.
 
-    See https://docs.python.org/3.6/distutils/apiref.html#distutils.dir_util.copy_tree
-    for a list of accepted kwargs.
+    Arguments:
+        symlinks (bool): preserve symlinks if True (default False)
     """
     tty.debug("Installing %s to %s" % (src, dest))
-    distutils.dir_util.copy_tree(src, dest, **kwargs)
 
-    for s, d in traverse_tree(src, dest, follow_nonexisting=False):
+    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
+        if symlinks and os.path.islink(s):
+            # note that this won't rewrite absolute links into the old
+            # root to point at the new root. Should we handle that case?
+            target = os.readlink(s)
+            os.symlink(target, d)
+        elif os.path.isdir(s):
+            mkdirp(d)
+        else:
+            shutil.copyfile(s, d)
+
         set_install_permissions(d)
         copy_mode(s, d)
 

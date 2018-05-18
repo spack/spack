@@ -58,7 +58,7 @@ class Trinity(MakefilePackage):
         make("plugins")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix.bin, preserve_symlinks=1)
+        install_tree('.', prefix.bin, symlinks=True)
         force_remove(join_path(prefix.bin, '.gitmodules'))
         force_remove(join_path(prefix.bin, 'Butterfly', '.err'))
         force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.classpath'))
