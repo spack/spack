@@ -35,8 +35,8 @@ class FastGbs(Package):
 
     version('2017-01-25', git='https://bitbucket.org/jerlar73/fast-gbs.git', commit='3b3cbffa84d269419692067c6a3de08b3b88849c')
 
-    depends_on('parallel', type='build')
-    depends_on('python@2.7:')
+    depends_on('parallel', type='run')
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('sabre', type='run')
     depends_on('py-cutadapt', type=('build', 'run'))
     depends_on('bwa', type='run')
