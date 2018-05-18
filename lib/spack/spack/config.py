@@ -267,7 +267,7 @@ class Configuration(object):
         """Add a higher precedence scope to the Configuration."""
         cmd_line_scope = None
         if self.scopes:
-            highest_precedence_scope = self.scopes.values()[-1]
+            highest_precedence_scope = list(self.scopes.values())[-1]
             if highest_precedence_scope.name == 'command_line':
                 # If the command-line scope is present, it should always
                 # be the scope of highest precedence
