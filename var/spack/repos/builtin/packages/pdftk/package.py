@@ -26,6 +26,7 @@ from spack import *
 import os
 import llnl.util.filesystem
 
+
 class Pdftk(MakefilePackage):
     """Parallel Ice Sheet Model"""
 
@@ -40,7 +41,6 @@ class Pdftk(MakefilePackage):
 
     # https://www.pdflabs.com/docs/install-pdftk-on-redhat-or-centos/
     def edit(self, spec, prefix):
-        spec = self.spec
         compiler = self.compiler
 
         gcc_base = os.path.split(os.path.split(compiler.cxx)[0])[0]
@@ -78,7 +78,6 @@ class Pdftk(MakefilePackage):
             mk.write('include Makefile.Base\n')
 
     def build(self, spec, prefix):
-        spec = self.spec
         compiler = self.compiler
         gcc_base = os.path.split(os.path.split(compiler.cxx)[0])[0]
         env = dict(os.environ)
