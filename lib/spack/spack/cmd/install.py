@@ -25,18 +25,8 @@ section = "build"
 level = "short"
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '--only',
-        default='package,dependencies',
-        dest='things_to_install',
-        choices=['package', 'dependencies'],
-        help="""select the mode of installation.
-the default is to install the package along with all its dependencies.
-alternatively one can decide to install only the package or only
-the dependencies"""
-    )
-    arguments.add_common_arguments(subparser, ['jobs'])
+def add_common_arguments(subparser):
+    arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -65,13 +55,51 @@ the dependencies"""
     subparser.add_argument(
         '--fake', action='store_true',
         help="fake install for debug purposes.")
+
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
+
+
+def update_kwargs_from_args(args, kwargs):
+    """Parse cli arguments and construct a dictionary
+    that will be passed to Package.do_install API"""
+
+    kwargs.update({
+        'keep_prefix': args.keep_prefix,
+        'keep_stage': args.keep_stage,
+        'restage': not args.dont_restage,
+        'install_source': args.install_source,
+        'make_jobs': args.jobs,
+        'verbose': args.verbose,
+        'fake': args.fake,
+        'dirty': args.dirty,
+        'use_cache': args.use_cache
+    })
+    if hasattr(args, 'setup'):
+        setups = set()
+        for arglist_s in args.setup:
+            for arg in [x.strip() for x in arglist_s.split(',')]:
+                setups.add(arg)
+        kwargs['setup'] = setups
+        tty.msg('Setup={0}'.format(kwargs['setup']))
+
+
+def setup_parser(subparser):
+    add_common_arguments(subparser)
+    subparser.add_argument(
+        '--only',
+        default='package,dependencies',
+        dest='things_to_install',
+        choices=['package', 'dependencies'],
+        help="""select the mode of installation.
+the default is to install the package along with all its dependencies.
+alternatively one can decide to install only the package or only
+the dependencies"""
+    )
     subparser.add_argument(
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
-
-    cd_group = subparser.add_mutually_exclusive_group()
-    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
     subparser.add_argument(
         'package',
@@ -159,17 +187,10 @@ def install(parser, args, **kwargs):
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
+    update_kwargs_from_args(args, kwargs)
     kwargs.update({
-        'keep_prefix': args.keep_prefix,
-        'keep_stage': args.keep_stage,
-        'restage': not args.dont_restage,
-        'install_source': args.install_source,
-        'install_deps': 'dependencies' in args.things_to_install,
-        'make_jobs': args.jobs,
-        'verbose': args.verbose,
-        'fake': args.fake,
-        'dirty': args.dirty,
-        'use_cache': args.use_cache
+        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_package': ('package' in args.things_to_install)
     })
 
     if args.run_tests:
