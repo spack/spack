@@ -29,7 +29,7 @@ from six import string_types
 import sys
 
 import llnl.util.tty as tty
-import spack
+
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']

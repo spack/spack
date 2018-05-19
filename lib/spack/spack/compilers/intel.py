@@ -41,7 +41,7 @@ class Intel(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ifort']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'intel/icc',
                   'cxx': 'intel/icpc',
                   'f77': 'intel/ifort',

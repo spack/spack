@@ -40,6 +40,7 @@ class RRstan(RPackage):
     url      = "https://cran.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rstan"
 
+    version('2.17.2', '60f4a0284c58f5efc1b1cbf488d7edda')
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
     depends_on('r-ggplot2', type=('build', 'run'))
@@ -48,4 +49,5 @@ class RRstan(RPackage):
     depends_on('r-gridextra', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
+    depends_on('r-rcppeigen@0.3.3.3.0:', type=('build', 'run'), when='@2.17.2:')
     depends_on('r-bh', type=('build', 'run'))

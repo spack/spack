@@ -29,7 +29,7 @@ import itertools
 import re
 from six import StringIO
 
-import spack
+import spack.error
 
 __all__ = [
     'mod_to_class',

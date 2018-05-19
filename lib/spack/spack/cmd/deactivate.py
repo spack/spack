@@ -25,7 +25,6 @@
 import argparse
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
 import spack.store
 from spack.directory_layout import YamlViewExtensionsLayout
@@ -62,7 +61,8 @@ def deactivate(parser, args):
 
     layout = spack.store.extensions
     if args.view is not None:
-        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+        layout = YamlViewExtensionsLayout(
+            args.view, spack.store.layout)
 
     if args.all:
         if pkg.extendable:
