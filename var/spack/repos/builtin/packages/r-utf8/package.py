@@ -31,6 +31,7 @@ class RUtf8(RPackage):
 
     homepage = "https://github.com/patperry/r-utf8"
     url      = "https://cran.r-project.org/src/contrib/utf8_1.1.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/utf8"
 
     version('1.1.3', '3a4d84328eb3314e8ebb84d3553f7015')
 
