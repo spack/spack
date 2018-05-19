@@ -72,7 +72,7 @@ packages:
 
     pgi:
         paths:
-            pgi@18.4%gcc@4.8.5~amd~java~mpi~network+nvidia+single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-e4qf5sk4zo5r3vrotj7gl7v4nhzwosay
+            pgi@18.4%gcc@4.8.5~amd~java~mpi~network+nvidia+single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-afzgv4bbjee475vqjrgp7e5f73bf5rcc
         version: [18.4]
         buildable: False
 

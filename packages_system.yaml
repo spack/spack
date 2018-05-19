@@ -27,7 +27,7 @@ packages:
     variants: +lua +perl +python +ruby +huge
 
   pgi:
-    variants: +network +nvidia
+    variants: +single +mpi +nvidia
 
   intel-parallel-studio:
     variants: +ipp +mkl +mpi +openmp

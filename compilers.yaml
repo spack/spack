@@ -97,9 +97,9 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-e4qf5sk4zo5r3vrotj7gl7v4nhzwosay/linux86-64/18.4/bin/pgcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-e4qf5sk4zo5r3vrotj7gl7v4nhzwosay/linux86-64/18.4/bin/pgc++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-e4qf5sk4zo5r3vrotj7gl7v4nhzwosay/linux86-64/18.4/bin/pgfortran
-      fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-e4qf5sk4zo5r3vrotj7gl7v4nhzwosay/linux86-64/18.4/bin/pgf95
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-afzgv4bbjee475vqjrgp7e5f73bf5rcc/linux86-64/18.4/bin/pgcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-afzgv4bbjee475vqjrgp7e5f73bf5rcc/linux86-64/18.4/bin/pgc++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-afzgv4bbjee475vqjrgp7e5f73bf5rcc/linux86-64/18.4/bin/pgfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-afzgv4bbjee475vqjrgp7e5f73bf5rcc/linux86-64/18.4/bin/pgf95
     spec: pgi@18.4
     target: x86_64
