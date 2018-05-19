@@ -34,6 +34,7 @@ class RProc(RPackage):
 
     homepage = "https://web.expasy.org/pROC/"
     url      = "https://cran.r-project.org/src/contrib/pROC_1.12.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pROC"
 
     version('1.12.1', 'ef5fb446fd75c1a3a5e7abf9b7aa4f75')
 
