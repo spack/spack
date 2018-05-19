@@ -15,7 +15,7 @@ https://github.com/spack/spack/pull/4300 and
 https://github.com/spack/spack/pull/7469 for more information.
 
 
-**TODO:** replace http links to other files to rst syntax.
+**TODO:** replace http links by rST relative file links.
 
 ^^^^^^^^^^^^
 Introduction
@@ -61,10 +61,9 @@ For these packages, a license is always needed at installation time
 and to compile client packages, but never to run resulting client packages.
 
 Intel's standalone performance library products, notably MPI and MKL, are
-available for use `under a no-cost license
+available for use under a `no-cost license
 <https://software.intel.com/en-us/license/intel-simplified-software-license>`_
-since 2017. The following are available in Spack:
-packages:
+since 2017. The following are available as Spack packages:
 
 * ``intel-mkl`` – Math Kernel Library (linear algebra and FFT),
 * ``intel-mpi`` – The Intel-MPI implementation (based on MPICH),
@@ -79,13 +78,13 @@ The libraries can be used *independently* from Intel compilers. The latter
 offer options to simplify linking, though Spack always uses fairly explicit
 linkage instead.
 
-The performance libraries are included in the all-encompassing
+The performance libraries are also included in the all-encompassing
 ``intel-parallel-studio``, which requires a license as a whole. To complicate
 matters a bit, that package is sold in 3 "editions", of which only the
 upper-tier ``cluster`` edition supports compiling MPI applications, and hence
-only that edition will provide the ``mpi`` virtual package. To learn how we
-integrated editions into the versioning scheme adopted for Spack, inspect the
-output of::
+only that edition will provide the ``mpi`` virtual package. The edition forms
+a *non-numeric part of the version numbers* of the ``intel-parallel-studio``
+Spack package. Inspect the available editions and otherwise numeric versions by:
 
   spack info intel-parallel-studio
 
@@ -182,21 +181,21 @@ the following means, in order of decreasing preference:
   The first time you install an Intel package that requires a license, Spack
   will initialize a Spack-global Intel license file for you, as a template with
   instructional comments, and bring up an editor [fn5]_.  Spack will do this
-  even if you happen to have a working license elsewhere on the system.
+  *even if you have a working license elsewhere* on the system.
 
   * To proceed with an existing license, leave the file as is and close the
-    editor. You do not need to touch it again.
+    editor. You do not need to touch the file again.
 
-  * To use your own license, place the contents of your downloaded license file
-    into the editor and close it.
+  * To use your own license, copy the contents of your downloaded license file
+    into the opened file, save it, and close the editor.
 
   To revisit and manually edit the file, such as prior to a subsequent
   installation attempt, find it at
   ``$SPACK_ROOT/etc/spack/licenses/intel/intel.lic`` .
 
   Spack will place symbolic links to this file in each directory where licensed
-  Intel binaries were installed.  If you kept the template, Intel tools will
-  simply ignore it.
+  Intel binaries were installed.  If you kept the template unchanged, Intel tools
+  will simply ignore it.
 
 **TODO:** `PR #6534 "Intel v18 License File Format Issue"
 <https://github.com/spack/spack/issues/6534>`_.
@@ -230,18 +229,17 @@ specific vendor release and define each such set as a Spack `spec
 <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_
 that in this case always has the form ``intel@compilerversion``.  The entry
 determines how this spec is resolved, via ``paths`` and/or ``modules`` tokens,
-to the specific pre-installed compiler version on the system.
+to each specific pre-installed compiler version on the system.
 
 The following example illustrates how to integrate the 2017 Intel compiler
 suite, which outside of Spack was activated by users of the example system as
 ``module load intel/17``. Since Spack must be rather more picky about versions,
-we must specify full versions and complete modulefile names in the relevant
+we must specify full paths and complete modulefile names in the relevant
 ``compilers.yaml`` entry:
 
 .. code-block:: yaml
 
     compilers:
-    ...
     - compiler:
         target:     x86_64
         operating_system:   centos6
@@ -252,7 +250,6 @@ we must specify full versions and complete modulefile names in the relevant
           cxx:      /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/icpc
           f77:      /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/ifort
           fc:       /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/ifort
-    ...
 
 
 """"""""""""""""""""""
