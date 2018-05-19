@@ -4,7 +4,7 @@ from spack_install import install
 import os
 
 CC  = "gcc@4.8.5"
-JDK = "jdk@8u141-b15"
+JDK = "jdk@8u172-b11"
 
 # Install Intel Compiler
 for pkg in ["intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
@@ -22,7 +22,7 @@ for pkg in ["intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ip
 install("{} %{}".format(JDK, CC))
 
 # Install Java packages
-for pgk in ["maven@3.3.9", "gradle@3.4", "ant@1.9.9", "sbt@0.13.12", "bazel@0.4.5"]:
+for pgk in ["maven@3.3.9", "gradle@3.4", "ant@1.9.9", "sbt@0.13.12", "bazel@0.11.1"]:
     install("{} %{} ^{}".format(pgk, CC, JDK))
 
 # Install non-Java packages
@@ -34,8 +34,8 @@ packages = {"miniconda2@4.3.30": [""],
             "gcc~binutils@7.3.0": [""],
             "pgi+nvidia+single~network@18.4": [""],
             "environment-modules@3.2.10": [""],
-            "cuda@9.0.176": [""],
             "cuda@9.1.85": [""],
+            "cuda@9.0.176": [""],
             "cuda@8.0.61": [""],
             "cuda@7.5.18": [""],
             "cuda@6.5.14": [""],
