@@ -42,6 +42,8 @@ from llnl.util.tty.log import log_output
 
 import spack
 import spack.config
+import spack.cmd
+import spack.hooks
 import spack.paths
 import spack.repo
 import spack.util.debug

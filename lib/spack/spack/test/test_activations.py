@@ -25,7 +25,7 @@
 import os
 import pytest
 
-import spack
+import spack.spec
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 

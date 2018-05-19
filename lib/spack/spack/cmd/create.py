@@ -28,12 +28,13 @@ import os
 import re
 
 import llnl.util.tty as tty
-import spack
+from llnl.util.filesystem import mkdirp
+
 import spack.cmd
 import spack.util.web
-from llnl.util.filesystem import mkdirp
 import spack.repo
 from spack.spec import Spec
+from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
 from spack.util.naming import mod_to_class
 from spack.util.naming import simplify_name, valid_fully_qualified_module_name
@@ -693,4 +694,4 @@ def create(parser, args):
     tty.msg("Created package file: {0}".format(pkg_path))
 
     # Open up the new package file in your $EDITOR
-    spack.editor(pkg_path)
+    editor(pkg_path)

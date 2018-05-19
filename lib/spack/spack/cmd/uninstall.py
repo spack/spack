@@ -26,10 +26,10 @@ from __future__ import print_function
 
 import argparse
 
-import spack
 import spack.cmd
-import spack.store
+import spack.package
 import spack.repo
+import spack.store
 
 from llnl.util import tty
 
@@ -153,7 +153,7 @@ def do_uninstall(specs, force):
         except spack.repo.UnknownEntityError:
             # The package.py file has gone away -- but still
             # want to uninstall.
-            spack.Package.uninstall_by_spec(item, force=True)
+            spack.package.Package.uninstall_by_spec(item, force=True)
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order

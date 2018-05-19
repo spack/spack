@@ -26,7 +26,6 @@
 These tests check Spec DAG operations using dummy packages.
 """
 import pytest
-import spack
 import spack.architecture
 import spack.package
 
