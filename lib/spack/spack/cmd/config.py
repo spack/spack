@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.config
+from spack.util.editor import editor
 
 description = "get and set configuration options"
 section = "config"
@@ -70,7 +71,7 @@ def config_edit(args):
 
     config = spack.config.config
     config_file = config.get_config_filename(args.scope, args.section)
-    spack.editor(config_file)
+    editor(config_file)
 
 
 def config(parser, args):

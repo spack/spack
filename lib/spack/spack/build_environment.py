@@ -546,10 +546,10 @@ def get_std_cmake_args(pkg):
 
 def parent_class_modules(cls):
     """
-    Get list of super class modules that are all descend from spack.Package
+    Get list of superclass modules that descend from spack.package.PackageBase
     """
-    if (not issubclass(cls, spack.package.Package) or
-        issubclass(spack.package.Package, cls)):
+    if (not issubclass(cls, spack.package.PackageBase) or
+        issubclass(spack.package.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)

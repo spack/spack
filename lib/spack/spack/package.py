@@ -273,10 +273,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     packages it depends on, so that dependencies can be installed along
     with the package itself.  Packages are written in pure python.
 
-    Packages are all submodules of spack.packages.  If spack is installed
-    in ``$prefix``, all of its python files are in ``$prefix/lib/spack``.
-    Most of them are in the spack module, so all the packages live in
-    ``$prefix/lib/spack/spack/packages``.
+    Packages live in repositories (see repo.py).  If spack is installed
+    in ``$prefix``, all of its built-in package files are in the builtin
+    repo at ``$prefix/var/spack/repos/builtin/packages``.
 
     All you have to do to create a package is make a new subclass of Package
     in this directory.  Spack automatically scans the python files there
@@ -497,6 +496,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
+
     """
     #
     # These are default values for instance variables.
