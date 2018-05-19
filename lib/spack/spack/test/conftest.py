@@ -254,9 +254,12 @@ def config(configuration_dir):
 
     real_configuration = spack.config.config
 
-    spack.config.config = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-          for name in ['site', 'system', 'user']])
+    test_scopes = [
+        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+        for name in ['site', 'system', 'user']]
+    test_scopes.append(spack.config.InternalConfigScope('command_line'))
+
+    spack.config.config = spack.config.Configuration(*test_scopes)
 
     yield spack.config.config
 
