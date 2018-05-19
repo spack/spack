@@ -42,7 +42,7 @@ class Camellia(CMakePackage):
             git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
 
     depends_on('trilinos~shared+amesos+amesos2+anasazi+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
-    depends_on('moab~metis~parmetis', when='+moab')
+    depends_on('moab@4.9.2', when='+moab')
 
     def cmake_args(self):
         spec = self.spec
