@@ -44,6 +44,7 @@ class RRcppeigen(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RcppEigen"
 
+    version('0.3.3.3.1', '1a5ae17828813e40e6b3e7400e408a2b')
     version('0.3.2.9.0', '14a7786882a5d9862d53c4b2217df318')
     version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')
 

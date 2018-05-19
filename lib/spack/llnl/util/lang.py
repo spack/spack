@@ -531,3 +531,48 @@ class ObjectWrapper(object):
             self.__class__ = type(wrapped_name, (wrapped_cls,), {})
 
         self.__dict__ = wrapped_object.__dict__
+
+
+class Singleton(object):
+    """Simple wrapper for lazily initialized singleton objects."""
+
+    def __init__(self, factory):
+        """Create a new singleton to be inited with the factory function.
+
+        Args:
+            factory (function): function taking no arguments that
+                creates the singleton instance.
+        """
+        self.factory = factory
+        self._instance = None
+
+    @property
+    def instance(self):
+        if self._instance is None:
+            self._instance = self.factory()
+        return self._instance
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+
+    def __str__(self):
+        return str(self.instance)
+
+    def __repr__(self):
+        return repr(self.instance)
+
+
+class LazyReference(object):
+    """Lazily evaluated reference to part of a singleton."""
+
+    def __init__(self, ref_function):
+        self.ref_function = ref_function
+
+    def __getattr__(self, name):
+        return getattr(self.ref_function(), name)
+
+    def __str__(self):
+        return str(self.ref_function())
+
+    def __repr__(self):
+        return repr(self.ref_function())
