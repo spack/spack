@@ -145,10 +145,6 @@ class Stage(object):
         finally:
             stage.destroy()         # Explicitly destroy the stage directory.
 
-    If spack.use_tmp_stage is True, spack will attempt to create
-    stages in a tmp directory.  Otherwise, stages are created directly
-    in spack.paths.stage_path.
-
     There are two kinds of stages: named and unnamed.  Named stages
     can persist between runs of spack, e.g. if you fetched a tarball
     but didn't finish building it, you won't have to fetch it again.
@@ -481,10 +477,6 @@ class Stage(object):
         directly under spack.paths.stage_path, otherwise this will attempt to
         create a stage in a temporary directory and link it into
         spack.paths.stage_path.
-
-        Spack will use the first writable location in spack.tmp_dirs
-        to create a stage. If there is no valid location in tmp_dirs,
-        fall back to making the stage inside spack.paths.stage_path.
 
         """
         # Create the top-level stage directory
