@@ -36,16 +36,18 @@ class Siesta(Package):
     version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08', url='https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz')
     version('3.2-pl-5', '27a300c65eb2a25d107d910d26aaf81a', url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
 
-    patch('configure.patch', when='@:4.0')
-
-    depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
     depends_on('netcdf')
     depends_on('netcdf-fortran')
 
-    phases = ['configure', 'build', 'install']
+    phases = ['edit', 'configure', 'build', 'install']
+
+    def edit(self, spec, prefix):
+        configure = FileFilter('Src/configure')
+        configure.filter('  Gfortran\)',
+                         '  Gfortran)\n     FFLAGS="$FFLAGS -ffree-line-length-none"')
 
     def configure(self, spec, prefix):
         sh = which('sh')

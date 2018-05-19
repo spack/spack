@@ -15,17 +15,11 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc@5, intel@17, pgi@16]
+    compiler: [gcc@5, intel@18, pgi@18]
 
   openssl:
       paths:
           openssl@system: /usr
-      version: [system]
-      buildable: False
-
-  readline:
-      paths:
-          readline@system: /usr
       version: [system]
       buildable: False
 
