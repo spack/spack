@@ -9,6 +9,7 @@ import argparse
 
 import spack.cmd
 import spack.package
+import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.store
 
@@ -31,11 +32,16 @@ display_args = {
 }
 
 
-def setup_parser(subparser):
+def add_common_arguments(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="remove regardless of whether other packages depend on this one")
+    arguments.add_common_arguments(
+        subparser, ['recurse_dependents', 'yes_to_all'])
 
+
+def setup_parser(subparser):
+    add_common_arguments(subparser)
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
         help="USE CAREFULLY. remove ALL installed packages that match each "
@@ -43,15 +49,6 @@ def setup_parser(subparser):
              " ALL versions of `libelf` are uninstalled. if no spec is "
              "supplied all installed software will be uninstalled. this "
              "is both useful and dangerous, like rm -r")
-
-    subparser.add_argument(
-        '-R', '--dependents', action='store_true', dest='dependents',
-        help='also uninstall any packages that depend on the ones given '
-             'via command line')
-
-    subparser.add_argument(
-        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='assume "yes" is the answer to every confirmation requested')
 
     subparser.add_argument(
         'packages',
@@ -148,16 +145,12 @@ def do_uninstall(specs, force):
         item.do_uninstall(force=force)
 
 
-def get_uninstall_list(args):
-    specs = [any]
-    if args.packages:
-        specs = spack.cmd.parse_specs(args.packages)
-
+def get_uninstall_list(args, specs):
     # Gets the list of installed specs that match the ones give via cli
     # takes care of '-a' is given in the cli
     uninstall_list = find_matching_specs(specs, args.all, args.force)
 
-    # Takes care of '-d'
+    # Takes care of '-R'
     dependent_list = installed_dependents(uninstall_list)
 
     # Process dependent_list and update uninstall_list
@@ -181,12 +174,9 @@ def get_uninstall_list(args):
     return uninstall_list
 
 
-def uninstall(parser, args):
-    if not args.packages and not args.all:
-        tty.die('uninstall requires at least one package argument.',
-                '  Use `spack uninstall --all` to uninstall ALL packages.')
+def uninstall_specs(args, specs):
 
-    uninstall_list = get_uninstall_list(args)
+    uninstall_list = get_uninstall_list(args, specs)
 
     if not uninstall_list:
         tty.warn('There are no package to uninstall.')
@@ -201,3 +191,12 @@ def uninstall(parser, args):
 
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)
+
+
+def uninstall(parser, args):
+    if not args.packages and not args.all:
+        tty.die('uninstall requires at least one package argument.',
+                '  Use `spack uninstall --all` to uninstall ALL packages.')
+
+    uninstall_specs(
+        args, spack.cmd.parse_specs(args.packages) if args.packages else [any])

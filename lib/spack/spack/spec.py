@@ -3227,6 +3227,7 @@ class Spec(object):
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', 'all')
+        recurse_dependencies = kwargs.pop('recurse_dependencies', True)
         check_kwargs(kwargs, self.tree)
 
         out = ""
@@ -3275,6 +3276,11 @@ class Spec(object):
             if d > 0:
                 out += "^"
             out += node.format(fmt, color=color) + "\n"
+
+            # Check if we wanted just the first line
+            if not recurse_dependencies:
+                break
+
         return out
 
     def __repr__(self):
