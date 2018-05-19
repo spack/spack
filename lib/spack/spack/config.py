@@ -261,12 +261,25 @@ class Configuration(object):
 
     def push_scope(self, scope):
         """Add a higher precedence scope to the Configuration."""
+        cmd_line_scope = None
+        if self.scopes:
+            highest_precedence_scope = list(self.scopes.values())[-1]
+            if highest_precedence_scope.name == 'command_line':
+                # If the command-line scope is present, it should always
+                # be the scope of highest precedence
+                cmd_line_scope = self.pop_scope()
+
         self.scopes[scope.name] = scope
+        if cmd_line_scope:
+            self.scopes['command_line'] = cmd_line_scope
 
     def pop_scope(self):
         """Remove the highest precedence scope and return it."""
         name, scope = self.scopes.popitem(last=True)
         return scope
+
+    def remove_scope(self, scope_name):
+        return self.scopes.pop(scope_name)
 
     @property
     def file_scopes(self):
@@ -463,20 +476,17 @@ def override(path_or_scope, value=None):
 
     """
     if isinstance(path_or_scope, ConfigScope):
+        overrides = path_or_scope
         config.push_scope(path_or_scope)
-        yield config
-        config.pop_scope(path_or_scope)
-
     else:
         overrides = InternalConfigScope('overrides')
-
         config.push_scope(overrides)
         config.set(path_or_scope, value, scope='overrides')
 
-        yield config
+    yield config
 
-        scope = config.pop_scope()
-        assert scope is overrides
+    scope = config.remove_scope(overrides.name)
+    assert scope is overrides
 
 
 #: configuration scopes added on the command line
