@@ -55,14 +55,14 @@ available for use under a `simplified license
 since 2017 [fn1]_. They are packaged in Spack as:
 
 * ``intel-mkl`` – Math Kernel Library (linear algebra and FFT),
-* ``intel-mpi`` – The Intel-MPI implementation (based on MPICH),
+* ``intel-mpi`` – The Intel-MPI implementation (derived from MPICH),
 * ``intel-ipp`` – Primitives for image-, signal-, and data-processing,
 * ``intel-daal`` – Machine learning and data analytics.
 
 Some earlier versions of these library products were released under a paid
-license, which for these versions is required, like for compilers discussed
-next, at installation time of the products and during compilation of client
-packages.
+license, which for these versions must be available, like for compilers
+discussed next, at installation time of the products and during compilation of
+client packages.
 
 The library packages can be used both with and without Intel compilers.
 The latter offer options to simplify linking (sometimes considerably),
@@ -131,12 +131,27 @@ previous?) *cluster/professional/composer* editions, i.e., presence in downloads
 possibly subject to license coverage(!); see `disussion in PR #4300
 <https://github.com/spack/spack/pull/4300#issuecomment-305582898>`_.
 
+^^^^^^^^^^^^^^^^^^^^
+Unrelated packages
+^^^^^^^^^^^^^^^^^^^^
+
+The following packages do not use the Intel installer and are not in class ``IntelPackage``
+discussed here:
+
+* ``intel-gpu-tools`` – Test suite and low-level tools for the Linux `Direct
+  Rendering Manager <https://en.wikipedia.org/wiki/Direct_Rendering_Manager>`_.
+* ``intel-mkl-dnn`` – Math Kernel Library for Deep Neural Networks (``CMakePackage``)
+* ``intel-xed`` – X86 machine instructions encoder/decoder
+* ``intel-tbb`` – Standalone version of Intel Threading Building Blocks.
+
+  Development versions and a runtime version of TBB are included in all
+  ``intel-parallel-studio/intel`` and ``intel-mkl`` packages, respectively.
 
 .. _intel-configure-license:
 
-""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Configuring Spack to use Intel licenses
-""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you wish to integrate licensed Intel products into Spack as external packages
 (`route 1`_ above) we assume that their license configuration is in place and
@@ -161,9 +176,9 @@ Pointing to a license server
 Installing and configuring a license server is outside the scope of Spack. We
 assume your system administrator has a license server running and has installed
 network licenses for Intel packages.  To obtain a license from the server for
-installation [fn4]_ or temporary use, a process known as "checking out a license", a
+installation or temporary use, a process known as "checking out a license", a
 client application needs to know the host name and port number of one or more
-license servers.
+license servers [fn4]_.
 
 There are three methods to `configure the client license
 <https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license>`_.
@@ -254,7 +269,7 @@ the following means, in order of decreasing preference:
 Integration of Intel tools *external* to Spack
 --------------------------------------------------
 
-This section discusses `route 1`_ under `Introduction`_.
+This section discusses `route 1`_ from the introduction.
 
 A site that already uses Intel tools, especially licensed ones, will likely
 have some versions already installed on the system, especially at a time when
@@ -385,7 +400,7 @@ mechanism.
 Installing Intel tools *within* Spack
 -------------------------------------
 
-This section discusses `route 2`_ from the `Introduction`_.
+This section discusses `route 2`_ from the introduction.
 
 When a system does not yet have Intel tools installed already, or the installed
 versions are undesirable, Spack can install Intel tools like any regular Spack
@@ -400,9 +415,8 @@ Installing and integrating compiler components
 
 As stated in the previous section `Integration of Intel tools external to
 Spack`_, Intel compilers and some early library-type Intel packages require a
-license at installation and during runtime. Follow the section `Products and
-Licenses`_ on how to make your license accessible to Spack and the Intel
-installer it will run for you.
+license at installation and during runtime. Before installation, follow the
+section `Configuring Spack to use Intel licenses`_.
 
 **After installation**, follow the steps under `Integrating Compilers`_ to tell
 Spack the minutiae for actually using those compilers with client packages.
@@ -435,7 +449,7 @@ packages`_.
 Using Intel tools with client packages
 -----------------------------------------
 
-Finally, this section pertains to `route 3`_ from the `Introduction`_.
+Finally, this section pertains to `route 3`_ from the introduction.
 
 Once Intel tools are installed within Spack as external or internal package
 they can be used as intended for installing client packages.
@@ -509,7 +523,7 @@ and the section `Concretization Preferences
 
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear
-algebra virtual packages in Spack, ``intel-mpi`` as preferred MPI
+algebra virtual packages in Spack, and ``intel-mpi`` as the preferred MPI
 implementation, while enabling to choose others on a per-spec basis.
 
 .. code-block:: yaml
