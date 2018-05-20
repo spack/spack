@@ -201,7 +201,7 @@ class IntelPackage(PackageBase):
             '+gdb':       ' intel-gdb',    # Integrated Performance Primitives
             '+ipp':       ' intel-ipp intel-crypto-ipp',
             '+mkl':       ' intel-mkl',    # Math Kernel Library
-            '+mpi':       ' intel-mpi intel-mpirt intel-imb',
+            '+mpi':       ' intel-mpi intel-imb',  # MPI runtime, SDK, benchm.
             '+tbb':       ' intel-tbb',    # Threading Building Blocks
             '+advisor':   ' intel-advisor',
             '+clck':      ' intel_clck',   # Cluster Checker
