@@ -536,7 +536,7 @@ Intel package as dependency, this being one of the target use cases for Spack.
 
 ------
 
-.. [fn1] Strictly speaking, versions up to and including ``2017.1``.
+.. [fn1] Strictly speaking, versions from ``2017.2`` onward.
 
 .. [fn2] The scope of MPI components installed was `discussed in PR #4300
    <https://github.com/spack/spack/pull/4300#issuecomment-305857268>`_.  It's
