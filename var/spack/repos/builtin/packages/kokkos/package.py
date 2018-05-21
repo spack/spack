@@ -47,6 +47,10 @@ class Kokkos(Package):
     variant('qthreads', default=False, description="enable Qthreads backend")
     variant('cuda', default=False, description="enable Cuda backend")
     variant('openmp', default=True, description="enable OpenMP backend")
+    variant('HSW', default=False, description="enable HSW architecture")
+    variant('KNL', default=False, description="enable KNL architecture")
+    variant('BDW', default=False, description="enable BDW architecture")
+    variant('Pascal60', default=False, description="enable P100/cc6.0 architecture")
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
@@ -62,12 +66,26 @@ class Kokkos(Package):
                 '--with-hwloc=%s' % spec['hwloc'].prefix,
                 '--with-serial'
             ]
+            arch_args = []
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
             if 'qthreads' in spec:
                 g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
             if 'cuda' in spec:
                 g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
+            # 1)  hopefully we have a host architecture
+            if '+HSW' in spec:
+                arch_args.append('--arch=HSW')
+            if '+KNL' in spec:
+                arch_args.append('--arch=KNL')
+            if '+BDW' in spec:
+                arch_args.append('--arch=BDW')
+            # 2) so that when we set a GPU architecture, things work
+            if '+Pascal60' in spec:
+                if 'cuda' in spec:
+                    arch_args.append(',Pascal60')
+            if arch_args != "":
+                g_args += arch_args
 
             generate(*g_args)
             make()
