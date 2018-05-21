@@ -1245,43 +1245,68 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         dump_packages(self.spec, packages_dir)
 
     def _if_make_target_execute(self, target):
-        try:
-            # Check if we have a makefile
-            file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
-            file = file.pop()
-        except IndexError:
+        make = inspect.getmodule(self).make
+
+        # Check if we have a Makefile
+        for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
+            if os.path.exists(makefile):
+                break
+        else:
             tty.msg('No Makefile found in the build directory')
             return
 
-        # Check if 'target' is in the makefile
-        regex = re.compile('^' + target + ':')
-        with open(file, 'r') as f:
-            matches = [line for line in f.readlines() if regex.match(line)]
-
-        if not matches:
-            tty.msg("Target '" + target + ":' not found in Makefile")
+        # Check if 'target' is a valid target
+        #
+        # -q, --question
+        #       ``Question mode''. Do not run any commands, or print anything;
+        #       just return an exit status that is zero if the specified
+        #       targets are already up to date, nonzero otherwise.
+        #
+        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        #
+        # The exit status of make is always one of three values:
+        #
+        # 0     The exit status is zero if make is successful.
+        #
+        # 2     The exit status is two if make encounters any errors.
+        #       It will print messages describing the particular errors.
+        #
+        # 1     The exit status is one if you use the '-q' flag and make
+        #       determines that some target is not already up to date.
+        #
+        # https://www.gnu.org/software/make/manual/html_node/Running.html
+        #
+        # NOTE: This only works for GNU Make, not NetBSD Make.
+        make('-q', target, fail_on_error=False)
+        if make.returncode == 2:
+            tty.msg("Target '" + target + "' not found in " + makefile)
             return
 
         # Execute target
-        inspect.getmodule(self).make(target)
+        make(target)
 
     def _if_ninja_target_execute(self, target):
-        # Check if we have a ninja build script
+        ninja = inspect.getmodule(self).ninja
+
+        # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
-            tty.msg('No ninja build script found in the build directory')
+            tty.msg('No Ninja build script found in the build directory')
             return
 
-        # Check if 'target' is in the ninja build script
-        regex = re.compile('^build ' + target + ':')
-        with open('build.ninja', 'r') as f:
-            matches = [line for line in f.readlines() if regex.match(line)]
+        # Get a list of all targets in the Ninja build script
+        # https://ninja-build.org/manual.html#_extra_tools
+        all_targets = ninja('-t', 'targets', output=str).split('\n')
+
+        # Check if 'target' is a valid target
+        matches = [line for line in all_targets
+                   if line.startswith(target + ':')]
 
         if not matches:
-            tty.msg("Target 'build " + target + ":' not found in build.ninja")
+            tty.msg("Target '" + target + "' not found in build.ninja")
             return
 
         # Execute target
-        inspect.getmodule(self).ninja(target)
+        ninja(target)
 
     def _get_needed_resources(self):
         resources = []
