@@ -51,13 +51,10 @@ class Umpire(CMakePackage):
             options.extend([
                 '-DENABLE_CUDA=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
-
-        if '~cuda' in spec:
-            options.extend([
-                '-DENABLE_CUDA=Off'])
+        else:
+            options.append('-DENABLE_CUDA=Off')
 
         if '+fortran' in spec:
-            options.extend([
-                '-DENABLE_FORTRAN=On'])
+            options.append('-DENABLE_FORTRAN=On')
 
         return options
