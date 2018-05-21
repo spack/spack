@@ -10,7 +10,7 @@ Intel packages in Spack
 --------------------------
 
 Spack can work with several software development products offered by Intel.
-Some are available under no-cost terms, others require a paid license.
+Some of these are available under no-cost terms, others require a paid license.
 All share the same basic steps for configuration, installation, and, where
 applicable, license management. The relevant Spack Python class is:
 
@@ -23,7 +23,7 @@ other package:
 
 .. _`route 1`:
 
-1. Accept system-provided Intel tools in Spack after you declare them as *external packages*.
+1. Accept system-provided tools in Spack after you declare them as *external packages*.
 
 .. _`route 2`:
 
@@ -79,6 +79,18 @@ and optimizers do require a paid license.  In Spack, they are provided as:
 * ``intel-parallel-studio`` – the entire suite of compilers and libraries,
 * ``intel`` – a subset containing just the compilers and the Intel-MPI runtime [fn2]_.
 
+------
+
+**TODO:**  Confirm scope of MPI components (runtime vs. devel) in current (and
+previous?) *cluster/professional/composer* editions, i.e., presence in downloads,
+possibly subject to license coverage(!); see `disussion in PR #4300
+<https://github.com/spack/spack/pull/4300#issuecomment-305582898>`_.
+[NB: An "mpi" subdirectory is not indicative of the full MPI SDK being present
+(``mpicc``, …, and header files).  The directory may contain just the MPI
+runtime (``mpirun`` and shared libraries) .]
+
+------
+
 The license is needed at installation time and to compile client packages, but
 never to just run any resulting binaries.
 
@@ -86,8 +98,8 @@ The libraries that are provided in the standalone packages are inluded in the
 all-encompassing ``intel-parallel-studio``. To complicate matters a bit, that
 package is sold in 3 "editions", of which only the upper-tier ``cluster``
 edition supports compiling MPI applications, and hence only that edition will
-provide the ``mpi`` virtual package. The edition is used as *leading part* of
-the Spack version number for the ``intel-parallel-studio`` package:
+provide the ``mpi`` virtual package. The edition forms the *leading part* of
+Spack's version numbers for the package:
 
 
 .. code-block:: sh
@@ -95,7 +107,7 @@ the Spack version number for the ``intel-parallel-studio`` package:
   $ spack info intel-parallel-studio
   …
   Preferred version:  
-      professional.2018.2    http://…
+      professional.2018.2    http:…
 
   Safe versions:  
       professional.2018.2    http:…
@@ -117,7 +129,7 @@ To install the full suite, capable of compiling MPI applications, run:
 
   $ spack install intel-parallel-studio@'cluster.2018.2'        # ca. 12 GB
 
-To save some disk space and time, you might install separately:
+If you need to save some disk space or installation time, install separately as needed:
 
 .. code-block:: sh
 
@@ -125,11 +137,6 @@ To save some disk space and time, you might install separately:
   $ spack install intel-mpi     # 0.5 GB
   $ spack install intel-mkl     # 2.5 GB
 
-
-**TODO:**  Confirm scope of MPI components (runtime vs. devel) in current (and
-previous?) *cluster/professional/composer* editions, i.e., presence in downloads,
-possibly subject to license coverage(!); see `disussion in PR #4300
-<https://github.com/spack/spack/pull/4300#issuecomment-305582898>`_.
 
 ^^^^^^^^^^^^^^^^^^^^
 Unrelated packages
@@ -142,12 +149,9 @@ discussed here:
   Rendering Manager <https://en.wikipedia.org/wiki/Direct_Rendering_Manager>`_.
 * ``intel-mkl-dnn`` – Math Kernel Library for Deep Neural Networks (``CMakePackage``)
 * ``intel-xed`` – X86 machine instructions encoder/decoder
-* ``intel-tbb`` – Standalone version of Intel Threading Building Blocks.
-
-  Development versions and a runtime version of TBB are included in all
+* ``intel-tbb`` – Standalone version of Intel Threading Building Blocks. – Note that
+  development versions and a runtime version of TBB are included in all
   ``intel-parallel-studio/intel`` and ``intel-mkl`` packages, respectively.
-
-.. _intel-configure-license:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Configuring Spack to use Intel licenses
@@ -167,8 +171,6 @@ For authoritative information on Intel licensing, see:
 * https://software.intel.com/en-us/faq/licensing
 * https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
 
-.. _intel-license-network-client:
-
 """"""""""""""""""""""""""""""
 Pointing to a license server
 """"""""""""""""""""""""""""""
@@ -180,7 +182,7 @@ installation or temporary use, a process known as "checking out a license", a
 client application needs to know the host name and port number of one or more
 license servers [fn4]_.
 
-There are three methods to `configure the client license
+There are three methods to `configure clients to use a network license
 <https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license>`_.
 Ideally, your license administrator will already have implemented one.
 Look for the environment variable ``INTEL_LICENSE_FILE`` or for files
@@ -193,16 +195,14 @@ The relevant tokens, among possibly others, are the ``USE_SERVER`` line,
 intended specifically for clients, and one or more ``SERVER`` lines above it
 which give the network address.
 
-.. _intel-install-license-file:
-
 """"""""""""""""""""""""""""""""""""
 Installing a standalone license file
 """"""""""""""""""""""""""""""""""""
 
-If you purchased a single-user license, "activate" it for your serial number
+If you purchased a user-specific license, "activate" it for your serial number
 and download the resulting license file as `instructed by Intel
 <https://software.intel.com/en-us/faq/licensing#license-management>`_.
-You can `request to have the file re-sent
+If needed, `request to have the file re-sent
 <https://software.intel.com/en-us/articles/resend-license-file>`_ to you.
 
 License files are plain text files containing license tokens in FLEXlm format
@@ -224,7 +224,7 @@ the following means, in order of decreasing preference:
 * Directory given in environment variable
 
   If you cannot use the default directory, but your system already has set the
-  environment variable ``INTEL_LICENSE_FILE`` [fn5]_ independent from Spack,
+  environment variable ``INTEL_LICENSE_FILE`` independent from Spack [fn5]_,
   then, if you have the necessary write permissions, place your license file in
   one of the directories mentioned in this environment variable.  Adjust file
   permissions to match licensed users.
@@ -234,25 +234,26 @@ the following means, in order of decreasing preference:
   If your system has not yet set and used the environment variable
   ``INTEL_LICENSE_FILE``, you could start using it with the ``spack install``
   stage of licensed tools and subsequent client packages. You would, however,
-  be in a bind to always set that variable in the same manner, even after
+  be in a bind to always set that variable in the same manner, across
   updates and re-installations, and perhaps accommodate additions to it. As
   this may be difficult in the long run, we recommend that you do *not* attempt
   to start using the variable solely for Spack.  Instead, try the next option.
 
 * Spack-managed file
 
-  The first time you install an Intel package that requires a license, Spack
-  will initialize a Spack-global Intel license file for you, as a template with
-  instructional comments, and bring up an editor [fn6]_.  Spack will do this
-  *even if you have a working license elsewhere* on the system.
+  The first time Spack encounters an Intel package that requires a license, it
+  will initialize a Spack-global Intel-specific license file for you, as a
+  template with instructional comments, and bring up an editor [fn6]_.  Spack
+  will do this *even if you have a working license elsewhere* on the system.
 
-  * To proceed with an existing license, leave the file as is and close the
-    editor. You do not need to touch the file again.
+  * To proceed with an externally configured license, leave the newly templated
+    file as is (containing comments only) and close the editor. You do not need
+    to touch the file again.
 
-  * To use your own license, copy the contents of your downloaded license file
-    into the opened file, save it, and close the editor.
+  * To configure your own license, copy the contents of your downloaded license
+    file into the opened file, save it, and close the editor.
 
-  To revisit and manually edit the file, such as prior to a subsequent
+  To revisit and manually edit this file, such as prior to a subsequent
   installation attempt, find it at
   ``$SPACK_ROOT/etc/spack/licenses/intel/intel.lic`` .
 
@@ -262,8 +263,6 @@ the following means, in order of decreasing preference:
 
 **TODO:** `PR #6534 "Intel v18 License File Format Issue"
 <https://github.com/spack/spack/issues/6534>`_.
-
-.. _intel-install-packages-external:
 
 --------------------------------------------------
 Integration of Intel tools *external* to Spack
@@ -277,8 +276,6 @@ Spack is just being introduced. It will be useful to make such previously
 installed tools available for use by Spack as they are. How to do this varies
 depending on the type of the tools:
 
-.. _intel-install-compilers-external:
-
 ^^^^^^^^^^^^^^^^^^^^^^
 Integrating compilers
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -286,20 +283,22 @@ Integrating compilers
 Configure external Intel compilers, like all compilers that Spack is to use,
 in ``compilers.yaml`` files located in
 ``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
-See `Vendor-Specific Compiler Configuration
+In the Spack documentation, see `Configuration Files in Spack
+<http://spack.readthedocs.io/en/latest/configuration.html>`_ in general and
+`Vendor-Specific Compiler Configuration
 <http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_
-in the Spack documentation and follow the specifics under Intel Compilers.
+for specifics under Intel Compilers.
 
 Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
-specific vendor release and define each such set as a Spack `spec
+specific vendor release and define such a set as a Spack `spec
 <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_
-that in this case always has the form ``intel@compilerversion``.  The entry
-determines how this spec is resolved, via ``paths`` and/or ``modules`` tokens,
-to each specific pre-installed compiler version on the system.
+that in this case has the form ``intel@compilerversion`` [fn7]_.
+The entry determines how the spec is to be resolved, via ``paths`` and/or
+``modules`` tokens, to each language compiler in the set.
 
-The following example illustrates how to integrate the 2017 Intel compiler
+The following example illustrates how to integrate the 2018 Intel compiler
 suite, which outside of Spack was activated by users of the example system as
-``module load intel/17``. Since Spack must be rather more picky about versions,
+``module load intel/18``. Since Spack must be rather more picky about versions,
 we must specify full paths and complete modulefile names in the relevant
 ``compilers.yaml`` entry:
 
@@ -307,17 +306,16 @@ we must specify full paths and complete modulefile names in the relevant
 
     compilers:
     - compiler:
-        target:     x86_64
+        spec:       intel@18.0.2
         operating_system:   centos6
-        modules:    [intel/17/17.0.6]
-        spec:       intel@17.0.6
+        target:     x86_64
+        modules:    [intel/18/18.0.2]
         paths:
-          cc:       /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/icc
-          cxx:      /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/icpc
-          f77:      /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/ifort
-          fc:       /opt/intel/compilers_and_libraries_2017.6.256/linux/bin/intel64/ifort
+          cc:       /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/icc
+          cxx:      /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/icpc
+          f77:      /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/ifort
+          fc:       /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/ifort
 
-.. _intel-install-libs-external:
 
 ^^^^^^^^^^^^^^^^^^^^^^
 Integrating libraries
@@ -325,9 +323,8 @@ Integrating libraries
 
 Configure external library-type packages (as opposed to compilers)
 in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
-``~/.spack/packages.yaml``, fully documented in the `Build settings
-<http://spack.readthedocs.io/en/latest/build_settings.html#external-packages>`_
-Spack documentation.
+``~/.spack/packages.yaml``, see the Spack documentation under `Build customization
+<http://spack.readthedocs.io/en/latest/build_settings.html>`_.
 
 Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
 external to Spack in terms of a Spack spec and resolve each such spec via
@@ -336,15 +333,15 @@ version on the system.  Since Intel tools generally need environment variables
 to interoperate, which cannot be conveyed in a mere ``paths`` specification,
 the ``modules`` token will be more sensible to use. It resolves the Spack-side
 spec to a modulefile generated and managed outside of Spack's purview,
-to be loaded within Spack when the corresponding spec is called upon to compile
-client packages.
+which Spack will load internally and transiently when the corresponding spec is
+called upon to compile client packages.
 
 If your system administrator did not provide modules for pre-installed Intel
 tools, you could do well to ask for them, because installing multiple copies
 of the Intel tools, as is wont to happen once Spack is in the picture, is
 bound to stretch disk space and patience thin. If you *are* the system
 administrator and are still new to modules, then perhaps it's best to follow
-the `next section <Installing Intel tools within Spack_>`_ to install the tools
+the `next section <Installing Intel tools within Spack_>`_ and install the tools
 solely within Spack.
 
 The following example integrates two packages embodied by hypothetical
@@ -394,7 +391,6 @@ mechanism.
 
 **TODO:** Confirm variant handling.
 
-.. _intel-install-packages-internal:
 
 -------------------------------------
 Installing Intel tools *within* Spack
@@ -407,7 +403,6 @@ versions are undesirable, Spack can install Intel tools like any regular Spack
 package for you and, after appropriate post-install configuration, use the
 compilers and/or libraries to install client packages.
 
-.. _intel-install-compilers-internal:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Installing and integrating compiler components
@@ -423,14 +418,13 @@ Spack the minutiae for actually using those compilers with client packages.
 
 * Under ``paths:``, use the full paths to the actual compiler binaries (``icc``,
   ``ifort``, etc.) located within the Spack installation tree, in all their
-  unpleasant length.
+  unpleasant length [fn8]_.
 
 * Use the ``modules:`` or ``cflags:`` tokens to specify a suitable accompanying
   ``gcc`` version to help pacify picky client packages that ask for C++
   standards more recent than supported by your system-provided ``gcc`` and its
   ``libstdc++.so``.
 
-.. _intel-install-libs-internal:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Installing library packages
@@ -443,7 +437,6 @@ same as for compilers.
 **After installation**, follow `Selecting libraries to satisfy virtual
 packages`_.
 
-.. _intel-tools-for-client-packages:
 
 -----------------------------------------
 Using Intel tools with client packages
@@ -454,7 +447,6 @@ Finally, this section pertains to `route 3`_ from the introduction.
 Once Intel tools are installed within Spack as external or internal package
 they can be used as intended for installing client packages.
 
-.. _intel-selecting-compilers:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selecting Intel compilers
@@ -488,7 +480,6 @@ Example: ``etc/spack/packages.yaml`` might contain:
       compiler: [ intel@18, intel@17, gcc@4.4.7, gcc@4.9.3, gcc@7.3.0, ]
 
 
-.. _intel-satisfying-virtual-package:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selecting libraries to satisfy virtual packages
@@ -536,7 +527,6 @@ implementation, while enabling to choose others on a per-spec basis.
         lapack: [intel-mkl, ]
         scalapack: [intel-mkl, ]
 
-.. _intel-explict-requires:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Using Intel tools as explicit dependency
@@ -553,25 +543,23 @@ Intel package as dependency, this being one of the target use cases for Spack.
 .. [fn1] Strictly speaking, versions from ``2017.2`` onward.
 
 .. [fn2] The scope of MPI components installed was `discussed in PR #4300
-   <https://github.com/spack/spack/pull/4300#issuecomment-305857268>`_.  It's
-   not clear, though, if "installs MPI" for the 2017 version current at the
-   time meant just runtime (only ``mpirun`` etc.) or SDK+RT (also ``mpicc`` etc.).
+   <https://github.com/spack/spack/pull/4300#issuecomment-305857268>`_.
 
    The package ``intel`` intentionally does not have a ``+mpi`` variant since
    it is meant to be small. The native installer always adds the MPI *runtime*
-   components due to defaults defined in the download package.  The same
-   applies to ``intel-parallel-studio ~mpi``.
+   components because it follows defaults defined in the download package.  The
+   same applies to ``intel-parallel-studio ~mpi``.
 
    For ``intel-parallel-studio`` with``+mpi``, Spack requests [in
    ``lib/spack/spack/build_systems/intel.py:pset_components()``] the component
-   pattern ``intel-mpi intel-imb``, which implies *all* MPI components present
-   in the download package (``intel-mpi{rt,-rt,-sdk,…}``). The native installer
-   expands the component pattern names with an implied glob ``*`` to the
-   packages in the product BOM.
+   pattern ``"intel-mpi intel-imb"``, which implies *all* MPI components that
+   are present in the download package (``intel-mpi{rt,-rt,-sdk,…}``). The
+   native installer expands the component pattern names with an implied glob
+   ``*`` to the packages in the product BOM.
 
 .. [fn3] How could the external installation have succeeded otherwise?
 
-.. [fn4] According to Intel's documentation, there is a way to install a
+.. [fn4] According to Intel's documentation, there is supposedly a way to install a
    product using a network license even `when a FLEXlm server is not running
    <https://software.intel.com/en-us/articles/licensing-setting-up-the-client-floating-license>`_:
    Specify the license in the form ``port@serverhost`` in the
@@ -585,3 +573,43 @@ Intel package as dependency, this being one of the target use cases for Spack.
 
 .. [fn6] Should said editor turn out to be ``vi``, you better be in a position
    to know how to use it.
+
+.. [fn7] The name component ``intel`` of the compiler spec is separate from (in
+   a different namespace than) the names of the Spack packages
+   ``intel-parallel-studio`` and ``intel``. Both of the latter provide the former.
+
+.. [fn8] With some effort, you can convince Spack to use better paths:
+
+   * Set the ``install_tree`` location in ``config.yaml`` (`doc
+     <http://spack.readthedocs.io/en/latest/config_yaml.html#install-tree>`_).
+   * Set the `hash length
+     <http://spack.readthedocs.io/en/latest/config_yaml.html#install-hash-length-and-install-path-scheme>`_
+     under ``install-path-scheme``, also in ``config.yaml``.
+   * You will want to set the *same* hash length for `tcl module files
+     <http://spack.readthedocs.io/en/latest/module_file_support.html#customize-the-naming-scheme>`_
+     that Spack produces, under ``naming_scheme`` in ``modules.yaml``.
+
+   **Warning**: Altering these settings implies that Spack will lose track of
+   all packages it has compiled for you so far. You could still dive into old
+   installation directories by hand, but that won't be fun, and less so under
+   their old long paths.
+
+   **Practical hint:** Hashes can be a pain to quickly scan over, especially in
+   ragged-right directory listings.  To lessen the eyesore for humans and give
+   shell glob patterns a handle to latch on to, prefix hashes with a consistent
+   string, such as the letter ``H``.
+
+   Set in ``config.yaml``:
+
+   .. code-block:: yaml
+
+     config:
+       install_path_scheme: '${ARCHITECTURE}/${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}/H${HASH:6}'
+
+   and in ``modules.yaml``:
+
+   .. code-block:: yaml
+
+     modules:
+       tcl:
+         naming_scheme: '${PACKAGE}/${VERSION}/${COMPILERNAME}-${COMPILERVER}/H${HASH:6}'
