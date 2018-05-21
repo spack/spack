@@ -52,8 +52,9 @@ class Kokkos(Package):
     variant(
         'host_arch',
         default='none',
-        values=('none','AMDAVX','ARMv80','ARMv81','ARMv8-ThunderX','Power7','Power8','Power9',
-                'WSM','SNB','HSW','BDW','SKX','KNC','KNL'),
+        values=('none', 'AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
+                'Power7', 'Power8', 'Power9',
+                'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
         description='Set the host architecture to use'
     )
 
@@ -61,8 +62,9 @@ class Kokkos(Package):
     variant(
         'gpu_arch',
         default='none',
-        values=('none','Kepler30','Kepler32','Kepler35','Kepler37','Maxwell50','Maxwell52',
-                'Maxwell53','Pascal60','Pascal61'),
+        values=('none', 'Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
+                'Maxwell50', 'Maxwell52', 'Maxwell53',
+                'Pascal60', 'Pascal61'),
         description='Set the GPU architecture to use'
     )
 
@@ -97,18 +99,19 @@ class Kokkos(Package):
             gpu_arch_args  = spec.variants['gpu_arch'].value
 
             # only a host architecture
-            if (host_arch_args!="none" AND gpu_arch_args=""):
-                arch_args = '--arch='+host_arch_args
+            if (host_arch_args != 'none' AND gpu_arch_args == ''):
+                arch_args = '--arch=' + host_arch_args
             # only a gpu architecture
-            if (host_arch_args="" AND gpu_arch_args!="none"):
+            if (host_arch_args == '' AND gpu_arch_args != 'none'):
                 if '+cuda' in spec:
-                    arch_args = '--arch='+gpu_arch_args
+                    arch_args = '--arch=' + gpu_arch_args
             # both a host and a gpu architecture
-            if (host_arch_args!="none" AND gpu_arch_args!="none"):
+            if (host_arch_args != 'none' AND gpu_arch_args != 'none'):
                 if '+cuda' in spec:
-                    arch_args = '--arch='+host_arch_args+','+gpu_arch_args
+                    arch_args = '--arch=' + host_arch_args
+                    + ',' + gpu_arch_args
 
-            if arch_args != "":
+            if arch_args != '':
                 g_args += arch_args
 
             generate(*g_args)
