@@ -59,6 +59,9 @@ class Geos(AutotoolsPackage):
     variant('python', default=False, description='Enable Python support')
 
     extends('ruby', when='+ruby')
+
+    # Python 3 is supposedly supported, but I couldn't get it to work
+    # https://trac.osgeo.org/geos/ticket/774
     extends('python@:2', when='+python')
 
     depends_on('swig', type='build', when='+ruby')
