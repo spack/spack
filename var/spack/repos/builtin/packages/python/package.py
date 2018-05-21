@@ -457,10 +457,10 @@ class Python(AutotoolsPackage):
         # Spack-installed Python works best
         # without other env vars polluting it.
         # https://askubuntu.com/questions/640010
-        pythoncmd = self.command('-c', cmd, output=str).strip()
-        pythoncmd.add_default_env('PYTHONPATH', '')
-        return pythoncmd
-
+        self.command.add_default_env('PYTHONPATH', '')
+        return self.command('-c', cmd, output=str).strip()
+    
+    
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
         Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
