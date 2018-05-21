@@ -282,8 +282,6 @@ in general and
 :ref:`Vendor-Specific Compiler Configuration <getting-started>`,
 section Intel Compilers.
 
-.. anchor ../getting_started.rst .. _vendor-specific-compiler-configuration:
-
 Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
 specific vendor release and define such a set as a Spack
 :ref:`spec <sec-specs>`
@@ -370,12 +368,10 @@ unmodified with different compilers.
 **TODO:** Confirm how the compiler-less spec is handled.
 
 A slightly more advanced example follows, illustrating how to provide
-:ref:`variants <basic-usage>` and using
-the ``buildable: False`` directive to prevent Spack from installing other
-versions or variants of the named package through its normal internal
+:ref:`variants <basic-usage>`
+and using the ``buildable: False`` directive to prevent Spack from installing
+other versions or variants of the named package through its normal internal
 mechanism.
-
-.. anchor ../basic_usage.rst .. _variants:
 
 .. code-block:: yaml
 
@@ -467,9 +463,6 @@ means:
   and
   :ref:`Concretization Preferences <build-settings>`.
 
-  .. anchor ../tutorial_configuration.rst .. _configuring-package-preferences:
-  .. anchor ../build_settings.rst  .. _concretization-preferences:
-
 Example: ``etc/spack/packages.yaml`` might contain:
 
 .. code-block:: yaml
@@ -500,8 +493,6 @@ the external product installation. Likewise, for Spack-internal packages, the
 active variants are determined, persistently at installation time, from the
 defaults in the repository and the spec selected to be installed.
 
-.. anchor ../basic_usage.rst .. _variants:
-
 To have Intel packages satisfy virtual package requests for all or selected
 client packages, edit the ``packages.yaml`` file.  Customize, either in the
 ``all:`` or a more specific entry, a ``providers:`` dictionary whose keys are
@@ -511,9 +502,6 @@ virtual package, in order of decreasing preference.  To learn more about the
 :ref:`Configuring Package Preferences <configs-tutorial>`
 and the section
 :ref:`Concretization Preferences <build-settings>`.
-
-.. anchor ../tutorial_configuration.rst .. _configuring-package-preferences:
-.. anchor ../build_settings.rst  .. _concretization-preferences:
 
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear
@@ -593,10 +581,6 @@ Footnotes
       if you have Spack produce them for you, under ``naming_scheme`` in
       ``modules.yaml``
       (:ref:`doc <modules-yaml>`).
-
-   .. anchor ../config_yaml.rst .. _install-tree:
-   .. anchor ../config_yaml.rst .. _install-hash-length-and-install-path-scheme:
-   .. anchor ../module_file_support.rst .. _customize-the-naming-scheme:
 
    .. warning:: Altering the naming scheme means that Spack will lose track of
       all packages it has installed for you so far. In a pinch, you can dive
