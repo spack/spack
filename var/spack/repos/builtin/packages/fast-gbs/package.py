@@ -36,13 +36,13 @@ class FastGbs(Package):
     version('2017-01-25', git='https://bitbucket.org/jerlar73/fast-gbs.git', commit='3b3cbffa84d269419692067c6a3de08b3b88849c')
 
     depends_on('parallel', type='run')
-    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('python@2.7:', type='run')
     depends_on('sabre', type='run')
-    depends_on('py-cutadapt', type=('build', 'run'))
+    depends_on('py-cutadapt', type='run')
     depends_on('bwa', type='run')
     depends_on('samtools', type='run')
     depends_on('platypus', type='run')
-    depends_on('py-pyvcf', type=('build', 'run'))
+    depends_on('py-pyvcf', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
