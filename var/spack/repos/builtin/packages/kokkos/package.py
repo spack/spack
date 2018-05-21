@@ -68,6 +68,10 @@ class Kokkos(Package):
         description='Set the GPU architecture to use'
     )
 
+    # conflicts
+    conflicts('~cuda', when='gpu_arch!=None',
+        msg='Must specify CUDA backend to use a GPU architecture.')
+
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
     depends_on('qthreads', when='+qthreads')
@@ -82,6 +86,7 @@ class Kokkos(Package):
                 '--with-hwloc=%s' % spec['hwloc'].prefix,
                 '--with-serial'
             ]
+            arch_args = []
             # backends
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
@@ -95,30 +100,12 @@ class Kokkos(Package):
             # gpu architectures
             gpu_arch  = spec.variants['gpu_arch'].value
 
-            # only a host architecture
-            if (host_arch and not gpu_arch):
-                arch_args = '--arch=' + host_arch
-            # only a gpu architecture
-            if (gpu_arch and not host_arch):
-                if '+cuda' in spec:
-                    arch_args = '--arch=' + gpu_arch
-                else:
-                    raise InstallError(
-                        "Specified a GPU architecture %s without "
-                        "also specifying CUDA backend" %
-                        (gpu_arch))
-            # both a host and a gpu architecture
-            if (host_arch and gpu_arch):
-                if '+cuda' in spec:
-                    arch_args = '--arch=' + host_arch + ',' + gpu_arch
-                else:
-                    raise InstallError(
-                        "Specified a GPU architecture %s without "
-                        "also specifying CUDA backend" %
-                        (gpu_arch))
-
-            if arch_args != '':
-                g_args += arch_args
+            if host_arch:
+                arch_args.append(host_arch)
+            if gpu_arch:
+                arch_args.append(gpu_arch)
+            if arch_args:
+                g_args.append('--arch={0}'.format(','.join(arch_args)))
 
             generate(*g_args)
             make()
