@@ -38,7 +38,7 @@ class LibjpegTurbo(Package):
     depends_on('automake', type='build', when="@1.3.1:1.5.3")
     depends_on('libtool', type='build', when="@1.3.1:1.5.3")
     depends_on('cmake', type='build', when="@1.5.90:")
-    depends_on('jdk', when='+java', type='build')
+    depends_on('java', when='+java', type='build')
 
     @property
     def libs(self):
