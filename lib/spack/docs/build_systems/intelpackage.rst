@@ -81,7 +81,7 @@ and optimizers do require a paid license.  In Spack, they are provided as:
 
 ------
 
-**TODO:**  Confirm scope of MPI components (runtime vs. devel) in current (and
+**TODO:** Confirm scope of MPI components (runtime vs. devel) in current (and
 previous?) *cluster/professional/composer* editions, i.e., presence in downloads,
 possibly subject to license coverage(!); see `disussion in PR #4300
 <https://github.com/spack/spack/pull/4300#issuecomment-305582898>`_.
@@ -361,8 +361,6 @@ used for the Intel products and adopted within Spack. You can inspect them by:
 
 Using the same version numbers is useful for clarity, but not strictly necessary.
 
-**TODO:** Confirm.
-
 Note that the Spack spec in the example does not contain a compiler
 specification. This is intentional, as the Intel library packages can be used
 unmodified with different compilers.
@@ -537,10 +535,7 @@ Footnotes
 
 .. [fn1] Strictly speaking, versions from ``2017.2`` onward.
 
-.. [fn2] The scope of MPI components installed was `discussed in PR #4300
-   <https://github.com/spack/spack/pull/4300#issuecomment-305857268>`_.
-
-   The package ``intel`` intentionally does not have a ``+mpi`` variant since
+.. [fn2] The package ``intel`` intentionally does not have a ``+mpi`` variant since
    it is meant to be small. The native installer always adds the MPI *runtime*
    components because it follows defaults defined in the download package.  The
    same applies to ``intel-parallel-studio ~mpi``.
