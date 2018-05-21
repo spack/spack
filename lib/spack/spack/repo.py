@@ -32,7 +32,10 @@ import inspect
 import imp
 import re
 import traceback
+import tempfile
 import json
+from contextlib import contextmanager
+from six import string_types
 
 try:
     from collections.abc import Mapping
@@ -45,9 +48,10 @@ import yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, join_path, install
+from llnl.util.filesystem import mkdirp, install
 
-import spack
+import spack.config
+import spack.caches
 import spack.error
 import spack.spec
 from spack.provider_index import ProviderIndex
@@ -55,10 +59,8 @@ from spack.util.path import canonicalize_path
 from spack.util.naming import NamespaceTrie, valid_module_name
 from spack.util.naming import mod_to_class, possible_spack_module_names
 
-#
-# Super-namespace for all packages.
-# Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
-#
+#: Super-namespace for all packages.
+#: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
 repo_namespace     = 'spack.pkg'
 
 #
@@ -69,8 +71,24 @@ repo_index_name    = 'index.yaml'  # Top-level filename for repository index.
 packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
 package_file_name  = 'package.py'  # Filename for packages in a repository.
 
-# Guaranteed unused default value for some functions.
+#: Guaranteed unused default value for some functions.
 NOT_PROVIDED = object()
+
+#: Code in ``_package_prepend`` is prepended to imported packages.
+#:
+#: Spack packages were originally expected to call `from spack import *`
+#: themselves, but it became difficult to manage and imports in the Spack
+#: core the top-level namespace polluted by package symbols this way.  To
+#: solve this, the top-level ``spack`` package contains very few symbols
+#: of its own, and importing ``*`` is essentially a no-op.  The common
+#: routines and directives that packages need are now in ``spack.pkgkit``,
+#: and the import system forces packages to automatically include
+#: this. This way, old packages that call ``from spack import *`` will
+#: continue to work without modification, but it's no longer required.
+#:
+#: TODO: At some point in the future, consider removing ``from spack import *``
+#: TODO: from packages and shifting to from ``spack.pkgkit import *``
+_package_prepend = 'from spack.pkgkit import *'
 
 
 def _autospec(function):
@@ -114,8 +132,7 @@ class FastPackageChecker(Mapping):
     _paths_cache = {}
 
     def __init__(self, packages_path):
-
-        #: The path of the repository managed by this instance
+        # The path of the repository managed by this instance
         self.packages_path = packages_path
 
         # If the cache we need is not there yet, then build it appropriately
@@ -138,7 +155,7 @@ class FastPackageChecker(Mapping):
         cache = {}
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
-            pkg_dir = join_path(self.packages_path, pkg_name)
+            pkg_dir = os.path.join(self.packages_path, pkg_name)
 
             # Warn about invalid names that look like packages.
             if not valid_module_name(pkg_name):
@@ -220,8 +237,7 @@ class TagIndex(Mapping):
             pkg_name (str): name of the package to be removed from the index
 
         """
-
-        package = spack.repo.get(pkg_name)
+        package = path.get(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():
@@ -252,7 +268,8 @@ def make_provider_index_cache(packages_path, namespace):
     cache_filename = 'providers/{0}-index.yaml'.format(namespace)
 
     # Compute which packages needs to be updated in the cache
-    index_mtime = spack.misc_cache.mtime(cache_filename)
+    misc_cache = spack.caches.misc_cache
+    index_mtime = misc_cache.mtime(cache_filename)
 
     needs_update = [
         x for x, sinfo in fast_package_checker.items()
@@ -260,19 +277,19 @@ def make_provider_index_cache(packages_path, namespace):
     ]
 
     # Read the old ProviderIndex, or make a new one.
-    index_existed = spack.misc_cache.init_entry(cache_filename)
+    index_existed = misc_cache.init_entry(cache_filename)
 
     if index_existed and not needs_update:
 
         # If the provider index exists and doesn't need an update
         # just read from it
-        with spack.misc_cache.read_transaction(cache_filename) as f:
+        with misc_cache.read_transaction(cache_filename) as f:
             index = ProviderIndex.from_yaml(f)
 
     else:
 
         # Otherwise we need a write transaction to update it
-        with spack.misc_cache.write_transaction(cache_filename) as (old, new):
+        with misc_cache.write_transaction(cache_filename) as (old, new):
 
             index = ProviderIndex.from_yaml(old) if old else ProviderIndex()
 
@@ -305,7 +322,8 @@ def make_tag_index_cache(packages_path, namespace):
     cache_filename = 'tags/{0}-index.json'.format(namespace)
 
     # Compute which packages needs to be updated in the cache
-    index_mtime = spack.misc_cache.mtime(cache_filename)
+    misc_cache = spack.caches.misc_cache
+    index_mtime = misc_cache.mtime(cache_filename)
 
     needs_update = [
         x for x, sinfo in fast_package_checker.items()
@@ -313,19 +331,19 @@ def make_tag_index_cache(packages_path, namespace):
     ]
 
     # Read the old ProviderIndex, or make a new one.
-    index_existed = spack.misc_cache.init_entry(cache_filename)
+    index_existed = misc_cache.init_entry(cache_filename)
 
     if index_existed and not needs_update:
 
         # If the provider index exists and doesn't need an update
         # just read from it
-        with spack.misc_cache.read_transaction(cache_filename) as f:
+        with misc_cache.read_transaction(cache_filename) as f:
             index = TagIndex.from_json(f)
 
     else:
 
         # Otherwise we need a write transaction to update it
-        with spack.misc_cache.write_transaction(cache_filename) as (old, new):
+        with misc_cache.write_transaction(cache_filename) as (old, new):
 
             index = TagIndex.from_json(old) if old else TagIndex()
 
@@ -341,13 +359,19 @@ def make_tag_index_cache(packages_path, namespace):
 class RepoPath(object):
     """A RepoPath is a list of repos that function as one.
 
-       It functions exactly like a Repo, but it operates on the
-       combined results of the Repos in its list instead of on a
-       single package repository.
+    It functions exactly like a Repo, but it operates on the combined
+    results of the Repos in its list instead of on a single package
+    repository.
+
+    Args:
+        repos (list): list Repo objects or paths to put in this RepoPath
+
+    Optional Args:
+        repo_namespace (str): super-namespace for all packages in this
+            RepoPath (used when importing repos as modules)
     """
 
-    def __init__(self, *repo_dirs, **kwargs):
-        # super-namespace for all packages in the RepoPath
+    def __init__(self, *repos, **kwargs):
         self.super_namespace = kwargs.get('namespace', repo_namespace)
 
         self.repos = []
@@ -357,41 +381,17 @@ class RepoPath(object):
         self._all_package_names = None
         self._provider_index = None
 
-        # If repo_dirs is empty, just use the configuration
-        if not repo_dirs:
-            import spack.config
-            repo_dirs = spack.config.get_config('repos')
-            if not repo_dirs:
-                raise NoRepoConfiguredError(
-                    "Spack configuration contains no package repositories.")
-
         # Add each repo to this path.
-        for root in repo_dirs:
+        for repo in repos:
             try:
-                repo = Repo(root, self.super_namespace)
+                if isinstance(repo, string_types):
+                    repo = Repo(repo, self.super_namespace)
                 self.put_last(repo)
             except RepoError as e:
-                tty.warn("Failed to initialize repository at '%s'." % root,
+                tty.warn("Failed to initialize repository: '%s'." % repo,
                          e.message,
                          "To remove the bad repository, run this command:",
-                         "    spack repo rm %s" % root)
-
-    def swap(self, other):
-        """Convenience function to make swapping repositories easier.
-
-        This is currently used by mock tests.
-        TODO: Maybe there is a cleaner way.
-
-        """
-        attrs = ['repos',
-                 'by_namespace',
-                 'by_path',
-                 '_all_package_names',
-                 '_provider_index']
-        for attr in attrs:
-            tmp = getattr(self, attr)
-            setattr(self, attr, getattr(other, attr))
-            setattr(other, attr, tmp)
+                         "    spack repo rm %s" % repo)
 
     def _add(self, repo):
         """Add a repository to the namespace and path indexes.
@@ -648,18 +648,18 @@ class Repo(object):
                 raise BadRepoError(msg)
 
         # Validate repository layout.
-        self.config_file = join_path(self.root, repo_config_name)
+        self.config_file = os.path.join(self.root, repo_config_name)
         check(os.path.isfile(self.config_file),
               "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = join_path(self.root, packages_dir_name)
+        self.packages_path = os.path.join(self.root, packages_dir_name)
         check(os.path.isdir(self.packages_path),
               "No directory '%s' found in '%s'" % (repo_config_name, root))
 
         # Read configuration and validate namespace
         config = self._read_config()
         check('namespace' in config, '%s must define a namespace.'
-              % join_path(root, repo_config_name))
+              % os.path.join(root, repo_config_name))
 
         self.namespace = config['namespace']
         check(re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', self.namespace),
@@ -832,7 +832,7 @@ class Repo(object):
         try:
             return package_class(spec)
         except Exception:
-            if spack.debug:
+            if spack.config.get('config:debug'):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
@@ -912,7 +912,7 @@ class Repo(object):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
         self._check_namespace(spec)
-        return join_path(self.packages_path, spec.name)
+        return os.path.join(self.packages_path, spec.name)
 
     @_autospec
     def filename_for_package_name(self, spec):
@@ -926,7 +926,7 @@ class Repo(object):
         """
         self._check_namespace(spec)
         pkg_dir = self.dirname_for_package_name(spec.name)
-        return join_path(pkg_dir, package_file_name)
+        return os.path.join(pkg_dir, package_file_name)
 
     @property
     def _pkg_checker(self):
@@ -989,7 +989,9 @@ class Repo(object):
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
             try:
-                module = imp.load_source(fullname, file_path)
+                with import_lock():
+                    with prepend_open(file_path, text=_package_prepend) as f:
+                        module = imp.load_source(fullname, file_path, f)
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename so we need to
                 # manually construct the error message in order to give the
@@ -1090,6 +1092,95 @@ def create_repo(root, namespace=None):
             shutil.rmtree(root, ignore_errors=True)
 
     return full_path, namespace
+
+
+def _path():
+    """Get the singleton RepoPath instance for Spack.
+
+    Create a RepoPath, add it to sys.meta_path, and return it.
+
+    TODO: consider not making this a singleton.
+    """
+    repo_dirs = spack.config.get('repos')
+    if not repo_dirs:
+        raise NoRepoConfiguredError(
+            "Spack configuration contains no package repositories.")
+
+    path = RepoPath(*repo_dirs)
+    sys.meta_path.append(path)
+    return path
+
+
+#: Singleton repo path instance
+path = llnl.util.lang.Singleton(_path)
+
+
+def get(spec):
+    """Convenience wrapper around ``spack.repo.get()``."""
+    return path.get(spec)
+
+
+def all_package_names():
+    """Convenience wrapper around ``spack.repo.all_package_names()``."""
+    return path.all_package_names()
+
+
+def set_path(repo):
+    """Set the path singleton to a specific value.
+
+    Overwrite ``path`` and register it as an importer in
+    ``sys.meta_path`` if it is a ``Repo`` or ``RepoPath``.
+    """
+    global path
+    path = repo
+
+    # make the new repo_path an importer if needed
+    append = isinstance(repo, (Repo, RepoPath))
+    if append:
+        sys.meta_path.append(repo)
+    return append
+
+
+@contextmanager
+def import_lock():
+    imp.acquire_lock()
+    yield
+    imp.release_lock()
+
+
+@contextmanager
+def prepend_open(f, *args, **kwargs):
+    """Open a file for reading, but prepend with some text prepended
+
+    Arguments are same as for ``open()``, with one keyword argument,
+    ``text``, specifying the text to prepend.
+    """
+    text = kwargs.get('text', None)
+
+    with open(f, *args) as f:
+        with tempfile.NamedTemporaryFile(mode='w+') as tf:
+            if text:
+                tf.write(text + '\n')
+            tf.write(f.read())
+            tf.seek(0)
+            yield tf.file
+
+
+@contextmanager
+def swap(repo_path):
+    """Temporarily use another RepoPath."""
+    global path
+
+    # swap out _path for repo_path
+    saved = path
+    remove_from_meta = set_path(repo_path)
+
+    yield
+
+    # restore _path and sys.meta_path
+    if remove_from_meta:
+        sys.meta_path.remove(repo_path)
+    path = saved
 
 
 class RepoError(spack.error.SpackError):

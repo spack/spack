@@ -27,8 +27,8 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
 import spack.store
+import spack.repo
 import spack.cmd
 
 description = "show dependencies of a package"
@@ -73,8 +73,9 @@ def dependencies(parser, args):
         if not spec.virtual:
             packages = [spec.package]
         else:
-            packages = [spack.repo.get(s.name)
-                        for s in spack.repo.providers_for(spec)]
+            packages = [
+                spack.repo.get(s.name)
+                for s in spack.repo.path.providers_for(spec)]
 
         dependencies = set()
         for pkg in packages:
