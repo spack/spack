@@ -34,7 +34,6 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
-import llnl.util.lock
 from llnl.util.filesystem import mkdirp, can_access
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
@@ -42,6 +41,7 @@ import spack.paths
 import spack.caches
 import spack.config
 import spack.error
+import spack.util.lock
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
@@ -145,10 +145,6 @@ class Stage(object):
         finally:
             stage.destroy()         # Explicitly destroy the stage directory.
 
-    If spack.use_tmp_stage is True, spack will attempt to create
-    stages in a tmp directory.  Otherwise, stages are created directly
-    in spack.paths.stage_path.
-
     There are two kinds of stages: named and unnamed.  Named stages
     can persist between runs of spack, e.g. if you fetched a tarball
     but didn't finish building it, you won't have to fetch it again.
@@ -231,7 +227,7 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(spack.paths.stage_path, '.lock')
 
-                Stage.stage_locks[self.name] = llnl.util.lock.Lock(
+                Stage.stage_locks[self.name] = spack.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
 
             self._lock = Stage.stage_locks[self.name]
@@ -481,10 +477,6 @@ class Stage(object):
         directly under spack.paths.stage_path, otherwise this will attempt to
         create a stage in a temporary directory and link it into
         spack.paths.stage_path.
-
-        Spack will use the first writable location in spack.tmp_dirs
-        to create a stage. If there is no valid location in tmp_dirs,
-        fall back to making the stage inside spack.paths.stage_path.
 
         """
         # Create the top-level stage directory

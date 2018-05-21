@@ -26,7 +26,6 @@ import os
 
 from llnl.util.lang import memoized
 
-import spack
 import spack.spec
 from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
