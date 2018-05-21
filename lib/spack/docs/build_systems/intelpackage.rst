@@ -2,6 +2,8 @@
 
 .. contents::
 
+**TODO:** Replace "readthedoc" links by Sphinx ":ref:" tags. But most need
+headings in the target docs to be declared link targets (I think).
 
 --------------------------
 Intel packages in Spack
@@ -277,14 +279,14 @@ Configure external Intel compilers, like all compilers that Spack is to use,
 in ``compilers.yaml`` files located in
 ``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
 In the Spack documentation, see
-:ref:`Configuration Files in Spack <configuration>`
+`Configuration Files in Spack <http://spack.readthedocs.io/en/latest/configuration.html>`_
 in general and
-:ref:`Vendor-Specific Compiler Configuration <getting-started>`,
+`Vendor-Specific Compiler Configuration <http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_,
 section Intel Compilers.
 
 Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
 specific vendor release and define such a set as a Spack
-:ref:`spec <sec-specs>`
+`spec <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_
 that in this case has the form ``intel@compilerversion`` [fn7]_.
 The entry determines how the spec is to be resolved, via ``paths`` and/or
 ``modules`` tokens, to each language compiler in the set.
@@ -317,7 +319,7 @@ Integrating libraries
 Configure external library-type packages (as opposed to compilers)
 in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
 ``~/.spack/packages.yaml``, see the Spack documentation under
-:ref:`Build customization <build-settings>`.
+`Build customization <http://spack.readthedocs.io/en/latest/build_settings.html>`_.
 
 Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
 external to Spack in terms of a Spack spec and resolve each such spec via
@@ -368,7 +370,7 @@ unmodified with different compilers.
 **TODO:** Confirm how the compiler-less spec is handled.
 
 A slightly more advanced example follows, illustrating how to provide
-:ref:`variants <basic-usage>`
+`variants <http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_
 and using the ``buildable: False`` directive to prevent Spack from installing
 other versions or variants of the named package through its normal internal
 mechanism.
@@ -459,9 +461,9 @@ means:
   Configure the order of compilers in the appropriate ``packages.yaml`` file,
   under either an ``all:`` or client-package-specific entry, in a
   ``compiler:`` list. Consult the Spack documentation for
-  :ref:`Configuring Package Preferences <configs-tutorial>`
+  `Configuring Package Preferences <http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
   and
-  :ref:`Concretization Preferences <build-settings>`.
+  `Concretization Preferences <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
 
 Example: ``etc/spack/packages.yaml`` might contain:
 
@@ -484,7 +486,7 @@ The relevant virtual packages for Intel are ``blas``, ``lapack``,
 ``scalapack``, and ``mpi``.
 
 In both integration routes, Intel packages can have optional
-:ref:`variants <basic-usage>`
+`variants <http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_
 which alter the list of virtual packages they can satisfy.  For Spack-external
 packages, the active variants are a combination of the defaults declared in
 Spack's package repository and the spec it is declared as in ``packages.yaml``.
@@ -499,9 +501,9 @@ client packages, edit the ``packages.yaml`` file.  Customize, either in the
 the virtual packages and whose values are the Spack specs that satisfy the
 virtual package, in order of decreasing preference.  To learn more about the
 ``providers:`` settings, see the Spack tutorial for
-:ref:`Configuring Package Preferences <configs-tutorial>`
+`Configuring Package Preferences <http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
 and the section
-:ref:`Concretization Preferences <build-settings>`.
+`Concretization Preferences <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
 
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear
@@ -574,11 +576,11 @@ Footnotes
 .. [fn8] With some effort, you can convince Spack to use shorter paths:
 
    1. Set the ``install_tree`` location in ``config.yaml``
-      (:ref:`doc <config-yaml>`).
+      (`doc <http://spack.readthedocs.io/en/latest/config_yaml.html#install-tree>`_).
    2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
-      (:ref:`q.v. <config-yaml>`).
+      (`q.v. <http://spack.readthedocs.io/en/latest/config_yaml.html#install-hash-length-and-install-path-scheme>`_).
    3. You will want to set the *same* hash length for
-      :ref:`tcl module files <modules-yaml>`
+      `tcl module files <http://spack.readthedocs.io/en/latest/module_file_support.html#customize-the-naming-scheme>`_
       if you have Spack produce them for you, under ``naming_scheme`` in
       ``modules.yaml``.
 
