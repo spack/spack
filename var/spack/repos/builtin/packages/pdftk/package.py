@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import llnl.util.filesystem
 
 
 class Pdftk(MakefilePackage):
