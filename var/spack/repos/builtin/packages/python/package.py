@@ -235,8 +235,7 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:') and spec.satisfies('+
-                                                    '):
+        if spec.satisfies('@3:') and spec.satisfies('+pythoncmd'):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
