@@ -36,6 +36,10 @@ class Bmake(Package):
 
     phases = ['configure', 'build', 'install']
 
+    def patch(self):
+        # Do not pre-roff cat pages
+        filter_file('MANTARGET?', 'MANTARGET', 'mk/man.mk', string=True)
+
     def configure(self, spec, prefix):
         sh = which('sh')
         sh('boot-strap', 'op=configure')
