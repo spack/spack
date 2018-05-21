@@ -2,8 +2,6 @@
 
 .. contents::
 
-**TODO:** replace http links by reST relative file links, as(?):
-`:ref:vendor-specific-compiler-configuration <../getting_started>`_
 
 --------------------------
 Intel packages in Spack
@@ -46,7 +44,7 @@ This document covers routes 1 through 3.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Packages available at no cost
+Packages under no-cost license
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Intel's standalone performance library products, notably MKL and MPI, are
@@ -92,9 +90,9 @@ runtime (``mpirun`` and shared libraries) .]
 ------
 
 The license is needed at installation time and to compile client packages, but
-never to just run any resulting binaries.
+never to merely run any resulting binaries.
 
-The libraries that are provided in the standalone packages are inluded in the
+The libraries that are provided in the standalone packages are included in the
 all-encompassing ``intel-parallel-studio``. To complicate matters a bit, that
 package is sold in 3 "editions", of which only the upper-tier ``cluster``
 edition supports compiling MPI applications, and hence only that edition will
@@ -112,22 +110,17 @@ Spack's version numbers for the package:
   Safe versions:  
       professional.2018.2    http:…
       …
-      professional.2015.1    http:…
-      
       composer.2018.2        http:…
       …
-      composer.2015.1        http:…
-      
       cluster.2018.2         http:…
       …
-      cluster.2015.1         http:…
   …
 
 To install the full suite, capable of compiling MPI applications, run:
 
 .. code-block:: sh
 
-  $ spack install intel-parallel-studio@'cluster.2018.2'        # ca. 12 GB
+  $ spack install intel-parallel-studio@cluster.2018.2        # ca. 12 GB
 
 If you need to save some disk space or installation time, install separately as needed:
 
@@ -160,7 +153,7 @@ Configuring Spack to use Intel licenses
 If you wish to integrate licensed Intel products into Spack as external packages
 (`route 1`_ above) we assume that their license configuration is in place and
 is working [fn3]_. In this case, skip ahead to section `Integration of Intel
-tools external to Spack`_.
+tools installed external to Spack`_.
 
 If you plan to use Spack to install licensed products for you (`route 2`_ above),
 the Intel product installer that Spack will run underneath must have access to
@@ -264,9 +257,9 @@ the following means, in order of decreasing preference:
 **TODO:** `PR #6534 "Intel v18 License File Format Issue"
 <https://github.com/spack/spack/issues/6534>`_.
 
---------------------------------------------------
-Integration of Intel tools *external* to Spack
---------------------------------------------------
+----------------------------------------------------------
+Integration of Intel tools installed *external* to Spack
+----------------------------------------------------------
 
 This section discusses `route 1`_ from the introduction.
 
@@ -283,15 +276,17 @@ Integrating compilers
 Configure external Intel compilers, like all compilers that Spack is to use,
 in ``compilers.yaml`` files located in
 ``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
-In the Spack documentation, see `Configuration Files in Spack
-<http://spack.readthedocs.io/en/latest/configuration.html>`_ in general and
-`Vendor-Specific Compiler Configuration
-<http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_
-for specifics under Intel Compilers.
+In the Spack documentation, see
+:ref:`Configuration Files in Spack <configuration>`
+in general and
+:ref:`Vendor-Specific Compiler Configuration <getting-started>`,
+section Intel Compilers.
+
+.. anchor ../getting_started.rst .. _vendor-specific-compiler-configuration:
 
 Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
-specific vendor release and define such a set as a Spack `spec
-<http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_
+specific vendor release and define such a set as a Spack
+:ref:`spec <sec-specs>`
 that in this case has the form ``intel@compilerversion`` [fn7]_.
 The entry determines how the spec is to be resolved, via ``paths`` and/or
 ``modules`` tokens, to each language compiler in the set.
@@ -323,8 +318,8 @@ Integrating libraries
 
 Configure external library-type packages (as opposed to compilers)
 in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
-``~/.spack/packages.yaml``, see the Spack documentation under `Build customization
-<http://spack.readthedocs.io/en/latest/build_settings.html>`_.
+``~/.spack/packages.yaml``, see the Spack documentation under
+:ref:`Build customization <build-settings>`.
 
 Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
 external to Spack in terms of a Spack spec and resolve each such spec via
@@ -374,11 +369,13 @@ unmodified with different compilers.
 
 **TODO:** Confirm how the compiler-less spec is handled.
 
-A slightly more advanced example follows, illustrating how to provide `variants
-<http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_ and using
+A slightly more advanced example follows, illustrating how to provide
+:ref:`variants <basic-usage>` and using
 the ``buildable: False`` directive to prevent Spack from installing other
 versions or variants of the named package through its normal internal
 mechanism.
+
+.. anchor ../basic_usage.rst .. _variants:
 
 .. code-block:: yaml
 
@@ -408,17 +405,17 @@ compilers and/or libraries to install client packages.
 Installing and integrating compiler components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As stated in the previous section `Integration of Intel tools external to
-Spack`_, Intel compilers and some early library-type Intel packages require a
-license at installation and during runtime. Before installation, follow the
-section `Configuring Spack to use Intel licenses`_.
+As stated in the previous section `Integration of Intel tools installed
+external to Spack`_, Intel compilers and some early library-type Intel
+packages require a license at installation and during runtime. Before
+installation, follow the section `Configuring Spack to use Intel licenses`_.
 
 **After installation**, follow the steps under `Integrating Compilers`_ to tell
 Spack the minutiae for actually using those compilers with client packages.
 
 * Under ``paths:``, use the full paths to the actual compiler binaries (``icc``,
   ``ifort``, etc.) located within the Spack installation tree, in all their
-  unpleasant length [fn8]_.
+  unsightly length [fn8]_.
 
 * Use the ``modules:`` or ``cflags:`` tokens to specify a suitable accompanying
   ``gcc`` version to help pacify picky client packages that ask for C++
@@ -438,9 +435,9 @@ same as for compilers.
 packages`_.
 
 
------------------------------------------
-Using Intel tools with client packages
------------------------------------------
+-------------------------------------------------------
+Using Intel tools in Spack to install client packages
+-------------------------------------------------------
 
 Finally, this section pertains to `route 3`_ from the introduction.
 
@@ -466,10 +463,12 @@ means:
   Configure the order of compilers in the appropriate ``packages.yaml`` file,
   under either an ``all:`` or client-package-specific entry, in a
   ``compiler:`` list. Consult the Spack documentation for
-  `Configuring Package Preferences
-  <http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
-  and `Concretization Preferences
-  <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
+  :ref:`Configuring Package Preferences <configs-tutorial>`
+  and
+  :ref:`Concretization Preferences <build-settings>`.
+
+  .. anchor ../tutorial_configuration.rst .. _configuring-package-preferences:
+  .. anchor ../build_settings.rst  .. _concretization-preferences:
 
 Example: ``etc/spack/packages.yaml`` might contain:
 
@@ -491,26 +490,30 @@ client package for a library that is available from different providers.
 The relevant virtual packages for Intel are ``blas``, ``lapack``,
 ``scalapack``, and ``mpi``.
 
-In both integration routes, Intel packages can have optional `variants
-<http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_ which alter
-the list of virtual packages they can satisfy.  For Spack-external packages,
-the active variants are a combination of the defaults declared in Spack's
-package repository and the spec it is declared as in ``packages.yaml``.
+In both integration routes, Intel packages can have optional
+:ref:`variants <basic-usage>`
+which alter the list of virtual packages they can satisfy.  For Spack-external
+packages, the active variants are a combination of the defaults declared in
+Spack's package repository and the spec it is declared as in ``packages.yaml``.
 Needless to say, those should match the components that are actually present in
 the external product installation. Likewise, for Spack-internal packages, the
 active variants are determined, persistently at installation time, from the
 defaults in the repository and the spec selected to be installed.
+
+.. anchor ../basic_usage.rst .. _variants:
 
 To have Intel packages satisfy virtual package requests for all or selected
 client packages, edit the ``packages.yaml`` file.  Customize, either in the
 ``all:`` or a more specific entry, a ``providers:`` dictionary whose keys are
 the virtual packages and whose values are the Spack specs that satisfy the
 virtual package, in order of decreasing preference.  To learn more about the
-``providers:`` settings, see the Spack tutorial for `Configuring Package
-Preferences
-<http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
-and the section `Concretization Preferences
-<http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
+``providers:`` settings, see the Spack tutorial for
+:ref:`Configuring Package Preferences <configs-tutorial>`
+and the section
+:ref:`Concretization Preferences <build-settings>`.
+
+.. anchor ../tutorial_configuration.rst .. _configuring-package-preferences:
+.. anchor ../build_settings.rst  .. _concretization-preferences:
 
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear
@@ -538,7 +541,9 @@ Intel package as dependency, this being one of the target use cases for Spack.
 
 **TODO:** confirm for DAAL, IPP
 
-------
+----------
+Footnotes
+----------
 
 .. [fn1] Strictly speaking, versions from ``2017.2`` onward.
 
@@ -578,21 +583,27 @@ Intel package as dependency, this being one of the target use cases for Spack.
    a different namespace than) the names of the Spack packages
    ``intel-parallel-studio`` and ``intel``. Both of the latter provide the former.
 
-.. [fn8] With some effort, you can convince Spack to use better paths:
+.. [fn8] With some effort, you can convince Spack to use shorter paths:
 
-   * Set the ``install_tree`` location in ``config.yaml`` (`doc
-     <http://spack.readthedocs.io/en/latest/config_yaml.html#install-tree>`_).
-   * Set the `hash length
-     <http://spack.readthedocs.io/en/latest/config_yaml.html#install-hash-length-and-install-path-scheme>`_
-     under ``install-path-scheme``, also in ``config.yaml``.
-   * You will want to set the *same* hash length for `tcl module files
-     <http://spack.readthedocs.io/en/latest/module_file_support.html#customize-the-naming-scheme>`_
-     that Spack produces, under ``naming_scheme`` in ``modules.yaml``.
+   1. Set the ``install_tree`` location in ``config.yaml``
+      (:ref:`doc <config-yaml>`).
+   2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
+      (:ref:`q.v. <config-yaml>`).
+   3. You will want to set the *same* hash length for tcl module files
+      if you have Spack produce them for you, under ``naming_scheme`` in
+      ``modules.yaml``
+      (:ref:`doc <modules-yaml>`).
 
-   **Warning**: Altering these settings implies that Spack will lose track of
-   all packages it has compiled for you so far. You could still dive into old
-   installation directories by hand, but that won't be fun, and less so under
-   their old long paths.
+   .. anchor ../config_yaml.rst .. _install-tree:
+   .. anchor ../config_yaml.rst .. _install-hash-length-and-install-path-scheme:
+   .. anchor ../module_file_support.rst .. _customize-the-naming-scheme:
+
+   .. warning:: Altering the naming scheme means that Spack will lose track of
+      all packages it has installed for you so far. In a pinch, you can dive
+      into old installation directories by hand until you delete them.
+      
+      That said, *the time is right* for this kind of customization
+      when you are lining up a new set of compilers.
 
    **Practical hint:** Hashes can be a pain to quickly scan over, especially in
    ragged-right directory listings.  To lessen the eyesore for humans and give
