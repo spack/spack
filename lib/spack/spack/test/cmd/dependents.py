@@ -28,7 +28,7 @@ import pytest
 
 from llnl.util.tty.color import color_when
 
-import spack
+import spack.store
 from spack.main import SpackCommand
 
 dependents = SpackCommand('dependents')

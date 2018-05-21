@@ -31,7 +31,6 @@ import sys
 from llnl.util.link_tree import LinkTree
 from llnl.util import tty
 
-import spack
 import spack.spec
 import spack.store
 from spack.directory_layout import ExtensionAlreadyInstalledError

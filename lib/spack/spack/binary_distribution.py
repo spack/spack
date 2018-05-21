@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
 import re
 import tarfile
@@ -37,7 +36,6 @@ import yaml
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install_tree
 
-import spack
 import spack.cmd
 import spack.fetch_strategy as fs
 import spack.util.gpg as gpg_util

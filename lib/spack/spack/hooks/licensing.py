@@ -24,9 +24,10 @@
 ##############################################################################
 import os
 
-import spack
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+
+from spack.util.editor import editor
 
 
 def pre_install(spec):
@@ -55,7 +56,7 @@ def set_up_license(pkg):
             # Create a new license file
             write_license_file(pkg, license_path)
             # Open up file in user's favorite $EDITOR for editing
-            spack.editor(license_path)
+            editor(license_path)
             tty.msg("Added global license file %s" % license_path)
         else:
             # Use already existing license file

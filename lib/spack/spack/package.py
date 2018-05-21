@@ -58,6 +58,7 @@ import spack.paths
 import spack.store
 import spack.compilers
 import spack.directives
+import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -75,7 +76,6 @@ from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
-from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
@@ -273,10 +273,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     packages it depends on, so that dependencies can be installed along
     with the package itself.  Packages are written in pure python.
 
-    Packages are all submodules of spack.packages.  If spack is installed
-    in ``$prefix``, all of its python files are in ``$prefix/lib/spack``.
-    Most of them are in the spack module, so all the packages live in
-    ``$prefix/lib/spack/spack/packages``.
+    Packages live in repositories (see repo.py).  If spack is installed
+    in ``$prefix``, all of its built-in package files are in the builtin
+    repo at ``$prefix/var/spack/repos/builtin/packages``.
 
     All you have to do to create a package is make a new subclass of Package
     in this directory.  Spack automatically scans the python files there
@@ -497,6 +496,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
+
     """
     #
     # These are default values for instance variables.
@@ -1581,7 +1581,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.db.add(
                 self.spec, spack.store.layout, explicit=explicit
             )
-        except directory_layout.InstallDirectoryAlreadyExistsError:
+        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
             # Abort install if install directory exists.
             # But do NOT remove it (you'd be overwriting someone else's stuff)
             tty.warn("Keeping existing install prefix in place.")
