@@ -51,8 +51,8 @@ class Kokkos(Package):
     # host architecture variant
     variant(
         'host_arch',
-        default='none',
-        values=('none', 'AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
+        default='None',
+        values=('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
                 'Power7', 'Power8', 'Power9',
                 'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
         description='Set the host architecture to use'
@@ -61,8 +61,8 @@ class Kokkos(Package):
     # gpu architecture variant
     variant(
         'gpu_arch',
-        default='none',
-        values=('none', 'Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
+        default='None',
+        values=('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
                 'Maxwell50', 'Maxwell52', 'Maxwell53',
                 'Pascal60', 'Pascal61'),
         description='Set the GPU architecture to use'
@@ -82,9 +82,6 @@ class Kokkos(Package):
                 '--with-hwloc=%s' % spec['hwloc'].prefix,
                 '--with-serial'
             ]
-            arch_args = []
-            host_arch_args = []
-            gpu_arch_args = []
             # backends
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
@@ -93,23 +90,32 @@ class Kokkos(Package):
             if 'cuda' in spec:
                 g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
             # host architectures
-            host_arch_args = spec.variants['host_arch'].value
+            host_arch = spec.variants['host_arch'].value
 
             # gpu architectures
-            gpu_arch_args  = spec.variants['gpu_arch'].value
+            gpu_arch  = spec.variants['gpu_arch'].value
 
             # only a host architecture
-            if (host_arch_args != 'none' AND gpu_arch_args == ''):
-                arch_args = '--arch=' + host_arch_args
+            if (host_arch and not gpu_arch):
+                arch_args = '--arch=' + host_arch
             # only a gpu architecture
-            if (host_arch_args == '' AND gpu_arch_args != 'none'):
+            if (gpu_arch and not host_arch):
                 if '+cuda' in spec:
-                    arch_args = '--arch=' + gpu_arch_args
+                    arch_args = '--arch=' + gpu_arch
+                else:
+                    raise InstallError(
+                        "Specified a GPU architecture %s without "
+                        "also specifying CUDA backend" %
+                        (gpu_arch))
             # both a host and a gpu architecture
-            if (host_arch_args != 'none' AND gpu_arch_args != 'none'):
+            if (host_arch and gpu_arch):
                 if '+cuda' in spec:
-                    arch_args = '--arch=' + host_arch_args
-                    + ',' + gpu_arch_args
+                    arch_args = '--arch=' + host_arch + ',' + gpu_arch
+                else:
+                    raise InstallError(
+                        "Specified a GPU architecture %s without "
+                        "also specifying CUDA backend" %
+                        (gpu_arch))
 
             if arch_args != '':
                 g_args += arch_args
