@@ -235,7 +235,8 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:') and spec.satisfies('+pythoncmd'):
+        if spec.satisfies('@3:') and spec.satisfies('+
+                                                    '):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
@@ -459,8 +460,7 @@ class Python(AutotoolsPackage):
         # https://askubuntu.com/questions/640010
         self.command.add_default_env('PYTHONPATH', '')
         return self.command('-c', cmd, output=str).strip()
-    
-    
+
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
         Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
