@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Memkind(AutotoolsPackage):
     """The memkind library is a user extensible heap manager built on top of
     jemalloc which enables control of memory characteristics and a partitioning
@@ -49,7 +50,8 @@ class Memkind(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('numactl')
 
-    phases = ['edit', 'build_jemalloc', 'autoreconf', 'configure', 'build', 'install']
+    phases = ['edit', 'build_jemalloc', 'autoreconf', 'configure', 'build',
+              'install']
 
     def edit(self, spec, prefix):
         with open('VERSION', 'w') as version_file:
@@ -64,4 +66,3 @@ class Memkind(AutotoolsPackage):
         if os.path.exists('autogen.sh'):
             bash = which('bash')
             bash('./autogen.sh')
-
