@@ -35,7 +35,7 @@ class Camellia(CMakePackage):
 
     maintainers = ['nvrober-sandia']
     variant('moab', default=True,
-            description='Compile with MOAB support for reading standard mesh formats')
+            description='Include MOAB support for reading standard mesh formats')
 
     version('master',
             git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
