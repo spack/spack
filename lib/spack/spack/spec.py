@@ -2248,6 +2248,8 @@ class Spec(object):
             for name, spec in user_spec_deps.items():
                 if name not in all_spec_deps:
                     all_spec_deps[name] = spec
+                else:
+                    all_spec_deps[name].constrain(spec)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
