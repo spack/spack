@@ -205,7 +205,31 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_build_environment_variables(pkg, env, dirty):
+def clear_environment_vars():
+    env = EnvironmentModifications()
+
+    # Remove these vars from the environment during build because they
+    # can affect how some packages find libraries.  We want to make
+    # sure that builds never pull in unintended external dependencies.
+    env.unset('LD_LIBRARY_PATH')
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('LD_RUN_PATH')
+    env.unset('DYLD_LIBRARY_PATH')
+
+    # Remove any macports installs from the PATH.  The macports ld can
+    # cause conflicts with the built-in linker on el capitan.  Solves
+    # assembler issues, e.g.:
+    #    suffix or operands invalid for `movq'"
+    path = get_path('PATH')
+    for p in path:
+        if '/macports/' in p:
+            env.remove_path('PATH', p)
+
+    env.apply_modifications()
+
+
+def set_build_environment_variables(pkg, env):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -215,7 +239,6 @@ def set_build_environment_variables(pkg, env, dirty):
     Args:
         pkg: The package we are building
         env: The build environment
-        dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
     build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
@@ -258,27 +281,6 @@ def set_build_environment_variables(pkg, env, dirty):
 
     # Install root prefix
     env.set(SPACK_INSTALL, spack.store.root)
-
-    # Stuff in here sanitizes the build environment to eliminate
-    # anything the user has set that may interfere.
-    if not dirty:
-        # Remove these vars from the environment during build because they
-        # can affect how some packages find libraries.  We want to make
-        # sure that builds never pull in unintended external dependencies.
-        env.unset('LD_LIBRARY_PATH')
-        env.unset('LIBRARY_PATH')
-        env.unset('CPATH')
-        env.unset('LD_RUN_PATH')
-        env.unset('DYLD_LIBRARY_PATH')
-
-        # Remove any macports installs from the PATH.  The macports ld can
-        # cause conflicts with the built-in linker on el capitan.  Solves
-        # assembler issues, e.g.:
-        #    suffix or operands invalid for `movq'"
-        path = get_path('PATH')
-        for p in path:
-            if '/macports/' in p:
-                env.remove_path('PATH', p)
 
     # Set environment variables if specified for
     # the given compiler
@@ -580,7 +582,7 @@ def setup_package(pkg, dirty):
     run_env = EnvironmentModifications()
 
     set_compiler_environment_variables(pkg, spack_env)
-    set_build_environment_variables(pkg, spack_env, dirty)
+    set_build_environment_variables(pkg, spack_env)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
 
     # traverse in postorder so package can use vars from its dependencies
@@ -608,7 +610,11 @@ def setup_package(pkg, dirty):
 
     # Make sure nothing's strange about the Spack environment.
     validate(spack_env, tty.warn)
-    spack_env.apply_modifications()
+
+    if not dirty:
+        # Sanitize the build environment to eliminate anything the user
+        # has set that may interfere.
+        clear_environment_vars()
 
     # All module loads that otherwise would belong in previous functions
     # have to occur after the spack_env object has its modifications applied.
@@ -624,6 +630,10 @@ def setup_package(pkg, dirty):
         load_module(pkg.architecture.target.module_name)
 
     load_external_modules(pkg)
+
+    # Apply spack environment modifications last, so that prepend_path actions
+    # from Spack take highest precedence (e.g. Spack's compiler wrappers)
+    spack_env.apply_modifications()
 
 
 def fork(pkg, function, dirty, fake):
