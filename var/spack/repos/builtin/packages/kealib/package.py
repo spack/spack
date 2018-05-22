@@ -44,7 +44,7 @@ class Kealib(CMakePackage):
     homepage = "http://www.kealib.org/"
     url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.7.tar.gz"
 
-    version('develop', hg='https://adamjstewart@bitbucket.org/chchrsc/kealib')
+    version('develop', hg='https://bitbucket.org/chchrsc/kealib')
     version('1.4.7', '6139e31e50f552247ddf98f489948893')
 
     depends_on('cmake@2.8.10:', type='build')
