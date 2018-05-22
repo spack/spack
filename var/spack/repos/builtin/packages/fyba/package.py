@@ -25,19 +25,24 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """LibTIFF - Tag Image File Format (TIFF) Library and Utilities."""
+class Fyba(AutotoolsPackage):
+    """OpenFYBA is the source code release of the FYBA library, distributed
+    by the National Mapping Authority of Norway (Statens kartverk) to read
+    and write files in the National geodata standard format SOSI."""
 
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.9.tar.gz"
+    homepage = "https://github.com/kartverket/fyba"
+    url      = "https://github.com/kartverket/fyba/archive/4.1.1.tar.gz"
 
-    version('4.0.9', '54bad211279cc93eb4fca31ba9bfdc79')
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
-    version('3.9.7', '626102f448ba441d42e3212538ad67d2')
+    version('4.1.1', 'ab687582efdef26593796271529a10cb')
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    # configure: error: cannot find install-sh or install.sh
+    force_autoreconf = True
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    # fatal error: 'sys/vfs.h' file not found
+    # https://github.com/kartverket/fyba/issues/12
+    patch('vfs-mount-darwin.patch', when='platform=darwin')

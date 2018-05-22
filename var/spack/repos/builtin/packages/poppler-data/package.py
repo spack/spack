@@ -25,19 +25,17 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """LibTIFF - Tag Image File Format (TIFF) Library and Utilities."""
+class PopplerData(CMakePackage):
+    """This package consists of encoding files for use with poppler. The
+    encoding files are optional and poppler will automatically read them if
+    they are present.  When installed, the encoding files enables poppler to
+    correctly render CJK and Cyrrilic properly.  While poppler is licensed
+    under the GPL, these encoding files have different license, and thus
+    distributed separately."""
 
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.9.tar.gz"
+    homepage = "https://poppler.freedesktop.org/"
+    url      = "https://poppler.freedesktop.org/poppler-data-0.4.9.tar.gz"
 
-    version('4.0.9', '54bad211279cc93eb4fca31ba9bfdc79')
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
-    version('3.9.7', '626102f448ba441d42e3212538ad67d2')
+    version('0.4.9', '35cc7beba00aa174631466f06732be40')
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    depends_on('cmake@2.6:', type='build')

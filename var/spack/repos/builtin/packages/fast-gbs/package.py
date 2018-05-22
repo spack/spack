@@ -25,19 +25,30 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """LibTIFF - Tag Image File Format (TIFF) Library and Utilities."""
+class FastGbs(Package):
+    """A bioinformatic pipeline designed to extract a high-quality SNP catalog
+       starting from FASTQ files obtained from sequencing
+       genotyping-by-sequencing (GBS) libraries."""
 
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.9.tar.gz"
+    homepage = "https://bitbucket.org/jerlar73/fast-gbs"
+    url      = "https://bitbucket.org/jerlar73/fast-gbs"
 
-    version('4.0.9', '54bad211279cc93eb4fca31ba9bfdc79')
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
-    version('3.9.7', '626102f448ba441d42e3212538ad67d2')
+    version('2017-01-25', git='https://bitbucket.org/jerlar73/fast-gbs.git', commit='3b3cbffa84d269419692067c6a3de08b3b88849c')
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    depends_on('parallel', type='run')
+    depends_on('python@2.7:', type='run')
+    depends_on('sabre', type='run')
+    depends_on('py-cutadapt', type='run')
+    depends_on('bwa', type='run')
+    depends_on('samtools', type='run')
+    depends_on('platypus', type='run')
+    depends_on('py-pyvcf', type='run')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('fastgbs.sh', prefix.bin)
+        install('parameters.txt', prefix.bin)
+        install('makeDir.sh', prefix.bin)
+        install('makeBarcodeSabre.py', prefix.bin)
+        install('vcf2txt.py', prefix.bin)
+        install('txt2unix.sh', prefix.bin)
