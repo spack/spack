@@ -44,16 +44,15 @@ class Kealib(CMakePackage):
     homepage = "http://www.kealib.org/"
     url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.7.tar.gz"
 
+    version('develop', hg='https://adamjstewart@bitbucket.org/chchrsc/kealib')
     version('1.4.7', '6139e31e50f552247ddf98f489948893')
-    version('1.4.5', '112e9c42d980b2d2987a3c15d0833a5d')
 
     depends_on('cmake@2.8.10:', type='build')
     depends_on('hdf5+cxx+hl')
 
-    # Out-of-source builds are broken
-    # fatal error: 'libkea/kea-config.h' file not found
-    build_directory = 'trunk'
     root_cmakelists_dir = 'trunk'
+
+    patch('cmake.patch', when='@1.4.7')
 
     def cmake_args(self):
         return [
