@@ -45,7 +45,7 @@ class Nektar(CMakePackage):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost@1.52.0: +iostreams')
+    depends_on('boost@1.56.0: +iostreams')
     depends_on('tinyxml', when='platform=darwin')
 
     depends_on('mpi', when='+mpi')
@@ -57,8 +57,8 @@ class Nektar(CMakePackage):
     depends_on('scotch ~mpi ~metis', when="~mpi+scotch")
     depends_on('scotch +mpi ~metis', when="+mpi+scotch")
 
-    conflicts("+hdf5", when="~mpi")
-    conflicts("+metis")
+    conflicts("+hdf5", when="~mpi",
+              msg="Nektar's hdf5 output is for parallel builds only")
 
     def cmake_args(self):
         args = []
