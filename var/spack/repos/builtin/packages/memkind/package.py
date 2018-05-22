@@ -47,7 +47,7 @@ class Memkind(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('numactl',  type='build')
+    depends_on('numactl')
 
     phases = ['edit', 'build_jemalloc', 'autoreconf', 'configure', 'build', 'install']
 
