@@ -2231,26 +2231,35 @@ class Spec(object):
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
-        # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False)
+        # Clear the DAG and collect all dependencies in the DAG, which will be
+        # reapplied as constraints. All dependencies collected this way will
+        # have been created by a previous execution of 'normalize'. Note that
+        # if there are user-specified constraints they will not initially be
+        # part of the DAG - they will be integrated into the DAG by this
+        # function.
+        all_spec_deps = self.flat_dependencies(copy=False)
 
-        full_spec_deps = dict(spec_deps)
         if user_spec_deps:
+            # Constraints specified by the user are assumed to be supplied to
+            # this function with the 'user_spec_deps' attribute. User-specified
+            # dependencies are not initially part of the DAG in order to
+            # distinguish inferred dependency constraints from user-specified
+            # constraints.
             for name, spec in user_spec_deps.items():
-                if name not in full_spec_deps:
-                    full_spec_deps[name] = spec
+                if name not in all_spec_deps:
+                    all_spec_deps[name] = spec
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            [s for s in full_spec_deps.values()], restrict=True)
+            [s for s in all_spec_deps.values()], restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
 
         any_change = self._normalize_helper(
-            visited, full_spec_deps, provider_index, tests)
+            visited, all_spec_deps, provider_index, tests)
 
         # Mark the spec as normal once done.
         self._normal = True
