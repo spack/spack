@@ -57,11 +57,11 @@ class Memkind(AutotoolsPackage):
 
     def build_jemalloc(self, spec, prefix):
         if os.path.exists('build_jemalloc.sh'):
-            os.system('./build_jemalloc.sh')
+            bash = which('bash')
+            bash('./build_jemalloc.sh')
 
     def autoreconf(self, spec, prefix):
         if os.path.exists('autogen.sh'):
-            # Bootstrap with autotools
             bash = which('bash')
             bash('./autogen.sh')
 
