@@ -50,10 +50,10 @@ class Memkind(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('numactl')
 
-    phases = ['edit', 'build_jemalloc', 'autoreconf', 'configure', 'build',
+    phases = ['build_jemalloc', 'autoreconf', 'configure', 'build',
               'install']
 
-    def edit(self, spec, prefix):
+    def patch(self):
         with open('VERSION', 'w') as version_file:
             version_file.write('{0}\n'.format(self.version))
 
