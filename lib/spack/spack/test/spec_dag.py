@@ -105,31 +105,37 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 @pytest.mark.usefixtures('config')
 def test_conditional_dep_with_user_constraints():
+    """This sets up packages X->Y such that X depends on Y conditionally. It
+    then constructs a Spec with X but with no constraints on X, so that the
+    initial normalization pass cannot determine whether the constraints are
+    met to add the dependency; this checks whether a user-specified constraint
+    on Y is applied properly.
+    """
     default = ('build', 'link')
 
     y = MockPackage('y', [], [])
     x_on_y_conditions = {
         y.name: {
-            'x@:2': 'y'
+            'x@2:': 'y'
         }
     }
     x = MockPackage('x', [y], [default], conditions=x_on_y_conditions)
 
     mock_repo = MockPackageMultiRepo([x, y])
     with spack.repo.swap(mock_repo):
-        spec = Spec('x@2 ^y@2')
+        spec = Spec('x ^y@2')
         spec.concretize()
 
         assert ('y@2' in spec)
 
     with spack.repo.swap(mock_repo):
-        spec = Spec('x')
+        spec = Spec('x@1')
         spec.concretize()
 
         assert ('y' not in spec)
 
     with spack.repo.swap(mock_repo):
-        spec = Spec('x@2')
+        spec = Spec('x')
         spec.concretize()
 
         assert ('y@3' in spec)
