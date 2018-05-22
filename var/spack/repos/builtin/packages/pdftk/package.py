@@ -33,6 +33,9 @@ class Pdftk(MakefilePackage):
 
     homepage = "https://www.pdflabs.com/tools/pdftk-server"
     url      = "https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/pdftk-2.02-src.zip"
+    # Alternative download locations:
+    # https://sources.debian.org/src/pdftk/
+    # http://archive.ubuntu.com/ubuntu/pool/universe/p/pdftk/pdftk_2.02.orig.tar.gz
 
     maintainers = ['citibeth']
 
