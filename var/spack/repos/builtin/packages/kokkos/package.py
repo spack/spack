@@ -48,7 +48,11 @@ class Kokkos(Package):
     variant('cuda', default=False, description="enable Cuda backend")
     variant('openmp', default=False, description="enable OpenMP backend")
 
-    # host architecture variant
+    gpu_values = ('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
+                  'Maxwell50', 'Maxwell52', 'Maxwell53',
+                  'Pascal60', 'Pascal61')
+
+    # Host architecture variant
     variant(
         'host_arch',
         default='None',
@@ -58,19 +62,19 @@ class Kokkos(Package):
         description='Set the host architecture to use'
     )
 
-    # gpu architecture variant
+    # GPU architecture variant
     variant(
         'gpu_arch',
         default='None',
-        values=('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
-                'Maxwell50', 'Maxwell52', 'Maxwell53',
-                'Pascal60', 'Pascal61'),
+        values=gpu_values,
         description='Set the GPU architecture to use'
     )
 
-    # conflicts
-    conflicts('~cuda', when='gpu_arch!=None',
-        msg='Must specify CUDA backend to use a GPU architecture.')
+    # Check that we haven't specified a gpu architecture
+    # without specifying CUDA
+    for p in gpu_values:
+        conflicts('--arch={0}'.format(p), when='~cuda',
+            msg='Must specify CUDA backend to use a GPU architecture.')
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
@@ -87,19 +91,17 @@ class Kokkos(Package):
                 '--with-serial'
             ]
             arch_args = []
-            # backends
+            # Backends
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
             if 'qthreads' in spec:
                 g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
             if 'cuda' in spec:
                 g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
-            # host architectures
+            # Host architectures
             host_arch = spec.variants['host_arch'].value
-
-            # gpu architectures
+            # GPU architectures
             gpu_arch  = spec.variants['gpu_arch'].value
-
             if host_arch:
                 arch_args.append(host_arch)
             if gpu_arch:
