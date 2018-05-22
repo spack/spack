@@ -2233,10 +2233,12 @@ class Spec(object):
         self.validate_or_raise()
         # Clear the DAG and collect all dependencies in the DAG, which will be
         # reapplied as constraints. All dependencies collected this way will
-        # have been created by a previous execution of 'normalize'. Note that
-        # if there are user-specified constraints they will not initially be
-        # part of the DAG - they will be integrated into the DAG by this
-        # function via the 'user_spec_deps' parameter
+        # have been created by a previous execution of 'normalize'.
+        # A dependency extracted here will only be reintegrated if it is
+        # discovered to apply according to _normalize_helper, so
+        # user-specified dependencies are recorded separately in case they
+        # refer to specs which take several normalization passes to
+        # materialize.
         all_spec_deps = self.flat_dependencies(copy=False)
 
         if user_spec_deps:
