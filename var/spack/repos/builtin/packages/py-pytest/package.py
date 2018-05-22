@@ -29,23 +29,29 @@ class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
     homepage = "http://pytest.org/"
-    url      = "https://pypi.io/packages/source/p/pytest/pytest-3.0.7.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytest/pytest-3.5.1.tar.gz"
 
     import_modules = [
         '_pytest', '_pytest.assertion', '_pytest._code',
-        '_pytest.vendored_packages', 'pytest'
+        '_pytest.mark', 'pytest'
     ]
 
+    version('3.5.1', 'ffd870ee3ca561695d2f916f0f0f3c0b')
     version('3.0.7', '89c60546507dc7eb6e9e40a6e9f720bd')
     version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5')
+
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     # Most Python packages only require setuptools as a build dependency.
     # However, pytest requires setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-py@1.4.29:', type=('build', 'run'))
-    depends_on('py-hypothesis@3.5.2:', type=('build', 'run'))
+    depends_on('py-py@1.5.0:', type=('build', 'run'))
+    depends_on('py-six@1.10.0:', type=('build', 'run'))
+    depends_on('py-attrs@17.4.0:', type=('build', 'run'))
+    depends_on('py-more-itertools@4.0.0:', type=('build', 'run'))
+    depends_on('py-pluggy@0.5:0.6', type=('build', 'run'))
+    depends_on('py-funcsigs', type=('build', 'run'), when='^python@:2')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-    # depends_on('py-mock', type='test')
-    # depends_on('py-requests', type='test')
+    depends_on('py-nose', type='test')
+    depends_on('py-mock', type='test')
+    depends_on('py-requests', type='test')

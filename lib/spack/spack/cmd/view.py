@@ -52,13 +52,14 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 '''
-
 import os
-import spack
+
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
-import llnl.util.tty as tty
+
 
 description = "produce a single-rooted directory view of packages"
 section = "environment"

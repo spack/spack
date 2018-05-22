@@ -44,8 +44,9 @@ def test_name_parsed_correctly():
     assert name_parsed_correctly(MyPackage('r-devtools',     []), 'devtools')
     assert name_parsed_correctly(MyPackage('py-numpy',       []), 'numpy')
     assert name_parsed_correctly(MyPackage('octave-splines', []), 'splines')
-    assert name_parsed_correctly(MyPackage('imagemagick',    []), 'ImageMagick')  # noqa
     assert name_parsed_correctly(MyPackage('th-data',        []), 'TH.data')
+    assert name_parsed_correctly(
+        MyPackage('imagemagick',    []), 'ImageMagick')
 
     # Expected False
     assert not name_parsed_correctly(MyPackage('',            []), 'hdf5')
@@ -53,7 +54,8 @@ def test_name_parsed_correctly():
     assert not name_parsed_correctly(MyPackage('yaml-cpp',    []), 'yamlcpp')
     assert not name_parsed_correctly(MyPackage('yamlcpp',     []), 'yaml-cpp')
     assert not name_parsed_correctly(MyPackage('r-py-parser', []), 'parser')
-    assert not name_parsed_correctly(MyPackage('oce',         []), 'oce-0.18.0')   # noqa
+    assert not name_parsed_correctly(
+        MyPackage('oce',         []), 'oce-0.18.0')
 
 
 def test_version_parsed_correctly():
@@ -70,7 +72,8 @@ def test_version_parsed_correctly():
     assert not version_parsed_correctly(MyPackage('', ['1.2.3']),  '1.2.4')
     assert not version_parsed_correctly(MyPackage('', ['3.4a']),   '3.4')
     assert not version_parsed_correctly(MyPackage('', ['3.4']),    '3.4b')
-    assert not version_parsed_correctly(MyPackage('', ['0.18.0']), 'oce-0.18.0')   # noqa
+    assert not version_parsed_correctly(
+        MyPackage('', ['0.18.0']), 'oce-0.18.0')
 
 
 def test_url_parse():
@@ -120,8 +123,10 @@ def test_url_summary():
     (total_urls, correct_names, correct_versions,
      name_count_dict, version_count_dict) = url_summary(None)
 
-    assert 0 < correct_names    <= sum(name_count_dict.values())    <= total_urls  # noqa
-    assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa
+    assert (0 < correct_names <=
+            sum(name_count_dict.values()) <= total_urls)
+    assert (0 < correct_versions <=
+            sum(version_count_dict.values()) <= total_urls)
 
     # make sure it agrees with the actual command.
     out = url('summary')

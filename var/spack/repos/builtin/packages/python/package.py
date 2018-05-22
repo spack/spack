@@ -32,11 +32,11 @@ import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from llnl.util.filesystem import force_remove
 
-import spack
-from spack import *
+import spack.store
+import spack.util.spack_json as sjson
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
-import spack.util.spack_json as sjson
+from spack import *
 
 
 class Python(AutotoolsPackage):
@@ -93,6 +93,10 @@ class Python(AutotoolsPackage):
         default=False,
         description='Enable expensive build-time optimizations, if available'
     )
+    # See https://legacy.python.org/dev/peps/pep-0394/
+    variant('pythoncmd', default=True,
+            description="Symlink 'python3' executable to 'python' "
+            "(not PEP 394 compliant)")
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -231,7 +235,7 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:'):
+        if spec.satisfies('@3:') and spec.satisfies('+pythoncmd'):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),

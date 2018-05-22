@@ -26,6 +26,7 @@ import pytest
 import os
 
 import spack.spec
+import spack.repo
 import spack.build_environment
 
 

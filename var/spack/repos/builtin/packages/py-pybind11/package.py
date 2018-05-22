@@ -39,6 +39,7 @@ class PyPybind11(CMakePackage):
 
     version('develop', branch='master',
             git='https://github.com/pybind/pybind11.git')
+    version('2.2.3', '55b637945bbf47d99d2c906bf0c13f49')
     version('2.2.2', 'fc174e1bbfe7ec069af7eea86ec37b5c')
     version('2.2.1', 'bab1d46bbc465af5af3a4129b12bfa3b')
     version('2.2.0', '978b26aea1c6bfc4f88518ef33771af2')
@@ -48,6 +49,11 @@ class PyPybind11(CMakePackage):
     depends_on('py-pytest', type=('build'))
 
     extends('python')
+
+    # compiler support
+    conflicts('%gcc@:4.7')
+    conflicts('%clang@:3.2')
+    conflicts('%intel@:16')
 
     def cmake_args(self):
         args = []
