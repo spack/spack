@@ -55,7 +55,7 @@ class Kokkos(Package):
     # Host architecture variant
     variant(
         'host_arch',
-        default='None',
+        default=None,
         values=('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
                 'Power7', 'Power8', 'Power9',
                 'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
@@ -65,7 +65,7 @@ class Kokkos(Package):
     # GPU architecture variant
     variant(
         'gpu_arch',
-        default='None',
+        default=None,
         values=gpu_values,
         description='Set the GPU architecture to use'
     )
