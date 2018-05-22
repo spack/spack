@@ -2236,15 +2236,10 @@ class Spec(object):
         # have been created by a previous execution of 'normalize'. Note that
         # if there are user-specified constraints they will not initially be
         # part of the DAG - they will be integrated into the DAG by this
-        # function.
+        # function via the 'user_spec_deps' parameter
         all_spec_deps = self.flat_dependencies(copy=False)
 
         if user_spec_deps:
-            # Constraints specified by the user are assumed to be supplied to
-            # this function with the 'user_spec_deps' attribute. User-specified
-            # dependencies are not initially part of the DAG in order to
-            # distinguish inferred dependency constraints from user-specified
-            # constraints.
             for name, spec in user_spec_deps.items():
                 if name not in all_spec_deps:
                     all_spec_deps[name] = spec
