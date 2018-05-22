@@ -103,6 +103,38 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
         assert ('z' not in spec)
 
 
+@pytest.mark.usefixtures('config')
+def test_conditional_dep_with_user_constraints():
+    default = ('build', 'link')
+
+    y = MockPackage('y', [], [])
+    x_on_y_conditions = {
+        y.name: {
+            'x@:2': 'y'
+        }
+    }
+    x = MockPackage('x', [y], [default], conditions=x_on_y_conditions)
+
+    mock_repo = MockPackageMultiRepo([x, y])
+    with spack.repo.swap(mock_repo):
+        spec = Spec('x@2 ^y@2')
+        spec.concretize()
+
+        assert ('y@2' in spec)
+
+    with spack.repo.swap(mock_repo):
+        spec = Spec('x')
+        spec.concretize()
+
+        assert ('y' not in spec)
+
+    with spack.repo.swap(mock_repo):
+        spec = Spec('x@2')
+        spec.concretize()
+
+        assert ('y@3' in spec)
+
+
 @pytest.mark.usefixtures('mutable_mock_packages')
 class TestSpecDag(object):
 
