@@ -52,8 +52,11 @@ class Dyninst(Package):
     # elf@0 is an abstaction for libelf
     # elf@1 is an abstaction for elfutils
     depends_on("elf@0", type='link', when='@:9.2.99')
+    # The sorting algorithm puts numbered releases as newer than alphabetic
+    # releases, but spack has special logic in place to ensure that
+    # develop is considered newer than all other releases.
+    # So, develop is included in the elf@1 line below.
     depends_on("elf@1", type='link', when='@9.3.0:')
-    depends_on("elf@1", type='link', when='@develop')
     depends_on("libdwarf", when='@:9.3.2')
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
@@ -81,7 +84,7 @@ class Dyninst(Package):
                     '-DLIBELF_INCLUDE_DIR=%s'   % join_path(
                         libelf.include, 'libelf'),
                     '-DLIBELF_LIBRARIES=%s'     % join_path(
-                        libelf.lib, 'libelf.so')]
+                        libelf.lib, "libelf." + dso_suffix)]
             if spec.satisfies('@:9.3.2'):
                 args.append('-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include)
                 args.append('-DLIBDWARF_LIBRARIES=%s'   % join_path(
