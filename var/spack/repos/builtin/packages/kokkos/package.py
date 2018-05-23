@@ -79,8 +79,8 @@ class Kokkos(Package):
     # conflicts on kokkos version and cuda enabled
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
-    conflicts('+cuda',when='@2.5.00:develop')
-    
+    conflicts('+cuda', when='@2.5.00:develop')
+
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
     depends_on('qthreads', when='+qthreads')
