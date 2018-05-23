@@ -73,9 +73,14 @@ class Kokkos(Package):
     # Check that we haven't specified a gpu architecture
     # without specifying CUDA
     for p in gpu_values:
-        conflicts('--arch={0}'.format(p), when='~cuda',
+        conflicts('gpu_arch={0}'.format(p), when='~cuda',
             msg='Must specify CUDA backend to use a GPU architecture.')
 
+    # conflicts on kokkos version and cuda enabled
+    # see kokkos issue #1296
+    # https://github.com/kokkos/kokkos/issues/1296
+    conflicts('+cuda',when='@2.5.00:develop')
+    
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
     depends_on('qthreads', when='+qthreads')
