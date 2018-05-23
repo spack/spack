@@ -61,6 +61,7 @@ class Scotch(Package):
     # Version-specific patches
     patch('nonthreaded-6.0.4.patch', when='@6.0.4')
     patch('esmumps-ldflags-6.0.4.patch', when='@6.0.4')
+    patch('metis-headers-6.0.4.patch', when='@6.0.4')
 
     # NOTE: In cross-compiling environment parallel build
     # produces weird linker errors.
