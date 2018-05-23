@@ -47,10 +47,10 @@ class Proj(AutotoolsPackage):
         name='proj-datumgrid',
         url='https://download.osgeo.org/proj/proj-datumgrid-1.7.tar.gz',
         md5='6799bd8ac411b8a78724e34850c206c4',
-        placement='share'
+        placement='nad'
     )
 
     def configure_args(self):
         return [
-            'PROJ_LIB={0}'.format(join_path(self.stage.source_path, 'share'))
+            'PROJ_LIB={0}'.format(join_path(self.stage.source_path, 'nad'))
         ]
