@@ -90,9 +90,6 @@ class Charm(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
-    variant("destination", description="Build charm++ inside DIR, by default the destination is <version>")
-    variant("suffix", description="Append DIR to the destination directory of the Charm++ build")
-
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
     depends_on("cuda", when="+cuda")
@@ -166,17 +163,9 @@ class Charm(Package):
         # here.
         options = [
             os.path.basename(self.compiler.cc),
-            os.path.basename(self.compiler.fc)
+            os.path.basename(self.compiler.fc),
+            "--destination=%s" % prefix,
         ]
-
-        suffix = spec.variants["suffix"].value
-        if suffix != "":
-            options.append("--suffix={0}".format(suffix))
-        destination = spec.variants["destination"].value
-        if destination != "":
-            options.append("--destination={0}".format(destination))
-        else:
-            options.append("--destination={0}".format(prefix))
 
         if 'backend=mpi' in spec:
             # in intelmpi <prefix>/include and <prefix>/lib fails so --basedir
