@@ -164,6 +164,7 @@ class Charm(Package):
         options = [
             os.path.basename(self.compiler.cc),
             os.path.basename(self.compiler.fc),
+            "-j%d" % make_jobs,
             "--destination=%s" % prefix,
         ]
 
