@@ -39,6 +39,7 @@ class Charm(Package):
     homepage = "http://charmplusplus.org"
     url      = "http://charm.cs.illinois.edu/distrib/charm-6.7.1.tar.gz"
 
+    version('6.8.2', 'a887a34b638a5b2f7fcf7ff3c262496d')    
     version("6.7.1", "a8e20cf85e9c8721158f5bbd0ade48d9")
     version("6.7.0", "35a39a7975f1954a7db2d76736158231")
     version("6.6.1", "9554230f741e2599deaaac4d9d93d7ab")
@@ -47,7 +48,7 @@ class Charm(Package):
 
     # Support OpenMPI; see
     # <https://charm.cs.illinois.edu/redmine/issues/1206>
-    patch("mpi.patch")
+    patch("mpi.patch", when='^openmpi')
     # Ignore compiler warnings while configuring
     patch("strictpass.patch")
 
