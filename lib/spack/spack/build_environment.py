@@ -250,6 +250,8 @@ def set_build_environment_variables(pkg, env, dirty):
             include_dirs.extend(query.headers.directories)
         except spack.spec.NoHeadersError:
             tty.debug("No headers found for {0}".format(dep.name))
+        if os.path.isdir(pkg.prefix.include):
+            include_dirs.append(pkg.prefix.include)
 
     # The top-level package is always RPATHed. It hasn't been installed yet
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
