@@ -116,6 +116,7 @@ from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack.architecture
 import spack.compilers as compilers
+import spack.compiler
 import spack.error
 import spack.parse
 import spack.repo
