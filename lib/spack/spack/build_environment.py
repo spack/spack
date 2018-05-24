@@ -875,8 +875,8 @@ class ChildError(InstallError):
         else:
             # The error happened in in the Python code, so try to show
             # some context from the Package itself.
-            out.write('%s: %s\n\n' % (self.name, self.message))
             if self.context:
+                out.write('\n')
                 out.write('\n'.join(self.context))
                 out.write('\n')
 
