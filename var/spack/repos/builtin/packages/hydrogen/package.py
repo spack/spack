@@ -25,7 +25,6 @@
 import os
 import sys
 from spack import *
-from spack.spec import UnsupportedCompilerError
 
 
 class Hydrogen(CMakePackage):
