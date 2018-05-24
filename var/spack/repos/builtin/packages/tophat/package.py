@@ -41,6 +41,8 @@ class Tophat(AutotoolsPackage):
     depends_on('boost@1.47:')
     depends_on('bowtie2', type='run')
 
+    patch('src-Makefile.am.patch')
+
     parallel = False
 
     def configure_args(self):
