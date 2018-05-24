@@ -1069,8 +1069,8 @@ target already exists as a directory:
 * If placement ends with a ``/`` it is assumed that the resource should keep
   its name and be placed in the target directory. 
 * If placement does not end with a ``/``, it is assumed that the resource
-  should be renamed. One exception is if the target already exists as an
-  empty directory. In this case if the resource is a single file, it is placed
+  should be renamed. One exception is if the target already exists as a
+  directory. In this case if the resource is a single file, it is placed
   in the directory; if the resource is a directory (or an exploding tarball)
   then all files in the resource are placed in the target directory.
 

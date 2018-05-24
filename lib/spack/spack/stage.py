@@ -576,16 +576,19 @@ class ResourceStage(Stage):
                 else:
                     raise
 
+            def warn_existing_file(src, dst):
+                tty.warn('File {1} already exists, '
+                         'not moving {0}'.format(src, dst))
+
             if not os.path.exists(destination_path):
                 tty.info('Moving resource stage\n\tsource : '
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path
                          ))
                 shutil.move(source_path, destination_path)
-            elif (os.path.isdir(destination_path) and
-                  not os.listdir(destination_path)):
-                tty.info('{0} exists as an empty directory, moving all files '
-                         'from {0} to {1}'.format(
+            elif os.path.isdir(destination_path):
+                tty.info('{0} exists as a directory, moving all files '
+                         'from {1} to {0}'.format(
                              destination_path, source_path))
                 if os.path.isfile(source_path):
                     src_paths = [source_path]
@@ -595,11 +598,14 @@ class ResourceStage(Stage):
                                  for x in src_files]
 
                 for src_path in src_paths:
-                    shutil.move(src_path, destination_path)
+                    dst_file_path = os.path.join(
+                        destination_path, os.path.basename(src_path))
+                    if os.path.exists(dst_file_path):
+                        warn_existing_file(src_path, dst_file_path)
+                    else:
+                        shutil.move(src_path, dst_file_path)
             else:
-                tty.warn('{0} exists as a file or nonempty directory, '
-                         'not moving {1}'.format(
-                             destination_path, source_path))
+                warn_existing_file(source_path, destination_path)
 
 
 @pattern.composite(method_list=[

@@ -324,7 +324,7 @@ class TestStage(object):
         root_stage.setup_source()
         os.mkdir(os.path.join(root_stage.source_path, 'resource-dir'))
         preexisting_file = os.path.join(
-            root_stage.source_path, 'resource-dir/foo')
+            root_stage.source_path, 'resource-dir/non-conflicting-file')
         with open(preexisting_file, 'w'):
             pass
 
@@ -332,7 +332,7 @@ class TestStage(object):
         for fname in mock_expand_resource.files:
             file_path = os.path.join(
                 root_stage.source_path, 'resource-dir', fname)
-            assert not os.path.exists(file_path)
+            assert os.path.exists(file_path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_archive):
         with Stage(mock_archive.url) as stage:
