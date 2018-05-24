@@ -779,19 +779,19 @@ def get_package_context(traceback, context=3):
     # point out the location in the install method where we failed.
     lines = []
     lines.append("%s:%d, in %s:" % (
-        inspect.getfile(frame.f_code), frame.f_lineno, frame.f_code.co_name
+        inspect.getfile(frame.f_code), frame.f_lineno - 1, frame.f_code.co_name
     ))
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    fl = frame.f_lineno - start
+    fl = frame.f_lineno - start - 1
     start_ctx = max(0, fl - context)
     sourcelines = sourcelines[start_ctx:fl + context + 1]
     for i, line in enumerate(sourcelines):
         is_error = start_ctx + i == fl
         mark = ">> " if is_error else "   "
-        marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
+        marked = "  %s%-6d%s" % (mark, start + start_ctx + i, line.rstrip())
         if is_error:
             marked = colorize('@R{%s}' % marked)
         lines.append(marked)
