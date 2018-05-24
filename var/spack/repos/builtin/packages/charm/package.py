@@ -39,6 +39,8 @@ class Charm(Package):
     homepage = "http://charmplusplus.org"
     url      = "http://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
 
+    version("develop", git="https://github.com/UIUC-PPL/charm")
+
     version("6.8.2", "a887a34b638a5b2f7fcf7ff3c262496d")
     version("6.8.1", "3e95ffa760909154ef16b643c9bb8193")
     version("6.8.0", "54df066a5aefb0bbc1a263c2383c2bba")
@@ -54,7 +56,7 @@ class Charm(Package):
     patch("mpi.patch", when="@:6.7.1")
 
     # Ignore compiler warnings while configuring
-    patch("strictpass.patch")
+    patch("strictpass.patch", when="@:6.8.2")
 
     # Build targets
     # "target" is reserved, so we have to use something else.
@@ -93,6 +95,10 @@ class Charm(Package):
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
     depends_on("cuda", when="+cuda")
+
+    # Git versions of Charm++ require automake and autoconf
+    depends_on("automake", when="@develop")
+    depends_on("autoconf", when="@develop")
 
     conflicts("~tracing", "+papi")
 
