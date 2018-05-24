@@ -107,14 +107,8 @@ class Hydrogen(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
-    @when('@:0.84' or '@0.99:')
     def cmake_args(self):
         spec = self.spec
-
-        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
-            raise UnsupportedCompilerError(
-                "Elemental {0} has a known bug with compiler: {1} {2}".format(
-                    spec.version, spec.compiler.name, spec.compiler.version))
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
