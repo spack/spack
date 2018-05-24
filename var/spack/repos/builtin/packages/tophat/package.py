@@ -38,7 +38,7 @@ class Tophat(AutotoolsPackage):
     # 2.1.1 only builds with automake@1.15.1.  There's a patch here:
     # https://github.com/spack/spack/pull/8244, which was incorporated
     # upstream in 2.1.2, which is known to build with 1.16.1 and 1.15.1.
-    depends_on('automake',        when='@2.1.2:', type='build')
+    depends_on('automake',                        type='build')
     depends_on('automake@1.15.1', when='@:2.1.1', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
