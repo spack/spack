@@ -40,7 +40,6 @@ import functools
 import glob
 import hashlib
 import inspect
-import itertools
 import os
 import re
 import shutil
