@@ -42,6 +42,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
     version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
     version('3.8.4', 'd7767fe2919536aa393eb22841899306')
     version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
@@ -117,7 +118,7 @@ class Petsc(Package):
     depends_on('python@2.6:2.8', type='build')
 
     # Other dependencies
-    depends_on('boost', when='@:3.5+boost')
+    depends_on('boost', when='+boost')
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
     depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
     depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
