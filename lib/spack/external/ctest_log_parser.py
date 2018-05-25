@@ -116,11 +116,8 @@ _error_matches = [
             'Error:', 'error', 'undefined reference', 'multiply defined')),
         "([^:]+): error[ \\t]*[0-9]+[ \\t]*:",
         "([^:]+): (Error:|error|undefined reference|multiply defined)",
-        "([^ :]+) : (error|fatal error|catastrophic error)",
+        "([^ :]+) ?: (error|fatal error|catastrophic error)",
         "([^:]+)\\(([^\\)]+)\\) ?: (error|fatal error|catastrophic error)"),
-    prefilter(
-        lambda s: s.count(':') >= 2,
-        "[^ :]+:[0-9]+: [^ \\t]"),
     "^[Bb]us [Ee]rror",
     "^[Ss]egmentation [Vv]iolation",
     "^[Ss]egmentation [Ff]ault",
