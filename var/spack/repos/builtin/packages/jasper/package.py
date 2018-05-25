@@ -51,9 +51,6 @@ class Jasper(Package):
     # See: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=469786
     patch('fix_alpha_channel_assert_fail.patch', when='@1.900.1')
 
-    # Needed by GDAL: https://trac.osgeo.org/gdal/wiki/JasPer
-    patch('uuid.patch', when='@1.900.1')
-
     def cmake_args(self):
         spec = self.spec
         args = std_cmake_args
