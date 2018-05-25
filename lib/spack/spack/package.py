@@ -1098,6 +1098,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Package can add its own patch function.
         has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
 
+        # Get the patches from the spec (this is a shortcut for the MV-variant)
+        patches = self.spec.patches
+
+        # If there are no patches, note it.
+        if not patches and not has_patch_fun:
+            tty.msg("No patches needed for %s" % self.name)
+            return
+
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
@@ -1119,17 +1127,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg("No patches needed for %s" % self.name)
             return
 
-        # Get the patches from the spec (this is a shortcut for the MV-variant)
-        file_patches = self.spec.patches
-
-        # If there are no patches, note it.
-        if not file_patches and not has_patch_fun:
-            tty.msg("No patches needed for %s" % self.name)
-            return
-
         # Apply all the patches for specs that match this one
         patched = False
-        for patch in file_patches:
+        for patch in patches:
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
