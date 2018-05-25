@@ -59,8 +59,8 @@ class NetlibLapack(Package):
     variant('xblas', default=False,
             description='Builds extended precision routines using XBLAS')
 
-    patch('ibm-xl.patch', when='@3.7: %xl')
-    patch('ibm-xl.patch', when='@3.7: %xl_r')
+    patch('ibm-xl.patch', when='@3.7:')
+    patch('cblas-cmake-fix.patch', when='@3.7:')
 
     # virtual dependency
     provides('blas', when='~external-blas')
@@ -133,6 +133,7 @@ class NetlibLapack(Package):
 
     def install_one(self, spec, prefix, shared):
         cmake_args = [
+            '--trace-expand',
             '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
             '-DCMAKE_BUILD_TYPE:STRING=%s' % (
                 'Debug' if '+debug' in spec else 'Release'),
@@ -149,13 +150,16 @@ class NetlibLapack(Package):
             cmake_args.extend(['-DCBLAS=OFF'])
             cmake_args.extend(['-DLAPACKE:BOOL=OFF'])
 
-        if self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
-            # use F77 compiler if IBM XL
-            cmake_args.extend([
-                '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
-                '-DCMAKE_Fortran_FLAGS=%s' % (
-                    ' '.join(self.spec.compiler_flags['fflags'])),
-            ])
+        if spec.satisfies('arch=linux-rhel7-ppc64le'):
+            if (self.compiler.name == 'xl' or
+                self.compiler.name == 'xl_r' or
+                self.compiler.name == 'clang'):
+                # use F77 compiler if IBM XL or clang
+                cmake_args.extend([
+                    '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
+                    '-DCMAKE_Fortran_FLAGS=%s' % (
+                        ' '.join(self.spec.compiler_flags['fflags'])),
+                ])
 
         # deprecated routines are commonly needed by, for example, suitesparse
         # Note that OpenBLAS spack is built with deprecated routines
