@@ -38,12 +38,15 @@ class Jasper(CMakePackage):
     variant('opengl', default=False, description='Enable the use of the OpenGL and GLUT libraries')
     variant('shared', default=True,  description='Enable the building of shared libraries')
 
+    depends_on('cmake@2.8.11:', type='build')
     depends_on('jpeg', when='+jpeg')
     depends_on('gl', when='+opengl')
 
     def cmake_args(self):
         spec = self.spec
-        args = []
+        args = [
+            '-DJAS_ENABLE_DOC=false'
+        ]
 
         if '+jpeg' in spec:
             args.append('-DJAS_ENABLE_LIBJPEG=true')
