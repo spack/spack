@@ -414,6 +414,8 @@ def relocate_package(workdir, allow_root):
     buildinfo = read_buildinfo_file(workdir)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
+    if new_path == old_path:
+        return
     rel = buildinfo.get('relative_rpaths', False)
     if rel:
         return
