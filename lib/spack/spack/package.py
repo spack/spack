@@ -1120,7 +1120,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return
 
         # Get the patches from the spec (this is a shortcut for the MV-variant)
-        file_patches = self.patches_to_apply()
+        file_patches = self.spec.patches
 
         # If there are no patches, note it.
         if not file_patches and not has_patch_fun:
@@ -1173,16 +1173,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             touch(no_patches_file)
 
-    def patches_to_apply(self):
-        """If the patch set does not change between two invocations of spack,
-           then all patches in the set will be applied in the same order"""
-        patchesToApply = itertools.chain.from_iterable(
-            patch_list
-            for spec, patch_list in self.patches.items()
-            if self.spec.satisfies(spec))
-        patchesToApply = list(patchesToApply) + list(self.spec.patches)
-        return patchesToApply
-
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
         package. This includes the contents of all applied patches and the
@@ -1200,7 +1190,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             hashContent.append(source_id.encode('utf-8'))
         hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                           for p in self.patches_to_apply())
+                           for p in self.spec.patches)
         hashContent.append(package_hash(self.spec, content))
         return base64.b32encode(
             hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()

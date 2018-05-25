@@ -71,6 +71,8 @@ class TestPackage(object):
     def test_content_hash_all_same_but_patch_contents(self):
         spec1 = Spec("hash-test1@1.1")
         spec2 = Spec("hash-test2@1.1")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)
