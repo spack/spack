@@ -33,12 +33,10 @@ class Camellia(CMakePackage):
     homepage = "https://bitbucket.org/nateroberts/Camellia"
     url      = "https://bitbucket.org/nateroberts/camellia.git"
 
-    maintainers = ['nvrober-sandia']
-    variant('moab', default=True,
-            description='MOAB support for reading standard mesh formats')
+    maintainers = ['CamelliaDPG']
+    variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
 
-    version('master',
-            git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
+    version('master', git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
 
     depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
     depends_on('moab@:4', when='+moab')
@@ -47,7 +45,8 @@ class Camellia(CMakePackage):
         spec = self.spec
         options = [
             '-DTrilinos_PATH:PATH=%s' % spec['trilinos'].prefix,
-            '-DMPI_DIR:PATH=%s' % spec['mpi'].prefix
+            '-DMPI_DIR:PATH=%s' % spec['mpi'].prefix,
+            '-DBUILD_FOR_INSTALL:BOOL=ON'
         ]
 
         if '+moab' in spec:
