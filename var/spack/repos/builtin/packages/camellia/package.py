@@ -34,12 +34,13 @@ class Camellia(CMakePackage):
     url      = "https://bitbucket.org/nateroberts/camellia.git"
 
     maintainers = ['CamelliaDPG']
-    variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
-
     version('master', git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
+
+    variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
 
     depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
     depends_on('moab@:4', when='+moab')
+    depends_on('mpi')
 
     def cmake_args(self):
         spec = self.spec
@@ -54,5 +55,7 @@ class Camellia(CMakePackage):
                 '-DENABLE_MOAB:BOOL=ON',
                 '-DMOAB_PATH:PATH=%s' % spec['moab'].prefix
             ])
+        else:
+            options.append('-DENABLE_MOAB:BOOL=OFF')
 
         return options
