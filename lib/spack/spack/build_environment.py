@@ -62,7 +62,7 @@ from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
 import spack.build_systems.cmake
@@ -793,7 +793,7 @@ def get_package_context(traceback, context=3):
         mark = ">> " if is_error else "   "
         marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
         if is_error:
-            marked = colorize('@R{%s}' % marked)
+            marked = colorize('@R{%s}' % cescape(marked))
         lines.append(marked)
 
     return lines
