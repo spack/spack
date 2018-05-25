@@ -96,10 +96,10 @@ class Libdwarf(Package):
                 libdwarf_name = 'libdwarf.{0}'.format(dso_suffix)
                 libdwarf1_name = 'libdwarf.{0}'.format(dso_suffix) + ".1"
                 install('libdwarf.a',  prefix.lib)
-                install('libdwarf.so', join_path(prefix.lib, libdwarf_name))
-                if spec.satisfies('@20160507:99999999'):
-                    os.symlink(os.path.join(prefix.lib, libdwarf_name),
-                               os.path.join(prefix.lib, libdwarf1_name))
+                install('libdwarf.so', join_path(prefix.lib, libdwarf1_name))
+                if spec.satisfies('@20160507:'):
+                    with working_dir(prefix.lib):
+                        os.symlink(libdwarf1_name, libdwarf_name)
                 install('libdwarf.h',  prefix.include)
                 install('dwarf.h',     prefix.include)
 
