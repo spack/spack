@@ -124,7 +124,7 @@ _error_matches = [
     ":.*[Pp]ermission [Dd]enied",
     "^Error ([0-9]+):",
     "^Fatal",
-    "^Error: ",
+    "^[Ee]rror: ",
     "^Error ",
     "[0-9] ERROR: ",
     "^\"[^\"]+\", line [0-9]+: [^Ww]",
