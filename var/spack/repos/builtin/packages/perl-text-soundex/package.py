@@ -35,4 +35,3 @@ class PerlTextSoundex(PerlPackage):
     url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Text-Soundex-3.05.tar.gz"
 
     version('3.05', 'cb40ded7a5d27aa3a411d274d6ec18ae')
-
