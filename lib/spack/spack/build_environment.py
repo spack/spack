@@ -907,16 +907,25 @@ class ChildError(InstallError):
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
-            # the build log with errors highlighted.
+            # the build log with errors or warnings highlighted.
             if self.build_log and os.path.exists(self.build_log):
                 errors, warnings = parse_log_events(self.build_log)
                 nerr = len(errors)
+                nwar = len(warnings)
                 if nerr > 0:
+                    # If errors are found, only display errors
                     if nerr == 1:
                         out.write("\n1 error found in build log:\n")
                     else:
                         out.write("\n%d errors found in build log:\n" % nerr)
                     out.write(make_log_context(errors))
+                elif nwar > 0:
+                    # If no errors are found but warnings are, display warnings
+                    if nwar == 1:
+                        out.write("\n1 warning found in build log:\n")
+                    else:
+                        out.write("\n%d warnings found in build log:\n" % nwar)
+                    out.write(make_log_context(warnings))
 
         else:
             # The error happened in in the Python code, so try to show
