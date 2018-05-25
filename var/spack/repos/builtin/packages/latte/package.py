@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,8 +32,9 @@ class Latte(CMakePackage):
     homepage = "https://github.com/lanl/latte"
     url      = "https://github.com/lanl/latte/tarball/v1.0"
 
-    version('develop', git='https://github.com/lanl/latte', branch='master')
+    version('1.1.1', 'ab11867ba6235189681cf6e50a50cc50')
     version('1.0.1', 'd0b99edbcf7a19abe0a68a192d6f6234')
+    version('develop', git='https://github.com/lanl/latte', branch='master')
 
     variant('mpi', default=True,
             description='Build with mpi')

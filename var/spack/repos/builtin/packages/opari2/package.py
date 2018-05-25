@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ class Opari2(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/opari2/opari2-1.1.2.tar.gz"
 
+    version('2.0.3', 'f34674718ffdb098a48732a1eb9c1aa2')
     version('2.0.1', '74af78f1f27b8caaa4271e0b97fb0fba')
     version('2.0',   '72350dbdb6139f2e68a5055a4f0ba16c')
     version('1.1.4', '245d3d11147a06de77909b0805f530c0')

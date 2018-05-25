@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -51,22 +51,46 @@ class Cbtf(CMakePackage):
 
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
+    url = "https://github.com/OpenSpeedShop/cbtf.git"
 
     # Use when the git repository is available
-    version('1.8', branch='master',
+    version('1.9.1.1', branch='1.9.1.1',
             git='https://github.com/OpenSpeedShop/cbtf.git')
+
+    version('1.9.1.0', branch='1.9.1.0',
+            git='https://github.com/OpenSpeedShop/cbtf.git')
+
+    version('develop', branch='master',
+            git='https://github.com/OpenSpeedShop/cbtf.git')
+
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
+
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
-    depends_on("cmake@3.0.2:", type='build')
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("xerces-c@3.1.1:")
-    # Work around for spack libxml2 package bug, take off python when fixed
-    depends_on("libxml2+python")
+    depends_on("cmake@3.11.1", when='@1.9.1.0:', type='build')
+    depends_on("cmake@3.0.2:", when='@develop', type='build')
+
+    depends_on("boost@1.66.0", when='@1.9.1.0:')
+    depends_on("boost@1.50.0:", when='@develop')
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:')
+
+    # For Xerces-C
+    depends_on("xerces-c@3.1.1:", when='@develop')
+    depends_on("xerces-c@3.1.4", when='@1.9.1.0:')
+
+    # For XML2
+    depends_on("libxml2", when='@develop')
+    depends_on("libxml2@2.9.4", when='@1.9.1.0:')
 
     parallel = False
 
@@ -83,7 +107,8 @@ class Cbtf(CMakePackage):
 
         compile_flags = "-O2 -g"
 
-        if '+runtime' in spec:
+        if spec.satisfies('+runtime'):
+
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME

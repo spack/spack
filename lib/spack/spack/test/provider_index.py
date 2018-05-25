@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,12 +39,12 @@ Tests assume that mock packages provide this::
 """
 from six import StringIO
 
-import spack
+import spack.repo
 from spack.provider_index import ProviderIndex
 from spack.spec import Spec
 
 
-def test_yaml_round_trip(builtin_mock):
+def test_yaml_round_trip(mock_packages):
     p = ProviderIndex(spack.repo.all_package_names())
 
     ostream = StringIO()
@@ -56,7 +56,7 @@ def test_yaml_round_trip(builtin_mock):
     assert p == q
 
 
-def test_providers_for_simple(builtin_mock):
+def test_providers_for_simple(mock_packages):
     p = ProviderIndex(spack.repo.all_package_names())
 
     blas_providers = p.providers_for('blas')
@@ -69,7 +69,7 @@ def test_providers_for_simple(builtin_mock):
     assert Spec('openblas-with-lapack') in lapack_providers
 
 
-def test_mpi_providers(builtin_mock):
+def test_mpi_providers(mock_packages):
     p = ProviderIndex(spack.repo.all_package_names())
 
     mpi_2_providers = p.providers_for('mpi@2')
@@ -82,13 +82,13 @@ def test_mpi_providers(builtin_mock):
     assert Spec('zmpi') in mpi_3_providers
 
 
-def test_equal(builtin_mock):
+def test_equal(mock_packages):
     p = ProviderIndex(spack.repo.all_package_names())
     q = ProviderIndex(spack.repo.all_package_names())
     assert p == q
 
 
-def test_copy(builtin_mock):
+def test_copy(mock_packages):
     p = ProviderIndex(spack.repo.all_package_names())
     q = p.copy()
     assert p == q

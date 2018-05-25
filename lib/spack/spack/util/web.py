@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -49,8 +49,12 @@ except ImportError:
 
 import llnl.util.tty as tty
 
-import spack
+import spack.config
+import spack.cmd
+import spack.url
+import spack.stage
 import spack.error
+import spack.util.crypto
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 
@@ -111,18 +115,19 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
     try:
         context = None
-        if sys.version_info < (2, 7, 9) or \
-                ((3,) < sys.version_info < (3, 4, 3)):
-            if not spack.insecure:
+        verify_ssl = spack.config.get('config:verify_ssl')
+        pyver = sys.version_info
+        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+            if verify_ssl:
                 tty.warn("Spack will not check SSL certificates. You need to "
                          "update your Python to enable certificate "
                          "verification.")
-        else:
+        elif verify_ssl:
             # We explicitly create default context to avoid error described in
             # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl._create_unverified_context() \
-                if spack.insecure \
-                else ssl.create_default_context()
+            context = ssl.create_default_context()
+        else:
+            context = ssl._create_unverified_context()
 
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -196,7 +201,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
     except URLError as e:
         tty.debug(e)
 
-        if isinstance(e.reason, ssl.SSLError):
+        if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
             tty.warn("Spack was unable to fetch url list due to a certificate "
                      "verification problem. You can try running spack -k, "
                      "which will not check SSL certificates. Use this at your "
@@ -285,9 +290,9 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     pages = {}
     links = set()
     for lurl in list_urls:
-        p, l = spider(lurl, depth=list_depth)
-        pages.update(p)
-        links.update(l)
+        pg, lnk = spider(lurl, depth=list_depth)
+        pages.update(pg)
+        links.update(lnk)
 
     # Scrape them for archive URLs
     regexes = []

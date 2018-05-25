@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,8 +34,14 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2018.2.199', 'fd31b656a8eb859c89495b9cc41230b4',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12725/l_mkl_2018.2.199.tgz")
+    version('2018.1.163', 'f1f7b6ddd7eb57dfe39bd4643446dc1c',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_mkl_2018.1.163.tgz")
     version('2018.0.128', '0fa23779816a0f2ee23a396fc1af9978',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12070/l_mkl_2018.0.128.tgz")
+    version('2017.4.239', '3066272dd0ad3da7961b3d782e1fab3b',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12147/l_mkl_2017.4.239.tgz")
     version('2017.3.196', '4a2eb4bee789391d9c07d7c348a80702',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11544/l_mkl_2017.3.196.tgz")
     version('2017.2.174', 'ef39a12dcbffe5f4a0ef141b8759208c',
@@ -119,7 +125,7 @@ class IntelMkl(IntelPackage):
             mkl_root = prefix.mkl.lib
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
@@ -177,6 +183,18 @@ class IntelMkl(IntelPackage):
         )
 
         return libs
+
+    @property
+    def headers(self):
+        prefix = self.spec.prefix
+        if sys.platform != 'darwin':
+            include_dir = prefix.compilers_and_libraries.linux.mkl.include
+        else:
+            include_dir = prefix.include
+
+        cblas_h = join_path(include_dir, 'mkl_cblas.h')
+        lapacke_h = join_path(include_dir, 'mkl_lapacke.h')
+        return HeaderList([cblas_h, lapacke_h])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package

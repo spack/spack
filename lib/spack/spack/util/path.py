@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,12 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Utilities for managing paths in Spack.
+
+TODO: this is really part of spack.config. Consolidate it.
 """
 import os
 import re
-import spack
 import getpass
 import tempfile
+
+import spack.paths
+
 
 __all__ = [
     'substitute_config_variables',
@@ -36,7 +40,7 @@ __all__ = [
 
 # Substitutions to perform
 replacements = {
-    'spack': spack.prefix,
+    'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
 }

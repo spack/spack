@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,22 +24,24 @@
 ##############################################################################
 import re
 
+import pytest
+
 from llnl.util.tty.color import color_when
 
-import spack
+import spack.store
 from spack.main import SpackCommand
 
 dependents = SpackCommand('dependents')
 
 
-def test_immediate_dependents(builtin_mock):
+def test_immediate_dependents(mock_packages):
     out = dependents('libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(['dyninst', 'libdwarf',
                           'patch-a-dependency', 'patch-several-dependencies'])
 
 
-def test_transitive_dependents(builtin_mock):
+def test_transitive_dependents(mock_packages):
     out = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(
@@ -48,7 +50,8 @@ def test_transitive_dependents(builtin_mock):
          'patch-a-dependency', 'patch-several-dependencies'])
 
 
-def test_immediate_installed_dependents(builtin_mock, database):
+@pytest.mark.db
+def test_immediate_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents('--installed', 'libelf')
 
@@ -64,7 +67,8 @@ def test_immediate_installed_dependents(builtin_mock, database):
     assert expected == hashes
 
 
-def test_transitive_installed_dependents(builtin_mock, database):
+@pytest.mark.db
+def test_transitive_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents('--installed', '--transitive', 'fake')
 

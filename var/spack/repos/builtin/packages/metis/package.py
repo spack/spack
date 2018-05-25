@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,11 +45,24 @@ class Metis(Package):
     version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
-    variant('debug', default=False, description='Builds the library in debug mode.')
-    variant('gdb', default=False, description='Enables gdb support.')
-
+    variant('gdb', default=False, description='Enables gdb support (version 5+).')
     variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
     variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
+
+    # For Metis version 5:, the build system is CMake, provide the
+    # `build_type` variant.
+    variant('build_type', default='Release',
+            description='The build type for the installation (only Debug or'
+            ' Release allowed for version 4).',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    # Prior to version 5, the (non-cmake) build system only knows about
+    # 'build_type=Debug|Release'.
+    conflicts('@:4.999', when='build_type=RelWithDebInfo')
+    conflicts('@:4.999', when='build_type=MinSizeRel')
+    conflicts('@:4.999', when='+gdb')
+    conflicts('@:4.999', when='+int64')
+    conflicts('@:4.999', when='+real64')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
 
@@ -87,12 +100,10 @@ class Metis(Package):
     @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
-        if any('+{0}'.format(v) in spec for v in ['gdb', 'int64', 'real64']):
-            raise InstallError('METIS@:4 does not support the following '
-                               'variants: gdb, int64, real64.')
-
-        options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
-        if '+debug' in spec:
+        options = []
+        if '+shared' in spec:
+            options.append('COPTIONS={0}'.format(self.compiler.pic_flag))
+        if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
         make(*options)
 
@@ -135,8 +146,8 @@ class Metis(Package):
 
         # Set up and run tests on installation
         ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
-                 self.compiler.cc_rpath_arg +
-                 '%s' % (prefix.lib if '+shared' in spec else ''),
+                 (self.compiler.cc_rpath_arg + prefix.lib
+                  if '+shared' in spec else ''),
                  join_path('Programs', 'io.o'), join_path('Test', 'mtest.c'),
                  '-o', '%s/mtest' % prefix.bin, '-lmetis', '-lm')
 
@@ -185,6 +196,11 @@ class Metis(Package):
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
+        # Normally this is available via the 'CMakePackage' object, but metis
+        # IS-A 'Package' (not a 'CMakePackage') to support non-cmake metis@:5.
+        build_type = spec.variants['build_type'].value
+        options.extend(['-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type)])
+
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
         else:
@@ -196,9 +212,6 @@ class Metis(Package):
                     rpath_options.append(o)
             for o in rpath_options:
                 options.remove(o)
-        if '+debug' in spec:
-            options.extend(['-DDEBUG:BOOL=ON',
-                            '-DCMAKE_BUILD_TYPE:STRING=Debug'])
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 

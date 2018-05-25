@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,12 +46,25 @@ class AdolC(AutotoolsPackage):
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
     variant('examples', default=True,  description='Install examples')
+    variant('boost',    default=False, description='Enable boost')
 
     # Build dependencies
     depends_on('automake', type='build', when='@develop')
     depends_on('autoconf', type='build', when='@develop')
     depends_on('libtool',  type='build', when='@develop')
     depends_on('m4',       type='build', when='@develop')
+
+    # Link dependencies
+    depends_on('boost+system', when='+boost')
+
+    # FIXME: add
+    #  --with-colpack=DIR      path to the colpack library and headers
+    #                       [default=system libraries]
+    #  --with-mpi-root=MPIROOT absolute path to the MPI root directory
+    #  --with-mpicc=MPICC      name of the MPI C++ compiler (default mpicc)
+    #  --with-mpicxx=MPICXX    name of the MPI C++ compiler (default mpicxx)
+    #  --with-ampi=AMPI_DIR    full path to the installation of adjoinable MPI
+    #                           (AMPI)
 
     patch('openmp_exam_261.patch', when='@2.6.1')
 
@@ -60,25 +73,34 @@ class AdolC(AutotoolsPackage):
 
         configure_args = []
 
+        if '+boost' in spec:
+            configure_args.append(
+                '--with-boost={0}'.format(spec['boost'].prefix)
+            )
+        else:
+            configure_args.append(
+                '--with-boost=no'
+            )
+
         if '+advanced_branching' in spec:
-            configure_args.extend([
+            configure_args.append(
                 '--enable-advanced-branching'
-            ])
+            )
 
         if '+atrig_erf' in spec:
-            configure_args.extend([
+            configure_args.append(
                 '--enable-atrig-erf'
-            ])
+            )
 
         if '+openmp' in spec:
-            configure_args.extend([
+            configure_args.append(
                 '--with-openmp-flag={0}'.format(self.compiler.openmp_flag)
-            ])
+            )
 
         if '+sparse' in spec:
-            configure_args.extend([
+            configure_args.append(
                 '--enable-sparse'
-            ])
+            )
 
         # We can simply use the bundled examples to check
         # whether Adol-C works as expected
@@ -88,9 +110,9 @@ class AdolC(AutotoolsPackage):
                 '--enable-addexa'  # Additional examples
             ])
             if '+openmp' in spec:
-                configure_args.extend([
+                configure_args.append(
                     '--enable-parexa'  # Parallel examples
-                ])
+                )
 
         return configure_args
 

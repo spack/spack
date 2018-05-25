@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,8 +24,12 @@
 ##############################################################################
 import argparse
 
-import spack
+import llnl.util.tty as tty
+
 import spack.cmd
+import spack.config
+import spack.repo
+import spack.cmd.common.arguments as arguments
 
 description = "fetch archives for packages"
 section = "build"
@@ -33,12 +37,10 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="do not check packages against checksum")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-m', '--missing', action='store_true',
-        help="also fetch all missing dependencies")
+        help="fetch only missing (not yet installed) dependencies")
     subparser.add_argument(
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
@@ -52,15 +54,22 @@ def fetch(parser, args):
         tty.die("fetch requires at least one package argument")
 
     if args.no_checksum:
-        spack.do_checksum = False
+        spack.config.set('config:checksum', False, scope='command_line')
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse(deptype_query=all):
+            for s in spec.traverse():
                 package = spack.repo.get(s)
+
+                # Skip already-installed packages with --missing
                 if args.missing and package.installed:
                     continue
+
+                # Do not attempt to fetch externals (they're local)
+                if package.spec.external:
+                    continue
+
                 package.do_fetch()
 
         package = spack.repo.get(spec)

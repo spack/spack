@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -61,15 +61,16 @@ Note that ``graph_ascii`` assumes a single spec while ``graph_dot``
 can take a number of specs as input.
 
 """
+import sys
 
-from heapq import *
+from heapq import heapify, heappop, heappush
 from six import iteritems
 
-from llnl.util.lang import *
-from llnl.util.tty.color import *
+from llnl.util.tty.color import ColorStream
 
-from spack.spec import *
-from spack.dependency import *
+from spack.spec import Spec
+from spack.dependency import all_deptypes, canonical_deptype
+
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
@@ -542,7 +543,9 @@ def graph_dot(specs, deptype='all', static=False, out=None):
 
     # Static graph includes anything a package COULD depend on.
     if static:
-        names = set.union(*[s.package.possible_dependencies() for s in specs])
+        names = set.union(*[
+            s.package.possible_dependencies(expand_virtuals=False)
+            for s in specs])
         specs = [Spec(name) for name in names]
 
     labeled = set()

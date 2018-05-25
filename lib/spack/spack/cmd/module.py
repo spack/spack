@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,10 +27,12 @@ from __future__ import print_function
 import collections
 import os
 import shutil
-import spack.modules
+
+from llnl.util import filesystem, tty
 
 import spack.cmd
-from llnl.util import filesystem, tty
+import spack.modules
+import spack.repo
 from spack.cmd.common import arguments
 
 description = "manipulate module files"
@@ -71,6 +73,11 @@ def setup_parser(subparser):
 
     # spack module find
     find_parser = sp.add_parser('find', help='find module files for packages')
+    find_parser.add_argument(
+        '--full-path',
+        help='display full path to module file',
+        action='store_true'
+    )
     arguments.add_common_arguments(find_parser, ['constraint', 'module_type'])
 
     # spack module rm
@@ -208,8 +215,11 @@ def find(module_types, specs, args):
         msg += 'no {0} module has been generated for it.'
         tty.die(msg.format(module_type, spec))
 
-    # ... and if it is print its use name
-    print(writer.layout.use_name)
+    # ... and if it is print its use name or full-path if requested
+    if args.full_path:
+        print(writer.layout.filename)
+    else:
+        print(writer.layout.use_name)
 
 
 @subcommand('rm')
@@ -270,9 +280,10 @@ def refresh(module_types, specs, args):
 
         cls = spack.modules.module_types[module_type]
 
+        # skip unknown packages.
         writers = [
-            cls(spec) for spec in specs if spack.repo.exists(spec.name)
-        ]  # skip unknown packages.
+            cls(spec) for spec in specs
+            if spack.repo.path.exists(spec.name)]
 
         # Filter blacklisted packages early
         writers = [x for x in writers if not x.conf.blacklisted]
@@ -332,7 +343,9 @@ def module(parser, args):
     module_types = args.module_type
     if module_types is None:
         # If no selection has been made select all of them
-        module_types = list(spack.modules.module_types.keys())
+        module_types = ['tcl']
+
+    module_types = list(set(module_types))
 
     try:
 

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class PyPyfasta(PythonPackage):
        access to fasta sequence files"""
 
     homepage = "https://pypi.python.org/pypi/pyfasta/"
-    url      = "https://pypi.python.org/packages/be/3f/794fbcdaaa2113f0a1d16a962463896c1a6bdab77bd63f33a8f16aae6cdc/pyfasta-0.5.2.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyfasta/pyfasta-0.5.2.tar.gz"
 
     version('0.5.2', 'bf61ab997dca329675c3eb2ee7cdfcf2')
 

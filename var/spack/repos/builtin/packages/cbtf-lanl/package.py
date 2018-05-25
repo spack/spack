@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -47,19 +47,60 @@ class CbtfLanl(CMakePackage):
     """CBTF LANL project contains a memory tool and data center type system
        command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    url = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
 
-    version('1.8', branch='master',
-            git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
+    version('1.9.1.1', branch='1.9.1.1',
+            git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
+
+    version('1.9.1.0', branch='1.9.1.0',
+            git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
+
+    version('develop', branch='master',
+            git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
-    depends_on("cmake@3.0.2:", type='build')
-    # Dependencies for cbtf-krell
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("xerces-c@3.1.1:")
-    depends_on("cbtf")
-    depends_on("cbtf-krell")
+    variant('runtime', default=False,
+            description="build only the runtime libraries and collectors.")
+
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
+
+    depends_on("cmake@3.0.2:", when='@develop', type='build')
+    depends_on("cmake@3.11.1", when='@1.9.1.0:', type='build')
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:')
+
+    # For Xerces-C
+    depends_on("xerces-c@3.1.1:", when='@develop')
+    depends_on("xerces-c@3.1.4", when='@1.9.1.0:')
+
+    # For CBTF
+    depends_on("cbtf@develop", when='@develop')
+    depends_on("cbtf@1.9.1.0:", when='@1.9.1.0:')
+
+    # For CBTF with cti
+    depends_on("cbtf@develop+cti", when='@develop+cti')
+    depends_on("cbtf@1.9.1.0:+cti", when='@1.9.1.0:+cti')
+
+    # For CBTF with runtime
+    depends_on("cbtf@develop+runtime", when='@develop+runtime')
+    depends_on("cbtf@1.9.1.0:+runtime", when='@1.9.1.0:+runtime')
+
+    # For CBTF-KRELL
+    depends_on("cbtf-krell@develop", when='@develop')
+    depends_on("cbtf-krell@1.9.1.0:", when='@1.9.1.0:')
+
+    depends_on('cbtf-krell@develop+cti', when='@develop+cti')
+    depends_on('cbtf-krell@1.9.1.0:+cti', when='@1.9.1.0:+cti')
+
+    depends_on('cbtf-krell@develop+runtime', when='@develop+runtime')
+    depends_on('cbtf-krell@1.9.1.0:+runtime', when='@1.9.1.0:+runtime')
 
     parallel = False
 

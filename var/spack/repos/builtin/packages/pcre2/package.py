@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,9 @@ class Pcre2(AutotoolsPackage):
     """The PCRE2 package contains Perl Compatible Regular Expression
        libraries. These are useful for implementing regular expression
        pattern matching using the same syntax and semantics as Perl 5."""
-    homepage = "http://www.pcre.org"""
-    url      = "https://ftp.pcre.org/pub/pcre/pcre2-10.20.tar.bz2"
 
+    homepage = "http://www.pcre.org"""
+    url      = "https://ftp.pcre.org/pub/pcre/pcre2-10.31.tar.bz2"
+
+    version('10.31', 'e0b91c891a3c49050f7fd15de33d0ba4')
     version('10.20', 'dcd027c57ecfdc8a6c3af9d0acf5e3f7')

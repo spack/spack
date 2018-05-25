@@ -1,0 +1,14 @@
+diff --git a/f_check b/f_check
+index 79febfb..c9da6ed 100644
+--- a/f_check
++++ b/f_check
+@@ -359,9 +359,6 @@ print MAKEFILE "NOFORTRAN=1\n" if $nofortran == 1;
+ 
+ print CONFFILE "#define BUNDERSCORE\t$bu\n" if $bu ne "";
+ print CONFFILE "#define NEEDBUNDERSCORE\t1\n" if $bu ne "";
+-print CONFFILE "#define NEED2UNDERSCORES\t1\n" if $need2bu ne "";
+-
+-print MAKEFILE "NEED2UNDERSCORES=1\n" if $need2bu ne "";
+ 
+ if (($linker_l ne "") || ($linker_a ne "")) {
+     print MAKEFILE "FEXTRALIB=$linker_L $linker_l $linker_a\n";

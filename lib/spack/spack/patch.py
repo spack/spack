@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,6 @@ import os.path
 import inspect
 import hashlib
 
-import spack
 import spack.error
 import spack.fetch_strategy as fs
 import spack.stage
@@ -187,7 +186,8 @@ class UrlPatch(Patch):
             # for a compressed archive, Need to check the patch sha256 again
             # and the patch is in a directory, not in the same place
             if self.archive_sha256:
-                if not Checker(self.sha256).check(self.path):
+                checker = Checker(self.sha256)
+                if not checker.check(self.path):
                     raise fs.ChecksumError(
                         "sha256 checksum failed for %s" % self.path,
                         "Expected %s but got %s" % (self.sha256, checker.sum))

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,8 @@ class Subread(MakefilePackage):
     homepage = "http://subread.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/subread/subread-1.5.2/subread-1.5.2-source.tar.gz"
 
+    version('1.6.2', '70125531737fe9ba2be83622ca236e5e')
+    version('1.6.0', 'ed7e32c56bda1e769703e0a4db5a89a7')
     version('1.5.2', '817d2a46d87fcef885c8832475b8b247')
 
     depends_on('zlib')

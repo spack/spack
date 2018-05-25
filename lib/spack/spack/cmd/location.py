@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,8 +27,9 @@ from __future__ import print_function
 import argparse
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
 import spack.cmd
+import spack.repo
 
 description = "print out locations of various directories used by Spack"
 section = "environment"
@@ -73,16 +74,16 @@ def setup_parser(subparser):
 
 def location(parser, args):
     if args.module_dir:
-        print(spack.module_path)
+        print(spack.paths.module_path)
 
     elif args.spack_root:
-        print(spack.prefix)
+        print(spack.paths.prefix)
 
     elif args.packages:
-        print(spack.repo.first_repo().root)
+        print(spack.repo.path.first_repo().root)
 
     elif args.stages:
-        print(spack.stage_path)
+        print(spack.paths.stage_path)
 
     else:
         specs = spack.cmd.parse_specs(args.spec)
@@ -101,7 +102,7 @@ def location(parser, args):
 
             if args.package_dir:
                 # This one just needs the spec name.
-                print(spack.repo.dirname_for_package_name(spec.name))
+                print(spack.repo.path.dirname_for_package_name(spec.name))
 
             else:
                 # These versions need concretized specs.

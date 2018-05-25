@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,27 +26,39 @@ from __future__ import print_function
 
 import os
 import re
-import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import *
-from llnl.util.tty.colify import *
-from llnl.util.tty.color import *
+from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
-import spack
 import spack.config
+import spack.paths
 import spack.spec
 import spack.store
+from spack.error import SpackError
+
 
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify configuration by default modify the *highest*
-# priority scope.
-default_modify_scope = spack.config.highest_precedence_scope().name
-# Commands that list configuration list *all* scopes by default.
-default_list_scope = None
+def default_modify_scope():
+    """Return the config scope that commands should modify by default.
+
+    Commands that modify configuration by default modify the *highest*
+    priority scope.
+    """
+    return spack.config.config.highest_precedence_scope().name
+
+
+def default_list_scope():
+    """Return the config scope that is listed by default.
+
+    Commands that list configuration list *all* scopes (merged) by default.
+    """
+    return None
+
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list
@@ -57,14 +69,40 @@ ignore_files = r'^\.|^__init__.py$|^#'
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
 
-command_path = os.path.join(spack.lib_path, "spack", "cmd")
+#: Names of all commands
+all_commands = []
 
-commands = []
-for file in os.listdir(command_path):
-    if file.endswith(".py") and not re.search(ignore_files, file):
-        cmd = re.sub(r'.py$', '', file)
-        commands.append(cmd)
-commands.sort()
+
+def python_name(cmd_name):
+    """Convert ``-`` to ``_`` in command name, to make a valid identifier."""
+    return cmd_name.replace("-", "_")
+
+
+def cmd_name(python_name):
+    """Convert module name (with ``_``) to command name (with ``-``)."""
+    return python_name.replace('_', '-')
+
+
+#: global, cached list of all commands -- access through all_commands()
+_all_commands = None
+
+
+def all_commands():
+    """Get a sorted list of all spack commands.
+
+    This will list the lib/spack/spack/cmd directory and find the
+    commands there to construct the list.  It does not actually import
+    the python files -- just gets the names.
+    """
+    global _all_commands
+    if _all_commands is None:
+        _all_commands = []
+        for file in os.listdir(spack.paths.command_path):
+            if file.endswith(".py") and not re.search(ignore_files, file):
+                cmd = re.sub(r'.py$', '', file)
+                _all_commands.append(cmd_name(cmd))
+        _all_commands.sort()
+    return _all_commands
 
 
 def remove_options(parser, *options):
@@ -76,33 +114,38 @@ def remove_options(parser, *options):
                 break
 
 
-def get_python_name(name):
-    """Commands can have '-' in their names, unlike Python identifiers."""
-    return name.replace("-", "_")
+def get_module(cmd_name):
+    """Imports the module for a particular command name and returns it.
 
-
-def get_module(name):
-    """Imports the module for a particular command name and returns it."""
-    module_name = "%s.%s" % (__name__, name)
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    pname = python_name(cmd_name)
+    module_name = "%s.%s" % (__name__, pname)
     module = __import__(module_name,
-                        fromlist=[name, SETUP_PARSER, DESCRIPTION],
+                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
                         level=0)
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
-    fn_name = get_python_name(name)
-    if not hasattr(module, fn_name):
+    if not hasattr(module, pname):
         tty.die("Command module %s (%s) must define function '%s'." %
-                (module.__name__, module.__file__, fn_name))
+                (module.__name__, module.__file__, pname))
 
     return module
 
 
-def get_command(name):
-    """Imports the command's function from a module and returns it."""
-    python_name = get_python_name(name)
-    return getattr(get_module(python_name), python_name)
+def get_command(cmd_name):
+    """Imports the command's function from a module and returns it.
+
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    pname = python_name(cmd_name)
+    return getattr(get_module(pname), pname)
 
 
 def parse_specs(args, **kwargs):
@@ -111,24 +154,30 @@ def parse_specs(args, **kwargs):
     """
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
+    tests = kwargs.get('tests', False)
 
     try:
         specs = spack.spec.parse(args)
         for spec in specs:
             if concretize:
-                spec.concretize()  # implies normalize
+                spec.concretize(tests=tests)  # implies normalize
             elif normalize:
-                spec.normalize()
+                spec.normalize(tests=tests)
 
         return specs
 
-    except spack.parse.ParseError as e:
-        tty.error(e.message, e.string, e.pos * " " + "^")
-        sys.exit(1)
+    except spack.spec.SpecParseError as e:
+        msg = e.message + "\n" + str(e.string) + "\n"
+        msg += (e.pos + 2) * " " + "^"
+        raise SpackError(msg)
 
     except spack.spec.SpecError as e:
-        tty.error(e.message)
-        sys.exit(1)
+
+        msg = e.message
+        if e.long_message:
+            msg += e.long_message
+
+        raise SpackError(msg)
 
 
 def elide_list(line_list, max_num=10):
@@ -241,7 +290,11 @@ def display_specs(specs, args=None, **kwargs):
         header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
                                       architecture, spack.spec.compiler_color,
                                       compiler)
-        tty.hline(colorize(header), char='-')
+        # Sometimes we want to display specs that are not yet concretized.
+        # If they don't have a compiler / architecture attached to them,
+        # then skip the header
+        if architecture is not None or compiler is not None:
+            tty.hline(colorize(header), char='-')
 
         specs = index[(architecture, compiler)]
         specs.sort()
@@ -292,5 +345,5 @@ def display_specs(specs, args=None, **kwargs):
 
 def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')

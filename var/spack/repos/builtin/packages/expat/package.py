@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,8 +29,8 @@ import sys
 class Expat(AutotoolsPackage):
     """Expat is an XML parser library written in C."""
 
-    homepage = "http://expat.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+    homepage = "https://libexpat.github.io/"
+    url      = "https://github.com/libexpat/libexpat/releases/download/R_2_2_2/expat-2.2.2.tar.bz2"
 
     # Version 2.2.2 introduced a requirement for a high quality
     # entropy source.  "Older" linux systems (aka CentOS 7) do not
@@ -44,8 +44,13 @@ class Expat(AutotoolsPackage):
             description="Use libbsd (for high quality randomness)")
     depends_on('libbsd', when="@2.2.1:+libbsd")
 
+    version('2.2.5', '789e297f547980fc9ecc036f9a070d49')
     version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
     version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
+
+    def url_for_version(self, version):
+        url = 'https://github.com/libexpat/libexpat/releases/download/R_{0}/expat-{1}.tar.bz2'
+        return url.format(version.underscored, version.dotted)
 
     def configure_args(self):
         spec = self.spec

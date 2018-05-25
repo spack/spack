@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,6 @@
 import inspect
 import os
 
-from llnl.util.filesystem import join_path
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
@@ -88,7 +87,7 @@ class PerlPackage(PackageBase):
         elif os.path.isfile('Build.PL'):
             self.build_method = 'Build.PL'
             self.build_executable = Executable(
-                join_path(self.stage.source_path, 'Build'))
+                os.path.join(self.stage.source_path, 'Build'))
         else:
             raise RuntimeError('Unknown build_method for perl package')
 

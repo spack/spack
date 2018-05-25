@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 import os
 import xml.etree.ElementTree as ET
 
-from llnl.util.filesystem import install, join_path
+from llnl.util.filesystem import install
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
 
@@ -109,8 +109,8 @@ class IntelPackage(PackageBase):
 
         All Intel software shares the same license, so we store it in a
         common 'intel' directory."""
-        return join_path(self.global_license_dir, 'intel',
-                         os.path.basename(self.license_files[0]))
+        return os.path.join(self.global_license_dir, 'intel',
+                            os.path.basename(self.license_files[0]))
 
     def configure(self, spec, prefix):
         """Writes the ``silent.cfg`` file used to configure the installation.
@@ -186,7 +186,7 @@ class IntelPackage(PackageBase):
     @run_after('install')
     def save_silent_cfg(self):
         """Copies the silent.cfg configuration file to ``<prefix>/.spack``."""
-        install('silent.cfg', join_path(self.prefix, '.spack'))
+        install('silent.cfg', os.path.join(self.prefix, '.spack'))
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

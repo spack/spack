@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class Binutils(AutotoolsPackage):
     homepage = "http://www.gnu.org/software/binutils/"
     url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.bz2"
 
+    version('2.29.1', '9af59a2ca3488823e453bb356fe0f113')
     version('2.28', '9e8340c96626b469a603c15c9d843727')
     version('2.27', '2869c9bf3e60ee97c74ac2a6bf4e9d68')
     version('2.26', '64146a0faa3b411ba774f47d41de239f')
@@ -77,5 +78,11 @@ class Binutils(AutotoolsPackage):
 
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')
+
+        # To avoid namespace collisions with Darwin/BSD system tools,
+        # prefix executables with "g", e.g., gar, gnm; see Homebrew
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
+        if spec.satisfies('platform=darwin'):
+            configure_args.append('--program-prefix=g')
 
         return configure_args

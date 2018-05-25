@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,9 +31,9 @@ import unittest
 import tempfile
 import shutil
 
-from llnl.util.filesystem import *
-import spack
-from spack.util.executable import *
+from spack.paths import build_env_path
+from llnl.util.filesystem import mkdirp
+from spack.util.executable import Executable
 
 # Complicated compiler test command
 test_command = [
@@ -54,11 +54,11 @@ test_command = [
 class CompilerWrapperTest(unittest.TestCase):
 
     def setUp(self):
-        self.cc = Executable(join_path(spack.build_env_path, "cc"))
-        self.ld = Executable(join_path(spack.build_env_path, "ld"))
-        self.cpp = Executable(join_path(spack.build_env_path, "cpp"))
-        self.cxx = Executable(join_path(spack.build_env_path, "c++"))
-        self.fc = Executable(join_path(spack.build_env_path, "fc"))
+        self.cc = Executable(os.path.join(build_env_path, "cc"))
+        self.ld = Executable(os.path.join(build_env_path, "ld"))
+        self.cpp = Executable(os.path.join(build_env_path, "cpp"))
+        self.cxx = Executable(os.path.join(build_env_path, "c++"))
+        self.fc = Executable(os.path.join(build_env_path, "fc"))
 
         self.realcc = "/bin/mycc"
         self.prefix = "/spack-test-prefix"
@@ -70,8 +70,10 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_PREFIX'] = self.prefix
         os.environ['SPACK_ENV_PATH'] = "test"
         os.environ['SPACK_DEBUG_LOG_DIR'] = "."
+        os.environ['SPACK_DEBUG_LOG_ID'] = "foo-hashabc"
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
-        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
+        os.environ['SPACK_SHORT_SPEC'] = (
+            "foo@1.2 arch=linux-rhel6-x86_64 /hashabc")
 
         os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath,"
         os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
@@ -80,20 +82,20 @@ class CompilerWrapperTest(unittest.TestCase):
 
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
-        self.dep1 = join_path(self.tmp_deps, 'dep1')
-        self.dep2 = join_path(self.tmp_deps, 'dep2')
-        self.dep3 = join_path(self.tmp_deps, 'dep3')
-        self.dep4 = join_path(self.tmp_deps, 'dep4')
+        self.dep1 = os.path.join(self.tmp_deps, 'dep1')
+        self.dep2 = os.path.join(self.tmp_deps, 'dep2')
+        self.dep3 = os.path.join(self.tmp_deps, 'dep3')
+        self.dep4 = os.path.join(self.tmp_deps, 'dep4')
 
-        mkdirp(join_path(self.dep1, 'include'))
-        mkdirp(join_path(self.dep1, 'lib'))
+        mkdirp(os.path.join(self.dep1, 'include'))
+        mkdirp(os.path.join(self.dep1, 'lib'))
 
-        mkdirp(join_path(self.dep2, 'lib64'))
+        mkdirp(os.path.join(self.dep2, 'lib64'))
 
-        mkdirp(join_path(self.dep3, 'include'))
-        mkdirp(join_path(self.dep3, 'lib64'))
+        mkdirp(os.path.join(self.dep3, 'include'))
+        mkdirp(os.path.join(self.dep3, 'lib64'))
 
-        mkdirp(join_path(self.dep4, 'include'))
+        mkdirp(os.path.join(self.dep4, 'include'))
 
         if 'SPACK_DEPENDENCIES' in os.environ:
             del os.environ['SPACK_DEPENDENCIES']
@@ -209,8 +211,12 @@ class CompilerWrapperTest(unittest.TestCase):
                       ' '.join(test_command) + ' ' +
                       '-lfoo')
 
-        os.environ['SPACK_LDFLAGS'] = ''
-        os.environ['SPACK_LDLIBS'] = ''
+        del os.environ['SPACK_CFLAGS']
+        del os.environ['SPACK_CXXFLAGS']
+        del os.environ['SPACK_FFLAGS']
+        del os.environ['SPACK_CPPFLAGS']
+        del os.environ['SPACK_LDFLAGS']
+        del os.environ['SPACK_LDLIBS']
 
     def test_dep_rpath(self):
         """Ensure RPATHs for root package are added."""

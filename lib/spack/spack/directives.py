@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -54,18 +54,15 @@ import re
 from six import string_types
 
 import llnl.util.lang
-from llnl.util.filesystem import join_path
 
-import spack
 import spack.error
 import spack.spec
 import spack.url
-from spack.dependency import *
+import spack.variant
+from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
 from spack.resource import Resource
-from spack.spec import Spec, parse_anonymous_spec
-from spack.variant import Variant
 from spack.version import Version
 
 __all__ = []
@@ -74,7 +71,7 @@ __all__ = []
 reserved_names = ['patches']
 
 
-class DirectiveMetaMixin(type):
+class DirectiveMeta(type):
     """Flushes the directives that were temporarily stored in the staging
     area into the package.
     """
@@ -107,12 +104,12 @@ class DirectiveMetaMixin(type):
 
         # Move things to be executed from module scope (where they
         # are collected first) to class scope
-        if DirectiveMetaMixin._directives_to_be_executed:
+        if DirectiveMeta._directives_to_be_executed:
             attr_dict['_directives_to_be_executed'].extend(
-                DirectiveMetaMixin._directives_to_be_executed)
-            DirectiveMetaMixin._directives_to_be_executed = []
+                DirectiveMeta._directives_to_be_executed)
+            DirectiveMeta._directives_to_be_executed = []
 
-        return super(DirectiveMetaMixin, mcs).__new__(
+        return super(DirectiveMeta, mcs).__new__(
             mcs, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
@@ -127,7 +124,7 @@ class DirectiveMetaMixin(type):
 
             # Ensure the presence of the dictionaries associated
             # with the directives
-            for d in DirectiveMetaMixin._directive_names:
+            for d in DirectiveMeta._directive_names:
                 setattr(cls, d, {})
 
             # Lazily execute directives
@@ -136,9 +133,9 @@ class DirectiveMetaMixin(type):
 
             # Ignore any directives executed *within* top-level
             # directives by clearing out the queue they're appended to
-            DirectiveMetaMixin._directives_to_be_executed = []
+            DirectiveMeta._directives_to_be_executed = []
 
-        super(DirectiveMetaMixin, cls).__init__(name, bases, attr_dict)
+        super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
     def directive(dicts=None):
@@ -188,7 +185,7 @@ class DirectiveMetaMixin(type):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
         # Add the dictionary names if not already there
-        DirectiveMetaMixin._directive_names |= set(dicts)
+        DirectiveMeta._directive_names |= set(dicts)
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
@@ -202,7 +199,7 @@ class DirectiveMetaMixin(type):
                 # This allows nested directive calls in packages.  The
                 # caller can return the directive if it should be queued.
                 def remove_directives(arg):
-                    directives = DirectiveMetaMixin._directives_to_be_executed
+                    directives = DirectiveMeta._directives_to_be_executed
                     if isinstance(arg, (list, tuple)):
                         # Descend into args that are lists or tuples
                         for a in arg:
@@ -228,18 +225,17 @@ class DirectiveMetaMixin(type):
                 if not isinstance(values, collections.Sequence):
                     values = (values, )
 
-                DirectiveMetaMixin._directives_to_be_executed.extend(values)
+                DirectiveMeta._directives_to_be_executed.extend(values)
 
                 # wrapped function returns same result as original so
                 # that we can nest directives
                 return result
-
             return _wrapper
 
         return _decorator
 
 
-directive = DirectiveMetaMixin.directive
+directive = DirectiveMeta.directive
 
 
 @directive('versions')
@@ -267,9 +263,9 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     # If when is None or True make sure the condition is always satisfied
     if when is None or when is True:
         when = pkg.name
-    when_spec = parse_anonymous_spec(when, pkg.name)
+    when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
 
-    dep_spec = Spec(spec)
+    dep_spec = spack.spec.Spec(spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError(
             "Package '%s' cannot depend on itself." % pkg.name)
@@ -330,7 +326,7 @@ def conflicts(conflict_spec, when=None, msg=None):
     def _execute_conflicts(pkg):
         # If when is not specified the conflict always holds
         condition = pkg.name if when is None else when
-        when_spec = parse_anonymous_spec(condition, pkg.name)
+        when_spec = spack.spec.parse_anonymous_spec(condition, pkg.name)
 
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
@@ -362,13 +358,14 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 @directive(('extendees', 'dependencies'))
 def extends(spec, **kwargs):
-    """Same as depends_on, but dependency is symlinked into parent prefix.
+    """Same as depends_on, but allows symlinking into dependency's
+    prefix tree.
 
     This is for Python and other language modules where the module
     needs to be installed into the prefix of the Python installation.
     Spack handles this by installing modules into their own prefix,
     but allowing ONE module version to be symlinked into a parent
-    Python install at a time.
+    Python install at a time, using ``spack activate``.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
@@ -381,9 +378,9 @@ def extends(spec, **kwargs):
         #     msg = 'Packages can extend at most one other package.'
         #     raise DirectiveError(directive, msg)
 
-        when = kwargs.pop('when', pkg.name)
+        when = kwargs.get('when', pkg.name)
         _depends_on(pkg, spec, when=when)
-        pkg.extendees[spec] = (Spec(spec), kwargs)
+        pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
 
 
@@ -395,7 +392,7 @@ def provides(*specs, **kwargs):
     """
     def _execute_provides(pkg):
         spec_string = kwargs.get('when', pkg.name)
-        provider_spec = parse_anonymous_spec(spec_string, pkg.name)
+        provider_spec = spack.spec.parse_anonymous_spec(spec_string, pkg.name)
 
         for string in specs:
             for provided_spec in spack.spec.parse(string):
@@ -432,7 +429,8 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     """
     def _execute_patch(pkg_or_dep):
         constraint = pkg_or_dep.name if when is None else when
-        when_spec = parse_anonymous_spec(constraint, pkg_or_dep.name)
+        when_spec = spack.spec.parse_anonymous_spec(
+            constraint, pkg_or_dep.name)
 
         # if this spec is identical to some other, then append this
         # patch to the existing list.
@@ -492,7 +490,7 @@ def variant(
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        pkg.variants[name] = Variant(
+        pkg.variants[name] = spack.variant.Variant(
             name, default, description, values, multi, validator
         )
     return _execute_variant
@@ -522,24 +520,24 @@ def resource(**kwargs):
 
         # Check if the path is relative
         if os.path.isabs(destination):
-            message = 'The destination keyword of a resource directive '
-            'can\'t be an absolute path.\n'
+            message = ('The destination keyword of a resource directive '
+                       'can\'t be an absolute path.\n')
             message += "\tdestination : '{dest}\n'".format(dest=destination)
             raise RuntimeError(message)
 
         # Check if the path falls within the main package stage area
         test_path = 'stage_folder_root'
         normalized_destination = os.path.normpath(
-            join_path(test_path, destination)
+            os.path.join(test_path, destination)
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:
-            message = "The destination folder of a resource must fall "
-            "within the main package stage directory.\n"
+            message = ("The destination folder of a resource must fall "
+                       "within the main package stage directory.\n")
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
 
-        when_spec = parse_anonymous_spec(when, pkg.name)
+        when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
         resources = pkg.resources.setdefault(when_spec, [])
         name = kwargs.get('name')
         fetcher = from_kwargs(**kwargs)

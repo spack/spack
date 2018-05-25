@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,8 +33,14 @@ class IntelMpi(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
+    version('2018.2.199', '6ffeab59c83a8842537484d53e180520',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12748/l_mpi_2018.2.199.tgz')
+    version('2018.1.163', '437ce50224c5bbf98fd578a810c3e401',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_mpi_2018.1.163.tgz')
     version('2018.0.128', '15b46fc6a3014595de897aa48d3a658b',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12120/l_mpi_2018.0.128.tgz')
+    version('2017.4.239', '460a9ef1b3599d60b4d696e3f0f2a14d',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12209/l_mpi_2017.4.239.tgz')
     version('2017.3.196', '721ecd5f6afa385e038777e5b5361dfb',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11595/l_mpi_2017.3.196.tgz')
     version('2017.2.174', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
@@ -66,7 +72,7 @@ class IntelMpi(IntelPackage):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recursive=True
         )
 
     @property
@@ -74,7 +80,7 @@ class IntelMpi(IntelPackage):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
+        return find_headers('mpi', root=mpi_root, recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)

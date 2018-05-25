@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class Otf2(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
 
+    version('2.1.1', 'e51ad0d8ca374d25f47426746ca629e7')
     version('2.1',   'e2994e53d9b7c2cbd0c4f564d638751e')
     version('2.0',   '5b546188b25bc1c4e285e06dddf75dfc')
     version('1.5.1', '16a9df46e0da78e374f5d12c8cdc1109')

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,12 +27,13 @@ from __future__ import print_function
 import argparse
 
 import llnl.util.tty as tty
-import spack
+
 import spack.cmd
+import spack.repo
 import spack.util.crypto
 import spack.util.web
-from spack.util.naming import *
-from spack.version import *
+from spack.util.naming import valid_fully_qualified_module_name
+from spack.version import ver, Version
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -54,8 +55,7 @@ def setup_parser(subparser):
 def checksum(parser, args):
     # Make sure the user provided a package and not a URL
     if not valid_fully_qualified_module_name(args.package):
-        tty.die("`spack checksum` accepts package names, not URLs. "
-                "Use `spack md5 <url>` instead.")
+        tty.die("`spack checksum` accepts package names, not URLs.")
 
     # Get the package we're going to generate checksums for
     pkg = spack.repo.get(args.package)

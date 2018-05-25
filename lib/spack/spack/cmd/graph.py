@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,12 +27,11 @@ from __future__ import print_function
 import argparse
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.config
 import spack.store
-from spack.spec import *
-from spack.dependency import *
-from spack.graph import *
+from spack.dependency import all_deptypes, canonical_deptype
+from spack.graph import graph_dot, graph_ascii
 
 description = "generate graphs of package dependency relationships"
 section = "basic"
@@ -99,7 +98,8 @@ def graph(parser, args):
         graph_dot(specs, static=args.static, deptype=deptype)
 
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
-        graph_ascii(specs[0], debug=spack.debug, deptype=deptype)
+        debug = spack.config.get('config:debug')
+        graph_ascii(specs[0], debug=debug, deptype=deptype)
         for spec in specs[1:]:
             print()  # extra line bt/w independent graphs
-            graph_ascii(spec, debug=spack.debug)
+            graph_ascii(spec, debug=debug)

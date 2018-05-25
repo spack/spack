@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,12 +26,11 @@
 These tests check Spec DAG operations using dummy packages.
 """
 import pytest
-import spack
 import spack.architecture
 import spack.package
 
 from spack.spec import Spec
-from spack.dependency import *
+from spack.dependency import all_deptypes, Dependency, canonical_deptype
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
@@ -86,8 +85,6 @@ packages in the following spec DAG::
 w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 """
-    saved_repo = spack.repo
-
     default = ('build', 'link')
     test_only = ('test',)
 
@@ -97,20 +94,15 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     w = MockPackage('w', [x, y], [test_only, default])
 
     mock_repo = MockPackageMultiRepo([w, x, y, z])
-    try:
-        spack.package_testing.test(w.name)
-        spack.repo = mock_repo
+    with spack.repo.swap(mock_repo):
         spec = Spec('w')
-        spec.concretize()
+        spec.concretize(tests=(w.name,))
 
         assert ('x' in spec)
         assert ('z' not in spec)
-    finally:
-        spack.repo = saved_repo
-        spack.package_testing.clear()
 
 
-@pytest.mark.usefixtures('refresh_builtin_mock')
+@pytest.mark.usefixtures('mutable_mock_packages')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):

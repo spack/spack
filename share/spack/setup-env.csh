@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,8 +41,8 @@ if ($?SPACK_ROOT) then
 
     # Shamelessly stolen from setup-env.sh
     set _sp_sys_type    = `$SPACK_ROOT/bin/spack python -c 'print(spack.architecture.sys_type())'`
-    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('dotkit')))"`
-    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('tcl')))"`
+    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get('config:module_roots', {}).get('dotkit')))"`
+    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get('config:module_roots', {}).get('tcl')))"`
 
     # Set up modules and dotkit search paths in the user environment
     _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"

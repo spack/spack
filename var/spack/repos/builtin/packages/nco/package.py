@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -60,3 +60,10 @@ class Nco(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         return ['--{0}-doc'.format('enable' if '+doc' in spec else 'disable')]
+
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        spack_env.set('NETCDF_INC', spec['netcdf'].prefix.include)
+        spack_env.set('NETCDF_LIB', spec['netcdf'].prefix.lib)
+        spack_env.set('ANTLR_ROOT', spec['antlr'].prefix)
+        spack_env.set('UDUNITS2_PATH', spec['udunits2'].prefix)

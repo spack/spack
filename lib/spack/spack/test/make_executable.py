@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,6 @@ import shutil
 import tempfile
 import unittest
 
-from llnl.util.filesystem import *
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
@@ -42,7 +41,7 @@ class MakeExecutableTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
 
-        make_exe = join_path(self.tmpdir, 'make')
+        make_exe = os.path.join(self.tmpdir, 'make')
         with open(make_exe, 'w') as f:
             f.write('#!/bin/sh\n')
             f.write('echo "$@"')

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,8 @@ import re
 import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-import spack
+
+import spack.paths
 import spack.build_environment as build_environment
 import spack.environment
 import spack.tengine as tengine
@@ -64,14 +65,14 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 
-#: Root folders where the various module files should be written
-roots = spack.config.get_config('config').get('module_roots', {})
+#: config section for this file
+configuration = spack.config.get('modules')
 
-#: Merged modules.yaml as a dictionary
-configuration = spack.config.get_config('modules')
+#: Root folders where the various module files should be written
+roots = spack.config.get('config:module_roots', {})
 
 #: Inspections that needs to be done on spec prefixes
-prefix_inspections = configuration.get('prefix_inspections', {})
+prefix_inspections = spack.config.get('modules:prefix_inspections', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -154,13 +155,13 @@ def dependencies(spec, request='all'):
     # FIXME : step among nodes that refer to the same package?
     seen = set()
     seen_add = seen.add
-    l = sorted(
+    deps = sorted(
         spec.traverse(order='post',
                       cover='nodes',
                       deptype=('link', 'run'),
                       root=False),
         reverse=True)
-    return [x for x in l if not (x in seen or seen_add(x))]
+    return [d for d in deps if not (d in seen or seen_add(d))]
 
 
 def merge_config_rules(configuration, spec):
@@ -204,8 +205,8 @@ def merge_config_rules(configuration, spec):
 
     # Which instead we want to mark as prerequisites
     prerequisite_strategy = spec_configuration.get('prerequisites', 'none')
-    l = dependencies(spec, prerequisite_strategy)
-    spec_configuration['prerequisites'] = l
+    spec_configuration['prerequisites'] = dependencies(
+        spec, prerequisite_strategy)
 
     # Attach options that are spec-independent to the spec-specific
     # configuration
@@ -229,7 +230,7 @@ def root_path(name):
     Returns:
         root folder for module file installation
     """
-    path = roots.get(name, os.path.join(spack.share_path, name))
+    path = roots.get(name, os.path.join(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
 
@@ -274,7 +275,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        l = spack.environment.EnvironmentModifications()
+        env_mods = spack.environment.EnvironmentModifications()
         actions = self.conf.get('environment', {})
 
         def process_arglist(arglist):
@@ -287,9 +288,9 @@ class BaseConfiguration(object):
 
         for method, arglist in actions.items():
             for args in process_arglist(arglist):
-                getattr(l, method)(*args)
+                getattr(env_mods, method)(*args)
 
-        return l
+        return env_mods
 
     @property
     def suffixes(self):
@@ -379,12 +380,12 @@ class BaseConfiguration(object):
         return self.conf.get('filter', {}).get('environment_blacklist', {})
 
     def _create_list_for(self, what):
-        l = []
+        whitelist = []
         for item in self.conf[what]:
             conf = type(self)(item)
             if not conf.blacklisted:
-                l.append(item)
-        return l
+                whitelist.append(item)
+        return whitelist
 
     @property
     def verbose(self):
@@ -592,8 +593,8 @@ class BaseContext(tengine.Context):
 
     def _create_module_list_of(self, what):
         m = self.conf.module
-        l = getattr(self.conf, what)
-        return [m.make_layout(x).use_name for x in l]
+        return [m.make_layout(x).use_name
+                for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,14 +25,15 @@
 from __future__ import print_function
 
 import os
-
 import argparse
+
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
 
-import spack
-from spack.util.executable import *
+import spack.paths
+import spack.repo
+from spack.util.executable import which
 from spack.cmd import spack_is_git_repo
 
 description = "query packages associated with particular git revisions"
@@ -78,11 +79,11 @@ def setup_parser(subparser):
 
 
 def list_packages(rev):
-    pkgpath = os.path.join(spack.packages_path, 'packages')
-    relpath = pkgpath[len(spack.prefix + os.path.sep):] + os.path.sep
+    pkgpath = os.path.join(spack.paths.packages_path, 'packages')
+    relpath = pkgpath[len(spack.paths.prefix + os.path.sep):] + os.path.sep
 
     git = which('git', required=True)
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
                      output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
@@ -90,14 +91,14 @@ def list_packages(rev):
 
 def pkg_add(args):
     for pkg_name in args.packages:
-        filename = spack.repo.filename_for_package_name(pkg_name)
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)
 
         git = which('git', required=True)
-        with working_dir(spack.prefix):
-            git('-C', spack.packages_path, 'add', filename)
+        with working_dir(spack.paths.prefix):
+            git('-C', spack.paths.packages_path, 'add', filename)
 
 
 def pkg_list(args):

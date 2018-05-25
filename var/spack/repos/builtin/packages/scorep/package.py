@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,21 +34,26 @@ class Scorep(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz"
 
+    version('4.0',   'f04478e0407d67eeb8c49c3c51d91e12')
     version('3.1',   '065bf8eb08398e8146c895718ddb9145')
     version('3.0',   '44da8beaa3f71436a5f6fe51938aab2f')
     version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
     version('1.3',   '9db6f957b7f51fa01377a9537867a55c')
 
-    patch('gcc7.patch')
+    patch('gcc7.patch', when='@:3')
 
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information.
+    # SCOREP 4
+    depends_on('otf2@2.1:', when='@4:')
+    depends_on('opari2@2.0:', when='@4:')
+    depends_on('cube@4.4:', when='@4:')
     # SCOREP 3
-    depends_on('otf2@2:', when='@3:')
-    depends_on('opari2@2:', when='@3:')
-    depends_on('cube@4.3:', when='@3:')
+    depends_on('otf2@2:', when='@3:3.99')
+    depends_on('opari2@2:', when='@3:3.99')
+    depends_on('cube@4.3:', when='@3:3.99')
     # SCOREP 2.0.2
     depends_on('otf2@2.0', when='@2.0.2')
     depends_on('opari2@2.0', when='@2.0.2')
@@ -71,7 +76,7 @@ class Scorep(AutotoolsPackage):
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
-    # https://github.com/LLNL/spack/issues/1609
+    # https://github.com/spack/spack/issues/1609
     conflicts('platform=darwin')
 
     def configure_args(self):

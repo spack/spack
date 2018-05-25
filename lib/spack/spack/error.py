@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,10 +25,9 @@
 from __future__ import print_function
 
 import sys
+import inspect
 
 import llnl.util.tty as tty
-import spack
-import inspect
 
 
 class SpackError(Exception):
@@ -73,7 +72,8 @@ class SpackError(Exception):
             sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
-        if spack.debug:
+        import spack.config
+        if spack.config.get('config:debug'):
             if self.traceback:
                 # exception came from a build child, already got
                 # traceback in child, so print it.

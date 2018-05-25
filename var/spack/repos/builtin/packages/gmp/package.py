@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,9 @@ class Gmp(AutotoolsPackage):
     version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
+    version('5.1.3', 'a082867cbca5e898371a97bb27b31fea')
+    # Old version needed for a binary package in ghc-bootstrap
+    version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

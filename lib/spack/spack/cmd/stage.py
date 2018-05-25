@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,8 +25,10 @@
 import argparse
 
 import llnl.util.tty as tty
-import spack
+
+import spack.repo
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 
 description = "expand downloaded archive in preparation for install"
 section = "build"
@@ -34,9 +36,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="do not check downloaded packages against checksum")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-p', '--path', dest='path',
         help="path to stage package, does not add to spack tree")
@@ -50,7 +50,7 @@ def stage(parser, args):
         tty.die("stage requires at least one package argument")
 
     if args.no_checksum:
-        spack.do_checksum = False
+        spack.config.set('config:checksum', False, scope='command_line')
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:

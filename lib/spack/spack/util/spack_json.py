@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ def dump(data, stream=None):
 def _strify(data, ignore_dicts=False):
     # if this is a unicode string in python 2, return its string representation
     if sys.version_info[0] < 3:
-        if isinstance(data, unicode):
+        if isinstance(data, string_types):
             return data.encode('utf-8')
 
     # if this is a list of values, return list of byteified values

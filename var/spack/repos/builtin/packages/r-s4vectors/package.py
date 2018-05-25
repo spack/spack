@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,10 +36,12 @@ class RS4vectors(RPackage):
        package and in other Bioconductor infrastructure packages)."""
 
     homepage = "https://bioconductor.org/packages/S4Vectors/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/S4Vectors_0.14.4.tar.gz"
+    url      = "https://git.bioconductor.org/packages/S4Vectors"
     list_url = homepage
 
-    version('0.14.6', 'e40ba5de581fc54d70bd5c049415973c')
-    version('0.14.4', '08ccc46e6d39f3aa9091f868ecec1f70')
+    version('0.16.0', git='https://git.bioconductor.org/packages/S4Vectors', commit='00fec03fcbcb7cff37917fab0da28d91fdf9dc3d')
+    version('0.14.7', git='https://git.bioconductor.org/packages/S4Vectors', commit='40af17fe0b8e93b6a72fc787540d2961773b8e23')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.21.1:', type=('build', 'run'), when='@0.14.7')
+    depends_on('r-biocgenerics@0.23.3:', type=('build', 'run'), when='@0.16.0')
+    depends_on('r@3.4.0:3.4.9', when='@0.14.7:')

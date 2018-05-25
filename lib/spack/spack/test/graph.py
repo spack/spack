@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@ from spack.spec import Spec
 from spack.graph import AsciiGraph, topological_sort, graph_dot
 
 
-def test_topo_sort(builtin_mock):
+def test_topo_sort(mock_packages):
     """Test topo sort gives correct order."""
     s = Spec('mpileaks').normalized()
 
@@ -51,7 +51,7 @@ def test_topo_sort(builtin_mock):
     assert topo.index('libdwarf') < topo.index('libelf')
 
 
-def test_static_graph_mpileaks(builtin_mock):
+def test_static_graph_mpileaks(mock_packages):
     """Test a static spack graph for a simple package."""
     s = Spec('mpileaks').normalized()
 
@@ -75,7 +75,7 @@ def test_static_graph_mpileaks(builtin_mock):
     assert '  "dyninst" -> "libelf"\n'    in dot
 
 
-def test_dynamic_dot_graph_mpileaks(builtin_mock):
+def test_dynamic_dot_graph_mpileaks(mock_packages):
     """Test dynamically graphing the mpileaks package."""
     s = Spec('mpileaks').normalized()
 
@@ -111,7 +111,7 @@ def test_dynamic_dot_graph_mpileaks(builtin_mock):
     assert '  "%s" -> "%s"\n' % (dyninst_hash, libelf_hash)  in dot
 
 
-def test_ascii_graph_mpileaks(builtin_mock):
+def test_ascii_graph_mpileaks(mock_packages):
     """Test dynamically graphing the mpileaks package."""
     s = Spec('mpileaks').normalized()
 

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,11 @@ import shutil
 class Sbt(Package):
     """Scala Build Tool"""
 
-    homepage = "http://www.scala-sbt.org"
-    url      = "https://dl.bintray.com/sbt/native-packages/sbt/0.13.12/sbt-0.13.12.tgz"
+    homepage = 'http://www.scala-sbt.org'
+    url = 'https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz'
 
-    version('0.13.12', 'cec3071d46ef13334c8097cc3467ff28')
+    version('1.1.4', 'c71e5fa846164d14d4cd450520d66c6a')
+    version('0.13.17', 'c52c6152cc7aadfd1f0736a1a5d0a5b8')
 
     depends_on('java')
 

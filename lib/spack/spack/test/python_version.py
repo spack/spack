@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,8 +37,13 @@ import os
 import sys
 import re
 
+import pytest
+
 import llnl.util.tty as tty
-import spack
+
+import spack.paths
+from spack.paths import lib_path as spack_lib_path
+
 
 #
 # This test uses pyqver, by Greg Hewgill, which is a dual-source module.
@@ -53,10 +58,10 @@ if sys.version_info[0] < 3:
     exclude_paths = [
         # Jinja 2 has some 'async def' functions that are not treated correctly
         # by pyqver.py
-        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncfilters.py'),
-        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncsupport.py'),
-        os.path.join(spack.lib_path, 'external', 'yaml', 'lib3'),
-        os.path.join(spack.lib_path, 'external', 'pyqver3.py')]
+        os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncfilters.py'),
+        os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncsupport.py'),
+        os.path.join(spack_lib_path, 'external', 'yaml', 'lib3'),
+        os.path.join(spack_lib_path, 'external', 'pyqver3.py')]
 
 else:
     import pyqver3 as pyqver
@@ -66,10 +71,10 @@ else:
     exclude_paths = [
         # Jinja 2 has some 'async def' functions that are not treated correctly
         # by pyqver.py
-        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncfilters.py'),
-        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncsupport.py'),
-        os.path.join(spack.lib_path, 'external', 'yaml', 'lib'),
-        os.path.join(spack.lib_path, 'external', 'pyqver2.py')]
+        os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncfilters.py'),
+        os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncsupport.py'),
+        os.path.join(spack_lib_path, 'external', 'yaml', 'lib'),
+        os.path.join(spack_lib_path, 'external', 'pyqver2.py')]
 
 
 def pyfiles(search_paths, exclude=()):
@@ -83,7 +88,7 @@ def pyfiles(search_paths, exclude=()):
         python files in the search path.
     """
     # first file is the spack script.
-    yield spack.spack_file
+    yield spack.paths.spack_script
 
     # Iterate through the whole spack source tree.
     for path in search_paths:
@@ -133,8 +138,8 @@ def check_python_versions(files):
         messages = []
         for path in sorted(all_issues[v].keys()):
             short_path = path
-            if path.startswith(spack.prefix):
-                short_path = path[len(spack.prefix):]
+            if path.startswith(spack.paths.prefix):
+                short_path = path[len(spack.paths.prefix):]
 
             reasons = [r for r in set(all_issues[v][path]) if r]
             for lineno, cause in reasons:
@@ -154,11 +159,14 @@ def check_python_versions(files):
     assert not all_issues
 
 
+@pytest.mark.maybeslow
 def test_core_module_compatibility():
     """Test that all core spack modules work with supported Python versions."""
-    check_python_versions(pyfiles([spack.lib_path], exclude=exclude_paths))
+    check_python_versions(
+        pyfiles([spack_lib_path], exclude=exclude_paths))
 
 
+@pytest.mark.maybeslow
 def test_package_module_compatibility():
     """Test that all spack packages work with supported Python versions."""
-    check_python_versions(pyfiles([spack.packages_path]))
+    check_python_versions(pyfiles([spack.paths.packages_path]))

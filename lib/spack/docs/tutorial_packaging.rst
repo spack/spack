@@ -43,7 +43,7 @@ A few things before we get started:
 Creating the Package File
 -------------------------
 
-Spack comes with a handy command to create a new package: ``spack create``
+Spack comes with a handy command to create a new package: ``spack create``.
 
 This command is given the location of a package's source code, downloads
 the code, and sets up some basic packaging infrastructure for you.  The
@@ -52,12 +52,20 @@ we run ``spack create`` on it:
 
 .. code-block:: console
 
-  $ spack create -f https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-  ==> This looks like a URL for mpileaks version 1.0
-  ==> Creating template for package mpileaks
+  $ spack create -t generic -f https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
+  ==> This looks like a URL for mpileaks
+  ==> Found 1 version of mpileaks:
+    
+    1.0  https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
+  
+  ==> How many would you like to checksum? (default is 1, q to abort) 1
   ==> Downloading...
-  ==> Fetching https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-  ###################################################################################### 100.0%
+  ==> Fetching https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
+  ############################################################################# 100.0%
+  ==> Checksummed 1 version of mpileaks
+  ==> Using specified package template: 'generic'
+  ==> Created template for mpileaks package
+  ==> Created package file: $SPACK_ROOT/var/spack/repos/builtin/packages/mpileaks/package.py
 
 And Spack should spawn a text editor with this file:
 
@@ -192,29 +200,27 @@ Now when we try to install this package a lot more happens:
 .. code-block:: console
 
   $ spack install mpileaks
+  ...
+  ==> libdwarf is already installed in SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libdwarf-20160507-er4jrjynul6uba7wiu5tasuj35roxw6m
+  ==> dyninst is already installed in SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/dyninst-9.3.2-t7mau34jv3e76mpspdzhf2p2a6k7qubg
+  ==> callpath is already installed in SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/callpath-1.0.4-ikbbkvfmsfmqzo624nvvrbooovf7egoc
   ==> Installing mpileaks
-  ==> openmpi is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz
-  ==> callpath is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/callpath-1.0.2-zm4pf3gasgxeibyu2y262suktvaazube
-  ==> adept-utils is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/adept-utils-1.0.1-7p7ezxwtajdglj6cmojy2vybjct4j4jz
-  ==> Using cached archive: /usr/workspace/wsa/legendre/spack/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
-  ==> Already staged mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk in /usr/workspace/wsa/legendre/spack/var/spack/stage/mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk
-  ==> Already patched mpileaks
-  ==> Building mpileaks [AutotoolsPackage]
-  ==> Executing phase : 'autoreconf'
-  ==> Executing phase : 'configure'
-  ==> Error: ProcessError: Command exited with status 1:
-      './configure' '--prefix=/usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk'
-  /usr/workspace/wsa/legendre/spack/lib/spack/spack/build_systems/autotools.py:150, in configure:
-       145      def configure(self, spec, prefix):
-       146          """Runs configure with the arguments specified in `configure_args`
-       147          and an appropriately set prefix
-       148          """
-       149          options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-    >> 150          inspect.getmodule(self).configure(*options)
-
+  ==> Using cached archive: SPACK_ROOT/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
+  ==> Already staged mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7 in SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7
+  ==> No patches needed for mpileaks
+  ==> Building mpileaks [Package]
+  ==> Executing phase: 'install'
+  ==> Error: ProcessError: Command exited with status 2:
+      'make' '-j36'
+  
+  1 error found in build log:
+       1     ==> Executing phase: 'install'
+       2     ==> 'make' '-j36'
+    >> 3     make: *** No targets specified and no makefile found.  Stop.
+  
   See build log for details:
-    /tmp/legendre/spack-stage/spack-stage-7V5yyk/mpileaks-1.0/spack-build.out
-
+    SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7/mpileaks-1.0/spack-build.out
+  
 Note that this command may take a while to run and produce more output if
 you don't have an MPI already installed or configured in Spack.
 
@@ -228,44 +234,79 @@ Debugging Package Builds
 ------------------------
 
 Our ``mpileaks`` package is still not building.  It may be obvious to
-many of you that we're still missing the configure options.  But let's
-pretend we're not all intelligent developers and use this opportunity
-spend some time debugging.  We a few options that can tell us about
+many of you that we never ran the configure script.  Let's add a
+call to ``configure()`` to the top of the install routine. The resulting
+package.py is in ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/3.package.py``:
+
+.. literalinclude:: tutorial/examples/3.package.py
+  :lines: 25-
+  :language: python
+
+If we re-run we still get errors:
+
+.. code-block:: console
+
+  ==> Installing mpileaks
+  ==> Using cached archive: SPACK_ROOT/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
+  ==> Already staged mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7 in SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7
+  ==> No patches needed for mpileaks
+  ==> Building mpileaks [Package]
+  ==> Executing phase: 'install'
+  ==> Error: ProcessError: Command exited with status 1:
+      './configure'
+  
+  1 error found in build log:
+       [ ... ]
+       21    checking whether SPACK_ROOT/lib/spack/env/gcc/gcc and cc understand -c and -o together... yes
+       22    checking whether we are using the GNU C++ compiler... yes
+       23    checking whether SPACK_ROOT/lib/spack/env/gcc/g++ accepts -g... yes
+       24    checking dependency style of SPACK_ROOT/lib/spack/env/gcc/g++... gcc3
+       25    checking for SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc... SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc
+       26    Checking whether SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc responds to '-showme:compile'... yes
+    >> 27    configure: error: unable to locate adept-utils installation
+  
+  See build log for details:
+    SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7/mpileaks-1.0/spack-build.out
+  
+Again, the problem may be obvious.  But let's pretend we're not
+all intelligent developers and use this opportunity spend some
+time debugging.  We have a few options that can tell us about
 what's going wrong:
 
 As per the error message, Spack has given us a ``spack-build.out`` debug log:
 
 .. code-block:: console
-
-  ==> './configure' '--prefix=/usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk'
+  
+  ==> Executing phase: 'install'
+  ==> './configure'
   checking metadata... no
   checking installation directory variables... yes
   checking for a BSD-compatible install... /usr/bin/install -c
   checking whether build environment is sane... yes
-  checking for a thread-safe mkdir -p... /usr/bin/mkdir -p
+  checking for a thread-safe mkdir -p... /bin/mkdir -p
   checking for gawk... gawk
   checking whether make sets $(MAKE)... yes
-  checking for gcc... /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc
+  checking for gcc... SPACK_ROOT/lib/spack/env/gcc/gcc
   checking for C compiler default output file name... a.out
   checking whether the C compiler works... yes
   checking whether we are cross compiling... no
-  checking for suffix of executables...
+  checking for suffix of executables... 
   checking for suffix of object files... o
   checking whether we are using the GNU C compiler... yes
-  checking whether /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc accepts -g... yes
-  checking for /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc option to accept ISO C89... none needed
+  checking whether SPACK_ROOT/lib/spack/env/gcc/gcc accepts -g... yes
+  checking for SPACK_ROOT/lib/spack/env/gcc/gcc option to accept ISO C89... none needed
   checking for style of include used by make... GNU
-  checking dependency style of /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc... gcc3
-  checking whether /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc and cc understand -c and -o together... yes
+  checking dependency style of SPACK_ROOT/lib/spack/env/gcc/gcc... gcc3
+  checking whether SPACK_ROOT/lib/spack/env/gcc/gcc and cc understand -c and -o together... yes
   checking whether we are using the GNU C++ compiler... yes
-  checking whether /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/g++ accepts -g... yes
-  checking dependency style of /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/g++... gcc3
-  checking for /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz/bin/mpicc... /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz/bin/mpicc
-  Checking whether /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz/bin/mpicc responds to '-showme:compile'... yes
-  configure: error: unable to locate ``adept-utils`` installation
+  checking whether SPACK_ROOT/lib/spack/env/gcc/g++ accepts -g... yes
+  checking dependency style of SPACK_ROOT/lib/spack/env/gcc/g++... gcc3
+  checking for SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc... SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc
+  Checking whether SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc responds to '-showme:compile'... yes
+  configure: error: unable to locate adept-utils installation
 
-This gives us the output from the build, and it's fairly obvious that
-mpileaks isn't finding its ``adept-utils`` package.  Spack has
+This gives us the output from the build, and mpileaks isn't
+finding its ``adept-utils`` package.  Spack has
 automatically added the include and library directories of
 ``adept-utils`` to the compiler's search path, but some packages like
 mpileaks can sometimes be picky and still want things spelled out on
@@ -292,26 +333,26 @@ From here we can manually re-run the build:
   checking installation directory variables... yes
   checking for a BSD-compatible install... /usr/bin/install -c
   checking whether build environment is sane... yes
-  checking for a thread-safe mkdir -p... /usr/bin/mkdir -p
+  checking for a thread-safe mkdir -p... /bin/mkdir -p
   checking for gawk... gawk
   checking whether make sets $(MAKE)... yes
-  checking for gcc... /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc
+  checking for gcc... SPACK_ROOT/lib/spack/env/gcc/gcc
   checking for C compiler default output file name... a.out
   checking whether the C compiler works... yes
   checking whether we are cross compiling... no
-  checking for suffix of executables...
+  checking for suffix of executables... 
   checking for suffix of object files... o
   checking whether we are using the GNU C compiler... yes
-  checking whether /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc accepts -g... yes
-  checking for /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc option to accept ISO C89... none needed
+  checking whether SPACK_ROOT/lib/spack/env/gcc/gcc accepts -g... yes
+  checking for SPACK_ROOT/lib/spack/env/gcc/gcc option to accept ISO C89... none needed
   checking for style of include used by make... GNU
-  checking dependency style of /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc... gcc3
-  checking whether /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/gcc and cc understand -c and -o together... yes
+  checking dependency style of SPACK_ROOT/lib/spack/env/gcc/gcc... gcc3
+  checking whether SPACK_ROOT/lib/spack/env/gcc/gcc and cc understand -c and -o together... yes
   checking whether we are using the GNU C++ compiler... yes
-  checking whether /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/g++ accepts -g... yes
-  checking dependency style of /usr/workspace/wsa/legendre/spack/lib/spack/env/gcc/g++... gcc3
-  checking for /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz/bin/mpicc... /usr/workspace/wsa  /legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz/bin/mpicc
-  Checking whether /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz/bin/mpicc responds to '-showme:compile'... yes
+  checking whether SPACK_ROOT/lib/spack/env/gcc/g++ accepts -g... yes
+  checking dependency style of SPACK_ROOT/lib/spack/env/gcc/g++... gcc3
+  checking for SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc... SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc
+  Checking whether SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc responds to '-showme:compile'... yes
   configure: error: unable to locate adept-utils installation
 
 We're seeing the same error, but now we're in a shell where we can run
@@ -328,9 +369,9 @@ Specifying Configure Arguments
 
 Let's add the configure arguments to the mpileaks' ``package.py``.  This
 version can be found in
-``$SPACK_ROOT/lib/spack/docs/tutorial/examples/3.package.py``:
+``$SPACK_ROOT/lib/spack/docs/tutorial/examples/4.package.py``:
 
-.. literalinclude:: tutorial/examples/3.package.py
+.. literalinclude:: tutorial/examples/4.package.py
    :lines: 25-
    :language: python
 
@@ -339,37 +380,35 @@ This is all we need for working mpileaks!  If we install now we'll see:
 .. code-block:: console
 
   $ spack install mpileaks
-  spack install mpileaks
+  ...
   ==> Installing mpileaks
-  ==> openmpi is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz
-  ==> callpath is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/callpath-1.0.2-zm4pf3gasgxeibyu2y262suktvaazube
-  ==> adept-utils is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/adept-utils-1.0.1-7p7ezxwtajdglj6cmojy2vybjct4j4jz
-  ==> Using cached archive: /usr/workspace/wsa/legendre/spack/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
-  ==> Already staged mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk in /usr/workspace/wsa/legendre/spack/var/spack/stage/mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk
-  ==> Already patched mpileaks
-  ==> Building mpileaks [AutotoolsPackage]
-  ==> Executing phase : 'autoreconf'
-  ==> Executing phase : 'configure'
-  ==> Executing phase : 'build'
-  ==> Executing phase : 'install'
+  ==> Using cached archive: SPACK_ROOT/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
+  ==> Staging archive: SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7/mpileaks-1.0.tar.gz
+  ==> Created stage in SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7
+  ==> No patches needed for mpileaks
+  ==> Building mpileaks [Package]
+  ==> Executing phase: 'install'
   ==> Successfully installed mpileaks
-    Fetch: 0.00s.  Build: 14.08s.  Total: 14.08s.
-  [+] /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/mpileaks-1.0-eum4hmnlt6ovalwjnciaygfb3beja4gk
+  Fetch: 0.00s.  Build: 9.01s.  Total: 9.01s.
+  [+] SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7
 
-We took a few shortcuts for this package that are worth highlighting.
-Spack automatically detected that mpileaks was an Autotools-based package
-when we ran ``spack create``.  If this had been a CMake-based package we
-would have been filling in a ``cmake_args`` function instead of
-``configure_args``.  If Spack hadn't been able to detect the build
-system, we'd be filling in a generic install method that would manually
-be calling build commands, such as is found in the ``zlib`` package:
+
+There are some special circumstances in package that are worth highlighting.
+Normally spack would have automatically detected that mpileaks was an
+Autotools-based package when we ran ``spack create`` and made it an ``AutoToolsPackage`` class (except we added the ``-t generic`` option to skip this).  Instead of
+a full install routine we would have just written:
 
 .. code-block:: python
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')
+    def configure_args(self):
+        args = ['--with-adept-utils=%s' % self.spec['adept-utils'].prefix,
+                '--with-callpath=%s' % self.spec['callpath'].prefix]
+        return args
+
+Similarly, if this had been a CMake-based package we
+would have been filling in a ``cmake_args`` function instead of
+``configure_args``.  There are similar default package types for
+many build environments.
 
 --------
 Variants
@@ -381,9 +420,9 @@ that it walks.  Let's add a variant to allow users to set this when they
 build in Spack.
 
 To do this, we'll add a variant to our package, as per the following (see
-``$SPACK_ROOT/lib/spack/docs/tutorial/examples/4.package.py``):
+``$SPACK_ROOT/lib/spack/docs/tutorial/examples/5.package.py``):
 
-.. literalinclude:: tutorial/examples/4.package.py
+.. literalinclude:: tutorial/examples/5.package.py
    :lines: 25-
    :language: python
 
@@ -394,18 +433,15 @@ configure line (output truncated for length):
 .. code-block:: console
 
   $ spack install --verbose mpileaks stackstart=4
+  ...
   ==> Installing mpileaks
-  ==> openmpi is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/openmpi-2.0.1-5ee5j34c2y4kb5c3joygrgahidqnwhnz
-  ==> callpath is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/callpath-1.0.2-zm4pf3gasgxeibyu2y262suktvaazube
-  ==> adept-utils is already installed in /usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/adept-utils-1.0.1-7p7ezxwtajdglj6cmojy2vybjct4j4jz
-  ==> Using cached archive: /usr/workspace/wsa/legendre/spack/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
-  ==> Staging archive: /usr/workspace/wsa/legendre/spack/var/spack/stage/mpileaks-1.0-otqo2opkhan5ksujt6tpmdftydrieig7/mpileaks-1.0.tar.gz
-  ==> Created stage in /usr/workspace/wsa/legendre/spack/var/spack/stage/mpileaks-1.0-otqo2opkhan5ksujt6tpmdftydrieig7
-  ==> Ran patch() for mpileaks
-  ==> Building mpileaks [AutotoolsPackage]
-  ==> Executing phase : 'autoreconf'
-  ==> Executing phase : 'configure'
-  ==> './configure' '--prefix=/usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/mpileaks-1.0-otqo2opkhan5ksujt6tpmdftydrieig7' '--with-adept-utils=/usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/adept-utils-1.0.1-7p7ezxwtajdglj6cmojy2vybjct4j4jz' '--with-callpath=/usr/workspace/wsa/legendre/spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/callpath-1.0.2-zm4pf3gasgxeibyu2y262suktvaazube' '--with-stack-start-c=4' '--with-stack-start-fortran=4'
+  ==> Using cached archive: SPACK_ROOT/var/spack/cache/mpileaks/mpileaks-1.0.tar.gz
+  ==> Staging archive: SPACK_ROOT/var/spack/stage/mpileaks-1.0-gxxi4fp57b4j6xalra5t65hyx5rj25t7/mpileaks-1.0.tar.gz
+  ==> Created stage in SPACK_ROOT/var/spack/stage/mpileaks-1.0-gxxi4fp57b4j6xalra5t65hyx5rj25t7
+  ==> No patches needed for mpileaks
+  ==> Building mpileaks [Package]
+  ==> Executing phase: 'install'
+  ==> './configure' '--with-adept-utils=SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/adept-utils-1.0.1-pm3gffhrnwsdtqthtvsfvs2tny4r65wb' '--with-callpath=SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/callpath-1.0.4-ikbbkvfmsfmqzo624nvvrbooovf7egoc' '--prefix=SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/mpileaks-1.0-gxxi4fp57b4j6xalra5t65hyx5rj25t7' '--with-stack-start-c=4' '--with-stack-start-fortran=4'
 
 ---------------
 The Spec Object

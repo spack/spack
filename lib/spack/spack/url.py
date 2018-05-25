@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -50,7 +50,7 @@ from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import *
+from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.util.compression as comp
@@ -90,9 +90,14 @@ def find_list_url(url):
         (r'(.*github\.com/[^/]+/[^/]+)',
          lambda m: m.group(1) + '/releases'),
 
-        # GitLab
+        # GitLab API endpoint
+        # e.g. https://gitlab.dkrz.de/api/v4/projects/k202009%2Flibaec/repository/archive.tar.gz?sha=v1.0.2
+        (r'(.*gitlab[^/]+)/api/v4/projects/([^/]+)%2F([^/]+)',
+         lambda m: m.group(1) + '/' + m.group(2) + '/' + m.group(3) + '/tags'),
+
+        # GitLab non-API endpoint
         # e.g. https://gitlab.dkrz.de/k202009/libaec/uploads/631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz
-        (r'(.*gitlab[^/]+/[^/]+/[^/]+)',
+        (r'(.*gitlab[^/]+/(?!api/v4/projects)[^/]+/[^/]+)',
          lambda m: m.group(1) + '/tags'),
 
         # BitBucket
@@ -201,7 +206,7 @@ def strip_version_suffixes(path):
         'intel',
         'amd64',
         'x64',
-        'x86_64',
+        'x86[_-]64',
         'x86',
         'i[36]86',
         'ppc64(le)?',
@@ -226,7 +231,7 @@ def strip_version_suffixes(path):
         'intel',
         'amd64',
         'x64',
-        'x86_64',
+        'x86[_-]64',
         'x86',
         'i[36]86',
         'ppc64(le)?',
@@ -529,6 +534,9 @@ def parse_version_offset(path):
 
         # 9th Pass: Query strings
 
+        # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
+        (r'\?sha=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
+
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
         (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
 
@@ -640,9 +648,13 @@ def parse_name_offset(path, v=None):
         # e.g. https://github.com/nco/nco/archive/4.6.2.tar.gz
         (r'github\.com/[^/]+/([^/]+)', path),
 
-        # GitLab: gitlab.*/repo/name/
+        # GitLab API endpoint: gitlab.*/api/v4/projects/NAMESPACE%2Fname/
+        # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
+        (r'gitlab[^/]+/api/v4/projects/[^/]+%2F([^/]+)', path),
+
+        # GitLab non-API endpoint: gitlab.*/repo/name/
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        (r'gitlab[^/]+/[^/]+/([^/]+)', path),
+        (r'gitlab[^/]+/(?!api/v4/projects)[^/]+/([^/]+)', path),
 
         # Bitbucket: bitbucket.org/repo/name/
         # e.g. https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2

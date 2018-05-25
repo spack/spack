@@ -1,0 +1,124 @@
+--- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java.orig	2018-05-23 12:11:29.319402761 +0200
++++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java	2018-05-23 12:35:21.817904301 +0200
+@@ -150,6 +150,121 @@
+       builder.put("PATH", null);
+       builder.put("LD_LIBRARY_PATH", null);
+     }
++
++      String spack_prefix = System.getenv("SPACK_PREFIX");
++      if (spack_prefix != null) {
++          builder.put("SPACK_PREFIX", spack_prefix);
++      }
++
++      String spack_env_path = System.getenv("SPACK_ENV_PATH");
++      if (spack_env_path != null) {
++          builder.put("SPACK_ENV_PATH", spack_env_path);
++      }
++
++      String spack_debug_log_id = System.getenv("SPACK_DEBUG_LOG_ID");
++      if (spack_debug_log_id != null) {
++          builder.put("SPACK_DEBUG_LOG_ID", spack_debug_log_id);
++      }
++
++      String spack_debug_log_dir = System.getenv("SPACK_DEBUG_LOG_DIR");
++      if (spack_debug_log_dir != null) {
++          builder.put("SPACK_DEBUG_LOG_DIR", spack_debug_log_dir);
++      }
++
++      String spack_compiler_spec = System.getenv("SPACK_COMPILER_SPEC");
++      if (spack_compiler_spec != null) {
++          builder.put("SPACK_COMPILER_SPEC", spack_compiler_spec);
++      }
++
++      String spack_cc_rpath_arg = System.getenv("SPACK_CC_RPATH_ARG");
++      if (spack_cc_rpath_arg != null) {
++          builder.put("SPACK_CC_RPATH_ARG", spack_cc_rpath_arg);
++      }
++
++      String spack_cxx_rpath_arg = System.getenv("SPACK_CXX_RPATH_ARG");
++      if (spack_cxx_rpath_arg != null) {
++          builder.put("SPACK_CXX_RPATH_ARG", spack_cxx_rpath_arg);
++      }
++
++      String spack_f77_rpath_arg = System.getenv("SPACK_F77_RPATH_ARG");
++      if (spack_f77_rpath_arg != null) {
++          builder.put("SPACK_F77_RPATH_ARG", spack_f77_rpath_arg);
++      }
++
++      String spack_fc_rpath_arg = System.getenv("SPACK_FC_RPATH_ARG");
++      if (spack_fc_rpath_arg != null) {
++          builder.put("SPACK_FC_RPATH_ARG", spack_fc_rpath_arg);
++      }
++
++      String spack_short_spec = System.getenv("SPACK_SHORT_SPEC");
++      if (spack_short_spec != null) {
++          builder.put("SPACK_SHORT_SPEC", spack_short_spec);
++      }
++
++      String spack_cc = System.getenv("SPACK_CC");
++      if (spack_cc != null) {
++          builder.put("SPACK_CC", spack_cc);
++      }
++
++      String spack_cxx = System.getenv("SPACK_CXX");
++      if (spack_cxx != null) {
++          builder.put("SPACK_CXX", spack_cxx);
++      }
++
++      String spack_f77 = System.getenv("SPACK_F77");
++      if (spack_f77 != null) {
++          builder.put("SPACK_F77", spack_f77);
++      }
++
++      String spack_fc = System.getenv("SPACK_FC");
++      if (spack_fc != null) {
++          builder.put("SPACK_FC", spack_fc);
++      }
++
++      String spack_cflags = System.getenv("SPACK_CFLAGS");
++      if (spack_cflags != null) {
++          builder.put("SPACK_CFLAGS", spack_cflags);
++      }
++
++      String spack_cxxflags = System.getenv("SPACK_CXXFLAGS");
++      if (spack_cxxflags != null) {
++          builder.put("SPACK_CXXFLAGS", spack_cxxflags);
++      }
++
++      String spack_fcflags = System.getenv("SPACK_FCFLAGS");
++      if (spack_fcflags != null) {
++          builder.put("SPACK_FCFLAGS", spack_fcflags);
++      }
++
++      String spack_fflags = System.getenv("SPACK_FFLAGS");
++      if (spack_fflags != null) {
++          builder.put("SPACK_FFLAGS", spack_fflags);
++      }
++
++      String spack_ldflags = System.getenv("SPACK_LDFLAGS");
++      if (spack_ldflags != null) {
++          builder.put("SPACK_LDFLAGS", spack_ldflags);
++      }
++
++      String spack_ldlibs = System.getenv("SPACK_LDLIBS");
++      if (spack_ldlibs != null) {
++          builder.put("SPACK_LDLIBS", spack_ldlibs);
++      }
++
++      String spack_debug = System.getenv("SPACK_DEBUG");
++      if (spack_debug != null) {
++          builder.put("SPACK_DEBUG", spack_debug);
++      }
++
++      String spack_test_command = System.getenv("SPACK_TEST_COMMAND");
++      if (spack_test_command != null) {
++          builder.put("SPACK_TEST_COMMAND", spack_test_command);
++      }
++
++      String spack_dependencies = System.getenv("SPACK_DEPENDENCIES");
++      if (spack_dependencies != null) {
++          builder.put("SPACK_DEPENDENCIES", spack_dependencies);
++      }
+   }
+ 
+   private static PathFragment determineShellExecutable(OS os, PathFragment fromOption) {

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,15 +28,18 @@ import os
 import re
 
 import llnl.util.tty as tty
-import spack
+from llnl.util.filesystem import mkdirp
+
 import spack.cmd
 import spack.util.web
-from llnl.util.filesystem import mkdirp
-from spack.repository import Repo
+import spack.repo
 from spack.spec import Spec
-from spack.util.executable import which
-from spack.util.naming import *
-from spack.url import *
+from spack.util.editor import editor
+from spack.util.executable import which, ProcessError
+from spack.util.naming import mod_to_class
+from spack.util.naming import simplify_name, valid_fully_qualified_module_name
+from spack.url import UndetectableNameError, UndetectableVersionError
+from spack.url import parse_name, parse_version
 
 description = "create a new package file"
 section = "packaging"
@@ -45,14 +48,14 @@ level = "short"
 
 package_template = '''\
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -330,20 +333,13 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
+    base_class_name = 'OctavePackage'
+
     dependencies = """\
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
     # depends_on('octave-foo', type=('build', 'run'))"""
-
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        octave('--quiet', '--norc',
-               '--built-in-docstrings-file=/dev/null',
-               '--texi-macros-file=/dev/null',
-               '--eval', 'pkg prefix {0}; pkg install {1}'.format(
-                   prefix, self.stage.archive_file))"""
 
     def __init__(self, name, *args):
         # If the user provided `--name octave-splines`, don't rename it
@@ -462,6 +458,7 @@ class BuildSystemGuesser:
             (r'/Makefile\.PL$',       'perlmake'),
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
+            (r'/DESCRIPTION$',        'octave'),
         ]
 
         # Peek inside the compressed file.
@@ -469,14 +466,14 @@ class BuildSystemGuesser:
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         else:
             try:
                 tar    = which('tar')
                 output = tar('--exclude=*/*/*', '-tf',
                              stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         lines = output.split('\n')
 
@@ -652,17 +649,17 @@ def get_repository(args, name):
     # Figure out where the new package should live
     repo_path = args.repo
     if repo_path is not None:
-        repo = Repo(repo_path)
+        repo = spack.repo.Repo(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die("Can't create package with namespace {0} in repo with "
-                    "namespace {0}".format(spec.namespace, repo.namespace))
+                    "namespace {1}".format(spec.namespace, repo.namespace))
     else:
         if spec.namespace:
-            repo = spack.repo.get_repo(spec.namespace, None)
+            repo = spack.repo.path.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.first_repo()
+            repo = spack.repo.path.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:
@@ -697,4 +694,4 @@ def create(parser, args):
     tty.msg("Created package file: {0}".format(pkg_path))
 
     # Open up the new package file in your $EDITOR
-    spack.editor(pkg_path)
+    editor(pkg_path)

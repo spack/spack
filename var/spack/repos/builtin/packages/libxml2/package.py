@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,9 +29,11 @@ class Libxml2(AutotoolsPackage):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
        project (but usable outside of the Gnome platform), it is free
        software available under the MIT License."""
-    homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.2.tar.gz"
 
+    homepage = "http://xmlsoft.org"
+    url      = "http://xmlsoft.org/sources/libxml2-2.9.8.tar.gz"
+
+    version('2.9.8', 'b786e353e2aa1b872d70d5d1ca0c740d')
     version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
     version('2.7.8', '8127a65e8c3b08856093099b52599c86')
@@ -44,16 +46,23 @@ class Libxml2(AutotoolsPackage):
     depends_on('zlib')
     depends_on('xz')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     def configure_args(self):
         spec = self.spec
+
+        args = ["--with-lzma=%s" % spec['xz'].prefix]
+
         if '+python' in spec:
-            python_args = [
+            args.extend([
                 '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
-            ]
+            ])
         else:
-            python_args = ['--without-python']
+            args.append('--without-python')
 
-        return python_args
+        return args
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('CPATH', self.prefix.include.libxml2)
+        run_env.prepend_path('CPATH', self.prefix.include.libxml2)
