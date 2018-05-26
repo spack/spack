@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import sys
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
@@ -143,7 +142,8 @@ class Elemental(CMakePackage):
             intel_bin = os.path.dirname(ifort)
             intel_root = os.path.dirname(intel_bin)
             print('{} {} {}'.format(ifort, intel_bin, intel_root))
-            libfortran = find_libraries('libifcoremt', root=intel_root, recursive=True)
+            libfortran = find_libraries('libifcoremt',
+                                        root=intel_root, recursive=True)
         elif self.spec.satisfies('%gcc'):
             # see <stage_folder>/debian/rules as an example:
             mpif77 = Executable(spec['mpi'].mpif77)
@@ -154,7 +154,8 @@ class Elemental(CMakePackage):
             xl_fort = env['SPACK_F77']
             xl_bin = os.path.dirname(xl_fort)
             xl_root = os.path.dirname(xl_bin)
-            libfortran = find_libraries('libxlf90_r', root=xl_root, recursive=True)
+            libfortran = find_libraries('libxlf90_r',
+                                        root=xl_root, recursive=True)
         else:
             libfortran = None
 
