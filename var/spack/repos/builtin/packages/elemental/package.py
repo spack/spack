@@ -149,7 +149,7 @@ class Elemental(CMakePackage):
             mpif77 = Executable(spec['mpi'].mpif77)
             libfortran = LibraryList(mpif77('--print-file-name',
                                             'libgfortran.%s' % dso_suffix,
-                                            output=str))
+                                            output=str).strip())
         elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
             xl_fort = env['SPACK_F77']
             xl_bin = os.path.dirname(xl_fort)
