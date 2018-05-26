@@ -141,7 +141,6 @@ class Elemental(CMakePackage):
             ifort = env['SPACK_F77']
             intel_bin = os.path.dirname(ifort)
             intel_root = os.path.dirname(intel_bin)
-            print('{} {} {}'.format(ifort, intel_bin, intel_root))
             libfortran = find_libraries('libifcoremt',
                                         root=intel_root, recursive=True)
         elif self.spec.satisfies('%gcc'):
