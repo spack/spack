@@ -77,7 +77,7 @@ from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
 from spack.util.executable import which
-from spack.stage import Stage, ResourceStage, StageComposite
+from spack.stage import Stage, ResourceStage, StageComposite, BundleStage
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -2259,6 +2259,43 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+
+
+class BundlePackage(PackageBase):
+    """BundlePackage is used to collect disparate dependencies into a
+    single concretization operation.  Sometimes called a "meta
+    package," it is a package with dependencies but nothing to do.
+    There is no URL, not tarball fetch, no stage, and no install
+    phases."""
+
+    # No phases, because this package does nothing
+    phases = []
+
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
+    build_system_class = 'BundlePackage'
+
+    # No URLs to download
+    def url_for_version(self, version):
+        return None
+
+    # Called by PackageBase.__init__().
+    def _fixup_url(self):
+        pass
+
+    def _make_fetcher(self):
+        return fs.BundleFetchStrategy()
+
+    def _make_stage(self):
+        return BundleStage()
+
+    @property
+    def build_directory(self):
+        """Returns the directory containing the main Bundle
+
+        :return: build directory
+        """
+        return self.stage.source_path
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
