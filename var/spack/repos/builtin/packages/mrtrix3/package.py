@@ -52,8 +52,6 @@ class Mrtrix3(Package):
         build = Executable('./build')
         configure()
         build()
-        # install_tree('.', prefix) does not work since the prefix
-        # directory already exists by this point
         install_tree('.', prefix)
 
     def setup_environment(self, spac_env, run_env):

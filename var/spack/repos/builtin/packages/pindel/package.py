@@ -50,7 +50,7 @@ class Pindel(MakefilePackage):
     #
 
     def edit(self, spec, prefix):
-        install('Makefile', 'Makefile2')
+        copy('Makefile', 'Makefile2')
         myedit = FileFilter('Makefile2')
         myedit.filter('-include Makefile.local', '#removed include')
         myedit.filter('@false', '#removed autofailure')

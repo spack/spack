@@ -70,8 +70,8 @@ class Chombo(MakefilePackage):
         # Set remaining variables in Make.defs.local
         # Make.defs.local.template.patch ensures lines for USE_TIMER,
         # USE_LAPACK and lapackincflags are present
-        install('./lib/mk/Make.defs.local.template',
-                './lib/mk/Make.defs.local')
+        copy('./lib/mk/Make.defs.local.template',
+             './lib/mk/Make.defs.local')
 
         defs_file = FileFilter('./lib/mk/Make.defs.local')
 

@@ -48,5 +48,4 @@ class Sctk(Package):
         make('config')
         make('all')
         make('install')
-        mkdirp(prefix.bin)
         install_tree('bin', prefix.bin)

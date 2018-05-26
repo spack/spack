@@ -116,7 +116,7 @@ class Glib(AutotoolsPackage):
         dtrace_copy = join_path(self.dtrace_copy_path, 'dtrace')
 
         with working_dir(self.dtrace_copy_path, create=True):
-            install(dtrace, dtrace_copy)
+            copy(dtrace, dtrace_copy)
             filter_file(
                 '^#!/usr/bin/python',
                 '#!/usr/bin/env python',

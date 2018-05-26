@@ -76,7 +76,7 @@ class Wannier90(MakefilePackage):
             'make.sys'
         )
 
-        install(template, self.makefile_name)
+        copy(template, self.makefile_name)
         for key, value in substitutions.items():
             filter_file(key, value, self.makefile_name)
 

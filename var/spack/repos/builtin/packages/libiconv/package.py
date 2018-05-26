@@ -45,6 +45,6 @@ class Libiconv(AutotoolsPackage):
         args = ['--enable-extra-encodings']
 
         # A hack to patch config.guess in the libcharset sub directory
-        install('./build-aux/config.guess',
-                'libcharset/build-aux/config.guess')
+        copy('./build-aux/config.guess',
+             'libcharset/build-aux/config.guess')
         return args

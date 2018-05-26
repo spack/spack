@@ -77,7 +77,7 @@ class Grackle(Package):
             'clib',
             'Make.mach.{0}'.format(grackle_architecture)
         )
-        install(template, makefile)
+        copy(template, makefile)
         for key, value in substitutions.items():
             filter_file(key, value, makefile)
 

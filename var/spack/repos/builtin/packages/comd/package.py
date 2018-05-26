@@ -56,7 +56,7 @@ class Comd(MakefilePackage):
 
     def edit(self, spec, prefix):
         with working_dir('src-mpi') or working_dir('src-openmp'):
-            install('Makefile.vanilla', 'Makefile')
+            copy('Makefile.vanilla', 'Makefile')
 
     @property
     def build_targets(self):

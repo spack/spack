@@ -35,5 +35,5 @@ class Farmhash(CMakePackage):
     version('92e897', commit='92e897b282426729f4724d91a637596c7e2fe28f')
 
     def patch(self):
-        install(join_path(os.path.dirname(__file__), "CMakeLists.txt"),
+        copy(join_path(os.path.dirname(__file__), "CMakeLists.txt"),
                 "CMakeLists.txt")

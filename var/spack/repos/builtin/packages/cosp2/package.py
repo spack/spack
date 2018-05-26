@@ -61,7 +61,7 @@ class Cosp2(MakefilePackage):
             if '+double' in spec:
                 filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
                             'Makefile.vanilla')
-            install('Makefile.vanilla', 'Makefile')
+            copy('Makefile.vanilla', 'Makefile')
 
     def install(self, spec, prefix):
         install_tree('bin/', prefix.bin)

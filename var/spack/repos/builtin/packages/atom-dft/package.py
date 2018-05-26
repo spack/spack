@@ -38,7 +38,7 @@ class AtomDft(MakefilePackage):
     depends_on('xmlf90')
 
     def edit(self, spec, prefix):
-        install('arch.make.sample', 'arch.make')
+        copy('arch.make.sample', 'arch.make')
 
     @property
     def build_targets(self):

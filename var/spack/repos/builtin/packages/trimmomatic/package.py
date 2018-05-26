@@ -45,7 +45,7 @@ class Trimmomatic(Package):
         install(jar_file, prefix.bin)
 
         # Put the adapter files someplace sensible
-        install_tree('adapters', join_path(self.prefix.share, 'adapters'))
+        install_tree('adapters', prefix.share.adapters)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.

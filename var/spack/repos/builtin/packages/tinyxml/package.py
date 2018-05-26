@@ -41,8 +41,8 @@ class Tinyxml(CMakePackage):
         return url.format(version.dotted, version.underscored)
 
     def patch(self):
-        install(join_path(os.path.dirname(__file__),
-                "CMakeLists.txt"), "CMakeLists.txt")
+        copy(join_path(os.path.dirname(__file__),
+             "CMakeLists.txt"), "CMakeLists.txt")
 
     def cmake_args(self):
         spec = self.spec

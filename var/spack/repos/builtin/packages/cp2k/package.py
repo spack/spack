@@ -265,7 +265,7 @@ class Cp2k(Package):
                 lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
                 mkdirp(lib_dir)
                 try:
-                    install(env['LIBSMM_PATH'], join_path(lib_dir, 'libsmm.a'))
+                    copy(env['LIBSMM_PATH'], join_path(lib_dir, 'libsmm.a'))
                 except KeyError:
                     raise KeyError('Point environment variable LIBSMM_PATH to '
                                    'the absolute path of the libsmm.a file')

@@ -43,5 +43,5 @@ class Bioawk(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('bioawk',  prefix.bin.bioawk)
-        install('maketab', prefix.bin.maketab)
+        install('bioawk',  prefix.bin)
+        install('maketab', prefix.bin)

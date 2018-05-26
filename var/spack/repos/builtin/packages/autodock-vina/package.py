@@ -64,5 +64,5 @@ class AutodockVina(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
-            install('vina', prefix.bin.vina)
-            install('vina_split', prefix.bin.vina_split)
+            install('vina', prefix.bin)
+            install('vina_split', prefix.bin)

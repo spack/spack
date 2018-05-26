@@ -93,7 +93,7 @@ class Bcl2fastq2(Package):
                     tty.msg("cwd sez: {0}".format(os.getcwd()))
                     tarball = glob.glob(join_path('spack-expanded-archive',
                                         'bcl2fastq2*.tar.gz'))[0]
-                    install(tarball, '.')
+                    copy(tarball, '.')
                     os.rmdir('spack-expanded-archive')
                     tar = which('tar')
                     tarball = os.path.basename(tarball)

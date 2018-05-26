@@ -262,8 +262,8 @@ class Ncl(Package):
             triangle_src = join_path(self.stage.source_path, 'triangle_src')
             triangle_dst = join_path(self.stage.source_path, 'ni', 'src',
                                      'lib', 'hlu')
-            install(join_path(triangle_src, 'triangle.h'), triangle_dst)
-            install(join_path(triangle_src, 'triangle.c'), triangle_dst)
+            copy(join_path(triangle_src, 'triangle.h'), triangle_dst)
+            copy(join_path(triangle_src, 'triangle.c'), triangle_dst)
 
     @staticmethod
     def delete_files(*filenames):

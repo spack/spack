@@ -57,8 +57,8 @@ class Namd(MakefilePackage):
 
     def _copy_arch_file(self, lib):
         config_filename = 'arch/{0}.{1}'.format(self.arch, lib)
-        install('arch/Linux-x86_64.{0}'.format(lib),
-                config_filename)
+        copy('arch/Linux-x86_64.{0}'.format(lib),
+             config_filename)
         if lib == 'tcl':
             filter_file(r'-ltcl8\.5',
                         '-ltcl{0}'.format(self.spec['tcl'].version.up_to(2)),

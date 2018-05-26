@@ -40,7 +40,7 @@ class Libgridxc(Package):
         sh = which('sh')
         with working_dir('build', create=True):
             sh('../src/config.sh')
-            install('../extra/fortran.mk', 'fortran.mk')
+            copy('../extra/fortran.mk', 'fortran.mk')
 
     def install(self, spec, prefix):
         with working_dir('build'):
