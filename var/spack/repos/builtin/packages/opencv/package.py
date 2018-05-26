@@ -180,27 +180,29 @@ class Opencv(CMakePackage):
 
         # 3rd party components
         args.extend([
+            '-DBUILD_IPP_IW:BOOL={0}'.format((
+                'ON' if '+ipp_iw' in spec else 'OFF')),
             '-DWITH_CUDA:BOOL={0}'.format((
                 'ON' if '+cuda' in spec else 'OFF')),
-            '-DWITH_EIGEN={0}'.format((
+            '-DWITH_EIGEN:BOOL={0}'.format((
                 'ON' if '+eigen' in spec else 'OFF')),
             '-DWITH_IPP:BOOL={0}'.format((
                 'ON' if '+ipp' in spec else 'OFF')),
-            '-DBUILD_IPP_IW:BOOL={0}'.format((
-                'ON' if '+ipp_iw' in spec else 'OFF')),
+            '-DWITH_JASPER:BOOL={0}'.format((
+                'ON' if '+jasper' in spec else 'OFF')),
             '-DWITH_JPEG:BOOL={0}'.format((
                 'ON' if '+jpeg' in spec else 'OFF')),
-            '-DWITH_OPENCL={0}'.format((
+            '-DWITH_OPENCL:BOOL={0}'.format((
                 'ON' if '+opencl' in spec else 'OFF')),
-            '-DWITH_OPENCL_SVM={0}'.format((
+            '-DWITH_OPENCL_SVM:BOOL={0}'.format((
                 'ON' if '+opencl_svm' in spec else 'OFF')),
-            '-DWITH_OPENCLAMDFFT={0}'.format((
+            '-DWITH_OPENCLAMDFFT:BOOL={0}'.format((
                 'ON' if '+openclamdfft' in spec else 'OFF')),
-            '-DWITH_OPENCLAMDBLAS={0}'.format((
+            '-DWITH_OPENCLAMDBLAS:BOOL={0}'.format((
                 'ON' if '+openclamdblas' in spec else 'OFF')),
             '-DWITH_OPENMP:BOOL={0}'.format((
                 'ON' if '+openmp' in spec else 'OFF')),
-            '-DWITH_PTHREADS_PF={0}'.format((
+            '-DWITH_PTHREADS_PF:BOOL={0}'.format((
                 'ON' if '+pthreads_pf' in spec else 'OFF')),
             '-DWITH_PNG:BOOL={0}'.format((
                 'ON' if '+png' in spec else 'OFF')),
@@ -210,8 +212,6 @@ class Opencv(CMakePackage):
                 'ON' if '+tiff' in spec else 'OFF')),
             '-DWITH_VTK:BOOL={0}'.format((
                 'ON' if '+vtk' in spec else 'OFF')),
-            '-DWITH_ZLIB:BOOL={0}'.format((
-                'ON' if '+zlib' in spec else 'OFF')),
         ])
 
         # Media I/O
