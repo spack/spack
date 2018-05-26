@@ -1381,6 +1381,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    keep_stage=False,
                    install_source=False,
                    install_deps=True,
+                   install_self=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1577,8 +1578,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
             # Fork a child to do the actual installation
             # we preserve verbosity settings across installs.
-            PackageBase._verbose = spack.build_environment.fork(
-                self, build_process, dirty=dirty, fake=fake)
+            if install_self:
+                PackageBase._verbose = spack.build_environment.fork(
+                    self, build_process, dirty=dirty, fake=fake)
 
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
@@ -2276,6 +2278,28 @@ class BundlePackage(PackageBase):
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'BundlePackage'
+
+    def do_fetch(self, **kwargs):
+        pass
+
+    def do_stage(self):
+        pass
+
+    def do_patch(self):
+        pass
+
+    def do_install(self, **kwargs):
+        kwargs['install_self'] = False
+        super(BundlePackage,self).do_install(**kwargs)
+
+    def do_uninstall(self, **kwargs):
+        pass
+
+    def do_clean(self):
+        pass
+
+    def do_restage(self):
+        pass
 
     # No URLs to download
     def url_for_version(self, version):

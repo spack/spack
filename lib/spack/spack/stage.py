@@ -647,7 +647,7 @@ class BundleStage(object):
 
     def __init__(self):
         self.archive_file = None
-        self.path = None
+        self.path = ''
         self.source_path = None
 
     def chdir(self):
@@ -674,6 +674,9 @@ class BundleStage(object):
 
     def restage(self):
         tty.die("Cannot restage BundleStage.")
+
+    def create(self):
+        tty.msg("No stage directory created for BundleStage")
 
     def destroy(self):
         # No need to destroy BundleStage
