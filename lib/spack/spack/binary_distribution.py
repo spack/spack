@@ -524,7 +524,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
     else:
-        shutil.copytree(workdir, spec.prefix, symlinks=True)
+        install_tree(workdir, spec.prefix, symlinks=True)
     finally:
         shutil.rmtree(tmpdir)
 
