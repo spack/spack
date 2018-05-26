@@ -581,9 +581,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                       'make_jobs']
 
     def _fixup_url(self):
-        # Fix up self.url if this package fetches with a URLFetchStrategy.
-        # This makes self.url behave sanely.
-        # This method is separated out to support BundlePackage
+        """Fix up self.url if this package fetches with a URLFetchStrategy,
+        making self.url behave sanely.  This method is separated out so
+        BundlePackage can override it with a NOP"""
         if self.spec.versions.concrete:
             # TODO: this is a really roundabout way of determining the type
             # TODO: of fetch to do. figure out a more sane fetch
@@ -628,6 +628,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self._fetcher = None
         self.url = getattr(self.__class__, 'url', None)
 
+        # Fix up self.url if this package fetches with a URLFetchStrategy.
+        # This makes self.url behave sanely.
         self._fixup_url()
 
         # Set a default list URL (place to find available versions)

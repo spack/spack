@@ -972,7 +972,6 @@ def args_are_for(args, fetcher):
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
-
     # If it's not a known version, extrapolate one.
     if version not in pkg.versions:
         url = pkg.url_for_version(version)
@@ -1093,6 +1092,8 @@ class NoStageError(FetchError):
 
 
 class BundleFetchStrategy(FetchStrategy):
+    """Fetch strategy for BundlePackage.  BundlePackages don't fetch
+    anything, so this is a no-op."""
 
     # Subclasses need to implement these methods
     def fetch(self):
