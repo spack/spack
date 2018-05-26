@@ -326,7 +326,7 @@ def copy_tree(src, dst, symlinks=True):
 
     mkdirp(dst)
 
-    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
+    for s, d in traverse_tree(src, dst, order='pre', follow_nonexisting=True):
         if symlinks and os.path.islink(s):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?
@@ -361,7 +361,7 @@ def install_tree(src, dst, symlinks=False):
 
     mkdirp(dst)
 
-    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
+    for s, d in traverse_tree(src, dst, order='pre', follow_nonexisting=True):
         if symlinks and os.path.islink(s):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?

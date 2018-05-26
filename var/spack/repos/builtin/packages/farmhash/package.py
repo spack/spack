@@ -36,4 +36,4 @@ class Farmhash(CMakePackage):
 
     def patch(self):
         copy(join_path(os.path.dirname(__file__), "CMakeLists.txt"),
-                "CMakeLists.txt")
+             "CMakeLists.txt")
