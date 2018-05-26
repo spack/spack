@@ -273,13 +273,10 @@ def copy(src, dst):
     Parameters:
         src (str): the file to copy
         dst (str): the destination file or directory
-
-    Returns:
-        str: the path to the newly created file
     """
     tty.debug('Copying {0} to {1}'.format(src, dst))
 
-    return shutil.copy(src, dst)
+    shutil.copy(src, dst)
 
 
 def install(src, dst):
@@ -294,17 +291,17 @@ def install(src, dst):
     Parameters:
         src (str): the file to install
         dst (str): the destination file or directory
-
-    Returns:
-        str: the path to the newly created file
     """
     tty.debug('Installing {0} to {1}'.format(src, dst))
 
-    dst = shutil.copy(src, dst)
+    # Expand dst to its eventual full path if it is a directory.
+    if os.path.isdir(dst):
+        dst = join_path(dst, os.path.basename(src))
+
+    shutil.copy(src, dst)
+
     set_install_permissions(dst)
     copy_mode(src, dst)
-
-    return dst
 
 
 def copy_tree(src, dst, symlinks=True):
@@ -322,9 +319,6 @@ def copy_tree(src, dst, symlinks=True):
         src (str): the directory to copy
         dst (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-
-    Returns:
-        str: the destination directory
     """
     tty.debug('Copying {0} to {1}'.format(src, dst))
 
@@ -340,8 +334,6 @@ def copy_tree(src, dst, symlinks=True):
             mkdirp(d)
         else:
             shutil.copyfile(s, d)
-
-    return dst
 
 
 def install_tree(src, dst, symlinks=False):
@@ -362,9 +354,6 @@ def install_tree(src, dst, symlinks=False):
         src (str): the directory to install
         dst (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-
-    Returns:
-        str: the destination directory
     """
     tty.debug('Installing {0} to {1}'.format(src, dst))
 
@@ -383,8 +372,6 @@ def install_tree(src, dst, symlinks=False):
 
         set_install_permissions(d)
         copy_mode(s, d)
-
-    return dst
 
 
 def is_exe(path):
