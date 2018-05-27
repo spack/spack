@@ -419,8 +419,14 @@ class Python(AutotoolsPackage):
         # location of libraries and headers based on the path,
         # return the realpath
         path = os.path.realpath(os.path.join(self.prefix.bin, command))
+        cmd = Executable(path)
 
-        return Executable(path)
+        # Spack-installed Python works best
+        # without other env vars polluting it.
+        # https://askubuntu.com/questions/640010
+        cmd.add_default_env('PYTHONPATH', '')
+
+        return cmd
 
     def print_string(self, string):
         """Returns the appropriate print string depending on the
@@ -454,10 +460,6 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_var; '
         cmd += self.print_string("get_config_var('{0}')".format(key))
 
-        # Spack-installed Python works best
-        # without other env vars polluting it.
-        # https://askubuntu.com/questions/640010
-        self.command.add_default_env('PYTHONPATH', '')
         return self.command('-c', cmd, output=str).strip()
 
     def get_config_h_filename(self):
