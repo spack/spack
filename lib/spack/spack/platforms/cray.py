@@ -25,6 +25,7 @@
 import os
 import re
 import llnl.util.tty as tty
+import spack.config
 from spack.paths import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
@@ -113,16 +114,12 @@ class Cray(Platform):
         for module in modules_to_unload:
             unload_module(module)
 
-        packages = spack.config.get_config("packages")
-        link_type = packages.get(pkg.name, {}).get("craype_link_type", "")
-        if not link_type:
-            link_type = packages.get("all").get("craype_link_type")
-        if not link_type:
-            link_type = "dynamic"
+        link_type = spack.config.get("packages:all:craype_link_type",
+                                     "dynamic")
 
         env.set('CRAYPE_LINK_TYPE', link_type)
 
-        cray_wrapper_names = join_path(build_env_path, 'cray')
+        cray_wrapper_names = os.path.join(build_env_path, 'cray')
 
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
