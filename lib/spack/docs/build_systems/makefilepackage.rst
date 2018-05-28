@@ -13,7 +13,7 @@ variables.
 Phases
 ^^^^^^
 
-``MakefilePackage`` comes with 3 phases:
+The ``MakefilePackage`` base class comes with 3 phases:
 
 #. ``edit`` - edit the Makefile
 #. ``build`` - build the project
@@ -39,8 +39,6 @@ This file will be named one of the following ways:
 * GNUmakefile (only works with GNU Make)
 * Makefile (most common)
 * makefile
-
-``Makefile`` is the most common name.
 
 Some Makefiles also *include* other configuration files. Check for an
 ``include`` directive in the Makefile.
@@ -93,8 +91,10 @@ method:
        env['BLASLIB'] = spec['blas'].libs.ld_flags
 
 
-``cbench`` is a good example of a simple package that does this, while
-``esmf`` is a good example of a more complex package.
+`cbench <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cbench/package.py>`_
+is a good example of a simple package that does this, while
+`esmf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/esmf/package.py>`_
+is a good example of a more complex package.
 
 """"""""""""""""""""""
 Command-line arguments
@@ -124,7 +124,8 @@ If you do need access to the spec, you can create a property like so:
        ]
 
 
-``cloverleaf`` is a good example of a package that uses this strategy.
+`cloverleaf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cloverleaf/package.py>`_
+is a good example of a package that uses this strategy.
 
 """""""""""""
 Edit Makefile
@@ -144,14 +145,15 @@ and a ``filter_file`` method to help with this. For example:
        makefile.filter('CXX = g++', 'CC = c++')
 
 
-``stream`` is a good example of a package that involves editing a
-Makefile to set the appropriate variables.
+`stream <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/stream/package.py>`_
+is a good example of a package that involves editing a Makefile to set
+the appropriate variables.
 
 """""""""""
 Config file
 """""""""""
 
-More complex packages often involve Makefiles that _include_ a
+More complex packages often involve Makefiles that *include* a
 configuration file. These configuration files are primarily composed
 of variables relating to the compiler, platform, and the location of
 dependencies or names of libraries. Since these config files are
@@ -183,8 +185,9 @@ well for storing variables:
                inc.write('{0} = {1}\n'.format(key, config[key]))
 
 
-``elk`` is a good example of a package that uses a dictionary to
-store configuration variables.
+`elk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/elk/package.py>`_
+is a good example of a package that uses a dictionary to store
+configuration variables.
 
 If the order of variables is important, it may be easier to store
 them in a list:
@@ -203,7 +206,8 @@ them in a list:
                inc.write('{0}\n'.format(var))
 
 
-``hpl`` is a good example of a package that uses a list to store
+`hpl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/hpl/package.py>`_
+is a good example of a package that uses a list to store
 configuration variables.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

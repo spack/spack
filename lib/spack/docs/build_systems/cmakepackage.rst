@@ -4,10 +4,10 @@
 CMakePackage
 ------------
 
-Like Autotools, CMake is a build script generator. Designed by Kitware,
-CMake is a popular up-and-coming build system. It is becoming the
-dominant build system used by new projects, and many older projects are
-switching to it as well.
+Like Autotools, CMake is a build-script generator. Designed by Kitware,
+CMake is a popular up-and-coming build system. It is
+`becoming the dominant build system <https://trends.google.com/trends/explore?date=all&q=autoconf,automake,cmake,scons>`_
+used by new projects, and many older projects are switching to it as well.
 
 Unlike Autotools, CMake can generate build scripts for builders other
 than Make: Ninja, Visual Studio, etc. It is therefore cross-platform,
@@ -192,8 +192,9 @@ a variant to control this:
 
 However, not every CMake package accepts all four of these options.
 Grep the ``CMakeLists.txt`` file to see if the default values are
-missing or replaced. For example, the ``dealii`` package overrides
-the default variant with:
+missing or replaced. For example, the
+`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py>`_
+package overrides the default variant with:
 
 .. code-block:: python
 
@@ -201,7 +202,7 @@ the default variant with:
            description='The build type to build',
            values=('Debug', 'Release', 'DebugRelease'))
 
-For more information on CMAKE_BUILD_TYPE, see:
+For more information on ``CMAKE_BUILD_TYPE``, see:
 https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

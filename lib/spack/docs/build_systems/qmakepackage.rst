@@ -4,7 +4,7 @@
 QMakePackage
 ------------
 
-Much like Autotools and CMake, QMake is a build script generator
+Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's
 ``QMakePackage`` runs the following steps:
 
@@ -40,8 +40,8 @@ By default, these phases run:
 
 
 Any of these phases can be overridden in your package as necessary.
-There is also a ``check`` method that looks for a ``check:`` target
-in the Makefile. If a ``check:`` target exists and the user runs:
+There is also a ``check`` method that looks for a ``check`` target
+in the Makefile. If a ``check`` target exists and the user runs:
 
 .. code-block:: console
 

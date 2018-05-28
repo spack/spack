@@ -10,27 +10,28 @@ Python packages and modules have their own special build system.
 Phases
 ^^^^^^
 
-This class provides the following phases that can be overridden:
+The ``PythonPackage`` base class provides the following phases that
+can be overridden:
 
-* build
-* build_py
-* build_ext
-* build_clib
-* build_scripts
-* clean
-* install
-* install_lib
-* install_headers
-* install_scripts
-* install_data
-* sdist
-* register
-* bdist
-* bdist_dumb
-* bdist_rpm
-* bdist_wininst
-* upload
-* check
+* ``build``
+* ``build_py``
+* ``build_ext``
+* ``build_clib``
+* ``build_scripts``
+* ``clean``
+* ``install``
+* ``install_lib``
+* ``install_headers``
+* ``install_scripts``
+* ``install_data``
+* ``sdist``
+* ``register``
+* ``bdist``
+* ``bdist_dumb``
+* ``bdist_rpm``
+* ``bdist_wininst``
+* ``upload``
+* ``check``
 
 These are all standard ``setup.py`` commands and can be found by running:
 
@@ -275,7 +276,9 @@ If Python 2.7 is the only version that works, you can use:
 
 The documentation may not always specify supported Python versions.
 Another place to check is in the ``setup.py`` file. Look for a line
-containing ``python_requires``. An example from ``numpy`` looks like:
+containing ``python_requires``. An example from
+`py-numpy <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-numpy/package.py>`_
+looks like:
 
 .. code-block:: python
 
@@ -383,7 +386,7 @@ When you install a package with ``pip``, it reads the ``setup.py``
 file in order to determine the dependencies of the package.
 If the dependencies are not yet installed, ``pip`` downloads them
 and installs them for you. This may sound convenient, but Spack
-cannot rely on this behavior for 2 reasons:
+cannot rely on this behavior for two reasons:
 
 #. Spack needs to be able to install packages on air-gapped networks.
 
@@ -393,7 +396,7 @@ cannot rely on this behavior for 2 reasons:
 
 #. Duplicate installations of the same dependency may occur.
 
-   Spack supports _activation_ of Python extensions, which involves
+   Spack supports *activation* of Python extensions, which involves
    symlinking the package installation prefix to the Python installation
    prefix. If your package is missing a dependency, that dependency
    will be installed to the installation directory of the same package.
@@ -421,17 +424,17 @@ Obviously, this means that ``py-numpy`` is a dependency.
 
 If the package uses ``setuptools``, check for the following clues:
 
-* install_requires
+* ``install_requires``
 
   These packages are required for installation.
 
-* extra_requires
+* ``extra_requires``
 
   These packages are optional dependencies that enable additional
   functionality. You should add a variant that optionally adds these
   dependencies.
 
-* test_requires
+* ``test_requires``
 
   These are packages that are required to run the unit tests for the
   package. These dependencies can be specified using the
@@ -485,7 +488,9 @@ You can view the available options for a particular phase with:
 
 
 Each phase provides a ``<phase_args>`` function that can be used to
-pass arguments to that phase. For example, ``py-numpy`` adds:
+pass arguments to that phase. For example,
+`py-numpy <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-numpy/package.py>`_
+adds:
 
 .. code-block:: python
 
@@ -602,9 +607,11 @@ Alternate names for setup.py
 
 As previously mentioned, packages need to call their setup script ``setup.py``
 in order to be compatible with package managers like ``pip``. However, some
-packages like ``py-meep`` and ``py-adios`` come with multiple setup scripts,
-one for a serial build and another for a parallel build. You can override the
-default name to use like so:
+packages like
+`py-meep <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-meep/package.py>`_  and
+`py-adios <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-adios/package.py>`_
+come with multiple setup scripts, one for a serial build and another for a
+parallel build. You can override the default name to use like so:
 
 .. code-block:: python
 
@@ -690,7 +697,7 @@ extends vs. depends_on
 This is very similar to the naming dilemma above, with a slight twist.
 As mentioned in the :ref:`Packaging Guide <packaging_extensions>`,
 ``extends`` and ``depends_on`` are very similar, but ``extends`` adds
-the ability to _activate_ the package. Activation involves symlinking
+the ability to *activate* the package. Activation involves symlinking
 everything in the installation prefix of the package to the installation
 prefix of Python. This allows the user to import a Python module without
 having to add that module to ``PYTHONPATH``.

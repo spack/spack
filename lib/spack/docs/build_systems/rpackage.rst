@@ -14,7 +14,7 @@ new Spack packages for.
 Phases
 ^^^^^^
 
-``RPackage`` has a single phase:
+The ``RPackage`` base class has a single phase:
 
 #. ``install`` - install the package
 
@@ -34,7 +34,8 @@ R Archive Network. If you are looking for a particular R package, search
 for "CRAN <package-name>" and you should quickly find what you want.
 If it isn't on CRAN, try Bioconductor, another common R repository.
 
-For the purposes of this tutorial, we will be walking through ``r-caret``
+For the purposes of this tutorial, we will be walking through
+`r-caret <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-caret/package.py>`_
 as an example. If you search for "CRAN caret", you will quickly find what
 you are looking for at https://cran.r-project.org/web/packages/caret/index.html.
 If you search for "Package source", you will find the download URL for
@@ -258,7 +259,8 @@ Non-R dependencies
 ^^^^^^^^^^^^^^^^^^
 
 Some packages depend on non-R libraries for linking. Check out the
-``stringi`` package for an example: https://CRAN.R-project.org/package=stringi.
+`r-stringi <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-stringi/package.py>`_
+package for an example: https://CRAN.R-project.org/package=stringi.
 If you search for the text "SystemRequirements", you will see:
 
    ICU4C (>= 52, optional)
@@ -271,8 +273,9 @@ Passing arguments to the installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some R packages provide additional flags that can be passed to
-``R CMD INSTALL``, often to locate non-R dependencies. ``r-rmpi`` is
-an example of this, and flags for linking to an MPI library. To pass
+``R CMD INSTALL``, often to locate non-R dependencies.
+`r-rmpi <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-rmpi/package.py>`_
+is an example of this, and flags for linking to an MPI library. To pass
 these to the installation command, you can override ``configure_args``
 like so:
 

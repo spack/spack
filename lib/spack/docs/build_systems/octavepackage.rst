@@ -10,7 +10,7 @@ Octave has its own build system for installing packages.
 Phases
 ^^^^^^
 
-``OctavePackage`` has a single phase:
+The ``OctavePackage`` base class has a single phase:
 
 #. ``install`` - install the package
 

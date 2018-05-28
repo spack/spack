@@ -4,7 +4,7 @@
 PerlPackage
 -----------
 
-Much like Python and R, Perl has its own language-specific
+Much like Octave, Perl has its own language-specific
 build system.
 
 ^^^^^^
@@ -17,9 +17,7 @@ The ``PerlPackage`` base class comes with 3 phases that can be overridden:
 #. ``build`` - build the package
 #. ``install`` - install the package
 
-When we looked at ``PythonPackage``, we saw that there are 2 common Python
-modules used for module installation: ``distutils`` and ``setuptools``.
-Similarly, Perl packages have 2 common modules for this purpose:
+Perl packages have 2 common modules used for module installation:
 
 """""""""""""""""""""""
 ``ExtUtils::MakeMaker``
@@ -70,7 +68,7 @@ Most Perl modules are hosted on CPAN - The Comprehensive Perl Archive
 Network. If you need to find a package for ``XML::Parser``, for example,
 you should search for "CPAN XML::Parser".
 
-Like PyPI, some CPAN pages are versioned. Check for a link to the
+Some CPAN pages are versioned. Check for a link to the
 "Latest Release" to make sure you have the latest version.
 
 ^^^^^^^^^^^^
@@ -190,7 +188,7 @@ Now, you can install any Perl module you want by running:
 
 .. code-block:: console
 
-   cpanm Module::Name
+   $ cpanm Module::Name
 
 
 Obviously, these commands can only be run if you have root privileges.

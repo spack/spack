@@ -11,7 +11,7 @@ on Makefiles to build software.
 Phases
 ^^^^^^
 
-The ``WafPackage`` comes with the following phases:
+The ``WafPackage`` base class comes with the following phases:
 
 #. ``configure`` - configure the project
 #. ``build`` - build the project
@@ -52,7 +52,8 @@ Testing
 ``WafPackage`` also provides ``test`` and ``installtest`` methods,
 which are run after the ``build`` and ``install`` phases, respectively.
 By default, these phases do nothing, but you can override them to
-run package-specific unit tests. For example, the ``py-py2cairo``
+run package-specific unit tests. For example, the
+`py-py2cairo <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-py2cairo/package.py>`_
 package uses:
 
 .. code-block:: python
@@ -81,11 +82,10 @@ supported.
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Much like ``AutotoolsPackage`` does not require ``automake`` and
-``autoconf`` to build, ``WafPackage`` does not require ``waf`` to
-build. ``waf`` is only needed to create the ``./waf`` script.
-Since ``./waf`` is a Python script, Python is needed to build the
-project. ``WafPackage`` adds the following dependency automatically:
+``WafPackage`` does not require ``waf`` to build. ``waf`` is only
+needed to create the ``./waf`` script. Since ``./waf`` is a Python
+script, Python is needed to build the project. ``WafPackage`` adds
+the following dependency automatically:
 
 .. code-block:: python
 

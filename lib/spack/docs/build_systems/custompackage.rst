@@ -15,10 +15,12 @@ If you want to add support for a new build system, a good place to
 start is to look at the definitions of other build systems. This guide
 focuses mostly on how Spack's build systems work.
 
-In this guide, we will be using the ``perl`` and ``cmake`` packages as
-examples. ``perl``'s build system is a hand-written ``Configure`` shell
-script, while ``cmake`` bootstraps itself during installation. Both of
-these packages require custom build systems
+In this guide, we will be using the
+`perl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/perl/package.py>`_ and
+`cmake <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cmake/package.py>`_
+packages as examples. ``perl``'s build system is a hand-written
+``Configure`` shell script, while ``cmake`` bootstraps itself during
+installation. Both of these packages require custom build systems.
 
 ^^^^^^^^^^
 Base class

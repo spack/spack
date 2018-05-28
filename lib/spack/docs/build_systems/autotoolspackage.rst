@@ -4,7 +4,7 @@
 AutotoolsPackage
 ----------------
 
-Autotools is a GNU build system that provides a build script generator.
+Autotools is a GNU build system that provides a build-script generator.
 By running the platform-independent ``./configure`` script that comes
 with the package, you can generate a platform-dependent Makefile.
 
@@ -102,7 +102,7 @@ of the process:
    CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=15581407
 
 If a ``configure`` script is not present in your tarball, you will
-need to generate one yourself. Luckily, Spack already has a ``autoreconf``
+need to generate one yourself. Luckily, Spack already has an ``autoreconf``
 phase to do most of the work for you. By default, the ``autoreconf``
 phase runs:
 
@@ -211,7 +211,10 @@ requested. This is important, as many Autotools packages will enable
 options by default if the dependencies are found, and disable them
 otherwise. We want Spack installations to be as deterministic as possible.
 If two users install a package with the same variants, the goal is that
-both installations work the same way.
+both installations work the same way. See `here <https://www.linux.com/news/best-practices-autotools>`__
+and `here <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Automagic_dependencies>`__
+for a rationale as to why these so-called "automagic" dependencies
+are a problem.
 
 By default, Autotools installs packages to ``/usr``. We don't want this,
 so Spack automatically adds ``--prefix=/path/to/installation/prefix``

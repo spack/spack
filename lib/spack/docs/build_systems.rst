@@ -46,8 +46,8 @@ on these ideas for each distinct build system that Spack supports:
    :caption: Other
 
    build_systems/cudapackage
-   build_systems/custompackage
    build_systems/intelpackage
+   build_systems/custompackage
 
 For reference, the :py:mod:`Build System API docs <spack.build_systems>`
 provide a list of build systems and methods/attributes that can be

@@ -4,9 +4,9 @@
 SConsPackage
 ------------
 
-Unlike Autotools and CMake, SCons is a general-purpose build system
-that does not rely on Makefiles to build software. SCons is written
-in Python, and handles all building and linking itself.
+SCons is a general-purpose build system that does not rely on
+Makefiles to build software. SCons is written in Python, and handles
+all building and linking itself.
 
 As far as build systems go, SCons is very non-uniform. It provides a
 common framework for developers to write build scripts, but the build
@@ -37,7 +37,8 @@ As previously mentioned, SCons allows developers to add subcommands like
    $ scons install
 
 
-To facilitate this, Spack provides the following phases:
+To facilitate this, the ``SConsPackage`` base class provides the
+following phases:
 
 #. ``build`` - build the package
 #. ``install`` - install the package
@@ -98,10 +99,12 @@ Finding available options
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The first place to start when looking for a list of valid options to
-build a package is ``scons --help``. Some packages like ``kahip``
+build a package is ``scons --help``. Some packages like
+`kahip <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/kahip/package.py>`_
 don't bother overwriting the default SCons help message, so this isn't
-very useful, but other packages like ``serf`` print a list of valid
-command-line variables:
+very useful, but other packages like
+`serf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/serf/package.py>`_
+print a list of valid command-line variables:
 
 .. code-block:: console
 
@@ -169,8 +172,9 @@ command-line variables:
    Use scons -H for help about command-line options.
 
 
-More advanced packages like ``cantera`` use
-``scons --help`` to print a list of subcommands:
+More advanced packages like
+`cantera <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cantera/package.py>`_
+use ``scons --help`` to print a list of subcommands:
 
 .. code-block:: console
 
@@ -215,7 +219,7 @@ More advanced packages like ``cantera`` use
        'scons doxygen' - Build the Doxygen documentation
 
 
-You'll notice that ``cantera`` provides a ``scons help`` subcommand. Running
+You'll notice that cantera provides a ``scons help`` subcommand. Running
 ``scons help`` prints a list of valid command-line variables.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -241,7 +245,7 @@ the package build phase. This is done by overriding ``build_args`` like so:
        return args
 
 
-``SConsPackage`` also provides a ``install_args`` function that you can
+``SConsPackage`` also provides an ``install_args`` function that you can
 override to pass additional arguments to ``scons install``.
 
 ^^^^^^^^^^^^^^^^^
@@ -259,7 +263,7 @@ cases, SCons packages are not compatible with Spack's compiler wrappers,
 and linking must be done manually.
 
 First of all, check the list of valid options for anything relating to
-environment variables. For example, ``cantera`` has the following option:
+environment variables. For example, cantera has the following option:
 
 .. code-block:: none
 
@@ -270,7 +274,7 @@ environment variables. For example, ``cantera`` has the following option:
        - default: 'LD_LIBRARY_PATH,PYTHONPATH'
 
 
-In the case of ``cantera``, using ``env_vars=all`` allows us to use
+In the case of cantera, using ``env_vars=all`` allows us to use
 Spack's compiler wrappers. If you don't see an option related to
 environment variables, try using Spack's compiler wrappers. The full
 path to these wrappers are stored in ``spack_cc`` and friends. If
@@ -286,7 +290,7 @@ wrappers. In this case, you'll have to use the path to the actual
 compilers, which are stored in ``self.compiler.cc`` and friends.
 Note that this may involve passing additional flags to the build to
 locate dependencies, a task normally done by the compiler wrappers.
-``serf`` is an example of a package with this limitation.
+serf is an example of a package with this limitation.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation
