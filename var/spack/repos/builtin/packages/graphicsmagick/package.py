@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install graphicsmagick
-#
-# You can edit this file again by typing:
-#
-#     spack edit graphicsmagick
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -57,14 +42,13 @@ class Graphicsmagick(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('ghostscript')
     depends_on('ghostscript-fonts')
-    depends_on('bzip2')
-    depends_on('lcms')
     depends_on('graphviz')
-    depends_on('jpeg')
     depends_on('jasper')
-    depends_on('libtool')
+    depends_on('jpeg')
+    depends_on('lcms')
     depends_on('libpng')
     depends_on('libtiff')
+    depends_on('libtool')
     depends_on('libxml2')
     depends_on('xz')
     depends_on('zlib')

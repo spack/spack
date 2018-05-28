@@ -26,7 +26,7 @@ from spack import *
 
 
 class Gdl(CMakePackage):
-    """A free and open-source IDL/PV-WAVE compiler
+    """A free and open-source IDL/PV-WAVE compiler.
 
     GNU Data Language (GDL) is a free/libre/open source incremental compiler
     compatible with IDL and to some extent with PV-WAVE.
@@ -37,46 +37,62 @@ class Gdl(CMakePackage):
 
     version('0.9.8', '447b0362e1df5ea8af814a969e89d3ec')
 
-    variant('python', default=False)
-    variant('x11', default=False)
-    variant('proj', default=True)
-    variant('graphicsmagick', default=False)
+    variant(
+            'graphicsmagick',
+            default=False,
+            description='Enable GraphicsMagick'
+           )
+    variant('proj', default=True, description='Enable LIBPROJ4')
+    variant('python', default=False, description='Enable Python')
+    variant('wx', default=False, description='Enable WxWidgets')
+    variant('x11', default=False, description='Enable X11')
 
     extends('python', when='+python')
 
-    depends_on('python@2.7:2.8', type=('build', 'run'), when='+python')
-    depends_on('py-numpy', type=('build', 'run'), when='+python')
+    depends_on('graphicsmagick', when='+graphicsmagick')
     depends_on('libx11', when='+x11')
     depends_on('proj', when='+proj')
-    depends_on('graphicsmagick', when='+graphicsmagick')
-    depends_on('plplot')
-    depends_on('gsl')
-    depends_on('readline')
-    depends_on('netcdf')
-    depends_on('jpeg')
-    depends_on('hdf5')
-    depends_on('hdf')
-    depends_on('fftw')
+    depends_on('py-numpy', type=('build', 'run'), when='+python')
+    depends_on('python@2.7:2.8', type=('build', 'run'), when='+python')
     depends_on('eigen')
+    depends_on('fftw')
+    depends_on('gsl')
+    depends_on('hdf')
+    depends_on('hdf5')
+    depends_on('jpeg')
+    depends_on('netcdf')
+    depends_on('plplot')
     depends_on('pslib')
+    depends_on('readline')
 
     def cmake_args(self):
         args = []
-        # wxWidgets isn't packaged yet
-        args += ['-DWXWIDGETS=OFF']
-        # only version 6 of ImageMagick is supported and version 7 is packaged
+
+        # GraphicsMagick covers the same features as ImageMagick and
+        # only version 6 of ImageMagick is supported (version 7 is packaged)
         args += ['-DMAGICK=OFF']
 
-        if '+graphicsmagick' not in self.spec:
+        if '+wx' in self.spec:
+            args += ['-DWXWIDGETS=ON']
+        else:
+            args += ['-DWXWIDGETS=OFF']
+
+        if '+graphicsmagick' in self.spec:
+            args += ['-DGRAPHICSMAGICK=ON']
+        else:
             args += ['-DGRAPHICSMAGICK=OFF']
 
-        if '+python' not in self.spec:
+        if '+python' in self.spec:
+            args += ['-DPYTHON=ON']
+        else:
             args += ['-DPYTHON=OFF']
 
         if '+proj' in self.spec:
             args += [
-                '-DLIBPROJ4=YES',
+                '-DLIBPROJ4=ON',
                 '-DLIBPROJ4DIR={0}'.format(self.spec['proj'].prefix)
             ]
+        else:
+            args += ['-DLIBPROJ4=OFF']
 
         return args
