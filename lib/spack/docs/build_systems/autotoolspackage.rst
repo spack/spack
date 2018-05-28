@@ -95,6 +95,11 @@ while ``automake`` is used to convert ``Makefile.am`` into ``Makefile.in``.
 of the process:
 
 .. image:: Autoconf-automake-process.*
+   :target: https://commons.wikimedia.org/w/index.php?curid=15581407
+
+..
+   By Jdthood - Own work, based on https://commons.wikimedia.org/wiki/File:Autoconf.svg,
+   CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=15581407
 
 If a ``configure`` script is not present in your tarball, you will
 need to generate one yourself. Luckily, Spack already has a ``autoreconf``
