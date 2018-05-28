@@ -33,6 +33,7 @@ class Emacs(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('26.1', '544d2ab5eb142e9ca69adb023d17bf4b')
     version('25.3', '74ddd373dc52ac05ca7a8c63b1ddbf58')
     version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
     version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
@@ -57,6 +58,7 @@ class Emacs(AutotoolsPackage):
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
+    depends_on('gnutls', when='@26.1:')
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('libxpm ^gettext+libunistring', when='+tls')
