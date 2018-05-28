@@ -12,13 +12,20 @@ on these ideas for each distinct build system that Spack supports:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Make-based tools
+   :caption: Make-based
 
    build_systems/makefilepackage
 
 .. toctree::
    :maxdepth: 1
-   :caption: Build-script generation tools
+   :caption: Make-incompatible
+
+   build_systems/sconspackage
+   build_systems/wafpackage
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Build-script generation
 
    build_systems/autotoolspackage
    build_systems/cmakepackage
@@ -26,28 +33,21 @@ on these ideas for each distinct build system that Spack supports:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Language-specific tools
+   :caption: Language-specific
 
+   build_systems/octavepackage
+   build_systems/perlpackage
    build_systems/pythonpackage
    build_systems/rpackage
-   build_systems/perlpackage
    build_systems/rubypackage
-   build_systems/octavepackage
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Non-Make-based tools
-
-   build_systems/sconspackage
-   build_systems/wafpackage
 
 .. toctree::
    :maxdepth: 1
    :caption: Other
 
-   build_systems/intelpackage
    build_systems/cudapackage
    build_systems/custompackage
+   build_systems/intelpackage
 
 For reference, the :py:mod:`Build System API docs <spack.build_systems>`
 provide a list of build systems and methods/attributes that can be
