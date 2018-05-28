@@ -41,3 +41,9 @@ class Libxt(AutotoolsPackage):
     depends_on('kbproto', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libXt', root=self.prefix, shared=True, recursive=True
+        )

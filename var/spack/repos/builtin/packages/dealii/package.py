@@ -37,6 +37,7 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
     version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
     version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
@@ -48,20 +49,20 @@ class Dealii(CMakePackage, CudaPackage):
     version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
-    variant('assimp',   default=False,
+    variant('assimp',   default=True,
             description='Compile with Assimp')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
-    variant('adol-c',   default=False,
+    variant('adol-c',   default=True,
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
-    variant('gmsh',     default=False,  description='Compile with GMSH')
+    variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
-    variant('nanoflann', default=False, description='Compile with Nanoflann')
+    variant('nanoflann', default=True, description='Compile with Nanoflann')
     variant('netcdf',   default=True,
             description='Compile with Netcdf (only with MPI)')
     variant('oce',      default=True,  description='Compile with OCE')
@@ -69,9 +70,9 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with P4est (only with MPI)')
     variant('petsc',    default=True,
             description='Compile with Petsc (only with MPI)')
-    variant('scalapack', default=False,
+    variant('scalapack', default=True,
             description='Compile with ScaLAPACK (only with MPI)')
-    variant('sundials', default=False,
+    variant('sundials', default=True,
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')

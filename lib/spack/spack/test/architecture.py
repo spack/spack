@@ -28,7 +28,7 @@
 import itertools
 import os
 import platform as py_platform
-import spack
+
 import spack.architecture
 from spack.spec import Spec
 from spack.operating_systems.cnl import Cnl

@@ -49,8 +49,12 @@ except ImportError:
 
 import llnl.util.tty as tty
 
-import spack
+import spack.config
+import spack.cmd
+import spack.url
+import spack.stage
 import spack.error
+import spack.util.crypto
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 
@@ -111,18 +115,19 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
     try:
         context = None
-        if sys.version_info < (2, 7, 9) or \
-                ((3,) < sys.version_info < (3, 4, 3)):
-            if not spack.insecure:
+        verify_ssl = spack.config.get('config:verify_ssl')
+        pyver = sys.version_info
+        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+            if verify_ssl:
                 tty.warn("Spack will not check SSL certificates. You need to "
                          "update your Python to enable certificate "
                          "verification.")
-        else:
+        elif verify_ssl:
             # We explicitly create default context to avoid error described in
             # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl._create_unverified_context() \
-                if spack.insecure \
-                else ssl.create_default_context()
+            context = ssl.create_default_context()
+        else:
+            context = ssl._create_unverified_context()
 
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.

@@ -31,8 +31,9 @@ class Pcre(AutotoolsPackage):
     pattern matching using the same syntax and semantics as Perl 5."""
 
     homepage = "http://www.pcre.org"
-    url      = "https://ftp.pcre.org/pub/pcre/pcre-8.40.tar.bz2"
+    url      = "https://ftp.pcre.org/pub/pcre/pcre-8.42.tar.bz2"
 
+    version('8.42', '085b6aa253e0f91cae70b3cdbe8c1ac2')
     version('8.41', 'c160d22723b1670447341b08c58981c1')
     version('8.40', '41a842bf7dcecd6634219336e2167d1d')
     version('8.39', 'e3fca7650a0556a2647821679d81f585')

@@ -33,6 +33,8 @@ class PyTestinfra(PythonPackage):
     homepage = "https://testinfra.readthedocs.io"
     url      = "https://pypi.python.org/packages/source/t/testinfra/testinfra-1.11.1.tar.gz"
 
+    version('1.13.0', '1e0a135c784207f8609e7730901f1291')
+    version('1.12.0', '9784c01d7af3d624c6ec3cd25cce2011')
     version('1.11.1', 'c64ce6b16661d647c62c9508de419f5f')
 
     depends_on('py-setuptools', type='build')
