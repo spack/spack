@@ -61,5 +61,7 @@ class Openfst(AutotoolsPackage):
         args = []
         spec = self.spec
         if '+far' in spec:
-            args.extend(['--enable-far'])
+            args.append('--enable-far')
+        else:
+            args.append('--disable-far')
         return args
