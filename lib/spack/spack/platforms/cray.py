@@ -113,7 +113,6 @@ class Cray(Platform):
         for module in modules_to_unload:
             unload_module(module)
 
-<<<<<<< HEAD
         packages = spack.config.get_config("packages")
         link_type = packages.get(pkg.name, {}).get("craype_link_type", "")
         if not link_type:
@@ -124,10 +123,6 @@ class Cray(Platform):
         env.set('CRAYPE_LINK_TYPE', link_type)
 
         cray_wrapper_names = join_path(build_env_path, 'cray')
-=======
-        env.set('CRAYPE_LINK_TYPE', 'dynamic')
-        cray_wrapper_names = os.path.join(build_env_path, 'cray')
->>>>>>> upstream/develop
 
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
