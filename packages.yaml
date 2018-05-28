@@ -72,7 +72,7 @@ packages:
 
     cmake:
         paths:
-            bazel@3.11.2%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.11.2-fnsltoqiybcd7uc3k5uor5zhua2vt6k5
+            cmake@3.11.2%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.11.2-fnsltoqiybcd7uc3k5uor5zhua2vt6k5
         version: [3.11.2]
         buildable: False
 
