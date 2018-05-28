@@ -51,6 +51,8 @@ class Paraview(CMakePackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
+    variant('netcdf', default=False, description="Use external NETCDF")
+    variant('expat', default=False, description="Use external EXPAT")
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
@@ -74,7 +76,8 @@ class Paraview(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
-    # depends_on('netcdf')
+    depends_on('netcdf', when='+netcdf')
+    depends_on('expat', when='+expat')
     # depends_on('netcdf-cxx')
     # depends_on('protobuf') # version mismatches?
     # depends_on('sqlite') # external version not supported
@@ -154,7 +157,8 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
-            '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_NETCDF:BOOL=%s' % variant_bool('+netcdf'),
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=%s' % variant_bool('+expat'),
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
         ]
