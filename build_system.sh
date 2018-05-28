@@ -41,7 +41,8 @@ packages = {"miniconda2@4.3.30": [""],
             "cuda@6.5.14": [""],
             "cudnn@7.0": ["^cuda@9.1.85", "^cuda@8.0.61"],
             "cudnn@6.0": ["^cuda@8.0.61"],
-            "cudnn@5.1": ["^cuda@8.0.61"]
+            "cudnn@5.1": ["^cuda@8.0.61"],
+            "cmake@3.11.2": [""]
 }
 for pkg,specs in packages.items():
     for spec in specs:
