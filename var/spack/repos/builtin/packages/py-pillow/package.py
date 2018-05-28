@@ -87,7 +87,7 @@ class PyPillow(PythonPackage):
         if '+jpeg' in spec:
             setup.filter('JPEG_ROOT = None',
                          'JPEG_ROOT=("{0}","{1}")'.format(
-                             spec['jpeg'].prefix.lib64,
+                             spec['jpeg'].libs.directories[0],
                              spec['jpeg'].prefix.include))
         if '+zlib' in spec:
             setup.filter('ZLIB_ROOT = None',
