@@ -115,6 +115,7 @@ from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack.architecture
+import spack.compiler
 import spack.compilers as compilers
 import spack.error
 import spack.parse

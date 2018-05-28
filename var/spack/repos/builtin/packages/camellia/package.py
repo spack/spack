@@ -25,43 +25,37 @@
 from spack import *
 
 
-class BookleafCpp(CMakePackage):
+class Camellia(CMakePackage):
+    """Camellia: user-friendly MPI-parallel adaptive finite element package,
+       with support for DPG and other hybrid methods, built atop Trilinos.
     """
-    BookLeaf is a 2D unstructured hydrodynamics mini-app.
-    """
 
-    homepage = "https://github.com/UK-MAC/BookLeaf_Cpp"
-    url      = "https://github.com/UK-MAC/BookLeaf_Cpp/archive/v2.0.tar.gz"
+    homepage = "https://bitbucket.org/nateroberts/Camellia"
+    url      = "https://bitbucket.org/nateroberts/camellia.git"
 
-    version('2.0.1', '34a5a9e7b2b5ffc98562656a4406ba5b')
-    version('2.0', '69819ebcbae5eaa63d1a4de2c77cac85')
+    maintainers = ['CamelliaDPG']
+    version('master', git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
 
-    variant('typhon', default=True, description='Use Typhon')
-    variant('parmetis', default=False, description='Use ParMETIS')
-    variant('silo', default=False, description='Use Silo')
-    variant('caliper', default=False, description='Use Caliper')
+    variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
 
-    depends_on('caliper', when='+caliper')
-    depends_on('parmetis', when='+parmetis')
-    depends_on('silo', when='+silo')
-    depends_on('typhon', when='+typhon')
-    depends_on('mpi', when='+typhon')
-    depends_on('yaml-cpp@0.6.0:')
+    depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
+    depends_on('moab@:4', when='+moab')
+    depends_on('mpi')
 
     def cmake_args(self):
         spec = self.spec
-        cmake_args = []
+        options = [
+            '-DTrilinos_PATH:PATH=%s' % spec['trilinos'].prefix,
+            '-DMPI_DIR:PATH=%s' % spec['mpi'].prefix,
+            '-DBUILD_FOR_INSTALL:BOOL=ON'
+        ]
 
-        if '+typhon' in spec:
-            cmake_args.append('-DENABLE_TYPHON=ON')
+        if '+moab' in spec:
+            options.extend([
+                '-DENABLE_MOAB:BOOL=ON',
+                '-DMOAB_PATH:PATH=%s' % spec['moab'].prefix
+            ])
+        else:
+            options.append('-DENABLE_MOAB:BOOL=OFF')
 
-        if '+parmetis' in spec:
-            cmake_args.append('-DENABLE_PARMETIS=ON')
-
-        if '+silo' in spec:
-            cmake_args.append('-DENABLE_SILO=ON')
-
-        if '+caliper' in spec:
-            cmake_args.append('-DENABLE_CALIPER=ON')
-
-        return cmake_args
+        return options
