@@ -42,12 +42,12 @@ class Libfabric(AutotoolsPackage):
                'sockets',
                'verbs',
                'usnic',
-               'mxm',
                'gni',
                'xpmem',
                'udp',
                'rxm',
-               'rxd')
+               'rxd',
+               'mlx')
 
     variant(
        'fabrics',
@@ -56,6 +56,11 @@ class Libfabric(AutotoolsPackage):
        values=fabrics,
        multi=True
     )
+
+    depends_on('rdma-core', when='fabrics=verbs')
+    depends_on('opa-psm2', when='fabrics=psm2')
+    depends_on('psm', when='fabrics=psm')
+    depends_on('ucx', when='fabrics=mlx')
 
     def configure_args(self):
         args = []

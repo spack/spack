@@ -28,20 +28,20 @@ import pytest
 
 from llnl.util.tty.color import color_when
 
-import spack
+import spack.store
 from spack.main import SpackCommand
 
 dependents = SpackCommand('dependents')
 
 
-def test_immediate_dependents(builtin_mock):
+def test_immediate_dependents(mock_packages):
     out = dependents('libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(['dyninst', 'libdwarf',
                           'patch-a-dependency', 'patch-several-dependencies'])
 
 
-def test_transitive_dependents(builtin_mock):
+def test_transitive_dependents(mock_packages):
     out = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(
@@ -51,7 +51,7 @@ def test_transitive_dependents(builtin_mock):
 
 
 @pytest.mark.db
-def test_immediate_installed_dependents(builtin_mock, database):
+def test_immediate_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents('--installed', 'libelf')
 
@@ -68,7 +68,7 @@ def test_immediate_installed_dependents(builtin_mock, database):
 
 
 @pytest.mark.db
-def test_transitive_installed_dependents(builtin_mock, database):
+def test_transitive_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents('--installed', '--transitive', 'fake')
 

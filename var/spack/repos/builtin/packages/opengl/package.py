@@ -88,3 +88,12 @@ class Opengl(Package):
 
     def install(self, spec, prefix):
         pass
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libGL', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs
+        return None

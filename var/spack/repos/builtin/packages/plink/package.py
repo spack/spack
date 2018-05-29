@@ -32,10 +32,22 @@ class Plink(Package):
 
     homepage = "https://www.cog-genomics.org/plink/1.9/"
 
-    version('1.9', 'a2325881594856c0f1b7523290d1e04f',
-            url='https://www.cog-genomics.org/static/bin/plink170815/plink_linux_x86_64.zip')
+    version('1.9-beta5', '737545504ae19348a44a05fa69b75c28',
+            url='https://github.com/chrchang/plink-ng/archive/b15c19f.tar.gz')
+    version('1.07', 'fd0bafeda42151b20534e4f97b0d97df',
+            url='http://zzz.bwh.harvard.edu/plink/dist/plink-1.07-x86_64.zip',
+            preferred=True)
+
+    depends_on('atlas', when='@1.9-beta5')
+    depends_on('netlib-lapack', when='@1.9-beta5')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('plink', prefix.bin)
-        install('prettify', prefix.bin)
+        if spec.version == Version('1.07'):
+            install('plink', prefix.bin)
+            install('gPLINK.jar', prefix.bin)
+        if spec.version == Version('1.9-beta5'):
+            with working_dir('1.9'):
+                first_compile = Executable('./plink_first_compile')
+                first_compile()
+                install('plink', prefix.bin)

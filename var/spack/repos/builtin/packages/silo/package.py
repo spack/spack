@@ -32,7 +32,9 @@ class Silo(Package):
     homepage = "http://wci.llnl.gov/simulation/computer-codes/silo"
     url      = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz"
 
-    version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8')
+    version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8', preferred=True)
+    version('4.10.2-bsd', '60fef9ce373daf1e9cc8320cfa509bc5',
+            url="https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2-bsd.tar.gz")
     version('4.9', 'a83eda4f06761a86726e918fc55e782a')
     version('4.8', 'b1cbc0e7ec435eb656dc4b53a23663c9')
 
@@ -42,8 +44,11 @@ class Silo(Package):
             description='Builds Silex, a GUI for viewing Silo files')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    variant('mpi', default=True,
+            description='Compile with MPI Compatibility')
 
-    depends_on('hdf5~mpi')
+    depends_on('hdf5~mpi', when='~mpi')
+    depends_on('hdf5+mpi', when='+mpi')
     depends_on('qt', when='+silex')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
@@ -68,6 +73,11 @@ class Silo(Package):
                 'CFLAGS={0}'.format(self.compiler.pic_flag),
                 'CXXFLAGS={0}'.format(self.compiler.pic_flag),
                 'FCFLAGS={0}'.format(self.compiler.pic_flag)]
+
+        if '+mpi' in spec:
+            config_args.append('CC=%s' % spec['mpi'].mpicc)
+            config_args.append('CXX=%s' % spec['mpi'].mpicxx)
+            config_args.append('FC=%s' % spec['mpi'].mpifc)
 
         configure(
             '--prefix=%s' % prefix,

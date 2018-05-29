@@ -34,7 +34,8 @@ class RBiobase(RPackage):
     url      = "https://git.bioconductor.org/packages/Biobase"
     list_url = homepage
 
+    version('2.38.0', git='https://git.bioconductor.org/packages/Biobase', commit='83f89829e0278ac014b0bc6664e621ac147ba424')
     version('2.36.2', git='https://git.bioconductor.org/packages/Biobase', commit='15f50912f3fa08ccb15c33b7baebe6b8a59ce075')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.36.2')
+    depends_on('r-biocgenerics@0.16.1:', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.36.2:')
