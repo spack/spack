@@ -58,6 +58,7 @@ class Tau(Package):
     variant('libunwind', default=False, description='Activates support of libunwind')
     variant('likwid', default=False, description='Activates LIKWID support')
     variant('papi', default=True, description='Activates Performance API')
+    variant('python', default=True, description='Activates Python support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant('ompt', default=False, description='Activates OMPT instrumentation')
     variant('opari', default=False, description='Activates Opari2 instrumentation')
@@ -136,6 +137,7 @@ class Tau(Package):
     depends_on('otf2@2.1', when='+otf')
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
+    depends_on('python', when='+python')
     #depends_on('binutils', when='~download')
     depends_on('gettext')
     depends_on('binutils@2.27+libiberty')
@@ -239,6 +241,9 @@ class Tau(Package):
 
         if '+papi' in spec:
             options.append("-papi=%s" % spec['papi'].prefix)
+
+        if '+python' in spec:
+            options.append("-python")
 
         if '+openmp' in spec:
             options.append('-openmp')
