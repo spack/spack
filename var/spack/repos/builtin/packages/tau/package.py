@@ -29,14 +29,15 @@ from llnl.util.filesystem import join_path
 import subprocess as sp
 import json
 
+
 class Tau(Package):
     """A portable profiling and tracing toolkit for performance
     analysis of parallel programs written in Fortran, C, C++, UPC,
     Java, Python.
     """
-    
+
     homepage = "http://www.cs.uoregon.edu/research/tau"
-    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.27.1.tar.gz"
+    url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.27.1.tar.gz"
 
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
     version('2.27', '76602d35fc96f546b5b9dcaf09158651')
@@ -53,82 +54,99 @@ class Tau(Package):
     variant('download', default=False,
             description='Downloads and builds various dependencies')
     variant('scorep', default=False, description='Activates SCOREP support')
-    variant('otf', default=False, description='Activates support of Open Trace Format (OTF)')
-    variant('binutils', default=False, description='Activates support of BFD GNU Binutils')
-    variant('libunwind', default=False, description='Activates support of libunwind')
+    variant(
+        'otf',
+        default=False,
+        description='Activates support of Open Trace Format (OTF)')
+    variant(
+        'binutils',
+        default=False,
+        description='Activates support of BFD GNU Binutils')
+    variant(
+        'libunwind',
+        default=False,
+        description='Activates support of libunwind')
     variant('likwid', default=False, description='Activates LIKWID support')
     variant('papi', default=True, description='Activates Performance API')
     variant('python', default=True, description='Activates Python support')
     variant('openmp', default=False, description='Use OpenMP threads')
-    variant('ompt', default=False, description='Activates OMPT instrumentation')
-    variant('opari', default=False, description='Activates Opari2 instrumentation')
+    variant(
+        'ompt',
+        default=False,
+        description='Activates OMPT instrumentation')
+    variant(
+        'opari',
+        default=False,
+        description='Activates Opari2 instrumentation')
     variant('mpi', default=True,
             description='Specify use of TAU MPI wrapper library')
-    variant('phase', default=False, description='Generate phase based profiles')
+    variant(
+        'phase',
+        default=False,
+        description='Generate phase based profiles')
     variant('comm', default=False,
             description=' Generate profiles with MPI communicator info')
     variant('shmem', default=False,
-             description='Activates SHMEM support')
+            description='Activates SHMEM support')
     variant('gasnet', default=False,
-             description='Activates GASNET support')
+            description='Activates GASNET support')
     variant('cuda', default=False,
-             description='Activates CUDA support')
+            description='Activates CUDA support')
     variant('beacon', default=False, description='Activates BEACON support')
-    
- 
+
     # Check MPI implementation
-    #try:
+    # try:
     #  mpirunOut = os.popen('which mpirun')
-    #except OSError as e:
+    # except OSError as e:
     #  print "OSError > ", e.errno
     #  print "OSError > ", e.strerror
-   
-    mpiruncmd = "which mpirun" 
+
+    mpiruncmd = "which mpirun"
     ret = sp.call(mpiruncmd, shell=True)
     if ret != 0:
-      print "mpirun does not exist - reading from JSON file"
-      strmpijson = ""
-      with open('/dev/shm/mpi.json') as mpi_file:
-        data = json.load(mpi_file)
-      print(data)
-      strmpijson = data["mpi"]
+        print "mpirun does not exist - reading from JSON file"
+        strmpijson = ""
+        with open('/dev/shm/mpi.json') as mpi_file:
+            data = json.load(mpi_file)
+        print(data)
+        strmpijson = data["mpi"]
 
-      if "mpich" in strmpijson:
-        print "mpich in JSON file"
-        MpiImpl = 'mpich'
-      elif "mvapich2" in strmpijson:
-        print "mvapich2 in JSON file"
-        MpiImpl = 'mvapich2'
-      elif "openmpi" in strmpijson:
-        print "openmpi in JSON file"
-        MpiImpl = 'openmpi'
-      elif "intel" in strmpijson:
-        print "IntelMpi in JSON file"
-        MpiImpl = 'intel-mpi'
+        if "mpich" in strmpijson:
+            print "mpich in JSON file"
+            MpiImpl = 'mpich'
+        elif "mvapich2" in strmpijson:
+            print "mvapich2 in JSON file"
+            MpiImpl = 'mvapich2'
+        elif "openmpi" in strmpijson:
+            print "openmpi in JSON file"
+            MpiImpl = 'openmpi'
+        elif "intel" in strmpijson:
+            print "IntelMpi in JSON file"
+            MpiImpl = 'intel-mpi'
 
     else:
-      print "mpirun exists"
-      #strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
-      #print p.communicate
-      
-      #strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
-      mpirunOut = os.popen('which mpirun')
-      #strMpiImplOut = os.popen('which mpirun').read() 
-      strMpiImplOut = mpirunOut.read()
-      #print "Mpi Impl out: ", strMpiImplOut
-      #MpiImpl = "mpich"
-      if "mpich" in strMpiImplOut:
-        MpiImpl = 'mpich'
-      elif "mvapich2" in strMpiImplOut:
-        MpiImpl = 'mvapich2'
-      elif "openmpi" in strMpiImplOut:
-        MpiImpl = 'openmpi'
-      elif "intel" in strMpiImplOut:
-        MpiImpl = 'intel-mpi'
-      #else:
-      #  MpiImpl = ""
+        print "mpirun exists"
+        #strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
+        #print p.communicate
 
-        # TODO : Try to build direct OTF2 support? Some parts of the OTF support
+        #strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
+        mpirunOut = os.popen('which mpirun')
+        #strMpiImplOut = os.popen('which mpirun').read()
+        strMpiImplOut = mpirunOut.read()
+        #print "Mpi Impl out: ", strMpiImplOut
+        #MpiImpl = "mpich"
+        if "mpich" in strMpiImplOut:
+            MpiImpl = 'mpich'
+        elif "mvapich2" in strMpiImplOut:
+            MpiImpl = 'mvapich2'
+        elif "openmpi" in strMpiImplOut:
+            MpiImpl = 'openmpi'
+        elif "intel" in strMpiImplOut:
+            MpiImpl = 'intel-mpi'
+        # else:
+        #  MpiImpl = ""
+
+    # TODO : Try to build direct OTF2 support? Some parts of the OTF support
     # TODO : library in TAU are non-conformant,
     # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2
     # support.
@@ -147,9 +165,9 @@ class Tau(Package):
     depends_on('cuda', when='+cuda')
     depends_on('gasnet', when='+gasnet')
 
-    #filter_compiler_wrappers(
+    # filter_compiler_wrappers(
     #    'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
-    #)
+    # )
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
@@ -177,7 +195,7 @@ class Tau(Package):
         compiler_options = ['-c++=%s' % self.compiler.cxx,
                             '-cc=%s' % self.compiler.cc]
 
-        #compiler_options = ['-c++=mpicxx',
+        # compiler_options = ['-c++=mpicxx',
         #                    '-cc=mpicc']
 
         if self.compiler.fc:
@@ -218,19 +236,19 @@ class Tau(Package):
 #        print "export SPACK_SHORT_SPEC=",os.environ['SPACK_SHORT_SPEC']
 
         options.extend(["-bfd=%s" % spec['binutils'].prefix])
-        #options.extend(["-bfd=/home/users/sameer/tau-2.27.1/x86_64/binutils-2.23.2"])
+        # options.extend(["-bfd=/home/users/sameer/tau-2.27.1/x86_64/binutils-2.23.2"])
         options.extend(["-unwind=%s" % spec['libunwind'].prefix])
-	#if '+binutils' in spec:
+        # if '+binutils' in spec:
         #    options.extend(["-bfd=%s" % spec['binutils'].prefix])
-        #else:
+        # else:
         #    options.extend(['-bfd=download'])
-	#if '+libunwind' in spec:
+        # if '+libunwind' in spec:
         #    options.extend(["-unwind=%s" % spec['libunwind'].prefix])
-        #else:
+        # else:
         #    options.extend(['-unwind=download'])
-	#if '+otf' in spec:
+        # if '+otf' in spec:
         #    options.extend(["-otf=%s" % spec['otf'].prefix])
-        #else:
+        # else:
         #    options.extend(['-otf=download'])
 
         if '+scorep' in spec:
@@ -251,64 +269,71 @@ class Tau(Package):
         if '+opari' in spec:
             options.append('-opari')
 
-        if '+mpi' in spec: 
+        if '+mpi' in spec:
             print "MPI in spec"
             strMpiIncTmp = ""
             strMpiLibsTmp = ""
             strMpiLibraryTmp = ""
             strMpi = os.popen('mpicc -show').read()
             print "mpicc -show: ", strMpi
-            #parse_mpi_wrapper(strmpi) 
+            # parse_mpi_wrapper(strmpi)
             listMpiOpts = strMpi.split()
-      
+
             for MpiItem in listMpiOpts:
-   
-              if "-I" in MpiItem:
-                if strMpiIncTmp == "":
-                  strMpiIncTmp = MpiItem[2:]
-                else:
-                  strMpiIncTmp += " "
-                  strMpiIncTmp += MpiItem[2:]
 
-                #strMpiInc.replace("-I","")
-                #strMpiInc = '"' + strMpiIncTmp + '"'
-                strMpiInc =  strMpiIncTmp 
-                print "MPI Include: ", strMpiInc
+                if "-I" in MpiItem:
+                    if strMpiIncTmp == "":
+                        strMpiIncTmp = MpiItem[2:]
+                    else:
+                        strMpiIncTmp += " "
+                        strMpiIncTmp += MpiItem[2:]
 
-              if "-L" in MpiItem:
-                #if strMpiLibsTmp == "":
-                  #strMpiLibsTmp = MpiItem[2:]
-                #else:
-                  #print(" ".join(strMpiLibsTmp))
-                  #strMpiLibsTmp += " "
-                  #strMpiLibsTmp += MpiItem[2:]
-                  #os.system("echo "+ strMpiLibsTmp +" | sed -e 's/#/ /g'")
-                  #strMpiLibsTmp = os.popen("echo "+ strMpiLibsTmp +" | sed -e 's/#/ /g'").read()
+                    # strMpiInc.replace("-I","")
+                    #strMpiInc = '"' + strMpiIncTmp + '"'
+                    strMpiInc = strMpiIncTmp
+                    print "MPI Include: ", strMpiInc
 
-                strMpiLibsTmp = MpiItem[2:]
-                strMpiLibs = strMpiLibsTmp 
-                print "MPI Libs path: ", strMpiLibs
-  
-              if "-l" in MpiItem:
-                strMpiLibraryTmp = MpiItem 
+                if "-L" in MpiItem:
+                    # if strMpiLibsTmp == "":
+                        #strMpiLibsTmp = MpiItem[2:]
+                    # else:
+                        #print(" ".join(strMpiLibsTmp))
+                        #strMpiLibsTmp += " "
+                        #strMpiLibsTmp += MpiItem[2:]
+                        # os.system("echo "+ strMpiLibsTmp +" | sed -e 's/#/ /g'")
+                        # strMpiLibsTmp = os.popen("echo "+ strMpiLibsTmp +" |
+                        # sed -e 's/#/ /g'").read()
 
-                #strMpiLibrary = '"' + strMpiLibraryTmp + '"'
-                strMpiLibrary = strMpiLibraryTmp
-                print "MPI Library: ", strMpiLibrary
+                    strMpiLibsTmp = MpiItem[2:]
+                    strMpiLibs = strMpiLibsTmp
+                    print "MPI Libs path: ", strMpiLibs
+
+                if "-l" in MpiItem:
+                    strMpiLibraryTmp = MpiItem
+
+                    #strMpiLibrary = '"' + strMpiLibraryTmp + '"'
+                    strMpiLibrary = strMpiLibraryTmp
+                    print "MPI Library: ", strMpiLibrary
 
             #strMpiLibs = '"' + strMpiLibsTmp + '"'
-            #strMpiLibs = strMpiLibsTmp 
+            #strMpiLibs = strMpiLibsTmp
             print "MPI Libs path: ", strMpiLibs
- 
+
             options.append('-mpi')
-            #options.append('-mpiinc=/packages/mpich2/3.1.4_gcc-4.9.2/include')
-            options.append('-mpiinc='+strMpiInc)
-            #options.append('-mpilib=/packages/mpich2/3.1.4_gcc-4.9.2/lib')
-            options.append('-mpilib='+strMpiLibs)
-            #options.append('-mpilibrary=-lmpi')
-            #options.append('-mpilibrary='+strMpiLibrary)
-            libintl=spec['gettext'].prefix+'/lib'
-            options.append('-mpilibrary='+strMpiLibrary+' -L'+libintl+' -Wl,-rpath,'+libintl)
+            # options.append('-mpiinc=/packages/mpich2/3.1.4_gcc-4.9.2/include')
+            options.append('-mpiinc=' + strMpiInc)
+            # options.append('-mpilib=/packages/mpich2/3.1.4_gcc-4.9.2/lib')
+            options.append('-mpilib=' + strMpiLibs)
+            # options.append('-mpilibrary=-lmpi')
+            # options.append('-mpilibrary='+strMpiLibrary)
+            libintl = spec['gettext'].prefix + '/lib'
+            options.append(
+                '-mpilibrary=' +
+                strMpiLibrary +
+                ' -L' +
+                libintl +
+                ' -Wl,-rpath,' +
+                libintl)
 
         if '+shmem' in spec:
             options.append('-shmem')
@@ -325,7 +350,6 @@ class Tau(Package):
         if '+comm' in spec:
             options.append('-PROFILECOMMUNICATORS')
 
-        
         #env['CC'] = spec['mpi'].mpicc
         #env['CXX'] = spec['mpi'].mpicxx
         #env['F77'] = spec['mpi'].mpif77
@@ -343,7 +367,7 @@ class Tau(Package):
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
             for d in ('bin', 'lib'):
-                src  = join_path(self.prefix, subdir, d)
+                src = join_path(self.prefix, subdir, d)
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
