@@ -58,11 +58,8 @@ class Emacs(AutotoolsPackage):
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('gnutls', when='@26.1:')
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
-    depends_on('libxpm ^gettext+libunistring', when='+tls')
-    depends_on('ncurses+termlib', when='+tls')
 
     def configure_args(self):
         spec = self.spec
@@ -80,5 +77,10 @@ class Emacs(AutotoolsPackage):
         # doing so throws an error at build-time
         if sys.platform == 'darwin':
             args.append('--without-ns')
+
+        if '+tls' in spec:
+            args = ['--with-gnutls']
+        else:
+            args = ['--without-gnutls']
 
         return args
