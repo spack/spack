@@ -29,6 +29,6 @@ class PyBackcall(PythonPackage):
     """Specifications for callback functions passed in to an API"""
 
     homepage = "https://github.com/takluyver/backcall"
-    url = "https://files.pythonhosted.org/packages/84/71/c8ca4f5bb1e08401b916c68003acf0a0655df935d74d93bf3f3364b310e0/backcall-0.1.0.tar.gz"
+    url = "https://pypi.io/packages/source/b/backcall/backcall-0.1.0.tar.gz"
 
     version('0.1.0', '87ce0c7839808e6a3427d57df6a792e7')
