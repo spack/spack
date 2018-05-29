@@ -172,7 +172,7 @@ class Boost(Package):
     patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
-    patch('boost_pgi.patch', when='%pgi')
+    patch('boost_pgi.patch', when='@1.67.0%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
