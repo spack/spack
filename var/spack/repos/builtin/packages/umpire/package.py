@@ -29,7 +29,8 @@ from spack import *
 class Umpire(CMakePackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
-    homepage = "https://github.com/LLNL/Umpire"
+    url = 'https://github.com/LLNL/Umpire/releases/download/v0.1.4/umpire-0.1.4.tar.gz'
+    homepage = 'https://github.com/LLNL/Umpire'
 
     version('master', git='https://github.com/LLNL/Umpire.git', branch='master', submodules='True')
     version('develop', git='https://github.com/LLNL/Umpire.git', branch='develop', submodules='True')
