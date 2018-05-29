@@ -29,8 +29,9 @@ class PyTraitlets(PythonPackage):
     """Traitlets Python config system"""
 
     homepage = "https://pypi.python.org/pypi/traitlets"
-    url      = "https://github.com/ipython/traitlets/archive/4.3.1.tar.gz"
-
+    url      = "https://github.com/ipython/traitlets/archive/master.tar.gz"
+    #their setup.py seems to have changed after the last release, forcing me to install the master.tar.gz to avoid py-enum34 for python@3.5:, which can't be checksummmed :|
+    version('4.3.2', '0b5b7986aef676d12f31a16cbbe3ed92')
     version('4.3.1', '146a4885ea64079f62a33b2049841543')
     version('4.3.0', '17af8d1306a401c42dbc92a080722422')
     version('4.2.2', 'ffc03056dc5c8d1fc5dbd6eac76e1e46')
@@ -40,10 +41,11 @@ class PyTraitlets(PythonPackage):
     version('4.0.0', 'b5b95ea5941fd9619b4704dfd8201568')
     version('4.0',   '14544e25ccf8e920ed1cbf833852481f')
 
-    depends_on('py-decorator', type=('build', 'run'))
+    depends_on('py-decorator', type=('build', 'run'),when="@:4.3.1")
+    depends_on('py-six',       type=('build', 'run'),when="@4.3.2:")
     depends_on('py-ipython-genutils', type=('build', 'run'))
 
     # This dependency breaks concretization
     # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-enum34', type=('build', 'run'))
+    depends_on('py-enum34', when='^python@2.7', type=('build', 'run'))
+    #depends_on('py-enum34', type=('build', 'run'))

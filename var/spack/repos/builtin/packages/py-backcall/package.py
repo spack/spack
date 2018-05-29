@@ -25,17 +25,12 @@
 from spack import *
 
 
-class PyIpythonGenutils(PythonPackage):
-    """This package shouldn't exist. It contains some common utilities shared by Jupyter and IPython 
-       projects during The Big Split. As soon as possible, those packages will remove their dependency
-       on this, and this repo will go away."""
+class PyBackcall(PythonPackage):
+    """Specifications for callback functions passed in to an API"""
 
-    homepage = "https://github.com/ipython/ipython_genutils"
-    url      = "https://github.com/ipython/ipython_genutils/archive/0.2.0.tar.gz"
+    homepage = "https://github.com/takluyver/backcall"
+    url      = "https://files.pythonhosted.org/packages/84/71/c8ca4f5bb1e08401b916c68003acf0a0655df935d74d93bf3f3364b310e0/backcall-0.1.0.tar.gz"
 
-    version('0.2.0', '477e596a0e6e2f74ec08ec09687eeb6c')
-    version('0.1.0', '2016819d42d8b186aad1eaed2d11b4d2')
+    version('0.1.0', '87ce0c7839808e6a3427d57df6a792e7')
 
-    # FIXME: Add dependencies if required.
-    #depends_on('py-setuptools', type='build')
-    depends_on('py-six',        type=('build', 'run'))    
+
