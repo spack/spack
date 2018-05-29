@@ -79,8 +79,8 @@ class Emacs(AutotoolsPackage):
             args.append('--without-ns')
 
         if '+tls' in spec:
-            args = ['--with-gnutls']
+            args.append('--with-gnutls')
         else:
-            args = ['--without-gnutls']
+            args.append('--without-gnutls')
 
         return args
