@@ -48,7 +48,7 @@ class Dyninst(Package):
     # Dyninst depends on libelf and libdwarf prior to @9.3.0
     # Dyninst depends on elfutils and libdwarf from @9.3.0 to but
     # not including @develop
-    # Dyninst depends on elfutils and elfutils libdw from @develop onwards
+    # Dyninst depends on elfutils and elfutils libdw from @develop forward
     # elf@0 is an abstaction for libelf
     # elf@1 is an abstaction for elfutils
     depends_on("elf@0", type='link', when='@:9.2.99')
