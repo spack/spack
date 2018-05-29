@@ -29,8 +29,10 @@ class PyTraitlets(PythonPackage):
     """Traitlets Python config system"""
 
     homepage = "https://pypi.python.org/pypi/traitlets"
-    url      = "https://github.com/ipython/traitlets/archive/master.tar.gz"
-    #their setup.py seems to have changed after the last release, forcing me to install the master.tar.gz to avoid py-enum34 for python@3.5:, which can't be checksummmed :|
+    url = "https://github.com/ipython/traitlets/archive/master.tar.gz"
+    # their setup.py seems to have changed after the last release, forcing me
+    # to install the master.tar.gz to avoid py-enum34 for python@3.5:, which
+    # can't be checksummmed :|
     version('4.3.2', '0b5b7986aef676d12f31a16cbbe3ed92')
     version('4.3.1', '146a4885ea64079f62a33b2049841543')
     version('4.3.0', '17af8d1306a401c42dbc92a080722422')
@@ -39,10 +41,10 @@ class PyTraitlets(PythonPackage):
     version('4.2.0', '53553a10d124e264fd2e234d0571b7d0')
     version('4.1.0', 'd5bc75c7bd529afb40afce86c2facc3a')
     version('4.0.0', 'b5b95ea5941fd9619b4704dfd8201568')
-    version('4.0',   '14544e25ccf8e920ed1cbf833852481f')
+    version('4.0', '14544e25ccf8e920ed1cbf833852481f')
 
-    depends_on('py-decorator', type=('build', 'run'),when="@:4.3.1")
-    depends_on('py-six',       type=('build', 'run'),when="@4.3.2:")
+    depends_on('py-decorator', type=('build', 'run'), when="@:4.3.1")
+    depends_on('py-six', type=('build', 'run'), when="@4.3.2:")
     depends_on('py-ipython-genutils', type=('build', 'run'))
 
     # This dependency breaks concretization

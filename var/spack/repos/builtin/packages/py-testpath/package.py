@@ -30,7 +30,6 @@ class PyTestpath(PythonPackage):
     """Test utilities for Python code working with files and commands"""
 
     homepage = "https://github.com/jupyter/testpath"
-    url      = "https://files.pythonhosted.org/packages/f4/8b/b71e9ee10e5f751e9d959bc750ab122ba04187f5aa52aabdc4e63b0e31a7/testpath-0.3.1.tar.gz"
+    url = "https://files.pythonhosted.org/packages/f4/8b/b71e9ee10e5f751e9d959bc750ab122ba04187f5aa52aabdc4e63b0e31a7/testpath-0.3.1.tar.gz"
 
     version('0.3.1', '2cd5ed5522fda781bb497c9d80ae2fc9')
-  
