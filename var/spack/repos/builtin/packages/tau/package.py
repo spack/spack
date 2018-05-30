@@ -125,16 +125,8 @@ class Tau(Package):
             MpiImpl = 'intel-mpi'
 
     else:
-#        print ("mpirun exists")
-#       strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
-#       print p.communicate
-
-#       strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
         mpirunOut = os.popen('which mpirun')
-#       strMpiImplOut = os.popen('which mpirun').read()
         strMpiImplOut = mpirunOut.read()
-#       print "Mpi Impl out: ", strMpiImplOut
-#       MpiImpl = "mpich"
         if "mpich" in strMpiImplOut:
             MpiImpl = 'mpich'
         elif "mvapich2" in strMpiImplOut:
