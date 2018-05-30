@@ -60,7 +60,6 @@ class PyIpython(PythonPackage):
     depends_on('py-backcall', type=('build', 'run'), when="@6.0:")
     depends_on('py-pexpect', type=('build', 'run'), when="@6.0:")
     depends_on('py-ptyprocess', type=('build', 'run'), when="@6.0:")
-    
     depends_on('py-appnope', type=('build', 'run'),
                when=sys.platform == 'darwin' and
                int(platform.mac_ver()[0].split('.')[1]) >= 9)
