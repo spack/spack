@@ -56,16 +56,11 @@ class PyIpython(PythonPackage):
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-pexpect', type=('build', 'run'), when="@:6.0")
     depends_on('py-jedi@0.10:', type=('build', 'run'), when="@6.0:")
-    #depends_on('py-setuptools@18.5:',            type=('build'),      when="@6.0:")
+    # depends_on('py-setuptools@18.5:',    type=('build'),   when="@6.0:")
     depends_on('py-backcall', type=('build', 'run'), when="@6.0:")
     depends_on('py-pexpect', type=('build', 'run'), when="@6.0:")
     depends_on('py-ptyprocess', type=('build', 'run'), when="@6.0:")
-    #depends_on('py-qtconsole',                  type=('build', 'run'),when="@6.0:")
-    #depends_on('py-ipykernel',                  type=('build', 'run'),when="@6.0:")
-    #depends_on('py-nbformat',                   type=('build', 'run'),when="@6.0:")
-    #depends_on('py-nbconvert',                  type=('build', 'run'),when="@6.0:")
-    #depends_on('py-ipywidgets',                 type=('build', 'run'),when="@6.0:")
-
+    
     depends_on('py-appnope', type=('build', 'run'),
                when=sys.platform == 'darwin' and
                int(platform.mac_ver()[0].split('.')[1]) >= 9)
