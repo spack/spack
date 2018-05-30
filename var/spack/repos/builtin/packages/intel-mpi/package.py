@@ -29,7 +29,12 @@ from spack.environment import EnvironmentModifications
 
 
 class IntelMpi(IntelPackage):
-    """Intel MPI"""
+    """Intel MPI
+
+    One of the purposes of this package is to support a stand-alone
+    installation, that is when prefix does not contain
+    compilers_and_libraries folder and alike.
+    """
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
@@ -64,7 +69,16 @@ class IntelMpi(IntelPackage):
 
     @property
     def mpi_libs(self):
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
+        dirs = [
+            self.prefix.compilers_and_libraries.linux.mpi.lib64,
+            self.prefix.lib64
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                mpi_root = d
+                break
+
         query_parameters = self.spec.last_query.extra_parameters
         libraries = ['libmpifort', 'libmpi']
 
@@ -79,7 +93,16 @@ class IntelMpi(IntelPackage):
     def mpi_headers(self):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
+        dirs = [
+            self.prefix.compilers_and_libraries.linux.mpi.include64,
+            self.prefix.include64
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                mpi_root = d
+                break
+
         return find_headers('mpi', root=mpi_root, recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -102,7 +125,16 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
+        dirs = [
+            self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
+            self.prefix.bin64,
+            self.prefix.bin
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                bindir = d
+                break
 
         if self.compiler.name == 'intel':
             self.spec.mpicc  = bindir.mpiicc
