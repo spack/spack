@@ -30,6 +30,7 @@ import os
 class Pgmath(CMakePackage):
     """Flang's math library"""
     homepage = "https://github.com/flang-compiler/flang"
+    url      = "https://github.com/flang-compiler/flang/archive/pgmath_20180319.tar.gz"
 
     version('develop', git='https://github.com/flang-compiler/flang', branch='master')
 

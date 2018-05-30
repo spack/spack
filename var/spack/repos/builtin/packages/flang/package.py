@@ -82,7 +82,7 @@ class Flang(CMakePackage):
             if '@develop' in self.spec:
                 out.write(
                     '{0} -I{1} -L{2} -L{3} {4}{5} {6}{7} -B{8} "$@"\n'.format(
-                        os.path.join(self.spec['llvm'].prefix.bin, 'flang'),
+                        self.spec['llvm'].prefix.bin.flang,
                         self.prefix.include, self.prefix.lib,
                         self.spec['pgmath'].prefix.lib,
                         self.compiler.fc_rpath_arg, self.prefix.lib,
@@ -92,7 +92,7 @@ class Flang(CMakePackage):
             else:
                 out.write(
                     '{0} -I{1} -L{2} {3}{4} -B{5} "$@"\n'.format(
-                        os.path.join(self.spec['llvm'].prefix.bin, 'flang'),
+                        self.spec['llvm'].prefix.bin.flang,
                         self.prefix.include, self.prefix.lib,
                         self.compiler.fc_rpath_arg, self.prefix.lib,
                         self.spec.prefix.bin))
