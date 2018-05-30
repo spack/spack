@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyIpythonGenutils(PythonPackage):
-    """This package shouldn't exist. It contains some common utilities 
+    """This package shouldn't exist. It contains some common utilities
        shared by Jupyter and IPython projects during The Big Split. As
        soon as possible, those packages will remove their dependency
        on this, and this repo will go away."""
