@@ -50,4 +50,4 @@ class PyTraitlets(PythonPackage):
     # This dependency breaks concretization
     # See https://github.com/spack/spack/issues/2793
     depends_on('py-enum34', when='^python@2.7', type=('build', 'run'))
-    #depends_on('py-enum34', type=('build', 'run'))
+    # depends_on('py-enum34', type=('build', 'run'))
