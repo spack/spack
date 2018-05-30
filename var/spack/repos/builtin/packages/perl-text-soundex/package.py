@@ -25,19 +25,13 @@
 from spack import *
 
 
-class MsgpackC(CMakePackage):
-    """A small, fast binary interchange format convertible to/from JSON"""
-    homepage = "http://www.msgpack.org"
-    url      = "https://github.com/msgpack/msgpack-c/archive/cpp-3.0.1.tar.gz"
+class PerlTextSoundex(PerlPackage):
+    """Soundex is a phonetic algorithm for indexing names by sound, as
+       pronounced in English. The goal is for names with the same
+       pronunciation to be encoded to the same representation so
+       that they can be matched despite minor differences in spelling"""
 
-    version('3.0.1', 'a79f05f0dc5637c161805d6c0e9bfbe7')
-    version('1.4.1', 'e2fd3a7419b9bc49e5017fdbefab87e0')
+    homepage = "http://search.cpan.org/~rjbs/Text-Soundex-3.05/Soundex.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Text-Soundex-3.05.tar.gz"
 
-    depends_on('cmake@2.8.12:', type='build')
-
-    def cmake_args(self):
-        args = [
-            "-DCMAKE_CXX_FLAGS=-Wno-implicit-fallthrough",
-            "-DCMAKE_C_FLAGS=-Wno-implicit-fallthrough"
-        ]
-        return args
+    version('3.05', 'cb40ded7a5d27aa3a411d274d6ec18ae')

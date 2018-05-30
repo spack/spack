@@ -43,6 +43,10 @@ class Fyba(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    # error: macro "min" passed 3 arguments, but takes just 2
+    # https://github.com/kartverket/fyba/issues/21
+    patch('gcc-6.patch')
+
     # fatal error: 'sys/vfs.h' file not found
     # https://github.com/kartverket/fyba/issues/12
     patch('vfs-mount-darwin.patch', when='platform=darwin')

@@ -22,22 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class MsgpackC(CMakePackage):
-    """A small, fast binary interchange format convertible to/from JSON"""
-    homepage = "http://www.msgpack.org"
-    url      = "https://github.com/msgpack/msgpack-c/archive/cpp-3.0.1.tar.gz"
+class Umpire(CMakePackage):
+    """An application-focused API for memory management on NUMA & GPU
+    architectures"""
+    url = 'https://github.com/LLNL/Umpire/releases/download/v0.1.4/umpire-0.1.4.tar.gz'
+    homepage = 'https://github.com/LLNL/Umpire'
 
-    version('3.0.1', 'a79f05f0dc5637c161805d6c0e9bfbe7')
-    version('1.4.1', 'e2fd3a7419b9bc49e5017fdbefab87e0')
+    version('master', git='https://github.com/LLNL/Umpire.git', branch='master', submodules='True')
+    version('develop', git='https://github.com/LLNL/Umpire.git', branch='develop', submodules='True')
+    version('0.1.4', git='https://github.com/LLNL/Umpire.git', tag='v0.1.4', submodules='True')
+    version('0.1.3', git='https://github.com/LLNL/Umpire.git', tag='v0.1.3', submodules='True')
 
-    depends_on('cmake@2.8.12:', type='build')
+    variant('cuda', default=False, description='Build with CUDA support')
+    variant('fortran', default=False, description='Build C/Fortran API')
+
+    depends_on('cuda', when='+cuda')
+    depends_on('cmake@3.3:', type='build')
 
     def cmake_args(self):
-        args = [
-            "-DCMAKE_CXX_FLAGS=-Wno-implicit-fallthrough",
-            "-DCMAKE_C_FLAGS=-Wno-implicit-fallthrough"
-        ]
-        return args
+        spec = self.spec
+
+        options = []
+
+        if '+cuda' in spec:
+            options.extend([
+                '-DENABLE_CUDA=On',
+                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+        else:
+            options.append('-DENABLE_CUDA=Off')
+
+        if '+fortran' in spec:
+            options.append('-DENABLE_FORTRAN=On')
+
+        return options
