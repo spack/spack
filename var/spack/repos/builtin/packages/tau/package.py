@@ -126,15 +126,15 @@ class Tau(Package):
 
     else:
         print "mpirun exists"
-        #strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
-        #print p.communicate
+#       strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
+#       print p.communicate
 
-        #strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
+#       strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
         mpirunOut = os.popen('which mpirun')
-        #strMpiImplOut = os.popen('which mpirun').read()
+#       strMpiImplOut = os.popen('which mpirun').read()
         strMpiImplOut = mpirunOut.read()
-        #print "Mpi Impl out: ", strMpiImplOut
-        #MpiImpl = "mpich"
+#       print "Mpi Impl out: ", strMpiImplOut
+#       MpiImpl = "mpich"
         if "mpich" in strMpiImplOut:
             MpiImpl = 'mpich'
         elif "mvapich2" in strMpiImplOut:
@@ -156,7 +156,7 @@ class Tau(Package):
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('python', when='+python')
-    #depends_on('binutils', when='~download')
+#   depends_on('binutils', when='~download')
     depends_on('gettext')
     depends_on('binutils@2.27+libiberty')
     depends_on('libunwind', when='~download')
@@ -191,7 +191,7 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        #compiler_options = []
+#       compiler_options = []
         compiler_options = ['-c++=%s' % self.compiler.cxx,
                             '-cc=%s' % self.compiler.cc]
 
@@ -222,18 +222,7 @@ class Tau(Package):
         options = ["-prefix=%s" % prefix,
                    "-iowrapper",
                    "-pdt=%s" % spec['pdt'].prefix]
-        # If download is active, download and build suggested dependencies
-
-#	 print "export SPACK_PREFIX=",os.environ['SPACK_PREFIX']
-#        print "export SPACK_ENV_PATH=",os.environ['SPACK_ENV_PATH']
-#        print "export SPACK_DEBUG_LOG_DIR=",os.environ['SPACK_DEBUG_LOG_DIR']
-#        print "export SPACK_DEBUG_LOG_ID=",os.environ['SPACK_DEBUG_LOG_ID']
-#        print "export SPACK_COMPILER_SPEC=",os.environ['SPACK_COMPILER_SPEC']
-#        print "export SPACK_CC_RPATH_ARG=",os.environ['SPACK_CC_RPATH_ARG']
-#        print "export SPACK_CXX_RPATH_ARG=",os.environ['SPACK_CXX_RPATH_ARG']
-#        print "export SPACK_F77_RPATH_ARG=",os.environ['SPACK_F77_RPATH_ARG']
-#        print "export SPACK_FC_RPATH_ARG=",os.environ['SPACK_FC_RPATH_ARG']
-#        print "export SPACK_SHORT_SPEC=",os.environ['SPACK_SHORT_SPEC']
+#       If download is active, download and build suggested dependencies
 
         options.extend(["-bfd=%s" % spec['binutils'].prefix])
         # options.extend(["-bfd=/home/users/sameer/tau-2.27.1/x86_64/binutils-2.23.2"])
@@ -289,21 +278,11 @@ class Tau(Package):
                         strMpiIncTmp += MpiItem[2:]
 
                     # strMpiInc.replace("-I","")
-                    #strMpiInc = '"' + strMpiIncTmp + '"'
+                    # strMpiInc = '"' + strMpiIncTmp + '"'
                     strMpiInc = strMpiIncTmp
                     print "MPI Include: ", strMpiInc
 
                 if "-L" in MpiItem:
-                    # if strMpiLibsTmp == "":
-                        #strMpiLibsTmp = MpiItem[2:]
-                    # else:
-                        #print(" ".join(strMpiLibsTmp))
-                        #strMpiLibsTmp += " "
-                        #strMpiLibsTmp += MpiItem[2:]
-                        # os.system("echo "+ strMpiLibsTmp +" | sed -e 's/#/ /g'")
-                        # strMpiLibsTmp = os.popen("echo "+ strMpiLibsTmp +" |
-                        # sed -e 's/#/ /g'").read()
-
                     strMpiLibsTmp = MpiItem[2:]
                     strMpiLibs = strMpiLibsTmp
                     print "MPI Libs path: ", strMpiLibs
@@ -311,12 +290,12 @@ class Tau(Package):
                 if "-l" in MpiItem:
                     strMpiLibraryTmp = MpiItem
 
-                    #strMpiLibrary = '"' + strMpiLibraryTmp + '"'
+                    # strMpiLibrary = '"' + strMpiLibraryTmp + '"'
                     strMpiLibrary = strMpiLibraryTmp
                     print "MPI Library: ", strMpiLibrary
 
-            #strMpiLibs = '"' + strMpiLibsTmp + '"'
-            #strMpiLibs = strMpiLibsTmp
+            # strMpiLibs = '"' + strMpiLibsTmp + '"'
+            # strMpiLibs = strMpiLibsTmp
             print "MPI Libs path: ", strMpiLibs
 
             options.append('-mpi')
@@ -350,10 +329,10 @@ class Tau(Package):
         if '+comm' in spec:
             options.append('-PROFILECOMMUNICATORS')
 
-        #env['CC'] = spec['mpi'].mpicc
-        #env['CXX'] = spec['mpi'].mpicxx
-        #env['F77'] = spec['mpi'].mpif77
-        #env['FC'] = spec['mpi'].mpifc
+        # env['CC'] = spec['mpi'].mpicc
+        # env['CXX'] = spec['mpi'].mpicxx
+        # env['F77'] = spec['mpi'].mpif77
+        # env['FC'] = spec['mpi'].mpifc
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
