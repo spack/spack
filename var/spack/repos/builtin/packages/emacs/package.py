@@ -51,6 +51,7 @@ class Emacs(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
 
     depends_on('ncurses')
+    depends_on('pcre')
     depends_on('zlib')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
