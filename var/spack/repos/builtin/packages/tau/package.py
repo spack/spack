@@ -104,7 +104,7 @@ class Tau(Package):
     mpiruncmd = "which mpirun"
     ret = sp.call(mpiruncmd, shell=True)
     if ret != 0:
-        print "mpirun does not exist - reading from JSON file"
+        print ("mpirun does not exist - reading from JSON file")
         strmpijson = ""
         with open('/dev/shm/mpi.json') as mpi_file:
             data = json.load(mpi_file)
@@ -112,20 +112,20 @@ class Tau(Package):
         strmpijson = data["mpi"]
 
         if "mpich" in strmpijson:
-            print "mpich in JSON file"
+            print ("mpich in JSON file")
             MpiImpl = 'mpich'
         elif "mvapich2" in strmpijson:
-            print "mvapich2 in JSON file"
+            print ("mvapich2 in JSON file")
             MpiImpl = 'mvapich2'
         elif "openmpi" in strmpijson:
-            print "openmpi in JSON file"
+            print ("openmpi in JSON file")
             MpiImpl = 'openmpi'
         elif "intel" in strmpijson:
-            print "IntelMpi in JSON file"
+            print ("IntelMpi in JSON file")
             MpiImpl = 'intel-mpi'
 
     else:
-        print "mpirun exists"
+#        print ("mpirun exists")
 #       strMpiImplOut = sp.Popen(["which", "mpirun"],stdout=sp.PIPE)
 #       print p.communicate
 
@@ -259,12 +259,12 @@ class Tau(Package):
             options.append('-opari')
 
         if '+mpi' in spec:
-            print "MPI in spec"
+            print ("MPI in spec")
             strMpiIncTmp = ""
             strMpiLibsTmp = ""
             strMpiLibraryTmp = ""
             strMpi = os.popen('mpicc -show').read()
-            print "mpicc -show: ", strMpi
+            print ("mpicc -show: ", strMpi)
             # parse_mpi_wrapper(strmpi)
             listMpiOpts = strMpi.split()
 
@@ -280,23 +280,23 @@ class Tau(Package):
                     # strMpiInc.replace("-I","")
                     # strMpiInc = '"' + strMpiIncTmp + '"'
                     strMpiInc = strMpiIncTmp
-                    print "MPI Include: ", strMpiInc
+                    print ("MPI Include: ", strMpiInc)
 
                 if "-L" in MpiItem:
                     strMpiLibsTmp = MpiItem[2:]
                     strMpiLibs = strMpiLibsTmp
-                    print "MPI Libs path: ", strMpiLibs
+                    print ("MPI Libs path: ", strMpiLibs)
 
                 if "-l" in MpiItem:
                     strMpiLibraryTmp = MpiItem
 
                     # strMpiLibrary = '"' + strMpiLibraryTmp + '"'
                     strMpiLibrary = strMpiLibraryTmp
-                    print "MPI Library: ", strMpiLibrary
+                    print ("MPI Library: ", strMpiLibrary)
 
             # strMpiLibs = '"' + strMpiLibsTmp + '"'
             # strMpiLibs = strMpiLibsTmp
-            print "MPI Libs path: ", strMpiLibs
+            print ("MPI Libs path: ", strMpiLibs)
 
             options.append('-mpi')
             # options.append('-mpiinc=/packages/mpich2/3.1.4_gcc-4.9.2/include')
