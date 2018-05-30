@@ -43,10 +43,10 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['flang', 'gfortran']
+    f77_names = ['flang', 'gfortran', 'xlf_r']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['flang', 'gfortran']
+    fc_names = ['flang', 'gfortran', 'xlf90_r']
 
     # Named wrapper links within lib/spack/env
     link_paths = {'cc': 'clang/clang',
@@ -57,6 +57,10 @@ class Clang(Compiler):
         # compilers.yaml
         link_paths['f77'] = 'clang/gfortran'
         link_paths['fc'] = 'clang/gfortran'
+    elif spack.architecture.sys_type() == 'linux-rhel7-ppc64le':
+        # This platform uses clang with IBM XL Fortran compiler
+        link_paths['f77'] = 'xl_r/xlf_r'
+        link_paths['fc'] = 'xl_r/xlf90_r'
     else:
         link_paths['f77'] = 'clang/flang'
         link_paths['fc'] = 'clang/flang'
