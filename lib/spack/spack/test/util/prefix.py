@@ -44,6 +44,18 @@ def test_prefix_join():
     assert prefix.join('a-{0}'.format(1)).lib64 == '/usr/a-1/lib64'
     assert prefix.join('a.{0}'.format(1)).lib64 == '/usr/a.1/lib64'
 
+    assert prefix.bin.join('executable.sh')               == '/usr/bin/executable.sh'
+    assert prefix.share.join('pkg-config').join('foo.pc') == '/usr/share/pkg-config/foo.pc'
+    assert prefix.join('dashed-directory').foo            == '/usr/dashed-directory/foo'
+
+    assert isinstance(prefix.join('a_{0}'.format(1)).lib64, Prefix)
+    assert isinstance(prefix.join('a-{0}'.format(1)).lib64, Prefix)
+    assert isinstance(prefix.join('a.{0}'.format(1)).lib64, Prefix)
+
+    assert isinstance(prefix.bin.join('executable.sh'), Prefix)
+    assert isinstance(prefix.share.join('pkg-config').join('foo.pc'), Prefix)
+    assert isinstance(prefix.join('dashed-directory').foo, Prefix)
+
 
 def test_multilevel_attributes():
     """Test attributes of attributes, like ``prefix.share.man``"""
