@@ -1858,7 +1858,7 @@ class Spec(object):
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
-                if s.satisfies(cond):
+                if s.satisfies_patch(cond):
                     for patch in patch_list:
                         patches.append(patch.sha256)
             if patches:
@@ -2526,6 +2526,7 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        
         # If there are no constraints to satisfy, we're done.
         if not other._dependencies:
             return True
@@ -2573,6 +2574,88 @@ class Spec(object):
 
         return True
 
+    def satisfies_patch(self, other, deps=True, strict=False, strict_deps=False):
+        """Determine if this spec needs to be patched.
+
+        the issue here is that a 3.2.1 may fix the issue 
+        being patched in 3.2
+        """
+        other = self._autospec(other)
+
+        # The only way to satisfy a concrete spec is to match its hash exactly.
+        if other.concrete:
+            return self.concrete and self.dag_hash() == other.dag_hash()
+
+        # A concrete provider can satisfy a virtual dependency.
+        if not self.virtual and other.virtual:
+            try:
+                pkg = spack.repo.get(self.fullname)
+            except spack.repo.UnknownEntityError:
+                # If we can't get package info on this spec, don't treat
+                # it as a provider of this vdep.
+                return False
+
+            if pkg.provides(other.name):
+                for provided, when_specs in pkg.provided.items():
+                    if any(self.satisfies(when_spec, deps=False, strict=strict)
+                           for when_spec in when_specs):
+                        if provided.satisfies(other):
+                            return True
+            return False
+        
+        # Otherwise, first thing we care about is whether the name matches
+        if self.name != other.name and self.name and other.name:
+            return False
+
+        # namespaces either match, or other doesn't require one.
+        if (other.namespace is not None and
+                self.namespace is not None and
+                self.namespace != other.namespace):
+            return False
+        if self.versions and other.versions:
+            #if not self.versions.satisfies(other.versions, strict=strict):
+            if other.versions != _any_version and self.versions != other.versions:
+                return False
+        elif strict and (self.versions or other.versions):
+            return False
+
+        # None indicates no constraints when not strict.
+        if self.compiler and other.compiler:
+            if not self.compiler.satisfies(other.compiler, strict=strict):
+                return False
+        elif strict and (other.compiler and not self.compiler):
+            return False
+
+        var_strict = strict
+        if (not self.name) or (not other.name):
+            var_strict = True
+        if not self.variants.satisfies(other.variants, strict=var_strict):
+            return False
+
+        # Architecture satisfaction is currently just string equality.
+        # If not strict, None means unconstrained.
+        if self.architecture and other.architecture:
+            if not self.architecture.satisfies(other.architecture, strict):
+                return False
+        elif strict and (other.architecture and not self.architecture):
+            return False
+
+        if not self.compiler_flags.satisfies(
+                other.compiler_flags,
+                strict=strict):
+            return False
+
+        # If we need to descend into dependencies, do it, otherwise we're done.
+        if deps:
+            deps_strict = strict
+            if self._concrete and not other.name:
+                # We're dealing with existing specs
+                deps_strict = True
+            return self.satisfies_dependencies(other, strict=deps_strict)
+        else:
+            return True
+
+    
     def virtual_dependencies(self):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
