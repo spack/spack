@@ -319,7 +319,7 @@ class EnvironmentModifications(object):
 
         source_file = [source_command, filename]
         source_file.extend(args)
-        source_file = ' '.join(source_file)
+        source_file = '"' + ' '.join(source_file) + '"'
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
         dump_environment = 'python -c "{0}"'.format(dump_cmd)
