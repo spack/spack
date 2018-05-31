@@ -50,7 +50,10 @@ class Lz4(Package):
             return "{0}/r{1}.tar.gz".format(url, version.joined)
 
     def install(self, spec, prefix):
-        make()
+        if sys.platform != "darwin":
+            make('LIBS=-lrt')  # fixes make error on CentOS6
+        else:
+            make()
         if self.run_tests:
             make('test')  # requires valgrind to be installed
         make('install', 'PREFIX={0}'.format(prefix))
