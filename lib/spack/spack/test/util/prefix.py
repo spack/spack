@@ -41,6 +41,8 @@ def test_prefix_join():
     prefix = Prefix('/usr')
 
     assert prefix.join('a_{0}'.format(1)).lib64 == '/usr/a_1/lib64'
+    assert prefix.join('a-{0}'.format(1)).lib64 == '/usr/a-1/lib64'
+    assert prefix.join('a.{0}'.format(1)).lib64 == '/usr/a.1/lib64'
 
 
 def test_multilevel_attributes():
