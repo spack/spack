@@ -26,8 +26,6 @@ from spack import *
 import os
 import glob
 from llnl.util.filesystem import join_path
-import subprocess as sp
-import json
 
 
 class Tau(Package):
@@ -40,7 +38,7 @@ class Tau(Package):
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.27.1.tar.gz"
 
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
-    version('2.27', '76602d35fc96f546b5b9dcaf09158651')
+#    version('2.27', '76602d35fc96f546b5b9dcaf09158651')
     version('2.26.3', '4ec14e85b8f3560b58628512c7b49e17')
     version('2.26.2', '8a5908c35dac9406c9220b8098c70c1c')
     version('2.26.1', 'cc13df9d6ad19bca9a8e55a9e7d0341e')
@@ -67,7 +65,7 @@ class Tau(Package):
         default=False,
         description='Activates support of libunwind')
     variant('likwid', default=False, description='Activates LIKWID support')
-    variant('papi', default=True, description='Activates Performance API')
+    variant('papi', default=False, description='Activates Performance API')
     variant('python', default=False, description='Activates Python support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant(
@@ -78,7 +76,7 @@ class Tau(Package):
         'opari',
         default=False,
         description='Activates Opari2 instrumentation')
-    variant('mpi', default=True,
+    variant('mpi', default=False,
             description='Specify use of TAU MPI wrapper library')
     variant(
         'phase',
@@ -101,43 +99,6 @@ class Tau(Package):
     #  print "OSError > ", e.errno
     #  print "OSError > ", e.strerror
 
-    mpiruncmd = "which mpirun"
-    ret = sp.call(mpiruncmd, shell=True)
-    if ret != 0:
-        print ("mpirun does not exist - reading from JSON file")
-        strmpijson = ""
-        with open('/dev/shm/mpi.json') as mpi_file:
-            data = json.load(mpi_file)
-        print(data)
-        strmpijson = data["mpi"]
-
-        if "mpich" in strmpijson:
-            print ("mpich in JSON file")
-            MpiImpl = 'mpich'
-        elif "mvapich2" in strmpijson:
-            print ("mvapich2 in JSON file")
-            MpiImpl = 'mvapich2'
-        elif "openmpi" in strmpijson:
-            print ("openmpi in JSON file")
-            MpiImpl = 'openmpi'
-        elif "intel" in strmpijson:
-            print ("IntelMpi in JSON file")
-            MpiImpl = 'intel-mpi'
-
-    else:
-        mpirunOut = os.popen('which mpirun')
-        strMpiImplOut = mpirunOut.read()
-        if "mpich" in strMpiImplOut:
-            MpiImpl = 'mpich'
-        elif "mvapich2" in strMpiImplOut:
-            MpiImpl = 'mvapich2'
-        elif "openmpi" in strMpiImplOut:
-            MpiImpl = 'openmpi'
-        elif "intel" in strMpiImplOut:
-            MpiImpl = 'intel-mpi'
-        # else:
-        #  MpiImpl = ""
-
     # TODO : Try to build direct OTF2 support? Some parts of the OTF support
     # TODO : library in TAU are non-conformant,
     # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2
@@ -152,7 +113,6 @@ class Tau(Package):
     depends_on('gettext')
     depends_on('binutils@2.27+libiberty')
     depends_on('libunwind', when='~download')
-    depends_on(MpiImpl, when='+mpi')
     depends_on("mpi", when='+mpi')
     depends_on('cuda', when='+cuda')
     depends_on('gasnet', when='+gasnet')
@@ -253,9 +213,14 @@ class Tau(Package):
         if '+mpi' in spec:
             print ("MPI in spec")
             strMpiIncTmp = ""
+            strMpiInc = ""
             strMpiLibsTmp = ""
+            strMpiLibs = ""
             strMpiLibraryTmp = ""
-            strMpi = os.popen('mpicc -show').read()
+            strMpiLibrary = ""
+            strMpiPrefix = spec['mpi'].prefix
+            print ("MPI Prefix: ", strMpiPrefix)
+            strMpi = os.popen(strMpiPrefix + '/bin/mpicc -show').read()
             print ("mpicc -show: ", strMpi)
             # parse_mpi_wrapper(strmpi)
             listMpiOpts = strMpi.split()
@@ -304,7 +269,7 @@ class Tau(Package):
                 ' -L' +
                 libintl +
                 ' -Wl,-rpath,' +
-                libintl)
+                libintl + ' -lintl')
 
         if '+shmem' in spec:
             options.append('-shmem')
