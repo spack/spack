@@ -276,7 +276,7 @@ def _populate(mock_db):
       o  libelf
     """
     def _install(spec):
-        s = spack.spec.Spec(spec).concretized()
+        s = spack.spec.concretized(spack.spec.Spec(spec))
         pkg = spack.repo.get(s)
         pkg.do_install(fake=True)
 
