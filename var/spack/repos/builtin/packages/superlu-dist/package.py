@@ -88,7 +88,8 @@ class SuperluDist(Package):
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
             'LOADOPTS     =',
             'CDEFS        = %s' % ("-DNoChange"
-                                       if '%xl' in spec or '%xl_r' in spec
+                                       if spack_f77.endswith('xlf') or
+                                          spack_f77.endswith('xlf_r')
                                        else "-DAdd_")
         ])
 
