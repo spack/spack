@@ -68,7 +68,7 @@ class Tau(Package):
         description='Activates support of libunwind')
     variant('likwid', default=False, description='Activates LIKWID support')
     variant('papi', default=True, description='Activates Performance API')
-    variant('python', default=True, description='Activates Python support')
+    variant('python', default=False, description='Activates Python support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant(
         'ompt',
