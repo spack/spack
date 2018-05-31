@@ -69,7 +69,16 @@ class IntelMpi(IntelPackage):
 
     @property
     def mpi_libs(self):
+        ver_dir = os.path.join(
+            self.prefix,
+            'compilers_and_libraries_{0}'.format(self.version),
+            'linux',
+            'mpi',
+            'lib64'
+        )
+
         dirs = [
+            ver_dir,
             self.prefix.compilers_and_libraries.linux.mpi.lib64,
             self.prefix.lib64
         ]
@@ -93,7 +102,16 @@ class IntelMpi(IntelPackage):
     def mpi_headers(self):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
+        ver_dir = os.path.join(
+            self.prefix,
+            'compilers_and_libraries_{0}'.format(self.version),
+            'linux',
+            'mpi',
+            'include64'
+        )
+
         dirs = [
+            ver_dir,
             self.prefix.compilers_and_libraries.linux.mpi.include64,
             self.prefix.include64
         ]
@@ -125,7 +143,17 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
+        ver_dir = os.path.join(
+            self.prefix,
+            'compilers_and_libraries_{0}'.format(self.version),
+            'linux',
+            'mpi',
+            'intel64',
+            'bin'
+        )
+
         dirs = [
+            ver_dir,
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
             self.prefix.bin64,
             self.prefix.bin
@@ -164,8 +192,29 @@ class IntelMpi(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        mpivars = os.path.join(
+        ver_dir = os.path.join(
+            self.prefix,
+            'compilers_and_libraries_{0}'.format(self.version),
+            'linux',
+            'mpi',
+            'intel64',
+            'bin'
+        )
+
+        dirs = [
+            ver_dir,
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
+            self.prefix.bin64,
+            self.prefix.bin
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                bindir = d
+                break
+
+        mpivars = os.path.join(
+            bindir,
             'mpivars.sh')
 
         if os.path.isfile(mpivars):
