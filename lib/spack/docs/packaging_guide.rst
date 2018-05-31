@@ -2763,11 +2763,11 @@ Prefix Attribute        Location
 
 Of course, this only works if your file or directory is a valid Python
 variable name. If your file or directory contains dashes or dots, use
-``join_path`` instead:
+``join`` instead:
 
 .. code-block:: python
 
-   join_path(prefix.lib, 'libz.a')
+   prefix.lib.join('libz.a')
 
 
 .. _spec-objects:
