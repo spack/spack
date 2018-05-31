@@ -44,6 +44,8 @@ class Prefix(str):
     /usr/share/man
     >>> prefix.foo.bar.baz
     /usr/foo/bar/baz
+    >>> prefix.join('dashed-directory').bin64
+    /usr/dashed-directory/bin64
 
     Prefix objects behave identically to strings. In fact, they
     subclass ``str``. So operators like ``+`` are legal::
