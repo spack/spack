@@ -36,6 +36,13 @@ def test_prefix_attributes():
     assert prefix.include == '/usr/include'
 
 
+def test_prefix_join():
+    """Test prefix join  ``prefix.join(...)``"""
+    prefix = Prefix('/usr')
+
+    assert prefix.join('a_{0}'.format(1)).lib64 == '/usr/a_1/lib64'
+
+
 def test_multilevel_attributes():
     """Test attributes of attributes, like ``prefix.share.man``"""
     prefix = Prefix('/usr/')

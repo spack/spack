@@ -55,3 +55,6 @@ class Prefix(str):
     """
     def __getattr__(self, attr):
         return Prefix(os.path.join(self, attr))
+
+    def join(self, string):
+        return Prefix(os.path.join(self, string))
