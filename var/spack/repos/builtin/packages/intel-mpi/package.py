@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.util.prefix import Prefix
 import os
 
 from spack import *
@@ -78,7 +79,7 @@ class IntelMpi(IntelPackage):
         )
 
         dirs = [
-            ver_dir,
+            Prefix(ver_dir),
             self.prefix.compilers_and_libraries.linux.mpi.lib64,
             self.prefix.lib64
         ]
@@ -111,7 +112,7 @@ class IntelMpi(IntelPackage):
         )
 
         dirs = [
-            ver_dir,
+            Prefix(ver_dir),
             self.prefix.compilers_and_libraries.linux.mpi.include64,
             self.prefix.include64
         ]
@@ -153,7 +154,7 @@ class IntelMpi(IntelPackage):
         )
 
         dirs = [
-            ver_dir,
+            Prefix(ver_dir),
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
             self.prefix.bin64,
             self.prefix.bin
@@ -202,7 +203,7 @@ class IntelMpi(IntelPackage):
         )
 
         dirs = [
-            ver_dir,
+            Prefix(ver_dir),
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
             self.prefix.bin64,
             self.prefix.bin
