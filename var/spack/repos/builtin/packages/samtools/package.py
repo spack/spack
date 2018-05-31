@@ -42,6 +42,7 @@ class Samtools(Package):
 
     depends_on('ncurses')
     # htslib became standalone @1.3.1, must use corresponding version
+    depends_on('htslib@1.8',   when='@1.8')
     depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')
     depends_on('htslib@1.4',   when='@1.4')

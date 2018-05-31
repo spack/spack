@@ -544,8 +544,10 @@ def parent_class_modules(cls):
     """
     Get list of super class modules that are all descend from spack.Package
     """
-    if (not issubclass(cls, spack.package.Package) or
-        issubclass(spack.package.Package, cls)):
+    if (
+        not issubclass(cls, spack.package.Package) or
+        issubclass(spack.package.Package, cls)
+    ):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -615,6 +617,24 @@ def setup_package(pkg, dirty):
         if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
             load_module("cce")
         load_module(mod)
+
+    compiler = pkg.compiler
+    link_dir = spack.build_env_path
+
+    if compiler.cc:
+        spack_env.set('SPACK_CC', compiler.cc)
+        spack_env.set('CC', join_path(link_dir, compiler.link_paths['cc']))
+    if compiler.cxx:
+        spack_env.set('SPACK_CXX', compiler.cxx)
+        spack_env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
+    if compiler.f77:
+        spack_env.set('SPACK_F77', compiler.f77)
+        spack_env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
+    if compiler.fc:
+        spack_env.set('SPACK_FC',  compiler.fc)
+        spack_env.set('FC', join_path(link_dir, compiler.link_paths['fc']))
+
+    spack_env.apply_modifications()
 
     if pkg.architecture.target.module_name:
         load_module(pkg.architecture.target.module_name)
