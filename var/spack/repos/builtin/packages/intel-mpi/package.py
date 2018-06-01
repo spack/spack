@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
 import os
 
 from spack import *
@@ -30,12 +29,7 @@ from spack.environment import EnvironmentModifications
 
 
 class IntelMpi(IntelPackage):
-    """Intel MPI
-
-    One of the purposes of this package is to support a stand-alone
-    installation, that is when prefix does not contain
-    compilers_and_libraries folder and alike.
-    """
+    """Intel MPI"""
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
@@ -70,18 +64,11 @@ class IntelMpi(IntelPackage):
 
     @property
     def mpi_libs(self):
-        ver_dir = os.path.join(
-            self.prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mpi',
-            'lib64'
-        )
-
+        mpi_root = self.prefix.lib64   # default
         dirs = [
-            Prefix(ver_dir),
-            self.prefix.compilers_and_libraries.linux.mpi.lib64,
-            self.prefix.lib64
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.lib64,
+            self.prefix.compilers_and_libraries.linux.mpi.lib64
         ]
 
         for d in dirs:
@@ -103,18 +90,11 @@ class IntelMpi(IntelPackage):
     def mpi_headers(self):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
-        ver_dir = os.path.join(
-            self.prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mpi',
-            'include64'
-        )
-
+        mpi_root = self.prefix.include64  # default
         dirs = [
-            Prefix(ver_dir),
-            self.prefix.compilers_and_libraries.linux.mpi.include64,
-            self.prefix.include64
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.include64,
+            self.prefix.compilers_and_libraries.linux.mpi.include64
         ]
 
         for d in dirs:
@@ -144,20 +124,12 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        ver_dir = os.path.join(
-            self.prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mpi',
-            'intel64',
-            'bin'
-        )
-
+        bindir = self.prefix.bin  # default
         dirs = [
-            Prefix(ver_dir),
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.intel64.bin,
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
-            self.prefix.bin64,
-            self.prefix.bin
+            self.prefix.bin64
         ]
 
         for d in dirs:
@@ -193,20 +165,12 @@ class IntelMpi(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        ver_dir = os.path.join(
-            self.prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mpi',
-            'intel64',
-            'bin'
-        )
-
+        bindir = self.prefix.bin  # default
         dirs = [
-            Prefix(ver_dir),
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.intel64.bin,
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
-            self.prefix.bin64,
-            self.prefix.bin
+            self.prefix.bin64
         ]
 
         for d in dirs:

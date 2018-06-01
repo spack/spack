@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
 import os
 import sys
 
@@ -91,18 +90,11 @@ class IntelMkl(IntelPackage):
         shared = '+shared' in spec
 
         # omp:
-        ver_dir = os.path.join(
-            prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'lib',
-            'intel64'
-        )
-
+        omp_root = prefix.lib   # default
         dirs = [
-            ver_dir,
-            prefix.compilers_and_libraries.linux.lib.intel64,
-            prefix.lib
+            prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.lib.intel64,
+            prefix.compilers_and_libraries.linux.lib.intel64
         ]
 
         for d in dirs:
@@ -111,19 +103,11 @@ class IntelMkl(IntelPackage):
                 break
 
         # mkl_root:
-        ver_dir = os.path.join(
-            prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mkl',
-            'lib',
-            'intel64'
-        )
-
+        mkl_root = prefix.mkl.lib  # default
         dirs = [
-            ver_dir,
-            prefix.compilers_and_libraries.linux.mkl.lib.intel64,
-            prefix.mkl.lib
+            prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mkl.lib.intel64,
+            prefix.compilers_and_libraries.linux.mkl.lib.intel64
         ]
 
         for d in dirs:
@@ -204,19 +188,11 @@ class IntelMkl(IntelPackage):
             raise InstallError('No MPI found for scalapack')
 
         # mkl_root:
-        ver_dir = os.path.join(
-            prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mkl',
-            'lib',
-            'intel64'
-        )
-
+        mkl_root = prefix.mkl.lib  # default
         dirs = [
-            ver_dir,
-            prefix.compilers_and_libraries.linux.mkl.lib.intel64,
-            prefix.mkl.lib
+            prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mkl.lib.intel64,
+            prefix.compilers_and_libraries.linux.mkl.lib.intel64
         ]
 
         for d in dirs:
@@ -238,18 +214,11 @@ class IntelMkl(IntelPackage):
     @property
     def headers(self):
         prefix = self.spec.prefix
-        ver_dir = os.path.join(
-            prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mkl',
-            'include'
-        )
-
+        include_dir = prefix.include  # default
         dirs = [
-            ver_dir,
-            prefix.compilers_and_libraries.linux.mkl.include,
-            prefix.include
+            prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mkl.include,
+            prefix.compilers_and_libraries.linux.mkl.include
         ]
 
         for d in dirs:
@@ -262,17 +231,11 @@ class IntelMkl(IntelPackage):
         return HeaderList([cblas_h, lapacke_h])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        ver_dir = os.path.join(
-            self.prefix,
-            'compilers_and_libraries_{0}'.format(self.version),
-            'linux',
-            'mkl'
-        )
-
+        mkl_root = self.prefix.mkl  # default
         dirs = [
-            Prefix(ver_dir),
-            self.prefix.compilers_and_libraries.linux.mkl,
-            self.prefix.mkl
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mkl,
+            self.prefix.compilers_and_libraries.linux.mkl
         ]
 
         for d in dirs:
