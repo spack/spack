@@ -133,7 +133,6 @@ class NetlibLapack(Package):
 
     def install_one(self, spec, prefix, shared):
         cmake_args = [
-            '--trace-expand',
             '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
             '-DCMAKE_BUILD_TYPE:STRING=%s' % (
                 'Debug' if '+debug' in spec else 'Release'),
