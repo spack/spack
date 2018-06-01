@@ -30,9 +30,10 @@ class Pigz(MakefilePackage):
        multi-core machines."""
 
     homepage = "http://zlib.net/pigz/"
-    url      = "http://zlib.net/pigz/pigz-2.3.4.tar.gz"
+    url      = "https://github.com/madler/pigz/archive/v2.3.4.tar.gz"
 
-    version('2.3.4', '08e6b2e682bbf65ccf12c8966d633fc6')
+    version('2.4', '3c8a601db141d3013ef9fe5f2daaf73f')
+    version('2.3.4', 'c109057050b15edf3eb9bb4d0805235e')
 
     depends_on('zlib')
 
