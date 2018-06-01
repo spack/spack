@@ -34,7 +34,7 @@ class Abyss(AutotoolsPackage):
     url      = "https://github.com/bcgsc/abyss/archive/2.0.2.tar.gz"
 
     version('2.0.2', 'bb3f8cebf121312bf81789d963b4ecc5')
-    version('1.5.2', '10d6d72d1a915e618d41a5cbbcf2364c')
+    version('1.5.2', '88400e39592ec69938512e2ad6f35245')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
