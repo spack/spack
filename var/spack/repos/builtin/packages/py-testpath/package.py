@@ -22,21 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class PyIpythonGenutils(PythonPackage):
-    """This package shouldn't exist. It contains some common utilities
-       shared by Jupyter and IPython projects during The Big Split. As
-       soon as possible, those packages will remove their dependency
-       on this, and this repo will go away."""
+class PyTestpath(PythonPackage):
+    """Test utilities for Python code working with files and commands"""
 
-    homepage = "https://github.com/ipython/ipython_genutils"
-    url = "https://github.com/ipython/ipython_genutils/archive/0.2.0.tar.gz"
+    homepage = "https://github.com/jupyter/testpath"
+    url = "https://files.pythonhosted.org/packages/f4/8b/b71e9ee10e5f751e9d959bc750ab122ba04187f5aa52aabdc4e63b0e31a7/testpath-0.3.1.tar.gz"
 
-    version('0.2.0', '477e596a0e6e2f74ec08ec09687eeb6c')
-    version('0.1.0', '2016819d42d8b186aad1eaed2d11b4d2')
-
-    # FIXME: Add dependencies if required.
-    # depends_on('py-setuptools', type='build')
-    depends_on('py-six', type=('build', 'run'))
+    version('0.3.1', '2cd5ed5522fda781bb497c9d80ae2fc9')
