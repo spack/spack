@@ -68,6 +68,7 @@ from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
+from spack.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
@@ -127,7 +128,7 @@ class MakeExecutable(Executable):
 
 
 def set_compiler_environment_variables(pkg, env):
-    assert(pkg.spec.concrete)
+    assert pkg.spec.concrete
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
@@ -608,38 +609,26 @@ def setup_package(pkg, dirty):
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
 
-    # All module loads that otherwise would belong in previous functions
-    # have to occur after the spack_env object has its modifications applied.
-    # Otherwise the environment modifications could undo module changes, such
-    # as unsetting LD_LIBRARY_PATH after a module changes it.
-    for mod in pkg.compiler.modules:
-        # Fixes issue https://github.com/spack/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
+    # Loading modules, in particular if they are meant to be used outside
+    # of Spack, can change environment variables that are relevant to the
+    # build of packages. To avoid a polluted environment, preserve the
+    # value of a few, selected, environment variables
+    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
+        # All module loads that otherwise would belong in previous
+        # functions have to occur after the spack_env object has its
+        # modifications applied. Otherwise the environment modifications
+        # could undo module changes, such as unsetting LD_LIBRARY_PATH
+        # after a module changes it.
+        for mod in pkg.compiler.modules:
+            # Fixes issue https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                load_module("cce")
+            load_module(mod)
 
-    compiler = pkg.compiler
-    link_dir = spack.build_env_path
+        if pkg.architecture.target.module_name:
+            load_module(pkg.architecture.target.module_name)
 
-    if compiler.cc:
-        spack_env.set('SPACK_CC', compiler.cc)
-        spack_env.set('CC', join_path(link_dir, compiler.link_paths['cc']))
-    if compiler.cxx:
-        spack_env.set('SPACK_CXX', compiler.cxx)
-        spack_env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
-    if compiler.f77:
-        spack_env.set('SPACK_F77', compiler.f77)
-        spack_env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
-    if compiler.fc:
-        spack_env.set('SPACK_FC',  compiler.fc)
-        spack_env.set('FC', join_path(link_dir, compiler.link_paths['fc']))
-
-    spack_env.apply_modifications()
-
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
-
-    load_external_modules(pkg)
+        load_external_modules(pkg)
 
 
 def fork(pkg, function, dirty, fake):

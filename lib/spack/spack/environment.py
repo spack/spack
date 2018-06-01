@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
+import contextlib
 import inspect
 import json
 import os
@@ -602,3 +603,28 @@ def inspect_path(root, inspections, exclude=None):
                 env.prepend_path(variable, expected)
 
     return env
+
+
+@contextlib.contextmanager
+def preserve_environment(*variables):
+    """Ensures that the value of the environment variables passed as
+    arguments is the same before entering to the context manager and after
+    exiting it.
+
+    Args:
+        variables (list of str): list of environment variables to be preserved
+    """
+    cache = {}
+    for var in variables:
+        # The environment variable to be preserved might not be there.
+        # In that case store None as a placeholder.
+        cache[var] = os.environ.get(var, None)
+
+    yield
+
+    for var in variables:
+        value = cache[var]
+        if value is not None:
+            os.environ[var] = value
+        elif var in os.environ:
+            del os.environ[var]
