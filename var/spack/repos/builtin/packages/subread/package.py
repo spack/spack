@@ -43,6 +43,11 @@ class Subread(MakefilePackage):
         plat = sys.platform
         with working_dir('src'):
             if plat.startswith('linux'):
+                filter_file(
+                    'CC_EXEC = gcc',
+                    'CC_EXEC = {0}'.format(spack_cc),
+                    'Makefile.Linux'
+                )
                 make('-f', 'Makefile.Linux')
             elif plat.startswith('darwin'):
                 make('-f', 'Makefile.MacOS')
