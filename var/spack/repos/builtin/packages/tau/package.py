@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,7 @@ class Tau(Package):
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.27.1.tar.gz"
 
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
-#    version('2.27', '76602d35fc96f546b5b9dcaf09158651')
+    version('2.27', '76602d35fc96f546b5b9dcaf09158651')
     version('2.26.3', '4ec14e85b8f3560b58628512c7b49e17')
     version('2.26.2', '8a5908c35dac9406c9220b8098c70c1c')
     version('2.26.1', 'cc13df9d6ad19bca9a8e55a9e7d0341e')
@@ -143,12 +143,9 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-#       compiler_options = []
         compiler_options = ['-c++=%s' % self.compiler.cxx,
                             '-cc=%s' % self.compiler.cc]
 
-        # compiler_options = ['-c++=mpicxx',
-        #                    '-cc=mpicc']
 
         if self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
@@ -177,20 +174,7 @@ class Tau(Package):
 #       If download is active, download and build suggested dependencies
 
         options.extend(["-bfd=%s" % spec['binutils'].prefix])
-        # options.extend(["-bfd=/home/users/sameer/tau-2.27.1/x86_64/binutils-2.23.2"])
         options.extend(["-unwind=%s" % spec['libunwind'].prefix])
-        # if '+binutils' in spec:
-        #    options.extend(["-bfd=%s" % spec['binutils'].prefix])
-        # else:
-        #    options.extend(['-bfd=download'])
-        # if '+libunwind' in spec:
-        #    options.extend(["-unwind=%s" % spec['libunwind'].prefix])
-        # else:
-        #    options.extend(['-unwind=download'])
-        # if '+otf' in spec:
-        #    options.extend(["-otf=%s" % spec['otf'].prefix])
-        # else:
-        #    options.extend(['-otf=download'])
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
@@ -211,7 +195,6 @@ class Tau(Package):
             options.append('-opari')
 
         if '+mpi' in spec:
-            print ("MPI in spec")
             strMpiIncTmp = ""
             strMpiInc = ""
             strMpiLibsTmp = ""
@@ -219,10 +202,7 @@ class Tau(Package):
             strMpiLibraryTmp = ""
             strMpiLibrary = ""
             strMpiPrefix = spec['mpi'].prefix
-            print ("MPI Prefix: ", strMpiPrefix)
             strMpi = os.popen(strMpiPrefix + '/bin/mpicc -show').read()
-            print ("mpicc -show: ", strMpi)
-            # parse_mpi_wrapper(strmpi)
             listMpiOpts = strMpi.split()
 
             for MpiItem in listMpiOpts:
@@ -234,34 +214,21 @@ class Tau(Package):
                         strMpiIncTmp += " "
                         strMpiIncTmp += MpiItem[2:]
 
-                    # strMpiInc.replace("-I","")
-                    # strMpiInc = '"' + strMpiIncTmp + '"'
                     strMpiInc = strMpiIncTmp
-                    print ("MPI Include: ", strMpiInc)
 
                 if "-L" in MpiItem:
                     strMpiLibsTmp = MpiItem[2:]
                     strMpiLibs = strMpiLibsTmp
-                    print ("MPI Libs path: ", strMpiLibs)
 
                 if "-l" in MpiItem:
                     strMpiLibraryTmp = MpiItem
 
-                    # strMpiLibrary = '"' + strMpiLibraryTmp + '"'
                     strMpiLibrary = strMpiLibraryTmp
-                    print ("MPI Library: ", strMpiLibrary)
 
-            # strMpiLibs = '"' + strMpiLibsTmp + '"'
-            # strMpiLibs = strMpiLibsTmp
-            print ("MPI Libs path: ", strMpiLibs)
 
             options.append('-mpi')
-            # options.append('-mpiinc=/packages/mpich2/3.1.4_gcc-4.9.2/include')
             options.append('-mpiinc=' + strMpiInc)
-            # options.append('-mpilib=/packages/mpich2/3.1.4_gcc-4.9.2/lib')
             options.append('-mpilib=' + strMpiLibs)
-            # options.append('-mpilibrary=-lmpi')
-            # options.append('-mpilibrary='+strMpiLibrary)
             libintl = spec['gettext'].prefix + '/lib'
             options.append(
                 '-mpilibrary=' +
@@ -286,10 +253,6 @@ class Tau(Package):
         if '+comm' in spec:
             options.append('-PROFILECOMMUNICATORS')
 
-        # env['CC'] = spec['mpi'].mpicc
-        # env['CXX'] = spec['mpi'].mpicxx
-        # env['F77'] = spec['mpi'].mpif77
-        # env['FC'] = spec['mpi'].mpifc
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
