@@ -146,7 +146,6 @@ class Tau(Package):
         compiler_options = ['-c++=%s' % self.compiler.cxx,
                             '-cc=%s' % self.compiler.cc]
 
-
         if self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
 
@@ -225,7 +224,6 @@ class Tau(Package):
 
                     strMpiLibrary = strMpiLibraryTmp
 
-
             options.append('-mpi')
             options.append('-mpiinc=' + strMpiInc)
             options.append('-mpilib=' + strMpiLibs)
@@ -252,7 +250,6 @@ class Tau(Package):
 
         if '+comm' in spec:
             options.append('-PROFILECOMMUNICATORS')
-
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
