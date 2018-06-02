@@ -37,6 +37,7 @@ class Vim(AutotoolsPackage):
     homepage = "http://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.0.1376.tar.gz"
 
+    version('8.1.0001', 'edb6f5c67cb3100ea9e3966a43b9c9da')
     version('8.0.1376', '62855881a2d96d48956859d74cfb8a3b')
     version('8.0.0503', '82b77bd5cb38b70514bed47cfe033b8c')
     version('8.0.0454', '4030bf677bdfbd14efb588e4d9a24128')

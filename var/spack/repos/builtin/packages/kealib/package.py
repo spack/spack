@@ -26,7 +26,7 @@ from spack import *
 
 
 class Kealib(CMakePackage):
-    """An HDF5 Based Raster File Format
+    """An HDF5 Based Raster File Format.
 
     KEALib provides an implementation of the GDAL data model.
     The format supports raster attribute tables, image pyramids,
@@ -41,18 +41,21 @@ class Kealib(CMakePackage):
 
     Development work on this project has been funded by Landcare Research.
     """
-    homepage = "http://kealib.org/"
-    url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.5.tar.gz"
+    homepage = "http://www.kealib.org/"
+    url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.7.tar.gz"
 
-    version('1.4.5', '112e9c42d980b2d2987a3c15d0833a5d')
+    version('develop', hg='https://bitbucket.org/chchrsc/kealib')
+    version('1.4.7', '6139e31e50f552247ddf98f489948893')
 
-    depends_on('hdf5')
     depends_on('cmake@2.8.10:', type='build')
+    depends_on('hdf5+cxx+hl')
 
     root_cmakelists_dir = 'trunk'
 
+    patch('cmake.patch', when='@1.4.7')
+
     def cmake_args(self):
         return [
-            '-DHDF5_INCLUDE_DIR=%s' % self.spec['hdf5'].prefix.include,
-            '-DHDF5_LIB_PATH=%s' % self.spec['hdf5'].prefix.lib,
+            '-DHDF5_INCLUDE_DIR=%s' % self.spec['hdf5'].headers.directories[0],
+            '-DHDF5_LIB_PATH=%s' % self.spec['hdf5'].libs.directories[0],
         ]

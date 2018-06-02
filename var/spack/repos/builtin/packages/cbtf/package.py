@@ -51,25 +51,46 @@ class Cbtf(CMakePackage):
 
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
+    url = "https://github.com/OpenSpeedShop/cbtf.git"
 
     # Use when the git repository is available
-    version('1.9.1', branch='master',
+    version('1.9.1.1', branch='1.9.1.1',
+            git='https://github.com/OpenSpeedShop/cbtf.git')
+
+    version('1.9.1.0', branch='1.9.1.0',
+            git='https://github.com/OpenSpeedShop/cbtf.git')
+
+    version('develop', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf.git')
 
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")
+
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
+
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
-    depends_on("cmake@3.0.2:", type='build')
-    depends_on("boost@1.50.0:")
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("mrnet@5.0.1:+cti", when='+cti')
-    depends_on("xerces-c@3.1.1:")
-    # Work around for spack libxml2 package bug, take off python when fixed
-    depends_on("libxml2+python")
+    depends_on("cmake@3.11.1", when='@1.9.1.0:', type='build')
+    depends_on("cmake@3.0.2:", when='@develop', type='build')
+
+    depends_on("boost@1.66.0", when='@1.9.1.0:')
+    depends_on("boost@1.50.0:", when='@develop')
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:')
+
+    # For Xerces-C
+    depends_on("xerces-c@3.1.1:", when='@develop')
+    depends_on("xerces-c@3.1.4", when='@1.9.1.0:')
+
+    # For XML2
+    depends_on("libxml2", when='@develop')
+    depends_on("libxml2@2.9.4", when='@1.9.1.0:')
 
     parallel = False
 

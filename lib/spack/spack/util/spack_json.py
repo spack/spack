@@ -59,7 +59,7 @@ def dump(data, stream=None):
 def _strify(data, ignore_dicts=False):
     # if this is a unicode string in python 2, return its string representation
     if sys.version_info[0] < 3:
-        if isinstance(data, unicode):
+        if isinstance(data, string_types):
             return data.encode('utf-8')
 
     # if this is a list of values, return list of byteified values

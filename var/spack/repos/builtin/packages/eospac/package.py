@@ -34,8 +34,12 @@ class Eospac(Package):
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
 
+    version('6.4.0beta.2_69196eadbc77506561eef711f19d2f03b4ab0ffa', '9b6e48090647221d5ffe7ec5f9ea4c71')
     version('6.4.0beta.1_r20171213193219', 'e4e4beabf946f0b8953532832002afc2')
     version('6.3.1_r20161202150449', '549fda008c4169a69b02ec2a9de1e434', preferred=True)
+
+    # This patch allows the use of spack's compile wrapper 'flang'
+    patch('flang.patch', when='@:6.4.0beta.2%clang')
 
     def url_for_version(self, version):
         return "https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v{0}.tgz".format(version)

@@ -48,21 +48,54 @@ class CbtfArgonavisGui(QMakePackage):
        performance information by loading in the Sqlite database files.
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    url = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
-    version('1.3.0', branch='master',
+    version('1.3.0.0', branch='1.3.0.0',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
-    depends_on("cmake@3.0.2:", type='build')
-    depends_on("openspeedshop+cuda gui='qt4'")
-    depends_on('qt@4.8.6:')
-    depends_on("boost@1.50.0:")
-    depends_on("cbtf")
-    depends_on("cbtf-krell")
-    depends_on("cbtf-argonavis")
+    version('develop', branch='master',
+            git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
+
+    depends_on("cmake@3.0.2:", when='@develop', type='build')
+    depends_on("cmake@3.11.1", when='@1.3.0.0:', type='build')
+
+    # To specify ^elfutils@0.170 on the command line spack
+    # apparently needs/wants this dependency explicity here
+    # even though it is referenced downstream
+    depends_on("elf", type="link")
+
+    depends_on('qt@4.8.6:', when='@develop')
+    depends_on('qt@5.10.0', when='@1.3.0.0:')
+
+    depends_on("boost@1.50.0:", when='@develop')
+    depends_on("boost@1.66.0", when='@1.3.0.0:')
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.3.0.0:')
+
+    # Dependencies for the openspeedshop cbtf packages.
+    depends_on("cbtf@develop", when='@develop')
+    depends_on("cbtf@1.9.1.0:", when='@1.3.0.0:')
+
+    depends_on("cbtf-krell@develop", when='@develop')
+    depends_on("cbtf-krell@1.9.1.0:", when='@1.3.0.0:')
+
+    depends_on("cbtf-argonavis@develop", when='@develop')
+    depends_on("cbtf-argonavis@1.9.1.0:", when='@1.3.0.0:')
+
     depends_on("cuda")
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("xerces-c@3.1.1:")
-    depends_on("graphviz")
+
+    depends_on("openspeedshop-utils+cuda@develop", when='@develop')
+    depends_on("openspeedshop-utils@2.3.1.3:+cuda", when='@1.3.0.0:')
+
+    # For Xerces-C
+    depends_on("xerces-c@3.1.1:", when='@develop')
+    depends_on("xerces-c@3.1.4", when='@1.3.0.0:')
+
+    depends_on("graphviz@2.40.1:", when='@develop')
+    depends_on("graphviz@2.40.1", when='@1.3.0.0:')
+
     depends_on("qtgraph")
 
     parallel = False
@@ -74,7 +107,7 @@ class CbtfArgonavisGui(QMakePackage):
         spack_env.set('CBTF_KRELL_ROOT', self.spec['cbtf-krell'].prefix)
         spack_env.set('CBTF_ARGONAVIS_ROOT',
                       self.spec['cbtf-argonavis'].prefix)
-        spack_env.set('OSS_CBTF_ROOT', self.spec['openspeedshop'].prefix)
+        spack_env.set('OSS_CBTF_ROOT', self.spec['openspeedshop-utils'].prefix)
         spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
         spack_env.set('QTGRAPHLIB_ROOT', self.spec['qtgraph'].prefix)
         spack_env.set('KRELL_ROOT_MRNET', self.spec['mrnet'].prefix)
@@ -90,7 +123,7 @@ class CbtfArgonavisGui(QMakePackage):
         # The openspeedshop libraries are needed to actually load the
         # performance information into the GUI.
         run_env.prepend_path(
-            'LD_LIBRARY_PATH', self.spec['openspeedshop'].prefix.lib64)
+            'LD_LIBRARY_PATH', self.spec['openspeedshop-utils'].prefix.lib64)
 
     def qmake_args(self):
         options = ['-o', 'Makefile', 'openss-gui.pro']

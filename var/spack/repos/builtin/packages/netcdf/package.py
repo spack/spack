@@ -45,6 +45,7 @@ class Netcdf(AutotoolsPackage):
 
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
+    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
     version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
     # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
