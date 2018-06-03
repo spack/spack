@@ -22,41 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Camellia(CMakePackage):
-    """Camellia: user-friendly MPI-parallel adaptive finite element package,
-       with support for DPG and other hybrid methods, built atop Trilinos.
-    """
+class Umpire(CMakePackage):
+    """An application-focused API for memory management on NUMA & GPU
+    architectures"""
+    url = 'https://github.com/LLNL/Umpire/releases/download/v0.1.4/umpire-0.1.4.tar.gz'
+    homepage = 'https://github.com/LLNL/Umpire'
 
-    homepage = "https://bitbucket.org/nateroberts/Camellia"
-    url      = "https://bitbucket.org/nateroberts/camellia.git"
+    version('master', git='https://github.com/LLNL/Umpire.git', branch='master', submodules='True')
+    version('develop', git='https://github.com/LLNL/Umpire.git', branch='develop', submodules='True')
+    version('0.1.4', git='https://github.com/LLNL/Umpire.git', tag='v0.1.4', submodules='True')
+    version('0.1.3', git='https://github.com/LLNL/Umpire.git', tag='v0.1.3', submodules='True')
 
-    maintainers = ['CamelliaDPG']
-    version('master', git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
+    variant('cuda', default=False, description='Build with CUDA support')
+    variant('fortran', default=False, description='Build C/Fortran API')
 
-    variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
-
-    depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
-    depends_on('moab@:4', when='+moab')
-    depends_on('hdf5@:1.8')
-    depends_on('mpi')
+    depends_on('cuda', when='+cuda')
+    depends_on('cmake@3.3:', type='build')
 
     def cmake_args(self):
         spec = self.spec
-        options = [
-            '-DTrilinos_PATH:PATH=%s' % spec['trilinos'].prefix,
-            '-DMPI_DIR:PATH=%s' % spec['mpi'].prefix,
-            '-DBUILD_FOR_INSTALL:BOOL=ON'
-        ]
 
-        if '+moab' in spec:
+        options = []
+
+        if '+cuda' in spec:
             options.extend([
-                '-DENABLE_MOAB:BOOL=ON',
-                '-DMOAB_PATH:PATH=%s' % spec['moab'].prefix
-            ])
+                '-DENABLE_CUDA=On',
+                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
         else:
-            options.append('-DENABLE_MOAB:BOOL=OFF')
+            options.append('-DENABLE_CUDA=Off')
+
+        if '+fortran' in spec:
+            options.append('-DENABLE_FORTRAN=On')
 
         return options

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,22 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+import pytest
+
+from spack.main import SpackCommand
+
+mirror = SpackCommand('mirror')
 
 
-class Bedops(MakefilePackage):
-    """BEDOPS is an open-source command-line toolkit that performs highly
-    efficient and scalable Boolean and other set operations, statistical
-    calculations, archiving, conversion and other management of genomic data of
-    arbitrary scale."""
-
-    homepage = "https://bedops.readthedocs.io"
-    url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
-
-    version('2.4.35', 'b425b3e05fd4cd1024ef4dd8bf04b4e5')
-    version('2.4.34', 'fc467d96134a0efe8b134e638af87a1a')
-    version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        make('install', "BINDIR=%s" % prefix.bin)
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.regression('8083')
+def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
+    with capfd.disabled():
+        output = mirror('create', '-d', str(tmpdir), 'externaltool')
+    assert 'Skipping' in output
+    assert 'as it is an external spec' in output

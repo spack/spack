@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,19 +25,14 @@
 from spack import *
 
 
-class Bedops(MakefilePackage):
-    """BEDOPS is an open-source command-line toolkit that performs highly
-    efficient and scalable Boolean and other set operations, statistical
-    calculations, archiving, conversion and other management of genomic data of
-    arbitrary scale."""
+class PyAvroJsonSerializer(PythonPackage):
+    """Serializes data into a JSON format using AVRO schema."""
 
-    homepage = "https://bedops.readthedocs.io"
-    url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
+    homepage = "https://github.com/linkedin/python-avro-json-serializer"
+    url      = "https://github.com/linkedin/python-avro-json-serializer/archive/0.4.tar.gz"
 
-    version('2.4.35', 'b425b3e05fd4cd1024ef4dd8bf04b4e5')
-    version('2.4.34', 'fc467d96134a0efe8b134e638af87a1a')
-    version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
+    version('0.4',  'ee32f415e03820653cf8477bf5bfc779')
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        make('install', "BINDIR=%s" % prefix.bin)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-simplejson', type=('build', 'run'))
+    depends_on('py-avro', type=('build', 'run'))

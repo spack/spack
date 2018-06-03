@@ -219,11 +219,13 @@ class InternalConfigScope(ConfigScope):
     def __init__(self, name, data=None):
         self.name = name
         self.sections = syaml.syaml_dict()
+
         if data:
             for section in data:
                 dsec = data[section]
                 _validate_section({section: dsec}, section_schemas[section])
-                self.sections[section] = syaml.syaml_dict({section: dsec})
+                self.sections[section] = _mark_internal(
+                    syaml.syaml_dict({section: dsec}), name)
 
     def get_section_filename(self, section):
         raise NotImplementedError(
@@ -240,6 +242,7 @@ class InternalConfigScope(ConfigScope):
         data = self.get_section(section)
         if data is not None:
             _validate_section(data, section_schemas[section])
+        self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
         return '<InternalConfigScope: %s>' % self.name
@@ -361,13 +364,13 @@ class Configuration(object):
 
         """
         _validate_section_name(section)
-        merged_section = syaml.syaml_dict()
 
         if scope is None:
             scopes = self.scopes.values()
         else:
             scopes = [self._validate_scope(scope)]
 
+        merged_section = syaml.syaml_dict()
         for scope in scopes:
             # read potentially cached data from the scope.
 
@@ -414,6 +417,7 @@ class Configuration(object):
         while parts:
             key = parts.pop(0)
             value = value.get(key, default)
+
         return value
 
     def set(self, path, value, scope=None):
@@ -442,12 +446,13 @@ class Configuration(object):
         for scope in self.scopes.values():
             yield scope
 
-    def print_section(self, section):
+    def print_section(self, section, blame=False):
         """Print a configuration to stdout."""
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
-            syaml.dump(data, stream=sys.stdout, default_flow_style=False)
+            syaml.dump(
+                data, stream=sys.stdout, default_flow_style=False, blame=blame)
         except (yaml.YAMLError, IOError):
             raise ConfigError("Error reading configuration: %s" % section)
 
@@ -593,7 +598,7 @@ def _override(string):
 
 def _mark_overrides(data):
     if isinstance(data, list):
-        return [_mark_overrides(elt) for elt in data]
+        return syaml.syaml_list(_mark_overrides(elt) for elt in data)
 
     elif isinstance(data, dict):
         marked = syaml.syaml_dict()
@@ -606,6 +611,26 @@ def _mark_overrides(data):
 
     else:
         return data
+
+
+def _mark_internal(data, name):
+    """Add a simple name mark to raw YAML/JSON data.
+
+    This is used by `spack config blame` to show where config lines came from.
+    """
+    if isinstance(data, dict):
+        d = syaml.syaml_dict((_mark_internal(k, name), _mark_internal(v, name))
+                             for k, v in data.items())
+    elif isinstance(data, list):
+        d = syaml.syaml_list(_mark_internal(e, name) for e in data)
+    else:
+        d = syaml.syaml_type(data)
+
+    if syaml.markable(d):
+        d._start_mark = yaml.Mark(name, None, None, None, None, None)
+        d._end_mark = yaml.Mark(name, None, None, None, None, None)
+
+    return d
 
 
 def _merge_yaml(dest, source):
@@ -639,6 +664,9 @@ def _merge_yaml(dest, source):
 
     # Source dict is merged into dest.
     elif they_are(dict):
+        # track keys for marking
+        key_marks = {}
+
         for sk, sv in iteritems(source):
             if _override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
@@ -646,6 +674,18 @@ def _merge_yaml(dest, source):
             else:
                 # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
+
+            # this seems unintuitive, but see below. We need this because
+            # Python dicts do not overwrite keys on insert, and we want
+            # to copy mark information on source keys to dest.
+            key_marks[sk] = sk
+
+        # ensure that keys are marked in the destination.  the key_marks dict
+        # ensures we can get the actual source key objects from dest keys
+        for dk in dest.keys():
+            if dk in key_marks:
+                syaml.mark(dk, key_marks[dk])
+
         return dest
 
     # In any other case, overwrite with a copy of the source value.
