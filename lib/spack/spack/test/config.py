@@ -518,7 +518,7 @@ def test_internal_config_from_data():
 
 
 def test_keys_are_ordered():
-
+    """Test that keys in Spack YAML files retain their order from the file."""
     expected_order = (
         'bin',
         'man',
@@ -543,3 +543,74 @@ def test_keys_are_ordered():
 
     for actual, expected in zip(prefix_inspections, expected_order):
         assert actual == expected
+
+
+def test_config_format_error(mutable_config):
+    """This is raised when we try to write a bad configuration."""
+    with pytest.raises(spack.config.ConfigFormatError):
+        spack.config.set('compilers', {'bad': 'data'}, scope='site')
+
+
+def get_config_error(filename, schema, yaml_string):
+    """Parse a YAML string and return the resulting ConfigFormatError.
+
+    Fail if there is no ConfigFormatError
+    """
+    with open(filename, 'w') as f:
+        f.write(yaml_string)
+
+    # parse and return error, or fail.
+    try:
+        spack.config._read_config_file(filename, schema)
+    except spack.config.ConfigFormatError as e:
+        return e
+    else:
+        pytest.fail('ConfigFormatError was not raised!')
+
+
+def test_config_parse_dict_in_list(tmpdir):
+    with tmpdir.as_cwd():
+        e = get_config_error(
+            'repos.yaml', spack.schema.repos.schema, """\
+repos:
+- https://foobar.com/foo
+- https://foobar.com/bar
+- error:
+  - abcdef
+- https://foobar.com/baz
+""")
+        assert "repos.yaml:4" in str(e)
+
+
+def test_config_parse_str_not_bool(tmpdir):
+    with tmpdir.as_cwd():
+        e = get_config_error(
+            'config.yaml', spack.schema.config.schema, """\
+config:
+    verify_ssl: False
+    checksum: foobar
+    dirty: True
+""")
+        assert "config.yaml:3" in str(e)
+
+
+def test_config_parse_list_in_dict(tmpdir):
+    with tmpdir.as_cwd():
+        e = get_config_error(
+            'mirrors.yaml', spack.schema.mirrors.schema, """\
+mirrors:
+    foo: http://foobar.com/baz
+    bar: http://barbaz.com/foo
+    baz: http://bazfoo.com/bar
+    travis: [1, 2, 3]
+""")
+        assert "mirrors.yaml:5" in str(e)
+
+
+def test_bad_config_section(config):
+    """Test that getting or setting a bad section gives an error."""
+    with pytest.raises(spack.config.ConfigSectionError):
+        spack.config.set('foobar', 'foobar')
+
+    with pytest.raises(spack.config.ConfigSectionError):
+        spack.config.get('foobar')
