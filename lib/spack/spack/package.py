@@ -576,6 +576,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
+    #: Path to Python virtual environment to use.
+    venv_flag = False
+
     #: List of attributes which affect do not affect a package's content.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
@@ -1420,13 +1423,21 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
+        if self.venv_flag:
+            os.environ["VENV_PATH"] = self.prefix + "/libexec"
+
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
+        use_virtualenv = ("VENV_PATH" in os.environ and
+                           re.match('^Py', self.__class__.__name__) and
+                           self.__class__.__name__ is not 'Python')
 
         # Ensure package is not already installed
         layout = spack.store.layout
         with spack.store.db.prefix_read_lock(self.spec):
-            if partial:
+            if use_virtualenv:
+                tty.msg("Installing %s into virtualenv" % self.name)
+            elif partial:
                 tty.msg(
                     "Continuing from partial install of %s" % self.name)
             elif layout.check_installed(self.spec):
@@ -1541,7 +1552,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                 phase(self.spec, self.prefix)
 
                     echo = logger.echo
-                    self.log()
+                    # There's something messed up with the install
+                    # tree, including the .spack dir missing, so log()
+                    # can't write there...
+                    # self.log()
 
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)

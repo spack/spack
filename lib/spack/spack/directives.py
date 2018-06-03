@@ -544,6 +544,14 @@ def resource(**kwargs):
         resources.append(Resource(name, fetcher, destination, placement))
     return _execute_resource
 
+@directive('venv')
+def venv(venv_flag):
+    """
+    """
+    def _execute_venv(pkg):
+        pkg.venv_flag = venv_flag
+    return _execute_venv
+
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""

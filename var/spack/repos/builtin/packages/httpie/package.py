@@ -37,6 +37,8 @@ class Httpie(PythonPackage):
     variant('socks', default=True,
             description='Enable SOCKS proxy support')
 
+    venv(True)
+
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pygments@2.1.3:', type=('build', 'run'))
     depends_on('py-requests@2.11.0:', type=('build', 'run'))

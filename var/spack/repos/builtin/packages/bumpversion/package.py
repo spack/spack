@@ -34,4 +34,6 @@ class Bumpversion(PythonPackage):
     version('0.5.3', 'c66a3492eafcf5ad4b024be9fca29820')
     version('0.5.0', '222ba619283d6408ce1bfbb0b5b542f3')
 
+    venv(True)
+
     depends_on('py-setuptools', type='build')

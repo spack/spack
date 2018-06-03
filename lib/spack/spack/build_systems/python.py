@@ -224,7 +224,11 @@ class PythonPackage(PackageBase):
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
-        args = ['--prefix={0}'.format(prefix)]
+
+        if not "VENV_PATH" in os.environ:
+            args = ['--prefix={0}'.format(prefix)]
+        else:
+            args = []
 
         # This option causes python packages (including setuptools) NOT
         # to create eggs or easy-install.pth files.  Instead, they

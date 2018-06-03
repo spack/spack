@@ -548,7 +548,8 @@ class Python(AutotoolsPackage):
         # python is found in the build environment. This to prevent cases
         # where a system provided python is run against the standard libraries
         # of a Spack built python. See issue #7128
-        spack_env.set('PYTHONHOME', self.home)
+        if not "VENV_PATH" in os.environ:
+            spack_env.set('PYTHONHOME', self.home)
 
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
@@ -578,6 +579,14 @@ class Python(AutotoolsPackage):
         setup_py('install', '--prefix={0}'.format(prefix))"""
 
         module.python = self.command
+        if "VENV_PATH" in os.environ:
+            venv_path = os.environ["VENV_PATH"]
+            if not os.path.isdir(venv_path):
+                module.python('-m', 'virtualenv', venv_path)
+            newp = venv_path + '/bin/' + module.python.name
+            tty.warn("MY PYTHON IS: {0}".format(newp))
+            module.python = Executable(newp)
+
         module.setup_py = Executable(
             self.command.path + ' setup.py --no-user-cfg')
 
