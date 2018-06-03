@@ -31,6 +31,9 @@ import re
 import sys
 import os.path
 import subprocess
+
+import llnl.util.tty as tty
+
 from llnl.util.lang import dedupe
 
 
@@ -607,6 +610,9 @@ def preserve_environment(*variables):
     arguments is the same before entering to the context manager and after
     exiting it.
 
+    Variables that are unset before entering the context manager will be
+    explicitly unset on exit.
+
     Args:
         variables (list of str): list of environment variables to be preserved
     """
@@ -620,7 +626,17 @@ def preserve_environment(*variables):
 
     for var in variables:
         value = cache[var]
+        msg = '[PRESERVE_ENVIRONMENT]'
         if value is not None:
+            # Print a debug statement if the value changed
+            if var not in os.environ:
+                msg += ' {0} was unset, will be reset to "{1}"'
+                tty.debug(msg.format(var, value))
+            elif os.environ[var] != value:
+                msg += ' {0} was set to "{1}", will be reset to "{2}"'
+                tty.debug(msg.format(var, os.environ[var], value))
             os.environ[var] = value
         elif var in os.environ:
+            msg += ' {0} was set to "{1}", will be unset'
+            tty.debug(msg.format(var, os.environ[var]))
             del os.environ[var]
