@@ -65,10 +65,14 @@ class Mfem(Package):
     version('develop',
             git='https://github.com/mfem/mfem', branch='master')
 
-    version('3.3.2',
-            '01a762a5d0a2bc59ce4e2f59009045a4',
-            url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
+    version('3.4.0',
+            '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
+            url='https://goo.gl/Cq4f4Z', extension='.tar.gz',
             preferred=True)
+
+    version('3.3.2',
+            'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
+            url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
 
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
@@ -117,6 +121,8 @@ class Mfem(Package):
         description='Enable PETSc solvers, preconditioners, etc.')
     variant('sundials', default=False,
         description='Enable Sundials time integrators')
+    variant('pumi', default=False,
+        description='Enable functionality based on PUMI')
     variant('mpfr', default=False,
         description='Enable precise, 1D quadrature rules')
     variant('lapack', default=False,
@@ -152,6 +158,7 @@ class Mfem(Package):
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
     conflicts('+sundials', when='@:3.2')
+    conflicts('+pumi', when='@:3.3.2')
     conflicts('timer=mac', when='@:3.3.0')
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
@@ -160,6 +167,7 @@ class Mfem(Package):
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+petsc', when='~mpi')
+    conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
     depends_on('mpi', when='+mpi')
@@ -174,6 +182,7 @@ class Mfem(Package):
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
+    depends_on('pumi', when='+pumi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
     # The PETSc tests in MFEM will fail if PETSc is not configured with
@@ -248,6 +257,7 @@ class Mfem(Package):
             'MFEM_USE_SUITESPARSE=%s' % yes_no('+suite-sparse'),
             'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
             'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
+            'MFEM_USE_PUMI=%S' % yes_no('+pumi'),
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
@@ -317,6 +327,9 @@ class Mfem(Package):
                 'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
                 'PETSC_LIB=%s' %
                 ld_flags_from_LibraryList(spec['petsc'].libs)]
+
+        if '+pumi' in spec:
+            options += ['PUMI_DIR=%s' % spec['pumi'].prefix]
 
         if '+netcdf' in spec:
             options += [
