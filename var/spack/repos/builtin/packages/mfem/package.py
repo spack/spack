@@ -415,6 +415,13 @@ class Mfem(Package):
             # make('check', parallel=False)
         else:
             make('all')
+            if spec.satisfies('+pumi'):
+                # Do not test the PUMI examples - they require meshes from the
+                # mfem/data repository on github.
+                pumi_makefile = join_path('examples', 'pumi', 'makefile')
+                with open(pumi_makefile, 'a') as pumi_mk:
+                    pumi_mk.write('\nmfem-test = '
+                                  'printf "   $(3) [$(2) $(1) ... ]: SKIP\n"')
             make('test', parallel=False)
 
     def install(self, spec, prefix):
