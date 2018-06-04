@@ -226,7 +226,7 @@ class Trilinos(CMakePackage):
     conflicts('+isorropia', when='~epetraext')
     conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
-    conflicts('+muelu', when='~teuchosetra')
+    conflicts('+muelu', when='~teuchos')
     conflicts('+muelu', when='~xpetra')
     conflicts('+nox', when='~teuchos')
     conflicts('+phalanx', when='~kokkos')
