@@ -31,7 +31,7 @@ mirror = SpackCommand('mirror')
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression('8083')
-def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
+def test_regression_8083(tmpdir, capfd, builtin_mock, mock_fetch, config):
     with capfd.disabled():
         output = mirror('create', '-d', str(tmpdir), 'externaltool')
     assert 'Skipping' in output

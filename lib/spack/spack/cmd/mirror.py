@@ -167,61 +167,60 @@ def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
-    with spack.concretize.concretizer.disable_compiler_existence_check():
-        specs = spack.cmd.parse_specs(args.specs, concretize=True)
+    specs = spack.cmd.parse_specs(args.specs, concretize=True)
 
-        # If there is a file, parse each line as a spec and add it to the list.
-        if args.file:
-            if specs:
-                tty.die("Cannot pass specs on the command line with --file.")
-            specs = _read_specs_from_file(args.file)
+    # If there is a file, parse each line as a spec and add it to the list.
+    if args.file:
+        if specs:
+            tty.die("Cannot pass specs on the command line with --file.")
+        specs = _read_specs_from_file(args.file)
 
-        # If nothing is passed, use all packages.
-        if not specs:
-            specs = [Spec(n) for n in spack.repo.all_package_names()]
-            specs.sort(key=lambda s: s.format("$_$@").lower())
+    # If nothing is passed, use all packages.
+    if not specs:
+        specs = [Spec(n) for n in spack.repo.all_package_names()]
+        specs.sort(key=lambda s: s.format("$_$@").lower())
 
-        # If the user asked for dependencies, traverse spec DAG get them.
-        if args.dependencies:
-            new_specs = set()
-            for spec in specs:
-                spec.concretize()
-                for s in spec.traverse():
-                    new_specs.add(s)
-            specs = list(new_specs)
+    # If the user asked for dependencies, traverse spec DAG get them.
+    if args.dependencies:
+        new_specs = set()
+        for spec in specs:
+            spec.concretize()
+            for s in spec.traverse():
+                new_specs.add(s)
+        specs = list(new_specs)
 
-        # Skip external specs, as they are already installed
-        external_specs = [s for s in specs if s.external]
-        specs = [s for s in specs if not s.external]
+    # Skip external specs, as they are already installed
+    external_specs = [s for s in specs if s.external]
+    specs = [s for s in specs if not s.external]
 
-        for spec in external_specs:
-            msg = 'Skipping {0} as it is an external spec.'
-            tty.msg(msg.format(spec.cshort_spec))
+    for spec in external_specs:
+        msg = 'Skipping {0} as it is an external spec.'
+        tty.msg(msg.format(spec.cshort_spec))
 
-        # Default name for directory is spack-mirror-<DATESTAMP>
-        directory = args.directory
-        if not directory:
-            timestamp = datetime.now().strftime("%Y-%m-%d")
-            directory = 'spack-mirror-' + timestamp
+    # Default name for directory is spack-mirror-<DATESTAMP>
+    directory = args.directory
+    if not directory:
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        directory = 'spack-mirror-' + timestamp
 
-        # Make sure nothing is in the way.
-        existed = os.path.isdir(directory)
+    # Make sure nothing is in the way.
+    existed = os.path.isdir(directory)
 
-        # Actually do the work to create the mirror
-        present, mirrored, error = spack.mirror.create(
-            directory, specs, num_versions=args.one_version_per_spec)
-        p, m, e = len(present), len(mirrored), len(error)
+    # Actually do the work to create the mirror
+    present, mirrored, error = spack.mirror.create(
+        directory, specs, num_versions=args.one_version_per_spec)
+    p, m, e = len(present), len(mirrored), len(error)
 
-        verb = "updated" if existed else "created"
-        tty.msg(
-            "Successfully %s mirror in %s" % (verb, directory),
-            "Archive stats:",
-            "  %-4d already present"  % p,
-            "  %-4d added"            % m,
-            "  %-4d failed to fetch." % e)
-        if error:
-            tty.error("Failed downloads:")
-            colify(s.cformat("$_$@") for s in error)
+    verb = "updated" if existed else "created"
+    tty.msg(
+        "Successfully %s mirror in %s" % (verb, directory),
+        "Archive stats:",
+        "  %-4d already present"  % p,
+        "  %-4d added"            % m,
+        "  %-4d failed to fetch." % e)
+    if error:
+        tty.error("Failed downloads:")
+        colify(s.cformat("$_$@") for s in error)
 
 
 def mirror(parser, args):
