@@ -544,6 +544,7 @@ def resource(**kwargs):
         resources.append(Resource(name, fetcher, destination, placement))
     return _execute_resource
 
+
 @directive('venv')
 def venv(venv_flag):
     """

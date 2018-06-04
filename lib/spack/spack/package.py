@@ -1429,8 +1429,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
         use_virtualenv = ("VENV_PATH" in os.environ and
-                           re.match('^Py', self.__class__.__name__) and
-                           self.__class__.__name__ is not 'Python')
+                          re.match('^Py', self.__class__.__name__) and
+                          self.__class__.__name__ is not 'Python')
 
         # Ensure package is not already installed
         layout = spack.store.layout

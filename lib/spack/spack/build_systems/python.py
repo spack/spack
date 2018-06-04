@@ -225,7 +225,7 @@ class PythonPackage(PackageBase):
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
 
-        if not "VENV_PATH" in os.environ:
+        if "VENV_PATH" not in os.environ:
             args = ['--prefix={0}'.format(prefix)]
         else:
             args = []
