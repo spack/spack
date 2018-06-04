@@ -33,7 +33,7 @@ class BlasrLibcpp(Package):
     homepage = "https://github.com/PacificBiosciences/blasr_libcpp"
     url      = "https://github.com/PacificBiosciences/blasr_libcpp/tarball/b038971c97eb5403b982c177eb44e488d25e9994"
 
-    version('038971c97eb5403b982c177eb44e488d25e9994', 'bd75541ab5e0a53c62f534ee73746878')
+    version('5.3.1', '259ee685560a60c871849737269b56bae4bb6644')
 
     depends_on('pbbam')
     depends_on('hdf5+cxx@1.8.12:1.8.99')
@@ -43,7 +43,7 @@ class BlasrLibcpp(Package):
 
     depends_on('python', type='build')
 
-    phases = ['configure', 'install']
+    phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
         configure_args = []
@@ -57,8 +57,10 @@ class BlasrLibcpp(Package):
                               self.spec['hdf5'].prefix.lib))
         python('configure.py', *configure_args)
 
-    def install(self, spec, prefix):
+    def build(self):
         make()
+
+    def install(self, spec, prefix):
         install_tree('alignment', prefix.alignment)
         install_tree('hdf', prefix.hdf)
         install_tree('pbdata', prefix.pbdata)
