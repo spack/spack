@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 import glob
+import inspect
+import platform
 
 
 class IntelTbb(Package):
@@ -61,9 +63,6 @@ class IntelTbb(Package):
     conflicts('%gcc@6.1:', when='@:4.4.3',
               msg='4.4.4 or later required for GCC >= 6.1.')
 
-    # Assembler version is important.
-    depends_on('binutils', type='build', when='platform=linux %gcc@4.8.0:')
-
     variant('shared', default=True,
             description='Builds a shared version of TBB libraries')
 
@@ -73,8 +72,16 @@ class IntelTbb(Package):
             multi=False,
             description='Use the specified C++ standard when building.')
 
-    # Deactivate use of RTM with GCC when building against an old binutils.
-    patch("tbb_gcc_rtm_key.patch", level=0, when='^binutils@:2.23')
+    # Build and install CMake config files if we're new enough.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+
+    # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: platform_os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: platform_os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: platform_os=centos6')
+
+    # Patch cmakeConfig.cmake.in to find the libraries where we install them.
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
 
     def url_for_version(self, version):
         url = 'https://github.com/01org/tbb/archive/{0}.tar.gz'
@@ -101,7 +108,6 @@ class IntelTbb(Package):
                         of.write(l)
 
     def install(self, spec, prefix):
-
         # We need to follow TBB's compiler selection logic to get the proper
         # build + link flags but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:
@@ -160,3 +166,12 @@ class IntelTbb(Package):
             fs = glob.glob(join_path("build", "*debug", lib_name + "_debug.*"))
             for f in fs:
                 install(f, prefix.lib)
+
+        if self.spec.satisfies('@2017.0:'):
+            # Generate and install the CMake Config file.
+            cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
+                          '-DTBB_OS={0}'.format(platform.system()),
+                          '-P',
+                          'tbb_config_generator.cmake')
+            with working_dir(join_path(self.stage.source_path, 'cmake')):
+                inspect.getmodule(self).cmake(*cmake_args)
