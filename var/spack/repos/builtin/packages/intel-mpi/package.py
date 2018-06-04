@@ -64,7 +64,18 @@ class IntelMpi(IntelPackage):
 
     @property
     def mpi_libs(self):
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
+        mpi_root = self.prefix.lib64   # default
+        dirs = [
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.lib64,
+            self.prefix.compilers_and_libraries.linux.mpi.lib64
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                mpi_root = d
+                break
+
         query_parameters = self.spec.last_query.extra_parameters
         libraries = ['libmpifort', 'libmpi']
 
@@ -79,7 +90,18 @@ class IntelMpi(IntelPackage):
     def mpi_headers(self):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
+        mpi_root = self.prefix.include64  # default
+        dirs = [
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.include64,
+            self.prefix.compilers_and_libraries.linux.mpi.include64
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                mpi_root = d
+                break
+
         return find_headers('mpi', root=mpi_root, recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -102,7 +124,18 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
+        bindir = self.prefix.bin  # default
+        dirs = [
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.intel64.bin,
+            self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
+            self.prefix.bin64
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                bindir = d
+                break
 
         if self.compiler.name == 'intel':
             self.spec.mpicc  = bindir.mpiicc
@@ -132,8 +165,21 @@ class IntelMpi(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        mpivars = os.path.join(
+        bindir = self.prefix.bin  # default
+        dirs = [
+            self.prefix.join('compilers_and_libraries_{0}'.format(
+                self.version)).linux.mpi.intel64.bin,
             self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
+            self.prefix.bin64
+        ]
+
+        for d in dirs:
+            if os.path.isdir(d):
+                bindir = d
+                break
+
+        mpivars = os.path.join(
+            bindir,
             'mpivars.sh')
 
         if os.path.isfile(mpivars):
