@@ -44,6 +44,8 @@ class Legion(CMakePackage):
     url      = "https://github.com/StanfordLegion/legion/tarball/legion-17.02.0"
 
     version('develop', git='https://github.com/StanfordLegion/legion', branch='master')
+    version('18.05.0', 'ab5ac8cd4aa4c91e6187bf1333a031bf')
+    version('18.02.0', '14937b386100347b051a5fc514636353')
     version('17.10.0', 'ebfc974dc82a9d7f3ba53242ecae62e1')
     version('17.08.0', 'acc1ea8c564c4a382a015e0c9cf94574')
     version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')

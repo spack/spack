@@ -41,6 +41,7 @@ class Mvapich2(AutotoolsPackage):
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
+    version('2.3rc2', '6fcf22fe2a16023b462ef57614daa357')
     version('2.3rc1', '386d79ae36b2136d203826465ad8b6cc')
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
 
@@ -57,6 +58,9 @@ class Mvapich2(AutotoolsPackage):
 
     variant('cuda', default=False,
             description='Enable CUDA extension')
+
+    variant('regcache', default=True,
+            description='Enable memory registration cache')
 
     # Accepted values are:
     #   single      - No threads (MPI_THREAD_SINGLE)
@@ -105,6 +109,13 @@ class Mvapich2(AutotoolsPackage):
         description='Use alloca to allocate temporary memory if available'
     )
 
+    variant(
+        'file_systems',
+        description='List of the ROMIO file systems to activate',
+        values=('lustre', 'gpfs', 'nfs', 'ufs'),
+        multi=True
+    )
+
     depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
@@ -114,6 +125,18 @@ class Mvapich2(AutotoolsPackage):
     )
 
     @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
+
+    @property
     def process_manager_options(self):
         spec = self.spec
 
@@ -121,7 +144,10 @@ class Mvapich2(AutotoolsPackage):
         for x in ('hydra', 'gforker', 'remshell'):
             if 'process_managers={0}'.format(x) in spec:
                 other_pms.append(x)
-        opts = ['--with-pm=%s' % ':'.join(other_pms)]
+
+        opts = []
+        if len(other_pms) > 0:
+            opts = ['--with-pm=%s' % ':'.join(other_pms)]
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
@@ -150,6 +176,21 @@ class Mvapich2(AutotoolsPackage):
             opts = ["--with-device=ch3:nemesis"]
         elif 'fabrics=mrail' in self.spec:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
+        return opts
+
+    @property
+    def file_system_options(self):
+        spec = self.spec
+
+        fs = []
+        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
+            if 'file_systems={0}'.format(x) in spec:
+                fs.append(x)
+
+        opts = []
+        if len(fs) > 0:
+            opts.append('--with-file-system=%s' % '+'.join(fs))
+
         return opts
 
     def setup_environment(self, spack_env, run_env):
@@ -194,7 +235,7 @@ class Mvapich2(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-romio',
-            '-disable-silent-rules',
+            '--disable-silent-rules',
             '--disable-new-dtags',
             '--enable-fortran=all',
             "--enable-threads={0}".format(spec.variants['threads'].value),
@@ -224,6 +265,12 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append('--disable-cuda')
 
+        if '+regcache' in self.spec:
+            args.append('--enable-registration-cache')
+        else:
+            args.append('--disable-registration-cache')
+
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
+        args.extend(self.file_system_options)
         return args

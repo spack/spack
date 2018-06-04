@@ -25,15 +25,16 @@
 from spack import *
 
 
-class LibjpegTurbo(AutotoolsPackage):
+class LibjpegTurbo(Package):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
        accelerate baseline JPEG compression and decompression. libjpeg is a
        library that implements JPEG image encoding, decoding and
        transcoding."""
+    # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
+    homepage = "https://libjpeg-turbo.org/"
+    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
 
-    homepage = "http://libjpeg-turbo.virtualgl.org"
-    url      = "https://sourceforge.net/projects/libjpeg-turbo/files/1.5.3/libjpeg-turbo-1.5.3.tar.gz"
-
+    version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
     version('1.5.3', '7c82f0f6a3130ec06b8a4d0b321cbca3')
     version('1.5.0', '3fc5d9b6a8bce96161659ae7a9939257')
     version('1.3.1', '2c3a68129dac443a72815ff5bb374b05')
@@ -46,3 +47,23 @@ class LibjpegTurbo(AutotoolsPackage):
     # TODO: Implement the selection between two supported assemblers.
     # depends_on("yasm", type='build')
     depends_on("nasm", type='build')
+    depends_on('cmake', type='build', when="@1.5.90:")
+
+    @property
+    def libs(self):
+        return find_libraries("libjpeg*", root=self.prefix, recursive=True)
+
+    @when('@:1.5.3')
+    def install(self, spec, prefix):
+        configure('--prefix=%s' % prefix)
+        make()
+        make('install')
+
+    @when('@1.5.90:')
+    def install(self, spec, prefix):
+        cmake_args = ['-GUnix Makefiles']
+        cmake_args.extend(std_cmake_args)
+        with working_dir('spack-build', create=True):
+            cmake('..', *cmake_args)
+            make()
+            make('install')

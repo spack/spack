@@ -41,7 +41,7 @@ class Xl(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'xl/xlc',
                   'cxx': 'xl/xlc++',
                   'f77': 'xl/xlf',
@@ -112,6 +112,12 @@ class Xl(Compiler):
            older version of AIX and linux on power.
         """
         fver = get_compiler_version(fc, '-qversion', r'([0-9]?[0-9]\.[0-9])')
+        if fver >= 16:
+            """Starting with version 16.1, the XL C and Fortran compilers
+               have the same version.  So no need to downgrade the Fortran
+               compiler version to match that of the C compiler version.
+            """
+            return str(fver)
         cver = float(fver) - 2
         if cver < 10:
             cver = cver - 0.1

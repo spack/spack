@@ -35,15 +35,19 @@ class RGenomicalignments(RPackage):
     url      = "https://git.bioconductor.org/packages/GenomicAlignments"
     list_url = homepage
 
+    version('1.14.2', git='https://git.bioconductor.org/packages/GenomicAlignments', commit='57b0b35d8b36069d4d94af86af051f0129b28eef')
     version('1.12.2', git='https://git.bioconductor.org/packages/GenomicAlignments', commit='b5d6f19e4a89b6c1c3e9e58e5ea4eb13870874ef')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-genomeinfodb', type=('build', 'run'))
-    depends_on('r-genomicranges', type=('build', 'run'))
-    depends_on('r-summarizedexperiment', type=('build', 'run'))
-    depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-rsamtools', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.15.3:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
+    depends_on('r-iranges@2.5.36:', type=('build', 'run'), when='@1.12.2')
+    depends_on('r-iranges@2.11.16:', type=('build', 'run'), when='@1.14.2')
+    depends_on('r-genomeinfodb@1.11.5:', type=('build', 'run'), when='@1.12.2')
+    depends_on('r-genomeinfodb@1.13.1:', type=('build', 'run'), when='@1.14.2')
+    depends_on('r-genomicranges@1.27.19:', type=('build', 'run'), when='@1.12.2')
+    depends_on('r-genomicranges@1.29.14:', type=('build', 'run'), when='@1.14.2')
+    depends_on('r-summarizedexperiment@1.5.3:', type=('build', 'run'))
+    depends_on('r-biostrings@2.37.1:', type=('build', 'run'))
+    depends_on('r-rsamtools@1.21.4:', type=('build', 'run'))
     depends_on('r-biocparallel', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.2')
+    depends_on('r@3.4.0:3.4.9', when='@1.12.2:')

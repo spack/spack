@@ -31,7 +31,21 @@ class PyPyside(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.io/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
+    # More recent versions of PySide2 (for Qt5) have been taken under
+    # the offical Qt umbrella.  For more information, see:
+    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+
+    # Version 1.2.4 claims to not work with Python 3.5, mostly
+    # because it hasn't been tested.  Otherwise, it's the same as v1.2.3
+    # https://github.com/PySide/pyside-setup/issues/58
+    # Meanwhile, developers have moved onto pyside2 (for Qt5),
+    # and show little interest in certifying PySide 1.2.4 for Python.
     version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
+
+    # This is not available from pypi
+    # version('1.2.3', 'fa5d5438b045ede36104bba25a6ccc10')
+
+    # v1.2.2 does not work with Python3
     version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)
 
     depends_on('cmake', type='build')

@@ -22,36 +22,29 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import glob
 from spack import *
 
 
-class Cryptopp(Package):
+class Cryptopp(MakefilePackage):
     """Crypto++ is an open-source C++ library of cryptographic schemes. The
-       library supports a number of different cryptography algorithms,
-       including authenticated encryption schemes (GCM, CCM), hash
-       functions (SHA-1, SHA2), public-key encryption (RSA, DSA), and a
-       few obsolete/historical encryption algorithms (MD5, Panama).
-
-    """
+    library supports a number of different cryptography algorithms, including
+    authenticated encryption schemes (GCM, CCM), hash functions (SHA-1, SHA2),
+    public-key encryption (RSA, DSA), and a few obsolete/historical encryption
+    algorithms (MD5, Panama)."""
 
     homepage = "http://www.cryptopp.com"
-    url      = "http://www.cryptopp.com/cryptopp563.zip"
+    url      = "http://www.cryptopp.com/cryptopp700.zip"
 
+    version('7.0.0', '8f34884b572901b6ede89bd18f1c7ef6')
     version('5.6.3', '3c5b70e2ec98b7a24988734446242d07')
     version('5.6.2', '7ed022585698df48e65ce9218f6c6a67')
     version('5.6.1', '96cbeba0907562b077e26bcffb483828')
 
+    depends_on('gmake', type='build')
+
     def url_for_version(self, version):
-        url = "{0}/{1}{2}.zip"
+        url = '{0}/{1}{2}.zip'
         return url.format(self.homepage, self.name, version.joined)
 
     def install(self, spec, prefix):
-        make()
-
-        mkdirp(prefix.include)
-        for hfile in glob.glob('*.h*'):
-            install(hfile, prefix.include)
-
-        mkdirp(prefix.lib)
-        install('libcryptopp.a', prefix.lib)
+        make('install', 'PREFIX={0}'.format(prefix))

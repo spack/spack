@@ -26,7 +26,7 @@ import os
 
 import pytest
 import spack.environment as environment
-from spack import spack_root
+from spack.paths import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv

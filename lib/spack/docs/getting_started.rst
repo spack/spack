@@ -1064,9 +1064,12 @@ Secret keys may also be later exported using the
    Key creation speed
       The creation of a new GPG key requires generating a lot of random numbers.
       Depending on the entropy produced on your system, the entire process may
-      take a long time (even a few minutes). To speed it up you may install
-      tools like ``rngd``, which is usually available as a package in the host OS.
-      On e.g. an Ubuntu machine you need to give the following commands:
+      take a long time (*even appearing to hang*). Virtual machines and cloud
+      instances are particularly likely to display this behavior.
+
+      To speed it up you may install tools like ``rngd``, which is
+      usually available as a package in the host OS.  On e.g. an
+      Ubuntu machine you need to give the following commands:
 
       .. code-block:: console
 
@@ -1074,6 +1077,18 @@ Secret keys may also be later exported using the
          $ sudo rngd -r /dev/urandom
 
       before generating the keys.
+
+      Another alternative is ``haveged``, which can be installed on
+      RHEL/CentOS machines as follows:
+
+      .. code-block:: console
+
+         $ sudo yum install haveged
+         $ sudo chkconfig haveged on
+
+      `This Digital Ocean tutorial
+      <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
+      provides a good overview of sources of randomness.
 
 ^^^^^^^^^^^^
 Listing keys
@@ -1203,7 +1218,14 @@ Here's an example of an external configuration for cray modules:
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
 environment variables, libraries, etc, that are brought into the environment
-via module load.
+via module load.  
+
+.. note::
+
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:`` 
+    in ``packages.yaml``, because the Cray Programming Environment heavily relies on
+    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the 
+    compiler wrapper link line).
 
 You can set the default compiler that Spack can use for each compiler type.
 If you want to use the Cray defaults, then set them under ``all:`` in packages.yaml.

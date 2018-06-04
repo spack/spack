@@ -37,6 +37,7 @@ import base64
 import contextlib
 import copy
 import functools
+import glob
 import hashlib
 import inspect
 import itertools
@@ -51,28 +52,30 @@ from six import string_types
 from six import with_metaclass
 
 import llnl.util.tty as tty
-import spack
+
+import spack.config
+import spack.paths
 import spack.store
 import spack.compilers
 import spack.directives
+import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
 import spack.mixins
-import spack.repository
+import spack.repo
 import spack.url
 import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import mkdirp, touch
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
-from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
@@ -270,10 +273,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     packages it depends on, so that dependencies can be installed along
     with the package itself.  Packages are written in pure python.
 
-    Packages are all submodules of spack.packages.  If spack is installed
-    in ``$prefix``, all of its python files are in ``$prefix/lib/spack``.
-    Most of them are in the spack module, so all the packages live in
-    ``$prefix/lib/spack/spack/packages``.
+    Packages live in repositories (see repo.py).  If spack is installed
+    in ``$prefix``, all of its built-in package files are in the builtin
+    repo at ``$prefix/var/spack/repos/builtin/packages``.
 
     All you have to do to create a package is make a new subclass of Package
     in this directory.  Spack automatically scans the python files there
@@ -401,7 +403,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     the class name (The class name is really only used by spack to find
     your package).
 
-    Spack will download an install each dependency before it installs your
+    Spack will download and install each dependency before it installs your
     package.  In addtion, it will add -L, -I, and rpath arguments to your
     compiler and linker for each dependency.  In most cases, this allows you
     to avoid specifying any dependencies in your configure or cmake line;
@@ -494,6 +496,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
+
     """
     #
     # These are default values for instance variables.
@@ -503,7 +506,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     parallel = True
 
     #: # jobs to use for parallel make. If set, overrides default of ncpus.
-    make_jobs = spack.build_jobs
+    make_jobs = None
 
     #: By default do not run tests within package's install()
     run_tests = False
@@ -528,6 +531,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
     sanity_check_is_dir = []
+
+    #: List of glob expressions. Each expression must either be
+    #: absolute or relative to the package source path.
+    #: Matching artifacts found at the end of the build process will
+    #: be copied in the same directory tree as build.env and build.out.
+    archive_files = []
 
     #
     # Set default licensing information
@@ -652,9 +661,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             visited = set([self.name])
 
         for i, name in enumerate(self.dependencies):
-            if spack.repo.is_virtual(name):
+            if spack.repo.path.is_virtual(name):
                 if expand_virtuals:
-                    providers = spack.repo.providers_for(name)
+                    providers = spack.repo.path.providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
                     visited.add(name)
@@ -681,8 +690,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def global_license_dir(self):
         """Returns the directory where global license files for all
            packages are stored."""
-        spack_root = ancestor(__file__, 4)
-        return join_path(spack_root, 'etc', 'spack', 'licenses')
+        return os.path.join(spack.paths.prefix, 'etc', 'spack', 'licenses')
 
     @property
     def global_license_file(self):
@@ -690,8 +698,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            particular package should be stored."""
         if not self.license_files:
             return
-        return join_path(self.global_license_dir, self.name,
-                         os.path.basename(self.license_files[0]))
+        return os.path.join(self.global_license_dir, self.name,
+                            os.path.basename(self.license_files[0]))
 
     @property
     def version(self):
@@ -949,7 +957,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         True if this package provides a virtual package with the specified name
         """
-        return any(s.name == vpkg_name for s in self.provided)
+        return any(
+            any(self.spec.satisfies(c) for c in constraints)
+            for s, constraints in self.provided.items() if s.name == vpkg_name
+        )
 
     @property
     def installed(self):
@@ -1003,7 +1014,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only fetch concrete packages.")
 
         start_time = time.time()
-        if spack.do_checksum and self.version not in self.versions:
+        checksum = spack.config.get('config:checksum')
+        if checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
                      self.spec.cformat('$_$@'))
 
@@ -1025,7 +1037,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.fetch(mirror_only)
         self._fetch_time = time.time() - start_time
 
-        if spack.do_checksum and self.version in self.versions:
+        if checksum and self.version in self.versions:
             self.stage.check()
 
         self.stage.cache_local()
@@ -1097,9 +1109,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
-        good_file = join_path(archive_dir, '.spack_patched')
-        no_patches_file = join_path(archive_dir, '.spack_no_patches')
-        bad_file = join_path(archive_dir, '.spack_patch_failed')
+        good_file = os.path.join(archive_dir, '.spack_patched')
+        no_patches_file = os.path.join(archive_dir, '.spack_no_patches')
+        bad_file = os.path.join(archive_dir, '.spack_patch_failed')
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
@@ -1214,17 +1226,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Install fake command
         mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, command))
-        chmod('+x', join_path(self.prefix.bin, command))
+        touch(os.path.join(self.prefix.bin, command))
+        chmod('+x', os.path.join(self.prefix.bin, command))
 
         # Install fake header file
         mkdirp(self.prefix.include)
-        touch(join_path(self.prefix.include, header + '.h'))
+        touch(os.path.join(self.prefix.include, header + '.h'))
 
         # Install fake shared and static libraries
         mkdirp(self.prefix.lib)
         for suffix in [dso_suffix, '.a']:
-            touch(join_path(self.prefix.lib, library + suffix))
+            touch(os.path.join(self.prefix.lib, library + suffix))
 
         # Install fake man page
         mkdirp(self.prefix.man.man1)
@@ -1354,7 +1366,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         binary_distribution.extract_tarball(
             binary_spec, tarball, allow_root=False,
             unsigned=False, force=False)
-        spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
+        spack.store.db.add(
+            self.spec, spack.store.layout, explicit=explicit)
         return True
 
     def do_install(self,
@@ -1367,6 +1380,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    make_jobs=None,
                    fake=False,
                    explicit=False,
+                   tests=False,
                    dirty=None,
                    **kwargs):
         """Called by commands to install a package and its dependencies.
@@ -1392,6 +1406,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             fake (bool): Don't really build; install fake stub files instead.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
+            tests (bool or list or set): False to run no tests, True to test
+                all packages, or a list of package names to run tests for some
             dirty (bool): Don't clean the build environment before installing.
             force (bool): Install again, even if already installed.
         """
@@ -1422,7 +1438,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 # is installed
                 if keep_stage is False:
                     self.stage.destroy()
-
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
@@ -1441,6 +1456,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
+                    tests=tests,
                     dirty=dirty,
                     **kwargs)
 
@@ -1457,8 +1473,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg('No binary for %s found: installing from source'
                     % self.name)
 
-        # Set run_tests flag before starting build.
-        self.run_tests = spack.package_testing.check(self.name)
+        # Set run_tests flag before starting build
+        self.run_tests = (tests is True or
+                          tests and self.name in tests)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
@@ -1499,7 +1516,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 else:
                     source_path = self.stage.source_path
                     if install_source and os.path.isdir(source_path):
-                        src_target = join_path(
+                        src_target = os.path.join(
                             self.spec.prefix, 'share', self.name, 'src')
                         tty.msg('Copying source to {0}'.format(src_target))
                         install_tree(self.stage.source_path, src_target)
@@ -1542,6 +1559,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # preserve verbosity across runs
             return echo
 
+        # hook that allow tests to inspect this Package before installation
+        # see unit_test_check() docs.
+        if not self.unit_test_check():
+            return
+
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
@@ -1559,7 +1581,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.db.add(
                 self.spec, spack.store.layout, explicit=explicit
             )
-        except directory_layout.InstallDirectoryAlreadyExistsError:
+        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
             # Abort install if install directory exists.
             # But do NOT remove it (you'd be overwriting someone else's stuff)
             tty.warn("Keeping existing install prefix in place.")
@@ -1580,6 +1602,23 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # not created so that the next time self.stage is invoked, we
             # check the filesystem for it.
             self.stage.created = False
+
+    def unit_test_check(self):
+        """Hook for unit tests to assert things about package internals.
+
+        Unit tests can override this function to perform checks after
+        ``Package.install`` and all post-install hooks run, but before
+        the database is updated.
+
+        The overridden function may indicate that the install procedure
+        should terminate early (before updating the database) by
+        returning ``False`` (or any value such that ``bool(result)`` is
+        ``False``).
+
+        Return:
+            (bool): ``True`` to continue, ``False`` to skip ``install()``
+        """
+        return True
 
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
@@ -1609,7 +1648,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     partial = True
 
         stage_is_managed_in_spack = self.stage.path.startswith(
-            spack.stage_path)
+            spack.paths.stage_path)
         if restage and stage_is_managed_in_spack:
             self.stage.destroy()
             self.stage.create()
@@ -1644,8 +1683,54 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # FIXME : this potentially catches too many things...
             pass
 
+        # Archive the whole stdout + stderr for the package
         install(self.log_path, log_install_path)
+        # Archive the environment used for the build
         install(self.env_path, env_install_path)
+        # Finally, archive files that are specific to each package
+        with working_dir(self.stage.source_path):
+            errors = StringIO()
+            target_dir = os.path.join(
+                spack.store.layout.metadata_path(self.spec),
+                'archived-files')
+
+            for glob_expr in self.archive_files:
+                # Check that we are trying to copy things that are
+                # in the source_path tree (not arbitrary files)
+                abs_expr = os.path.realpath(glob_expr)
+                if os.path.realpath(self.stage.source_path) not in abs_expr:
+                    errors.write(
+                        '[OUTSIDE SOURCE PATH]: {0}\n'.format(glob_expr)
+                    )
+                    continue
+                # Now that we are sure that the path is within the correct
+                # folder, make it relative and check for matches
+                if os.path.isabs(glob_expr):
+                    glob_expr = os.path.relpath(
+                        glob_expr, self.stage.source_path
+                    )
+                files = glob.glob(glob_expr)
+                for f in files:
+                    try:
+                        target = os.path.join(target_dir, f)
+                        # We must ensure that the directory exists before
+                        # copying a file in
+                        mkdirp(os.path.dirname(target))
+                        install(f, target)
+                    except Exception:
+                        # Here try to be conservative, and avoid discarding
+                        # the whole install procedure because of copying a
+                        # single file failed
+                        errors.write('[FAILED TO ARCHIVE]: {0}'.format(f))
+
+            if errors.getvalue():
+                error_file = os.path.join(target_dir, 'errors.txt')
+                mkdirp(target_dir)
+                with open(error_file, 'w') as err:
+                    err.write(errors.getvalue())
+                tty.warn('Errors occurred when archiving files.\n\t'
+                         'See: {0}'.format(error_file))
+
         dump_packages(self.spec, packages_dir)
 
     def sanity_check_prefix(self):
@@ -1677,7 +1762,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return join_path(self.stage.source_path, 'spack-build.out')
+            return os.path.join(self.stage.source_path, 'spack-build.out')
 
     @property
     def module(self):
@@ -1850,7 +1935,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Try to get the pcakage for the spec
         try:
             pkg = spec.package
-        except spack.repository.UnknownEntityError:
+        except spack.repo.UnknownEntityError:
             pkg = None
 
         # Pre-uninstall hook runs first.
@@ -2220,7 +2305,7 @@ def dump_packages(spec, path):
             # Locate the dependency package in the install tree and find
             # its provenance information.
             source = spack.store.layout.build_packages_path(node)
-            source_repo_root = join_path(source, node.namespace)
+            source_repo_root = os.path.join(source, node.namespace)
 
             # There's no provenance installed for the source package.  Skip it.
             # User can always get something current from the builtin repo.
@@ -2229,25 +2314,25 @@ def dump_packages(spec, path):
 
             # Create a source repo and get the pkg directory out of it.
             try:
-                source_repo = spack.repository.Repo(source_repo_root)
+                source_repo = spack.repo.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except spack.repository.RepoError:
+            except spack.repo.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
 
         # Create a destination repository
-        dest_repo_root = join_path(path, node.namespace)
+        dest_repo_root = os.path.join(path, node.namespace)
         if not os.path.exists(dest_repo_root):
-            spack.repository.create_repo(dest_repo_root)
-        repo = spack.repository.Repo(dest_repo_root)
+            spack.repo.create_repo(dest_repo_root)
+        repo = spack.repo.Repo(dest_repo_root)
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
         if node is not spec:
             install_tree(source_pkg_dir, dest_pkg_dir)
         else:
-            spack.repo.dump_provenance(node, dest_pkg_dir)
+            spack.repo.path.dump_provenance(node, dest_pkg_dir)
 
 
 def print_pkg(message):
