@@ -266,25 +266,25 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def copy(src, dst):
-    """Copies the file *src* to the file or directory *dst*.
+def copy(src, dest):
+    """Copies the file *src* to the file or directory *dest*.
 
-    If *dst* specifies a directory, the file will be copied into *dst*
+    If *dest* specifies a directory, the file will be copied into *dest*
     using the base filename from *src*.
 
     Parameters:
         src (str): the file to copy
-        dst (str): the destination file or directory
+        dest (str): the destination file or directory
     """
-    tty.debug('Copying {0} to {1}'.format(src, dst))
+    tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    shutil.copy(src, dst)
+    shutil.copy(src, dest)
 
 
-def install(src, dst):
-    """Installs the file *src* to the file or directory *dst*.
+def install(src, dest):
+    """Installs the file *src* to the file or directory *dest*.
 
-    If *dst* specifies a directory, the file will be installed into *dst*
+    If *dest* specifies a directory, the file will be installed into *dest*
     using the base filename from *src*.
 
     Works similarly to :py:func:`copy` with the addition of setting proper
@@ -292,24 +292,24 @@ def install(src, dst):
 
     Parameters:
         src (str): the file to install
-        dst (str): the destination file or directory
+        dest (str): the destination file or directory
     """
-    tty.debug('Installing {0} to {1}'.format(src, dst))
+    tty.debug('Installing {0} to {1}'.format(src, dest))
 
-    # Expand dst to its eventual full path if it is a directory.
-    if os.path.isdir(dst):
-        dst = join_path(dst, os.path.basename(src))
+    # Expand dest to its eventual full path if it is a directory.
+    if os.path.isdir(dest):
+        dest = join_path(dest, os.path.basename(src))
 
-    shutil.copy(src, dst)
+    shutil.copy(src, dest)
 
-    set_install_permissions(dst)
-    copy_mode(src, dst)
+    set_install_permissions(dest)
+    copy_mode(src, dest)
 
 
-def copy_tree(src, dst, symlinks=True):
+def copy_tree(src, dest, symlinks=True):
     """Recursively copy an entire directory tree rooted at *src*.
 
-    If the destination directory *dst* does not already exist, it will
+    If the destination directory *dest* does not already exist, it will
     be created as well as missing parent directories.
 
     If *symlinks* is true, symbolic links in the source tree are represented
@@ -319,14 +319,14 @@ def copy_tree(src, dst, symlinks=True):
 
     Parameters:
         src (str): the directory to copy
-        dst (str): the destination directory
+        dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
     """
-    tty.debug('Copying {0} to {1}'.format(src, dst))
+    tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    mkdirp(dst)
+    mkdirp(dest)
 
-    for s, d in traverse_tree(src, dst, order='pre', follow_nonexisting=True):
+    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
         if symlinks and os.path.islink(s):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?
@@ -338,10 +338,10 @@ def copy_tree(src, dst, symlinks=True):
             shutil.copyfile(s, d)
 
 
-def install_tree(src, dst, symlinks=False):
+def install_tree(src, dest, symlinks=False):
     """Recursively install an entire directory tree rooted at *src*.
 
-    If the destination directory *dst* does not already exist, it will
+    If the destination directory *dest* does not already exist, it will
     be created as well as missing parent directories.
 
     If *symlinks* is true, symbolic links in the source tree are represented
@@ -354,14 +354,14 @@ def install_tree(src, dst, symlinks=False):
 
     Parameters:
         src (str): the directory to install
-        dst (str): the destination directory
+        dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
     """
-    tty.debug('Installing {0} to {1}'.format(src, dst))
+    tty.debug('Installing {0} to {1}'.format(src, dest))
 
-    mkdirp(dst)
+    mkdirp(dest)
 
-    for s, d in traverse_tree(src, dst, order='pre', follow_nonexisting=True):
+    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
         if symlinks and os.path.islink(s):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?
