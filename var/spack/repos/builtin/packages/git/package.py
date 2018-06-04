@@ -174,6 +174,7 @@ class Git(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('tk',       type='run')
 
     # See the comment in setup_environment re EXTLIBS.
     def patch(self):
@@ -198,6 +199,9 @@ class Git(AutotoolsPackage):
                 self.spec['gettext'].prefix.lib))
             spack_env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
+
+        # gitk requires tk's wish to be found in $PATH.
+        run_env.prepend_path('PATH', self.spec['tk'].prefix.bin)
 
     def configure_args(self):
         spec = self.spec
