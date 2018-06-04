@@ -31,9 +31,9 @@ class BlasrLibcpp(Package):
     loadPulses for analyzing PacBio sequences."""
 
     homepage = "https://github.com/PacificBiosciences/blasr_libcpp"
-    url      = "https://github.com/PacificBiosciences/blasr_libcpp/tarball/b038971c97eb5403b982c177eb44e488d25e9994"
+    url      = "https://github.com/PacificBiosciences/blasr_libcpp/archive/5.3.1.tar.gz"
 
-    version('5.3.1', '259ee685560a60c871849737269b56bae4bb6644')
+    version('5.3.1', 'ca770042cbca508d5ff12dff0d645045')
 
     depends_on('pbbam')
     depends_on('hdf5+cxx@1.8.12:1.8.99')
@@ -48,7 +48,7 @@ class BlasrLibcpp(Package):
     def configure(self, spec, prefix):
         configure_args = []
         configure_args.append('PBBAM_INC={0}'.format(
-                              self.spec['pbbam'].prefix))
+                              self.spec['pbbam'].prefix.include))
         configure_args.append('PBBAM_LIB={0}'.format(
                               self.spec['pbbam'].prefix.lib))
         configure_args.append('HDF5_INC={0}'.format(
