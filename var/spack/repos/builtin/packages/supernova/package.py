@@ -61,4 +61,4 @@ class Supernova(Package):
         # remove the broken symlinks
         rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
             'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
-        install_tree('.', prefix, symlinks=True)
+        install_tree('.', prefix)

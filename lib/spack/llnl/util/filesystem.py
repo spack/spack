@@ -338,7 +338,7 @@ def copy_tree(src, dest, symlinks=True):
             shutil.copyfile(s, d)
 
 
-def install_tree(src, dest, symlinks=False):
+def install_tree(src, dest, symlinks=True):
     """Recursively install an entire directory tree rooted at *src*.
 
     If the destination directory *dest* does not already exist, it will
