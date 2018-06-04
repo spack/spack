@@ -32,10 +32,9 @@ class Pbbam(CMakePackage):
     bindings for additional languages, and command-line utilities."""
 
     homepage = "https://github.com/PacificBiosciences/pbbam"
-    url      = "https://github.com/PacificBiosciences/pbbam/tarball/b0f9993704f7e8572420c2d8febc92eaa9b6ba6e"
+    url      = "https://github.com/PacificBiosciences/pbbam/archive/0.18.0.tar.gz"
 
-    version('2018.05.08', '7f322f6d47aa3a7da56c88edf51d8d8d',
-            url="https://github.com/PacificBiosciences/pbbam/tarball/b0f9993704f7e8572420c2d8febc92eaa9b6ba6e")
+    version('0.18.0', 'abbb687b1e7ea08916c26da828e11384')
 
     depends_on('zlib')
     depends_on('boost@1.55.0:')
