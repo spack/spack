@@ -39,6 +39,8 @@ class Googletest(CMakePackage):
 
     variant('pthreads', default=True,
             description='Build multithreaded version with pthreads')
+    variant('shared', default=False,
+            description='Build shared libraries (DLLs)')
 
     def cmake_args(self):
         spec = self.spec
@@ -55,6 +57,8 @@ class Googletest(CMakePackage):
 
         options.append('-Dgtest_disable_pthreads={0}'.format(
             'ON' if '+pthreads' in spec else 'OFF'))
+        options.append('-DBUILD_SHARED_LIBS={0}'.format(
+            'ON' if '+shared' in spec else 'OFF'))
         return options
 
     @when('@:1.7.0')
@@ -67,5 +71,7 @@ class Googletest(CMakePackage):
                          prefix.include)
 
             mkdirp(prefix.lib)
-            install('libgtest.a', prefix.lib)
-            install('libgtest_main.a', prefix.lib)
+            install('libgtest.{0}'.format(
+                'so' if '+shared' in spec else 'a'), prefix.lib)
+            install('libgtest_main.{0}'.format(
+                'so' if '+shared' in spec else 'a'), prefix.lib)
