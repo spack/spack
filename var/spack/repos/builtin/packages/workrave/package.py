@@ -74,12 +74,35 @@ class Workrave(AutotoolsPackage):
     # https://bugzilla.gnome.org/show_bug.cgi?id=708673#c4
     patch('no_gettext.patch')
 
+    # add a couple m4 macros used during autoreconf
+    # https://github.com/rcaelers/workrave/issues/95
+    m4files = ['ax_cxx_compile_stdcxx_11', 'ax_cxx_compile_stdcxx']
+    resource(name=m4files[0],
+             url='http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_cxx_compile_stdcxx_11.m4',
+             sha256='d75fc9fe4502eea02e8c5bfb61b88a04cd08aa6d5bd757fe66e9a9a1e4781b46',
+             expand=False,
+             destination='',
+             placement=m4files[0])
+    resource(name=m4files[1],
+             url='http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_cxx_compile_stdcxx.m4',
+             sha256='0c08d2f64147f65eb7e255019102c1042ab695c60fd49add19793951a1279a1a',
+             expand=False,
+             destination='',
+             placement=m4files[1])
+
+    def setup_environment(self, build_env, run_env):
+        # unset PYTHONHOME to let system python script with explict
+        # system python sbangs like glib-mkenums work, see #6968
+        # Without this, we will get
+        # ImportError: No module named site
+        # during build phase when make runs glib-mkenums
+        build_env.unset('PYTHONHOME')
+
     @run_before('autoreconf')
     def extra_m4(self):
-        # add a couple m4 macros used during autoreconf
-        # https://github.com/rcaelers/workrave/issues/95
-        m4files = ['ax_cxx_compile_stdcxx_11.m4', 'ax_cxx_compile_stdcxx.m4']
-        for fname in m4files:
-            src = '%s/%s' % (self.package_dir, fname)
-            dest = '%s/m4/%s' % (self.stage.source_path, fname)
+        # move m4 macros, which we added with the resource() directive,
+        # to the m4 directory, where aclocal will pick them up
+        for fname in self.m4files:
+            src = '%s/%s/%s.m4' % (self.stage.source_path, fname, fname)
+            dest = '%s/m4/%s.m4' % (self.stage.source_path, fname)
             copyfile(src, dest)

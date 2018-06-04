@@ -29,9 +29,6 @@ class PyCheetah(PythonPackage):
     """Cheetah is a template engine and code generation tool."""
 
     homepage = "https://pypi.python.org/pypi/Cheetah/2.4.4"
-    url      = """\
-https://pypi.python.org/packages/b4/18\
-/a9b2f0f09e99024f4a9ea1ab80b6807aaecb7d1552529ea3590ad3d7bc93\
-/Cheetah-2.3.0.tar.gz"""
+    url      = "https://pypi.io/packages/source/C/Cheetah/Cheetah-2.3.0.tar.gz"
 
     version('2.3.0', 'e28ffef7f5c1660d66196639f162d9ce')
