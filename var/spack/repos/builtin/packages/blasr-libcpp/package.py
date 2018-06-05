@@ -46,13 +46,12 @@ class BlasrLibcpp(Package):
     phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
-        configure_args = []
-        configure_args.append(
+        configure_args[
         'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
         'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
         'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
         'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
-        )
+        ]
         python('configure.py', *configure_args)
 
     def setup_dependent_environment(self, spack_env, run_env):
