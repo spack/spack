@@ -47,8 +47,7 @@ class PyPybind11(CMakePackage):
     version('2.1.0', '3cf07043d677d200720c928569635e12')
 
     depends_on('py-pytest', type='test')
-    depends_on('py-setuptools', type='build')
-    depends_on('python', type='build')
+    depends_on('py-setuptools', type='build') 
 
     extends('python')
 
