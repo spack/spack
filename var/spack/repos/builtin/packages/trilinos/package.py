@@ -255,7 +255,7 @@ class Trilinos(CMakePackage):
     patch('xlf_seacas.patch', when='@12.10.1:%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
-    patch('xlf_seacas.patch', when='@12.10.1:%clang')
+    patch('xlf_seacas.patch', when='@12.12.1:%clang')
     patch('xlf_tpetra.patch', when='@12.12.1:%clang')
 
     def url_for_version(self, version):
