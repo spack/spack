@@ -37,9 +37,9 @@ class BlasrLibcpp(Package):
 
     depends_on('pbbam')
     depends_on('hdf5+cxx@1.8.12:1.8.99')
-# maximum version is 1.8.20 currently. There doesn't appear to be a
-# major version 1.9 and the 1.10.1 version doesn't build correctly.
-# https://github.com/PacificBiosciences/blasr/issues/355
+    # maximum version is 1.8.20 currently. There doesn't appear to be a
+    # major version 1.9 and the 1.10.1 version doesn't build correctly.
+    # https://github.com/PacificBiosciences/blasr/issues/355
 
     depends_on('python', type='build')
 
@@ -47,14 +47,12 @@ class BlasrLibcpp(Package):
 
     def configure(self, spec, prefix):
         configure_args = []
-        configure_args.append('PBBAM_INC={0}'.format(
-                              self.spec['pbbam'].prefix.include))
-        configure_args.append('PBBAM_LIB={0}'.format(
-                              self.spec['pbbam'].prefix.lib))
-        configure_args.append('HDF5_INC={0}'.format(
-                              self.spec['hdf5'].prefix))
-        configure_args.append('HDF5_LIB={0}'.format(
-                              self.spec['hdf5'].prefix.lib))
+        configure_args.append(
+        'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
+        'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
+        'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
+        'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
+        )
         python('configure.py', *configure_args)
 
     def build(self):
