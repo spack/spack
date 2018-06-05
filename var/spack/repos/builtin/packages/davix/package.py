@@ -30,6 +30,7 @@ class Davix(CMakePackage):
 
     homepage = "https://dmc.web.cern.ch/projects/davix"
     url      = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/0.6.7/davix-0.6.7.tar.gz"
+    list_url = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/"
 
     version('0.6.7',     'f811647d924a6dc5852c92110359ed91')
 
