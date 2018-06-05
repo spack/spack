@@ -39,6 +39,7 @@
 #
 from spack import *
 
+
 class PyProjectq(PythonPackage):
     """
     ProjectQ is an open-source software framework for quantum computing started
@@ -47,28 +48,28 @@ class PyProjectq(PythonPackage):
     these programs to any type of back-end, be it a simulator run on a
     classical computer of an actual quantum chip.
     """
-    
-    ## URL and HOMEPAGE
+
+    # URL and HOMEPAGE
     homepage = "https://projectq.ch"
     url      = "https://github.com/projectq-framework"
-    
-    ## Provided python modules
+
+    # Provided python modules
     import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
     'projectq.libs',  'projectq.meta', 'projectq.ops', 'projectq.setups', 'projectq.types']
 
-    ## Versions
-    version('develop', branch = 'develop', git = 'https://github.com/projectq-framework/projectq.git')
-    version('master', branch = 'master', git = 'https://github.com/projectq-framework/projectq.git')
+    # Versions
+    version('develop', branch='develop', git='https://github.com/projectq-framework/projectq.git')
+    version('master', branch='master', git='https://github.com/projectq-framework/projectq.git')
 
-    ## Dependencies
+    # Dependencies
     extends('python')
-    
+
     depends_on('python', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'link', 'run'))
     depends_on('py-numpy', type=('build', 'link', 'run'))
-    depends_on('py-scipy',type=('build', 'link', 'run'))
-    depends_on('py-future',type=('build', 'link', 'run'))
+    depends_on('py-scipy', type=('build', 'link', 'run'))
+    depends_on('py-future', type=('build', 'link', 'run'))
     depends_on('py-pytest@3.1.0:', type=('build', 'link', 'run'))
-    depends_on('py-requests',type=('build', 'link', 'run'))
+    depends_on('py-requests', type=('build', 'link', 'run'))
     # conflict with pybind11@2.2.0
     depends_on('py-pybind11@1.7:2.1,2.2.1:', type=('build', 'link', 'run'))

@@ -69,5 +69,4 @@ class PyPybind11(CMakePackage):
 
     def install(self, spec, prefix):
         super(PyPybind11, self).install(spec, prefix)
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
-        
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))        
