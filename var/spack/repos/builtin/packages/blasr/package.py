@@ -73,7 +73,7 @@ class Blasr(Package):
         )
         python('configure.py', *configure_args)
 
-    def build(self)
+    def build(self):
         make()
 
     def install(self, spec, prefix):
