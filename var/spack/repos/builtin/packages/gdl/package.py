@@ -42,6 +42,8 @@ class Gdl(CMakePackage):
             default=False,
             description='Enable GraphicsMagick'
            )
+    variant('hdf4', default=False, description='Enable HDF4')
+    variant('hdf5', default=True, description='Enable HDF5')
     variant('openmp', default=True, description='Enable OpenMP')
     variant('proj', default=True, description='Enable LIBPROJ4')
     variant('python', default=False, description='Enable Python')
@@ -51,6 +53,8 @@ class Gdl(CMakePackage):
     extends('python', when='+python')
 
     depends_on('graphicsmagick', when='+graphicsmagick')
+    depends_on('hdf', when='+hdf4')
+    depends_on('hdf5', when='+hdf5')
     depends_on('libx11', when='+x11')
     depends_on('plplot+wx', when='+wx@:5.11')
     depends_on('plplot+wx+wxold', when='+wx@5.12:')
@@ -63,8 +67,6 @@ class Gdl(CMakePackage):
     depends_on('eigen')
     depends_on('fftw')
     depends_on('gsl')
-    depends_on('hdf')
-    depends_on('hdf5')
     depends_on('jpeg')
     depends_on('libice')
     depends_on('libsm')
@@ -81,30 +83,25 @@ class Gdl(CMakePackage):
         # only version 6 of ImageMagick is supported (version 7 is packaged)
         args += ['-DMAGICK=OFF']
 
-        if '+wx' in self.spec:
-            args += ['-DWXWIDGETS=ON']
-        else:
-            args += ['-DWXWIDGETS=OFF']
-
         if '+graphicsmagick' in self.spec:
             args += ['-DGRAPHICSMAGICK=ON']
         else:
             args += ['-DGRAPHICSMAGICK=OFF']
 
+        if '+hdf4' in self.spec:
+            args += ['-DHDF=ON']
+        else:
+            args += ['-DHDF=OFF']
+
+        if '+hdf5' in self.spec:
+            args += ['-DHDF5=ON']
+        else:
+            args += ['-DHDF5=OFF']
+
         if '+openmp' in self.spec:
             args += ['-DOPENMP=ON']
         else:
             args += ['-DOPENMP=OFF']
-
-        if '+x11' in self.spec:
-            args += ['-DX11=ON']
-        else:
-            args += ['-DX11=OFF']
-
-        if '+python' in self.spec:
-            args += ['-DPYTHON=ON']
-        else:
-            args += ['-DPYTHON=OFF']
 
         if '+proj' in self.spec:
             args += [
@@ -113,5 +110,20 @@ class Gdl(CMakePackage):
             ]
         else:
             args += ['-DLIBPROJ4=OFF']
+
+        if '+python' in self.spec:
+            args += ['-DPYTHON=ON']
+        else:
+            args += ['-DPYTHON=OFF']
+
+        if '+wx' in self.spec:
+            args += ['-DWXWIDGETS=ON']
+        else:
+            args += ['-DWXWIDGETS=OFF']
+
+        if '+x11' in self.spec:
+            args += ['-DX11=ON']
+        else:
+            args += ['-DX11=OFF']
 
         return args
