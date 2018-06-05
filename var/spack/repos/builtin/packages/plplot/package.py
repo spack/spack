@@ -37,9 +37,9 @@ class Plplot(CMakePackage):
 
     variant('java', default=False, description='Enable Java binding')
     variant('lua', default=False, description='Enable Lua binding')
-    variant('pango', default=False, description='Enable WxWidgets')
-    variant('python', default=False, description='Enable WxWidgets')
-    variant('qt', default=False, description='Enable WxWidgets')
+    variant('pango', default=False, description='Enable Pango')
+    variant('python', default=False, description='Enable Python binding')
+    variant('qt', default=False, description='Enable QT binding')
     variant('wx', default=False, description='Enable WxWidgets')
     variant('wxold', default=False, description='Use WxWidgets old interface')
 
