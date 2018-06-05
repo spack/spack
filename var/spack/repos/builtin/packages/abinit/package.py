@@ -121,7 +121,8 @@ class Abinit(AutotoolsPackage):
         if '+mpi' in spec:
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
-            oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
+            if "platform=cray" not in spec:
+                oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
             oapp('--enable-mpi-io=yes')
 
