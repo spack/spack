@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Sz(AutotoolsPackage):
     """Error-bounded Lossy Compressor for HPC Data."""
 
