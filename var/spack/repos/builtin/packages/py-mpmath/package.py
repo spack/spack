@@ -31,4 +31,4 @@ class PyMpmath(PythonPackage):
     url      = "https://pypi.io/packages/source/m/mpmath/mpmath-1.0.0.tar.gz"
 
     version('1.0.0', '998f10cb231af62743212ca80693f1b5')
-    version('0.19', 'd1b7e19dd6830d0d7b5e1bc93d46c02c')
+    version('0.19', 'af5cc956b2673b33a25c3e57299bae7b')
