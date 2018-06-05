@@ -59,8 +59,7 @@ class Blasr(Package):
             spack_env.set('CXX', self.spec['mpi'].mpicxx)
 
     def configure(self, spec, prefix):
-        configure_args = []
-        configure_args.append(
+        configure_args[
             'LIBPBDATA_INC={0}'.format(self.spec['blasr-libcpp'].prefix.pbdata),
             'LIBPBDATA_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.pbdata),
             'LIBBLASR_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.alignment),
@@ -70,7 +69,7 @@ class Blasr(Package):
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
             'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
             '--shared'
-        )
+        ]
         python('configure.py', *configure_args)
 
     def build(self):
