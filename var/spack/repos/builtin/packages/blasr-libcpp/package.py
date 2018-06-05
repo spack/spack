@@ -47,10 +47,10 @@ class BlasrLibcpp(Package):
 
     def configure(self, spec, prefix):
         configure_args[
-        'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
-        'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
-        'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
-        'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
+            'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
+            'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
+            'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
+            'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
         ]
         python('configure.py', *configure_args)
 
