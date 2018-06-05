@@ -39,8 +39,9 @@ class RSplitstackshape(RPackage):
 
     homepage = "http://github.com/mrdwab/splitstackshape"
     url      = "https://cran.r-project.org/src/contrib/splitstackshape_1.4.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/splitstackshape"
 
     version('1.4.4', '54d2554fe92dfc4670a000b45baacc28')
 
     depends_on('r-data-table@1.9.4:', type=('build', 'run'))
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))
