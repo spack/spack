@@ -60,10 +60,14 @@ class Blasr(Package):
 
     def configure(self, spec, prefix):
         configure_args[
-            'LIBPBDATA_INC={0}'.format(self.spec['blasr-libcpp'].prefix.pbdata),
-            'LIBPBDATA_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.pbdata),
-            'LIBBLASR_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.alignment),
-            'LIBBLASR_INC={0}'.format(self.spec['blasr-libcpp'].prefix.alignment),
+            'LIBPBDATA_INC={0}'.format(
+                self.spec['blasr-libcpp'].prefix.pbdata),
+            'LIBPBDATA_LIB={0}'.format(
+                self.spec['blasr-libcpp'].prefix.pbdata),
+            'LIBBLASR_LIB={0}'.format(
+                self.spec['blasr-libcpp'].prefix.alignment),
+            'LIBBLASR_INC={0}'.format(
+                self.spec['blasr-libcpp'].prefix.alignment),
             'LIBPBIHDF_INC={0}'.format(self.spec['blasr-libcpp'].prefix.hdf),
             'LIBPBIHDF_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.hdf),
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
