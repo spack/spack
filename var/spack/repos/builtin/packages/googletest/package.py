@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Googletest(CMakePackage):
@@ -71,7 +72,13 @@ class Googletest(CMakePackage):
                          prefix.include)
 
             mkdirp(prefix.lib)
-            install('libgtest.{0}'.format(
-                'so' if '+shared' in spec else 'a'), prefix.lib)
-            install('libgtest_main.{0}'.format(
-                'so' if '+shared' in spec else 'a'), prefix.lib)
+            if '+shared' in spec:
+                if sys.platform == 'darwin':
+                    install('libgtest.dylib', prefix.lib)
+                    install('libgtest_main.dylib', prefix.lib)
+                else:
+                    install('libgtest.so', prefix.lib)
+                    install('libgtest_main.so', prefix.lib)
+            else:
+                install('libgtest.a', prefix.lib)
+                install('libgtest_main.a', prefix.lib)
