@@ -55,6 +55,20 @@ class BlasrLibcpp(Package):
         )
         python('configure.py', *configure_args)
 
+    def setup_dependent_environment(self, spack_env, run_env):
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             self.spec['blasr-libcpp'].prefix.hdf)
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             self.spec['blasr-libcpp'].prefix.alignment)
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             self.spec['blasr-libcpp'].prefix.pbdata)
+        run_env.prepend_path('PATH', self.spec.prefix.utils)
+
+        # hdf has +mpi by default, so handle that possibility
+        if ('+mpi' in self.spec['hdf5']):
+            spack_env.set('CC', self.spec['mpi'].mpicc)
+            spack_env.set('CXX', self.spec['mpi'].mpicxx)
+
     def build(self):
         make()
 
