@@ -129,6 +129,16 @@ class Mumps(Package):
             orderings.append('-Dmetis')
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
+        
+        # Determine which compiler suite we are using
+        using_gcc = self.compiler.name == "gcc"
+        using_pgi = self.compiler.name == "pgi"
+        using_intel = self.compiler.name == "intel"
+        
+        # The llvm compiler suite does not contain a Fortran compiler by
+        # default.  Its possible that a Spack user may have configured
+        # ~/.spack/<platform>/compilers.yaml for using xlf.
+        using_xlf = (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
 
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
@@ -136,8 +146,6 @@ class Mumps(Package):
         fpic = self.compiler.pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
-
-        using_xlf = (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
 
         if '+int64' in self.spec:
             if using_xlf:
@@ -149,7 +157,7 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
                         fpic,
-                        '-fdefault-integer-8' if self.compiler.name == "gcc"
+                        '-fdefault-integer-8' if using_gcc
                                               else '-i8'),  # noqa
                 ])
 
@@ -186,7 +194,7 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if self.compiler.name == 'intel' or self.compiler.name == 'pgi':
+        if using_intel or using_pgi:
             # Intel & PGI Fortran compiler provides the main() function so
             # C examples linked with the Fortran compiler require a
             # hack defined by _DMAIN_COMP (see examples/c_example.c)
