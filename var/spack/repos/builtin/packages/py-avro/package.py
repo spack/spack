@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,19 +25,12 @@
 from spack import *
 
 
-class Bedops(MakefilePackage):
-    """BEDOPS is an open-source command-line toolkit that performs highly
-    efficient and scalable Boolean and other set operations, statistical
-    calculations, archiving, conversion and other management of genomic data of
-    arbitrary scale."""
+class PyAvro(PythonPackage):
+    """Avro is a serialization and RPC framework."""
 
-    homepage = "https://bedops.readthedocs.io"
-    url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
+    homepage = "http://avro.apache.org/docs/current/"
+    url      = "https://pypi.io/packages/source/a/avro/avro-1.8.2.tar.gz"
 
-    version('2.4.35', 'b425b3e05fd4cd1024ef4dd8bf04b4e5')
-    version('2.4.34', 'fc467d96134a0efe8b134e638af87a1a')
-    version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
+    version('1.8.2', '44ec007d432a2f3c35f87eee01f1e9ec')
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        make('install', "BINDIR=%s" % prefix.bin)
+    depends_on('py-setuptools', type='build')

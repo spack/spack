@@ -403,7 +403,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     the class name (The class name is really only used by spack to find
     your package).
 
-    Spack will download an install each dependency before it installs your
+    Spack will download and install each dependency before it installs your
     package.  In addtion, it will add -L, -I, and rpath arguments to your
     compiler and linker for each dependency.  In most cases, this allows you
     to avoid specifying any dependencies in your configure or cmake line;

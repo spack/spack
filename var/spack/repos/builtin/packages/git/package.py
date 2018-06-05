@@ -44,6 +44,11 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.17.1',
+            'md5': 'e04bfbbe5f17a4faa9507c75b8505c13',
+            'md5_manpages': 'f1d5dfc1459c9f2885f790c5af7473d1'
+        },
+        {
             'version': '2.17.0',
             'md5': '8e0f5253eef3abeb76bd9c55386d3bee',
             'md5_manpages': '1ce1ae78a559032810af8b455535935f'
@@ -146,7 +151,7 @@ class Git(AutotoolsPackage):
     ]
 
     for release in releases:
-        version(release['version'], release['md5'])
+        version(release['version'], md5=release['md5'])
         resource(
             name='git-manpages',
             url="https://www.kernel.org/pub/software/scm/git/git-manpages-{0}.tar.xz".format(

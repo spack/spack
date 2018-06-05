@@ -61,4 +61,9 @@ class Latte(CMakePackage):
         if '+progress' in self.spec:
             options.append('-DPROGRESS=yes')
 
+        blas_list = ';'.join(self.spec['blas'].libs)
+        lapack_list = ';'.join(self.spec['lapack'].libs)
+        options.append('-DBLAS_LIBRARIES={0}'.format(blas_list))
+        options.append('-DLAPACK_LIBRARIES={0}'.format(lapack_list))
+
         return options

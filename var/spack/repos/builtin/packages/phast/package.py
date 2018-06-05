@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,19 +25,34 @@
 from spack import *
 
 
-class Bedops(MakefilePackage):
-    """BEDOPS is an open-source command-line toolkit that performs highly
-    efficient and scalable Boolean and other set operations, statistical
-    calculations, archiving, conversion and other management of genomic data of
-    arbitrary scale."""
+class Phast(MakefilePackage):
+    """PHAST is a freely available software package for comparative and
+       evolutionary genomics."""
 
-    homepage = "https://bedops.readthedocs.io"
-    url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
+    homepage = "http://compgen.cshl.edu/phast/index.php"
+    url      = "https://github.com/CshlSiepelLab/phast/archive/v1.4.tar.gz"
 
-    version('2.4.35', 'b425b3e05fd4cd1024ef4dd8bf04b4e5')
-    version('2.4.34', 'fc467d96134a0efe8b134e638af87a1a')
-    version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
+    version('1.4', '2bc0412ba58ea1f08ba5e12fad43b4c7')
+
+    # phast cannot build with clapack using external blas
+    depends_on('clapack~external-blas')
+
+    build_directory = 'src'
+
+    @property
+    def build_targets(self):
+        targets = ['CLAPACKPATH={0}'.format(self.spec['clapack'].prefix)]
+        return targets
+
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            filter_file(r'\$\{PWD\}',
+                        '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
+                        'make-include.mk')
+            filter_file(r'\$\{PWD\}',
+                        '$(dir $(realpath $(firstword $(MAKEFILE_LIST))))',
+                        'Makefile')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        make('install', "BINDIR=%s" % prefix.bin)
+        install_tree('bin', prefix.bin)
+        install_tree('lib', prefix.lib)
