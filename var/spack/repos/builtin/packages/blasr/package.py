@@ -29,10 +29,9 @@ class Blasr(Package):
     """The PacBio long read aligner."""
 
     homepage = "https://github.com/PacificBiosciences/blasr/wiki"
-    url      = "https://github.com/PacificBiosciences/blasr/tarball/eab53fd220a05dfd7290962360a6ccce55be9c7c"
+    url      = "https://github.com/PacificBiosciences/blasr/archive/5.3.1.tar.gz"
 
-    version('2018.04.11', '42b298230213928a43652db7981e82fe',
-            url="https://github.com/PacificBiosciences/blasr/tarball/eab53fd220a05dfd7290962360a6ccce55be9c7c") 
+    version('5.3.1', '53c93f499aa4bc10781c87bafc33df2a') 
 
     depends_on('ncurses')
     depends_on('hdf5+cxx@1.8.12:1.8.99')
@@ -43,7 +42,7 @@ class Blasr(Package):
     depends_on('blasr-libcpp')
     depends_on('python', type='build')
 
-    phases = ['configure', 'install']
+    phases = ['configure', 'build', 'install']
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('LD_LIBRARY_PATH',
@@ -61,27 +60,23 @@ class Blasr(Package):
 
     def configure(self, spec, prefix):
         configure_args = []
-        configure_args.append('LIBPBDATA_INC={0}'.format(
-                              self.spec['blasr-libcpp'].prefix.pbdata))
-        configure_args.append('LIBPBDATA_LIB={0}'.format(
-                              self.spec['blasr-libcpp'].prefix.pbdata))
-        configure_args.append('LIBBLASR_LIB={0}'.format(
-                              self.spec['blasr-libcpp'].prefix.alignment))
-        configure_args.append('LIBBLASR_INC={0}'.format(
-                              self.spec['blasr-libcpp'].prefix.alignment))
-        configure_args.append('LIBPBIHDF_INC={0}'.format(
-                              self.spec['blasr-libcpp'].prefix.hdf))
-        configure_args.append('LIBPBIHDF_LIB={0}'.format(
-                              self.spec['blasr-libcpp'].prefix.hdf))
-        configure_args.append('HDF5_INC={0}'.format(
-                              self.spec['hdf5'].prefix.include))
-        configure_args.append('HDF5_LIB={0}'.format(
-                              self.spec['hdf5'].prefix.lib))
-        configure_args.append('--shared')
+        configure_args.append(
+            'LIBPBDATA_INC={0}'.format(self.spec['blasr-libcpp'].prefix.pbdata),
+            'LIBPBDATA_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.pbdata),
+            'LIBBLASR_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.alignment),
+            'LIBBLASR_INC={0}'.format(self.spec['blasr-libcpp'].prefix.alignment),
+            'LIBPBIHDF_INC={0}'.format(self.spec['blasr-libcpp'].prefix.hdf),
+            'LIBPBIHDF_LIB={0}'.format(self.spec['blasr-libcpp'].prefix.hdf),
+            'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
+            'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
+            '--shared'
+        )
         python('configure.py', *configure_args)
 
-    def install(self, spec, prefix):
+    def build(self)
         make()
+
+    def install(self, spec, prefix):
         mkdir(prefix.utils)
         mkdir(prefix.bin)
         install('blasr', prefix.bin.blasr)
