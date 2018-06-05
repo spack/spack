@@ -47,6 +47,8 @@ class PyPybind11(CMakePackage):
     version('2.1.0', '3cf07043d677d200720c928569635e12')
 
     depends_on('py-pytest', type='test')
+    depends_on('py-setuptools', type='build')
+    depends_on('python', type='build')
 
     extends('python')
 
@@ -64,3 +66,8 @@ class PyPybind11(CMakePackage):
                 'ON' if self.run_tests else 'OFF')
         ]
         return args
+
+    def install(self, spec, prefix):
+        super(PyPybind11, self).install(spec, prefix)
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        
