@@ -42,6 +42,7 @@ class Gdl(CMakePackage):
             default=False,
             description='Enable GraphicsMagick'
            )
+    variant('openmp', default=True, description='Enable OpenMP')
     variant('proj', default=True, description='Enable LIBPROJ4')
     variant('python', default=False, description='Enable Python')
     variant('wx', default=False, description='Enable WxWidgets')
@@ -51,17 +52,25 @@ class Gdl(CMakePackage):
 
     depends_on('graphicsmagick', when='+graphicsmagick')
     depends_on('libx11', when='+x11')
+    depends_on('plplot+wx', when='+wx@:5.11')
+    depends_on('plplot+wx+wxold', when='+wx@5.12:')
+    depends_on('plplot~wx', when='~wx')
     depends_on('proj', when='+proj')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+python')
+    depends_on('wx', when='+wx')
+
     depends_on('eigen')
     depends_on('fftw')
     depends_on('gsl')
     depends_on('hdf')
     depends_on('hdf5')
     depends_on('jpeg')
+    depends_on('libice')
+    depends_on('libsm')
+    depends_on('libxinerama')
+    depends_on('libxxf86vm')
     depends_on('netcdf')
-    depends_on('plplot')
     depends_on('pslib')
     depends_on('readline')
 
@@ -81,6 +90,16 @@ class Gdl(CMakePackage):
             args += ['-DGRAPHICSMAGICK=ON']
         else:
             args += ['-DGRAPHICSMAGICK=OFF']
+
+        if '+openmp' in self.spec:
+            args += ['-DOPENMP=ON']
+        else:
+            args += ['-DOPENMP=OFF']
+
+        if '+x11' in self.spec:
+            args += ['-DX11=ON']
+        else:
+            args += ['-DX11=OFF']
 
         if '+python' in self.spec:
             args += ['-DPYTHON=ON']
