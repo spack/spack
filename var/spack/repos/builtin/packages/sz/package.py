@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,18 +25,15 @@
 
 from spack import *
 
-
 class Sz(AutotoolsPackage):
     """Error-bounded Lossy Compressor for HPC Data."""
 
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
-    url      = "https://github.com/disheng222/SZ/archive/v1.4.13.4.zip"
+    url      = "https://github.com/disheng222/SZ/archive/v1.4.13.4.tar.gz"
 
     version('develop', git='https://github.com/disheng222/SZ.git',
             branch='master')
-    version('1.4.13.4', '953e80326fb31e4f9760325701593e6d')
-    version('1.4.13.3', '0f2c7474dba5581343e671d04d2e70d0')
-    version('1.4.13.2', '3d1730e95ccdb42a29cbadbe855e602f')
+    version('1.4.13.4', '1c47170a9eebeadbf0f7e9b675d68d76')
     version('1.4.12.3', '5f51be8530cdfa5280febb410ac6dd94')
     version('1.4.11.0', '10dee28b3503821579ce35a50e352cc6')
     version('1.4.10.0', '82e23dc5a51bcce1f70ba7e3b68a5965')
