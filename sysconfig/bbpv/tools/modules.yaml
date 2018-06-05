@@ -76,6 +76,10 @@ modules:
       - '%clang'
       - '%pgi'
       - 'cmake'
+    likwid:
+      environment:
+        set:
+          KMP_INIT_AT_FORK: 'FALSE'
   tcl:
     all:
       filter:
@@ -128,3 +132,7 @@ modules:
       - '%clang'
       - '%pgi'
       - 'cmake'
+    likwid:
+      environment:
+        set:
+          KMP_INIT_AT_FORK: 'FALSE'
