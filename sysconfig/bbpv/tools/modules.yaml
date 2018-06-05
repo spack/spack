@@ -76,7 +76,7 @@ modules:
       - '%clang'
       - '%pgi'
       - 'cmake'
-    likwid:
+    likwid@:4.3.1:
       environment:
         set:
           KMP_INIT_AT_FORK: 'FALSE'
@@ -132,7 +132,7 @@ modules:
       - '%clang'
       - '%pgi'
       - 'cmake'
-    likwid:
+    likwid@:4.3.1:
       environment:
         set:
           KMP_INIT_AT_FORK: 'FALSE'
