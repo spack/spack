@@ -41,7 +41,7 @@ class PyProjectq(PythonPackage):
     # Provided python modules
     import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
                       'projectq.libs', 'projectq.meta', 'projectq.ops',
-                      'projectq.setups','projectq.types']
+                      'projectq.setups', 'projectq.types']
 
     # Versions
     version('develop', branch='develop', git='https://github.com/projectq-framework/projectq.git')
