@@ -39,16 +39,22 @@
 #
 from spack import *
 
-
 class PyProjectq(PythonPackage):
-    """ProjectQ is an open-source software framework for quantum computing started at ETH Zurich. It allows users to implement their quantum programs in Python using a powerful and intuitive syntax. Proj    ectQ can then translate these programs to any type of back-end, be it a simulator run on a classical computer of an actual quantum chip."""
+    """
+    ProjectQ is an open-source software framework for quantum computing started
+    at ETH Zurich. It allows users to implement their quantum programs in
+    Python using a powerful and intuitive syntax. ProjectQ can then translate
+    these programs to any type of back-end, be it a simulator run on a
+    classical computer of an actual quantum chip.
+    """
     
     ## URL and HOMEPAGE
     homepage = "https://projectq.ch"
     url      = "https://github.com/projectq-framework"
     
     ## Provided python modules
-    import_modules = ['projectq', 'projectq.backends', 'projectq.cengines', 'projectq.libs', 'projectq.meta', 'projectq.ops', 'projectq.setups', 'projectq.types']
+    import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
+    'projectq.libs',  'projectq.meta', 'projectq.ops', 'projectq.setups', 'projectq.types']
 
     ## Versions
     version('develop', branch = 'develop', git = 'https://github.com/projectq-framework/projectq.git')
@@ -57,14 +63,12 @@ class PyProjectq(PythonPackage):
     ## Dependencies
     extends('python')
     
-    # always
     depends_on('python', type=('build', 'link', 'run'))
-    depends_on('py-setuptools', type=('build', 'link'))
+    depends_on('py-setuptools', type=('build', 'link', 'run'))
     depends_on('py-numpy', type=('build', 'link', 'run'))
     depends_on('py-scipy',type=('build', 'link', 'run'))
-    depends_on('py-future',type=('build', 'link'))
-    depends_on('py-pytest@3.1.0:', type=('build', 'link'))
+    depends_on('py-future',type=('build', 'link', 'run'))
+    depends_on('py-pytest@3.1.0:', type=('build', 'link', 'run'))
     depends_on('py-requests',type=('build', 'link', 'run'))
-    # only when with cppsim - conflict with pybind11@2.2.0
+    # conflict with pybind11@2.2.0
     depends_on('py-pybind11@1.7:2.1,2.2.1:', type=('build', 'link', 'run'))
-
