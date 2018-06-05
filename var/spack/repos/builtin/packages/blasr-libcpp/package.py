@@ -68,7 +68,7 @@ class BlasrLibcpp(Package):
             spack_env.set('CC', self.spec['mpi'].mpicc)
             spack_env.set('CXX', self.spec['mpi'].mpicxx)
 
-    def build(self):
+    def build():
         make()
 
     def install(self, spec, prefix):
