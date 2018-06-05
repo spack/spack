@@ -14,8 +14,9 @@ builds=(
     'mfem@develop+shared~static~mpi~metis~gzstream'
     # TODO: Replace '^conduit~python~hdf5' with '^conduit~python' when conduit
     # is fixed to accept '^hdf5+mpi'.
+    # NOTE: Skip PUMI since it conflicts with '+shared'.
     'mfem@develop+shared~static+mpi \
-        +superlu-dist+suite-sparse+petsc+sundials+pumi+mpfr+netcdf+gzstream \
+        +superlu-dist+suite-sparse+petsc+sundials+mpfr+netcdf+gzstream \
         +gnutls+libunwind+conduit ^hypre~internal-superlu \
         ^petsc~boost+suite-sparse+mumps ^conduit~python~hdf5'
     # TODO: The options '^netcdf~mpi ^hdf5@1.8.19~mpi' are added just to make

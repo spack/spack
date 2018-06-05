@@ -171,6 +171,8 @@ class Mfem(Package):
     conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
+    conflicts('+pumi', when='+shared')
+
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13.999', when='@:3.3.999+mpi')
     depends_on('hypre', when='@3.4:+mpi')
@@ -235,6 +237,15 @@ class Mfem(Package):
             flags += ['-L%s' % dir for dir in pkg_dirs_list]
             flags += ['-l%s' % lib for lib in pkg_libs_list]
             return ' '.join(flags)
+
+        def find_optional_library(name, prefix):
+            for shared in [True, False]:
+                for path in ['lib64', 'lib']:
+                    lib = find_libraries(name, join_path(prefix, path),
+                                         shared=shared, recursive=False)
+                    if lib:
+                        return lib
+            return LibraryList([])
 
         metis5_str = 'NO'
         if ('+metis' in spec) and spec['metis'].satisfies('@5:'):
@@ -380,11 +391,7 @@ class Mfem(Package):
             libunwind = spec['libunwind']
             headers = find_headers('libunwind', libunwind.prefix.include)
             headers.add_macro('-g')
-            libs = find_libraries('libunwind', libunwind.prefix.lib,
-                                  shared=True, recursive=True)
-            if not libs:
-                libs = find_libraries('libunwind', libunwind.prefix.lib,
-                                      shared=False, recursive=True)
+            libs = find_optional_library('libunwind', libunwind.prefix)
             # When mfem uses libunwind, it also needs 'libdl'.
             libs += LibraryList(find_system_libraries('libdl'))
             options += [
