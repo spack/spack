@@ -25,10 +25,21 @@
 from spack import *
 
 
-class PyMpmath(PythonPackage):
-    """A Python library for arbitrary-precision floating-point arithmetic."""
-    homepage = "http://mpmath.org"
-    url      = "https://pypi.io/packages/source/m/mpmath/mpmath-1.0.0.tar.gz"
+class Prng(AutotoolsPackage):
+    """Pseudo-Random Number Generator library."""
 
-    version('1.0.0', '998f10cb231af62743212ca80693f1b5')
-    version('0.19', 'af5cc956b2673b33a25c3e57299bae7b')
+    homepage = "http://statmath.wu.ac.at/prng/"
+    url      = "http://statmath.wu.ac.at/prng/prng-3.0.2.tar.gz"
+
+    version('3.0.2', '80cb0870f2d18618bd2772f9e1dc1a70')
+
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+
+    patch('prng-3.0.2-shared.patch', when="@3.0.2")
+    patch('prng-3.0.2-fix-c99-inline-semantics.patch', when="@3.0.2")
+
+    # Force the autoreconf step
+    force_autoreconf = True

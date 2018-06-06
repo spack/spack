@@ -25,10 +25,23 @@
 from spack import *
 
 
-class PyMpmath(PythonPackage):
-    """A Python library for arbitrary-precision floating-point arithmetic."""
-    homepage = "http://mpmath.org"
-    url      = "https://pypi.io/packages/source/m/mpmath/mpmath-1.0.0.tar.gz"
+class RSplitstackshape(RPackage):
+    """Stack and Reshape Datasets After Splitting Concatenated Values.
 
-    version('1.0.0', '998f10cb231af62743212ca80693f1b5')
-    version('0.19', 'af5cc956b2673b33a25c3e57299bae7b')
+    Online data collection tools like Google Forms often export
+    multiple-response questions with data concatenated in cells. The
+    concat.split (cSplit) family of functions splits such data into
+    separate cells. The package also includes functions to stack groups
+    of columns and to reshape wide data, even when the data are
+    "unbalanced" something which reshape (from base R) does not handle,
+    and which melt and dcast from reshape2 do not easily handle.
+    """
+
+    homepage = "http://github.com/mrdwab/splitstackshape"
+    url      = "https://cran.r-project.org/src/contrib/splitstackshape_1.4.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/splitstackshape"
+
+    version('1.4.4', '54d2554fe92dfc4670a000b45baacc28')
+
+    depends_on('r-data-table@1.9.4:', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
