@@ -37,9 +37,13 @@ class PatchMajorMinorPatch(Package):
     version('1.1.0', '3123456789abcdef0123456789abcdef')
     version('1.1.1', '3223456789abcdef0123456789abcdef')
     version('1.1.2', '4123456789abcdef0123456789abcdef')
+    version('1.3', '5123456789abcdef0123456789abcdef')
+    version('1.3.1', '6223456789abcdef0123456789abcdef')
+    version('1.3.2', '7123456789abcdef0123456789abcdef')
 
     patch('foo.patch', when='@1.0')
     patch('bar.patch', when='@1.1.0:1.1.1')
+    patch('gamma.patch', when='@1.3 %gcc@4.5')
 
     def install(self, spec, prefix):
         pass

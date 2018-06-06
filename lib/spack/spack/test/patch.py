@@ -108,25 +108,48 @@ def test_patch_in_spec(mock_packages, config):
             spec.variants['patches'].value)
 
 
-def test_patch_in_spec_when_major_minor_patch(mock_packages, config):
+def test_patch_in_spec_major_minor_patch_issues(mock_packages, config):
     """Test whether when a major.minor is specified to patch
        that the major.minor.patch is not also patched"""
+    # patch for 1.0 should not patch 1.0.1
     spec = Spec('patch-major-minor-patch@1.0.1')
     spec.concretize()
     assert 'patches' not in list(spec.variants.keys())
 
-    spec2 = Spec('patch-major-minor-patch@1.0')
-    spec2.concretize()
-    assert 'patches' in list(spec2.variants.keys())
-    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',) == spec2.variants['patches'].value)
+    # patch for 1.0 should still patch 1.0
+    spec = Spec('patch-major-minor-patch@1.0')
+    spec.concretize()
+    assert 'patches' in list(spec.variants.keys())
+    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',) == spec.variants['patches'].value)
 
-    spec3 = Spec('patch-major-minor-patch@1.1.1')
-    spec3.concretize()
-    assert 'patches' in list(spec3.variants.keys())
+    # patch 1.1.0:1.1.1 range should patch 1.1.1
+    spec = Spec('patch-major-minor-patch@1.1.1')
+    spec.concretize()
+    assert 'patches' in list(spec.variants.keys())
+    assert (('7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730',) == spec.variants['patches'].value)
 
-    spec4 = Spec('patch-major-minor-patch@1.1.2')
-    spec4.concretize()
-    assert 'patches' not in list(spec4.variants.keys())
+    # patch 1.1.0:1.1.1 range shouldn't patch 1.1.2
+    spec = Spec('patch-major-minor-patch@1.1.2')
+    spec.concretize()
+    assert 'patches' not in list(spec.variants.keys())
+
+    # patch with compiler should still work
+    spec = Spec('patch-major-minor-patch@1.3 %gcc@4.5.0')
+    spec.concretize()
+    assert 'patches' in list(spec.variants.keys())
+
+    assert (('ae9a6306a205417afddd14316cc1d0d5e04a98f1be10865dce643925ee070ce2',) == spec.variants['patches'].value)
+
+    # patch with default compiler since it matches
+    spec = Spec('patch-major-minor-patch@1.3')
+    spec.concretize()
+    assert 'patches' in list(spec.variants.keys())
+    assert (('ae9a6306a205417afddd14316cc1d0d5e04a98f1be10865dce643925ee070ce2',) == spec.variants['patches'].value)
+
+    # no patch with different compiler
+    spec = Spec('patch-major-minor-patch@1.3.1 %clang')
+    spec.concretize()
+    assert 'patches' not in list(spec.variants.keys())
 
 
 def test_patched_dependency(mock_packages, config):
