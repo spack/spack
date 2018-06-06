@@ -72,9 +72,7 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.0.0:', type='test')
+    depends_on('py-nose@1.0.0:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
