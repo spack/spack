@@ -39,7 +39,7 @@ class Googletest(CMakePackage):
 
     variant('pthreads', default=True,
             description='Build multithreaded version with pthreads')
-    variant('shared', default=False,
+    variant('shared', default=True,
             description='Build shared libraries (DLLs)')
 
     def cmake_args(self):
