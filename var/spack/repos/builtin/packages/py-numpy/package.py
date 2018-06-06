@@ -48,6 +48,7 @@ class PyNumpy(PythonPackage):
     # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
     # FIXME: Is this expected?
 
+    version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
     version('1.14.2', '080f01a19707cf467393e426382c7619')
     version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
     version('1.14.0', 'c12d4bf380ac925fcdc8a59ada6c3298')
