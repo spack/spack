@@ -59,9 +59,9 @@ class Hydrogen(CMakePackage):
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
-    variant('cuda', default=False, 
+    variant('cuda', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
-    variant('test', default=False, 
+    variant('test', default=False,
             description='Builds test suite')
 
     # Note that #1712 forces us to enumerate the different blas variants
@@ -106,6 +106,11 @@ class Hydrogen(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
+    @when('@:0.98.0')
+    def cmake_args(self):
+        raise InstallError("Hydrogen did not exist before v0.99. Did you mean to use Elemental instead?")
+
+    @when('@0.99:')
     def cmake_args(self):
         spec = self.spec
 
