@@ -38,8 +38,8 @@ class PatchMajorMinorPatch(Package):
     version('1.1.1', '3223456789abcdef0123456789abcdef')
     version('1.1.2', '4123456789abcdef0123456789abcdef')
 
-    patch('foo.patch', when='@1.0:')
-    patch('bar.patch', when='@1.1.0:')
+    patch('foo.patch', when='@1.0')
+    patch('bar.patch', when='@1.1.0:1.1.1')
 
     def install(self, spec, prefix):
         pass

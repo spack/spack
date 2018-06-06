@@ -402,7 +402,26 @@ class Version(object):
 
     @coerced
     def overlaps(self, other):
-        return self in other or other in self
+        """self.version = x.y
+           other.version = a.b.c
+           self overlaps other iff c==0
+
+           consisten with VersionRange satisfies doc string
+        """
+        diff_len = len(self.version) - len(other.version)
+        if diff_len == 0:
+            return self == other
+        else:
+            # We need to pad with 0's as described in satisfies
+            lversion_self = list(self.version)
+            lversion_other = list(other.version)
+            if diff_len < 0:
+                for i in range(abs(diff_len)):
+                    lversion_self.append(0)
+            elif diff_len > 0:
+                for i in range(diff_len):
+                    lversion_other.append(0)
+            return lversion_self == lversion_other
 
     @coerced
     def union(self, other):

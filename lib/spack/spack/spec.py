@@ -2487,7 +2487,7 @@ class Spec(object):
         if self.versions and other.versions:
             if patch_sense:
                 if (other.versions != _any_version and
-                    self.versions != other.versions):
+                    not self.versions.overlaps(other.versions)):
                     return False
             else:
                 if not self.versions.satisfies(other.versions, strict=strict):
