@@ -43,7 +43,7 @@ class BlasrLibcpp(Package):
 
     depends_on('python', type='build')
 
-    phases = ['configure', 'install', 'build']
+    phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
         configure_args = [
@@ -51,21 +51,22 @@ class BlasrLibcpp(Package):
             'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
             'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
+            'LIBBLASR_INC={0}'.format(self.spec['alignment'].prefix.include),
+            'LIBBLASR_LIB={0}'.format(self.spec['alignment'].prefix.lib),
+            'LIBPBDATA_LIB={0}'.format(self.spec['pbdata'].prefix.lib),
+            'LIBPBDATA_INC={0}'.format(self.spec['pbdata'].prefix.include),
+            'LIBPBIHDF_INC={0}'.format(self.spec['hdf'].prefix.include),
+            'LIBPBIHDF_LIB={0}'.format(self.spec['hdf'].prefix.lib)
         ]
         python('configure.py', *configure_args)
+
+    def build(self, spec, prefix):
+        make()
 
     def install(self, spec, prefix):
         install_tree('alignment', prefix.alignment)
         install_tree('hdf', prefix.hdf)
         install_tree('pbdata', prefix.pbdata)
-
-    def build(self, spec, prefix):
-        make()
-
-#    def install(self, spec, prefix):
-#        install_tree('alignment', prefix.alignment)
-#        install_tree('hdf', prefix.hdf)
-#        install_tree('pbdata', prefix.pbdata)
 
     def setup_dependent_environment(self, spack_env, run_env):
         run_env.prepend_path('LD_LIBRARY_PATH',
