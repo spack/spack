@@ -30,6 +30,5 @@ class Rngstreams(AutotoolsPackage):
 
     homepage = "http://statmath.wu.ac.at/software/RngStreams"
     url      = "http://statmath.wu.ac.at/software/RngStreams/rngstreams-1.0.1.tar.gz"
-    list_url = "http://statmath.wu.ac.at/software/RngStreams/"
 
     version('1.0.1', '6d9d842247cd1d4e9e60440406858a69')
