@@ -43,7 +43,7 @@ class BlasrLibcpp(Package):
 
     depends_on('python', type='build')
 
-    phases = ['configure', 'build', 'install']
+    phases = ['configure', 'install', 'build']
 
     def configure(self, spec, prefix):
         configure_args = [
@@ -54,13 +54,18 @@ class BlasrLibcpp(Package):
         ]
         python('configure.py', *configure_args)
 
-    def build(self, spec, prefix):
-        make()
-
     def install(self, spec, prefix):
         install_tree('alignment', prefix.alignment)
         install_tree('hdf', prefix.hdf)
         install_tree('pbdata', prefix.pbdata)
+
+    def build(self, spec, prefix):
+        make()
+
+#    def install(self, spec, prefix):
+#        install_tree('alignment', prefix.alignment)
+#        install_tree('hdf', prefix.hdf)
+#        install_tree('pbdata', prefix.pbdata)
 
     def setup_dependent_environment(self, spack_env, run_env):
         run_env.prepend_path('LD_LIBRARY_PATH',
