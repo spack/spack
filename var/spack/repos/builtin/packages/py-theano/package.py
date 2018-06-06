@@ -54,6 +54,5 @@ class PyTheano(PythonPackage):
     depends_on('py-pygpu', when='+gpu', type=('build', 'run'))
     depends_on('libgpuarray', when='+gpu')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.3.0:', type='test')
-    # depends_on('py-nose-parameterized@0.5.0:', type='test')
+    depends_on('py-nose@1.3.0:', type='test')
+    depends_on('py-nose-parameterized@0.5.0:', type='test')
