@@ -103,7 +103,7 @@ class Plplot(CMakePackage):
                     )),
                 ),
                 '-DTCL_STUB_LIBRARY={0}'.format(
-                    LibraryList( find_libraries(
+                    LibraryList(find_libraries(
                         'libtclstub*',
                         self.spec['tcl'].prefix.lib,
                         shared=False,
