@@ -51,12 +51,12 @@ class BlasrLibcpp(Package):
             'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
             'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
-            'LIBBLASR_INC={0}'.format(self.spec['alignment'].prefix.include),
-            'LIBBLASR_LIB={0}'.format(self.spec['alignment'].prefix.lib),
-            'LIBPBDATA_LIB={0}'.format(self.spec['pbdata'].prefix.lib),
-            'LIBPBDATA_INC={0}'.format(self.spec['pbdata'].prefix.include),
-            'LIBPBIHDF_INC={0}'.format(self.spec['hdf'].prefix.include),
-            'LIBPBIHDF_LIB={0}'.format(self.spec['hdf'].prefix.lib)
+            'LIBBLASR_INC={0}'.format(self.['alignment'].prefix.include),
+            'LIBBLASR_LIB={0}'.format(self.['alignment'].prefix.lib),
+            'LIBPBDATA_LIB={0}'.format(self.['pbdata'].prefix.lib),
+            'LIBPBDATA_INC={0}'.format(self.['pbdata'].prefix.include),
+            'LIBPBIHDF_INC={0}'.format(self.['hdf'].prefix.include),
+            'LIBPBIHDF_LIB={0}'.format(self.['hdf'].prefix.lib)
         ]
         python('configure.py', *configure_args)
 
