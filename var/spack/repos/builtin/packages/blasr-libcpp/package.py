@@ -54,6 +54,14 @@ class BlasrLibcpp(Package):
         ]
         python('configure.py', *configure_args)
 
+    def build(self, spec, prefix):
+        make()
+
+    def install(self, spec, prefix):
+        install_tree('alignment', prefix.alignment)
+        install_tree('hdf', prefix.hdf)
+        install_tree('pbdata', prefix.pbdata)
+
     def setup_dependent_environment(self, spack_env, run_env):
         run_env.prepend_path('LD_LIBRARY_PATH',
                              self.spec['blasr-libcpp'].prefix.hdf)
@@ -68,10 +76,3 @@ class BlasrLibcpp(Package):
             spack_env.set('CC', self.spec['mpi'].mpicc)
             spack_env.set('CXX', self.spec['mpi'].mpicxx)
 
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        install_tree('alignment', prefix.alignment)
-        install_tree('hdf', prefix.hdf)
-        install_tree('pbdata', prefix.pbdata)
