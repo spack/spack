@@ -1288,7 +1288,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
-    def _if_make_target_execute(self, target, *args, **kwargs):
+    def _has_make_target(self, target):
         make = inspect.getmodule(self).make
 
         # Check if we have a Makefile
@@ -1297,7 +1297,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 break
         else:
             tty.msg('No Makefile found in the build directory')
-            return
+            return False
 
         # Check if 'target' is a valid target
         #
@@ -1324,17 +1324,21 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         make('-q', target, fail_on_error=False)
         if make.returncode == 2:
             tty.msg("Target '" + target + "' not found in " + makefile)
-            return
+            return False
 
-        # Execute target
-        make(target, *args, **kwargs)
+        return True
 
-    def _if_ninja_target_execute(self, target, *args, **kwargs):
+    def _if_make_target_execute(self, target, *args, **kwargs):
+        if self._has_make_target(target):
+            # Execute target
+            inspect.getmodule(self).make(target, *args, **kwargs)
+
+    def _has_ninja_target(self, target):
         ninja = inspect.getmodule(self).ninja
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No Ninja build script found in the build directory')
-            return
+            return False
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
@@ -1346,10 +1350,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not matches:
             tty.msg("Target '" + target + "' not found in build.ninja")
-            return
+            return False
 
-        # Execute target
-        ninja(target, *args, **kwargs)
+        return True
+
+    def _if_ninja_target_execute(self, target, *args, **kwargs):
+        if self._has_ninja_target(target):
+            # Execute target
+            inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         resources = []
