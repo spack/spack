@@ -30,13 +30,16 @@ class Prng(AutotoolsPackage):
 
     homepage = "http://statmath.wu.ac.at/prng/"
     url      = "http://statmath.wu.ac.at/prng/prng-3.0.2.tar.gz"
-    list_url = "http://statmath.wu.ac.at/prng"
 
     version('3.0.2', '80cb0870f2d18618bd2772f9e1dc1a70')
+
+    depends_on('automake')
+    depends_on('autoconf')
+    depends_on('libtool')
+    depends_on('m4')
 
     patch('prng-3.0.2-shared.patch', when="@3.0.2")
     patch('prng-3.0.2-fix-c99-inline-semantics.patch', when="@3.0.2")
 
-    def autoreconf(self, spec, prefix):
-        autoreconf = which('autoreconf')
-        autoreconf('-ivf')
+    # Force the autoreconf step
+    force_autoreconf = True
