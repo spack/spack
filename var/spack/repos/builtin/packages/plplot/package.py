@@ -40,6 +40,7 @@ class Plplot(CMakePackage):
     variant('pango', default=False, description='Enable Pango')
     variant('python', default=False, description='Enable Python binding')
     variant('qt', default=False, description='Enable QT binding')
+    variant('tcl', default=True, description='Enable TCL binding')
     variant('wx', default=False, description='Enable WxWidgets')
     variant('wxold', default=False, description='Use WxWidgets old interface')
 
@@ -52,6 +53,7 @@ class Plplot(CMakePackage):
     depends_on('py-numpy', type=('build', 'run'), when='+python')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+python')
     depends_on('qt', when='+qt')
+    depends_on('tcl', when='+tcl')
     depends_on('wx', when='+wx')
 
     depends_on('freetype')
@@ -59,27 +61,11 @@ class Plplot(CMakePackage):
     depends_on('libx11')
     depends_on('qhull')
     depends_on('swig')
-    depends_on('tcl')
 
     def cmake_args(self):
         args = []
         # needs 'tk with wish'
         args += ['-DENABLE_tk=OFF']
-
-        # could be solved by creating the links within tcl
-        args += [
-            '-DTCL_INCLUDE_PATH={0}/include'.format(
-                self.spec['tcl'].prefix.include
-            ),
-            '-DTCL_LIBRARY={0}/libtcl{1}.so'.format(
-                self.spec['tcl'].prefix.lib,
-                self.spec['tcl'].version.up_to(2)
-            ),
-            '-DTCL_STUB_LIBRARY={0}/libtclstub{1}.a'.format(
-                self.spec['tcl'].prefix.lib,
-                self.spec['tcl'].version.up_to(2)
-            )
-        ]
 
         if '+java' in self.spec:
             args += ['-DENABLE_java=ON']
@@ -100,6 +86,32 @@ class Plplot(CMakePackage):
             args += ['-DENABLE_qt=ON']
         else:
             args += ['-DENABLE_qt=OFF']
+
+        if '+tcl' in self.spec:
+            args += ['-DENABLE_tcl=ON']
+            # could also be addressed by creating the links within tcl
+            # as is done for the tclsh executable
+            args += [
+                '-DTCL_INCLUDE_PATH={0}/include'.format(
+                    self.spec['tcl'].prefix.include
+                ),
+                '-DTCL_LIBRARY={0}'.format(
+                    LibraryList(find_libraries(
+                        'libtcl*',
+                        self.spec['tcl'].prefix.lib,
+                        shared=True,
+                    )),
+                ),
+                '-DTCL_STUB_LIBRARY={0}'.format(
+                    LibraryList( find_libraries(
+                        'libtclstub*',
+                        self.spec['tcl'].prefix.lib,
+                        shared=False,
+                    )),
+                )
+            ]
+        else:
+            args += ['-DENABLE_tcl=OFF']
 
         if '+wx' in self.spec:
             args += ['-DENABLE_wxwidgets=ON']
