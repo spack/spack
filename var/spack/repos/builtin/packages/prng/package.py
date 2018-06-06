@@ -33,10 +33,10 @@ class Prng(AutotoolsPackage):
 
     version('3.0.2', '80cb0870f2d18618bd2772f9e1dc1a70')
 
-    depends_on('automake')
-    depends_on('autoconf')
-    depends_on('libtool')
-    depends_on('m4')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
 
     patch('prng-3.0.2-shared.patch', when="@3.0.2")
     patch('prng-3.0.2-fix-c99-inline-semantics.patch', when="@3.0.2")
