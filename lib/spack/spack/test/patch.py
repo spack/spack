@@ -107,13 +107,30 @@ def test_patch_in_spec(mock_packages, config):
              'bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c') ==
             spec.variants['patches'].value)
 
+
 def test_patch_in_spec_when_major_minor_patch(mock_packages, config):
-    """Test whether when a major.minor is specified to patch 
+    """Test whether when a major.minor is specified to patch
        that the major.minor.patch is not also patched"""
     spec = Spec('patch-major-minor-patch@1.0.1')
     spec.concretize()
     assert 'patches' not in list(spec.variants.keys())
-    
+
+
+def test_patch_in_spec_when_major_minor_range(mock_packages, config):
+    spec2 = Spec('patch-major-minor-patch@1.0')
+    spec2.concretize()
+    assert 'patches' in list(spec2.variants.keys())
+    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',) == spec2.variants['patches'].value)
+
+    spec = Spec('patch-major-minor-patch@1.0.1')
+    spec.concretize()
+    assert 'patches' in list(spec.variants.keys())
+
+    spec3 = Spec('patch-major-minor-patch@1.1.2')
+    spec3.concretize()
+    assert 'patches' not in list(spec3.variants.keys())
+
+
 def test_patched_dependency(mock_packages, config):
     """Test whether patched dependencies work."""
     spec = Spec('patch-a-dependency')
