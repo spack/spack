@@ -38,7 +38,7 @@ class PyShapely(PythonPackage):
     depends_on('py-setuptools',     type='build')
     depends_on('py-cython@0.19:',   type='build')
     depends_on('py-numpy@1.4.1:',   type=('build', 'run'))
-    depends_on('geos@3.3:',         type=('build', 'link', 'run'))
+    depends_on('geos@3.3:')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GEOS_CONFIG', self.spec['geos'].prefix)
