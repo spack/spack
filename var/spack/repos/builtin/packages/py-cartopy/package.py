@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCartopy(PythonPackage):
     """Cartopy - a cartographic python library with matplotlib support."""
 
@@ -33,7 +34,7 @@ class PyCartopy(PythonPackage):
     version('0.16.0', 'f9e2e528d7758da7c64f824548a53f32')
 
     depends_on('py-setuptools@0.7.2:', type='build')
-    depends_on('py-cython@0.15.1:', type=('build', 'run'))
+    depends_on('py-cython@0.15.1:',    type='build')
     depends_on('py-numpy@1.10.0:',  type=('build', 'run'))
     depends_on('geos@3.3.3:',       type=('build', 'run'))
     depends_on('py-shapely@1.5.6:', type=('build', 'run'))
@@ -43,7 +44,7 @@ class PyCartopy(PythonPackage):
 
     # optional dependecies
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
-    depends_on('gdal@1.10.0:',         type=('build', 'run'))
+    depends_on('gdal@1.10.0:+python',  type=('build', 'run'))
     depends_on('py-pillow@1.7.8:',     type=('build', 'run'))
     depends_on('py-pyepsg@0.2.0:',     type=('build', 'run'))
     depends_on('py-scipy@0.10:',       type=('build', 'run'))
@@ -56,8 +57,7 @@ class PyCartopy(PythonPackage):
     phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
-        args = [
-                '-I{}'.format(spec['proj'].prefix.include),
-                '-L{}'.format(spec['proj'].prefix.lib),
-               ]
+        args = ['-I{0}'.format(spec['proj'].prefix.include),
+                '-L{0}'.format(spec['proj'].prefix.lib)
+                ]
         return args
