@@ -739,17 +739,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def env_path(self):
-        if self.stage.source_path is None:
-            return None
-        else:
-            return os.path.join(self.stage.source_path, 'spack-build.env')
+        return os.path.join(self.stage.path, 'spack-build.env')
 
     @property
     def log_path(self):
-        if self.stage.source_path is None:
-            return None
-        else:
-            return os.path.join(self.stage.source_path, 'spack-build.out')
+        return os.path.join(self.stage.path, 'spack-build.out')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1769,7 +1763,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return os.path.join(self.stage.source_path, 'spack-build.out')
+            return os.path.join(self.stage.path, 'spack-build.out')
 
     @classmethod
     def inject_flags(cls, name, flags):
