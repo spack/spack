@@ -32,6 +32,7 @@ class PyTheano(PythonPackage):
     homepage = "http://deeplearning.net/software/theano/"
     url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
 
+    version('1.0.2', 'fcae24dfa76babe15f5f3c556d67c9f2')
     version('1.0.1', 'a38b36c0fdc3126c574163db0a253e69')
     version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
     version('master', git='https://github.com/Theano/Theano.git', branch='master')
