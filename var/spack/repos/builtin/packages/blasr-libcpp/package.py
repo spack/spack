@@ -50,7 +50,7 @@ class BlasrLibcpp(Package):
             'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
             'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
-            'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
+            'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
             'LIBBLASR_INC={0}'.format(self.spec['alignment'].prefix.include),
             'LIBBLASR_LIB={0}'.format(self.spec['alignment'].prefix.lib),
             'LIBPBDATA_LIB={0}'.format(self.spec['pbdata'].prefix.lib),
