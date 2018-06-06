@@ -108,7 +108,8 @@ class Hydrogen(CMakePackage):
 
     @when('@:0.98.0')
     def cmake_args(self):
-        raise InstallError("Hydrogen did not exist before v0.99. Did you mean to use Elemental instead?")
+        raise InstallError("Hydrogen did not exist before v0.99." +
+                           "Did you mean to use Elemental instead?")
 
     @when('@0.99:')
     def cmake_args(self):
