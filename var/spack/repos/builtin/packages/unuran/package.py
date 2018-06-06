@@ -30,26 +30,18 @@ class Unuran(AutotoolsPackage):
 
     homepage = "http://statmath.wu.ac.at/unuran"
     url      = "http://statmath.wu.ac.at/unuran/unuran-1.8.1.tar.gz"
-    list_url = "http://statmath.wu.ac.at/unuran/"
 
     version('1.8.1', 'a5885baab53a2608c1d85517bf5d06a5')
 
-    variant('shared', default=False,
+    variant('shared', default=True,
         description="Enable the build of shared libraries")
     variant('rngstreams', default=True,
         description="Use RNGSTREAM library for uniform random generation")
-    variant('prng',     default=False,
-        description="Use PRNG library for uniform random generation")
     variant('gsl',      default=False,
         description="Use random number generators from GNU Scientific Library")
 
     depends_on('gsl',        when="+gsl")
-    depends_on('prng',       when="+prng")
     depends_on('rngstreams', when="+rngstreams")
-
-    # Using prng fails at configuration time
-    # error: ../src/.libs/libunuran.so: undefined reference to `prng_new'
-    conflicts("+prng")
 
     def configure_args(self):
 
@@ -61,8 +53,6 @@ class Unuran(AutotoolsPackage):
                 'rngstream' if '+rngstreams' in spec else 'builtin'),
             '--%s-urng-gsl' % (
                 'with' if '+gsl' in spec else 'without'),
-            '--%s-urng-prng' % (
-                'with' if '+prng' in spec else 'without'),
             '--%s-urng-rngstreams' % (
                 'with' if '+rngstreams' in spec else 'without')
         ]
