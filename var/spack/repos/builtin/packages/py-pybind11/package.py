@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class PyPybind11(CMakePackage):
@@ -67,7 +66,10 @@ class PyPybind11(CMakePackage):
         ]
         return args
 
+    def setup_environment(self, spack_env, run_env):
+        super(PyPybind11, self).setup_environment(spack_env, run_env)
+        spack_env.set('PYBIND11_USE_CMAKE', 1)
+
     def install(self, spec, prefix):
         super(PyPybind11, self).install(spec, prefix)
-        os.environ['PYBIND11_USE_CMAKE'] = '1'
         python('setup.py', 'install', '--prefix={0}'.format(prefix))
