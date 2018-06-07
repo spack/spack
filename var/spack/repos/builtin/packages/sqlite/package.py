@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from spack import architecture
-from spack.build_environment import dso_suffix
 
 
 class Sqlite(AutotoolsPackage):
