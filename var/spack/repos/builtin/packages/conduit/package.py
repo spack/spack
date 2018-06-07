@@ -266,6 +266,10 @@ class Conduit(Package):
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
+        if "~shared" in spec:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+            
+
         #######################
         # Python
         #######################

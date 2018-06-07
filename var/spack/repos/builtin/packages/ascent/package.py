@@ -92,8 +92,8 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake@3.8.2:3.9.999")
-    depends_on("conduit+python@0.3.1")
-    depends_on("conduit~shared@0.3.1", when="~shared")
+    depends_on("conduit+python@0.3.1", when="+python")
+    depends_on("conduit~shared~python@0.3.1", when="~shared")
 
     #######################
     # Python
@@ -285,7 +285,7 @@ class Ascent(Package):
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
-        if "+doc" in spec:
+        if "+doc" in spec and "+python" in spec:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
             cfg.write("# sphinx from spack \n")
