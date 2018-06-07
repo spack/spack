@@ -85,7 +85,7 @@ class Elemental(CMakePackage):
 
     depends_on('veclibfort', when='blas=accelerate')
 
-    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl ~cuda', when='blas=essl ~openmp_blas ~int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
