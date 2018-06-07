@@ -403,6 +403,8 @@ class Qt(Package):
             ])
 
         # relies on a system installed wayland, i.e. no spack package yet
+        # https://wayland.freedesktop.org/ubuntu16.04.html
+        # https://wiki.qt.io/QtWayland
         config_args.extend(['-skip', 'wayland'])
 
         configure('-no-eglfs',
