@@ -104,6 +104,7 @@ def test_two_segments():
 
 def test_develop():
     assert_ver_eq('develop', 'develop')
+    assert_ver_eq('develop.local', 'develop.local')
     assert_ver_lt('1.0', 'develop')
     assert_ver_gt('develop', '1.0')
     assert_ver_eq('1.develop', '1.develop')
@@ -115,6 +116,8 @@ def test_develop():
     assert_ver_gt('2.1', '1.develop')
     assert_ver_lt('1.develop.1', '1.develop.2')
     assert_ver_gt('1.develop.2', '1.develop.1')
+    assert_ver_lt('develop.1', 'develop.2')
+    assert_ver_gt('develop.2', 'develop.1')
     # other +infinity versions
     assert_ver_gt('master', '9.0')
     assert_ver_gt('head', '9.0')
@@ -122,12 +125,15 @@ def test_develop():
     assert_ver_gt('develop', '9.0')
     assert_ver_gt('9.0', 'system')
     # not develop
+    assert_ver_lt('mydevelopmentnightmare', '1.1')
     assert_ver_lt('1.mydevelopmentnightmare', '1.1')
     assert_ver_gt('1.1', '1.mydevelopmentnightmare')
 
 
 def test_isdevelop():
     assert ver('develop').isdevelop()
+    assert ver('develop.1').isdevelop()
+    assert ver('develop.local').isdevelop()
     assert ver('master').isdevelop()
     assert ver('head').isdevelop()
     assert ver('trunk').isdevelop()
@@ -135,6 +141,7 @@ def test_isdevelop():
     assert ver('1.develop.2').isdevelop()
     assert not ver('1.1').isdevelop()
     assert not ver('1.mydevelopmentnightmare.3').isdevelop()
+    assert not ver('mydevelopmentnightmare.3').isdevelop()
 
 
 def test_three_segments():
