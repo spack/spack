@@ -45,7 +45,6 @@ class Pbbam(CMakePackage):
 
     def cmake_args(self):
         options = []
-        
         if self.run_tests:
             options.append('-DPacBioBAM_build_tests:BOOL=ON')
         else:
