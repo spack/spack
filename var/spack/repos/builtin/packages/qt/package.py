@@ -359,7 +359,7 @@ class Qt(Package):
                   '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
                   *(webkit_args + self.common_config_args))
 
-    @when('@5.7:')
+    @when('@5.7:5.7.999')
     def configure(self):
         config_args = self.common_config_args
 
@@ -377,6 +377,33 @@ class Qt(Package):
             config_args.extend([
                 '-skip', 'webglplugin',
             ])
+
+        configure('-no-eglfs',
+                  '-no-directfb',
+                  '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-'),
+                  *config_args)
+
+    @when('@5.8:')
+    def configure(self):
+        config_args = self.common_config_args
+
+        if not sys.platform == 'darwin':
+            config_args.extend([
+                '-qt-xcb',
+            ])
+
+        if '~webkit' in self.spec:
+            config_args.extend([
+                '-skip', 'webengine',
+            ])
+
+        if '~opengl' in self.spec and self.spec.satisfies('@5.10:'):
+            config_args.extend([
+                '-skip', 'webglplugin',
+            ])
+
+        # relies on a system installed wayland, i.e. no spack package yet
+        config_args.extend(['-skip', 'wayland'])
 
         configure('-no-eglfs',
                   '-no-directfb',
