@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class BlasrLibcpp(Package):
@@ -50,12 +51,12 @@ class BlasrLibcpp(Package):
             'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
             'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
-            'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
-            'C_INCLUDE_PATH={0}'.format(self.stage.source_path)
+            'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib)
         ]
         python('configure.py', *configure_args)
 
     def build(self, spec, prefix):
+        os.environ['CPLUS_INCLUDE_PATH'] = self.stage.source_path
         make()
 
     def install(self, spec, prefix):
@@ -63,10 +64,10 @@ class BlasrLibcpp(Package):
         install_tree('hdf', prefix.hdf)
         install_tree('pbdata', prefix.pbdata)
 
-    def setup_dependent_environment(self, spack_env, run_env):
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             self.spec.prefix.hdf)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             self.spec.prefix.alignment)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             self.spec.prefix.pbdata)
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('LD_LIBRARY_PATH',
+                               self.spec.prefix.hdf)
+        spack_env.prepend_path('LD_LIBRARY_PATH',
+                               self.spec.prefix.alignment)
+        spack_env.prepend_path('LD_LIBRARY_PATH',
+                               self.spec.prefix.pbdata)
