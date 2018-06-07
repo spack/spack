@@ -1,4 +1,4 @@
-version: '3'
+version: '3.1'
 services:
   arch:
     build: ./spack_arch
@@ -20,6 +20,12 @@ services:
       PROMPT: "${PROMPT:-0}"
   opensuse:
     build: ./spack_opensuse
+    volumes:
+      - '../../..:/spack'
+    environment:
+      PROMPT: "${PROMPT:-0}"
+  scilinux:
+    build: ./spack_scilinux
     volumes:
       - '../../..:/spack'
     environment:
