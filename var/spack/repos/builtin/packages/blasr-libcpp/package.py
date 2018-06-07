@@ -51,7 +51,7 @@ class BlasrLibcpp(Package):
             'PBBAM_LIB={0}'.format(self.spec['pbbam'].prefix.lib),
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
             'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
-            'CPATH={0}'.format(self.stage.source_path)
+            'C_INCLUDE_PATH={0}'.format(self.stage.source_path)
         ]
         python('configure.py', *configure_args)
 
