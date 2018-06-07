@@ -123,6 +123,10 @@ def test_develop():
     assert_ver_gt('head', '9.0')
     assert_ver_gt('trunk', '9.0')
     assert_ver_gt('develop', '9.0')
+    # hierarchical develop-like versions
+    assert_ver_gt('develop', 'master')
+    assert_ver_gt('master', 'head')
+    assert_ver_gt('head', 'trunk')
     assert_ver_gt('9.0', 'system')
     # not develop
     assert_ver_lt('mydevelopmentnightmare', '1.1')
