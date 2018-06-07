@@ -176,6 +176,14 @@ packages:
             hpe-mpi%intel: /opt/hpe/hpc/mpt/mpt-2.16
             hpe-mpi%pgi: /opt/hpe/hpc/mpt/mpt-2.16
         version: [2.16]
+    mvapich2:
+        paths:
+            mvapich2@ime: /opt/ddn/mvapich
+        version: [ime]
+    openmpi:
+        paths:
+            openmpi@ime: /opt/ddn/openmpi
+        version: [ime]
     all:
         compiler: [gcc@4.8.5, gcc@5.4.0, intel]
         providers:
