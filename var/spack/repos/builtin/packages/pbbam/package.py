@@ -44,9 +44,12 @@ class Pbbam(CMakePackage):
     conflicts('%gcc@:5.2.0')
 
     def cmake_args(self):
-        options = [
-            '-DPacBioBAM_build_tests:BOOL=OFF'
-        ]
+        options = []
+        
+        if self.run_tests:
+            options.append('-DPacBioBAM_build_tests:BOOL=ON')
+        else:
+            options.append('-DPacBioBAM_build_tests:BOOL=OFF')
 
         return options
 
