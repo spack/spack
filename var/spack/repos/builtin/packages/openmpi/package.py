@@ -239,6 +239,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('valgrind~mpi', when='+memchecker')
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('slurm', when='schedulers=slurm')
+    depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -344,8 +346,11 @@ class Openmpi(AutotoolsPackage):
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
         #
         # adding --enable-static silently disables slurm support via pmi/pmi2
-        if not spec.satisfies('schedulers=slurm'):
+        if spec.satisfies('schedulers=slurm'):
+            config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+        else:
             config_args.append('--enable-static')
+            config_args.extend(self.with_or_without('pmi'))
 
         if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
@@ -358,8 +363,6 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
         config_args.extend(self.with_or_without('schedulers'))
-        # PMI
-        config_args.extend(self.with_or_without('pmi'))
 
         config_args.extend(self.enable_or_disable('memchecker'))
         if spec.satisfies('+memchecker', strict=True):
