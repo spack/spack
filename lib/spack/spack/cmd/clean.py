@@ -32,6 +32,7 @@ import spack.caches
 import spack.cmd
 import spack.repo
 import spack.stage
+from spack.paths import spack_root
 
 description = "remove temporary build files and/or downloaded archives"
 section = "build"
@@ -95,15 +96,15 @@ def clean(parser, args):
         spack.caches.misc_cache.destroy()
 
     if args.python_cache:
-        tty.msg('Removing python cache files.')
-        for root, dirs, files in os.walk(os.environ['SPACK_ROOT']):
+        tty.msg('Removing python cache files')
+        for root, dirs, files in os.walk(spack_root):
             for f in files:
                 if f.endswith('.pyc') or f.endswith('.pyo'):
                     fname = os.path.join(root, f)
-                    tty.debug('removing {0}'.format(fname))
+                    tty.debug('Removing {0}'.format(fname))
                     os.remove(fname)
             for d in dirs:
                 if d == '__pycache__':
                     dname = os.path.join(root, d)
-                    tty.debug('removing {0}'.format(dname))
+                    tty.debug('Removing {0}'.format(dname))
                     shutil.rmtree(dname)
