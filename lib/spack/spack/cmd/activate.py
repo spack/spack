@@ -46,6 +46,15 @@ def setup_parser(subparser):
 
 
 def activate(parser, args):
+
+    # Somehow activation is sensible to quoting on the command line
+    # The code below is a quick fix to parse the spec as if it was unquoted,
+    # and work around a subtle bug. The bug itself is still to be found
+    pieces = []
+    for x in args.spec:
+        pieces.extend(x.split())
+    args.spec = pieces
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))
