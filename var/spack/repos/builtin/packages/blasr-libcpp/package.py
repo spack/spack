@@ -52,15 +52,6 @@ class BlasrLibcpp(Package):
             'HDF5_INC={0}'.format(self.spec['hdf5'].prefix.include),
             'HDF5_LIB={0}'.format(self.spec['hdf5'].prefix.lib),
         ]
-    def configure(self, prefix):
-        configure_args = [
-            'LIBBLASR_INC={0}'.format(self.['alignment'].prefix.include),
-            'LIBBLASR_LIB={0}'.format(self.['alignment'].prefix.lib),
-            'LIBPBDATA_LIB={0}'.format(self.['pbdata'].prefix.lib),
-            'LIBPBDATA_INC={0}'.format(self.['pbdata'].prefix.include),
-            'LIBPBIHDF_INC={0}'.format(self.['hdf'].prefix.include),
-            'LIBPBIHDF_LIB={0}'.format(self.['hdf'].prefix.lib)
-        ]
         python('configure.py', *configure_args)
 
     def build(self, spec, prefix):
@@ -73,15 +64,8 @@ class BlasrLibcpp(Package):
 
     def setup_dependent_environment(self, spack_env, run_env):
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             self.spec['blasr-libcpp'].prefix.hdf)
+                             self.spec.prefix.hdf)
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             self.spec['blasr-libcpp'].prefix.alignment)
+                             self.spec.prefix.alignment)
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             self.spec['blasr-libcpp'].prefix.pbdata)
-        run_env.prepend_path('PATH', self.spec.prefix.utils)
-
-        # hdf has +mpi by default, so handle that possibility
-        if ('+mpi' in self.spec['hdf5']):
-            spack_env.set('CC', self.spec['mpi'].mpicc)
-            spack_env.set('CXX', self.spec['mpi'].mpicxx)
-
+                             self.spec.prefix.pbdata)
