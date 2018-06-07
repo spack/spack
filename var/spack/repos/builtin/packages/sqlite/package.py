@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 from spack import architecture
+from spack.build_environment import dso_suffix
 
 
 class Sqlite(AutotoolsPackage):
@@ -92,7 +93,8 @@ class Sqlite(AutotoolsPackage):
     @run_after('install')
     def build_libsqlitefunctions(self):
         if '+functions' in self.spec:
-            gcc = which('gcc')
-            gcc('-fPIC', '-lm', '-shared', 'extension-functions.c', '-o',
-                'libsqlitefunctions.so')
-            install('libsqlitefunctions.so', self.prefix.lib)
+            libraryname = 'libsqlitefunctions.' + dso_suffix
+            cc = Executable(spack_cc)
+            cc(self.compiler.pic_flag, '-lm', '-shared',
+                'extension-functions.c', '-o', libraryname)
+            install(libraryname, self.prefix.lib)
