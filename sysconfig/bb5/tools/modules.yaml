@@ -43,6 +43,7 @@ modules:
       - mvapich2
       - mpich
       - intel-mpi
+      - hpe-mpi
       - openmpi
       - ior
       - darshan-runtime
@@ -102,6 +103,7 @@ modules:
       - mvapich2
       - mpich
       - intel-mpi
+      - hpe-mpi
       - openmpi
       - ior
       - darshan-runtime
