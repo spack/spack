@@ -22,19 +22,43 @@ modules:
     '':
       - CMAKE_PREFIX_PATH
   lmod:
+    all:
+      filter:
+        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     core_compilers:
       - 'gcc@4.8.5'
     hash_length: 0
     whitelist:
       - 'gcc'
-      - 'pgi'
       - 'intel-parallel-studio'
       - 'llvm'
+      - 'pgi'
     blacklist:
       - '%gcc'
-    all:
-      filter:
-        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+    gcc:
+      environment:
+        set:
+          MPICC_CC: 'gcc'
+          MPICXX_CXX: 'g++'
+          MPIF90_F90: 'gfortran'
+    intel-parallel-studio:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    pgi:
+      environment:
+        set:
+          MPICC_CC: 'pgcc'
+          MPICXX_CXX: 'pgc++'
+          MPIF90_F90: 'pgfortran'
+    llvm:
+      environment:
+        set:
+          MPICC_CC: 'clang'
+          MPICXX_CXX: 'clang++'
+          MPIF90_F90: 'gfortran'
   tcl:
     all:
       filter:
@@ -48,3 +72,27 @@ modules:
       - 'llvm'
     blacklist:
       - '%gcc'
+    gcc:
+      environment:
+        set:
+          MPICC_CC: 'gcc'
+          MPICXX_CXX: 'g++'
+          MPIF90_F90: 'gfortran'
+    intel-parallel-studio:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    pgi:
+      environment:
+        set:
+          MPICC_CC: 'pgcc'
+          MPICXX_CXX: 'pgc++'
+          MPIF90_F90: 'pgfortran'
+    llvm:
+      environment:
+        set:
+          MPICC_CC: 'clang'
+          MPICXX_CXX: 'clang++'
+          MPIF90_F90: 'gfortran'
