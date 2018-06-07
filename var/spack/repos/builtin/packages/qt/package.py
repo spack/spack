@@ -378,6 +378,12 @@ class Qt(Package):
                 '-skip', 'webglplugin',
             ])
 
+        if self.version > Version('5.8'):
+            # relies on a system installed wayland, i.e. no spack package yet
+            # https://wayland.freedesktop.org/ubuntu16.04.html
+            # https://wiki.qt.io/QtWayland
+            config_args.extend(['-skip', 'wayland'])
+
         configure('-no-eglfs',
                   '-no-directfb',
                   '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-'),
