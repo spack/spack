@@ -99,6 +99,9 @@ class Hydrogen(CMakePackage):
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
 
+    conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +
+              "Did you mean to use Elemental instead?")
+
     @property
     def libs(self):
         shared = True if '+shared' in self.spec else False
@@ -106,12 +109,6 @@ class Hydrogen(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
-    @when('@:0.98.0')
-    def cmake_args(self):
-        raise InstallError("Hydrogen did not exist before v0.99." +
-                           "Did you mean to use Elemental instead?")
-
-    @when('@0.99:')
     def cmake_args(self):
         spec = self.spec
 
