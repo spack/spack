@@ -70,13 +70,11 @@ modules:
       - imb
       - osu-micro-benchmarks
       - stat
-      - 'cmake%gcc@4.8.5'
     blacklist:
       - '%gcc'
       - '%intel'
       - '%clang'
       - '%pgi'
-      - 'cmake'
     likwid@:4.3.1:
       environment:
         set:
@@ -127,13 +125,11 @@ modules:
       - likwid
       - hpl
       - imb
-      - 'cmake%gcc@4.8.5'
     blacklist:
       - '%gcc'
       - '%intel'
       - '%clang'
       - '%pgi'
-      - 'cmake'
     likwid@:4.3.1:
       environment:
         set:
