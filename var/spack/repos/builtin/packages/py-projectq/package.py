@@ -36,7 +36,7 @@ class PyProjectq(PythonPackage):
 
     # URL and HOMEPAGE
     homepage = "https://projectq.ch"
-    url      = "https://github.com/projectq-framework"
+    url      = "https://github.com/ProjectQ-Framework/ProjectQ/archive/v0.3.6.tar.gz"
 
     # Provided python modules
     import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
@@ -44,9 +44,11 @@ class PyProjectq(PythonPackage):
                       'projectq.setups', 'projectq.types']
 
     # Versions
-    version('develop', branch='develop', git='https://github.com/projectq-framework/projectq.git')
-    version('master', branch='master', git='https://github.com/projectq-framework/projectq.git')
-
+    version('develop', branch='develop',
+            git='https://github.com/projectq-framework/projectq.git')
+    version('0.3.6', commit='fa484fe037a3a1772127bbd00fe4628ddba34611',
+            git='https://github.com/projectq-framework/projectq.git')
+    
     # Dependencies
     depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
@@ -55,5 +57,5 @@ class PyProjectq(PythonPackage):
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-pytest@3.1.0:', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
-    # conflict with pybind11@2.2.0 -> see requirements.txt on github
+    # conflict with pybind11@2.2.0 -> see requirements.txt
     depends_on('py-pybind11@1.7:2.1,2.2.1:', type=('build', 'run'))
