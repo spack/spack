@@ -63,7 +63,10 @@ class Sqlite(AutotoolsPackage):
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
-    variant('functions', default=False)
+    variant('functions', default=False,
+            description='Provide mathematical and string extension functions '
+                        'for SQL queries using the loadable extensions '
+                        'mechanism.')
 
     resource(name='extension-functions',
              url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',

@@ -35,7 +35,6 @@ class Sqlitebrowser(CMakePackage):
 
     version('3.10.1', '66cbe41f9da5be80067942ed3816576c')
 
-    # depends_on('c++11')
     msg = 'sqlitebrowser requires C++11 support'
     conflicts('%gcc@:4.8.0', msg=msg)
     conflicts('%clang@:3.2', msg=msg)
@@ -45,7 +44,3 @@ class Sqlitebrowser(CMakePackage):
 
     depends_on('sqlite@3:+functions')
     depends_on('qt@5.5:')
-
-    def cmake_args(self):
-        args = []
-        return args
