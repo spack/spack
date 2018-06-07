@@ -48,7 +48,7 @@ class PyProjectq(PythonPackage):
             git='https://github.com/projectq-framework/projectq.git')
     version('0.3.6', commit='fa484fe037a3a1772127bbd00fe4628ddba34611',
             git='https://github.com/projectq-framework/projectq.git')
-    
+
     # Dependencies
     depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
