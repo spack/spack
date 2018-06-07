@@ -170,7 +170,13 @@ packages:
             intel-parallel-studio@cluster.2018.1%pgi: $APPS_DIR_PATH/compilers/install/intel-parallel-studio-cluster.2018.1
         buildable: False
         version: [cluster.2018.1]
+    hpe-mpi:
+        paths:
+            hpe-mpi%gcc: /opt/hpe/hpc/mpt/mpt-2.16
+            hpe-mpi%intel: /opt/hpe/hpc/mpt/mpt-2.16
+            hpe-mpi%pgi: /opt/hpe/hpc/mpt/mpt-2.16
+        version: [2.16]
     all:
         compiler: [gcc@4.8.5, gcc@5.4.0, intel]
         providers:
-            mpi: [intel-parallel-studio]
+            mpi: [hpe-mpi, intel-parallel-studio]
