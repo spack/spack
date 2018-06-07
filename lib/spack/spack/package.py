@@ -1176,6 +1176,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Create a hash based on the sources and logic used to build the
         package. This includes the contents of all applied patches and the
         contents of applicable functions in the package subclass."""
+        if not self.spec.concrete:
+            err_msg = ("Cannot invoke content_hash on a package"
+                       " if the associated spec is not concrete")
+            raise spack.error.SpackError(err_msg)
+
         hashContent = list()
         source_id = fs.for_package_version(self, self.version).source_id()
         if not source_id:
