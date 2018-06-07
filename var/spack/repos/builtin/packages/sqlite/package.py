@@ -72,7 +72,8 @@ class Sqlite(AutotoolsPackage):
              url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
              md5='3a32bfeace0d718505af571861724a43',
              expand=False,
-             placement={'extension-functions.c?get=25': 'extension-functions.c'},
+             placement={'extension-functions.c?get=25':
+                        'extension-functions.c'},
              when='+functions')
 
     def get_arch(self):
@@ -92,5 +93,6 @@ class Sqlite(AutotoolsPackage):
     def build_libsqlitefunctions(self):
         if '+functions' in self.spec:
             gcc = which('gcc')
-            gcc('-fPIC', '-lm', '-shared', 'extension-functions.c', '-o', 'libsqlitefunctions.so')
+            gcc('-fPIC', '-lm', '-shared', 'extension-functions.c', '-o',
+                'libsqlitefunctions.so')
             install('libsqlitefunctions.so', self.prefix.lib)
