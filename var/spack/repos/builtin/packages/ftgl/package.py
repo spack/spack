@@ -49,10 +49,9 @@ class Ftgl(AutotoolsPackage):
     depends_on('freetype@2.0.9:')
 
     @property
+    @when('@2.1.2')
     def configure_directory(self):
-        subdir = ''
-        if self.version == Version('2.1.2'):
-            subdir = 'unix'
-            if sys.platform == 'darwin':
-                subdir = 'mac'
+        subdir = 'unix'
+        if sys.platform == 'darwin':
+            subdir = 'mac'
         return os.path.join(self.stage.source_path, subdir)
