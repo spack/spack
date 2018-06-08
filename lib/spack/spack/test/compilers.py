@@ -130,14 +130,9 @@ def flag_value(flag, spec):
         compiler_entry['spec'] = spec
         # Disable faulty id()-based cache (issue #7647).
         compilers._compiler_cache = {}
-        # Note that compiler is used within an eval() statement below
-        # but not otherwise, so we need to ignore flake8 error F841.
-        # Unfortunately the error is tagged to the line with the = on
-        # it, so we cannot continue the line and must therefore also
-        # deactivate the long line error, E501.
-        compiler = compilers.compiler_from_config_entry(compiler_entry)  # noqa: F841, E501
+        compiler = compilers.compiler_from_config_entry(compiler_entry)
 
-    return eval("compiler.{0}".format(flag))
+    return getattr(compiler, flag)
 
 
 # Utility function to verify that the expected exception is thrown for
