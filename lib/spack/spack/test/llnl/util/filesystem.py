@@ -104,11 +104,81 @@ class TestInstall:
 
 
 class TestCopyTree:
-    pass
+    """Tests for ``filesystem.copy_tree``"""
+
+    def test_existing_dir(self, stage):
+        """Test copying to an existing directory."""
+
+        with fs.working_dir(stage.path):
+            fs.copy_tree('source', 'dest')
+
+            assert os.path.exists('dest/a/b/2')
+            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+
+    def test_non_existing_dir(self, stage):
+        """Test copying to a non-existing directory."""
+
+        with fs.working_dir(stage.path):
+            fs.copy_tree('source', 'dest/sub/directory')
+
+            assert os.path.exists('dest/sub/directory/a/b/2')
+
+    def test_symlinks_true(self, stage):
+        """Test copying with symlink preservation."""
+
+        with fs.working_dir(stage.path):
+            fs.copy_tree('source', 'dest', symlinks=True)
+
+            assert os.path.exists('dest/2')
+            assert os.path.islink('dest/2')
+
+    def test_symlinks_false(self, stage):
+        """Test copying without symlink preservation."""
+
+        with fs.working_dir(stage.path):
+            fs.copy_tree('source', 'dest', symlinks=False)
+
+            assert os.path.exists('dest/2')
+            assert not os.path.islink('dest/2')
 
 
 class TestInstallTree:
-    pass
+    """Tests for ``filesystem.install_tree``"""
+
+    def test_existing_dir(self, stage):
+        """Test installing to an existing directory."""
+
+        with fs.working_dir(stage.path):
+            fs.install_tree('source', 'dest')
+
+            assert os.path.exists('dest/a/b/2')
+            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+
+    def test_non_existing_dir(self, stage):
+        """Test installing to a non-existing directory."""
+
+        with fs.working_dir(stage.path):
+            fs.install_tree('source', 'dest/sub/directory')
+
+            assert os.path.exists('dest/sub/directory/a/b/2')
+
+    def test_symlinks_true(self, stage):
+        """Test installing with symlink preservation."""
+
+        with fs.working_dir(stage.path):
+            fs.install_tree('source', 'dest', symlinks=True)
+
+            assert os.path.exists('dest/2')
+            assert os.path.islink('dest/2')
+
+    def test_symlinks_false(self, stage):
+        """Test installing without symlink preservation."""
+
+        with fs.working_dir(stage.path):
+            fs.install_tree('source', 'dest', symlinks=False)
+
+            assert os.path.exists('dest/2')
+            assert not os.path.islink('dest/2')
 
 
 def test_move_transaction_commit(tmpdir):
