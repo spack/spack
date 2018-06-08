@@ -255,6 +255,26 @@ class Boost(Package):
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
+    def cxxstd_to_flag(self, std):
+        flag = ''
+        if self.spec.variants['cxxstd'].value == '98':
+            flag = self.compiler.cxx98_flag
+        elif self.spec.variants['cxxstd'].value == '11':
+            flag = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            flag = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            flag = self.compiler.cxx17_flag
+        elif self.spec.variants['cxxstd'].value == 'default':
+            # Let the compiler do what it usually does.
+            pass
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
+                    "cxxstd={0}".format(spec.variants['cxxstd'].value))
+        return flag
+
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
             options.append('variant=debug')
@@ -304,24 +324,16 @@ class Boost(Package):
                 'toolset=%s' % self.determine_toolset(spec)
             ])
 
+        # Other C++ flags.
         cxxflags = []
-        if spec.variants['cxxstd'].value == '98':
-            cxxflags.append(self.compiler.cxx98_flag)
-        elif spec.variants['cxxstd'].value == '11':
-            cxxflags.append(self.compiler.cxx11_flag)
-        elif spec.variants['cxxstd'].value == '14':
-            cxxflags.append(self.compiler.cxx14_flag)
-        elif spec.variants['cxxstd'].value == '17':
-            cxxflags.append(self.compiler.cxx17_flag)
-        elif spec.variants['cxxstd'].value == 'default':
-            # Let the compiler do what it usually does.
-            pass
-        else:
-            # The user has selected a (new?) legal value that we've
-            # forgotten to deal with here.
-            tty.die(
-                "INTERNAL ERROR: cannot accommodate unexpected variant ",
-                "cxxstd={0}".format(spec.variants['cxxstd'].value))
+
+        # Deal with C++ standard.
+        if spec.satisfies('@1.66:'):
+            options.append('cxxstd={0}'.format(spec.variants['cxxstd'].value))
+        else:  # Add to cxxflags for older Boost.
+            flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
+            if flag:
+                cxxflags.append(flag)
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
