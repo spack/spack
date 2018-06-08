@@ -48,6 +48,7 @@ class Root(CMakePackage):
 
     # Old versions
     version('6.10.08', '88532f68e9e14691f530c60b55beb698')
+    version('6.09.02', '4188dfeafb72df339a3d688fe92f57ec')
     version('6.08.06', 'bcf0be2df31a317d25694ad2736df268')
     version('6.06.08', '6ef0fe9bd9f88f3ce8890e3651142ee4')
     version('6.06.06', '4308449892210c8d36e36924261fea26')
