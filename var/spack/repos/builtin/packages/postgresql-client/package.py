@@ -66,9 +66,9 @@ class PostgresqlClient(AutotoolsPackage):
     depends_on('readline', when='lineedit=readline')
     depends_on('libedit', when='lineedit=libedit')
     depends_on('openssl')
-    depends_on('tcl', when='+tcl')
-    depends_on('perl', when='+perl')
-    depends_on('python', when='+python')
+    extends('tcl', when='+tcl')
+    extends('perl', when='+perl')
+    extends('python', when='+python')
 
     def configure_args(self):
         config_args = ["--with-openssl"]
