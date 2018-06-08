@@ -29,7 +29,7 @@ class RMice(RPackage):
     """Multiple imputation using Fully Conditional Specification (FCS)
     implemented by the MICE algorithm as described in Van Buuren and
     Groothuis-Oudshoorn (2011) <doi:10.18637/jss.v045.i03>.
-    
+
     Each variable has its own imputation model. Built-in imputation models are
     provided for continuous data (predictive mean matching, normal), binary
     data (logistic regression), unordered categorical data (polytomous logistic
