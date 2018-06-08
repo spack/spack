@@ -25,7 +25,7 @@
 from spack import *
 
 
-class GmapGsnap(Package):
+class GmapGsnap(AutotoolsPackage):
     """GMAP: A Genomic Mapping and Alignment Program for
        mRNA and EST Sequences, and GSNAP: Genomic Short-read
        Nucleotide Alignment Program"""
@@ -45,33 +45,25 @@ class GmapGsnap(Package):
         multi=True
     )
 
-    def install(self, spec, prefix):
+    def configure(self, spec, prefix):
         configure = Executable('../configure')
 
-        if 'simd=avx2' in self.spec:
-            with working_dir('avx2', create=True):
-                configure('--with-simd-level=avx2',
+        for simd in spec.variants['simd'].value:
+            with working_dir(simd, create=True):
+                configure('--with-simd-level={0}'.format(simd),
                           '--prefix={0}'.format(prefix))
-                make()
-                make('install')
 
-        if 'simd=sse42' in self.spec:
-            with working_dir('sse42', create=True):
-                configure('--with-simd-level=sse42',
-                          '--prefix={0}'.format(prefix))
+    def build(self, spec, prefix):
+        for simd in spec.variants['simd'].value:
+            with working_dir(simd):
                 make()
-                make('install')
 
-        if 'simd=avx512' in self.spec:
-            with working_dir('avx512', create=True):
-                configure('--with-simd-level=avx512',
-                          '--prefix={0}'.format(prefix))
-                make()
-                make('install')
+    def check(self):
+        for simd in self.spec.variants['simd'].value:
+            with working_dir(simd):
+                make('check')
 
-        if 'simd=sse2' in self.spec:
-            with working_dir('sse2', create=True):
-                configure('--with-simd-level=sse2',
-                          '--prefix={0}'.format(prefix))
-                make()
+    def install(self, spec, prefix):
+        for simd in spec.variants['simd'].value:
+            with working_dir(simd):
                 make('install')
