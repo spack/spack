@@ -37,6 +37,7 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
+    version('2018.4', '5e2e6ba0e25624a94331c945856551c2')
     version('2018.3', 'cd2e136598ffa5c136f077ee85a35b4c')
     version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae')
     version('2018.1', 'b2f2fa09adf44a22f4024049907f774b')
