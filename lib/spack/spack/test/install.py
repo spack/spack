@@ -25,7 +25,7 @@
 import os
 import pytest
 
-import spack
+import spack.repo
 import spack.store
 from spack.spec import Spec
 
@@ -132,7 +132,7 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
 
 
 def test_installed_dependency_request_conflicts(
-        install_mockery, mock_fetch, refresh_builtin_mock):
+        install_mockery, mock_fetch, mutable_mock_packages):
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()

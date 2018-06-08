@@ -46,7 +46,7 @@ class PyPybind11(CMakePackage):
     version('2.1.1', '5518988698df937ccee53fb6ba91d12a')
     version('2.1.0', '3cf07043d677d200720c928569635e12')
 
-    depends_on('py-pytest', type=('build'))
+    depends_on('py-pytest', type='test')
 
     extends('python')
 
@@ -59,4 +59,8 @@ class PyPybind11(CMakePackage):
         args = []
         args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                     % self.spec['python'].command.path)
+        args += [
+            '-DPYBIND11_TEST:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF')
+        ]
         return args

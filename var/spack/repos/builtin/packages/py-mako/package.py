@@ -36,6 +36,6 @@ class PyMako(PythonPackage):
     version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
 
     depends_on('py-setuptools', type='build')
-    # depends_on('py-mock',   type='test')  # TODO: Add test deptype
-    # depends_on('py-pytest', type='test')  # TODO: Add test deptype
+    depends_on('py-mock',   type='test')
+    depends_on('py-pytest', type='test')
     depends_on('py-markupsafe@0.9.2:', type=('build', 'run'))

@@ -18,12 +18,15 @@ config:
   # You can use $spack here to refer to the root of the spack instance.
   install_tree: $spack/opt/spack
 
+
   # Locations where templates should be found
   template_dirs:
     - $spack/templates
 
+
   # default directory layout
   directory_layout: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+
 
   # Locations where different types of modules should be installed.
   module_roots:
@@ -72,6 +75,15 @@ config:
   # If set to true, `spack install` and friends will NOT clean
   # potentially harmful variables from the build environment. Use wisely.
   dirty: false
+
+
+  # When set to true, concurrent instances of Spack will use locks to
+  # avoid modifying the install tree, database file, etc. If false, Spack
+  # will disable all locking, but you must NOT run concurrent instances
+  # of Spack.  For filesystems that don't support locking, you should set
+  # this to false and run one Spack at a time, but otherwise we recommend
+  # enabling locks.
+  locks: true
 
 
   # The default number of jobs to use when running `make` in parallel.

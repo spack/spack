@@ -26,7 +26,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir
 
-import spack
+import spack.paths
 import spack.cmd
 from spack.main import SpackCommand
 from spack.util.executable import which
@@ -38,7 +38,7 @@ pytestmark = pytest.mark.skipif(
 blame = SpackCommand('blame')
 
 
-def test_blame_by_modtime(builtin_mock):
+def test_blame_by_modtime(mock_packages):
     """Sanity check the blame command to make sure it works."""
     out = blame('--time', 'mpich')
     assert 'LAST_COMMIT' in out
@@ -46,7 +46,7 @@ def test_blame_by_modtime(builtin_mock):
     assert 'EMAIL' in out
 
 
-def test_blame_by_percent(builtin_mock):
+def test_blame_by_percent(mock_packages):
     """Sanity check the blame command to make sure it works."""
     out = blame('--percent', 'mpich')
     assert 'LAST_COMMIT' in out
@@ -54,16 +54,16 @@ def test_blame_by_percent(builtin_mock):
     assert 'EMAIL' in out
 
 
-def test_blame_file(builtin_mock):
+def test_blame_file(mock_packages):
     """Sanity check the blame command to make sure it works."""
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         out = blame('bin/spack')
     assert 'LAST_COMMIT' in out
     assert 'AUTHOR' in out
     assert 'EMAIL' in out
 
 
-def test_blame_by_git(builtin_mock, capfd):
+def test_blame_by_git(mock_packages, capfd):
     """Sanity check the blame command to make sure it works."""
     with capfd.disabled():
         out = blame('--git', 'mpich')

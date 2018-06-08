@@ -47,8 +47,8 @@ class Opencv(CMakePackage):
     version('3.4.0',    '170732dc760e5f7ddeccbe53ba5d16a6')
     version('3.3.1',    'b1ed9aea030bb5bd9df28524d97de84c')
     version('3.3.0',    '98a4e4c6f23ec725e808a891dc11eec4')
-    version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
-    version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
+    version('3.2.0',    '1ea44a1d98c126ad40079d8eb914a72e')
+    version('3.1.0',    'a0669e22172dfc3225835b180744c9f0')
     version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
     version('2.4.13.1', 'f6d354500d5013e60dc0fc44b07a63d1')
     version('2.4.13',   '8feb45a71adad89b8017a777477c3eff')
@@ -180,27 +180,29 @@ class Opencv(CMakePackage):
 
         # 3rd party components
         args.extend([
+            '-DBUILD_IPP_IW:BOOL={0}'.format((
+                'ON' if '+ipp_iw' in spec else 'OFF')),
             '-DWITH_CUDA:BOOL={0}'.format((
                 'ON' if '+cuda' in spec else 'OFF')),
-            '-DWITH_EIGEN={0}'.format((
+            '-DWITH_EIGEN:BOOL={0}'.format((
                 'ON' if '+eigen' in spec else 'OFF')),
             '-DWITH_IPP:BOOL={0}'.format((
                 'ON' if '+ipp' in spec else 'OFF')),
-            '-DBUILD_IPP_IW:BOOL={0}'.format((
-                'ON' if '+ipp_iw' in spec else 'OFF')),
+            '-DWITH_JASPER:BOOL={0}'.format((
+                'ON' if '+jasper' in spec else 'OFF')),
             '-DWITH_JPEG:BOOL={0}'.format((
                 'ON' if '+jpeg' in spec else 'OFF')),
-            '-DWITH_OPENCL={0}'.format((
+            '-DWITH_OPENCL:BOOL={0}'.format((
                 'ON' if '+opencl' in spec else 'OFF')),
-            '-DWITH_OPENCL_SVM={0}'.format((
+            '-DWITH_OPENCL_SVM:BOOL={0}'.format((
                 'ON' if '+opencl_svm' in spec else 'OFF')),
-            '-DWITH_OPENCLAMDFFT={0}'.format((
+            '-DWITH_OPENCLAMDFFT:BOOL={0}'.format((
                 'ON' if '+openclamdfft' in spec else 'OFF')),
-            '-DWITH_OPENCLAMDBLAS={0}'.format((
+            '-DWITH_OPENCLAMDBLAS:BOOL={0}'.format((
                 'ON' if '+openclamdblas' in spec else 'OFF')),
             '-DWITH_OPENMP:BOOL={0}'.format((
                 'ON' if '+openmp' in spec else 'OFF')),
-            '-DWITH_PTHREADS_PF={0}'.format((
+            '-DWITH_PTHREADS_PF:BOOL={0}'.format((
                 'ON' if '+pthreads_pf' in spec else 'OFF')),
             '-DWITH_PNG:BOOL={0}'.format((
                 'ON' if '+png' in spec else 'OFF')),
@@ -210,8 +212,6 @@ class Opencv(CMakePackage):
                 'ON' if '+tiff' in spec else 'OFF')),
             '-DWITH_VTK:BOOL={0}'.format((
                 'ON' if '+vtk' in spec else 'OFF')),
-            '-DWITH_ZLIB:BOOL={0}'.format((
-                'ON' if '+zlib' in spec else 'OFF')),
         ])
 
         # Media I/O
@@ -219,50 +219,49 @@ class Opencv(CMakePackage):
             zlib = spec['zlib']
             args.extend([
                 '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(zlib.prefix.lib,
-                              'libz.{0}'.format(dso_suffix))),
-                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
+                    zlib.libs[0]),
+                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(
+                    zlib.headers.directories[0])
             ])
 
         if '+png' in spec:
             libpng = spec['libpng']
             args.extend([
                 '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(libpng.prefix.lib,
-                              'libpng.{0}'.format(dso_suffix))),
-                '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
+                    libpng.libs[0]),
+                '-DPNG_INCLUDE_DIR:PATH={0}'.format(
+                    libpng.headers.directories[0])
             ])
 
         if '+jpeg' in spec:
             libjpeg = spec['jpeg']
             args.extend([
                 '-DBUILD_JPEG:BOOL=OFF',
-                '-DJPEG_LIBRARY:FILEPATH={0}'.format(
-                    join_path(libjpeg.prefix.lib,
-                              'libjpeg.{0}'.format(dso_suffix))),
-                '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
+                '-DJPEG_LIBRARY:FILEPATH={0}'.format(libjpeg.libs[0]),
+                '-DJPEG_INCLUDE_DIR:PATH={0}'.format(
+                    libjpeg.headers.directories[0])
             ])
 
         if '+tiff' in spec:
             libtiff = spec['libtiff']
             args.extend([
                 '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(libtiff.prefix.lib,
-                              'libtiff.{0}'.format(dso_suffix))),
-                '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
+                    libtiff.libs[0]),
+                '-DTIFF_INCLUDE_DIR:PATH={0}'.format(
+                    libtiff.headers.directories[0])
             ])
 
         if '+jasper' in spec:
             jasper = spec['jasper']
             args.extend([
                 '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
-                    'DEBUG' if '+debug' in spec else 'RELEASE'),
-                    join_path(jasper.prefix.lib,
-                              'libjasper.{0}'.format(dso_suffix))),
-                '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
+                    'DEBUG' if 'build_type=Debug' in spec else 'RELEASE'),
+                    jasper.libs[0]),
+                '-DJASPER_INCLUDE_DIR:PATH={0}'.format(
+                    jasper.headers.directories[0])
             ])
 
         # GUI

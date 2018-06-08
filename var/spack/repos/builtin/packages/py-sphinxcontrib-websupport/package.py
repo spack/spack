@@ -42,6 +42,5 @@ class PySphinxcontribWebsupport(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest', type='test')
-    # depends_on('py-mock',   type='test')
+    depends_on('py-pytest', type='test')
+    depends_on('py-mock',   type='test')

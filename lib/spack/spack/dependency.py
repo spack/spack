@@ -26,7 +26,7 @@
 """
 from six import string_types
 
-import spack
+import spack.spec
 
 
 #: The types of dependency relationships that Spack understands.

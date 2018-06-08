@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import spack
+import spack.paths
 from llnl.util import tty
 
 
@@ -35,9 +35,10 @@ def print_module_placeholder_help():
             "To initialize spack's shell commands, you must run one of",
             "the commands below.  Choose the right command for your shell.",
             "", "For bash and zsh:",
-            "    . %s/setup-env.sh" % spack.share_path, "",
-            "For csh and tcsh:", "    setenv SPACK_ROOT %s" % spack.prefix,
-            "    source %s/setup-env.csh" % spack.share_path, "",
+            "    . %s/setup-env.sh" % spack.paths.share_path, "",
+            "For csh and tcsh:",
+            "    setenv SPACK_ROOT %s" % spack.paths.prefix,
+            "    source %s/setup-env.csh" % spack.paths.share_path, "",
             "This exposes a 'spack' shell function, which you can use like",
             "    $ spack load package-foo", "",
             "Running the Spack executable directly (for example, invoking",
