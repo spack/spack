@@ -76,9 +76,9 @@ class IntelTbb(Package):
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: platform_os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: platform_os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: platform_os=centos6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
