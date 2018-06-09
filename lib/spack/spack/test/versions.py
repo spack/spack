@@ -254,6 +254,7 @@ def test_in_list():
     assert_in('1.5', ['1.5', '1.2:1.3'])
     assert_not_in('1.4', ['1.5', '1.2:1.3'])
 
+    
     assert_in('1.2.5:1.2.7', [':'])
     assert_in('1.2.5:1.2.7', ['1.5', '1.2:1.3'])
     assert_not_in('1.2.5:1.5', ['1.5', '1.2:1.3'])
@@ -264,7 +265,13 @@ def test_ranges_overlap():
     assert_overlaps('1.2', '1.2')
     assert_overlaps('1.2.1', '1.2.1')
     assert_overlaps('1.2.1b', '1.2.1b')
-
+#    assert_overlaps('1.2', '1.2.0')
+#    assert_overlaps('1.2.0', '1.2')
+#    assert_no_overlap('1.2.1', '1.2')
+#    assert_no_overlap('1.2', '1.2.1')
+#    assert_no_overlap('1.2.1', ':1.2')
+#    assert_no_overlap(':1.2', '1.2.1')
+    
     assert_overlaps('1.2:1.7', '1.6:1.9')
     assert_overlaps(':1.7', '1.6:1.9')
     assert_overlaps(':1.7', ':1.9')
@@ -359,6 +366,7 @@ def test_union_with_containment():
 
 
 def test_basic_version_satisfaction():
+    assert_satisfies('1.2.0',   '1.2')
     assert_satisfies('4.7.3',   '4.7.3')
 
     assert_satisfies('4.7.3',   '4.7')
@@ -369,6 +377,7 @@ def test_basic_version_satisfaction():
     assert_satisfies('4.7.3b2', '4')
     assert_satisfies('4.7b6',   '4')
 
+    assert_does_not_satisfy('1.2',     '1.2.0')
     assert_does_not_satisfy('4.8.0', '4.9')
     assert_does_not_satisfy('4.8',   '4.9')
     assert_does_not_satisfy('4',     '4.9')
