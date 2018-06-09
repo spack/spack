@@ -177,7 +177,7 @@ class Git(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('tk',       type='run', when='+tcltk')
+    depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
     # See the comment in setup_environment re EXTLIBS.
     def patch(self):
@@ -203,14 +203,10 @@ class Git(AutotoolsPackage):
             spack_env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 
-        # gitk requires tk's wish to be found in $PATH.
-        if '+tcltk' in self.spec:
-            run_env.prepend_path('PATH', self.spec['tk'].prefix.bin)
-
     def configure_args(self):
         spec = self.spec
 
-        return [
+        configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
             '--with-iconv={0}'.format(spec['libiconv'].prefix),
@@ -219,6 +215,14 @@ class Git(AutotoolsPackage):
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
+
+        if '+tcltk' in self.spec:
+            configure_args.append('--with-tcltk={0}'.format(
+                self.spec['tk'].prefix.bin.wish))
+        else:
+            configure_args.append('--without-tcltk')
+
+        return configure_args
 
     @run_after('configure')
     def filter_rt(self):
