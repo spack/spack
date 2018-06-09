@@ -254,7 +254,6 @@ def test_in_list():
     assert_in('1.5', ['1.5', '1.2:1.3'])
     assert_not_in('1.4', ['1.5', '1.2:1.3'])
 
-    
     assert_in('1.2.5:1.2.7', [':'])
     assert_in('1.2.5:1.2.7', ['1.5', '1.2:1.3'])
     assert_not_in('1.2.5:1.5', ['1.5', '1.2:1.3'])
@@ -272,7 +271,7 @@ def test_ranges_overlap():
 #   These tests fail counterintuitively
 #    assert_no_overlap('1.2.1', ':1.2')
 #    assert_no_overlap(':1.2', '1.2.1')
-    
+
     assert_overlaps('1.2:1.7', '1.6:1.9')
     assert_overlaps(':1.7', '1.6:1.9')
     assert_overlaps(':1.7', ':1.9')
