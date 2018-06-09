@@ -67,9 +67,8 @@ class PyPybind11(CMakePackage):
         return args
 
     def setup_environment(self, spack_env, run_env):
-        super(PyPybind11, self).setup_environment(spack_env, run_env)
         spack_env.set('PYBIND11_USE_CMAKE', 1)
 
     def install(self, spec, prefix):
         super(PyPybind11, self).install(spec, prefix)
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--single-version-externally-managed', '--root=/', '--prefix={0}'.format(prefix))
