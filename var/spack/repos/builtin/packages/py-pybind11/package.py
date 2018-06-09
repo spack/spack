@@ -71,4 +71,5 @@ class PyPybind11(CMakePackage):
 
     def install(self, spec, prefix):
         super(PyPybind11, self).install(spec, prefix)
-        setup_py('install', '--single-version-externally-managed', '--root=/', '--prefix={0}'.format(prefix))
+        setup_py('install', '--single-version-externally-managed', '--root=/',
+                 '--prefix={0}'.format(prefix))

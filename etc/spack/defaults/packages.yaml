@@ -19,7 +19,7 @@ packages:
     providers:
       D: [ldc]
       awk: [gawk]
-      blas: [openblas]
+      blas: [intel-mkl]
       daal: [intel-daal]
       elf: [elfutils]
       gl: [mesa, opengl]
@@ -28,7 +28,7 @@ packages:
       ipp: [intel-ipp]
       java: [jdk]
       jpeg: [libjpeg-turbo, libjpeg]
-      lapack: [openblas]
+      lapack: [intel-mkl]
       mkl: [intel-mkl]
       mpe: [mpe2]
       mpi: [openmpi, mpich]
