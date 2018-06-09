@@ -265,10 +265,11 @@ def test_ranges_overlap():
     assert_overlaps('1.2', '1.2')
     assert_overlaps('1.2.1', '1.2.1')
     assert_overlaps('1.2.1b', '1.2.1b')
-#    assert_overlaps('1.2', '1.2.0')
-#    assert_overlaps('1.2.0', '1.2')
-#    assert_no_overlap('1.2.1', '1.2')
-#    assert_no_overlap('1.2', '1.2.1')
+    assert_overlaps('1.2', '1.2.0')
+    assert_overlaps('1.2.0', '1.2')
+    assert_no_overlap('1.2.1', '1.2')
+    assert_no_overlap('1.2', '1.2.1')
+#   These tests fail counterintuitively
 #    assert_no_overlap('1.2.1', ':1.2')
 #    assert_no_overlap(':1.2', '1.2.1')
     
