@@ -50,7 +50,6 @@ class PyProjectq(PythonPackage):
             git='https://github.com/projectq-framework/projectq.git')
 
     # Dependencies
-    extends('python')
     depends_on('py-setuptools', type=('build'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
