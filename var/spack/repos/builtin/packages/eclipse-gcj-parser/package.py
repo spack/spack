@@ -35,7 +35,7 @@ class EclipseGcjParser(Package):
     url = "ftp://sourceware.org/pub/java/ecj-4.8.jar"
     # Official download found at (see ecj-4.8M4.jar and ecjsrc-4.8M4.jar)
     # http://download.eclipse.org/eclipse/downloads/drops4/S-4.8M4-201712062000/
-    
+
     maintainers = ['citibeth']
 
     version('4.8', 'd7cd6a27c8801e66cbaa964a039ecfdb', expand=False)
