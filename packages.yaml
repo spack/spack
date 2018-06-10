@@ -22,12 +22,6 @@ packages:
             lapack: [openblas, intel-parallel-studio+mkl]
             scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
 
-    openssl:
-        paths:
-            openssl@system: /usr
-        version: [system]
-        buildable: False
-
     intel-parallel-studio:
         paths:
             intel-parallel-studio@cluster.2017.5%intel@17.0.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.5/intel-parallel-studio-cluster.2017.5-h4hjkh276hoh7gcbkvhfqep3oadt6nck

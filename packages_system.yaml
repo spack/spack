@@ -17,12 +17,6 @@ packages:
   all:
     compiler: [gcc@5, intel@18, pgi@18]
 
-  openssl:
-      paths:
-          openssl@system: /usr
-      version: [system]
-      buildable: False
-
   vim:
     variants: +lua +perl +python +ruby +huge
 
