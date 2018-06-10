@@ -40,7 +40,6 @@ import functools
 import glob
 import hashlib
 import inspect
-import itertools
 import os
 import re
 import shutil
@@ -1129,7 +1128,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for patch in self.patches_to_apply():
+        for patch in patches:
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
@@ -1173,19 +1172,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             touch(no_patches_file)
 
-    def patches_to_apply(self):
-        """If the patch set does not change between two invocations of spack,
-           then all patches in the set will be applied in the same order"""
-        patchesToApply = itertools.chain.from_iterable(
-            patch_list
-            for spec, patch_list in self.patches.items()
-            if self.spec.satisfies(spec))
-        return list(patchesToApply)
-
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
         package. This includes the contents of all applied patches and the
         contents of applicable functions in the package subclass."""
+        if not self.spec.concrete:
+            err_msg = ("Cannot invoke content_hash on a package"
+                       " if the associated spec is not concrete")
+            raise spack.error.SpackError(err_msg)
+
         hashContent = list()
         source_id = fs.for_package_version(self, self.version).source_id()
         if not source_id:
@@ -1199,7 +1194,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             hashContent.append(source_id.encode('utf-8'))
         hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                           for p in self.patches_to_apply())
+                           for p in self.spec.patches)
         hashContent.append(package_hash(self.spec, content))
         return base64.b32encode(
             hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()

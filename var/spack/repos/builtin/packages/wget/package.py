@@ -62,8 +62,7 @@ class Wget(AutotoolsPackage):
     depends_on('perl@5.12.0:', type='build')
     depends_on('pkgconfig', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('valgrind', type='test')
+    depends_on('valgrind', type='test')
 
     build_directory = 'spack-build'
 

@@ -67,10 +67,7 @@ class Openssl(Package):
 
     depends_on('zlib')
 
-    # TODO: 'make test' requires Perl module Test::More version 0.96
-    # TODO: uncomment when test dependency types are supported.
-    # TODO: This is commented in the meantime to avoid dependnecy bloat.
-    # depends_on('perl@5.14.0:', type='build', when='+tests')
+    depends_on('perl@5.14.0:', type='test')
 
     parallel = False
 
@@ -111,9 +108,8 @@ class Openssl(Package):
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
-        # TODO: add this back when we have a 'test' dependency type. See above.
-        # if self.run_tests:
-        #     make('test')            # 'VERBOSE=1'
+        if self.run_tests:
+            make('test')            # 'VERBOSE=1'
         make('install')
 
     @run_after('install')

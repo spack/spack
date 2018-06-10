@@ -63,6 +63,19 @@ class Sqlite(AutotoolsPackage):
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
+    variant('functions', default=False,
+            description='Provide mathematical and string extension functions '
+                        'for SQL queries using the loadable extensions '
+                        'mechanism.')
+
+    resource(name='extension-functions',
+             url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
+             md5='3a32bfeace0d718505af571861724a43',
+             expand=False,
+             placement={'extension-functions.c?get=25':
+                        'extension-functions.c'},
+             when='+functions')
+
     def get_arch(self):
         arch = architecture.Arch()
         arch.platform = architecture.platform()
@@ -75,3 +88,12 @@ class Sqlite(AutotoolsPackage):
             args.append('--build=powerpc64le-redhat-linux-gnu')
 
         return args
+
+    @run_after('install')
+    def build_libsqlitefunctions(self):
+        if '+functions' in self.spec:
+            libraryname = 'libsqlitefunctions.' + dso_suffix
+            cc = Executable(spack_cc)
+            cc(self.compiler.pic_flag, '-lm', '-shared',
+                'extension-functions.c', '-o', libraryname)
+            install(libraryname, self.prefix.lib)

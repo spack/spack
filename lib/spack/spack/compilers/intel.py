@@ -22,9 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -60,7 +59,11 @@ class Intel(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('11.1'):
-            tty.die("Only intel 11.1 and above support c++11.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          "< 11.1")
+
         elif self.version < ver('13'):
             return "-std=c++0x"
         else:
@@ -70,7 +73,10 @@ class Intel(Compiler):
     def cxx14_flag(self):
         # Adapted from CMake's Intel-CXX rules.
         if self.version < ver('15'):
-            tty.die("Only intel 15.0 and above support c++14.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++14 standard",
+                                          "cxx14_flag",
+                                          "< 15")
         elif self.version < ver('15.0.2'):
             return "-std=c++1y"
         else:
