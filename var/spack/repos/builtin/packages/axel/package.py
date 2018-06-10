@@ -33,7 +33,6 @@ class Axel(AutotoolsPackage):
 
     version('2.16.1', '3aaa7052458c66c1547bf1133609d0f2')
 
-    depends_on('pkgconf', type='build')
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
