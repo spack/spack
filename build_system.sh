@@ -26,8 +26,8 @@ for pgk in ["maven@3.3.9", "gradle@3.4", "ant@1.9.9", "sbt@0.13.12", "bazel@0.11
     install("{} %{} ^{}".format(pgk, CC, JDK))
 
 # Install non-Java packages
-packages = {"miniconda2@4.3.30": [""],
-            "miniconda3@4.3.30": [""],
+packages = {"miniconda2@4.5.4": [""],
+            "miniconda3@4.5.4": [""],
             "gcc~binutils@4.9.4": [""],
             "gcc~binutils@5.4.0": [""],
             "gcc~binutils@6.4.0": [""],
