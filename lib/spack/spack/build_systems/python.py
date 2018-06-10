@@ -30,7 +30,8 @@ from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
-
+import re
+from llnl.util.filesystem import mkdirp
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using Python
@@ -221,6 +222,17 @@ class PythonPackage(PackageBase):
         args = self.install_args(spec, prefix)
 
         self.setup_py('install', *args)
+
+        rpaths = []
+        rpaths.append(spec.prefix)
+        for d in spec.dependencies(deptype=('link', 'run')):
+            if re.match('^py-', d.name):
+                rpaths.append(d.prefix)
+
+        mkdirp(spec.prefix.bin)
+        rpaths_file = open(spec.prefix.bin.join(".spack-rpaths"), 'w')
+        rpaths_file.write("\n".join(rpaths) + "\n")
+        rpaths_file.close()
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""

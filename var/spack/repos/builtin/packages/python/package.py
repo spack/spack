@@ -208,6 +208,8 @@ class Python(AutotoolsPackage):
         spec = self.spec
         prefix = self.prefix
 
+        install(os.path.join(self.package_dir, 'sitecustomize.py'), os.path.join(prefix.lib, 'python2.7', 'site-packages'))
+
         self.sysconfigfilename = '_sysconfigdata.py'
         if spec.satisfies('@3.6:'):
             # Python 3.6.0 renamed the sys config file
