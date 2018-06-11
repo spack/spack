@@ -329,7 +329,9 @@ class Boost(Package):
 
         # Deal with C++ standard.
         if spec.satisfies('@1.66:'):
-            options.append('cxxstd={0}'.format(spec.variants['cxxstd'].value))
+            if spec.variants['cxxstd'].value != 'default':
+                options.append('cxxstd={0}'.format(
+                    spec.variants['cxxstd'].value))
         else:  # Add to cxxflags for older Boost.
             flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
             if flag:
