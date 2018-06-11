@@ -174,7 +174,15 @@ class Root(CMakePackage):
     # if not x variant, then asimage,opengl,qt4 and tiff are not needed either
     # or: if ~x then ~asimage~opengl~qt4~tiff
 
-    # ###################### Dependencies ##########################
+    # ###################### Compiler variants ########################
+
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
+    # ###################### Dependencies ##############################
 
     depends_on('pkgconfig', type='build')
 
@@ -452,6 +460,19 @@ class Root(CMakePackage):
             '-Dtcmalloc=OFF'
 
         ])
+
+        # #################### Compiler options ####################
+
+        if sys.platform == 'darwin':
+            if self.compiler.cc == 'gcc':
+                options.extend([
+                    '-DCMAKE_C_FLAGS=-D__builtin_unreachable=__builtin_trap',
+                    '-DCMAKE_CXX_FLAGS=-D__builtin_unreachable=__builtin_trap',
+                ])
+
+        options.append(
+            '-Dcxx{0}=ON'.format(self.spec.variants['cxxstd'].value)
+        )
 
         return options
 
