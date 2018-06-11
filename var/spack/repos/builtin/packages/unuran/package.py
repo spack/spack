@@ -48,7 +48,7 @@ class Unuran(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '%s' % ('--enable-shared' if '+shared' in spec else ''),
+            '--%s-shared' % ('enable' if '+shared' in spec else 'disable'),
             '--with-urgn-default=%s' % (
                 'rngstream' if '+rngstreams' in spec else 'builtin'),
             '--%s-urng-gsl' % (
