@@ -27,7 +27,7 @@ from spack import *
 
 
 class LmSensors(MakefilePackage):
-    """The lm-sensors package provides user-space support for the 
+    """The lm-sensors package provides user-space support for the
     hardware monitoring drivers in Linux."""
 
     homepage = "https://github.com/groeck/lm-sensors/"
@@ -45,4 +45,5 @@ class LmSensors(MakefilePackage):
     version('3-1-1', '2a62fb3789972756ff2ad2d3ad3f016c')
 
     def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix), 'ETCDIR={0}/etc'.format(prefix))
+        make('install', 'PREFIX={0}'.format(prefix),
+		'ETCDIR={0}/etc'.format(prefix))
