@@ -123,6 +123,9 @@ class Vtk(CMakePackage):
             # Disable wrappers for other languages.
             '-DVTK_WRAP_JAVA=OFF',
             '-DVTK_WRAP_TCL=OFF',
+
+            # Add a test change...
+            '-DSOME_UNUSED_ARGUMENT=ON',
         ]
 
         if 'darwin' in spec.architecture:

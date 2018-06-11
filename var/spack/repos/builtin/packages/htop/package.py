@@ -38,4 +38,4 @@ class Htop(AutotoolsPackage):
     depends_on('ncurses')
 
     def configure_args(self):
-        return ['--enable-shared']
+        return ['--disable-option-checking', '--enable-shared']
