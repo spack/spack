@@ -51,6 +51,30 @@ __write() {
     return $?
 }
 
+__revparse_head() {
+    head="`git -C /spack rev-parse $@ HEAD 2>/dev/null`"
+    result="$?"
+    if [ "$result" '!=' '0' ] ; then
+        head="`git --git-dir=/spack/.git \\
+              --work-tree=/spack rev-parse $@ HEAD 2>/dev/null`"
+        result="$?"
+    fi
+
+    echo "$head"
+    return $result
+}
+
+__git_head() {
+    head="`__revparse_head --abbrev-ref`"
+    if [ "$?" '=' '0' ] ; then
+        if [ "$head" '=' 'HEAD' ] ; then
+            head="`__revparse_head | cut -c1-8`..."
+        fi
+
+        echo "$head"
+    fi
+}
+
 __update_prompt() {
     local prompt
     prompt=''
@@ -63,14 +87,7 @@ __update_prompt() {
         prompt="$prompt$linux_distro"
     fi
 
-    git_head="`git --git-dir=/spack/.git --work-tree=/spack rev-parse --abbrev-ref HEAD 2>/dev/null`"
-    if [ "$?" '=' '0' ] ; then
-        if [ "$git_head" '=' 'HEAD' ] ; then
-            git_head="`git --git-dir=/spack/.git --work-tree=/spack rev-parse HEAD 2>/dev/null | cut -c1-8`..."
-        fi
-    else
-        git_head=''
-    fi
+    git_head="`__git_head`"
 
     if [ -n "$git_head" ] ; then
         git_head='\[\e[1;32m\](\[\e[0;32m\]'"$git_head"'\[\e[1;32m\])'
