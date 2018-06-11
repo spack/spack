@@ -61,13 +61,14 @@ class Vtkh(Package):
     variant("shared", default=True, description="Build vtk-h as shared libs")
 
     variant("mpi", default=True, description="build mpi support")
-    variant("tbb", default=True, description="build tbb support")
+    variant("tbb", default=False, description="build tbb support")
     variant("cuda", default=False, description="build cuda support")
+    variant("openmp", default=True, description="build openmp support")
 
     depends_on("cmake@3.8.2:3.9.999")
 
     depends_on("mpi", when="+mpi")
-    depends_on("tbb", when="+tbb")
+    depends_on("tbb", when="@0.1.0+tbb")
     depends_on("cuda", when="+cuda")
 
     #raise ValueError('A very specific bad thing happened.')
@@ -76,10 +77,10 @@ class Vtkh(Package):
     depends_on("vtkm@1.2.0+cuda", when="@0.1.0+cuda")
     depends_on("vtkm@1.2.0~shared", when="@0.1.0~shared")
   
-    depends_on("vtkm@master", when="@develp")
-    depends_on("vtkm@master+tbb", when="@develop+tbb")
-    depends_on("vtkm@master+cuda", when="@develop+cuda")
-    depends_on("vtkm@master~shared", when="@develop~shared")
+    depends_on("vtkm@master~tbb+openmp", when="@develop")
+    depends_on("vtkm@master+cuda~tbb", when="@develop+cuda")
+    depends_on("vtkm@master+openmp~tbb", when="@develop+openmp")
+    depends_on("vtkm@master~shared~tbb", when="@develop~shared")
   
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -106,6 +107,10 @@ class Vtkh(Package):
             # tbb support
             if "+tbb" in spec:
                 cmake_args.append("-DTBB_DIR={0}".format(spec["tbb"].prefix))
+
+            # openmp support
+            if "+openmp" in spec:
+                cmake_args.append("-DENABLE_OPENMP=ON")
 
             # cuda support
             if "+cuda" in spec:
@@ -209,9 +214,9 @@ class Vtkh(Package):
 
         cfg.write("# vtk-m support \n")
 
-        if "+tbb" in spec:
-            cfg.write("# tbb from spack\n")
-            cfg.write(cmake_cache_entry("TBB_DIR", spec['intel-tbb'].prefix))
+        if "+openmp" in spec:
+            cfg.write("# enable openmp support\n")
+            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
 
         cfg.write("# vtk-m from spack\n")
         cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))

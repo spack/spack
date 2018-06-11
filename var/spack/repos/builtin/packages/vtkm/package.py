@@ -50,6 +50,7 @@ class Vtkm(Package):
     
     variant("cuda", default=False, description="build cuda support")
     variant("tbb", default=True, description="build TBB support")
+    variant("openmp", default=False, description="build OpenMP support")
 
     depends_on("cmake@3.8.2:3.9.999")
     depends_on("tbb", when="+tbb")
@@ -82,6 +83,10 @@ class Vtkm(Package):
                 # no devices (this common for front end nodes on hpc clusters)
                 # we choose kepler as a lowest common denominator
                 cmake_args.append("-DVTKm_CUDA_Architecture=kepler")
+
+            # openmp support
+            if "+openmp" in spec:
+                cmake_args.append("-DVTKm_ENABLE_OPENMP=ON")
 
             # use release, instead of release with debug symbols b/c vtkm libs
             # can overwhelm compilers with too many symbols
