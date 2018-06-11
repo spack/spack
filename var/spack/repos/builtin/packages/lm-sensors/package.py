@@ -46,4 +46,4 @@ class LmSensors(MakefilePackage):
 
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix),
-		'ETCDIR={0}/etc'.format(prefix))
+             'ETCDIR={0}/etc'.format(prefix))
