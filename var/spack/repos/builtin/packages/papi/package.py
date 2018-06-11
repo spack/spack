@@ -49,12 +49,13 @@ class Papi(Package):
 
     variant('components',
             default='',
-            values=('', 'example', 'cuda', 'nvml', 'infiniband',
-                    'infiniband_umad', 'powercap', 'rapl', 'lmsensors'),
+            values=('', 'example', 'cuda', 'nvml','infiniband', 
+		'infiniband_umad', 'powercap', 'rapl', 'lmsensors'),
             multi=True,
             description='Include optional components')
     depends_on('cuda', when='components=cuda')
     depends_on('cuda', when='components=nvml')
+    depends_on('lm-sensors', when='components=lmsensors')
 
     def install(self, spec, prefix):
         with working_dir("src/components/cuda"):
@@ -76,8 +77,8 @@ class Papi(Package):
         with working_dir("src/components/lmsensors"):
             if 'components=lmsensors' in spec:
                 configure_args = [
-                    "--with-sensors_incdir=/usr/include/sensors",
-                    "--with-sensors_libdir=/usr/lib64"]
+                    "--with-sensors_incdir=%s/include/sensors" % spec['lm-sensors'].prefix,
+                    "--with-sensors_libdir=%s/lib64" % spec['lm-sensors'].prefix]
                 configure(*configure_args)
         with working_dir("src"):
 
