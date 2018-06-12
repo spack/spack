@@ -2617,12 +2617,17 @@ class Spec(object):
         if 'patches' not in self.variants:
             return []
 
+        variants_patches = self.variants['patches']
+
+        if not hasattr(variants_patches, '_patches_in_order_of_appearance'):
+            return []
+
         patches = []
 
         # FIXME: The private attribute below is attached after
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
-        for sha256 in self.variants['patches']._patches_in_order_of_appearance:
+        for sha256 in variants_patches._patches_in_order_of_appearance:
             patch = self.package_class.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
