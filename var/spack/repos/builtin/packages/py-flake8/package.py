@@ -71,8 +71,7 @@ class PyFlake8(PythonPackage):
     depends_on('py-configparser', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'))
 
-    # TODO: Add test dependencies
-    # depends_on('py-nose', type='test')
+    depends_on('py-nose', type='test')
 
     def patch(self):
         """Filter pytest-runner requirement out of setup.py."""
