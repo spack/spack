@@ -25,7 +25,6 @@
 from spack import *
 import os
 import shutil
-import glob
 
 
 class Mfem(Package):
@@ -204,6 +203,9 @@ class Mfem(Package):
     depends_on('conduit+mpi', when='+conduit+mpi')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
+    patch('mfem-3.4.patch', when='@3.4.0')
+    patch('mfem-3.3-3.4-petsc-3.9.patch',
+          when='@3.3.0:3.4.0,develop +petsc ^petsc@3.9.0:')
 
     phases = ['configure', 'build', 'install']
 
@@ -340,25 +342,8 @@ class Mfem(Package):
                 'PETSC_LIB=%s' %
                 ld_flags_from_LibraryList(spec['petsc'].libs)]
 
-            # If using PETSc >= 3.9, patch the "rc_*" files in examples/petsc:
-            # 'factor_mat_solver_package' -> 'factor_mat_solver_type'
-            if spec['petsc'].satisfies('@3.9:'):
-                with working_dir(join_path('examples', 'petsc')):
-                    for rc_file in glob.glob('rc_*'):
-                        filter_file('factor_mat_solver_package',
-                                    'factor_mat_solver_type',
-                                    rc_file, backup=False)
-
         if '+pumi' in spec:
             options += ['PUMI_DIR=%s' % spec['pumi'].prefix]
-
-            # Do not test the PUMI examples - they require meshes from the
-            # mfem/data repository on github.
-            if self.run_tests:
-                pumi_makefile = join_path('examples', 'pumi', 'makefile')
-                with open(pumi_makefile, 'a') as pumi_mk:
-                    pumi_mk.write('\nmfem-test = printf "   '
-                                  '$(3) [$(2) $(1) ... ]: SKIP\\n"\n')
 
         if '+netcdf' in spec:
             options += [
