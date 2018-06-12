@@ -25,19 +25,28 @@
 from spack import *
 
 
-class Libxfixes(AutotoolsPackage):
-    """This package contains header files and documentation for the XFIXES
-    extension.  Library and server implementations are separate."""
+class Gtkplus3(AutotoolsPackage):
+    """The GTK+ package contains libraries used for creating graphical user
+       interfaces for applications."""
+    homepage = "http://www.gtk.org"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/gtk+/3.22/gtk+-3.22.26.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/gtk+/"
+    list_depth = 2
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfixes"
-    url      = "https://www.x.org/archive/individual/lib/libXfixes-5.0.2.tar.gz"
+    version('3.22.26', 'eeeb8038fe0d386c7516fa46cd4fff6b')
 
-    version('5.0.2', '3636e59f8f5fa2e469d556d49f30e98d')
-
-    depends_on('libx11@1.6:')
-
-    depends_on('xproto', type='build')
-    depends_on('fixesproto@5.0:')
-    depends_on('xextproto', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on('at-spi2-atk@2.26:')
+    depends_on('gdk-pixbuf@2.36:')
+    depends_on('glib@2.54:')
+    depends_on('gobject-introspection@1.54:')
+    # Hardcode X11 support (former +X variant),
+    # see #6940 for rationale:
+    depends_on('pango+X@1.40:')
+    depends_on('libepoxy')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS",
+                               self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS",
+                             self.prefix.share)

@@ -36,6 +36,7 @@ class GdkPixbuf(AutotoolsPackage):
     list_url = "http://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 2
 
+    version('2.36.12', 'fff85cf48223ab60e3c3c8318e2087131b590fd6f1737e42cb3759a3b427a334')
     version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
 
     depends_on("pkgconfig", type="build")
@@ -45,6 +46,7 @@ class GdkPixbuf(AutotoolsPackage):
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("gobject-introspection")
+    depends_on("shared-mime-info")
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",

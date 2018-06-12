@@ -92,8 +92,9 @@ class Qt(Package):
 
     # Use system openssl for security.
     depends_on("openssl")
+    depends_on("pkgconfig")
     depends_on("glib", when='@4:')
-    depends_on("gtkplus", when='+gtk')
+    depends_on("gtkplus3", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("dbus", when='@4:+dbus')
@@ -105,6 +106,7 @@ class Qt(Package):
     depends_on("icu4c")
     depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
     depends_on("freetype")
+    depends_on("binutils+gold")
 
     # Core options:
     # -doubleconversion  [system/qt/no]

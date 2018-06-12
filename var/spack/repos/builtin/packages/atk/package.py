@@ -25,25 +25,21 @@
 from spack import *
 
 
-class Atk(AutotoolsPackage):
+class Atk(MesonPackage):
     """ATK provides the set of accessibility interfaces that are
        implemented by other toolkits and applications. Using the ATK
        interfaces, accessibility tools have full access to view and
        control running applications."""
     homepage = "https://developer.gnome.org/atk/"
     url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.14/atk-2.14.0.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/atk/"
+    list_depth = 2
 
-    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
-    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
+    version('2.28.1', 'dfb5e7474220afa3f4ca7e45af9f3a11')
 
     depends_on('glib')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
-
-    def url_for_version(self, version):
-        """Handle atk's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
-        return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",

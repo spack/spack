@@ -33,7 +33,10 @@ class GobjectIntrospection(Package):
 
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.49/gobject-introspection-1.49.2.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/"
+    list_depth = 2
 
+    version('1.54.1', 'b88ded5e5f064ab58a93aadecd6d58db2ec9d970648534c63807d4f9a7bb877e')
     version('1.49.2', 'c47a76b05b2d8438089f519922180747')
     version('1.48.0', '01301fa9019667d48e927353e08bc218')
 

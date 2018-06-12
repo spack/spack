@@ -37,10 +37,6 @@ class Libxi(AutotoolsPackage):
     depends_on('libx11@1.6:')
     depends_on('libxext@1.0.99.1:')
     depends_on('libxfixes@5:')
-
-    # transient build dependency (from libxfixes), i.e. shouldn't be needed?
-    depends_on('fixesproto@5.0:', type='build')
-
     depends_on('xproto@7.0.13:', type='build')
     depends_on('xextproto@7.0.3:', type='build')
-    depends_on('inputproto@2.2.99.1:', type='build')
+    depends_on('inputproto@2.2.99.1:')

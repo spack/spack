@@ -25,19 +25,19 @@
 from spack import *
 
 
-class Libxfixes(AutotoolsPackage):
-    """This package contains header files and documentation for the XFIXES
-    extension.  Library and server implementations are separate."""
+class AtSpi2Core(MesonPackage):
+    """The At-Spi2 Core package provides a Service Provider Interface for the
+       Assistive Technologies available on the GNOME platform and a library
+       against which applications can be linked."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfixes"
-    url      = "https://www.x.org/archive/individual/lib/libXfixes-5.0.2.tar.gz"
+    homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-core.html"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/2.28/at-spi2-core-2.28.0.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/"
+    list_depth = 2
 
-    version('5.0.2', '3636e59f8f5fa2e469d556d49f30e98d')
+    version('2.28.0', '9c42f79636ed1c0e908b7483d789b32e')
 
-    depends_on('libx11@1.6:')
-
-    depends_on('xproto', type='build')
-    depends_on('fixesproto@5.0:')
-    depends_on('xextproto', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on('glib@2.56.1:')
+    depends_on('dbus@1.12.8')
+    depends_on('libx11')
+    depends_on('libxi')

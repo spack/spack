@@ -41,6 +41,7 @@ class Glib(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.56.1', '988af38524804ea1ae6bc9a2bad181ff')
     version('2.56.0', 'f2b59392f2fb514bbe7791dda0c36da5')
     version('2.55.1', '9cbb6b3c7e75ba75575588497c7707b6')
     version('2.53.1', '3362ef4da713f834ea26904caf3a75f5')
@@ -57,6 +58,7 @@ class Glib(AutotoolsPackage):
         multi=True,
         description='Enable tracing support'
     )
+    variant('oldkernel', default=False, description='Fix for kernels older than 2.6.35 and glib 2.56+')
 
     depends_on('pkgconfig', type='build')
     depends_on('libffi')
@@ -72,6 +74,8 @@ class Glib(AutotoolsPackage):
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
+    # Patch to prevent compiler errors in kernels older than 2.6.35
+    patch('old-kernels.patch', spec='+oldkernel')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
