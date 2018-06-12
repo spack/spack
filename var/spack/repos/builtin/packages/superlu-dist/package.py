@@ -86,6 +86,7 @@ class SuperluDist(Package):
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
             'F90FLAGS     = -O2',
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
+            'INCLUDEDIR   = $(SuperLUroot)/include',
             'LOADOPTS     =',
             'CDEFS        = %s' % ("-DNoChange"
                                        if '%xl' in spec or '%xl_r' in spec
