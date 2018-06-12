@@ -275,7 +275,7 @@ the following means, in order of decreasing preference:
 
   * To use a license server (i.e., a network license) not already configured
     otherwise, enter your license server address(es) in the form of ``SERVER``
-    and ``USE_SERVER`` lines at the *beginning of the file* [fn8]_, in the
+    and ``USE_SERVER`` lines at the *beginning of the file* [fn7]_, in the
     format shown in section `Pointing to a license server`_. Save the file and
     close the editor.
 
@@ -316,7 +316,7 @@ section Intel Compilers.
 Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
 specific vendor release and define such a set as a Spack
 `spec <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_
-that in this case has the form ``intel@compilerversion`` [fn7]_.
+that in this case has the form ``intel@compilerversion`` [fn8]_.
 The entry determines how the spec is to be resolved, via ``paths`` and/or
 ``modules`` tokens, to each language compiler in the set.
 
@@ -625,15 +625,15 @@ Footnotes
 .. [fn6] Should said editor turn out to be ``vi``, you better be in a position
    to know how to use it.
 
-.. [fn7] The name component ``intel`` of the compiler spec is separate from (in
-   a different namespace than) the names of the Spack packages
-   ``intel-parallel-studio`` and ``intel``. Both of the latter provide the former.
-
-.. [fn8] Comment lines in FLEXlm files, indicated by ``#`` as the first
+.. [fn7] Comment lines in FLEXlm files, indicated by ``#`` as the first
    non-white character on the line, are generally allowed anywhere in the file.
    There `have been reports <https://github.com/spack/spack/issues/6534>`_,
    however, that as of 2018, ``SERVER`` and ``USE_SERVER`` lines must precede
    any comment lines.
+
+.. [fn8] The name component ``intel`` of the compiler spec is separate from (in
+   a different namespace than) the names of the Spack packages
+   ``intel-parallel-studio`` and ``intel``. Both of the latter provide the former.
 
 .. [fn9] With some effort, you can convince Spack to use shorter paths:
 
