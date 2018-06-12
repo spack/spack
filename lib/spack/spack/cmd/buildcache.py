@@ -59,6 +59,9 @@ def setup_parser(subparser):
     create.add_argument('-d', '--directory', metavar='directory',
                         type=str, default='.',
                         help="directory in which to save the tarballs.")
+    create.add_argument('--no-rebuild-index', action='store_true',
+                        default=False, help="skip rebuilding index after " +
+                                            "building package(s)")
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to create buildcache for")
@@ -221,8 +224,10 @@ def createtarball(args):
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
+        spec.concretize()
         bindist.build_tarball(spec, outdir, args.force, args.rel,
-                              args.unsigned, args.allow_root, signkey)
+                              args.unsigned, args.allow_root, signkey,
+                              not args.no_rebuild_index)
 
 
 def installtarball(args):
