@@ -98,8 +98,8 @@ class Adios(AutotoolsPackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
     depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
-    depends_on('sz@1.4.11.0:', when='@1.13.0 +sz')
-    depends_on('sz@1.4.12.3:', when='@1.13.1: +sz')
+    depends_on('sz@1.4.11.0:1.4.11.99', when='@1.13.0 +sz')
+    depends_on('sz@1.4.12.3:1.4.12.99', when='@1.13.1: +sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     depends_on('lz4', when='+lz4')
     depends_on('c-blosc@1.12.0:', when='+blosc')
@@ -121,6 +121,9 @@ class Adios(AutotoolsPackage):
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
+    # Fix ADIOS <=1.13.1 serial compile against parallel library
+    #   https://github.com/ornladios/ADIOS/pull/182
+    patch('nompi.patch', when='@1.10.0:1.13.1')
 
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time

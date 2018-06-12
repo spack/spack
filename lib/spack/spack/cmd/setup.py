@@ -33,6 +33,7 @@ from llnl.util.filesystem import set_executable
 
 import spack.repo
 import spack.store
+import spack.build_systems.cmake
 import spack.cmd
 import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
@@ -147,7 +148,7 @@ def setup(self, args):
 
         spec.concretize()
         package = spack.repo.get(spec)
-        if not isinstance(package, spack.CMakePackage):
+        if not isinstance(package, spack.build_systems.cmake.CMakePackage):
             tty.die(
                 'Support for {0} derived packages not yet implemented'.format(
                     package.build_system_class))

@@ -37,6 +37,7 @@ class Repeatmasker(Package):
     version('4.0.7', '4dcbd7c88c5343e02d819f4b3e6527c6')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('perl-text-soundex', type=('build', 'run'))
     depends_on('hmmer')
     depends_on('ncbi-rmblastn')
     depends_on('trf')
@@ -77,4 +78,4 @@ class Repeatmasker(Package):
         with open(config_answers_filename, 'r') as f:
             inspect.getmodule(self).perl('configure', input=f)
 
-        distutils.dir_util.copy_tree(".", prefix)
+        distutils.dir_util.copy_tree(".", prefix.bin)

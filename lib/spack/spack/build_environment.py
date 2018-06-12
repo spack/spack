@@ -62,14 +62,16 @@ from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
+import spack.build_systems.cmake
 import spack.config
 import spack.main
 import spack.paths
 import spack.store
 from spack.environment import EnvironmentModifications, validate
+from spack.environment import preserve_environment
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path)
 from spack.util.executable import Executable
@@ -132,7 +134,7 @@ class MakeExecutable(Executable):
 
 
 def set_compiler_environment_variables(pkg, env):
-    assert(pkg.spec.concrete)
+    assert pkg.spec.concrete
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
@@ -409,7 +411,7 @@ def set_module_variables_for_package(pkg, module):
     m.ctest = Executable('ctest')
 
     # Standard CMake arguments
-    m.std_cmake_args = spack.CMakePackage._std_args(pkg)
+    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -575,15 +577,15 @@ def get_std_cmake_args(pkg):
     Returns:
         list of str: arguments for cmake
     """
-    return spack.CMakePackage._std_args(pkg)
+    return spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
 
 def parent_class_modules(cls):
     """
-    Get list of super class modules that are all descend from spack.Package
+    Get list of superclass modules that descend from spack.package.PackageBase
     """
-    if (not issubclass(cls, spack.package.Package) or
-        issubclass(spack.package.Package, cls)):
+    if (not issubclass(cls, spack.package.PackageBase) or
+        issubclass(spack.package.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -649,20 +651,26 @@ def setup_package(pkg, dirty):
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
 
-    # All module loads that otherwise would belong in previous functions
-    # have to occur after the spack_env object has its modifications applied.
-    # Otherwise the environment modifications could undo module changes, such
-    # as unsetting LD_LIBRARY_PATH after a module changes it.
-    for mod in pkg.compiler.modules:
-        # Fixes issue https://github.com/spack/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
+    # Loading modules, in particular if they are meant to be used outside
+    # of Spack, can change environment variables that are relevant to the
+    # build of packages. To avoid a polluted environment, preserve the
+    # value of a few, selected, environment variables
+    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
+        # All module loads that otherwise would belong in previous
+        # functions have to occur after the spack_env object has its
+        # modifications applied. Otherwise the environment modifications
+        # could undo module changes, such as unsetting LD_LIBRARY_PATH
+        # after a module changes it.
+        for mod in pkg.compiler.modules:
+            # Fixes issue https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                load_module("cce")
+            load_module(mod)
 
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
+        if pkg.architecture.target.module_name:
+            load_module(pkg.architecture.target.module_name)
 
-    load_external_modules(pkg)
+        load_external_modules(pkg)
 
 
 def fork(pkg, function, dirty, fake):
@@ -814,25 +822,33 @@ def get_package_context(traceback, context=3):
             if isinstance(obj, spack.package.PackageBase):
                 break
 
-    # we found obj, the Package implementation we care about.
-    # point out the location in the install method where we failed.
-    lines = []
-    lines.append("%s:%d, in %s:" % (
-        inspect.getfile(frame.f_code), frame.f_lineno, frame.f_code.co_name
-    ))
+    # We found obj, the Package implementation we care about.
+    # Point out the location in the install method where we failed.
+    lines = [
+        '{0}:{1:d}, in {2}:'.format(
+            inspect.getfile(frame.f_code),
+            frame.f_lineno - 1,  # subtract 1 because f_lineno is 0-indexed
+            frame.f_code.co_name
+        )
+    ]
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    fl = frame.f_lineno - start
-    start_ctx = max(0, fl - context)
-    sourcelines = sourcelines[start_ctx:fl + context + 1]
+    # Calculate lineno of the error relative to the start of the function.
+    # Subtract 1 because f_lineno is 0-indexed.
+    fun_lineno = frame.f_lineno - start - 1
+    start_ctx = max(0, fun_lineno - context)
+    sourcelines = sourcelines[start_ctx:fun_lineno + context + 1]
+
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == fl
-        mark = ">> " if is_error else "   "
-        marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
+        is_error = start_ctx + i == fun_lineno
+        mark = '>> ' if is_error else '   '
+        # Add start to get lineno relative to start of file, not function.
+        marked = '  {0}{1:-6d}{2}'.format(
+            mark, start + start_ctx + i, line.rstrip())
         if is_error:
-            marked = colorize('@R{%s}' % marked)
+            marked = colorize('@R{%s}' % cescape(marked))
         lines.append(marked)
 
     return lines
@@ -914,8 +930,8 @@ class ChildError(InstallError):
         else:
             # The error happened in in the Python code, so try to show
             # some context from the Package itself.
-            out.write('%s: %s\n\n' % (self.name, self.message))
             if self.context:
+                out.write('\n')
                 out.write('\n'.join(self.context))
                 out.write('\n')
 

@@ -23,12 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
-
 import pytest
 
 from llnl.util.tty.color import color_when
 
-import spack
+import spack.store
 from spack.main import SpackCommand
 
 dependencies = SpackCommand('dependencies')

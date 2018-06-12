@@ -147,22 +147,36 @@ class Trilinos(CMakePackage):
             description='Enable Intrepid')
     variant('intrepid2',    default=False,
             description='Enable Intrepid2')
+    variant('isorropia',    default=False,
+            description='Compile with Isorropia')
     variant('kokkos',       default=True,
             description='Compile with Kokkos')
     variant('ml',           default=True,
             description='Compile with ML')
+    variant('minitensor',   default=False,
+            description='Compile with MiniTensor')
     variant('muelu',        default=True,
             description='Compile with Muelu')
     variant('nox',          default=False,
-            description='Enable NOX')
+            description='Compile with NOX')
+    variant('piro',         default=False,
+            description='Compile with Piro')
+    variant('phalanx',      default=False,
+            description='Compile with Phalanx')
     variant('rol',          default=False,
-            description='Enable ROL')
+            description='Compile with ROL')
+    variant('rythmos',      default=False,
+            description='Compile with Rythmos')
     variant('sacado',       default=True,
             description='Compile with Sacado')
     variant('stk',          default=False,
             description='Compile with STK')
     variant('shards',       default=False,
-            description='Enable Shards')
+            description='Compile with Shards')
+    variant('teko',         default=False,
+            description='Compile with Teko')
+    variant('tempus',       default=False,
+            description='Compile with Tempus')
     variant('teuchos',      default=True,
             description='Compile with Teuchos')
     variant('tpetra',       default=True,
@@ -189,11 +203,53 @@ class Trilinos(CMakePackage):
              placement='packages/ForTrilinos',
              when='+fortrilinos')
 
-    conflicts('+tpetra', when='~kokkos')
-    conflicts('+intrepid2', when='~kokkos')
+    conflicts('+amesos2', when='~teuchos')
     conflicts('+amesos2', when='~tpetra')
+    conflicts('+amesos', when='~epetra')
+    conflicts('+amesos', when='~teuchos')
+    conflicts('+anasazi', when='~teuchos')
+    conflicts('+belos', when='~teuchos')
+    conflicts('+epetraext', when='~epetra')
+    conflicts('+epetraext', when='~teuchos')
+    conflicts('+ifpack2', when='~belos')
+    conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
+    conflicts('+ifpack', when='~epetra')
+    conflicts('+ifpack', when='~teuchos')
+    conflicts('+intrepid2', when='~kokkos')
+    conflicts('+intrepid2', when='~shards')
+    conflicts('+intrepid2', when='~teuchos')
+    conflicts('+intrepid', when='~sacado')
+    conflicts('+intrepid', when='~shards')
+    conflicts('+intrepid', when='~teuchos')
+    conflicts('+isorropia', when='~epetra')
+    conflicts('+isorropia', when='~epetraext')
+    conflicts('+isorropia', when='~teuchos')
+    conflicts('+isorropia', when='~zoltan')
+    conflicts('+muelu', when='~teuchos')
+    conflicts('+muelu', when='~xpetra')
+    conflicts('+nox', when='~teuchos')
+    conflicts('+phalanx', when='~kokkos')
+    conflicts('+phalanx', when='~sacado')
+    conflicts('+phalanx', when='~teuchos')
+    conflicts('+piro', when='~teuchos')
+    conflicts('+rol', when='~teuchos')
+    conflicts('+rythmos', when='~teuchos')
+    conflicts('+teko', when='~amesos')
+    conflicts('+teko', when='~anasazi')
+    conflicts('+teko', when='~aztec')
+    conflicts('+teko', when='~ifpack')
+    conflicts('+teko', when='~ml')
+    conflicts('+teko', when='~teuchos')
+    conflicts('+teko', when='~tpetra')
+    conflicts('+tempus', when='~nox')
+    conflicts('+tempus', when='~teuchos')
+    conflicts('+tpetra', when='~kokkos')
+    conflicts('+tpetra', when='~teuchos')
+    conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
+    conflicts('+zoltan2', when='~xpetra')
+    conflicts('+zoltan2', when='~zoltan')
 
     conflicts('+dtk', when='~tpetra')
     conflicts('+fortrilinos', when='~fortran')
@@ -251,8 +307,10 @@ class Trilinos(CMakePackage):
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
-    patch('xlf_seacas.patch', when='@12.10.1%xl')
-    patch('xlf_seacas.patch', when='@12.10.1%xl_r')
+    patch('xlf_seacas.patch', when='@12.10.1:%xl')
+    patch('xlf_seacas.patch', when='@12.10.1:%xl_r')
+    patch('xlf_tpetra.patch', when='@12.12.1:%xl')
+    patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -320,22 +378,36 @@ class Trilinos(CMakePackage):
                 'ON' if '+intrepid' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Intrepid2=%s' % (
                 'ON' if '+intrepid2' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Isorropia=%s' % (
+                'ON' if '+isorropia' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Kokkos:BOOL=%s' % (
                 'ON' if '+kokkos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_MiniTensor=%s' % (
+                'ON' if '+minitensor' in spec else 'OFF'),
             '-DTrilinos_ENABLE_ML:BOOL=%s' % (
                 'ON' if '+ml' in spec else 'OFF'),
             '-DTrilinos_ENABLE_MueLu:BOOL=%s' % (
                 'ON' if '+muelu' in spec else 'OFF'),
             '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
                 'ON' if '+nox' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Piro:BOOL=%s' % (
+                'ON' if '+piro' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Phalanx=%s' % (
+                'ON' if '+phalanx' in spec else 'OFF'),
             '-DTrilinos_ENABLE_PyTrilinos:BOOL=%s' % (
                 'ON' if '+python' in spec else 'OFF'),
             '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
                 'ON' if '+rol' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Rythmos=%s' % (
+                'ON' if '+rythmos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Sacado:BOOL=%s' % (
                 'ON' if '+sacado' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Shards=%s' % (
                 'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Teko=%s' % (
+                'ON' if '+teko' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Tempus=%s' % (
+                'ON' if '+tempus' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
