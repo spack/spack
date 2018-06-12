@@ -111,28 +111,6 @@ apidoc_args = [
 sphinx_apidoc(apidoc_args + ['../spack'])
 sphinx_apidoc(apidoc_args + ['../llnl'])
 
-#
-# Exclude everything in spack.__all__ from indexing.  All of these
-# symbols are imported from elsewhere in spack; their inclusion in
-# __all__ simply allows package authors to use `from spack import *`.
-# Excluding them ensures they're only documented in their "real" module.
-#
-# This also avoids issues where some of these symbols shadow core spack
-# modules.  Sphinx will complain about duplicate docs when this happens.
-#
-import fileinput
-handling_spack = False
-for line in fileinput.input('spack.rst', inplace=1):
-    if handling_spack:
-        if not line.startswith('    :noindex:'):
-            print('    :noindex: %s' % ' '.join(spack.__all__))
-        handling_spack = False
-
-    if line.startswith('.. automodule::'):
-        handling_spack = (line == '.. automodule:: spack\n')
-
-    sys.stdout.write(line)
-
 # Enable todo items
 todo_include_todos = True
 

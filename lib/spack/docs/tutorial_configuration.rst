@@ -298,13 +298,32 @@ dependencies on the resulting executables that are not rpath'ed into
 the executable automatically, the ``extra_rpath`` field of the compiler
 configuration tells Spack which dependencies to rpath into every
 executable created by that compiler. The executables will then be able
-to find the link dependencies imposed by the compiler.
+to find the link dependencies imposed by the compiler. As an example,
+this field can be set by
+
+.. code-block:: yaml
+
+   - compiler:
+     ...
+     extra_rpaths:
+      - /apps/intel/ComposerXE2017/compilers_and_libraries_2017.5.239/linux/compiler/lib/intel64_lin
+     ...
+
 
 The ``environment`` field of the compiler configuration is used for
 compilers that require environment variables to be set during build
 time. For example, if your Intel compiler suite requires the
 ``INTEL_LICENSE_FILE`` environment variable to point to the proper
-license server, you can set this in ``compilers.yaml``.
+license server, you can set this in ``compilers.yaml`` as follows:
+
+.. code-block:: yaml
+
+  - compiler:
+      environment:
+        set:
+          INTEL_LICENSE_FILE: 1713@license4
+      ...
+
 
 -------------------------------
 Configuring Package Preferences

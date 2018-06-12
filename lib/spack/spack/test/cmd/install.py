@@ -31,7 +31,6 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack
 import spack.config
 import spack.package
 import spack.cmd.install

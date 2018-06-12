@@ -40,7 +40,6 @@ import functools
 import glob
 import hashlib
 import inspect
-import itertools
 import os
 import re
 import shutil
@@ -58,6 +57,7 @@ import spack.paths
 import spack.store
 import spack.compilers
 import spack.directives
+import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -75,7 +75,6 @@ from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
-from spack import directory_layout
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
@@ -274,10 +273,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     packages it depends on, so that dependencies can be installed along
     with the package itself.  Packages are written in pure python.
 
-    Packages are all submodules of spack.packages.  If spack is installed
-    in ``$prefix``, all of its python files are in ``$prefix/lib/spack``.
-    Most of them are in the spack module, so all the packages live in
-    ``$prefix/lib/spack/spack/packages``.
+    Packages live in repositories (see repo.py).  If spack is installed
+    in ``$prefix``, all of its built-in package files are in the builtin
+    repo at ``$prefix/var/spack/repos/builtin/packages``.
 
     All you have to do to create a package is make a new subclass of Package
     in this directory.  Spack automatically scans the python files there
@@ -405,7 +403,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     the class name (The class name is really only used by spack to find
     your package).
 
-    Spack will download an install each dependency before it installs your
+    Spack will download and install each dependency before it installs your
     package.  In addtion, it will add -L, -I, and rpath arguments to your
     compiler and linker for each dependency.  In most cases, this allows you
     to avoid specifying any dependencies in your configure or cmake line;
@@ -498,6 +496,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
+
     """
     #
     # These are default values for instance variables.
@@ -1129,7 +1128,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for patch in self.patches_to_apply():
+        for patch in patches:
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
@@ -1173,19 +1172,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             touch(no_patches_file)
 
-    def patches_to_apply(self):
-        """If the patch set does not change between two invocations of spack,
-           then all patches in the set will be applied in the same order"""
-        patchesToApply = itertools.chain.from_iterable(
-            patch_list
-            for spec, patch_list in self.patches.items()
-            if self.spec.satisfies(spec))
-        return list(patchesToApply)
-
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
         package. This includes the contents of all applied patches and the
         contents of applicable functions in the package subclass."""
+        if not self.spec.concrete:
+            err_msg = ("Cannot invoke content_hash on a package"
+                       " if the associated spec is not concrete")
+            raise spack.error.SpackError(err_msg)
+
         hashContent = list()
         source_id = fs.for_package_version(self, self.version).source_id()
         if not source_id:
@@ -1199,7 +1194,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             hashContent.append(source_id.encode('utf-8'))
         hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                           for p in self.patches_to_apply())
+                           for p in self.spec.patches)
         hashContent.append(package_hash(self.spec, content))
         return base64.b32encode(
             hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()
@@ -1581,7 +1576,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.db.add(
                 self.spec, spack.store.layout, explicit=explicit
             )
-        except directory_layout.InstallDirectoryAlreadyExistsError:
+        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
             # Abort install if install directory exists.
             # But do NOT remove it (you'd be overwriting someone else's stuff)
             tty.warn("Keeping existing install prefix in place.")

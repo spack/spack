@@ -32,6 +32,7 @@ import inspect
 import imp
 import re
 import traceback
+import tempfile
 import json
 from contextlib import contextmanager
 from six import string_types
@@ -49,7 +50,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install
 
-import spack
 import spack.config
 import spack.caches
 import spack.error
@@ -59,10 +59,8 @@ from spack.util.path import canonicalize_path
 from spack.util.naming import NamespaceTrie, valid_module_name
 from spack.util.naming import mod_to_class, possible_spack_module_names
 
-#
-# Super-namespace for all packages.
-# Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
-#
+#: Super-namespace for all packages.
+#: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
 repo_namespace     = 'spack.pkg'
 
 #
@@ -73,8 +71,24 @@ repo_index_name    = 'index.yaml'  # Top-level filename for repository index.
 packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
 package_file_name  = 'package.py'  # Filename for packages in a repository.
 
-# Guaranteed unused default value for some functions.
+#: Guaranteed unused default value for some functions.
 NOT_PROVIDED = object()
+
+#: Code in ``_package_prepend`` is prepended to imported packages.
+#:
+#: Spack packages were originally expected to call `from spack import *`
+#: themselves, but it became difficult to manage and imports in the Spack
+#: core the top-level namespace polluted by package symbols this way.  To
+#: solve this, the top-level ``spack`` package contains very few symbols
+#: of its own, and importing ``*`` is essentially a no-op.  The common
+#: routines and directives that packages need are now in ``spack.pkgkit``,
+#: and the import system forces packages to automatically include
+#: this. This way, old packages that call ``from spack import *`` will
+#: continue to work without modification, but it's no longer required.
+#:
+#: TODO: At some point in the future, consider removing ``from spack import *``
+#: TODO: from packages and shifting to from ``spack.pkgkit import *``
+_package_prepend = 'from spack.pkgkit import *'
 
 
 def _autospec(function):
@@ -118,8 +132,7 @@ class FastPackageChecker(Mapping):
     _paths_cache = {}
 
     def __init__(self, packages_path):
-
-        #: The path of the repository managed by this instance
+        # The path of the repository managed by this instance
         self.packages_path = packages_path
 
         # If the cache we need is not there yet, then build it appropriately
@@ -976,7 +989,9 @@ class Repo(object):
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
             try:
-                module = imp.load_source(fullname, file_path)
+                with import_lock():
+                    with prepend_open(file_path, text=_package_prepend) as f:
+                        module = imp.load_source(fullname, file_path, f)
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename so we need to
                 # manually construct the error message in order to give the
@@ -1124,6 +1139,31 @@ def set_path(repo):
     if append:
         sys.meta_path.append(repo)
     return append
+
+
+@contextmanager
+def import_lock():
+    imp.acquire_lock()
+    yield
+    imp.release_lock()
+
+
+@contextmanager
+def prepend_open(f, *args, **kwargs):
+    """Open a file for reading, but prepend with some text prepended
+
+    Arguments are same as for ``open()``, with one keyword argument,
+    ``text``, specifying the text to prepend.
+    """
+    text = kwargs.get('text', None)
+
+    with open(f, *args) as f:
+        with tempfile.NamedTemporaryFile(mode='w+') as tf:
+            if text:
+                tf.write(text + '\n')
+            tf.write(f.read())
+            tf.seek(0)
+            yield tf.file
 
 
 @contextmanager

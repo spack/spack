@@ -52,7 +52,6 @@ from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
-from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
 
 import spack.store
 import spack.repo
@@ -64,6 +63,7 @@ from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
+from spack.util.lock import Lock, WriteTransaction, ReadTransaction
 
 
 # DB goes in this directory underneath the root

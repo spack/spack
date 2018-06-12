@@ -26,7 +26,7 @@ import os
 import pytest
 import sys
 
-import spack
+import spack.spec
 from llnl.util.link_tree import MergeConflictError
 from spack.build_systems.python import PythonPackage
 from spack.directory_layout import YamlDirectoryLayout

@@ -33,7 +33,6 @@ from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
 from llnl.util.lang import match_predicate
 
-import spack
 import spack.spec
 import spack.store
 from spack.directory_layout import ExtensionAlreadyInstalledError

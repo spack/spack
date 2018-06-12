@@ -344,6 +344,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
+                old_dir != new_dir and
                 strings_contains_installroot(path_name, old_dir)):
                     raise InstallRootStringException(path_name, old_dir)
 
@@ -362,6 +363,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
+                    old_dir != new_dir and
                     strings_contains_installroot(path_name, old_dir)):
                         raise InstallRootStringException(path_name, old_dir)
     else:
