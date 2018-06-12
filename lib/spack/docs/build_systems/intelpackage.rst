@@ -143,16 +143,16 @@ Unrelated packages
 ^^^^^^^^^^^^^^^^^^^^
 
 The following packages do not use the Intel installer and are not in class ``IntelPackage``
-discussed here:
+that is discussed here:
 
 * ``intel-gpu-tools`` – Test suite and low-level tools for the Linux `Direct
   Rendering Manager <https://en.wikipedia.org/wiki/Direct_Rendering_Manager>`_
 * ``intel-mkl-dnn`` – Math Kernel Library for Deep Neural Networks (``CMakePackage``)
 * ``intel-xed`` – X86 machine instructions encoder/decoder
 * ``intel-tbb`` – Standalone version of Intel Threading Building Blocks. – Note that
-  a runtime version and development versions of TBB are included in all
-  ``intel-mkl`` and ``intel-parallel-studio`` packages, respectively, including
-  the ``intel`` subset of the latter.
+  a TBB runtime version is included with ``intel-mkl``, and development
+  versions are provided by the packages ``intel-parallel-studio`` (all
+  editions) and its ``intel`` subset.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Configuring Spack to use Intel licenses
@@ -160,22 +160,21 @@ Configuring Spack to use Intel licenses
 
 If you wish to integrate licensed Intel products into Spack as external packages
 (`route 1`_ above) we assume that their license configuration is in place and
-is working [fn3]_. In this case, skip ahead to section `Integration of Intel
-tools installed external to Spack`_.
+is working [fn3]_. In this case, skip to section `Integration of Intel tools
+installed external to Spack`_.
 
-If you plan to use Spack to install licensed products for you (`route 2`_
-above), the Intel product installer that Spack will run underneath must have
-access to a license.  Provide it by one of the means sketched out in the
-following sections.  For authoritative information on Intel licensing, see:
+If you plan to have Spack install licensed products for you (`route 2`_ above),
+the Intel product installer that Spack will run underneath must have access to
+a license.  Via the means sketched out in the following sections, check and use
+the license provided by default means, or explicitly configure the license for
+Spack.  For authoritative information on Intel licensing, see:
 
 * https://software.intel.com/en-us/faq/licensing
 * https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
 
-.. _`Pointing to a license server`:
-
-""""""""""""""""""""""""""""""
-Pointing to a license server
-""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""
+Pointing to an existing license server
+""""""""""""""""""""""""""""""""""""""
 
 Installing and configuring a license server is outside the scope of Spack. We
 assume that:
@@ -185,8 +184,8 @@ assume that:
 * You can access these licenses under the user id running Spack.
 
 Be aware of the difference between (a) installing and configuring a license
-server, and (b) installing and configuring client software that is to use the
-server's so-called floating licenses. We are concerned here with (b) only. The
+server, and (b) configuring client software to *use* a server's
+so-called floating licenses.  We are concerned here with (b) only. The
 process of obtaining a license from a server for temporary use is called
 "checking out a license".  For that, a client application such as the Intel
 package installer or a compiler needs to know the host name and port number of
@@ -210,7 +209,7 @@ If you cannot find pre-existing ``/opt/intel/licenses/*.lic`` files and the
 ``INTEL_LICENSE_FILE`` environment variable is not set (even after you loaded
 any relevant modulefiles), ask your license administrator for the server
 address(es) and place them in a "global" license file within your Spack
-installation tree (see `next section <Spack-managed file_>`_).
+directory tree `as shown below <Spack-managed file_>`_).
 
 
 """"""""""""""""""""""""""""""""""""
@@ -273,11 +272,11 @@ the following means, in order of decreasing preference:
   * To configure your own standalone license, copy the contents of your
     downloaded license file into the opened file, save it, and close the editor.
 
-  * To use a license server (i.e., a network license) not already configured
-    otherwise, enter your license server address(es) in the form of ``SERVER``
-    and ``USE_SERVER`` lines at the *beginning of the file* [fn7]_, in the
-    format shown in section `Pointing to a license server`_. Save the file and
-    close the editor.
+  * To use a license server (i.e., a floating network license) that is not
+    already configured elsewhere on the system, supply your license server
+    address(es) in the form of ``SERVER`` and ``USE_SERVER`` lines at the
+    *beginning of the file* [fn7]_, in the format shown in section `Pointing to
+    an existing license server`_. Save the file and close the editor.
 
   To revisit and manually edit this file, such as prior to a subsequent
   installation attempt, find it at
@@ -342,14 +341,20 @@ we must specify full paths and complete modulefile names in the relevant
 
 The Intel compilers need and use GCC to provide certain functionality, notably
 to support C++. In the preceding minimal example, the  system's default ``gcc``
-command would be queried for such needs.  To customize the GCC integration, see
+command would be queried for such needs.  To alter the GCC integration:
+
+* add a gcc module to the list at the ``modules:`` tag, separated by comma, e.g. ``[gcc-4.9.3, intel/18/18.0.2]``, or
+* add ``cflags:``, ``cxxflags:``, and ``fflags:`` tags under the ``paths:`` tag,
+
+as detailed with examples under
 `Vendor-Specific Compiler Configuration
 <http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_
-in the Spack documentation.  In addition to the ways shown there, the
-modulefile that provides the Intel compilers (``intel/18/18.0.2`` in the
-example) might, for the benefit of users outside of Spack, already specify
-another ``gcc`` version via compiler flag environment variables or (hopefully
-not) via a sneaky extra ``PATH`` addition.
+in the Spack documentation. There is also an advanced third option:
+
+* the modulefile that provides the Intel compilers (``intel/18/18.0.2`` in the
+  example) could, for the benefit of users outside of Spack, explicitly
+  integrate a specific ``gcc`` version via compiler flag environment variables
+  or (hopefully not) via a sneaky extra ``PATH`` addition.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -358,7 +363,7 @@ Integrating libraries
 
 Configure external library-type packages (as opposed to compilers)
 in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
-``~/.spack/packages.yaml``, see the Spack documentation under
+``~/.spack/packages.yaml``, following the Spack documentation under
 `Build customization <http://spack.readthedocs.io/en/latest/build_settings.html>`_.
 
 Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
@@ -407,7 +412,7 @@ unmodified with different compilers.
 
 **TODO:** Confirm how the compiler-less spec is handled.
 
-A slightly more advanced example, illustrates how to provide
+A slightly more advanced example illustrates how to provide
 `variants <http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_
 and how to use the ``buildable: False`` directive to prevent Spack from installing
 other versions or variants of the named package through its normal internal
@@ -455,18 +460,27 @@ versions are undesirable, Spack can install Intel tools like any regular Spack
 package for you and, after appropriate post-install configuration, use the
 compilers and/or libraries to install client packages.
 
+^^^^^^^^^^^^^^^^^^
+Install steps
+^^^^^^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Installing and integrating compiler components
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1. For licensed Intel packages, i.e., compilers and some early
+   library-type packages, review the section `Configuring Spack to use Intel licenses`_
+   at least once.
 
-As stated in the previous section `Integration of Intel tools installed
-external to Spack`_, Intel compilers and some early library-type Intel
-packages require a license at installation and during runtime. Before
-installation, follow the section `Configuring Spack to use Intel licenses`_.
+2. Install the Intel packages using Spack's regular ``install`` command, e.g.:
 
-**After installation**, follow the steps under `Integrating Compilers`_ to tell
-Spack the minutiae for actually using those compilers with client packages.
+   .. code-block:: sh
+
+     $ spack install intel-parallel-studio@cluster.2018.2
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Post-install steps for compilers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Follow the steps under `Integrating Compilers`_ to tell Spack the minutiae for
+actually using those compilers with client packages.
 
 * Under ``paths:``, use the full paths to the actual compiler binaries (``icc``,
   ``ifort``, etc.) located within the Spack installation tree, in all their
@@ -478,16 +492,48 @@ Spack the minutiae for actually using those compilers with client packages.
   ``libstdc++.so``.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Installing library packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Post-install steps for library packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Standalone Intel library packages are installed like most other Spack packages,
-save for the licensing accommodations of the earlier releases, which are the
-same as for compilers.
+Follow `Selecting libraries to satisfy virtual packages`_.
 
-**After installation**, follow `Selecting libraries to satisfy virtual
-packages`_.
+
+^^^^^^^^^^^^^^^^
+Debug notes
+^^^^^^^^^^^^^^^^
+
+* You can trigger a wall of additional diagnostics by Spack options, e.g.:
+
+  .. code-block:: sh
+
+    $ spack --debug -v install -v intel-mpi
+
+  The the ``--debug`` option can also be useful while installing client
+  packages `(see below) <Using Intel tools in Spack to install client
+  packages_>`_ to confirm the integration of the Intel tools in Spack, notably
+  MKL and MPI.
+
+* The ``.spack/`` subdirectory of an installed ``IntelPackage`` will contain,
+  besides Spack's usual archival items, a copy of the ``silent.cfg`` file that
+  was passed to the Intel installer:
+
+  .. code-block:: sh
+
+    $ grep COMPONENTS …intel-mpi…<hash>/.spack/silent.cfg
+    COMPONENTS=ALL
+
+* If an installation error occurs, Spack will normally clean up and remove a
+  partially installed target directory. You can direct Spack to keep it using
+  ``--keep-prefix``, e.g.:
+
+  .. code-block:: sh
+
+    $ spack install --keep-prefix  intel-mpi
+
+  You must, however, *remove such partial installations* prior to subsequent
+  installation attempts. Otherwise, the Intel installer will behave
+  incorrectly.
 
 
 -------------------------------------------------------
@@ -596,17 +642,16 @@ Footnotes
 
 .. [fn2] The package ``intel`` intentionally does not have a ``+mpi`` variant since
    it is meant to be small. The native installer always adds the MPI *runtime*
-   components because it follows defaults defined in the download package.  The
-   same applies to ``intel-parallel-studio ~mpi``.
+   components because it follows defaults defined in the download package, even
+   for ``intel-parallel-studio ~mpi``.
 
-   For ``intel-parallel-studio`` with ``+mpi``, Spack requests [in code at
+   For ``intel-parallel-studio +mpi``, Spack internally supplies [in code at
    ``lib/spack/spack/build_systems/intel.py:pset_components()``] the component
-   pattern ``"intel-mpi intel-imb"``, intended to yield all MPI components of
-   the download package.
-   The native installer expands these component pattern names with an implied
-   glob ``*`` to the packages that are *actually present in the product BOM*.
-   As a side effect, the pattern approach accommodates occasional package name
-   changes, e.g., capturing both ``intel-mpirt`` and ``intel-mpi-rt`` .
+   pattern ``"intel-mpi intel-imb"`` to the Intel installer, which will expand
+   each name with an implied glob-like ``*`` to the package names that are
+   *actually present in the product BOM*.  As a side effect, the pattern
+   approach accommodates occasional package name changes, e.g., capturing both
+   ``intel-mpirt`` and ``intel-mpi-rt`` .
 
 .. [fn3] How could the external installation have succeeded otherwise?
 
