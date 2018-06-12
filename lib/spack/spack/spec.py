@@ -115,6 +115,7 @@ from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack.architecture
+import spack.compiler
 import spack.compilers as compilers
 import spack.error
 import spack.parse
@@ -1832,12 +1833,25 @@ class Spec(object):
         changed = True
         force = False
 
+        user_spec_deps = self.flat_dependencies(copy=False)
+
         while changed:
-            changes = (self.normalize(force, tests),
+            changes = (self.normalize(force, tests=tests,
+                                      user_spec_deps=user_spec_deps),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
             changed = any(changes)
             force = True
+
+        visited_user_specs = set()
+        for dep in self.traverse():
+            visited_user_specs.add(dep.name)
+            visited_user_specs.update(x.name for x in dep.package.provided)
+
+        extra = set(user_spec_deps.keys()).difference(visited_user_specs)
+        if extra:
+            raise InvalidDependencyError(
+                self.name + " does not depend on " + comma_or(extra))
 
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
@@ -2189,7 +2203,7 @@ class Spec(object):
 
         return any_change
 
-    def normalize(self, force=False, tests=False):
+    def normalize(self, force=False, tests=False, user_spec_deps=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2218,27 +2232,34 @@ class Spec(object):
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
-        # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False)
+        # Clear the DAG and collect all dependencies in the DAG, which will be
+        # reapplied as constraints. All dependencies collected this way will
+        # have been created by a previous execution of 'normalize'.
+        # A dependency extracted here will only be reintegrated if it is
+        # discovered to apply according to _normalize_helper, so
+        # user-specified dependencies are recorded separately in case they
+        # refer to specs which take several normalization passes to
+        # materialize.
+        all_spec_deps = self.flat_dependencies(copy=False)
+
+        if user_spec_deps:
+            for name, spec in user_spec_deps.items():
+                if name not in all_spec_deps:
+                    all_spec_deps[name] = spec
+                else:
+                    all_spec_deps[name].constrain(spec)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            [s for s in spec_deps.values()], restrict=True)
+            [s for s in all_spec_deps.values()], restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
 
         any_change = self._normalize_helper(
-            visited, spec_deps, provider_index, tests)
-
-        # If there are deps specified but not visited, they're not
-        # actually deps of this package.  Raise an error.
-        extra = set(spec_deps.keys()).difference(visited)
-        if extra:
-            raise InvalidDependencyError(
-                self.name + " does not depend on " + comma_or(extra))
+            visited, all_spec_deps, provider_index, tests)
 
         # Mark the spec as normal once done.
         self._normal = True

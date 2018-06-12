@@ -192,6 +192,14 @@ def mirror_create(args):
                     new_specs.add(s)
             specs = list(new_specs)
 
+        # Skip external specs, as they are already installed
+        external_specs = [s for s in specs if s.external]
+        specs = [s for s in specs if not s.external]
+
+        for spec in external_specs:
+            msg = 'Skipping {0} as it is an external spec.'
+            tty.msg(msg.format(spec.cshort_spec))
+
         # Default name for directory is spack-mirror-<DATESTAMP>
         directory = args.directory
         if not directory:
@@ -199,11 +207,7 @@ def mirror_create(args):
             directory = 'spack-mirror-' + timestamp
 
         # Make sure nothing is in the way.
-        existed = False
-        if os.path.isfile(directory):
-            tty.error("%s already exists and is a file." % directory)
-        elif os.path.isdir(directory):
-            existed = True
+        existed = os.path.isdir(directory)
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(

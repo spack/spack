@@ -30,7 +30,7 @@ from shutil import copytree, ignore_patterns
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.compiler import Compiler, _version_cache
+from spack.compiler import Compiler, _version_cache, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
 
@@ -69,7 +69,10 @@ class Clang(Compiler):
     @property
     def openmp_flag(self):
         if self.is_apple:
-            tty.die("Clang from Apple does not support Openmp yet.")
+            raise UnsupportedCompilerFlag(self,
+                                          "OpenMP",
+                                          "openmp_flag",
+                                          "Xcode {0}".format(self.version))
         else:
             return "-fopenmp"
 
@@ -77,14 +80,20 @@ class Clang(Compiler):
     def cxx11_flag(self):
         if self.is_apple:
             # Adapted from CMake's AppleClang-CXX rules
-            # Spack's AppleClang detection only valid form Xcode >= 4.6
+            # Spack's AppleClang detection only valid from Xcode >= 4.6
             if self.version < ver('4.0.0'):
-                tty.die("Only Apple LLVM 4.0 and above support c++11")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++11 standard",
+                                              "cxx11_flag",
+                                              "Xcode < 4.0.0")
             else:
                 return "-std=c++11"
         else:
             if self.version < ver('3.3'):
-                tty.die("Only Clang 3.3 and above support c++11.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++11 standard",
+                                              "cxx11_flag",
+                                              "< 3.3")
             else:
                 return "-std=c++11"
 
@@ -93,14 +102,20 @@ class Clang(Compiler):
         if self.is_apple:
             # Adapted from CMake's rules for AppleClang
             if self.version < ver('5.1.0'):
-                tty.die("Only Apple LLVM 5.1 and above support c++14.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++14 standard",
+                                              "cxx14_flag",
+                                              "Xcode < 5.1.0")
             elif self.version < ver('6.1.0'):
                 return "-std=c++1y"
             else:
                 return "-std=c++14"
         else:
             if self.version < ver('3.4'):
-                tty.die("Only Clang 3.4 and above support c++14.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++14 standard",
+                                              "cxx14_flag",
+                                              "< 3.5")
             elif self.version < ver('3.5'):
                 return "-std=c++1y"
             else:
@@ -111,14 +126,22 @@ class Clang(Compiler):
         if self.is_apple:
             # Adapted from CMake's rules for AppleClang
             if self.version < ver('6.1.0'):
-                tty.die("Only Apple LLVM 6.1 and above support c++17.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++17 standard",
+                                              "cxx17_flag",
+                                              "Xcode < 6.1.0")
             else:
                 return "-std=c++1z"
         else:
             if self.version < ver('3.5'):
-                tty.die("Only Clang 3.5 and above support c++17.")
-            else:
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++17 standard",
+                                              "cxx17_flag",
+                                              "< 5.0")
+            elif self.version < ver('5.0'):
                 return "-std=c++1z"
+            else:
+                return "-std=c++17"
 
     @property
     def pic_flag(self):

@@ -41,6 +41,7 @@
 ##########################################################################
 
 from spack import *
+import spack
 import spack.store
 
 
@@ -52,11 +53,12 @@ class CbtfKrell(CMakePackage):
 
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    url = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
-    version('1.9.1.0', branch='1.9.1.0',
+    version('1.9.1.1', branch='1.9.1.1',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
-    version('1.9.1', branch='master',
+    version('1.9.1.0', branch='1.9.1.0',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
     version('develop', branch='master',
@@ -86,51 +88,52 @@ class CbtfKrell(CMakePackage):
                          to point to target build.")
 
     # Dependencies for cbtf-krell
-    depends_on("cmake@3.0.2:", type='build')
+    depends_on("cmake@3.11.1", when='@1.9.1.0:', type='build')
+    depends_on("cmake@3.0.2:", when='@develop', type='build')
 
     # For binutils
     depends_on("binutils", when='@develop')
-    depends_on("binutils@2.29.1", when='@1.9.1.0')
+    depends_on("binutils@2.29.1", when='@1.9.1.0:')
 
     # For boost
     depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@1.9.1.0')
+    depends_on("boost@1.66.0", when='@1.9.1.0:')
 
     # For Dyninst
     depends_on("dyninst@9.3.2:", when='@develop')
-    depends_on("dyninst@9.3.2", when='@1.9.1.0')
+    depends_on("dyninst@9.3.2", when='@1.9.1.0:')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
 
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0+cti')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:')
 
     # For Xerces-C
     depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4", when='@1.9.1.0')
+    depends_on("xerces-c@3.1.4", when='@1.9.1.0:')
 
     # For CBTF
     depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0", when='@1.9.1.0')
+    depends_on("cbtf@1.9.1.0:", when='@1.9.1.0:')
 
     # For CBTF with cti
     depends_on("cbtf@develop+cti", when='@develop+cti')
-    depends_on("cbtf@1.9.1.0+cti", when='@1.9.1.0+cti')
+    depends_on("cbtf@1.9.1.0:+cti", when='@1.9.1.0:+cti')
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when='@develop+runtime')
-    depends_on("cbtf@1.9.1.0+runtime", when='@1.9.1.0+runtime')
+    depends_on("cbtf@1.9.1.0:+runtime", when='@1.9.1.0:+runtime')
 
     # for services and collectors
     depends_on("libmonitor+krellpatch")
 
     depends_on("libunwind", when='@develop')
-    depends_on("libunwind@1.1", when='@1.9.1.0')
+    depends_on("libunwind@1.1", when='@1.9.1.0:')
 
     depends_on("papi", when='@develop')
-    depends_on("papi@5.5.1", when='@1.9.1.0')
+    depends_on("papi@5.5.1", when='@1.9.1.0:')
 
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
@@ -193,16 +196,15 @@ class CbtfKrell(CMakePackage):
         # the login node components with this spack invocation. We
         # need these paths to be the ones created in the CNL
         # spack invocation.
-        store = spack.store
-        be_cbtf = store.db.query_one('cbtf arch=cray-CNL-haswell')
-        be_cbtfk = store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
-        be_papi = store.db.query_one('papi arch=cray-CNL-haswell')
-        be_boost = store.db.query_one('boost arch=cray-CNL-haswell')
-        be_mont = store.db.query_one('libmonitor arch=cray-CNL-haswell')
-        be_unw = store.db.query_one('libunwind arch=cray-CNL-haswell')
-        be_xer = store.db.query_one('xerces-c arch=cray-CNL-haswell')
-        be_dyn = store.db.query_one('dyninst arch=cray-CNL-haswell')
-        be_mrnet = store.db.query_one('mrnet arch=cray-CNL-haswell')
+        be_cbtf = spack.store.db.query_one('cbtf arch=cray-CNL-haswell')
+        be_cbtfk = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+        be_papi = spack.store.db.query_one('papi arch=cray-CNL-haswell')
+        be_boost = spack.store.db.query_one('boost arch=cray-CNL-haswell')
+        be_mont = spack.store.db.query_one('libmonitor arch=cray-CNL-haswell')
+        be_unw = spack.store.db.query_one('libunwind arch=cray-CNL-haswell')
+        be_xer = spack.store.db.query_one('xerces-c arch=cray-CNL-haswell')
+        be_dyn = spack.store.db.query_one('dyninst arch=cray-CNL-haswell')
+        be_mrnet = spack.store.db.query_one('mrnet arch=cray-CNL-haswell')
 
         CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'
                                     % rt_platform)

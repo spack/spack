@@ -26,14 +26,14 @@ from spack import *
 import glob
 
 
-class Mirdeep(Package):
+class Mirdeep2(Package):
     """miRDeep2 is a completely overhauled tool which discovers microRNA genes
        by analyzing sequenced RNAs."""
 
     homepage = "https://www.mdc-berlin.de/8551903/en/"
-    url      = "https://www.mdc-berlin.de/45995549/en/research/research_teams/systems_biology_of_gene_regulatory_elements/projects/miRDeep/mirdeep2_0_0_8.zip"
+    url      = "https://www.mdc-berlin.de/system/files/migrated_files/fiona/mirdeep2_0_0_8.zip"
 
-    version('2.0.0.8', 'a707f7d7ad4a2975fb8b2e78c5bcf483')
+    version('0.0.8', 'a707f7d7ad4a2975fb8b2e78c5bcf483')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-pdf-api2', type=('build', 'run'))
@@ -43,7 +43,7 @@ class Mirdeep(Package):
     depends_on('randfold')
 
     def url_for_version(self, version):
-        url = 'https://www.mdc-berlin.de/45995549/en/research/research_teams/systems_biology_of_gene_regulatory_elements/projects/miRDeep/mirdeep{0}.zip'
+        url = 'https://www.mdc-berlin.de/system/files/migrated_files/fiona/mirdeep2_{0}.zip'
         return url.format(version.underscored)
 
     def patch(self):
