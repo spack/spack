@@ -149,11 +149,17 @@ class NetlibLapack(Package):
             # build CBLAS and LapackE
             cmake_args.extend(['-DCBLAS=OFF'])
             cmake_args.extend(['-DLAPACKE:BOOL=OFF'])
-
-        if spec.satisfies('arch=linux-rhel7-ppc64le'):
-            if (self.compiler.name == 'xl' or
-                self.compiler.name == 'xl_r' or
-                self.compiler.name == 'clang'):
+        
+        if self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
+            # use F77 compiler if IBM XL
+            cmake_args.extend([
+                '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
+                '-DCMAKE_Fortran_FLAGS=%s' % (
+                    ' '.join(self.spec.compiler_flags['fflags'])),
+            ])
+            
+        if spec.satisfies('arch=linux-rhel7-ppc64le') and self.compiler.name == 'clang':
+            if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
                 # use F77 compiler if IBM XL or clang
                 cmake_args.extend([
                     '-DCMAKE_Fortran_COMPILER=%s' % spack_f77,
