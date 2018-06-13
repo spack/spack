@@ -37,7 +37,7 @@ class Xsdk(Package):
 
     # Dummy url since Spack complains if I don't list something, will be
     # removed when metapackage is available
-    url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
+    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
 
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
     version('0.3.0', 'a52dc710c744afa0b71429b8ec9425bc', preferred=True)
