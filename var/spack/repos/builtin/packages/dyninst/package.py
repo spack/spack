@@ -91,7 +91,7 @@ class Dyninst(Package):
                     libdwarf.lib, "libdwarf." + dso_suffix))
             # For @develop + use elfutils libdw, libelf is an abstraction
             # we are really using elfutils here
-            if spec.satisfies('@develop:'):
+            if spec.satisfies('@develop'):
                 args.append('-DLIBDWARF_INCLUDE_DIR=%s' % libelf.include)
                 args.append('-DLIBDWARF_LIBRARIES=%s'   % join_path(
                     libelf.lib, "libdw." + dso_suffix))
