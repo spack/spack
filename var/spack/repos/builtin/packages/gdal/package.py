@@ -41,9 +41,10 @@ class Gdal(AutotoolsPackage):
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
 
-    version('2.3.0', '2fe9d64fcd9dc37645940df020d3e200')
-    version('2.1.2', 'ae85b78888514c75e813d658cac9478e')
-    version('2.0.2', '940208e737c87d31a90eaae43d0efd65')
+    version('2.3.0',  '2fe9d64fcd9dc37645940df020d3e200')
+    version('2.1.2',  'ae85b78888514c75e813d658cac9478e')
+    version('2.0.2',  '940208e737c87d31a90eaae43d0efd65')
+    version('1.11.5', '5fcee5622430fbeb25556a4d07c06dd7')
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -92,14 +93,15 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:')
-    depends_on('json-c')
+    depends_on('json-c', when='@2.3:')
+    depends_on('json-c@0.12.1', when='@:2.2.99')
 
     # Optional dependencies
     depends_on('libtool', type='build', when='+libtool')
     depends_on('zlib', when='+libz')
     depends_on('libiconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
-    depends_on('zstd', when='+zstd')
+    depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
     depends_on('cfitsio', when='+cfitsio')
     depends_on('libpng', when='+png')
@@ -108,7 +110,7 @@ class Gdal(AutotoolsPackage):
     depends_on('fyba', when='+sosi')
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
-    depends_on('kealib', when='+kea')
+    depends_on('kealib', when='+kea @2:')
     depends_on('netcdf', when='+netcdf')
     depends_on('jasper@1.900.1', patches=patch('uuid.patch'), when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
@@ -120,16 +122,16 @@ class Gdal(AutotoolsPackage):
     depends_on('sqlite@3:', when='+sqlite3')
     depends_on('pcre', when='+pcre')
     depends_on('geos', when='+geos')
-    depends_on('qhull', when='+qhull')
+    depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
-    depends_on('proj', when='+proj')
+    depends_on('proj', when='+proj @2.3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
     depends_on('python', type=('build', 'run'), when='+python')
     depends_on('java', type=('build', 'run'), when='+java')
     depends_on('armadillo', when='+armadillo')
-    depends_on('cryptopp', when='+cryptopp')
-    depends_on('openssl', when='+crypto')
+    depends_on('cryptopp', when='+cryptopp @2.1:')
+    depends_on('openssl', when='+crypto @2.3:')
 
     # https://trac.osgeo.org/gdal/wiki/SWIG
     depends_on('swig', type='build', when='+python')
@@ -155,6 +157,45 @@ class Gdal(AutotoolsPackage):
             '--with-libjson-c={0}'.format(spec['json-c'].prefix),
         ]
 
+        if spec.satisfies('@2.3:'):
+            if '+zstd' in spec:
+                args.append('--with-zstd={0}'.format(spec['zstd'].prefix))
+            else:
+                args.append('--with-zstd=no')
+
+            if '+proj' in spec:
+                args.append('--with-proj={0}'.format(spec['proj'].prefix))
+                if spec.satisfies('^proj@5.0:5.999'):
+                    args.append('--with-proj5-api=yes')
+                else:
+                    args.append('--with-proj5-api=no')
+            else:
+                args.append('--with-proj=no')
+
+            if '+crypto' in spec:
+                args.append('--with-crypto={0}'.format(spec['openssl'].prefix))
+            else:
+                args.append('--with-crypto=no')
+
+        if spec.satisfies('@2.1:'):
+            if '+qhull' in spec:
+                args.append('--with-qhull=yes')
+            else:
+                args.append('--with-qhull=no')
+
+            if '+cryptopp' in spec:
+                args.append('--with-cryptopp={0}'.format(
+                    spec['cryptopp'].prefix))
+            else:
+                args.append('--with-cryptopp=no')
+
+        if spec.satisfies('@2:'):
+            if '+kea' in spec:
+                args.append('--with-kea={0}'.format(
+                    join_path(spec['kealib'].prefix.bin, 'kea-config')))
+            else:
+                args.append('--with-kea=no')
+
         # Optional dependencies
         if '+libtool' in spec:
             args.append('--with-libtool=yes')
@@ -176,11 +217,6 @@ class Gdal(AutotoolsPackage):
             args.append('--with-liblzma=yes')
         else:
             args.append('--with-liblzma=no')
-
-        if '+zstd' in spec:
-            args.append('--with-zstd={0}'.format(spec['zstd'].prefix))
-        else:
-            args.append('--with-zstd=no')
 
         if '+pg' in spec:
             args.append('--with-pg={0}'.format(
@@ -224,12 +260,6 @@ class Gdal(AutotoolsPackage):
             args.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
         else:
             args.append('--with-hdf5=no')
-
-        if '+kea' in spec:
-            args.append('--with-kea={0}'.format(
-                join_path(spec['kealib'].prefix.bin, 'kea-config')))
-        else:
-            args.append('--with-kea=no')
 
         # https://trac.osgeo.org/gdal/wiki/NetCDF
         if '+netcdf' in spec:
@@ -293,11 +323,6 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-geos=no')
 
-        if '+qhull' in spec:
-            args.append('--with-qhull=yes')
-        else:
-            args.append('--with-qhull=no')
-
         if '+opencl' in spec:
             args.append('--with-opencl={0}'.format(spec['opencl'].prefix))
         else:
@@ -307,15 +332,6 @@ class Gdal(AutotoolsPackage):
             args.append('--with-poppler={0}'.format(spec['poppler'].prefix))
         else:
             args.append('--with-poppler=no')
-
-        if '+proj' in spec:
-            args.append('--with-proj={0}'.format(spec['proj'].prefix))
-            if spec.satisfies('^proj@5.0:5.999'):
-                args.append('--with-proj5-api=yes')
-            else:
-                args.append('--with-proj5-api=no')
-        else:
-            args.append('--with-proj=no')
 
         if '+perl' in spec:
             args.append('--with-perl=yes')
@@ -339,16 +355,6 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-armadillo=no')
 
-        if '+cryptopp' in spec:
-            args.append('--with-cryptopp={0}'.format(spec['cryptopp'].prefix))
-        else:
-            args.append('--with-cryptopp=no')
-
-        if '+crypto' in spec:
-            args.append('--with-crypto={0}'.format(spec['openssl'].prefix))
-        else:
-            args.append('--with-crypto=no')
-
         # TODO: add packages for these dependencies
         args.extend([
             # https://trac.osgeo.org/gdal/wiki/GRASS
@@ -360,7 +366,6 @@ class Gdal(AutotoolsPackage):
             '--with-pcidsk=no',
             '--with-ogdi=no',
             '--with-fme=no',
-            '--with-mongocxx=no',
             # https://trac.osgeo.org/gdal/wiki/FileGDB
             '--with-fgdb=no',
             # https://trac.osgeo.org/gdal/wiki/ECW
@@ -371,14 +376,12 @@ class Gdal(AutotoolsPackage):
             '--with-mrsid=no',
             '--with-jp2mrsid=no',
             '--with-mrsid_lidar=no',
-            '--with-jp2lura=no',
             # https://trac.osgeo.org/gdal/wiki/MSG
             '--with-msg=no',
             '--with-bsb=no',
             # https://trac.osgeo.org/gdal/wiki/Oracle
             '--with-oci=no',
             '--with-grib=no',
-            '--with-gnm=no',
             '--with-mysql=no',
             # https://trac.osgeo.org/gdal/wiki/Ingres
             '--with-ingres=no',
@@ -386,26 +389,39 @@ class Gdal(AutotoolsPackage):
             '--with-libkml=no',
             '--with-dods-root=no',
             '--with-spatialite=no',
-            '--with-rasterlite2=no',
-            # https://trac.osgeo.org/gdal/wiki/DxfDwg
-            '--with-teigha=no',
             '--with-idb=no',
             # https://trac.osgeo.org/gdal/wiki/ArcSDE
             '--with-sde=no',
             # https://trac.osgeo.org/gdal/wiki/Epsilon
             '--with-epsilon=no',
             '--with-webp=no',
-            '--with-sfcgal=no',
             '--with-freexl=no',
             '--with-pam=no',
             '--with-podofo=no',
-            '--with-pdfium=no',
             '--with-php=no',
             # https://trac.osgeo.org/gdal/wiki/mdbtools
             '--with-mdb=no',
             '--with-rasdaman=no',
-            '--with-mrf=no',
         ])
+
+        # TODO: add packages for these dependencies (only for 2.3 and newer)
+        if spec.satisfies('@2.3:'):
+            args.extend([
+                '--with-jp2lura=no',
+                '--with-rasterlite2=no',
+                # https://trac.osgeo.org/gdal/wiki/DxfDwg
+                '--with-teigha=no',
+                '--with-sfcgal=no',
+                '--with-mrf=no',
+            ])
+
+        # TODO: add packages for these dependencies (only for 2.1 and newer)
+        if spec.satisfies('@2.1:'):
+            args.extend([
+                '--with-mongocxx=no',
+                '--with-gnm=no',
+                '--with-pdfium=no',
+            ])
 
         return args
 

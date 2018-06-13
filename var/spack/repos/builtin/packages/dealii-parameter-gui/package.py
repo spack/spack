@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,21 +25,16 @@
 from spack import *
 
 
-class JsonC(AutotoolsPackage):
-    """A JSON implementation in C."""
-    homepage = "https://github.com/json-c/json-c/wiki"
-    url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.12.1.tar.gz"
+class DealiiParameterGui(CMakePackage):
+    """A qt based graphical user interface for editing deal.II .prm parameter
+    files."""
 
-    version('0.13.1', '04969ad59cc37bddd83741a08b98f350')
-    version('0.12.1', '55f7853f7d8cf664554ce3fa71bf1c7d')
-    version('0.11',   'aa02367d2f7a830bf1e3376f77881e98')
+    homepage = "https://github.com/dealii/parameter_gui"
+    url      = "https://github.com/dealii/parameter_gui"
 
-    depends_on('autoconf', type='build')
+    version('develop', git='https://github.com/dealii/parameter_gui.git', branch='master')
 
-    parallel = False
+    depends_on('qt')
 
-    @when('@0.12.1 %gcc@7:')
-    def patch(self):
-        filter_file('-Wextra',
-                    '-Wextra -Wno-error=implicit-fallthrough',
-                    'Makefile.in')
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('PARAMETER_GUI_DIR', self.prefix)
