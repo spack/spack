@@ -39,7 +39,7 @@ class Petsc(Package):
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
+    version('develop', git='https://bitbucket.org/petsc/petsc.git', branch='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
     version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
