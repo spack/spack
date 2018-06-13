@@ -2,8 +2,6 @@
 
 .. contents::
 
-**TODO:** Replace "readthedoc" links by Sphinx ":ref:" tags. But most need
-headings in the target docs to be declared link targets (I think).
 
 --------------------------
 Intel packages in Spack
@@ -307,14 +305,14 @@ Configure external Intel compilers, like all compilers that Spack is to use,
 in ``compilers.yaml`` files located in
 ``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
 In the Spack documentation, see
-`Configuration Files in Spack <http://spack.readthedocs.io/en/latest/configuration.html>`_
+:ref:`Configuration Files in Spack <configuration>`
 in general and
-`Vendor-Specific Compiler Configuration <http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_,
+:ref:`Vendor-Specific Compiler Configuration <vendor-specific-compiler-configuration>`,
 section Intel Compilers.
 
 Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
 specific vendor release and define such a set as a Spack
-`spec <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_
+:ref:`spec <sec-specs>`
 that in this case has the form ``intel@compilerversion`` [fn8]_.
 The entry determines how the spec is to be resolved, via ``paths`` and/or
 ``modules`` tokens, to each language compiler in the set.
@@ -347,8 +345,7 @@ command would be queried for such needs.  To alter the GCC integration:
 * add ``cflags:``, ``cxxflags:``, and ``fflags:`` tags under the ``paths:`` tag,
 
 as detailed with examples under
-`Vendor-Specific Compiler Configuration
-<http://spack.readthedocs.io/en/latest/getting_started.html#vendor-specific-compiler-configuration>`_
+:ref:`Vendor-Specific Compiler Configuration <vendor-specific-compiler-configuration>`
 in the Spack documentation. There is also an advanced third option:
 
 * the modulefile that provides the Intel compilers (``intel/18/18.0.2`` in the
@@ -364,7 +361,7 @@ Integrating libraries
 Configure external library-type packages (as opposed to compilers)
 in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
 ``~/.spack/packages.yaml``, following the Spack documentation under
-`Build customization <http://spack.readthedocs.io/en/latest/build_settings.html>`_.
+:ref:`Build customization <build-settings>`.
 
 Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
 external to Spack in terms of a Spack spec and resolve each such spec via
@@ -413,7 +410,7 @@ unmodified with different compilers.
 **TODO:** Confirm how the compiler-less spec is handled.
 
 A slightly more advanced example illustrates how to provide
-`variants <http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_
+:ref:`variants <basic-variants>`
 and how to use the ``buildable: False`` directive to prevent Spack from installing
 other versions or variants of the named package through its normal internal
 mechanism.
@@ -445,8 +442,8 @@ suitable:
          intel-mkl@2018.2.199: /opt/intel/parallel_studio_xe_2018.2.046
        buildable: False
 
-For background and details, see `External Packages
-<https://spack.readthedocs.io/en/latest/build_settings.html#external-packages>`_.
+For background and details, see
+:ref:`External Packages <sec-external-packages>`.
 
 
 -------------------------------------
@@ -564,9 +561,9 @@ means:
   Configure the order of compilers in the appropriate ``packages.yaml`` file,
   under either an ``all:`` or client-package-specific entry, in a
   ``compiler:`` list. Consult the Spack documentation for
-  `Configuring Package Preferences <http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
+  :ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
   and
-  `Concretization Preferences <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
+  :ref:`Concretization Preferences <concretization-preferences`.
 
 Example: ``etc/spack/packages.yaml`` might contain:
 
@@ -589,7 +586,7 @@ The relevant virtual packages for Intel are ``blas``, ``lapack``,
 ``scalapack``, and ``mpi``.
 
 In both integration routes, Intel packages can have optional
-`variants <http://spack.readthedocs.io/en/latest/basic_usage.html#variants>`_
+:ref:`variants <basic-variants>`
 which alter the list of virtual packages they can satisfy.  For Spack-external
 packages, the active variants are a combination of the defaults declared in
 Spack's package repository and the spec it is declared as in ``packages.yaml``.
@@ -604,9 +601,9 @@ client packages, edit the ``packages.yaml`` file.  Customize, either in the
 the virtual packages and whose values are the Spack specs that satisfy the
 virtual package, in order of decreasing preference.  To learn more about the
 ``providers:`` settings, see the Spack tutorial for
-`Configuring Package Preferences <http://spack.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
+:ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
 and the section
-`Concretization Preferences <http://spack.readthedocs.io/en/latest/build_settings.html#concretization-preferences>`_.
+:ref:`Concretization Preferences <concretization-preferences>`.
 
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear
@@ -683,11 +680,11 @@ Footnotes
 .. [fn9] With some effort, you can convince Spack to use shorter paths:
 
    1. Set the ``install_tree`` location in ``config.yaml``
-      (`doc <http://spack.readthedocs.io/en/latest/config_yaml.html#install-tree>`_).
+      (:ref:`see doc <config-yaml>`).
    2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
-      (`q.v. <http://spack.readthedocs.io/en/latest/config_yaml.html#install-hash-length-and-install-path-scheme>`_).
+      (:ref:`q.v. <config-yaml>`).
    3. You will want to set the *same* hash length for
-      `tcl module files <http://spack.readthedocs.io/en/latest/module_file_support.html#customize-the-naming-scheme>`_
+      :ref:`tcl module files <modules-naming-scheme>`
       if you have Spack produce them for you, under ``naming_scheme`` in
       ``modules.yaml``.
 
