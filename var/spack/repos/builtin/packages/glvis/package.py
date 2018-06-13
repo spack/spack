@@ -56,7 +56,7 @@ class Glvis(MakefilePackage):
 
     version('3.4',
             '289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
-            url='http://goo.gl/A2wFVQ',
+            url='https://bit.ly/glvis-3-4',
             extension='.tar.gz')
 
     version('3.3',
