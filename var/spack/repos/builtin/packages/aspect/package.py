@@ -47,14 +47,10 @@ class Aspect(CMakePackage):
     depends_on('dealii-parameter-gui', when='+gui')
 
     def cmake_args(self):
-        spec = self.spec
-        options = []
-        options.extend([
+        return [
             '-DASPECT_USE_FP_EXCEPTIONS=%s' %
-            ('ON' if '+fpe' in spec else 'OFF')
-        ])
-
-        return options
+            ('ON' if '+fpe' in self.spec else 'OFF')
+        ]
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('Aspect_DIR', self.prefix)
