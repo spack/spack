@@ -97,8 +97,6 @@ class Dyninst(Package):
                     libelf.lib, "libdw." + dso_suffix))
             if spec.satisfies('arch=linux-redhat7-ppc64le'):
                 args.append('-Darch_ppc64_little_endian=1')
-            if spec.satisfies('arch=linux-redhat7-ppc64le'):
-                args.append('-Darch_ppc64_little_endian=1')
             args += std_cmake_args
             cmake(*args)
             make()
