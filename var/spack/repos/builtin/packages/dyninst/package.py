@@ -57,7 +57,7 @@ class Dyninst(Package):
     # develop is considered newer than all other releases.
     # So, develop is included in the elf@1 line below.
     depends_on("elf@1", type='link', when='@9.3.0:')
-    depends_on("libdwarf", when='@:9.3.2')
+    depends_on("libdwarf", when='@:9')
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
 
@@ -73,7 +73,7 @@ class Dyninst(Package):
             return
 
         libelf = spec['elf'].prefix
-        if spec.satisfies('@:9.3.2'):
+        if spec.satisfies('@:9'):
             libdwarf = spec['libdwarf'].prefix
 
         with working_dir('spack-build', create=True):
@@ -85,7 +85,7 @@ class Dyninst(Package):
                         libelf.include, 'libelf'),
                     '-DLIBELF_LIBRARIES=%s'     % join_path(
                         libelf.lib, "libelf." + dso_suffix)]
-            if spec.satisfies('@:9.3.2'):
+            if spec.satisfies('@:9'):
                 args.append('-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include)
                 args.append('-DLIBDWARF_LIBRARIES=%s'   % join_path(
                     libdwarf.lib, "libdwarf." + dso_suffix))
