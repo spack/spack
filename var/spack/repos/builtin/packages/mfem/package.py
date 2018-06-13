@@ -67,7 +67,7 @@ class Mfem(Package):
 
     version('3.4.0',
             '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
-            url='https://goo.gl/Cq4f4Z', extension='.tar.gz',
+            url='https://bit.ly/mfem-3-4', extension='.tar.gz',
             preferred=True)
 
     version('3.3.2',
