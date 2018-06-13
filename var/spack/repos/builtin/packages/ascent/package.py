@@ -79,7 +79,7 @@ class Ascent(Package):
     variant("vtkh", default=True,
             description="Build VTK-h filter and rendering support")
 
-    variant("tbb", default=True, description="Build tbb support")
+    variant("openmp", default=True, description="Build openmp support")
     variant("cuda", default=False, description="Build cuda support")
 
     variant("adios", default=False, description="Build Adios filter support")
@@ -115,10 +115,10 @@ class Ascent(Package):
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtkh", when="+vtkh")
-    depends_on("vtkh~tbb", when="+vtkh~tbb")
-    depends_on("vtkh+cuda", when="+vtkh+cuda")
-    depends_on("vtkh~shared", when="+vtkh~shared")
+    depends_on("vtkh@develop", when="+vtkh")
+    depends_on("vtkh@develop~openmp", when="+vtkh~openmp")
+    depends_on("vtkh@develop+cuda", when="+vtkh+cuda")
+    depends_on("vtkh@develop~shared", when="+vtkh~shared")
     depends_on("adios", when="+adios")
 
     #######################
@@ -331,6 +331,11 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
+          
+        if "+openmp" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
 
         #######################
         # VTK-h (and deps)
@@ -338,18 +343,12 @@ class Ascent(Package):
 
         cfg.write("# vtk-h support \n")
 
-
         if "+vtkh" in spec:
             cfg.write("# vtk-m from spack\n")
             cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
 
             cfg.write("# vtk-h from spack\n")
-            # we only depend on tbb when we are using vtkh, so 
-            # conditionally add 
-            if "+tbb" in spec:
-                cfg.write("# tbb from spack\n")
-                cfg.write(cmake_cache_entry("TBB_DIR", spec['intel-tbb'].prefix))
-                cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
+            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
         else:
             cfg.write("# vtk-h not built by spack \n")
 
