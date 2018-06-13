@@ -116,7 +116,7 @@ class Ascent(Package):
     #############################
 
     depends_on("vtkh@develop",      when="+vtkh")
-    depends_on("vtkh@develop~openmp",      when="+vtkh~openp")
+    depends_on("vtkh@develop~openmp",      when="+vtkh~openmp")
     depends_on("vtkh@develop+cuda+openmp", when="+vtkh+cuda+openmp")
     depends_on("vtkh@develop+cuda~openmp", when="+vtkh+cuda~openmp")
 
