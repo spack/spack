@@ -372,6 +372,7 @@ def set_module_variables_for_package(pkg, module):
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable('./configure')
 
+    m.meson = Executable('meson')
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
 
