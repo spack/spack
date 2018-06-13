@@ -77,10 +77,18 @@ class Vtkh(Package):
     depends_on("vtkm@1.2.0+cuda", when="@0.1.0+cuda")
     depends_on("vtkm@1.2.0~shared", when="@0.1.0~shared")
   
-    depends_on("vtkm@master~tbb+openmp", when="@develop")
-    depends_on("vtkm@master+cuda~tbb", when="@develop+cuda")
-    depends_on("vtkm@master+openmp~tbb", when="@develop+openmp")
-    depends_on("vtkm@master~shared~tbb", when="@develop~shared")
+    depends_on("vtkm@master~tbb+openmp", when="@develop+openmp")
+    depends_on("vtkm@master~tbb~openmp", when="@develop~openmp")
+
+    depends_on("vtkm@master+cuda~tbb+openmp", when="@develop+cuda+openmp")
+    depends_on("vtkm@master+cuda~tbb~openmp", when="@develop+cuda~openmp")
+
+    depends_on("vtkm@master~tbb+openmp~shared", when="@develop+openmp~shared")
+    depends_on("vtkm@master~tbb~openmp~shared", when="@develop~openmp~shared")
+
+    depends_on("vtkm@master+cuda~tbb+openmp~shared", when="@develop+cuda+openmp~shared")
+    depends_on("vtkm@master+cuda~tbb~openmp~shared", when="@develop+cuda~openmp~shared")
+
   
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

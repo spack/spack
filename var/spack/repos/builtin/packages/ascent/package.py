@@ -92,7 +92,7 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake@3.8.2:3.9.999")
-    depends_on("conduit+python@0.3.1", when="+python")
+    depends_on("conduit+python@0.3.1", when="+python+shared")
     depends_on("conduit~shared~python@0.3.1", when="~shared")
 
     #######################
@@ -100,25 +100,34 @@ class Ascent(Package):
     #######################
     # we need a shared version of python b/c linking with static python lib
     # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python")
-    extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=('build', 'run'))
+    depends_on("python+shared", when="+python+shared")
+    extends("python", when="+python+shared")
+    depends_on("py-numpy", when="+python+shared", type=('build', 'run'))
 
     #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
     # use old version of mpi4py to avoid build issues with cython
-    depends_on("py-mpi4py@2.0.0:2.9.999", when="+mpi+python")
+    depends_on("py-mpi4py@2.0.0:2.9.999", when="+mpi+python+shared")
 
     #############################
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtkh@develop", when="+vtkh")
-    depends_on("vtkh@develop~openmp", when="+vtkh~openmp")
-    depends_on("vtkh@develop+cuda", when="+vtkh+cuda")
-    depends_on("vtkh@develop~shared", when="+vtkh~shared")
+    depends_on("vtkh@develop",      when="+vtkh")
+    depends_on("vtkh@develop~openmp",      when="+vtkh~openp")
+    depends_on("vtkh@develop+cuda+openmp", when="+vtkh+cuda+openmp")
+    depends_on("vtkh@develop+cuda~openmp", when="+vtkh+cuda~openmp")
+
+    depends_on("vtkh@develop~shared",             when="~shared+vtkh")
+    depends_on("vtkh@develop~shared~openmp",      when="~shared+vtkh~openmp")
+    depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
+    depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+
+
+    #depends_on("vtkh@develop~shared", when="+vtkh~shared")
+
     depends_on("adios", when="+adios")
 
     #######################
