@@ -22,36 +22,43 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Neovim(CMakePackage):
-    """NeoVim: the future of vim"""
+class Mpilander(CMakePackage):
+    """There can only be one (MPI process)!"""
 
-    homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    homepage = "https://github.com/MPILander/MPILander"
+    url      = "https://github.com/MPILander/MPILander/archive/0.1.0.tar.gz"
+    maintainers = ['ax3l']
 
-    version('0.3.0', 'e5fdb2025757c337c17449c296eddf5b')
-    version('0.2.2', '44b69f8ace88b646ec890670f1e462c4')
-    version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
-    version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
+    version('develop', branch='master',
+            git='https://github.com/MPILander/MPILander.git')
 
-    depends_on('lua@5.1:5.2')
-    depends_on('lua-lpeg')
-    depends_on('lua-mpack')
-    depends_on('lua-bitlib')
-    depends_on('libuv')
-    depends_on('jemalloc')
-    depends_on('libtermkey')
-    depends_on('libvterm')
-    depends_on('unibilium')
-    depends_on('msgpack-c')
-    depends_on('gperf')
+    # variant('cuda', default=False, description='Enable CUDA support')
+    # variant(
+    #     'schedulers',
+    #     description='List of supported schedulers',
+    #     values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
+    #     multi=True
+    # )
+
+    depends_on('cmake@3.9.2:', type='build')
+
+    provides('mpi@:3.1')
+
+    # compiler support
+    conflicts('%gcc@:4.7')
+    conflicts('%clang@:3.8')
+    conflicts('%intel@:16')
 
     def cmake_args(self):
-        args = []
-        if self.version >= Version('0.2.1'):
-            args = ['-DPREFER_LUA=ON']
+        args = [
+            # tests and examples
+            '-DBUILD_TESTING:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
+            '-DBUILD_EXAMPLES:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
+        ]
 
         return args
