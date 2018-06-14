@@ -54,7 +54,7 @@ class Atk(Package):
         with working_dir('spack-build', create=True):
             meson('..', *std_meson_args)
             ninja('-v')
-            ninja('install')    
+            ninja('install')
 
     @when('@:2.27')
     def install(self, spec, prefix):
