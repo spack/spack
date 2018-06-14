@@ -27,6 +27,7 @@ import pytest
 import sys
 
 import spack.spec
+import spack.package
 from llnl.util.link_tree import MergeConflictError
 from spack.build_systems.python import PythonPackage
 from spack.directory_layout import YamlDirectoryLayout
@@ -34,7 +35,7 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.util.prefix import Prefix
 
 
-class FakeExtensionPackage(object):
+class FakeExtensionPackage(spack.package.PackageViewMixin):
     def __init__(self, name, prefix):
         self.name = name
         self.prefix = Prefix(prefix)

@@ -2210,7 +2210,27 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.warn(msg.format(name))
 
 
-class Package(PackageBase):
+class PackageViewMixin(object):
+    def view_source(self):
+        return self.spec.prefix
+
+    def view_destination(self, view):
+        return view.root
+
+    def view_file_conflicts(self, view, merge_map):
+        return set(dst for dst in merge_map.values() if os.path.exists(dst))
+
+    def add_files_to_view(self, view, merge_map):
+        for src, dst in merge_map.items():
+            if not os.path.exists(dst):
+                view.link(src, dst)
+
+    def remove_files_from_view(self, view, merge_map):
+        for src, dst in merge_map.items():
+            view.remove_file(src, dst)
+
+
+class Package(PackageBase, PackageViewMixin):
     """General purpose class with a single ``install``
     phase that needs to be coded by packagers.
     """
