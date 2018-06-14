@@ -195,6 +195,18 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class MesonPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for meson-based packages"""
+
+    base_class_name = 'MesonPackage'
+
+    body = """\
+    def meson_args(self):
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
 class QMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for QMake-based packages"""
 
@@ -389,6 +401,7 @@ templates = {
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
+    'meson':      MesonPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -459,6 +472,7 @@ class BuildSystemGuesser:
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
+            (r'/meson\.build$',       'meson'),
         ]
 
         # Peek inside the compressed file.
