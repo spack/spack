@@ -2211,21 +2211,48 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
 
 class PackageViewMixin(object):
+    """This collects all functionality related to adding installed Spack
+    package to views. Packages can customize how they are added to views by
+    overriding these functions.
+    """
     def view_source(self):
+        """The source root directory that will be added to the view: files are
+        added such that their path relative to the view destination matches
+        their path relative to the view source.
+        """
         return self.spec.prefix
 
     def view_destination(self, view):
+        """The target root directory: each file is added relative to this
+        directory.
+        """
         return view.root
 
     def view_file_conflicts(self, view, merge_map):
+        """Report any files which prevent adding this package to the view. The
+        default implementation looks for any files which already exist.
+        Alternative implementations may allow some of the files to exist in
+        the view (in this case they would be omitted from the results).
+        """
         return set(dst for dst in merge_map.values() if os.path.exists(dst))
 
     def add_files_to_view(self, view, merge_map):
+        """Given a map of package files to destination paths in the view, add
+        the files to the view. By default this adds all files. Alternative
+        implementations may skip some files, for example if other packages
+        linked into the view already include the file.
+        """
         for src, dst in merge_map.items():
             if not os.path.exists(dst):
                 view.link(src, dst)
 
     def remove_files_from_view(self, view, merge_map):
+        """Given a map of package files to files currently linked in the view,
+        remove the files from the view. The default implementation removes all
+        files. Alternative implementations may not remove all files. For
+        example if two packages include the same file, it should only be
+        removed when both packages are removed.
+        """
         for src, dst in merge_map.items():
             view.remove_file(src, dst)
 
