@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import sys
+import os
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
@@ -45,10 +46,12 @@ class Libdwarf(Package):
     url      = "http://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
 
+    version('20180129', 'c5e90fad4640f0d713ae8b986031f959')
     version('20160507', 'ae32d6f9ece5daf05e2d4b14822ea811')
     version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
     version('20130207', '64b42692e947d5180e162e46c689dfbf')
     version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
+    depends_on("elfutils@0.163", when='@20160507', type='link')
     depends_on("elf", type='link')
     depends_on('zlib', type='link')
 
@@ -91,8 +94,12 @@ class Libdwarf(Package):
                 make()
 
                 libdwarf_name = 'libdwarf.{0}'.format(dso_suffix)
+                libdwarf1_name = 'libdwarf.{0}'.format(dso_suffix) + ".1"
                 install('libdwarf.a',  prefix.lib)
-                install('libdwarf.so', join_path(prefix.lib, libdwarf_name))
+                install('libdwarf.so', join_path(prefix.lib, libdwarf1_name))
+                if spec.satisfies('@20160507:'):
+                    with working_dir(prefix.lib):
+                        os.symlink(libdwarf1_name, libdwarf_name)
                 install('libdwarf.h',  prefix.include)
                 install('dwarf.h',     prefix.include)
 
