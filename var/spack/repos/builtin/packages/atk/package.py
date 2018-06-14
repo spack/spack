@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Atk(MesonPackage):
+class Atk(Package):
     """ATK provides the set of accessibility interfaces that are
        implemented by other toolkits and applications. Using the ATK
        interfaces, accessibility tools have full access to view and
@@ -36,7 +36,10 @@ class Atk(MesonPackage):
     list_depth = 2
 
     version('2.28.1', 'dfb5e7474220afa3f4ca7e45af9f3a11')
+    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
+    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
 
+    depends_on('meson', type='build', when='@2.8:')
     depends_on('glib')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
@@ -46,3 +49,19 @@ class Atk(MesonPackage):
                                self.prefix.share)
         run_env.prepend_path("XDG_DATA_DIRS",
                              self.prefix.share)
+
+    def install(self, spec, prefix):
+        with working_dir('spack-build', create=True):
+            meson('..', *std_meson_args)
+            ninja('-v')
+            ninja('install')    
+
+    @when('@:2.27')
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
+        if self.run_tests:
+            make('installcheck')
