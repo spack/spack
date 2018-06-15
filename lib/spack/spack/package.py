@@ -1191,7 +1191,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return True
 
-    def _if_make_target_execute(self, target):
+    def _if_make_target_execute(self, target, *args, **kwargs):
         """Runs ``make target`` if 'target' is a valid target in the Makefile.
 
         Parameters:
@@ -1199,7 +1199,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         if self._has_make_target(target):
             # Execute target
-            inspect.getmodule(self).make(target)
+            inspect.getmodule(self).make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
         """Checks to see if 'target' is a valid target in a Ninja build script.
@@ -1231,7 +1231,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return True
 
-    def _if_ninja_target_execute(self, target):
+    def _if_ninja_target_execute(self, target, *args, **kwargs):
         """Runs ``ninja target`` if 'target' is a valid target in the Ninja
         build script.
 
@@ -1240,7 +1240,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         if self._has_ninja_target(target):
             # Execute target
-            inspect.getmodule(self).ninja(target)
+            inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         resources = []
