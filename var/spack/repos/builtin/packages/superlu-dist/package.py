@@ -91,7 +91,8 @@ class SuperluDist(Package):
             'INCLUDEDIR   = $(SuperLUroot)/include',
             'LOADOPTS     =',
             'CDEFS        = %s' % ("-DNoChange"
-                                       if '%xl' in spec or '%xl_r' in spec
+                                       if spack_f77.endswith('xlf') or
+                                          spack_f77.endswith('xlf_r')
                                        else "-DAdd_")
         ])
 
