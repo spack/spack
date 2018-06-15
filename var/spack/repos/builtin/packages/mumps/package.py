@@ -129,17 +129,18 @@ class Mumps(Package):
             orderings.append('-Dmetis')
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
-        
+
         # Determine which compiler suite we are using
         using_gcc = self.compiler.name == "gcc"
         using_pgi = self.compiler.name == "pgi"
         using_intel = self.compiler.name == "intel"
         using_xl = self.compiler.name in ['xl', 'xl_r']
-        
+
         # The llvm compiler suite does not contain a Fortran compiler by
         # default.  Its possible that a Spack user may have configured
         # ~/.spack/<platform>/compilers.yaml for using xlf.
-        using_xlf = using_xl or (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
+        using_xlf = using_xl or \
+        (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
 
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
@@ -147,7 +148,7 @@ class Mumps(Package):
         fpic = self.compiler.pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
-        
+
         opt_level = '3' if using_xl else ''
 
         if '+int64' in self.spec:
@@ -165,19 +166,20 @@ class Mumps(Package):
                 ])
 
             makefile_conf.extend([
-                 'OPTL = %s -O%s' % (fpic, opt_level),
-                 'OPTC = %s -O%s -DINTSIZE64' % (fpic, opt_level)
+                'OPTL = %s -O%s' % (fpic, opt_level),
+                'OPTC = %s -O%s -DINTSIZE64' % (fpic, opt_level)
             ])
         else:
             if using_xlf:
                 makefile_conf.append('OPTF = -O%s -qfixed' % opt_level)
             else:
-                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (fpic, opt_level))
+                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (
+                    fpic, opt_level))
 
             makefile_conf.extend([
-               'OPTL = %s -O%s' % (fpic, opt_level),
-               'OPTC = %s -O%s' % (fpic, opt_level)
-           ])
+                'OPTL = %s -O%s' % (fpic, opt_level),
+                'OPTC = %s -O%s' % (fpic, opt_level)
+            ])
 
         if '+mpi' in self.spec:
             scalapack = self.spec['scalapack'].libs if not shared \
@@ -244,7 +246,7 @@ class Mumps(Package):
                     'LIBEXT=.so',
                     'AR=link_cmd() { $(FL) -%s -Wl,-soname '
                     '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
-                        (build_shared_flag, prefix.lib, inject_libs),
+                    (build_shared_flag, prefix.lib, inject_libs),
                     'RANLIB=ls'
                 ])
                 # When building libpord, read AR from Makefile.inc instead of
