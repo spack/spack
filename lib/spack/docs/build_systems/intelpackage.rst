@@ -285,6 +285,8 @@ the following means, in order of decreasing preference:
   will simply ignore it.
 
 
+.. _`integrate-external-intel`:
+
 ----------------------------------------------------------
 Integration of Intel tools installed *external* to Spack
 ----------------------------------------------------------
@@ -431,6 +433,8 @@ used for the Intel products and adopted within Spack. You can inspect them by:
 
 Using the same version numbers is useful for clarity, but not strictly necessary.
 
+.. _`compiler-neutral-package`:
+
 Note that the Spack spec in the example does not contain a compiler
 specification. This is intentional, as the Intel library packages can be used
 unmodified with different compilers.
@@ -461,13 +465,9 @@ suitable:
 .. code-block:: yaml
 
    packages:
-     intel-mpi:
+     intel-parallel-studio:
        paths:
-         intel-mpi@2018.2.199: /opt/intel/parallel_studio_xe_2018.2.046
-       buildable: False
-     intel-mkl:
-       paths:
-         intel-mkl@2018.2.199: /opt/intel/parallel_studio_xe_2018.2.046
+         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal: /opt/intel/parallel_studio_xe_2018.2.046
        buildable: False
 
 For background and details, see
@@ -564,9 +564,9 @@ Install steps
 
          spack spec intel-parallel-studio@cluster.2018.2  %intel@18.0.2
 
-   You are right to ask: "Why on earth is that necessary?". The answer lies in
-   Spack's philosophy of compiler consistency (or perhaps purity). Consider:
-   You ask Spack to install a particular version
+   You are right to ask: "Why on earth is that necessary?" [fn9]_.
+   The answer lies in Spack's philosophy of compiler consistency (or perhaps purity).
+   Consider: You ask Spack to install a particular version
    ``intel-parallel-studio@edition.V``. Spack will apply an associated compiler
    spec to concretize your request, and the result will be some
    ``intel-parallel-studio@edition.V %X``, with ``%X`` referring to the
@@ -619,7 +619,7 @@ actually using those compilers with client packages.
 
 * Under ``paths:``, use the full paths to the actual compiler binaries (``icc``,
   ``ifort``, etc.) located within the Spack installation tree, in all their
-  unsightly length [fn9]_.
+  unsightly length [fn10]_.
 
 * Use the ``modules:`` or ``cflags:`` tokens to specify a suitable accompanying
   ``gcc`` version to help pacify picky client packages that ask for C++
@@ -753,11 +753,27 @@ implementation, while enabling to choose others on a per-spec basis.
   packages:
     all:
       providers:
-        mpi: [intel-mpi, openmpi, mpich, ]
-        blas: [intel-mkl, ]
-        lapack: [intel-mkl, ]
+        mpi:       [intel-mpi, openmpi, mpich, ]
+        blas:      [intel-mkl, ]
+        lapack:    [intel-mkl, ]
         scalapack: [intel-mkl, ]
 
+If you have access to the ``intel-parallel-studio@cluster`` edition, you can
+use instead:
+
+.. code-block:: yaml
+
+      all:
+      providers:
+        mpi:       [intel-parallel-studio+mpi, openmpi, mpich, ]
+        blas:      [intel-parallel-studio+mkl, ]
+        lapack:    [intel-parallel-studio+mkl, ]
+        scalapack: [intel-parallel-studio+mkl, ]
+
+If you installed ``intel-parallel-studio`` within Spack ("`route 2`_"), make
+sure you followed the `special installation step
+<intel-compiler-anticipation_>`_ to ensure that its virtual packages match the
+compilers it provides.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Using Intel tools as explicit dependency
@@ -815,7 +831,14 @@ Footnotes
    a different namespace than) the names of the Spack packages
    ``intel-parallel-studio`` and ``intel``. Both of the latter provide the former.
 
-.. [fn9] With some effort, you can convince Spack to use shorter paths:
+.. [fn9] Spack's close coupling of installed packages to compilers, which both
+   necessitates the detour for installing ``intel-parallel-studio``, and,
+   limits any of its provided virtual packages to a single compiler, heavily
+   favors a `recommendation to install Intel Parallel Studio outside of Spack
+   <integrate-external-intel_>`_ and declare it for Spack in ``packages.yaml``
+   by a `compiler-less spec <compiler-neutral-package_>`_.
+
+.. [fn10] With some effort, you can convince Spack to use shorter paths:
 
    1. Set the ``install_tree`` location in ``config.yaml``
       (:ref:`see doc <config-yaml>`).
