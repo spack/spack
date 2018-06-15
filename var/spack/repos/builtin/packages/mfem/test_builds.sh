@@ -5,7 +5,7 @@ builds=(
     'mfem'
     'mfem~mpi~metis~gzstream'
     'mfem+mpi+superlu-dist+suite-sparse+petsc \
-        +sundials+mpfr+netcdf+gzstream+gnutls+libunwind \
+        +sundials+pumi+mpfr+netcdf+gzstream+gnutls+libunwind \
         ^hypre~internal-superlu ^petsc~boost+suite-sparse+mumps'
     'mfem~mpi+suite-sparse+sundials+mpfr+netcdf \
         +gzstream+gnutls+libunwind'
@@ -14,6 +14,7 @@ builds=(
     'mfem@develop+shared~static~mpi~metis~gzstream'
     # TODO: Replace '^conduit~python~hdf5' with '^conduit~python' when conduit
     # is fixed to accept '^hdf5+mpi'.
+    # NOTE: Skip PUMI since it conflicts with '+shared'.
     'mfem@develop+shared~static+mpi \
         +superlu-dist+suite-sparse+petsc+sundials+mpfr+netcdf+gzstream \
         +gnutls+libunwind+conduit ^hypre~internal-superlu \
@@ -32,6 +33,7 @@ builds2=(
     'mfem+suite-sparse'
     'mfem+sundials~mpi'
     'mfem+sundials'
+    'mfem+pumi'
     'mfem+netcdf~mpi'
     'mfem+netcdf'
     'mfem+mpfr'
@@ -43,6 +45,7 @@ builds2=(
     'mfem@develop+suite-sparse'
     'mfem@develop+sundials~mpi'
     'mfem@develop+sundials'
+    'mfem@develop+pumi'
     'mfem@develop+netcdf~mpi'
     'mfem@develop+netcdf'
     'mfem@develop+mpfr'

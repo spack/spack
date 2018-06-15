@@ -59,7 +59,7 @@ class Esmf(MakefilePackage):
     depends_on('xerces-c@3.1.0:', when='+xerces')
 
     # Testing dependencies
-    # depends_on('perl', type='test')  # TODO: Add a test deptype
+    depends_on('perl', type='test')
 
     # Make esmf build with newer gcc versions
     # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/

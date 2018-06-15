@@ -71,6 +71,8 @@ class TestPackage(object):
     def test_content_hash_all_same_but_patch_contents(self):
         spec1 = Spec("hash-test1@1.1")
         spec2 = Spec("hash-test2@1.1")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)
@@ -81,6 +83,8 @@ class TestPackage(object):
     def test_content_hash_different_variants(self):
         spec1 = Spec("hash-test1@1.2 +variantx")
         spec2 = Spec("hash-test2@1.2 ~variantx")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)
@@ -91,6 +95,8 @@ class TestPackage(object):
     def test_all_same_but_archive_hash(self):
         spec1 = Spec("hash-test1@1.3")
         spec2 = Spec("hash-test2@1.3")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)

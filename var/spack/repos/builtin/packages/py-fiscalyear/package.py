@@ -43,6 +43,5 @@ class PyFiscalyear(PythonPackage):
     depends_on('python@2.5:')
     depends_on('py-setuptools', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest', type='test')
-    # depends_on('py-pytest-runner', type='test')
+    depends_on('py-pytest', type='test')
+    depends_on('py-pytest-runner', type='test')
