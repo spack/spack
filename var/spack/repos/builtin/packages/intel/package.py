@@ -31,7 +31,8 @@ class Intel(IntelPackage):
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
-    # but version numbering differs.
+    # but the version numbering in Spack differs.
+    version('18.0.3',              '00000000000000000000000000000000', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13002/parallel_studio_xe_2018_update3_composer_edition.tgz')
     version('18.0.2',              '76f820f53de4c1ff998229c983cf4f53', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12722/parallel_studio_xe_2018_update2_composer_edition.tgz')
     version('18.0.1',              '28cb807126d713350f4aa6f9f167448a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
     version('18.0.0',              '31ba768fba6e7322957b03feaa3add28', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
