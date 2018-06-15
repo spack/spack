@@ -51,14 +51,14 @@ class CbtfArgonavisGui(QMakePackage):
     url = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
     version('1.3.0.0', branch='1.3.0.0',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git', preferred=True)
+            git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
     version('develop', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
     depends_on("cmake@3.0.2:", type='build')
 
-    depends_on('qt@4.8.6:', when='@develop')
+    depends_on('qt@5.10.0:', when='@develop')
     depends_on('qt@5.10.0', when='@1.3.0.0:9999')
 
     depends_on("boost@1.50.0:", when='@develop')

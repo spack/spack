@@ -67,7 +67,7 @@ class Openspeedshop(CMakePackage):
 
     # Use when the git repository is available
     version('2.3.1.4', branch='2.3.1.4',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git', preferred=True)
+            git='https://github.com/OpenSpeedShop/openspeedshop.git')
 
     version('2.3.1.3', branch='2.3.1.3',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
@@ -137,7 +137,7 @@ class Openspeedshop(CMakePackage):
     depends_on("dyninst@9.3.2", when='@2.3.1.3:9999')
 
     depends_on("python", when='@develop')
-    depends_on("python@2.7.14", when='@2.3.1.3:9999')
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')
 
     depends_on("libxml2")
 
