@@ -82,8 +82,8 @@ class QuantumEspresso(Package):
     depends_on('elpa~openmp', when='+elpa~openmp')
     depends_on('hdf5', when='+hdf5')
 
-    patch('dspev_drv_elpa.patch', when='@6.1+elpa ^elpa@2016.05.004')
-    patch('dspev_drv_elpa.patch', when='@6.1+elpa ^elpa@2016.05.003')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
 
     # We can't ask for scalapack or elpa if we don't want MPI
     conflicts(
@@ -164,6 +164,24 @@ class QuantumEspresso(Package):
         ])
 
         configure(*options)
+
+        # Apparently the build system of QE is so broken that:
+        #
+        # 1. The variable reported on stdout as HDF5_LIBS is actually
+        #    called HDF5_LIB (singular)
+        # 2. The link flags omit a few `-L` from the line, and this
+        #    causes the linker to break
+        #
+        # Below we try to match the entire HDF5_LIB line and substitute
+        # with the list of libraries that needs to be linked.
+        if '+hdf5' in spec:
+            make_inc = join_path(self.stage.source_path, 'make.inc')
+            hdf5_libs = ' '.join(spec['hdf5:hl,fortran'].libs)
+            filter_file(
+                'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
+                'HDF5_LIB = {0}'.format(hdf5_libs),
+                make_inc
+            )
 
         make('all')
 

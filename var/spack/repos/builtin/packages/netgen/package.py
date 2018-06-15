@@ -43,6 +43,7 @@ class Netgen(AutotoolsPackage):
     variant("gui", default=False, description='enable gui')
     variant("metis", default=False, description='use metis for partitioning')
 
+    depends_on('zlib')
     depends_on('mpi', when='+mpi')
     depends_on('oce+X11', when='+oce')
     depends_on('metis', when='+metis')

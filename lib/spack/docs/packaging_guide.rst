@@ -2654,8 +2654,8 @@ In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
 alike. To that end the compiler classes in ``spack`` implement the
-following **properties**: ``openmp_flag``, ``cxx11_flag``,
-``cxx14_flag``, which can be accessed in a package by
+following **properties**: ``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``,
+``cxx14_flag``, and ``cxx17_flag``, which can be accessed in a package by
 ``self.compiler.cxx11_flag`` and alike. Note that the implementation is
 such that if a given compiler version does not support this feature, an
 error will be produced. Therefore package developers can also use these
