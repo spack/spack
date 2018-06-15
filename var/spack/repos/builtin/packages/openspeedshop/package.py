@@ -227,7 +227,6 @@ class Openspeedshop(CMakePackage):
         if spec.satisfies('+runtime'):
             # Appends base options to cmake_args
             self.set_defaultbase_cmakeOptions(spec, cmake_args)
-
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
                  '-DCMAKE_C_FLAGS=%s'    % compile_flags,
