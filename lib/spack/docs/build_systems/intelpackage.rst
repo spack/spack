@@ -498,7 +498,7 @@ Install steps
 2. The package ``intel-parallel-studio`` needs a special preparatory step for
    its virtual packages like ``mkl`` and ``mpi`` to be usable:
 
-.. _`determine-compiler-anticipated`:
+   .. _`determine-compiler-anticipated`:
 
    A. From the package version, determine the compiler spec that the package provides.
 
@@ -516,7 +516,7 @@ Install steps
       The package ``intel-parallel-studio@cluster.2018.2`` provides the
       compiler spec ``intel@18.0.2``.
 
-.. _`config-compiler-anticipated`:
+   .. _`config-compiler-anticipated`:
 
    B. Declare the compiler spec that you anticipate as a stub entry at the end
       of ``compilers.yaml`` from a suitable scope.
@@ -546,7 +546,7 @@ Install steps
       step. The contents of the language compiler tags (``cc:`` etc.) do not
       matter at this point.
 
-.. _`verify-compiler-anticipated`:
+   .. _`verify-compiler-anticipated`:
 
    C. Verify that the stub spec will be used as expected:
 
