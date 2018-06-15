@@ -140,7 +140,7 @@ class Mumps(Package):
         # default.  Its possible that a Spack user may have configured
         # ~/.spack/<platform>/compilers.yaml for using xlf.
         using_xlf = using_xl or \
-        (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
+            (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
 
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
