@@ -285,7 +285,7 @@ the following means, in order of decreasing preference:
   will simply ignore it.
 
 
-.. _`integrate-external-intel`:
+.. _integrate-external-intel:
 
 ----------------------------------------------------------
 Integration of Intel tools installed *external* to Spack
@@ -433,7 +433,7 @@ used for the Intel products and adopted within Spack. You can inspect them by:
 
 Using the same version numbers is useful for clarity, but not strictly necessary.
 
-.. _`compiler-neutral-package`:
+.. _compiler-neutral-package:
 
 Note that the Spack spec in the example does not contain a compiler
 specification. This is intentional, as the Intel library packages can be used
@@ -493,7 +493,7 @@ Install steps
    library-type packages, review the section `Configuring Spack to use Intel licenses`_
    at least once.
 
-.. _`intel-compiler-anticipation`:
+.. _intel-compiler-anticipation:
 
 2. The package ``intel-parallel-studio`` needs a special preparatory step for
    its virtual packages like ``mkl`` and ``mpi`` to be usable:
