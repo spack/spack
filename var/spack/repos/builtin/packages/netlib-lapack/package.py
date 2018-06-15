@@ -159,7 +159,7 @@ class NetlibLapack(Package):
             ])
 
         if self.compiler.name == 'clang' \
-        and spec.satisfies('arch=linux-rhel7-ppc64le'):
+            and spec.satisfies('arch=linux-rhel7-ppc64le'):
             if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
                 # use F77 compiler if IBM XL or clang
                 cmake_args.extend([
