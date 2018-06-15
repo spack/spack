@@ -320,12 +320,27 @@ The entry determines how the spec is to be resolved, via ``paths`` and/or
 The following example illustrates how to integrate the 2018 Intel compiler
 suite, which outside of Spack was activated by users of the example system as
 ``module load intel/18``. Since Spack must be rather more picky about versions,
-we must specify full paths and complete modulefile names in the relevant
-``compilers.yaml`` entry:
+we must specify full paths and complete modulefile names in a relevant
+``compilers.yaml`` entry. Edit as follows:
+
+.. code-block:: sh
+
+  spack config --scope=site edit compilers
+
+This command will edit ``$SPACK_ROOT/etc/spack/compilers.yaml`` located inside
+Spack's installation.  This scope is likely suitable for an installation that
+might be shared between several users.  Choose another scope if desired.
+
+Make sure the file begins with:
 
 .. code-block:: yaml
 
     compilers:
+
+Append the following, adjusting the paths appropriately:
+
+.. code-block:: yaml
+
     - compiler:
         spec:       intel@18.0.2
         operating_system:   centos6
@@ -386,9 +401,22 @@ external modulefiles ``intel-mkl/18/18.0.1`` and ``intel-mkl/18/18.0.2``, as
 Spack packages ``intel-mkl@2018.1.163`` and ``intel-mkl@2018.2.199``,
 respectively.
 
+.. code-block:: sh
+
+  spack config --scope=site edit packages
+
+Make sure the file begins with:
+
 .. code-block:: yaml
 
    packages:
+
+Append, indented as shown:
+
+.. code-block:: yaml
+
+   # other content ...
+
      intel-mkl:
        modules:
          intel-mkl@2018.1.163  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.1
@@ -465,11 +493,121 @@ Install steps
    library-type packages, review the section `Configuring Spack to use Intel licenses`_
    at least once.
 
-2. Install the Intel packages using Spack's regular ``install`` command, e.g.:
+.. _`intel-compiler-anticipation`:
+
+2. The package ``intel-parallel-studio`` needs a special preparatory step for
+   its virtual packages like ``mkl`` and ``mpi`` to be usable:
+
+.. _`determine-compiler-anticipated`:
+
+   A. From the package version, determine the compiler spec that the package provides.
+
+      Combine the last two digits of the version year, a literal "0", and the
+      component immediately following the version year:
+
+      ==========================================  ======================
+      Package version                             Compiler spec provided
+      ------------------------------------------  ----------------------
+       ``intel-parallel-studio@edition.YYYY.U``   ``intel@YY.0.U``
+      ==========================================  ======================
+
+      Example:
+
+      The package ``intel-parallel-studio@cluster.2018.2`` provides the
+      compiler spec ``intel@18.0.2``.
+
+.. _`config-compiler-anticipated`:
+
+   B. Declare the compiler spec that you anticipate as a stub entry at the end
+      of ``compilers.yaml`` from a suitable scope.
+
+      For example, run:
+
+      .. code-block:: sh
+
+          spack config --scope=site edit compilers
+
+      and append:
+
+      .. code-block:: yaml
+
+         - compiler:
+             target:     x86_64
+             operating_system:   centos6
+             modules:    []
+             spec:       intel@18.0.2
+             paths:
+               cc:       stub
+               cxx:      stub
+               f77:      stub
+               fc:       stub
+
+      Replace ``18.0.2`` with the version that you determined in the preceeding
+      step. The contents of the language compiler tags (``cc:`` etc.) do not
+      matter at this point.
+
+.. _`verify-compiler-anticipated`:
+
+   C. Verify that the stub spec will be used as expected:
+
+      If you placed the stub last in ``compilers.yaml``, you should see it
+      being used with a plain package specification, e.g.:
+
+      .. code-block:: sh
+
+         spack spec intel-parallel-studio@cluster.2018.2
+
+      Otherwise, or simply to be sure, give the anticipated compiler as spec
+      component, e.g.:
+
+      .. code-block:: sh
+
+         spack spec intel-parallel-studio@cluster.2018.2  %intel@18.0.2
+
+   You are right to ask: "Why on earth is that necessary?". The answer lies in
+   Spack's philosophy of compiler consistency (or perhaps purity). Consider:
+   You ask Spack to install a particular version
+   ``intel-parallel-studio@edition.V``. Spack will apply an associated compiler
+   spec to concretize your request, and the result will be some
+   ``intel-parallel-studio@edition.V %X``, with ``%X`` referring to the
+   compiler that was formally used in the concretization. Naturally, this is
+   not going to be the version that the new package provides, but typically
+   ``%gcc@...`` in a new-ish Spack installation or ``%intel@...`` if you
+   previously configured Intel compilers in Spack.
+
+   So far, so good, but a problem arises as soon as you try to use any virtual
+   ``mkl`` and ``mpi`` packages that you would expect to now be provided by
+   ``intel-parallel-studio@edition.V``.  Spack will see those virtual packages,
+   but as being tied to the compiler concretized *at installation*.  To
+   illustrate: Consider installing a client package with the new compilers now
+   available to you. You would run ``spack install foo +mkl %intel@V``, and
+   Spack will complain about ``mkl%intel@V`` being missing, because it only
+   offers ``mkl%X``.
+
+   To escape this trap, place the compiler stub declaration shown here, and use
+   the pre-declared compiler spec to install the package as shown in the next
+   step.  This will work because only the package's builtin binary installer
+   will be used, not any of the compilers.
+
+3. Install the Intel packages using Spack's regular ``install`` command, e.g.:
 
    .. code-block:: sh
 
-     $ spack install intel-parallel-studio@cluster.2018.2
+      spack install intel-parallel-studio@cluster.2018.2
+
+   If you wish or need to force the matching compiler (`see above
+   <verify-compiler-anticipated_>`_), give it as additional concretization
+   element:
+
+   .. code-block:: sh
+
+      spack install intel-parallel-studio@cluster.2018.2  %intel@18.0.2
+
+   The command for a smaller standalone package, is the same:
+
+   .. code-block:: sh
+
+      spack install intel-mpi@2018.2.199
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
