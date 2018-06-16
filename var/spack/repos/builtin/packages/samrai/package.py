@@ -37,7 +37,12 @@ class Samrai(AutotoolsPackage):
     url      = "https://computation.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
 
+    version('3.12.0',     '07364f6e209284e45ac0e9caf1d610f6')
+    version('3.11.5',     '4359a03145c03501b230777f92b62104')
+    version('3.11.4',     '473d6796772f5926b1c0d1cf8f3f8c99')
+    # Version 3.11.3 permissions don't allow downloading
     version('3.11.2',     'd5f59f8efd755b23b797e46349428206')
+    version('3.11.1',     '19a2398a7448ec0f0f0c5e8fc6f80478')
     version('3.10.0',     'ff5f5b8b4a35b52a1b7e37a74166c65a')
     version('3.9.1',      '232d04d0c995f5abf20d94350befd0b2')
     version('3.8.0',      'c18fcffa706346bfa5828b36787ce5fe')
@@ -59,8 +64,13 @@ class Samrai(AutotoolsPackage):
     depends_on('mpi')
     depends_on('zlib')
     depends_on('hdf5+mpi')
-    depends_on('boost')
     depends_on('m4', type='build')
+
+    # At some point later versions of boost were not able to be found
+    # by SAMRAI during configure, so we're using boost <= 1.60.0 for
+    # < 3.12.0 versions. I don't know what version of boost that
+    # happened at though without trying each version of boost.
+    depends_on('boost@:1.60.0', when='@0:3.11.99')
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
@@ -74,12 +84,16 @@ class Samrai(AutotoolsPackage):
             '--with-F77=%s' % self.spec['mpi'].mpifc,
             '--with-M4=%s' % self.spec['m4'].prefix,
             '--with-hdf5=%s' % self.spec['hdf5'].prefix,
-            '--with-boost=%s' % self.spec['boost'].prefix,
             '--with-zlib=%s' % self.spec['zlib'].prefix,
             '--without-blas',
             '--without-lapack',
             '--with-hypre=no',
             '--with-petsc=no'])
+
+        if self.spec.satisfies('@0:3.11.99'):
+            options.extend([
+                '--with-boost=%s' % self.spec['boost'].prefix
+            ])
 
         if '+debug' in self.spec:
             options.extend([
