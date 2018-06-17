@@ -67,40 +67,39 @@ class CbtfLanl(CMakePackage):
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")
 
-    depends_on("cmake@3.0.2:", when='@develop', type='build')
-    depends_on("cmake@3.11.1", when='@1.9.1.0:', type='build')
+    depends_on("cmake@3.0.2:", type='build')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:+cti')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
 
     # For Xerces-C
     depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4", when='@1.9.1.0:')
+    depends_on("xerces-c@3.1.4", when='@1.9.1.0:9999')
 
     # For CBTF
     depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:", when='@1.9.1.0:')
+    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999')
 
     # For CBTF with cti
     depends_on("cbtf@develop+cti", when='@develop+cti')
-    depends_on("cbtf@1.9.1.0:+cti", when='@1.9.1.0:+cti')
+    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti')
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when='@develop+runtime')
-    depends_on("cbtf@1.9.1.0:+runtime", when='@1.9.1.0:+runtime')
+    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0:", when='@1.9.1.0:')
+    depends_on("cbtf-krell@1.9.1.0:9999", when='@1.9.1.0:9999')
 
     depends_on('cbtf-krell@develop+cti', when='@develop+cti')
-    depends_on('cbtf-krell@1.9.1.0:+cti', when='@1.9.1.0:+cti')
+    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@1.9.1.0:9999+cti')
 
     depends_on('cbtf-krell@develop+runtime', when='@develop+runtime')
-    depends_on('cbtf-krell@1.9.1.0:+runtime', when='@1.9.1.0:+runtime')
+    depends_on('cbtf-krell@1.9.1.0:9999+runtime', when='@1.9.1.0:9999+runtime')
 
     parallel = False
 
