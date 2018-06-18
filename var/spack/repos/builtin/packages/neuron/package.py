@@ -44,26 +44,30 @@ class Neuron(Package):
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
-    version('develop', git=github)
+    version('develop', git=github, preferred=True)
 
-    variant('mpi',           default=True,  description='Enable MPI parallelism')
-    variant('python',        default=True,  description='Enable python')
-    variant('shared',        default=False, description='Build shared libraries')
+    variant('binary',        default=True, description="Create special as a binary instead of shell script")
+    variant('coreneuron',    default=True, description="Patch hh.mod for CoreNEURON compatibility")
     variant('cross-compile', default=False, description='Build for cross-compile environment')
+    variant('debug',         default=False, description='Build debug with O0')
+    variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('multisend',     default=True,  description="Enable multi-send spike exchange")
+    variant('profile',       default=False, description="Enable Tau profiling")
+    variant('python',        default=True,  description='Enable python')
+    variant('shared',        default=True, description='Build shared libraries')
     variant('rx3d',          default=False, description="Enable cython translated 3-d rxd")
 
-    depends_on('flex',       type='build')
-    depends_on('bison',      type='build')
-    depends_on('automake',   type='build')
-    depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')
+    depends_on('automake',   type='build')
+    depends_on('bison',      type='build')
+    depends_on('flex',       type='build')
     depends_on('libtool',    type='build')
     depends_on('pkg-config', type='build')
 
     depends_on('mpi',         when='+mpi')
-    depends_on('python@2.6:', when='+python')
     depends_on('ncurses',     when='~cross-compile')
+    depends_on('python@2.6:', when='+python')
+    depends_on('tau',         when='+profile')
 
     conflicts('~shared', when='+python')
 
@@ -92,6 +96,17 @@ class Neuron(Package):
         newpath = 'aclocal -I m4 %s %s' % (pkgconf_inc, libtool_inc)
         filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")
 
+        # patch hh.mod to be compatible with coreneuron
+        if self.spec.satisfies('+coreneuron'):
+            filter_file(r'GLOBAL minf', r'RANGE minf', 'src/nrnoc/hh.mod')
+            filter_file(r'TABLE minf', r':TABLE minf', "src/nrnoc/hh.mod")
+
+    def profiling_wrapper_on(self):
+        os.environ["USE_PROFILER_WRAPPER"] = "1"
+
+    def profiling_wrapper_off(self):
+        del os.environ["USE_PROFILER_WRAPPER"]
+
     def get_arch_options(self, spec):
         options = []
 
@@ -99,7 +114,6 @@ class Neuron(Package):
             options.extend(['cross_compiling=yes',
                             '--without-memacs',
                             '--without-nmodl'])
-
         # need to enable bg-q arch
         if 'bgq' in self.spec.architecture:
             options.extend(['--enable-bluegeneQ',
@@ -138,8 +152,11 @@ class Neuron(Package):
     def get_compiler_options(self, spec):
         flags = '-O2 -g'
 
-        if 'bgq' in self.spec.architecture:
+        if 'bgq' in spec.architecture:
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qstrict -qnohot -g'
+
+        if spec.satisfies('+debug'):
+            flags = '-g -O0'
 
         if self.spec.satisfies('%pgi'):
             flags += ' ' + self.compiler.pic_flag
@@ -169,7 +186,6 @@ class Neuron(Package):
         make('install')
 
     def install(self, spec, prefix):
-
         options = ['--prefix=%s' % prefix,
                    '--without-iv',
                    '--without-x',
@@ -189,12 +205,22 @@ class Neuron(Package):
             options.append('--without-paranrn')
 
         if spec.satisfies('~shared'):
-            options.extend(['--disable-shared',
-                            'linux_nrnmech=no'])
+            options.append('--disable-shared')
+
+        if spec.satisfies('+binary'):
+            options.append('linux_nrnmech=no')
 
         options.extend(self.get_arch_options(spec))
         options.extend(self.get_python_options(spec))
         options.extend(self.get_compiler_options(spec))
+
+        # -M option to Tau disables instrumentation
+        if spec.satisfies('+profile'):
+            options.extend(['--disable-dependency-tracking',
+                            'CC=%s' % 'tau_cc',
+                            'CXX=%s' % 'tau_cxx',
+                            'MPICC=%s' % 'tau_cc',
+                            'MPICXX=%s' % 'tau_cxx'])
 
         build = Executable('./build.sh')
         build()
@@ -205,8 +231,26 @@ class Neuron(Package):
             srcpath = self.stage.source_path
             configure = Executable(join_path(srcpath, 'configure'))
             configure(*options)
+            self.profiling_wrapper_on()
             make('VERBOSE=1')
             make('install')
+            self.profiling_wrapper_off()
+
+    @run_after('install')
+    def filter_compilers(self):
+        """run after install to avoid spack compiler wrappers
+        getting embded into nrnivmodl script"""
+
+        arch = self.get_neuron_archdir()
+        nrnmakefile = join_path(self.prefix, arch, 'bin/nrniv_makefile')
+
+        kwargs = {
+            'backup': False,
+            'string': True
+        }
+
+        filter_file(env['CC'],  self.compiler.cc, nrnmakefile, **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx, nrnmakefile, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
         neuron_archdir = self.get_neuron_archdir()
@@ -219,3 +263,7 @@ class Neuron(Package):
         spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
         spack_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+
+    def setup_dependent_package(self, module, dependent_spec):
+        neuron_archdir = self.get_neuron_archdir()
+        dependent_spec.package.neuron_archdir = neuron_archdir

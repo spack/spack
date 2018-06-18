@@ -1,0 +1,142 @@
+##############################################################################
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
+from spack import *
+import os
+
+
+class Coreneuron(CMakePackage):
+
+    """CoreNEURON is a simplified engine for the NEURON simulator
+    optimised for both memory usage and computational speed. Its goal
+    is to simulate massive cell networks with minimal memory footprint
+    and optimal performance."""
+
+    homepage = "https://github.com/BlueBrain/CoreNeuron"
+    url      = "https://github.com/BlueBrain/CoreNeuron"
+
+    version('develop', git=url, submodules=True)
+    version('hippocampus', git=url, submodules=True)
+    version('plasticity', git=url, preferred=True, submodules=True)
+
+    variant('debug', default=False, description='Build debug with O0')
+    variant('gpu', default=False, description="Enable GPU build")
+    variant('knl', default=False, description="Enable KNL specific flags")
+    variant('mpi', default=True, description="Enable MPI support")
+    variant('openmp', default=True, description="Enable OpenMP support")
+    variant('profile', default=False, description="Enable profiling using Tau")
+    variant('report', default=True, description="Enable reports using ReportingLib")
+    variant('shared', default=True, description="Build shared library")
+    variant('tests', default=False, description="Enable building tests")
+
+    depends_on('boost', when='+tests')
+    depends_on('cmake@3:', type='build')
+    depends_on('cuda', when='+gpu')
+    depends_on('mpi', when='+mpi')
+    depends_on('neurodamus-base@plasticity', when='@plasticity')
+    depends_on('neurodamus-base@hippocampus', when='@hippocampus')
+    depends_on('reportinglib', when='+report')
+    depends_on('reportinglib+profile', when='+report+profile')
+    depends_on('tau', when='+profile')
+
+    @run_before('build')
+    def profiling_wrapper_on(self):
+        os.environ["USE_PROFILER_WRAPPER"] = "1"
+
+    @run_after ('install')
+    def profiling_wrapper_off(self):
+        del os.environ["USE_PROFILER_WRAPPER"]
+
+    def get_flags(self):
+        flags = "-g -O2"
+        if 'bgq' in self.spec.architecture and '%xl' in self.spec:
+            flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
+        if '+knl' in self.spec and '%intel' in self.spec:
+            flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
+        if '+debug' in self.spec:
+            flags = '-g -O0'
+        if '+profile' in self.spec:
+            flags += ' -DTAU'
+        return flags
+
+    def cmake_args(self):
+        spec   = self.spec
+        flags = self.get_flags()
+
+        if spec.satisfies('+profile'):
+            env['CC']  = 'tau_cc'
+            env['CXX'] = 'tau_cxx'
+        elif 'bgq' in spec.architecture and spec.satisfies('+mpi'):
+            env['CC']  = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+
+        options = ['-DENABLE_SPLAYTREE_QUEUING=ON',
+                   '-DCMAKE_C_FLAGS=%s' % flags,
+                   '-DCMAKE_CXX_FLAGS=%s' % flags,
+                   '-DCMAKE_BUILD_TYPE=CUSTOM',
+                   '-DENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
+                   '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+                   '-DCORENEURON_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
+                   '-DUNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+                   '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF')
+                   ]
+
+        if spec.satisfies('~shared'):
+            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
+
+        if 'bgq' in spec.architecture and '%xl' in spec:
+            options.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+
+        if spec.satisfies('+gpu'):
+            gcc = which("gcc")
+            options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
+                            '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
+                            '-DENABLE_SELECTIVE_GPU_PROFILING=ON',
+                            '-DENABLE_OPENACC=ON',
+                            '-DENABLE_OPENACC_INFO=ON'])
+            # PGI compiler not able to compile nrnreport.cpp when enabled
+            # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
+            options.append('-DENABLE_REPORTINGLIB=OFF')
+
+        if '^neurodamus-base' in spec:
+            modlib_dir = self.spec['neurodamus-base'].prefix.lib.modlib
+            modfile_list = '%s/coreneuron_modlist.txt' % modlib_dir
+            options.append('-DADDITIONAL_MECHS=%s' % modfile_list)
+            options.append('-DADDITIONAL_MECHPATH=%s' % modlib_dir)
+
+        return options
+
+    @property
+    def libs(self):
+        """Export the coreneuron library.
+        Sample usage: spec['coreneuron'].libs.ld_flags
+        """
+        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False]]
+        is_shared = '+shared' in self.spec
+        for path, recursive in search_paths:
+            libs = find_libraries('libcoreneuron', root=path,
+                                  shared=is_shared, recursive=False)
+            if libs:
+                return libs
+        return None
