@@ -38,7 +38,8 @@ class Tau(Package):
     variant('mpi', default=True,
             description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
-    variant('comm', default=True,
+    # TODO : comm variant has bug, reported upstream
+    variant('comm', default=False,
             description=' Generate profiles with MPI communicator info')
     variant('ompt', default=False, description='Use OpenMP tool interface (with Intel compiler)')
 
@@ -210,7 +211,7 @@ class Tau(Package):
             f.write(content)
             f.close()
             chmod = which('chmod')
-            chmod('go+rx', fname)
+            chmod('ugo+rx', fname)
 
     def get_makefiles(self):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
