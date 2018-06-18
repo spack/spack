@@ -205,6 +205,8 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('dso', default=True, description='Build in DSO mode')
+    variant('static', default=False, description='Build static libraries, which automatically disables DSO mode')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -239,6 +241,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('valgrind~mpi', when='+memchecker')
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('lsf', when='schedulers=lsf')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -246,6 +249,7 @@ class Openmpi(AutotoolsPackage):
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+    conflicts('+dso', when='+static')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -335,17 +339,15 @@ class Openmpi(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = [
-            '--enable-shared',
-        ]
+        config_args = ['--enable-shared']
 
-        # According to this comment on github:
-        #
-        # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
-        #
-        # adding --enable-static silently disables slurm support via pmi/pmi2
-        if not spec.satisfies('schedulers=slurm'):
-            config_args.append('--enable-static')
+        # In DSO mode, OpenMPI is built with plugins, whereas all functions are in the main libraries, then DSO is disabled.
+        if not spec.satisfies('+dso'):
+            config_args.extend(['--disable-mca-dso'])
+
+        # Enabling the build of static libraries automatically sets --disable-mca-dso, therefore +static conflicts with +dso
+        if spec.satisfies('+static'):
+            config_args.extend(['--enable-static'])
 
         if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
