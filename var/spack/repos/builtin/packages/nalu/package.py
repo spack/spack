@@ -27,9 +27,8 @@ from spack import *
 
 class Nalu(CMakePackage):
     """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest (most
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
-       Tpetra/Epetra stack
+       designed to support a variety of energy applications of interest
+       built on the Sierra Toolkit and Trilinos solver Tpetra/Epetra stack
     """
 
     homepage = "https://github.com/NaluCFD/Nalu"
@@ -66,17 +65,23 @@ class Nalu(CMakePackage):
                 '-DENABLE_OPENFAST:BOOL=ON',
                 '-DOpenFAST_DIR:PATH=%s' % spec['openfast'].prefix
             ])
+        else:
+            options.append('-DENABLE_OPENFAST:BOOL=OFF')
 
         if '+tioga' in spec:
             options.extend([
                 '-DENABLE_TIOGA:BOOL=ON',
                 '-DTIOGA_DIR:PATH=%s' % spec['tioga'].prefix
             ])
+        else:
+            options.append('-DENABLE_TIOGA:BOOL=OFF')
 
         if '+hypre' in spec:
             options.extend([
                 '-DENABLE_HYPRE:BOOL=ON',
                 '-DHYPRE_DIR:PATH=%s' % spec['hypre'].prefix
             ])
+        else:
+            options.append('-DENABLE_HYPRE:BOOL=OFF')
 
         return options

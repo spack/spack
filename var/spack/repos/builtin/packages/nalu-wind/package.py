@@ -69,17 +69,23 @@ class NaluWind(CMakePackage):
                 '-DENABLE_OPENFAST:BOOL=ON',
                 '-DOpenFAST_DIR:PATH=%s' % spec['openfast'].prefix
             ])
+        else:
+            options.append('-DENABLE_OPENFAST:BOOL=OFF')
 
         if '+tioga' in spec:
             options.extend([
                 '-DENABLE_TIOGA:BOOL=ON',
                 '-DTIOGA_DIR:PATH=%s' % spec['tioga'].prefix
             ])
+        else:
+            options.append('-DENABLE_TIOGA:BOOL=OFF')
 
         if '+hypre' in spec:
             options.extend([
                 '-DENABLE_HYPRE:BOOL=ON',
                 '-DHYPRE_DIR:PATH=%s' % spec['hypre'].prefix
             ])
+        else:
+            options.append('-DENABLE_HYPRE:BOOL=OFF')
 
         return options
