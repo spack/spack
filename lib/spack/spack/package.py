@@ -501,6 +501,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     # These are default values for instance variables.
     #
 
+    provides_python_libs = True
+
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
 
@@ -578,6 +580,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: List of attributes which affect do not affect a package's content.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
+
+    provide_python_libs = False
 
     def __init__(self, spec):
         # this determines how the package should be built.

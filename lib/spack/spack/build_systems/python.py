@@ -230,10 +230,10 @@ class PythonPackage(PackageBase):
         mkdirp(spec.prefix.bin)
 
         rpaths = []
-        rpaths.extend(spec.prefix)
+        rpaths.append(spec.prefix)
         for d in spec.dependencies(deptype=('link', 'run')):
-            if re.match('^py-', d.name):
-                rpaths.extend(d.prefix)
+            if d.package.provides_python_libs:
+                rpaths.append(d.prefix)
 
         with open(spec.prefix.bin.join(".spack-rpaths"), 'w') as rpaths_file:
             rpaths_file.write("\n".join(rpaths) + "\n")
