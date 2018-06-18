@@ -30,7 +30,6 @@ import filecmp
 
 from llnl.util.filesystem import traverse_tree, mkdirp, touch
 import llnl.util.tty as tty
-import spack.error
 
 __all__ = ['LinkTree']
 
@@ -173,7 +172,7 @@ def remove_link(src, dest):
         os.remove(dest)
 
 
-class MergeConflictError(spack.error.SpackError):
+class MergeConflictError(Exception):
 
     def __init__(self, path):
         super(MergeConflictError, self).__init__(
