@@ -280,6 +280,7 @@ class Trilinos(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf+mpi', when="~pnetcdf")
     depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
+    depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -311,6 +312,8 @@ class Trilinos(CMakePackage):
     patch('xlf_seacas.patch', when='@12.10.1:%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
+    patch('xlf_seacas.patch', when='@12.12.1:%clang')
+    patch('xlf_tpetra.patch', when='@12.12.1:%clang')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"

@@ -313,13 +313,15 @@ class Mfem(Package):
                 'LAPACK_LIB=%s' % ld_flags_from_LibraryList(lapack_blas)]
 
         if '+superlu-dist' in spec:
+            lapack_blas = spec['lapack'].libs + spec['blas'].libs
             options += [
                 'SUPERLU_OPT=-I%s -I%s' %
                 (spec['superlu-dist'].prefix.include,
                  spec['parmetis'].prefix.include),
-                'SUPERLU_LIB=-L%s -L%s -lsuperlu_dist -lparmetis' %
+                'SUPERLU_LIB=-L%s -L%s -lsuperlu_dist -lparmetis %s' %
                 (spec['superlu-dist'].prefix.lib,
-                 spec['parmetis'].prefix.lib)]
+                 spec['parmetis'].prefix.lib,
+                 ld_flags_from_LibraryList(lapack_blas))]
 
         if '+suite-sparse' in spec:
             ss_spec = 'suite-sparse:' + self.suitesparse_components
