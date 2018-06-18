@@ -355,7 +355,9 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
     def extension_file_path(self, spec):
         """Gets full path to an installed package's extension file"""
         _check_concrete(spec)
-        if os.path.abspath(self.root) in os.path.abspath(spec.prefix):
+        normalize_path = lambda p: (
+            os.path.abspath(p).rstrip(os.path.sep) + os.path.sep)
+        if normalize_path(spec.prefix).startswith(normalize_path(self.root)):
             # For backwards compatibility, when the root is in the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
