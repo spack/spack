@@ -5,7 +5,6 @@
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
-#
 # For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
@@ -25,14 +24,13 @@
 from spack import *
 
 
-class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest
-       built on the Sierra Toolkit and Trilinos solver Tpetra/Epetra stack
-    """
+class NaluWind(CMakePackage):
+    """Nalu-Wind: Wind energy focused variant of Nalu."""
 
-    homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    homepage = "https://github.com/exawind/nalu-wind"
+    url      = "https://github.com/exawind/nalu-wind.git"
+
+    maintainers = ['jrood-nrel']
 
     variant('openfast', default=False,
             description='Compile with OpenFAST support')
@@ -42,7 +40,7 @@ class Nalu(CMakePackage):
             description='Compile with Hypre support')
 
     version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
+            git='https://github.com/exawind/nalu-wind.git', branch='master')
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')
@@ -57,7 +55,13 @@ class Nalu(CMakePackage):
 
         options.extend([
             '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix
+            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+            '-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc
         ])
 
         if '+openfast' in spec:
