@@ -39,4 +39,4 @@ class Lsf(Package):
     #     buildable: False
 
     def install(self, spec, prefix):
-        raise InstallError('IBM Plattform LSF is not installable; it is vendor supplied')
+        raise InstallError('IBM Platform LSF is not installable; it is vendor supplied')
