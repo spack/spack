@@ -66,7 +66,7 @@ class Samrai(AutotoolsPackage):
     depends_on('hdf5+mpi')
     depends_on('m4', type='build')
 
-    # From 3.12.0, samrai no long depends on boost.
+    # Starting with 3.12.0, samrai no longer depends on boost.
     # version 3.11.5 or earlier can only work with boost version
     # 1.64.0 or earlier.
     depends_on('boost@:1.64.0', when='@0:3.11.99', type='build')
@@ -89,11 +89,6 @@ class Samrai(AutotoolsPackage):
             '--with-hypre=no',
             '--with-petsc=no'])
 
-        if self.spec.satisfies('@0:3.11.99'):
-            options.extend([
-                '--with-boost=%s' % self.spec['boost'].prefix
-            ])
-
         if '+debug' in self.spec:
             options.extend([
                 '--disable-opt',
@@ -113,6 +108,6 @@ class Samrai(AutotoolsPackage):
                 env['CXXFLAGS'] = self.compiler.cxx11_flag
         else:
             # boost 1.64.0 or earlier works with samrai 2.4.4~3.11.5
-            options.extend(['--with-boost=%s' % self.spec['boost'].prefix])
+            options.append('--with-boost=%s' % self.spec['boost'].prefix)
 
         return options
