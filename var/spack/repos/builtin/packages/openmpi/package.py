@@ -342,11 +342,13 @@ class Openmpi(AutotoolsPackage):
         spec = self.spec
         config_args = ['--enable-shared']
 
-        # In DSO mode, OpenMPI is built with plugins, whereas all functions are in the main libraries, then DSO is disabled.
+        # In DSO mode, OpenMPI is built with plugins, whereas all
+        # functions are in the main libraries, then DSO is disabled.
         if not spec.satisfies('+dso'):
             config_args.extend(['--disable-mca-dso'])
 
-        # Enabling the build of static libraries automatically sets --disable-mca-dso, therefore +static conflicts with +dso
+        # Enabling the build of static libraries automatically sets
+        # --disable-mca-dso, therefore +static conflicts with +dso
         if spec.satisfies('+static'):
             config_args.extend(['--enable-static'])
 
