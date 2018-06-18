@@ -223,16 +223,20 @@ class PythonPackage(PackageBase):
 
         self.setup_py('install', *args)
 
+    @run_after('install')
+    def write_rpath_file(self):
+
+        spec = self.spec
+        mkdirp(spec.prefix.bin)
+
         rpaths = []
-        rpaths.append(spec.prefix)
+        rpaths.extend(spec.prefix)
         for d in spec.dependencies(deptype=('link', 'run')):
             if re.match('^py-', d.name):
-                rpaths.append(d.prefix)
+                rpaths.extend(d.prefix)
 
-        mkdirp(spec.prefix.bin)
-        rpaths_file = open(spec.prefix.bin.join(".spack-rpaths"), 'w')
-        rpaths_file.write("\n".join(rpaths) + "\n")
-        rpaths_file.close()
+        with open(spec.prefix.bin.join(".spack-rpaths"), 'w') as rpaths_file:
+            rpaths_file.write("\n".join(rpaths) + "\n")
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
