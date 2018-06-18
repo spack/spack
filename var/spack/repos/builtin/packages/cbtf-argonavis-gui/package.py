@@ -56,45 +56,39 @@ class CbtfArgonavisGui(QMakePackage):
     version('develop', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
-    depends_on("cmake@3.0.2:", when='@develop', type='build')
-    depends_on("cmake@3.11.1", when='@1.3.0.0:', type='build')
+    depends_on("cmake@3.0.2:", type='build')
 
-    # To specify ^elfutils@0.170 on the command line spack
-    # apparently needs/wants this dependency explicity here
-    # even though it is referenced downstream
-    depends_on("elf", type="link")
-
-    depends_on('qt@4.8.6:', when='@develop')
-    depends_on('qt@5.10.0', when='@1.3.0.0:')
+    depends_on('qt@5.10.0:', when='@develop')
+    depends_on('qt@5.10.0', when='@1.3.0.0:9999')
 
     depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@1.3.0.0:')
+    depends_on("boost@1.66.0", when='@1.3.0.0:9999')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.3.0.0:')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.3.0.0:9999')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:", when='@1.3.0.0:')
+    depends_on("cbtf@1.9.1.0:9999", when='@1.3.0.0:9999')
 
     depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0:", when='@1.3.0.0:')
+    depends_on("cbtf-krell@1.9.1.0:9999", when='@1.3.0.0:9999')
 
     depends_on("cbtf-argonavis@develop", when='@develop')
-    depends_on("cbtf-argonavis@1.9.1.0:", when='@1.3.0.0:')
+    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@1.3.0.0:9999')
 
     depends_on("cuda")
 
     depends_on("openspeedshop-utils+cuda@develop", when='@develop')
-    depends_on("openspeedshop-utils@2.3.1.3:+cuda", when='@1.3.0.0:')
+    depends_on("openspeedshop-utils@2.3.1.3:+cuda", when='@1.3.0.0:9999')
 
     # For Xerces-C
     depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4", when='@1.3.0.0:')
+    depends_on("xerces-c@3.1.4", when='@1.3.0.0:9999')
 
     depends_on("graphviz@2.40.1:", when='@develop')
-    depends_on("graphviz@2.40.1", when='@1.3.0.0:')
+    depends_on("graphviz@2.40.1", when='@1.3.0.0:9999')
 
     depends_on("qtgraph")
 

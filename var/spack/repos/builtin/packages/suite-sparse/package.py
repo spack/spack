@@ -120,7 +120,7 @@ class SuiteSparse(Package):
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
 
-        if '%xl' in spec or '%xl_r' in spec:
+        if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
