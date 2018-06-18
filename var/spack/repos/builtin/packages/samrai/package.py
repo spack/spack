@@ -66,11 +66,10 @@ class Samrai(AutotoolsPackage):
     depends_on('hdf5+mpi')
     depends_on('m4', type='build')
 
-    # At some point later versions of boost were not able to be found
-    # by SAMRAI during configure, so we're using boost <= 1.60.0 for
-    # < 3.12.0 versions. I don't know what version of boost that
-    # happened at though without trying each version of boost.
-    depends_on('boost@:1.60.0', when='@0:3.11.99')
+    # From 3.12.0, samrai no long depends on boost.
+    # version 3.11.5 or earlier can only work with boost version
+    # 1.64.0 or earlier.
+    depends_on('boost@:1.64.0', when='@0:3.11.99', type='build')
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
@@ -103,5 +102,17 @@ class Samrai(AutotoolsPackage):
             options.extend([
                 '--enable-opt',
                 '--disable-debug'])
+
+        if self.version >= Version('3.12.0'):
+            # only version 3.12.0 and above, samrai does not use
+            # boost, but needs c++11. Without c++11 flags, samrai
+            # cannot build with either gcc or intel compilers.
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx11_flag
+        else:
+            # boost 1.64.0 or earlier works with samrai 2.4.4~3.11.5
+            options.extend(['--with-boost=%s' % self.spec['boost'].prefix])
 
         return options
