@@ -74,7 +74,6 @@ class Petsc(Package):
             description='Activates support for metis and parmetis')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
-    variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     # Mumps is disabled by default, because it depends on Scalapack
@@ -121,7 +120,6 @@ class Petsc(Package):
     depends_on('python@2.6:2.8', type='build')
 
     # Other dependencies
-    depends_on('boost', when='@:3.5+boost')
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
     depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
     depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
@@ -129,6 +127,8 @@ class Petsc(Package):
     # petsc-3.8+ uses default (float) metis with any (petsc) precision
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
+    # trilinos requires boost
+    depends_on('boost',when='@3.8:+trilinos')
 
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
@@ -197,7 +197,10 @@ class Petsc(Package):
                    '--with-x=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0']
+                   '--download-hwloc=0',
+                   'COPTFLAGS=',
+                   'FOPTFLAGS=',
+                   'CXXOPTFLAGS=']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -217,6 +220,7 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
+            options.append('--with-boost=1')
 
         if self.spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
@@ -236,7 +240,7 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
+        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(
