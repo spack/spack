@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install grass
-#
-# You can edit this file again by typing:
-#
-#     spack edit grass
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -75,11 +60,11 @@ class Grass(AutotoolsPackage):
     # required components
     depends_on('gmake@3.8.1:', type='build')
     depends_on('zlib')
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
     depends_on('proj')
     depends_on('gdal')
-    depends_on('python@2.7:2.99')
+    depends_on('python@2.7:2.9')
     depends_on('libx11')
 
     # optional pieces
@@ -88,13 +73,14 @@ class Grass(AutotoolsPackage):
     depends_on('postgresql', when='+postgres')
     depends_on('mariadb', when='+mysql')
     depends_on('sqlite', when='+sqlite')
-    depends_on('opengl', when='+opengl')
+    depends_on('gl', when='+opengl')
     depends_on('fftw', when='+fftw')
     depends_on('blas', when='+blas')
     depends_on('lapack', when='+lapack')
     depends_on('cairo', when='+cairo')
     depends_on('freetype', when='+freetype')
     depends_on('readline', when='+readline')
+    depends_on('opencl', when='+opencl')
     depends_on('bzip2', when='+bzlib')
     depends_on('netcdf', when='+netcdf')
     depends_on('geos', when='+geos')
@@ -111,66 +97,106 @@ class Grass(AutotoolsPackage):
                 spec['gdal'].prefix),
         ]
 
-        if '-cxx' in spec:
+        if '+cxx' in spec:
+            args.append('--with-cxx')
+        else:
             args.append('--without-cxx')
 
-        if '-tiff' in spec:
+        if '+tiff' in spec:
+            args.append('--with-tiff')
+        else:
             args.append('--without-tiff')
 
-        if '-png' in spec:
+        if '+png' in spec:
+            args.append('--with-png')
+        else:
             args.append('--without-png')
 
         if '+postgres' in spec:
             args.append('--with-postgres')
+        else:
+            args.append('--without-postgres')
 
         if '+mysql' in spec:
             args.append('--with-mysql')
+        else:
+            args.append('--without-mysql')
 
-        if '-sqlite' in spec:
+        if '+sqlite' in spec:
+            args.append('--with-sqlite')
+        else:
             args.append('--without-sqlite')
 
-        if '-opengl' in spec:
+        if '+opengl' in spec:
+            args.append('--with-opengl')
+        else:
             args.append('--without-opengl')
 
-        if '-fftw' in spec:
+        if '+fftw' in spec:
+            args.append('--with-fftw')
+        else:
             args.append('--without-fftw')
 
         if '+blas' in spec:
             args.append('--with-blas')
+        else:
+            args.append('--without-blas')
 
         if '+lapack' in spec:
             args.append('--with-lapack')
+        else:
+            args.append('--without-lapack')
 
-        if '-cairo' in spec:
+        if '+cairo' in spec:
+            args.append('--with-cairo')
+        else:
             args.append('--without-cairo')
 
-        if '-freetype' in spec:
+        if '+freetype' in spec:
+            args.append('--with-freetype')
+        else:
             args.append('--without-freetype')
 
         if '+readline' in spec:
             args.append('--with-readline')
+        else:
+            args.append('--without-readline')
 
-        if '-regex' in spec:
+        if '+regex' in spec:
+            args.append('--with-regex')
+        else:
             args.append('--without-regex')
 
         if '+pthread' in spec:
             args.append('--with-pthread')
+        else:
+            args.append('--without-pthread')
 
         if '+openmp' in spec:
             args.append('--with-openmp')
+        else:
+            args.append('--without-openmp')
 
         if '+opencl' in spec:
             args.append('--with-opencl')
+        else:
+            args.append('--without-opencl')
 
         if '+bzlib' in spec:
             args.append('--with-bzlib')
+        else:
+            args.append('--without-bzlib')
 
         if '+netcdf' in spec:
             args.append('--with-netcdf={0}/bin/nc-config'.format(
                 spec['netcdf'].prefix))
+        else:
+            args.append('--without-netcdf')
 
         if '+geos' in spec:
             args.append('--with-geos={0}/bin/geos-config'.format(
                 spec['geos'].prefix))
+        else:
+            args.append('--without-geos')
 
         return args
