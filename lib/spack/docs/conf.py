@@ -108,8 +108,8 @@ apidoc_args = [
     '--no-toc',        # Don't create a table of contents file
     '--output-dir=.',  # Directory to place all output
 ]
-sphinx_apidoc(apidoc_args + ['../spack'])
-sphinx_apidoc(apidoc_args + ['../llnl'])
+sphinx_apidoc(argv=apidoc_args + ['../spack'])
+sphinx_apidoc(argv=apidoc_args + ['../llnl'])
 
 # Enable todo items
 todo_include_todos = True
