@@ -100,15 +100,15 @@ class Grass(AutotoolsPackage):
     depends_on('geos', when='+geos')
 
     def configure_args(self):
-        spec=self.spec
+        spec = self.spec
 
         args = [
-                '--without-odbc',
-                '--without-nls',
-                '--without-opendwg',
-                '--with-x',
-                '--with-gdal={0}/bin/gdal-config'.format(
-                    spec['gdal'].prefix),
+            '--without-odbc',
+            '--without-nls',
+            '--without-opendwg',
+            '--with-x',
+            '--with-gdal={0}/bin/gdal-config'.format(
+                spec['gdal'].prefix),
         ]
 
         if '-cxx' in spec:
