@@ -160,13 +160,13 @@ class NetlibLapack(Package):
 
         if self.compiler.name == 'clang' \
             and spec.satisfies('arch=linux-rhel7-ppc64le'):
-            if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
-                # use F77 compiler if IBM XL or clang
-                cmake_args.extend([
-                    '-DCMAKE_Fortran_COMPILER=%s' % spack_f77,
-                    '-DCMAKE_Fortran_FLAGS=%s' % (
-                        ' '.join(self.spec.compiler_flags['fflags'])),
-                ])
+                if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
+                    # use F77 compiler if IBM XL or clang
+                    cmake_args.extend([
+                        '-DCMAKE_Fortran_COMPILER=%s' % spack_f77,
+                        '-DCMAKE_Fortran_FLAGS=%s' % (
+                            ' '.join(self.spec.compiler_flags['fflags'])),
+                    ])
 
         # deprecated routines are commonly needed by, for example, suitesparse
         # Note that OpenBLAS spack is built with deprecated routines
