@@ -105,6 +105,10 @@ class Opencv(CMakePackage):
     variant('vtk', default=True, description='Activates support for VTK')
     variant('zlib', default=True, description='Build zlib from source')
 
+    # Patch to fix conflict between CUDA and OpenCV 3.4.1 header file that have the same name.
+    # Problem is fixed in the current development branch of OpenCV. See #8461 for more information.
+    patch('dnn_cuda.patch', when='@3.4.1+cuda+dnn')
+
     depends_on('eigen~mpfr', when='+eigen', type='build')
 
     depends_on('zlib', when='+zlib')
