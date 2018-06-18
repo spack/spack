@@ -560,10 +560,10 @@ Install steps
 
    .. _`verify-compiler-anticipated`:
 
-   C. Verify that the will be used as expected:
+   C. Verify that the new compiler version will be used as expected:
 
-      You should see the new compiler version as active if you placed the stub
-      last in ``compilers.yaml``, and ask for the compiler just by name, e.g.:
+      You should see it if you placed the stub last in ``compilers.yaml`` and
+      ask for the compiler just by name, e.g.:
 
       .. code-block:: sh
 
@@ -577,18 +577,16 @@ Install steps
          spack spec zlib %intel@18.0.2
 
    You are right to ask: "Why on earth is that necessary?" [fn9]_.
-   The answer lies in Spack's philosophy of compiler consistency (or perhaps purity).
-   Consider what would happen without the compiler stub being declared:
+   The answer lies in Spack striving for strict compiler consistency.
+   Consider what happens without a pre-declared compiler stub:
    You ask Spack to install a particular version
-   ``intel-parallel-studio@edition.V``.  Spack will apply an associated
-   compiler spec to concretize your request, and the result will be some
-   ``intel-parallel-studio@edition.V %X``, with ``%X`` referring to the
-   compiler that was formally used in the concretization. Naturally, this is
-   not going to be the version that this new package provides, but typically
-   ``%gcc@...`` in a new-ish Spack installation or ``%intel@...`` if you
-   previously configured Intel compilers in Spack.
+   ``intel-parallel-studio@edition.V``.  Spack will apply an unrelated compiler
+   spec to concretize your request, giving ``intel-parallel-studio@edition.V
+   %X``. Naturally, ``%X`` is not going to be the version that this new package
+   provides, but typically ``%gcc@...`` in a default Spack installation or possibly
+   indeed ``%intel@...``, though at a version preceeding ``V``.
 
-   So far, so good, but a problem arises as soon as you try to use any virtual
+   The problem comes to the fore as soon as you try to use any virtual
    ``mkl`` or ``mpi`` packages that you would expect to now be provided by
    ``intel-parallel-studio@edition.V``.  Spack will indeed see those virtual packages,
    but only as being tied to the compiler concretized *at installation*.
@@ -597,8 +595,8 @@ Install steps
    Spack would complain about ``mkl%intel@V`` being missing, because it only
    knows about ``mkl%X``.
 
-   To escape this trap, put the compiler stub declaration shown here into
-   place, then use the pre-declared compiler spec to install the package as
+   To escape this trap, put the compiler stub declaration shown here in place,
+   then use that pre-declared compiler spec to install the actual package, as
    shown in the next step.  This approach works because only the package's
    builtin binary installer will be used, not any of the compilers.
 
@@ -616,11 +614,11 @@ Install steps
 
       spack install intel-parallel-studio@cluster.2018.2  %intel@18.0.2
 
-   The command for a smaller standalone package, is the same:
+   The command for a smaller standalone package is the same:
 
    .. code-block:: sh
 
-      spack install intel-mpi@2018.2.199
+      spack install intel-mpi@2018.2.199  %intel
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
