@@ -323,10 +323,10 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions):
     assert not os.path.exists(os.path.join(view_dir, init_file))
 
 
-# TODO: is this redundant? it makes sure that under circumstances where the
-# namespace doesnt match that a conflict is recorded
 def test_python_namespace_conflict(tmpdir, namespace_extensions):
-    """Test the view update logic in PythonPackage
+    """Test the view update logic in PythonPackage reports an error when two
+       python extensions with different namespaces have a conflicting __init__
+       file.
     """
     ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
     other_namespace = py_namespace + 'other'
