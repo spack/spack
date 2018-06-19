@@ -24,7 +24,8 @@
 ##############################################################################
 """This file dispatches to the correct implementation of OrderedDict."""
 
-# TODO: this file can be removed when support for python 2.6 will be dropped
+# TODO: this file, along with py26/ordereddict.py, can be removed when
+# TODO: support for python 2.6 will be dropped
 
 # Removing this import will make python 2.6
 # fail on import of ordereddict
