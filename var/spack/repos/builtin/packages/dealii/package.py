@@ -164,26 +164,27 @@ class Dealii(CMakePackage, CudaPackage):
     for p in ['assimp', 'gmsh', 'nanoflann', 'scalapack', 'sundials',
               'adol-c']:
         conflicts('+{0}'.format(p), when='@:8.5.1',
-                  msg='Interface to {0} is supported starting from 9.0.0'
-                      ', please explicitly disable this variant '
+                  msg='The interface to {0} is supported from version 9.0.0 '
+                      'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
     conflicts('+slepc', when='~petsc',
-              msg='It is not possible ot enable slepc interfaces '
+              msg='It is not possible to enable slepc interfaces '
                   'without petsc.')
 
     # interfaces added in 8.5.0:
     for p in ['gsl', 'python']:
         conflicts('+{0}'.format(p), when='@:8.4.2',
-                  msg='Interface to {0} is supported starting from 8.5.0'
-                      ', please explicitly disable this variant '
+                  msg='The interface to {0} is supported from version 8.5.0 '
+                      'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
     # MPI requirements:
     for p in ['arpack', 'hdf5', 'netcdf', 'p4est', 'petsc', 'scalapack',
               'slepc', 'trilinos']:
         conflicts('+{0}'.format(p), when='~mpi',
-                  msg='Can not enable {0} without MPI'.format(p))
+                  msg='To enable {0} it is necessary to build deal.II with '
+                      'MPI support enabled.'.format(p))
 
     def cmake_args(self):
         spec = self.spec
