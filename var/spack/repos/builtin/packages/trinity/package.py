@@ -53,7 +53,6 @@ class Trinity(MakefilePackage):
     depends_on("automake")
     depends_on("libtool")
 
-
     def build(self, spec, prefix):
         make()
         make("trinity_essentials")
@@ -78,4 +77,4 @@ class Trinity(MakefilePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('TRINITY_HOME', self.prefix.bin)
-        spack_env.append_flags('CXXFLAGS',self.compiler.openmp_flag)
+        spack_env.append_flags('CXXFLAGS', self.compiler.openmp_flag)
