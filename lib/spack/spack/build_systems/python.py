@@ -229,7 +229,8 @@ class PythonPackage(PackageBase):
         sitecustomize.py will add it to sys.path.
         """
         spec = self.spec
-        mkdirp(spec.prefix.bin)
+        output_dir = spec.prefix.join(".spack")
+        mkdirp(output_dir)
 
         sitedirs = []
         sitedirs.append(spec.prefix)
@@ -242,7 +243,7 @@ class PythonPackage(PackageBase):
                 if d.package.extends(my_python):
                     sitedirs.append(d.prefix)
 
-        with open(spec.prefix.bin.join(".python-sitedirs"), 'w') as sd_file:
+        with open(output_dir.join("python-sitedirs"), 'w') as sd_file:
             sd_file.write("\n".join(sitedirs) + "\n")
 
     def install_args(self, spec, prefix):

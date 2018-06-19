@@ -40,7 +40,9 @@ class SetSysArgvTrigger(object):
         # with site.addsitedir(...).
         cmd = sys.argv[0]
         try:
-            sd_file = os.path.join(os.path.dirname(cmd), ".python-sitedirs")
+            bin_dir = os.path.dirname(cmd)
+            prefix = os.path.dirname(bin_dir)
+            sd_file = os.path.join(prefix, ".spack", "python-sitedirs")
             sitedirs = open(sd_file).read()
 
             for d in sitedirs.split():
