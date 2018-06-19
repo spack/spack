@@ -34,7 +34,7 @@ class NcbiMagicblast(AutotoolsPackage):
 
     version('1.3.0', '2615b919c1fe1bf7dc3d816392ab4420')
 
-    depends_on('ncbi-vdb')
+    depends_on('lmdb')
     configure_directory = 'c++'
 
     def configure_args(self):
