@@ -6,41 +6,41 @@
     http://help.catchsoftware.com/display/ET/JUnit+Format
 -->
 <testsuites>
-{% for suite in test_suites %}
-    <testsuite name="{{ suite.name }}"
-               errors="{{ suite.nerrors }}"
-               tests="{{ suite.ntests }}"
-               failures="{{ suite.nfailures }}"
-               time="{{ suite.time }}"
-               timestamp="{{ suite.timestamp }}" >
+{% for spec in specs %}
+    <testsuite name="{{ spec.name }}"
+               errors="{{ spec.nerrors }}"
+               tests="{{ spec.npackages }}"
+               failures="{{ spec.nfailures }}"
+               time="{{ spec.time }}"
+               timestamp="{{ spec.timestamp }}" >
         <properties>
-{% for property in suite.properties %}
+{% for property in spec.properties %}
             <property name="{{ property.name }}" value="{{ property.value }}" />
 {% endfor %}
         </properties>
-{% for test in suite.testcases %}
-        <testcase classname="{{ test.name }}"
-                  name="{{ test.id }}"
-                  time="{{ test.elapsed_time }}">
-{% if test.result == 'failure' %}
-            <failure message="{{ test.message }}">
-{{ test.exception }}
+{% for package in spec.packages %}
+        <testcase classname="{{ package.name }}"
+                  name="{{ package.id }}"
+                  time="{{ package.elapsed_time }}">
+{% if package.result == 'failure' %}
+            <failure message="{{ package.message }}">
+{{ package.exception }}
             </failure>
-{% elif test.result == 'error' %}
-            <error message="{{ test.message }}">
-{{ test.exception }}
+{% elif package.result == 'error' %}
+            <error message="{{ package.message }}">
+{{ package.exception }}
             </error>
-{% elif test.result == 'skipped' %}
+{% elif package.result == 'skipped' %}
             <skipped />
 {% endif %}
-{% if test.stdout %}
+{% if package.stdout %}
             <system-out>
-{{ test.stdout }}
+{{ package.stdout }}
             </system-out>
 {% endif %}
-{% if test.stderr %}
+{% if package.stderr %}
             <system-err>
-{{ test.stderr }}
+{{ package.stderr }}
             </system-err>
 {% endif %}
         </testcase>

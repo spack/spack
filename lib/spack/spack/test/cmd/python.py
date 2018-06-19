@@ -30,4 +30,4 @@ python = SpackCommand('python')
 
 def test_python():
     out = python('-c', 'import spack; print(spack.spack_version)')
-    assert out.strip() == str(spack.spack_version)
+    assert out.strip() == spack.spack_version

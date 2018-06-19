@@ -59,8 +59,8 @@ class NetlibLapack(Package):
     variant('xblas', default=False,
             description='Builds extended precision routines using XBLAS')
 
-    patch('ibm-xl.patch', when='@3:6%xl')
-    patch('ibm-xl.patch', when='@3:6%xl_r')
+    patch('ibm-xl.patch', when='@3.7: %xl')
+    patch('ibm-xl.patch', when='@3.7: %xl_r')
 
     # virtual dependency
     provides('blas', when='~external-blas')
@@ -153,7 +153,8 @@ class NetlibLapack(Package):
             # use F77 compiler if IBM XL
             cmake_args.extend([
                 '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
-                '-DCMAKE_Fortran_FLAGS=-qzerosize'
+                '-DCMAKE_Fortran_FLAGS=%s' % (
+                    ' '.join(self.spec.compiler_flags['fflags'])),
             ])
 
         # deprecated routines are commonly needed by, for example, suitesparse

@@ -114,11 +114,12 @@ from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
-import spack
 import spack.architecture
+import spack.compiler
 import spack.compilers as compilers
 import spack.error
 import spack.parse
+import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -183,7 +184,7 @@ hash_color = '@K'              #: color for highlighting package hashes
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
-#: See spack.color for descriptions of the color codes.
+#: See llnl.util.tty.color for descriptions of the color codes.
 color_formats = {'%': compiler_color,
                  '@': version_color,
                  '=': architecture_color,
@@ -1228,7 +1229,7 @@ class Spec(object):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.get_pkg_class(self.fullname)
+        return spack.repo.path.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -1244,7 +1245,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return (name is not None) and (not spack.repo.exists(name))
+        return (name is not None) and (not spack.repo.path.exists(name))
 
     @property
     def concrete(self):
@@ -1674,13 +1675,15 @@ class Spec(object):
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
             if not self.virtual:
+                import spack.concretize
+                concretizer = spack.concretize.concretizer
                 changed |= any(
-                    (spack.concretizer.concretize_architecture(self),
-                     spack.concretizer.concretize_compiler(self),
-                     spack.concretizer.concretize_compiler_flags(
-                         self),  # has to be concretized after compiler
-                     spack.concretizer.concretize_version(self),
-                     spack.concretizer.concretize_variants(self)))
+                    (concretizer.concretize_architecture(self),
+                     concretizer.concretize_compiler(self),
+                     # flags must be concretized after compiler
+                     concretizer.concretize_compiler_flags(self),
+                     concretizer.concretize_version(self),
+                     concretizer.concretize_variants(self)))
             presets[self.name] = self
 
         visited.add(self.name)
@@ -1741,8 +1744,9 @@ class Spec(object):
                 if not replacement:
                     # Get a list of possible replacements in order of
                     # preference.
-                    candidates = spack.concretizer.choose_virtual_or_external(
-                        spec)
+                    import spack.concretize
+                    concretizer = spack.concretize.concretizer
+                    candidates = concretizer.choose_virtual_or_external(spec)
 
                     # Try the replacements in order, skipping any that cause
                     # satisfiability problems.
@@ -1804,9 +1808,13 @@ class Spec(object):
 
         return changed
 
-    def concretize(self):
+    def concretize(self, tests=False):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
+
+        Args:
+            tests (list or bool): list of packages that will need test
+                dependencies, or True/False for test all/none
 
         If this spec could describe more than one version, variant, or build
         of a package, this will add constraints to make it concrete.
@@ -1825,12 +1833,25 @@ class Spec(object):
         changed = True
         force = False
 
+        user_spec_deps = self.flat_dependencies(copy=False)
+
         while changed:
-            changes = (self.normalize(force),
+            changes = (self.normalize(force, tests=tests,
+                                      user_spec_deps=user_spec_deps),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
             changed = any(changes)
             force = True
+
+        visited_user_specs = set()
+        for dep in self.traverse():
+            visited_user_specs.add(dep.name)
+            visited_user_specs.update(x.name for x in dep.package.provided)
+
+        extra = set(user_spec_deps.keys()).difference(visited_user_specs)
+        if extra:
+            raise InvalidDependencyError(
+                self.name + " does not depend on " + comma_or(extra))
 
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
@@ -1842,7 +1863,7 @@ class Spec(object):
             # we can do it as late as possible to allow as much
             # compatibility across repositories as possible.
             if s.namespace is None:
-                s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+                s.namespace = spack.repo.path.repo_for_pkg(s.name).namespace
 
             if s.concrete:
                 continue
@@ -2046,7 +2067,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(
-            self, dependency, visited, spec_deps, provider_index):
+            self, dependency, visited, spec_deps, provider_index, tests):
         """Merge dependency information from a Package into this Spec.
 
         Args:
@@ -2142,10 +2163,10 @@ class Spec(object):
             self._add_dependency(spec_dependency, dependency.type)
 
         changed |= spec_dependency._normalize_helper(
-            visited, spec_deps, provider_index)
+            visited, spec_deps, provider_index, tests)
         return changed
 
-    def _normalize_helper(self, visited, spec_deps, provider_index):
+    def _normalize_helper(self, visited, spec_deps, provider_index, tests):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return False
@@ -2166,16 +2187,23 @@ class Spec(object):
             for dep_name in self.package_class.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
+
                 # If dep is a needed dependency, merge it.
-                if dep and (spack.package_testing.check(self.name) or
-                            set(dep.type) - set(['test'])):
-                    changed |= self._merge_dependency(
-                        dep, visited, spec_deps, provider_index)
+                if dep:
+                    merge = (
+                        # caller requested test dependencies
+                        tests is True or (tests and self.name in tests) or
+                        # this is not a test-only dependency
+                        dep.type - set(['test']))
+
+                    if merge:
+                        changed |= self._merge_dependency(
+                            dep, visited, spec_deps, provider_index, tests)
             any_change |= changed
 
         return any_change
 
-    def normalize(self, force=False):
+    def normalize(self, force=False, tests=False, user_spec_deps=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2204,26 +2232,34 @@ class Spec(object):
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
-        # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False)
+        # Clear the DAG and collect all dependencies in the DAG, which will be
+        # reapplied as constraints. All dependencies collected this way will
+        # have been created by a previous execution of 'normalize'.
+        # A dependency extracted here will only be reintegrated if it is
+        # discovered to apply according to _normalize_helper, so
+        # user-specified dependencies are recorded separately in case they
+        # refer to specs which take several normalization passes to
+        # materialize.
+        all_spec_deps = self.flat_dependencies(copy=False)
+
+        if user_spec_deps:
+            for name, spec in user_spec_deps.items():
+                if name not in all_spec_deps:
+                    all_spec_deps[name] = spec
+                else:
+                    all_spec_deps[name].constrain(spec)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            [s for s in spec_deps.values()], restrict=True)
+            [s for s in all_spec_deps.values()], restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
 
-        any_change = self._normalize_helper(visited, spec_deps, provider_index)
-
-        # If there are deps specified but not visited, they're not
-        # actually deps of this package.  Raise an error.
-        extra = set(spec_deps.keys()).difference(visited)
-        if extra:
-            raise InvalidDependencyError(
-                self.name + " does not depend on " + comma_or(extra))
+        any_change = self._normalize_helper(
+            visited, all_spec_deps, provider_index, tests)
 
         # Mark the spec as normal once done.
         self._normal = True
@@ -2440,7 +2476,7 @@ class Spec(object):
         if not self.virtual and other.virtual:
             try:
                 pkg = spack.repo.get(self.fullname)
-            except spack.repository.UnknownEntityError:
+            except spack.repo.UnknownEntityError:
                 # If we can't get package info on this spec, don't treat
                 # it as a provider of this vdep.
                 return False
@@ -3090,7 +3126,7 @@ class Spec(object):
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))
                 elif named_str == 'SPACK_ROOT':
-                    out.write(fmt % token_transform(spack.prefix))
+                    out.write(fmt % token_transform(spack.paths.prefix))
                 elif named_str == 'SPACK_INSTALL':
                     out.write(fmt % token_transform(spack.store.root))
                 elif named_str == 'PREFIX':

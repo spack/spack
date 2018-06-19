@@ -60,16 +60,19 @@ class CudaPackage(PackageBase):
     depends_on("cuda@8:", when='cuda_arch=62')
     depends_on("cuda@9:", when='cuda_arch=70')
 
-    depends_on('cuda@:8.99', when='cuda_arch=20')
+    depends_on('cuda@:8', when='cuda_arch=20')
 
     # Compiler conflicts:
     # https://gist.github.com/ax3l/9489132
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5')
-    conflicts('%gcc@6:', when='+cuda ^cuda@:8.99')
-    conflicts('%gcc@7:', when='+cuda ^cuda@:9.99')
+    conflicts('%gcc@6:', when='+cuda ^cuda@:8')
+    conflicts('%gcc@7:', when='+cuda ^cuda@:9.1')
+    conflicts('%gcc@8:', when='+cuda ^cuda@:9.99')
     if (platform.system() != "Darwin"):
         conflicts('%clang@:3.4,3.7:', when='+cuda ^cuda@7.5')
-        conflicts('%clang@:3.7,4:', when='+cuda ^cuda@8:9')
+        conflicts('%clang@:3.7,4:', when='+cuda ^cuda@8:9.0')
+        conflicts('%clang@:3.7,5:', when='+cuda ^cuda@9.1')
+        conflicts('%clang@:3.7,6:', when='+cuda ^cuda@9.2')
     conflicts('%intel@:14,16:', when='+cuda ^cuda@7.5')
     conflicts('%intel@:14,17:', when='+cuda ^cuda@8.0.44')
     conflicts('%intel@:14,18:', when='+cuda ^cuda@8.0.61:9')
