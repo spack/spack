@@ -127,8 +127,8 @@ class Petsc(Package):
     # petsc-3.8+ uses default (float) metis with any (petsc) precision
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
-    # trilinos requires boost
-    depends_on('boost', when='@3.8:+trilinos')
+    # trilinos might require boost
+    depends_on('boost', when='@3.7.0:+trilinos+boost')
 
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
@@ -220,7 +220,8 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
-            options.append('--with-boost=1')
+            if spec.satisfies('^trilinos+boost'):
+                options.append('--with-boost=1')
 
         if self.spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
