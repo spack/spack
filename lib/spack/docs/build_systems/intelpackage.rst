@@ -505,9 +505,10 @@ Install steps
 
 .. _intel-compiler-anticipation:
 
-2. If you wish to install the package ``intel-parallel-studio`` for the purpose
-   of using both its ``%intel`` compilers and its virtual packages (like
-   ``mkl`` and ``mpi``), apply the following special preparatory steps:
+2. If you wish to install the package ``intel-parallel-studio`` to leverage
+   both its ``%intel`` compilers and its virtual packages (like ``mkl`` and,
+   for the "cluster edition", ``mpi``), apply the following special preparatory
+   steps the first time you install each new version of the package.
 
    .. _`determine-compiler-anticipated`:
 
@@ -557,6 +558,14 @@ Install steps
       Replace ``18.0.2`` with the version that you determined in the preceeding
       step. The contents of the language compiler tags (``cc:`` etc.) do not
       matter at this point.
+
+      **Note:** If you already have a certain ``%intel@x.y.z`` compiler spec in
+      place and you wish to re-install the ``intel-parallel-studio`` (or
+      ``intel``) package providing the *same* compiler version, you do not need
+      to revert its ``compilers.yaml`` declaration to stub form as shown here.
+      When done, however, you may still need to adjust the entries under the
+      ``paths:`` tag (`see below <Post-install steps for compilers_>`_) if the
+      package's installation directory changed, such as in the hash portion.
 
    .. _`verify-compiler-anticipated`:
 
@@ -683,13 +692,13 @@ Install steps
 
          spack clean --stage
 
-   5. Also optionally, to roll back any ``build_stage`` customization, run:
+   5. Also optionally, roll back your ``build_stage`` customization:
 
       .. code-block:: sh
 
          spack config edit config
 
-     and delete or comment the ``build_stage`` entry.
+     and delete or comment out the ``build_stage`` entry.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -699,9 +708,20 @@ Post-install steps for compilers
 Follow the steps under `Integrating Compilers`_ to tell Spack the minutiae for
 actually using those compilers with client packages.
 
-* Under ``paths:``, use the full paths to the actual compiler binaries (``icc``,
+* Under ``paths:``, give the full paths to the actual compiler binaries (``icc``,
   ``ifort``, etc.) located within the Spack installation tree, in all their
   unsightly length [fn10]_.
+
+  To determine the full path to the C compiler, adapt and run:
+
+  .. code-block:: sh
+
+     find `spack location -i intel-parallel-studio@cluster.2018.2` \
+            -name icc -type f -ls
+
+  If you get hits for both ``intel64`` and ``ia32``, you almost certainly will
+  want to use the ``intel64`` variant.  The ``icpc`` and ``ifort`` compilers
+  will be located in the same directory as ``icc``.
 
 * Use the ``modules:`` or ``cflags:`` tokens to specify a suitable accompanying
   ``gcc`` version to help pacify picky client packages that ask for C++
@@ -929,7 +949,7 @@ Footnotes
 
 .. [fn9] Spack's close coupling of installed packages to compilers, which both
    necessitates the detour for installing ``intel-parallel-studio``, and,
-   limits any of its provided virtual packages to a single compiler, heavily
+   largely limits any of its provided virtual packages to a single compiler, heavily
    favors a `recommendation to install Intel Parallel Studio outside of Spack
    <integrate-external-intel_>`_ and declare it for Spack in ``packages.yaml``
    by a `compiler-less spec <compiler-neutral-package_>`_.
