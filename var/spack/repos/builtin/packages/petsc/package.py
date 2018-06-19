@@ -128,7 +128,7 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
     # trilinos requires boost
-    depends_on('boost',when='@3.8:+trilinos')
+    depends_on('boost', when='@3.8:+trilinos')
 
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
