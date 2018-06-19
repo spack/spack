@@ -49,9 +49,14 @@ class Trinity(MakefilePackage):
     depends_on("jellyfish")
     depends_on("salmon")
     depends_on("perl+threads")
+    depends_on("autoconf")
+    depends_on("automake")
+    depends_on("libtool")
+
 
     def build(self, spec, prefix):
-        make
+        make()
+        make("trinity_essentials")
         make("plugins")
 
     def install(self, spec, prefix):
@@ -73,3 +78,4 @@ class Trinity(MakefilePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('TRINITY_HOME', self.prefix.bin)
+        spack_env.append_flags('CXXFLAGS',self.compiler.openmp_flag)
