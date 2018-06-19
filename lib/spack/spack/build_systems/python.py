@@ -233,10 +233,10 @@ class PythonPackage(PackageBase):
         sitedirs.append(spec.prefix)
 
         deps = spec.dependencies(deptype=('link', 'run'))
-        python_spec = next( (spec for spec in deps if spec.satisfies('python')), None)
-        if python_spec:
+        my_python = next( (spec for spec in deps if spec.satisfies('python')), None)
+        if my_python:
             for d in spec.dependencies(deptype=('link', 'run')):
-                if d.package.extends(python_spec):
+                if d.package.extends(my_python):
                     sitedirs.append(d.prefix)
 
         with open(spec.prefix.bin.join(".python-sitedirs"), 'w') as sd_file:
