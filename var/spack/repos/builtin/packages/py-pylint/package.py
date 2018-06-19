@@ -43,7 +43,7 @@ class PyPylint(PythonPackage):
     depends_on('py-isort@4.2.5:')
     depends_on('py-mccabe')
     depends_on('py-editdistance')
-    depends_on('py-setuptools@17.1:', type='build')
+    depends_on('py-setuptools@17.1:', type=('build', 'run'))
     # depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on('py-configparser', when='^python@:2.8')
     depends_on('py-backports-functools-lru-cache', when='^python@:2.8')
