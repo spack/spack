@@ -185,30 +185,6 @@ def namespace_extensions(tmpdir):
     return str(ext1_prefix), str(ext2_prefix), 'examplenamespace'
 
 
-def test_python_activation(tmpdir):
-    """Test a global activation of a python extension. For global activations,
-       the extension is added to the installation prefix of the extendee.
-    """
-    # Note the lib directory is based partly on the python version
-    python_spec = spack.spec.Spec('python@2.7.12')
-    python_spec._concrete = True
-
-    python_name = 'python'
-    tmpdir.ensure(python_name, dir=True)
-
-    python_prefix = str(tmpdir.join(python_name))
-    # Set the prefix on the package's spec reference because that is a copy of
-    # the original spec
-    python_spec.package.spec.prefix = python_prefix
-
-    ext_name = 'py-extension'
-    tmpdir.ensure(ext_name, dir=True)
-    ext_pkg = FakeExtensionPackage(ext_name, str(tmpdir.join(ext_name)))
-
-    python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg, python_pkg.view())
-
-
 def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
     python_prefix, ext_prefix = python_and_extension_dirs
 
