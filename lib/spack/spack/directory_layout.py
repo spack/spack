@@ -353,12 +353,15 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             raise NoSuchExtensionError(spec, ext_spec)
 
     def extension_file_path(self, spec):
-        """Gets full path to an installed package's extension file"""
+        """Gets full path to an installed package's extension file, which
+           keeps track of all the extensions for that package which have been
+           added to this view.
+        """
         _check_concrete(spec)
         normalize_path = lambda p: (
-            os.path.abspath(p).rstrip(os.path.sep) + os.path.sep)
-        if normalize_path(spec.prefix).startswith(normalize_path(self.root)):
-            # For backwards compatibility, when the root is in the extended
+            os.path.abspath(p).rstrip(os.path.sep))
+        if normalize_path(spec.prefix) == normalize_path(self.root):
+            # For backwards compatibility, when the root is the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
             components = [self.root, self.layout.metadata_dir,
