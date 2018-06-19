@@ -186,6 +186,9 @@ def namespace_extensions(tmpdir):
 
 
 def test_python_activation(tmpdir):
+    """Test a global activation of a python extension. For global activations,
+       the extension is added to the installation prefix of the extendee.
+    """
     # Note the lib directory is based partly on the python version
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
