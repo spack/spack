@@ -2148,6 +2148,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         view.unmerge(extension.spec, ignore=kwargs.get('ignore', None))
 
     def view(self):
+        """Create a view with the prefix of this package as the root.
+        Extensions added to this view will modify the installation prefix of
+        this package.
+        """
         return YamlFilesystemView(self.prefix, spack.store.layout)
 
     def do_restage(self):
