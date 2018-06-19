@@ -4,6 +4,7 @@ Hack a bunch of directories onto the front of sys.path
 
 import os
 import site
+import sys
 
 ## Need to find the `.python-sitedirs` file.
 ## But, sys.argv hasn't been set up yet.
