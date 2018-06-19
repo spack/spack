@@ -231,9 +231,13 @@ class PythonPackage(PackageBase):
 
         rpaths = []
         rpaths.append(spec.prefix)
-        for d in spec.dependencies(deptype=('link', 'run')):
-            if d.package.provides_python_libs:
-                rpaths.append(d.prefix)
+
+        deps = spec.dependencies(deptype=('link', 'run'))
+        python_spec = next( (spec for spec in deps if spec.satisfies('python')), None)
+        if python_spec:
+            for d in spec.dependencies(deptype=('link', 'run')):
+                if d.package.extends(python_spec):
+                    rpaths.append(d.prefix)
 
         with open(spec.prefix.bin.join(".spack-rpaths"), 'w') as rpaths_file:
             rpaths_file.write("\n".join(rpaths) + "\n")
