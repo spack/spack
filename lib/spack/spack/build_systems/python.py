@@ -29,9 +29,7 @@ import os
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
-from llnl.util.filesystem import working_dir
-import re
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, working_dir
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using Python
