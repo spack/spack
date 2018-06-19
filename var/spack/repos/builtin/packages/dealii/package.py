@@ -155,21 +155,41 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
     # check that the combination of variants makes sense
-    conflicts('^openblas+ilp64', when='@:8.5.1')
-    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
-    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
-    conflicts('+assimp', when='@:8.5.1')
-    conflicts('+gmsh', when='@:8.5.1')
-    conflicts('+nanoflann', when='@:8.5.1')
-    conflicts('+scalapack', when='@:8.5.1')
-    conflicts('+sundials', when='@:8.5.1')
-    conflicts('+adol-c', when='@:8.5.1')
+    conflicts('^openblas+ilp64', when='@:8.5.1',
+              msg='64bit BLAS is only supported from 9.0.0')
+    conflicts('^intel-mkl+ilp64', when='@:8.5.1',
+              msg='64bit BLAS is only supported from 9.0.0')
+    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1',
+              msg='64bit BLAS is only supported from 9.0.0')
+    conflicts('+assimp', when='@:8.5.1',
+              msg='Interface to assim is supported starting from 9.0.0'
+                  ', please explicitly disable this variant via ~assimp')
+    conflicts('+gmsh', when='@:8.5.1',
+              msg='Interface to gmsh is supported starting from 9.0.0'
+                  ', please explicitly disable this variant via ~gmsh')
+    conflicts('+nanoflann', when='@:8.5.1',
+              msg='Interface to gmsh is supported starting from 9.0.0'
+                  ', please explicitly disable this variant via ~nanoflann')
+    conflicts('+scalapack', when='@:8.5.1',
+              msg='Interface to gmsh is supported starting from 9.0.0'
+                  ', please explicitly disable this variant via ~scalapack')
+    conflicts('+sundials', when='@:8.5.1',
+              msg='Interface to gmsh is supported starting from 9.0.0'
+                  ', please explicitly disable this variant via ~sundials')
+    conflicts('+adol-c', when='@:8.5.1',
+              msg='Interface to gmsh is supported starting from 9.0.0'
+                  ', please explicitly disable this variant via ~adol-c')
     conflicts('+slepc', when='~petsc')
-    conflicts('+gsl',    when='@:8.4.2')
-    conflicts('+python', when='@:8.4.2')
+    conflicts('+gsl',    when='@:8.4.2',
+              msg='Interface to gsl is supported starting from 8.5.0'
+                  ', please explicitly disable this variant via ~gsl')
+    conflicts('+python', when='@:8.4.2',
+              msg='Interface to python is supported starting from 8.5.0'
+                  ', please explicitly disable this variant via ~python')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc', '+scalapack',
               '+slepc', '+trilinos']:
-        conflicts(p, when='~mpi')
+        conflicts(p, when='~mpi',
+                  msg='Can not enable {0} without MPI'.format(p))
 
     def cmake_args(self):
         spec = self.spec
