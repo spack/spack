@@ -31,6 +31,7 @@ from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import mkdirp, working_dir
 
+
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using Python
     setup.py files
@@ -223,7 +224,10 @@ class PythonPackage(PackageBase):
 
     @run_after('install')
     def write_python_sitedirs_file(self):
-
+        """Write out a file that contains the prefixes of each depedency that
+        provides a python library.  Code in our Python's
+        sitecustomize.py will add it to sys.path.
+        """
         spec = self.spec
         mkdirp(spec.prefix.bin)
 
