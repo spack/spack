@@ -45,6 +45,7 @@ class Gmp(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
+    depends_on('bzip2', type='build')
 
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
