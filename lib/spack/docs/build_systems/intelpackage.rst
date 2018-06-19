@@ -620,6 +620,77 @@ Install steps
 
       spack install intel-mpi@2018.2.199  %intel
 
+.. tip::
+
+   As mentioned, Intel packages can be above 10 GB in size, which can tax the
+   disk space available for temporary files (usually ``/tmp``) on small, busy,
+   or restricted systems (like VMs). The Intel installer will stop and report
+   insufficient space as::
+
+       ==> './install.sh' '--silent' 'silent.cfg'
+       …
+       Missing critical prerequisite
+       -- Not enough disk space
+
+   As first remedy, clean Spack's existing staging area:
+
+   .. code-block:: sh
+
+      spack clean --stage
+
+   then retry installing the large package. Spack normally cleans staging
+   directories but certain failures may prevent it from doing so.
+   
+   If the error persists, tell Spack to use an alternative location for
+   temporary files:
+
+   1. Run ``df -h`` to identify an alternative location on your system.
+
+   2. Tell Spack to use that location for staging. Do **one** of the following:
+
+      * Run Spack with the environment variable ``TMPDIR`` altered for just a
+        single command. For example, to use your ``$HOME`` directory:
+
+        .. code-block:: sh
+
+           TMPDIR="$HOME/spack-stage"  spack install ....
+
+        This example uses Bourne shell syntax. Adapt for other shells as needed.
+
+      * Alternatively, customize
+        :ref:`Spack's ``build_stage`` configuration setting <config-overrides_>`.
+
+        .. code-block:: sh
+
+           spack config edit config
+
+        Append:
+
+        .. code-block:: yaml
+
+           config:
+             build_stage:
+             - /home/$user/spack-stage
+        
+        Do not duplicate the ``config:`` line if it already is present.
+        Adapt the location, which here is the same as in the preceeding example.
+
+   3. Retry installing the large package.
+
+   4. Optionally, clean the staging area:
+
+      .. code-block:: sh
+
+         spack clean --stage
+
+   5. Also optionally, to roll back any ``build_stage`` customization, run:
+
+      .. code-block:: sh
+
+         spack config edit config
+
+     and delete or comment the ``build_stage`` entry.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Post-install steps for compilers
