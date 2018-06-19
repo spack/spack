@@ -230,10 +230,11 @@ class PythonPackage(PackageBase):
         sitedirs = []
         sitedirs.append(spec.prefix)
 
-        deps = spec.dependencies(deptype=('link', 'run'))
-        my_python = next( (spec for spec in deps if spec.satisfies('python')), None)
+        deps = spec.traverse(deptype=('link', 'run'))
+        my_python = next((spec for spec in deps if spec.satisfies('python')),
+                         None)
         if my_python:
-            for d in spec.dependencies(deptype=('link', 'run')):
+            for d in spec.traverse(deptype=('link', 'run')):
                 if d.package.extends(my_python):
                     sitedirs.append(d.prefix)
 
