@@ -26,7 +26,7 @@ from spack import *
 
 
 class Rankstr(CMakePackage):
-    """MPI rank strings"""
+    """Assign one-to-one mapping of MPI ranks to strings"""
 
     homepage = "https://github.com/ECP-VeloC/rankstr"
     url      = "https://github.com/ECP-VeloC/rankstr/archive/v0.0.1.zip"
