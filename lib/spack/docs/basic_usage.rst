@@ -950,11 +950,11 @@ directly when you run ``python``:
    ImportError: No module named numpy
    >>>
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Extensions & Environment Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+Using Extensions
+^^^^^^^^^^^^^^^^
 
-There are two ways to get ``numpy`` working in Python.  The first is
+There are three ways to get ``numpy`` working in Python.  The first is
 to use :ref:`shell-support`.  You can simply ``use`` or ``load`` the
 module for the extension, and it will be added to the ``PYTHONPATH``
 in your current shell.
@@ -976,9 +976,18 @@ or, for dotkit:
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
 
-^^^^^^^^^^^^^^^^^^^^^
-Activating Extensions
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Activating Extensions in a View
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The second way to use extensions is to create a view, which merges the
+python installation along with the extensions into a single prefix.
+See :ref:`filesystem-views` for a more in-depth description of views and
+:ref:`cmd-spack-view` for usage of the ``spack view`` command.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Activating Extensions Globally
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is often desirable to have certain packages *always* available as
 part of a Python installation.  Spack offers a more permanent solution
