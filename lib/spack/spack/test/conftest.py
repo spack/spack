@@ -28,6 +28,7 @@ import os
 import shutil
 import re
 
+import ordereddict_backport
 import py
 import pytest
 
@@ -42,7 +43,6 @@ import spack.paths
 import spack.platforms.test
 import spack.repo
 import spack.stage
-import spack.util.ordereddict
 import spack.util.executable
 import spack.util.pattern
 from spack.dependency import Dependency
@@ -603,7 +603,7 @@ class MockPackage(object):
                  versions=None):
         self.name = name
         self.spec = None
-        self.dependencies = spack.util.ordereddict.OrderedDict()
+        self.dependencies = ordereddict_backport.OrderedDict()
 
         assert len(dependencies) == len(dependency_types)
         for dep, dtype in zip(dependencies, dependency_types):
