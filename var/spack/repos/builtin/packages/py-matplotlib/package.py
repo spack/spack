@@ -68,6 +68,7 @@ class PyMatplotlib(PythonPackage):
 
     depends_on('libpng@1.2:')
     depends_on('freetype@2.3:')
+    patch('freetype-include-path.patch', when='@2.2.2:') # Patch to pick up correct freetype headers
 
     depends_on('py-numpy@1.6:', type=('build', 'run'))
     depends_on('py-dateutil@1.1:', type=('build', 'run'))
