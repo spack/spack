@@ -41,5 +41,3 @@ class Rankstr(CMakePackage):
         if self.spec.satisfies('platform=cray'):
             args.append("-DRANKSTR_LINK_STATIC=ON")
         return args
-
-        return args
