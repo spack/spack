@@ -177,6 +177,7 @@ class Boost(Package):
     patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
+    patch('boost_1.67.0_pgi.patch', when='@1.67.0%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
@@ -329,7 +330,9 @@ class Boost(Package):
 
         # Deal with C++ standard.
         if spec.satisfies('@1.66:'):
-            options.append('cxxstd={0}'.format(spec.variants['cxxstd'].value))
+            if spec.variants['cxxstd'].value != 'default':
+                options.append('cxxstd={0}'.format(
+                    spec.variants['cxxstd'].value))
         else:  # Add to cxxflags for older Boost.
             flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
             if flag:

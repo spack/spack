@@ -286,6 +286,13 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     for aurl in archive_urls:
         list_urls.add(spack.url.find_list_url(aurl))
 
+    # Add '/' to the end of the URL. Some web servers require this.
+    additional_list_urls = set()
+    for lurl in list_urls:
+        if not lurl.endswith('/'):
+            additional_list_urls.add(lurl + '/')
+    list_urls.update(additional_list_urls)
+
     # Grab some web pages to scrape.
     pages = {}
     links = set()

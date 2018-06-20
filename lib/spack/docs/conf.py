@@ -42,7 +42,13 @@ import re
 import shutil
 import subprocess
 from glob import glob
-from sphinx.apidoc import main as sphinx_apidoc
+
+# Since Sphinx 1.7, sphinx.apidoc has been moved to sphinx.ext.apidoc
+# sphinx.apidoc is deprecated and will be removed in Sphinx 2.0
+try:
+    from sphinx.ext.apidoc import main as sphinx_apidoc
+except ImportError:
+    from sphinx.apidoc import main as sphinx_apidoc
 
 # -- Spack customizations -----------------------------------------------------
 
@@ -222,7 +228,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = { 'logo_only' : True }
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["_themes"]
+# html_theme_path = ["_themes"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
