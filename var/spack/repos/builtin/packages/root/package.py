@@ -31,7 +31,7 @@ class Root(CMakePackage):
     """ROOT is a data analysis framework."""
 
     homepage = "https://root.cern.ch"
-    url      = "https://root.cern/download/root_v6.12.06.source.tar.gz"
+    url      = "https://root.cern/download/root_v6.14.00.source.tar.gz"
     list_url = "https://root.cern/download/"
 
     # ###################### Versions ##########################
@@ -44,9 +44,10 @@ class Root(CMakePackage):
     version('6.13.08', '2b4546fc4b712ba1d672401bee07f5b3')
 
     # Production version
-    version('6.12.06', 'bef6535a5d0cdf471b550da45a10f605', preferred=True)
+    version('6.14.00', '3613c930589734531ac8995486d41af5', preferred=True)
 
     # Old versions
+    version('6.12.06', 'bef6535a5d0cdf471b550da45a10f605')
     version('6.10.08', '88532f68e9e14691f530c60b55beb698')
     version('6.09.02', '4188dfeafb72df339a3d688fe92f57ec')
     version('6.08.06', 'bcf0be2df31a317d25694ad2736df268')
