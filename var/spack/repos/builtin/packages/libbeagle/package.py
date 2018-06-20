@@ -41,7 +41,12 @@ class Libbeagle(AutotoolsPackage):
 
     depends_on('subversion', type='build')
     depends_on('pkgconfig', type='build')
+    depends_on('java', type='build')
 
     def url_for_version(self, version):
         url = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_{0}.tar.gz"
         return url.format(version.underscored)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        prefix = self.prefix
+        spack_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
