@@ -34,8 +34,7 @@ class Grnboost(Package):
             commit='26c836b3dcbb85852d3c6f4b8340e8655434da02')
 
     depends_on('sbt', type='build')
-    depends_on('xgboost+jdk-packages')
-    depends_on('jdk')
+    depends_on('jdk', type='build')
 
     def install(self, spec, prefix):
         sbt = which('sbt')
