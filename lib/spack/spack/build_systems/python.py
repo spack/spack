@@ -236,6 +236,9 @@ class PythonPackage(PackageBase):
         sitedirs.append(spec.prefix)
 
         deps = spec.traverse(deptype=('link', 'run'))
+        # grab the first spec that satisfies('python'),
+        # from https://stackoverflow.com/a/2364277
+        # TODO: What happens when both python 2 and 3 can be in the DAG?
         my_python = next((spec for spec in deps if spec.satisfies('python')),
                          None)
         if my_python:
