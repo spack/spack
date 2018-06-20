@@ -1,0 +1,6 @@
+image: scottwittenburg/binary_check_runner
+
+binary-check:
+  script: "./run-binary-check.sh"
+  tags:
+    - my-tag
