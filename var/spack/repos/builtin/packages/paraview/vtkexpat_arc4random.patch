@@ -1,0 +1,166 @@
+diff -Naru ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/ConfigureChecks.cmake ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/ConfigureChecks.cmake
+--- ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/ConfigureChecks.cmake	2018-06-15 13:09:45.000000000 -0600
++++ ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/ConfigureChecks.cmake	2018-06-20 13:30:30.439784000 -0600
+@@ -27,10 +27,6 @@
+ if(USE_libbsd)
+     set(CMAKE_REQUIRED_LIBRARIES "${LIB_BSD}")
+ endif()
+-check_symbol_exists("arc4random_buf" "stdlib.h" HAVE_ARC4RANDOM_BUF)
+-if(NOT HAVE_ARC4RANDOM_BUF)
+-    check_symbol_exists("arc4random" "stdlib.h" HAVE_ARC4RANDOM)
+-endif()
+ set(CMAKE_REQUIRED_LIBRARIES)
+ 
+ #/* Define to 1 if you have the ANSI C header files. */
+diff -Naru ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/expat_config.h.cmake ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/expat_config.h.cmake
+--- ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/expat_config.h.cmake	2018-06-15 13:09:45.000000000 -0600
++++ ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/expat_config.h.cmake	2018-06-20 13:30:46.831726000 -0600
+@@ -3,12 +3,6 @@
+ /* 1234 = LIL_ENDIAN, 4321 = BIGENDIAN */
+ #cmakedefine BYTEORDER @BYTEORDER@
+ 
+-/* Define to 1 if you have the `arc4random' function. */
+-#cmakedefine HAVE_ARC4RANDOM
+-
+-/* Define to 1 if you have the `arc4random_buf' function. */
+-#cmakedefine HAVE_ARC4RANDOM_BUF
+-
+ /* Define to 1 if you have the `bcopy' function. */
+ #cmakedefine HAVE_BCOPY
+ 
+@@ -39,9 +33,6 @@
+ /* Define to 1 if you have the `SYS_getrandom' function. */
+ #cmakedefine HAVE_SYSCALL_GETRANDOM
+ 
+-/* Define to 1 if you have the `arc4random_buf' function. */
+-#cmakedefine HAVE_ARC4RANDOM_BUF
+-
+ /* XXX(kitware): VTK is fine with low entropy. */
+ #define XML_POOR_ENTROPY
+ 
+diff -Naru ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/lib/siphash.h ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/lib/siphash.h
+--- ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/lib/siphash.h	2018-06-15 13:09:45.000000000 -0600
++++ ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/lib/siphash.h	2018-06-20 13:31:41.775727000 -0600
+@@ -48,7 +48,6 @@
+  * parameter.
+  *
+  * 	unsigned char secret[16];
+- * 	arc4random_buf(secret, sizeof secret);
+  * 	struct sipkey *key = sip_keyof(secret);
+  *
+  * For hashing a message, use either the convenience macro siphash24 or the
+diff -Naru ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/lib/xmlparse.c ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/lib/xmlparse.c
+--- ParaView-v5.5.2/VTK/ThirdParty/expat/vtkexpat/lib/xmlparse.c	2018-06-15 13:09:45.000000000 -0600
++++ ParaView-v5.5.2.patched/VTK/ThirdParty/expat/vtkexpat/lib/xmlparse.c	2018-06-20 13:38:59.343726000 -0600
+@@ -75,17 +75,11 @@
+ # endif  /* defined(GRND_NONBLOCK) */
+ #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+ 
+-#if defined(HAVE_LIBBSD) \
+-    && (defined(HAVE_ARC4RANDOM_BUF) || defined(HAVE_ARC4RANDOM))
+-# include <bsd/stdlib.h>
+-#endif
+-
+ #if defined(_WIN32) && !defined(LOAD_LIBRARY_SEARCH_SYSTEM32)
+ # define LOAD_LIBRARY_SEARCH_SYSTEM32  0x00000800
+ #endif
+ 
+ #if !defined(HAVE_GETRANDOM) && !defined(HAVE_SYSCALL_GETRANDOM) \
+-    && !defined(HAVE_ARC4RANDOM_BUF) && !defined(HAVE_ARC4RANDOM) \
+     && !defined(XML_DEV_URANDOM) \
+     && !defined(_WIN32) \
+     && !defined(XML_POOR_ENTROPY)
+@@ -96,10 +90,6 @@
+     Your options include: \
+       * Linux + glibc >=2.25 (getrandom): HAVE_GETRANDOM, \
+       * Linux + glibc <2.25 (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
+-      * BSD / macOS >=10.7 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
+-      * BSD / macOS <10.7 (arc4random): HAVE_ARC4RANDOM, \
+-      * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
+-      * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
+       * Linux / BSD / macOS (/dev/urandom): XML_DEV_URANDOM \
+       * Windows (RtlGenRandom): _WIN32. \
+     \
+@@ -673,9 +663,6 @@
+ };
+ 
+ 
+-/* To avoid warnings about unused functions: */
+-#if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
+-
+ #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
+ 
+ /* Obtain entropy on Linux 3.17+ */
+@@ -741,30 +728,6 @@
+ 
+ #endif  /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
+ 
+-#endif  /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
+-
+-
+-#if defined(HAVE_ARC4RANDOM)
+-
+-static void
+-writeRandomBytes_arc4random(void * target, size_t count) {
+-  size_t bytesWrittenTotal = 0;
+-
+-  while (bytesWrittenTotal < count) {
+-    const uint32_t random32 = arc4random();
+-    size_t i = 0;
+-
+-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
+-        i++, bytesWrittenTotal++) {
+-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
+-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
+-    }
+-  }
+-}
+-
+-#endif  /* defined(HAVE_ARC4RANDOM) */
+-
+-
+ #ifdef _WIN32
+ 
+ typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
+@@ -798,8 +761,6 @@
+ #endif /* _WIN32 */
+ 
+ 
+-#if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
+-
+ static unsigned long
+ gather_time_entropy(void)
+ {
+@@ -824,9 +785,6 @@
+ #endif
+ }
+ 
+-#endif  /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
+-
+-
+ static unsigned long
+ ENTROPY_DEBUG(const char * label, unsigned long entropy) {
+   const char * const EXPAT_ENTROPY_DEBUG = getenv("EXPAT_ENTROPY_DEBUG");
+@@ -846,14 +804,6 @@
+   (void)parser;
+ 
+   /* "Failproof" high quality providers: */
+-#if defined(HAVE_ARC4RANDOM_BUF)
+-  arc4random_buf(&entropy, sizeof(entropy));
+-  return ENTROPY_DEBUG("arc4random_buf", entropy);
+-#elif defined(HAVE_ARC4RANDOM)
+-  writeRandomBytes_arc4random((void *)&entropy, sizeof(entropy));
+-  return ENTROPY_DEBUG("arc4random", entropy);
+-#else
+-  /* Try high quality providers first .. */
+ #ifdef _WIN32
+   if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
+     return ENTROPY_DEBUG("RtlGenRandom", entropy);
+@@ -880,7 +830,6 @@
+     return ENTROPY_DEBUG("fallback(8)",
+         entropy * (unsigned long)2305843009213693951ULL);
+   }
+-#endif
+ }
+ 
+ static unsigned long

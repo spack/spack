@@ -34,6 +34,9 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
+    version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
+    version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')
     version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
@@ -51,6 +54,7 @@ class Paraview(CMakePackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
+    variant('visit', default=False, description="Use VisIt bridge")
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
@@ -59,11 +63,8 @@ class Paraview(CMakePackage):
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
-
     depends_on('mesa+swrender', when='+osmesa')
     depends_on('libxt', when='+qt')
-    conflicts('+qt', when='+osmesa')
-
     depends_on('bzip2')
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
@@ -80,14 +81,17 @@ class Paraview(CMakePackage):
     # depends_on('sqlite') # external version not supported
     depends_on('zlib')
     depends_on('cmake@3.3:', type='build')
+    depends_on('boost', when='+visit')
+
+    conflicts('+qt', when='+osmesa')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
-
     # Broken gcc-detection - improved in 5.1.0, redundant later
     patch('gcc-compiler-pv501.patch', when='@:5.0.1')
-
     # Broken installation (ui_pqExportStateWizard.h) - fixed in 5.2.0
     patch('ui_pqExportStateWizard.patch', when='@:5.1.2')
+    # Broken vtkexpat where arc4random symbols are undefined
+    patch('vtkexpat_arc4random.patch', when='@5.5.0:')
 
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
@@ -164,6 +168,12 @@ class Paraview(CMakePackage):
         if '+qt' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
+            ])
+
+        if '+visit' in spec:
+            cmake_args.extend([
+                '-DPARAVIEW_USE_VISITBRIDGE:BOOL=ON',
+                '-DBOOST_ROOT:PATH=%s' % spec['boost'].prefix
             ])
 
         if '+python' in spec:
