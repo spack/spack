@@ -34,6 +34,10 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.prefix import Prefix
 
+"""This includes tests for customized activation logic for specific packages
+   (e.g. python and perl).
+"""
+
 
 class FakeExtensionPackage(spack.package.PackageViewMixin):
     def __init__(self, name, prefix):
