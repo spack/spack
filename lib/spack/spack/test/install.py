@@ -190,15 +190,6 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
         spack.package.Package.remove_prefix = remove_prefix
 
 
-def test_global_activation(install_mockery, mock_fetch):
-    spec = spack.spec.Spec('extension1').concretized()
-    pkg = spec.package
-    pkg.do_install()
-    pkg.do_activate()
-    assert os.path.exists(
-        os.path.join(spec['extendee'].prefix, '.spack', 'extensions.yaml'))
-
-
 def test_store(install_mockery, mock_fetch):
     spec = Spec('cmake-client').concretized()
     pkg = spec.package
