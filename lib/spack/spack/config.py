@@ -57,6 +57,7 @@ import multiprocessing
 from contextlib import contextmanager
 from six import string_types
 from six import iteritems
+from ordereddict_backport import OrderedDict
 
 import yaml
 from yaml.error import MarkedYAMLError
@@ -69,7 +70,6 @@ import spack.paths
 import spack.architecture
 import spack.schema
 from spack.error import SpackError
-from spack.util.ordereddict import OrderedDict
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
