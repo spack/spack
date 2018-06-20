@@ -64,7 +64,7 @@ class Grass(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('proj')
     depends_on('gdal')
-    depends_on('python@2.7:2.9')
+    depends_on('python@2.7:2.9', type=('build', 'run'))
     depends_on('libx11')
 
     # optional pieces
