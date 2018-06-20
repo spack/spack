@@ -208,7 +208,11 @@ class Python(AutotoolsPackage):
         spec = self.spec
         prefix = self.prefix
 
-        install(os.path.join(self.package_dir, 'sitecustomize.py'), os.path.join(prefix.lib, 'python2.7', 'site-packages'))
+        # TODO, hardcoding the version number is silly.  Could grab it
+        # from the spec, but need to understand if/how this is all
+        # going to work for python3.
+        install(os.path.join(self.package_dir, 'sitecustomize.py'),
+                os.path.join(prefix.lib, 'python2.7', 'site-packages'))
 
         self.sysconfigfilename = '_sysconfigdata.py'
         if spec.satisfies('@3.6:'):
