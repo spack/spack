@@ -155,7 +155,7 @@ def find(parser, args):
 
         # If tags have been specified on the command line, filter by tags
         if args.tags:
-            packages_with_tags = spack.repo.packages_with_tags(*args.tags)
+            packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
             query_specs = [x for x in query_specs
                            if x.name in packages_with_tags]
 
