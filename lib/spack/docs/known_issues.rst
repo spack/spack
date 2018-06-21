@@ -88,3 +88,6 @@ software outside of Spack. Unfortunately, this command no longer works.
 See https://github.com/spack/spack/issues/2597 and
 https://github.com/spack/spack/issues/2662 for details. This is expected
 to be fixed by https://github.com/spack/spack/pull/2664.
+
+
+THis hasn't worked from the beginning!!!;',';l';l'l';l
