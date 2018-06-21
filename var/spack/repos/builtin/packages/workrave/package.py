@@ -63,9 +63,6 @@ class Workrave(AutotoolsPackage):
     # adds #include <time.h> to a workrave test
     patch('add_time_header.patch')
 
-    # removes call to missing glimm api function
-    patch('signal_size_changed.patch', when='@1.10.0')
-
     # removes call to missing gtkmm api function
     patch('dont_get_widget.patch')
 
