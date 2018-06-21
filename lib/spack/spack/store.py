@@ -59,43 +59,6 @@ default_root = os.path.join(spack.paths.opt_path, 'spack')
 class Store(object):
     """A store is a path full of installed Spack packages.
 
-<<<<<<< HEAD
-chain_prefixes = config.get('chain_prefixes', [])
-parent_prefixes = []
-for prefix in chain_prefixes:
-    if prefix == spack.prefix:
-        break
-    parent_prefixes.append(prefix)
-parent_install_trees = config.get('parent_install_trees',
-                                  [os.path.join(prefix, 'opt', 'spack')
-                                   for prefix in parent_prefixes])
-if not isinstance(parent_install_trees, (list, tuple)):
-    parent_install_trees = [parent_install_trees]
-if parent_install_trees == [None]:
-    parent_install_trees = []
-parent_dbs = [None]
-parent_layouts = [None]
-for parent_install_tree in parent_install_trees:
-    parent_root = canonicalize_path(parent_install_tree)
-    if parent_root == root:
-        break
-    parent_dbs.append(Database(parent_root, parent_db=parent_dbs[-1]))
-    parent_layouts.append(
-        YamlDirectoryLayout(parent_root,
-                            hash_len=config.get('install_hash_length'),
-                            path_scheme=config.get('install_path_scheme'),
-                            parent_layout=parent_layouts[-1]))
-db = Database(root, parent_db=parent_dbs[-1])
-
-#
-# This controls how spack lays out install prefixes and
-# stage directories.
-#
-layout = YamlDirectoryLayout(root,
-                             hash_len=config.get('install_hash_length'),
-                             path_scheme=config.get('install_path_scheme'),
-                             parent_layout=parent_layouts[-1])
-=======
     Stores consist of packages installed according to a
     ``DirectoryLayout``, along with an index, or _database_ of their
     contents.  The directory layout controls what paths look like and how
@@ -114,11 +77,36 @@ layout = YamlDirectoryLayout(root,
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
-        self.db = spack.database.Database(root)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
         self.extensions = spack.directory_layout.YamlExtensionsLayout(
             root, self.layout)
+
+        self.chain_prefixes = spack.config.get('config:chain_prefixes', [])
+        self.parent_prefixes = []
+        for prefix in self.chain_prefixes:
+            if prefix == spack.prefix:
+                break
+            self.parent_prefixes.append(prefix)
+        self.parent_install_trees = spack.config.get('config:parent_install_trees',
+                                  [os.path.join(prefix, 'opt', 'spack') for prefix in self.parent_prefixes])
+        if not isinstance(self.parent_install_trees, (list, tuple)):
+            self.parent_install_trees = [self.parent_install_trees]
+        if self.parent_install_trees == [None]:
+            self.parent_install_trees = []
+        self.parent_dbs = [None]
+        self.parent_layouts = [None]
+        for parent_install_tree in self.parent_install_trees:
+            parent_root = spack.util.path.canonicalize_path(parent_install_tree)
+            if parent_root == self.root:
+                break
+            self.parent_dbs.append(Database(parent_root, parent_db=parent_dbs[-1]))
+            self.parent_layouts.append(
+                spack.directory_layout.YamlDirectoryLayout(parent_root,
+                                    hash_len=spack.config.get('config:install_hash_length'),
+                                    path_scheme=spack.config.get('config:install_path_scheme'),
+                                    parent_layout=parent_layouts[-1]))
+        self.db = spack.database.Database(root, parent_db=parent_dbs[-1])
 
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
@@ -137,7 +125,6 @@ def _store():
 
 #: Singleton store instance
 store = llnl.util.lang.Singleton(_store)
->>>>>>> llnl/develop
 
 # convenience accessors for parts of the singleton store
 root = llnl.util.lang.LazyReference(lambda: store.root)

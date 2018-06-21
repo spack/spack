@@ -65,24 +65,18 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 
-<<<<<<< HEAD
+#: config section for this file
+configuration = spack.config.get('modules')
+
 #: Root folders where the various module files should be written
-config = spack.config.get_config("config")
-roots = config.get('module_roots', {})
-chain_prefixes = config.get('chain_prefixes', [])
+roots = spack.config.get('config:module_roots', {})
+
+chain_prefixes = spack.config.get('config:chain_prefixes', [])
 parent_prefixes = []
 for prefix in chain_prefixes:
     if prefix == spack.prefix:
         break
     parent_prefixes.append(prefix)
-
-=======
-#: config section for this file
-configuration = spack.config.get('modules')
->>>>>>> llnl/develop
-
-#: Root folders where the various module files should be written
-roots = spack.config.get('config:module_roots', {})
 
 #: Inspections that needs to be done on spec prefixes
 prefix_inspections = spack.config.get('modules:prefix_inspections', {})
