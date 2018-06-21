@@ -246,7 +246,7 @@ def parent_root_paths(name):
         list of root folders for parent module file installations
     """
     chain_module_roots = spack.config.get("config:chain_module_roots",
-                                          default = [None])
+                                          default=None)
     if chain_module_roots:
         chain_module_paths = chain_module_roots.get(name)
         if not isinstance(chain_module_paths, (list, tuple)):

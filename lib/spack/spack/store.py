@@ -56,7 +56,6 @@ import spack.directory_layout
 default_root = os.path.join(spack.paths.opt_path, 'spack')
 
 
-
 class Store(object):
     """A store is a path full of installed Spack packages.
 
