@@ -185,6 +185,8 @@ class Root(CMakePackage):
 
     # ###################### Dependencies ##############################
 
+    # minimum cmake version required
+    depends_on('cmake@3.4.3:', type='build')
     depends_on('pkgconfig', type='build')
 
     depends_on('lz4')
