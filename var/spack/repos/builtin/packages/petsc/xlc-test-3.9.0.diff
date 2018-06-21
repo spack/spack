@@ -1,0 +1,60 @@
+--- a/gmakefile.test
++++ b/gmakefile.test
+@@ -123,15 +123,16 @@
+ ifeq ($(FC_MODULE_OUTPUT_FLAG),)
+ 	$(call quiet,FCMOD) $(MODDIR) && $(FC) -c $(FC_FLAGS) $(FFLAGS) $(FCPPFLAGS) $(FC_DEPFLAGS) -I$(dir $<) $(abspath $<) -o $(abspath $@)
+ else
+-	$(PETSC_COMPILE.F) -I$(dir $<) $(abspath $<) -o $@ $(FC_MODULE_OUTPUT_FLAG)$(MODDIR)
++	$(PETSC_COMPILE.F) -I$(dir $<) -I$(MODDIR) $(abspath $<) -o $@ $(FC_MODULE_OUTPUT_FLAG)$(MODDIR)
+ endif
+ 	-@$(GFORTRAN_DEP_CLEANUP)
+ 
++XLF2003FLAGS = "-qxlf2003=polymorphic:bozlitargs:stopexcept:volatile:autorealloc"
+ $(TESTDIR)/%.o : $(EXAMPLESDIR)/%.F90 | $$(@D)/.DIR
+ ifeq ($(FC_MODULE_OUTPUT_FLAG),)
+ 	$(call quiet,FCMOD) $(MODDIR) && $(FC) -c $(FC_FLAGS) $(FFLAGS) $(FCPPFLAGS) $(FC_DEPFLAGS) -I$(dir $<) $(abspath $<) -o $(abspath $@)
+ else
+-	$(PETSC_COMPILE.F) -I$(dir $<) $(abspath $<) -o $@ $(FC_MODULE_OUTPUT_FLAG)$(MODDIR)
++	$(PETSC_COMPILE.F) ${XLF2003FLAGS} -I$(dir $<) -I$(MODDIR) $(abspath $<) -o $@ $(FC_MODULE_OUTPUT_FLAG)$(MODDIR)
+ endif
+ 	-@$(GFORTRAN_DEP_CLEANUP)
+ 
+--- a/src/ksp/ksp/examples/tutorials/ex6f.F90
++++ b/src/ksp/ksp/examples/tutorials/ex6f.F90
+@@ -173,7 +173,7 @@
+         call PetscOptionsHasName(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-mat_view',pflag,ierr)
+         if (pflag) then
+           if (rank .eq. 0) write(6,100)
+-          call flush(6)
++          call flush_(6)
+         endif
+         call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
+ ! All other times: Set previous solution as initial guess for next solve.
+@@ -190,7 +190,7 @@
+       call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr)
+       if (pflag) then
+         if (rank .eq. 0) write(6,110)
+-        call flush(6)
++        call flush_(6)
+       endif
+       call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
+ 
+--- a/src/vec/vec/examples/tutorials/ex21.c
++++ b/src/vec/vec/examples/tutorials/ex21.c
+@@ -8,13 +8,13 @@
+ #define f90array1daccessmystruct_       F90ARRAY1DACCESSMYSTRUCT
+ #define f90array1ddestroymystruct_      F90ARRAY1DDESTROYMYSTRUCT
+ #define f90array1dgetaddrmystruct_      F90ARRAY1DGETADDRMYSTRUCT
+-#elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE)
++#elif defined(PETSC_HAVE_FORTRAN_NOUNDERSCORE)
+ #define vecgetarraymystruct_            vecgetarraymystruct
+ #define vecrestorearraymystruct_        vecrestorearraymystruct
+ #define f90array1dcreatemystruct_       f90array1dcreatemystruct
+ #define f90array1daccessmystruct_       f90array1daccessmystruct
+ #define f90array1ddestroymystruct_      f90array1ddestroymystruct
+-#define f90array1dgetaddrmystruc_       f90array1dgetaddrmystruct
++#define f90array1dgetaddrmystruct_      f90array1dgetaddrmystruct
+ #endif
+ 
+ PETSC_EXTERN void PETSC_STDCALL f90array1dcreatemystruct_(void *,PetscInt *,PetscInt *,F90Array1d * PETSC_F90_2PTR_PROTO_NOVAR);
+

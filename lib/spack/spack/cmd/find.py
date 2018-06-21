@@ -26,8 +26,8 @@ import sys
 
 import llnl.util.tty as tty
 import llnl.util.lang
-import spack
-import spack.database
+
+import spack.repo
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 

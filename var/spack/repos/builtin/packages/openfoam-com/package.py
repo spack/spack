@@ -284,7 +284,7 @@ class OpenfoamCom(Package):
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
-    version('develop', branch='develop', git=gitrepo)  # Needs credentials
+    version('develop', branch='develop', git=gitrepo, submodules='True')  # Needs credentials
 
     variant('float32', default=False,
             description='Use single-precision')

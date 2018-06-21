@@ -83,9 +83,10 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
-    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1
+    version('3.1.0', '0895e268ca27735d7654bf64cee6c256')  # libmpi.so.40.10.0
 
     # Still supported
+    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1    
     version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
     version('2.1.3', '46079b6f898a412240a0bf523e6cd24b')  # libmpi.so.20.10.2
     version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
@@ -336,8 +337,16 @@ class Openmpi(AutotoolsPackage):
         spec = self.spec
         config_args = [
             '--enable-shared',
-            '--enable-static'
         ]
+
+        # According to this comment on github:
+        #
+        # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
+        #
+        # adding --enable-static silently disables slurm support via pmi/pmi2
+        if not spec.satisfies('schedulers=slurm'):
+            config_args.append('--enable-static')
+
         if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])

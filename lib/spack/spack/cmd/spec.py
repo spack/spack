@@ -25,7 +25,7 @@
 from __future__ import print_function
 
 import argparse
-import spack
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
