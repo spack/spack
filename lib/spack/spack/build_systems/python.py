@@ -30,7 +30,8 @@ import shutil
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
-from llnl.util.filesystem import working_dir, get_filetype, filter_file
+from llnl.util.filesystem import (working_dir, get_filetype, filter_file,
+                                  path_contains_subdirectory, same_path)
 from llnl.util.lang import match_predicate
 
 
@@ -430,13 +431,13 @@ class PythonPackage(PackageBase):
         return conflicts
 
     def add_files_to_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin.rstrip(os.path.sep) + os.path.sep
+        bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
-        global_view = python_prefix == view.root
+        global_view = same_path(python_prefix, view.root)
         for src, dst in merge_map.items():
             if os.path.exists(dst):
                 continue
-            elif global_view or not src.startswith(bin_dir):
+            elif global_view or not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
@@ -460,13 +461,13 @@ class PythonPackage(PackageBase):
                     r'site-packages/{0}/__init__.py'.format(self.py_namespace))
                 ignore_namespace = True
 
-        bin_dir = self.spec.prefix.bin.rstrip(os.path.sep) + os.path.sep
+        bin_dir = self.spec.prefix.bin
         global_view = self.extendee_spec.prefix == view.root
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):
                 continue
 
-            if global_view or not src.startswith(bin_dir):
+            if global_view or not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)

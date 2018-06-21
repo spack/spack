@@ -31,7 +31,8 @@ import shutil
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import force_remove, get_filetype
+from llnl.util.filesystem import (force_remove, get_filetype,
+                                  path_contains_subdirectory)
 
 import spack.store
 import spack.util.spack_json as sjson
@@ -704,7 +705,7 @@ class Python(AutotoolsPackage):
     def add_files_to_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
-            if bin_dir not in src:
+            if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
@@ -719,7 +720,7 @@ class Python(AutotoolsPackage):
     def remove_files_from_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
-            if bin_dir not in src:
+            if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)

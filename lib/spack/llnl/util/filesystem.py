@@ -77,6 +77,18 @@ __all__ = [
 ]
 
 
+def path_contains_subdirectory(path, root):
+    norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
+    norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
+    return norm_path.startswith(norm_root)
+
+
+def same_path(path1, path2):
+    norm1 = os.path.abspath(path1).rstrip(os.path.sep)
+    norm2 = os.path.abspath(path2).rstrip(os.path.sep)
+    return norm1 == norm2
+
+
 def filter_file(regex, repl, *filenames, **kwargs):
     r"""Like sed, but uses python regular expressions.
 
