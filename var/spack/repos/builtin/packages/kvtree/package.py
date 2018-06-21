@@ -34,7 +34,7 @@ class Kvtree(CMakePackage):
 
     version('1.0.0', '108412eb206d36581bcea62930d835a5')
 
-    variant('mpi', default=False, description="Build with MPI message packing")
+    variant('mpi', default=True, description="Build with MPI message packing")
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
