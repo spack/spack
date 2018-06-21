@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install minuit
-#
-# You can edit this file again by typing:
-#
-#     spack edit minuit
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -60,10 +45,3 @@ class Minuit(AutotoolsPackage):
     version('5.12.00', '36726b8c6fcddf4f0837c900461a1d3c')
     version('5.10.00', 'dfc7afc0add70deaca105ff549f5a786')
     version('5.08.00', '1cc8da07c4a247c877f39acf8d76ba02')
-
-
-    def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
