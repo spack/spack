@@ -42,6 +42,7 @@ class Axl(CMakePackage):
     url      = "https://github.com/ECP-VeloC/AXL/archive/v0.1.0.zip"
 
     version('0.1.0', '1ff16c046c3a080c252e0bf4251b83bc')
+    version('master', git='https://github.com/ecp-veloc/axl.git', branch='master')
 
     variant('async_api', default='daemon',
             description="Set of async transfer APIs to enable",

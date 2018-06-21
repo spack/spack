@@ -31,7 +31,8 @@ class Redset(CMakePackage):
     homepage = "https://github.com/ECP-VeloC/redset"
     url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.1.zip"
 
-    version('0.0.1', 'd9ea5de4fcedf420ed6c373422a685d5')
+    version('0.0.2', '370d4dd477ebcfdd28dcc6375c22f731')
+    version('master', git='https://github.com/ecp-veloc/redset.git', branch='master')
 
     depends_on('mpi')
     depends_on('rankstr')

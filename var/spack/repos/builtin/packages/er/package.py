@@ -31,7 +31,8 @@ class Er(CMakePackage):
     homepage = "https://github.com/ECP-VeloC/er"
     url      = "https://github.com/ECP-VeloC/er/archive/v0.0.1.zip"
 
-    version('0.0.1', 'e0b83da2df71286d14779312e1fbadf5')
+    version('0.0.2', '24ad8f87bce2b6d900f1fb67452c3672')
+    version('master', git='https://github.com/ecp-veloc/er.git', branch='master')
 
     depends_on('mpi')
     depends_on('kvtree')
