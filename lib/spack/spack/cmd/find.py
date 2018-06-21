@@ -28,6 +28,7 @@ import llnl.util.tty as tty
 import llnl.util.lang
 
 import spack.repo
+import spack.parents
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
@@ -136,7 +137,7 @@ def query_arguments(args):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    dbs = spack.store.parent_dbs
+    dbs = spack.parents.parent_dbs
     dbs.append(spack.store.db)
     for db in dbs[1:]:
         q_args['db'] = db
