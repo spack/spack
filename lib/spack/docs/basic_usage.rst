@@ -989,11 +989,13 @@ See :ref:`filesystem-views` for a more in-depth description of views and
 Activating Extensions Globally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is often desirable to have certain packages *always* available as
-part of a Python installation.  Spack offers a more permanent solution
-for this case.  Instead of requiring users to load particular
-environment modules, you can *activate* the package within the Python
-installation:
+As an alternative to creating a merged prefix with Python and its extensions,
+and prior to support for views, Spack has provided a means to install the
+extension into the Spack installation prefix for the extendee. This has
+typically been useful since extendable packages typically search their own
+installation path for addons by default.
+
+Global activations are performed with the ``spack activate`` command:
 
 .. _cmd-spack-activate:
 
@@ -1053,11 +1055,11 @@ the ``py-numpy`` into the prefix of the ``python`` package.  To the
 python interpreter, it looks like ``numpy`` is installed in the
 ``site-packages`` directory.
 
-The only limitation of activation is that you can only have a *single*
+The only limitation of global activation is that you can only have a *single*
 version of an extension activated at a time.  This is because multiple
 versions of the same extension would conflict if symbolically linked
 into the same prefix.  Users who want a different version of a package
-can still get it by using environment modules, but they will have to
+can still get it by using environment modules or views, but they will have to
 explicitly load their preferred version.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
