@@ -84,8 +84,7 @@ class PySphinx(PythonPackage):
     #            type=('build', 'run'))
     depends_on('py-typing', when='@1.6:', type=('build', 'run'))
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest',     type='test')
-    # depends_on('py-mock',       type='test')
-    # depends_on('py-simplejson', type='test')
-    # depends_on('py-html5lib',   type='test')
+    depends_on('py-pytest',     type='test')
+    depends_on('py-mock',       type='test')
+    depends_on('py-simplejson', type='test')
+    depends_on('py-html5lib',   type='test')

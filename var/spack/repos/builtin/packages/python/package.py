@@ -32,11 +32,11 @@ import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from llnl.util.filesystem import force_remove
 
-import spack
-from spack import *
+import spack.store
+import spack.util.spack_json as sjson
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
-import spack.util.spack_json as sjson
+from spack import *
 
 
 class Python(AutotoolsPackage):
@@ -60,7 +60,8 @@ class Python(AutotoolsPackage):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724', preferred=True)
+    version('2.7.15', '045fb3440219a1f6923fefdabde63342', preferred=True)
+    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
     version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
     version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')

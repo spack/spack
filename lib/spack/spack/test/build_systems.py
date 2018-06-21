@@ -22,15 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import spack
 import pytest
 
+import spack.repo
 from spack.build_environment import get_std_cmake_args
 from spack.spec import Spec
 
 
-def test_cmake_std_args(config, builtin_mock):
+def test_cmake_std_args(config, mock_packages):
     # Call the function on a CMakePackage instance
     s = Spec('cmake-client')
     s.concretize()
@@ -44,7 +43,7 @@ def test_cmake_std_args(config, builtin_mock):
     assert get_std_cmake_args(pkg)
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestAutotoolsPackage(object):
 
     def test_with_or_without(self):

@@ -64,7 +64,9 @@ schema = {
                 'source_cache': {'type': 'string'},
                 'misc_cache': {'type': 'string'},
                 'verify_ssl': {'type': 'boolean'},
+                'debug': {'type': 'boolean'},
                 'checksum': {'type': 'boolean'},
+                'locks': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
                 'build_jobs': {'type': 'integer', 'minimum': 1},
             }

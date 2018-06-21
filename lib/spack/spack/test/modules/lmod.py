@@ -52,7 +52,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock',)
+@pytest.mark.usefixtures('config', 'mock_packages',)
 class TestLmod(object):
 
     def test_file_layout(
@@ -213,7 +213,6 @@ class TestLmod(object):
         with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
             module.write()
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_package(
             self, modulefile_content, patch_configuration
     ):
@@ -224,7 +223,6 @@ class TestLmod(object):
 
         assert 'Override successful!' in content
 
-    @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_modules_yaml(
             self, modulefile_content, patch_configuration
     ):

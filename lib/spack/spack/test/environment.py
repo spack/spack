@@ -26,7 +26,7 @@ import os
 
 import pytest
 import spack.environment as environment
-from spack import spack_root
+from spack.paths import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
@@ -306,3 +306,22 @@ def test_source_files(files_to_be_sourced):
     assert modifications['PATH_LIST'][1].value == '/path/fourth'
     assert isinstance(modifications['PATH_LIST'][2], PrependPath)
     assert modifications['PATH_LIST'][2].value == '/path/first'
+
+
+@pytest.mark.regression('8345')
+def test_preserve_environment(prepare_environment_for_tests):
+    # UNSET_ME is defined, and will be unset in the context manager,
+    # NOT_SET is not in the environment and will be set within the
+    # context manager, PATH_LIST is set and will be changed.
+    with environment.preserve_environment('UNSET_ME', 'NOT_SET', 'PATH_LIST'):
+        os.environ['NOT_SET'] = 'a'
+        assert os.environ['NOT_SET'] == 'a'
+
+        del os.environ['UNSET_ME']
+        assert 'UNSET_ME' not in os.environ
+
+        os.environ['PATH_LIST'] = 'changed'
+
+    assert 'NOT_SET' not in os.environ
+    assert os.environ['UNSET_ME'] == 'foo'
+    assert os.environ['PATH_LIST'] == '/path/second:/path/third'

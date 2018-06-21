@@ -44,6 +44,7 @@ class Phist(CMakePackage):
             git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
     version('master',
             git='https://bitbucket.org/essex/phist/phist.git', branch='master')
+    version('1.6.0', '751f855230d6227b972b5ab7bce2c65f')
     version('1.4.3', 'af3300378d4282366d148e38c3a3199a')
 
     variant(name='kernel_lib', default='builtin',

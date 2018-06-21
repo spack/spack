@@ -26,7 +26,8 @@ from spack import *
 
 
 class PyDlcpar(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """DLCpar is a reconciliation method for inferring gene duplications,
+    losses, and coalescence (accounting for incomplete lineage sorting)."""
 
     homepage = "https://www.cs.hmc.edu/~yjw/software/dlcpar/"
     url      = "https://www.cs.hmc.edu/~yjw/software/dlcpar/pub/sw/dlcpar-1.0.tar.gz"

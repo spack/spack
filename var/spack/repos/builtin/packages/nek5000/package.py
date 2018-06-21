@@ -85,6 +85,7 @@ class Nek5000(Package):
     depends_on('libx11', when="+postnek")
     # libxt is needed for X11/Intrinsic.h but not for linking
     depends_on('libxt', when="+prenek")
+    depends_on('xproto', when="+prenek")
     depends_on('libxt', when="+postnek")
     depends_on('visit', when="+visit")
 
@@ -125,6 +126,14 @@ class Nek5000(Package):
                 raise RuntimeError('Xlib.h not found in %s' %
                                    spec['libx11'].prefix.include)
             cflags += ['-I%s' % os.path.dirname(libx11_h.directories[0])]
+
+            xproto_h = find_headers('X', spec['xproto'].prefix.include,
+                                    recursive=True)
+            if not xproto_h:
+                raise RuntimeError('X.h not found in %s' %
+                                   spec['xproto'].prefix.include)
+            cflags += ['-I%s' % os.path.dirname(xproto_h.directories[0])]
+
             libxt_h = find_headers('Intrinsic', spec['libxt'].prefix.include,
                                    recursive=True)
             if not libxt_h:
