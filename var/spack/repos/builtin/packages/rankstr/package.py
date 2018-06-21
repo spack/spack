@@ -37,7 +37,7 @@ class Rankstr(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append("-DMPI_C_COMPILER=%s" % spec['mpi'].mpicc)
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         if self.spec.satisfies('platform=cray'):
             args.append("-DRANKSTR_LINK_STATIC=ON")
         return args

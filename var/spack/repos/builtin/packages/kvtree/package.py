@@ -41,9 +41,9 @@ class Kvtree(CMakePackage):
         args = []
         if self.spec.satisfies('+mpi'):
             args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % spec['mpi'].mpicc)
+            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         else:
-            arg.append("-DMPI=OFF")
+            args.append("-DMPI=OFF")
         if self.spec.satisfies('platform=cray'):
             args.append("-DKVTREE_LINK_STATIC=ON")
         return args

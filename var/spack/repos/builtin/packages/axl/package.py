@@ -58,7 +58,7 @@ class Axl(CMakePackage):
         args = []
         if self.spec.satisfies('platform=cray'):
             args.append("-DAXL_LINK_STATIC=ON")
-        args.append("-DWITH_KVTREE_PREFIX=%s" % spec['kvtree'].prefix)
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
 
         # Set up the async APIs to enable
         if self.spec.satisfies('async_api=cray_dw'):

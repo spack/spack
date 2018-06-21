@@ -40,10 +40,10 @@ class Er(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append("-DMPI_C_COMPILER=%s" % spec['mpi'].mpicc)
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         if self.spec.satisfies('platform=cray'):
             args.append("-DER_LINK_STATIC=ON")
-        args.append("-DWITH_KVTREE_PREFIX=%s" % spec['kvtree'].prefix)
-        args.append("-DWITH_REDSET_PREFIX=%s" % spec['redset'].prefix)
-        args.append("-DWITH_SHUFFILE_PREFIX=%s" % spec['shuffile'].prefix)
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
+        args.append("-DWITH_REDSET_PREFIX=%s" % self.spec['redset'].prefix)
+        args.append("-DWITH_SHUFFILE_PREFIX=%s" % self.spec['shuffile'].prefix)
         return args

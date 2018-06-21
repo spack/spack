@@ -39,9 +39,9 @@ class Redset(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append("-DMPI_C_COMPILER=%s" % spec['mpi'].mpicc)
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         if self.spec.satisfies('platform=cray'):
             args.append("-DREDSET_LINK_STATIC=ON")
-        args.append("-DWITH_KVTREE_PREFIX=%s" % spec['kvtree'].prefix)
-        args.append("-DWITH_RANKSTR_PREFIX=%s" % spec['rankstr'].prefix)
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
+        args.append("-DWITH_RANKSTR_PREFIX=%s" % self.spec['rankstr'].prefix)
         return args
