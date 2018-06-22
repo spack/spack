@@ -30,14 +30,15 @@ class Ffmpeg(AutotoolsPackage):
     convert and stream audio and video."""
 
     homepage = "https://ffmpeg.org"
-    url      = "http://ffmpeg.org/releases/ffmpeg-3.2.4.tar.bz2"
+    url      = "http://ffmpeg.org/releases/ffmpeg-4.0.1.tar.bz2"
 
-    version('3.2.4',   'd3ebaacfa36c6e8145373785824265b4')
+    version('4.0.1', 'b5520f6571e69688894fb5971caa39d0')
+    version('3.2.4', 'd3ebaacfa36c6e8145373785824265b4')
 
     variant('shared', default=True,
             description='build shared libraries')
 
-    depends_on('yasm@1.2.0:')
+    depends_on('nasm@2.11.0:')
 
     def configure_args(self):
         spec = self.spec

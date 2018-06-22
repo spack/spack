@@ -34,9 +34,9 @@ class DarshanRuntime(Package):
     systems where you intend to instrument MPI applications."""
 
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url = "https://xgitlab.cels.anl.gov/darshan/darshan/repository/darshan-3.1.6/archive.tar.gz"
 
-    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
+    version('3.1.6', '310d6bc02df9f470f56a477eea9bd050')
     version('3.1.0', '439d717323e6265b2612ed127886ae52')
     version('3.0.0', '732577fe94238936268d74d7d74ebd08')
 
