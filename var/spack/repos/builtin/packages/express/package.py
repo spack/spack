@@ -55,8 +55,12 @@ class Express(CMakePackage):
             # really ugly way to escape the $ in CMakeLists.txt
             edit.filter('{CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
                         'libbamtools.a', '$')
-            edit.filter('\\$\\$', '%s' % join_path(self.spec[
-                        'bamtools'].prefix.lib.bamtools, 'libbamtools.a'))
+            if 'bamtools@:2.4' in self.spec:
+                edit.filter('\\$\\$', '%s' % join_path(self.spec[
+                            'bamtools'].prefix.lib.bamtools, 'libbamtools.a'))
+            if 'bamtools@2.5:' in self.spec:
+                edit.filter('\\$\\$', '%s' % join_path(self.spec[
+                            'bamtools'].prefix.lib64, 'libbamtools.a'))
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('CPATH', self.spec[
