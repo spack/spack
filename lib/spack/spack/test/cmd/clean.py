@@ -23,7 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
-import spack
+import spack.stage
+import spack.caches
 import spack.main
 import spack.package
 
@@ -42,12 +43,14 @@ def mock_calls_for_clean(monkeypatch):
 
     monkeypatch.setattr(spack.package.PackageBase, 'do_clean', Counter())
     monkeypatch.setattr(spack.stage, 'purge', Counter())
-    monkeypatch.setattr(spack.fetch_cache, 'destroy', Counter(), raising=False)
-    monkeypatch.setattr(spack.misc_cache, 'destroy', Counter())
+    monkeypatch.setattr(
+        spack.caches.fetch_cache, 'destroy', Counter(), raising=False)
+    monkeypatch.setattr(
+        spack.caches.misc_cache, 'destroy', Counter())
 
 
 @pytest.mark.usefixtures(
-    'builtin_mock', 'config', 'mock_calls_for_clean'
+    'mock_packages', 'config', 'mock_calls_for_clean'
 )
 @pytest.mark.parametrize('command_line,counters', [
     ('mpileaks', [1, 0, 0, 0]),
@@ -66,5 +69,5 @@ def test_function_calls(command_line, counters):
     # number of times
     assert spack.package.PackageBase.do_clean.call_count == counters[0]
     assert spack.stage.purge.call_count == counters[1]
-    assert spack.fetch_cache.destroy.call_count == counters[2]
-    assert spack.misc_cache.destroy.call_count == counters[3]
+    assert spack.caches.fetch_cache.destroy.call_count == counters[2]
+    assert spack.caches.misc_cache.destroy.call_count == counters[3]

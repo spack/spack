@@ -40,8 +40,7 @@ class PyPy2cairo(WafPackage):
     depends_on('pixman')
     depends_on('pkgconfig', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest', type='test')
+    depends_on('py-pytest', type='test')
 
     def installtest(self):
         with working_dir('test'):

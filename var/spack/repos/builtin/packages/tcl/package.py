@@ -39,6 +39,7 @@ class Tcl(AutotoolsPackage):
     homepage = "http://www.tcl.tk"
     url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
 
+    version('8.6.8', '81656d3367af032e0ae6157eff134f89')
     version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
     version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
@@ -60,8 +61,29 @@ class Tcl(AutotoolsPackage):
         with working_dir(self.build_directory):
             make('install')
 
+            # http://wiki.tcl.tk/17463
+            if self.spec.satisfies('@8.6:'):
+                make('install-headers')
+
             # Some applications like Expect require private Tcl headers.
             make('install-private-headers')
+
+            # Copy source to install tree
+            # A user-provided install option might re-do this
+            # https://github.com/spack/spack/pull/4102/files
+            installed_src = join_path(
+                self.spec.prefix, 'share', self.name, 'src')
+            stage_src = os.path.realpath(self.stage.source_path)
+            install_tree(stage_src, installed_src)
+
+            # Replace stage dir -> installed src dir in tclConfig
+            filter_file(
+                stage_src, installed_src,
+                join_path(self.spec.prefix, 'lib', 'tclConfig.sh'))
+
+        # Don't install binaries in src/ tree
+        with working_dir(join_path(installed_src, self.configure_directory)):
+            make('clean')
 
     @run_after('install')
     def symlink_tclsh(self):

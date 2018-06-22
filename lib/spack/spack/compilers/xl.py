@@ -22,9 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -41,7 +40,7 @@ class Xl(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'xl/xlc',
                   'cxx': 'xl/xlc++',
                   'f77': 'xl/xlf',
@@ -54,7 +53,10 @@ class Xl(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('13.1'):
-            tty.die("Only xlC 13.1 and above have some c++11 support.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          "< 13.1")
         else:
             return "-qlanglvl=extended0x"
 
@@ -112,6 +114,12 @@ class Xl(Compiler):
            older version of AIX and linux on power.
         """
         fver = get_compiler_version(fc, '-qversion', r'([0-9]?[0-9]\.[0-9])')
+        if fver >= 16:
+            """Starting with version 16.1, the XL C and Fortran compilers
+               have the same version.  So no need to downgrade the Fortran
+               compiler version to match that of the C compiler version.
+            """
+            return str(fver)
         cver = float(fver) - 2
         if cver < 10:
             cver = cver - 0.1

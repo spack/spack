@@ -60,6 +60,10 @@ class SuiteSparse(Package):
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
 
+    # This patch adds '-lm' when linking libgraphblas and when using clang.
+    # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
+    patch('graphblas_libm_dep.patch', when='@5.2.0:%clang')
+
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header
@@ -116,7 +120,7 @@ class SuiteSparse(Package):
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
 
-        if '%xl' in spec or '%xl_r' in spec:
+        if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
