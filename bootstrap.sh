@@ -87,7 +87,7 @@ git checkout -- config.yaml.template
 # Installing packages
 if [[ $2 == "--install" ]]; then
     echo "Installing packages..."
-    spack clean
+    spack clean --all
     ./build_${1}.sh PLATFORM
 fi
 
