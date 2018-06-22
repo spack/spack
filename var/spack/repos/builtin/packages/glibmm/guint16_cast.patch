@@ -1,0 +1,36 @@
+diff --git a/glib/glibmm/class.cc b/glib/glibmm/class.cc
+index dc1c4a8..fc640ae 100644
+--- a/glib/glibmm/class.cc
++++ b/glib/glibmm/class.cc
+@@ -37,13 +37,13 @@ void Class::register_derived_type(GType base_type)
+ 
+   const GTypeInfo derived_info =
+   {
+-    base_query.class_size,
++    (guint16) base_query.class_size,
+     0, // base_init
+     0, // base_finalize
+     class_init_func_,
+     0, // class_finalize
+     0, // class_data
+-    base_query.instance_size,
++    (guint16) base_query.instance_size,
+     0, // n_preallocs
+     0, // instance_init
+     0, // value_table
+@@ -75,13 +75,13 @@ GType Class::clone_custom_type(const char* custom_type_name) const
+ 
+     const GTypeInfo derived_info =
+     {
+-      base_query.class_size,
++      (guint16) base_query.class_size,
+       0, // base_init
+       0, // base_finalize
+       &Class::custom_class_init_function,
+       0, // class_finalize
+       this, // class_data
+-      base_query.instance_size,
++      (guint16) base_query.instance_size,
+       0, // n_preallocs
+       0, // instance_init
+       0, // value_table

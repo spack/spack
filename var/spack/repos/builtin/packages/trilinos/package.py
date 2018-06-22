@@ -53,9 +53,9 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0',
             git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
     version('develop',
-            git='https://github.com/trilinos/Trilinos.git', tag='develop')
+            git='https://github.com/trilinos/Trilinos.git', branch='develop')
     version('master',
-            git='https://github.com/trilinos/Trilinos.git', tag='master')
+            git='https://github.com/trilinos/Trilinos.git', branch='master')
     version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
@@ -280,6 +280,7 @@ class Trilinos(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf+mpi', when="~pnetcdf")
     depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
+    depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -311,6 +312,8 @@ class Trilinos(CMakePackage):
     patch('xlf_seacas.patch', when='@12.10.1:%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
+    patch('xlf_seacas.patch', when='@12.12.1:%clang')
+    patch('xlf_tpetra.patch', when='@12.12.1:%clang')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
