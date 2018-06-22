@@ -189,7 +189,8 @@ class Root(CMakePackage):
     depends_on('cmake@3.4.3:', type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('lz4')
+    depends_on('lz4',    when='@6.13.02:')
+    depends_on('xxhash', when='@6.13.02:')
     depends_on('xz')
     depends_on('pcre')
     # depends_on('xxhash') - not supported (using builtin for now)
@@ -304,7 +305,6 @@ class Root(CMakePackage):
             '-Dbuiltin_gl2ps=OFF',
             '-Dbuiltin_glew=OFF',
             '-Dbuiltin_gsl=OFF',
-            '-Dbuiltin_lz4=OFF',
             '-Dbuiltin_lzma=OFF',
             '-Dbuiltin_openssl=OFF',
             '-Dbuiltin_pcre=OFF',
@@ -314,9 +314,16 @@ class Root(CMakePackage):
             '-Dbuiltin_vdt=OFF',
             '-Dbuiltin_veccore=OFF',
             '-Dbuiltin_xrootd=OFF',
-            '-Dbuiltin_xxhash=ON',
             '-Dbuiltin_zlib=OFF'
         ]
+
+        # LZ4 and xxhash do not work as external deps for older versions
+        options.extend([
+            '-Dbuiltin_lz4:BOOL=%s' % (
+                'ON' if self.spec.satisfies('@:6.12.99') else 'OFF'),
+            '-Dbuiltin_xxhash:BOOL=%s' % (
+                'ON' if self.spec.satisfies('@:6.12.99') else 'OFF'),
+        ])
 
         # #################### ROOT options #######################
 
