@@ -54,3 +54,7 @@ class Minuit(AutotoolsPackage):
         else:
             url = "http://seal.web.cern.ch/seal/minuit/releases/Minuit-{0}.tar.gz"
             return url.format(version.underscored)
+
+    patch('sprintf.cxx.patch', when='@5.08.00:5.18.00')
+    patch('sprintf.patch', when='@:1.7.9')
+    patch('LASymMatrix.h.patch', when='@:1.7.6')
