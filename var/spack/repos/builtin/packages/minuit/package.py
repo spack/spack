@@ -45,13 +45,13 @@ class Minuit(AutotoolsPackage):
     version('5.12.00', '36726b8c6fcddf4f0837c900461a1d3c')
     version('5.10.00', 'dfc7afc0add70deaca105ff549f5a786')
     version('5.08.00', '1cc8da07c4a247c877f39acf8d76ba02')
-    version('1_7_9', '10fd518fc778317fdadbc4ef6f7ce8e4')
-    version('1_7_6', '6a9a8341557de154274caff810686364')
-    version('1_7_1', 'd202a1cf58662e9833f2967b4dc8808e')
-    version('1_6_3', '955f560d0fb17bd7f081eddd7080fad6')
-    version('1_6_0', '6992d70fc8fded50be49b6b358b58507')
-    version('1_5_2', '31a0698febe59edd70aa001c4d7a56f8')
-    version('1_5_0', 'bc502c66af071fcdc0a2ae45a8740c75')
+    version('1.7.9', '10fd518fc778317fdadbc4ef6f7ce8e4')
+    version('1.7.6', '6a9a8341557de154274caff810686364')
+    version('1.7.1', 'd202a1cf58662e9833f2967b4dc8808e')
+    version('1.6.3', '955f560d0fb17bd7f081eddd7080fad6')
+    version('1.6.0', '6992d70fc8fded50be49b6b358b58507')
+    version('1.5.2', '31a0698febe59edd70aa001c4d7a56f8')
+    version('1.5.0', 'bc502c66af071fcdc0a2ae45a8740c75')
 
     def url_for_version(self, version):
         if version > Version('5.0.0'):
