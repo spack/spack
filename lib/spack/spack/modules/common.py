@@ -64,19 +64,13 @@ import spack.tengine as tengine
 import spack.util.path
 import spack.util.environment
 import spack.error
+import spack.parents
 
 #: config section for this file
 configuration = spack.config.get('modules')
 
 #: Root folders where the various module files should be written
 roots = spack.config.get('config:module_roots', {})
-
-chain_prefixes = spack.config.get('config:chain_prefixes', [])
-parent_prefixes = []
-for prefix in chain_prefixes:
-    if prefix == spack.prefix:
-        break
-    parent_prefixes.append(prefix)
 
 #: Inspections that needs to be done on spec prefixes
 prefix_inspections = spack.config.get('modules:prefix_inspections', {})
@@ -251,15 +245,15 @@ def parent_root_paths(name):
     Returns:
         list of root folders for parent module file installations
     """
-    config = spack.config.get_config("config")
-    chain_module_roots = config.get("chain_module_roots", None)
+    chain_module_roots = spack.config.get("config:chain_module_roots",
+                                          default=None)
     if chain_module_roots:
         chain_module_paths = chain_module_roots.get(name)
         if not isinstance(chain_module_paths, (list, tuple)):
             chain_module_paths = [chain_module_paths]
     else:
         chain_module_paths = [os.path.join(prefix, "share", "spack", "modules")
-                              for prefix in parent_prefixes]
+                              for prefix in spack.parents.parent_prefixes]
     this_root_path = root_path(name)
     retval = []
     for path in chain_module_paths:

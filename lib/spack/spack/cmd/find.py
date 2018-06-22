@@ -28,6 +28,7 @@ import llnl.util.tty as tty
 import llnl.util.lang
 
 import spack.repo
+import spack.parents
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
@@ -136,7 +137,7 @@ def query_arguments(args):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    dbs = spack.store.parent_dbs
+    dbs = spack.parents.parent_dbs
     dbs.append(spack.store.db)
     for db in dbs[1:]:
         q_args['db'] = db
@@ -154,7 +155,7 @@ def find(parser, args):
 
         # If tags have been specified on the command line, filter by tags
         if args.tags:
-            packages_with_tags = spack.repo.packages_with_tags(*args.tags)
+            packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
             query_specs = [x for x in query_specs
                            if x.name in packages_with_tags]
 
