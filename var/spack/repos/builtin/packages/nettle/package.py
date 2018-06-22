@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+import sys
 
 class Nettle(AutotoolsPackage):
     """The Nettle package contains the low-level cryptographic library
@@ -39,3 +40,9 @@ class Nettle(AutotoolsPackage):
 
     depends_on('gmp')
     depends_on('m4', type='build')
+
+    def configure_args(self):
+        if sys.platform == 'darwin':	
+            return ['--disable-assembler']
+	else:
+            return []
