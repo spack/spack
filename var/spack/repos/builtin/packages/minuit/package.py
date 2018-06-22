@@ -47,7 +47,6 @@ class Minuit(AutotoolsPackage):
     version('5.08.00', '1cc8da07c4a247c877f39acf8d76ba02')
 
     def url_for_version(self, version):
-        print version
         if version > Version('5.0.0'):
             url = "http://www.cern.ch/mathlibs/sw/{0}/Minuit2/Minuit2-{1}.tar.gz"
             return url.format(version.underscored, version)
