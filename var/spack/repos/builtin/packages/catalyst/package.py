@@ -52,13 +52,15 @@ class Catalyst(CMakePackage):
     variant('essentials', default=False, description='Enable Essentials support')
     variant('extras', default=False, description='Enable Extras support')
     variant('rendering', default=False, description='Enable Vtk Rendering support')
+    variant('expat', default=True, description="Use external EXPAT")
 
     depends_on('git')
     depends_on('mpi')
+    depends_on('expat', when='+expat')
     depends_on('python@2:2.8', when='+python')
     depends_on('mesa', when='+rendering')
-    depends_on("libx11", when='+rendering')
-    depends_on("libxt", when='+rendering')
+    depends_on('libx11', when='+rendering')
+    depends_on('libxt', when='+rendering')
     depends_on('cmake@3.3:', type='build')
 
     def url_for_version(self, version):
@@ -151,8 +153,21 @@ class Catalyst(CMakePackage):
 
     def cmake_args(self):
         """Populate cmake arguments for Catalyst."""
+        spec = self.spec
+
+        def variant_bool(feature, on='ON', off='OFF'):
+            """Ternary for spec variant to ON/OFF string"""
+            if feature in spec:
+                return on
+            return off
+
+        def nvariant_bool(feature):
+            """Negated ternary for spec variant to OFF/ON string"""
+            return variant_bool(feature, on='OFF', off='ON')        
+
         cmake_args = [
-            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version)
+            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version),
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=%s' % variant_bool('+expat')
         ]
         return cmake_args
 
