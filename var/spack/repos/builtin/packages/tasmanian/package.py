@@ -34,3 +34,4 @@ class Tasmanian(CMakePackage):
     url      = "http://tasmanian.ornl.gov/documents/Tasmanian_v5.0.zip"
 
     version('5.0', '4bf131841d786033863d271739be0f7a')
+    depends_on('unzip')
