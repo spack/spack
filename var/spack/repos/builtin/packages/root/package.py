@@ -32,6 +32,8 @@ class Root(CMakePackage):
 
     homepage = "https://root.cern.ch"
     url      = "https://root.cern.ch/download/root_v6.09.02.source.tar.gz"
+    list_url = "https://root.cern.ch/download/"
+    list_depth = 1
 
     # Development versions
     version('6.09.02', '4188dfeafb72df339a3d688fe92f57ec')

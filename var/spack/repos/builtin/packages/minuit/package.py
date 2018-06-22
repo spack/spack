@@ -45,3 +45,12 @@ class Minuit(AutotoolsPackage):
     version('5.12.00', '36726b8c6fcddf4f0837c900461a1d3c')
     version('5.10.00', 'dfc7afc0add70deaca105ff549f5a786')
     version('5.08.00', '1cc8da07c4a247c877f39acf8d76ba02')
+
+    def url_for_version(self, version):
+        print version
+        if version > Version('5.0.0'):
+            url = "http://www.cern.ch/mathlibs/sw/{0}/Minuit2/Minuit2-{1}.tar.gz"
+            return url.format(version.underscored, version)
+        else:
+            url = "http://seal.web.cern.ch/seal/minuit/releases/Minuit-{0}.tar.gz"
+            return url.format(version.underscored)
