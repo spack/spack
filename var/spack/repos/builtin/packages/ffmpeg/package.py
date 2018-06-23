@@ -48,3 +48,4 @@ class Ffmpeg(AutotoolsPackage):
             config_args.append('--enable-shared')
 
         return config_args
+
