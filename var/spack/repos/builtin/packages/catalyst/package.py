@@ -40,6 +40,9 @@ class Catalyst(CMakePackage):
     url      = "http://www.paraview.org/files/v5.4/ParaView-v5.4.1.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
+    version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
+    version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')
     version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
