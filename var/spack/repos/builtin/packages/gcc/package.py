@@ -163,7 +163,7 @@ class Gcc(AutotoolsPackage):
             # https://trac.macports.org/ticket/56502#no1
             # see also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83531
             patch('darwin/headers-10.13-fix.patch', when='@5.5.0')
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
