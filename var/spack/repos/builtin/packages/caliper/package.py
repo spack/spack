@@ -99,5 +99,5 @@ class Caliper(CMakePackage):
         # allow some nonconforming code to compile
         compile_flags = "-O3 -fpermissive"
         args.append('-DCMAKE_CXX_FLAGS=%s' % compile_flags)
-        
+
         return args
