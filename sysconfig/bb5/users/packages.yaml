@@ -148,7 +148,7 @@ packages:
         version: [5.2]
     zlib:
         paths:
-            zlib@1.2.7: /usr
+            zlib@1.2.7+shared: /usr
         version: [1.2.7]
     intel-parallel-studio:
         modules:
