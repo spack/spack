@@ -376,15 +376,16 @@ The merged configuration would look like this:
 Config file variables
 ------------------------------
 
-Spack understands several variables which can be used in config file paths
-where ever they appear. There are three sets of these variables, Spack specific
-variables, environment variables, and user path variables. Spack specific
-variables and environment variables both are indicated by prefixing the variable
-name with ``$``. User path variables are indicated at the start of the path with
-``~`` or ``~user``. Let's discuss each in turn.
+Spack understands several variables which can be used in config file
+paths wherever they appear. There are three sets of these variables,
+Spack specific variables, environment variables, and user path
+variables. Spack specific variables and environment variables both are
+indicated by prefixing the variable name with ``$``. User path variables
+are indicated at the start of the path with ``~`` or ``~user``. See below
+for more details.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Spack Specific Variables
+Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack understands several special variables. These are:
@@ -398,23 +399,74 @@ Spack understands several special variables. These are:
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
-``${varname}``. Their names are also case insensitive meaning that ``$SPACK``
-works just as well as ``$spack``. These special variables are also
-substituted first, so any environment variables with the same name will not
-be used.
+``${varname}``. Their names are also case insensitive, meaning that
+``$SPACK`` works just as well as ``$spack``. These special variables are
+substituted first, so any environment variables with the same name will
+not be used.
 
 ^^^^^^^^^^^^^^^^^^^^^
-Environment Variables
+Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
-Spack then uses ``os.path.expandvars`` to expand any remaining environment
-variables.
+After spack-specific variables are evaluated, environment variables are
+expanded.  These are formatted like spack-specific variables, e.g.,
+``${varname}``.  You can use this to insert environment variables in your
+Spack configuration.
 
-^^^^^^^^^^^^^^
-User Variables
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+User home directories
+^^^^^^^^^^^^^^^^^^^^^
 
-Spack also uses the ``os.path.expanduser`` function on the path to expand
-any user tilde paths such as ``~`` or ``~user``. These tilde paths must appear
-at the beginning of the path or ``os.path.expanduser`` will not properly
-expand them.
+Spack performs unix-style tilde expansion on paths in configuration
+files.  This means that tilde (``~``) will expand to the current user's
+home directory, and ``~user`` will expand to a specified user's home
+directory.  The ``~`` must appear at the beginning of the path, or Spack
+will not expand it.
+
+----------------------------
+Seeing Spack's configuration
+----------------------------
+
+With so many scopes overriding each other, it can sometimes be difficult
+to understand what Spack's final configuration looks like.  ``spack
+config get`` shows a fully merged configuration file, taking into account
+all scopes.  For example, to see the fully merged ``config.yaml``, you
+can type:
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     debug: false
+     checksum: true
+     verify_ssl: true
+     dirty: false
+     build_jobs: 8
+     install_tree: $spack/opt/spack
+     template_dirs:
+     - $spack/templates
+     directory_layout: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}
+     module_roots:
+       tcl: $spack/share/spack/modules
+       lmod: $spack/share/spack/lmod
+       dotkit: $spack/share/spack/dotkit
+     build_stage:
+     - $tempdir
+     - /nfs/tmp2/$user
+     - $spack/var/spack/stage
+     source_cache: $spack/var/spack/cache
+     misc_cache: ~/.spack/cache
+     locks: true
+
+Likewise, this will show the fully merged ``packages.yaml``:
+
+.. code-block:: console
+
+   $ spack config get packages
+
+You can use this in conjunction with the ``-C`` / ``--config-scope`` argument to
+see how your scope will affect Spack's configuration:
+
+.. code-block:: console
+
+   $ spack -C /path/to/my/scope config get packages
