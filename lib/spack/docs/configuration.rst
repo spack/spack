@@ -428,10 +428,20 @@ Seeing Spack's configuration
 ----------------------------
 
 With so many scopes overriding each other, it can sometimes be difficult
-to understand what Spack's final configuration looks like.  ``spack
-config get`` shows a fully merged configuration file, taking into account
-all scopes.  For example, to see the fully merged ``config.yaml``, you
-can type:
+to understand what Spack's final configuration looks like.
+
+Spack provides two useful ways to view the final "merged" version of any
+configuration file: ``spack config get`` and ``spack config blame``.
+
+.. _cmd-spack-config-get:
+
+^^^^^^^^^^^^^^^^^^^^
+``spack config get``
+^^^^^^^^^^^^^^^^^^^^
+
+``spack config get`` shows a fully merged configuration file, taking into
+account all scopes.  For example, to see the fully merged
+``config.yaml``, you can type:
 
 .. code-block:: console
 
@@ -470,3 +480,48 @@ see how your scope will affect Spack's configuration:
 .. code-block:: console
 
    $ spack -C /path/to/my/scope config get packages
+
+
+.. _cmd-spack-config-blame:
+
+^^^^^^^^^^^^^^^^^^^^^^
+``spack config blame``
+^^^^^^^^^^^^^^^^^^^^^^
+
+``spack config blame`` functions much like ``spack config get``, but it
+shows exactly which configuration file each preference came from. If you
+do not know why Spack is behaving a certain way, this can help you track
+down the problem:
+
+.. code-block:: console
+
+   $ spack --insecure -C ./my-scope -C ./my-scope-2 config blame config
+   ==> Warning: You asked for --insecure. Will NOT check SSL certificates.
+   ---                                                   config:
+   _builtin                                                debug: False
+   /home/myuser/spack/etc/spack/defaults/config.yaml:72    checksum: True
+   command_line                                            verify_ssl: False
+   ./my-scope-2/config.yaml:2                              dirty: False
+   _builtin                                                build_jobs: 8
+   ./my-scope/config.yaml:2                                install_tree: /path/to/some/tree
+   /home/myuser/spack/etc/spack/defaults/config.yaml:23    template_dirs:
+   /home/myuser/spack/etc/spack/defaults/config.yaml:24    - $spack/templates
+   /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}
+   /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
+   /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
+   /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
+   /home/myuser/spack/etc/spack/defaults/config.yaml:35      dotkit: $spack/share/spack/dotkit
+   /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
+   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - /nfs/tmp2/$user
+   /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
+
+You can see above that the ``build_jobs`` and ``debug`` settings are
+built in and are not overridden by a configuration file.  The
+``verify_ssl`` setting comes from the ``--insceure`` option on the
+command line. ``dirty`` and ``install_tree`` come from the command-line
+scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
+options come from the default configuration files that ship with Spack.
