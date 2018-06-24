@@ -129,6 +129,7 @@ class Catalyst(CMakePackage):
         else:
             lib_dir = self.prefix.lib
         paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
+        run_env.prepend_path('ParaView_DIR', self.prefix)
         run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
