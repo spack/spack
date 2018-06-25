@@ -32,9 +32,9 @@ class PyImageio(PythonPackage):
     cross-platform, runs on Python 2.7 and 3.4+, and is easy to install."""
 
     homepage = "http://imageio.github.io/"
-    url      = "https://github.com/imageio/imageio/archive/v2.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/i/imageio/imageio-2.3.0.tar.gz"
 
-    version('2.3.0', '8d1b3f93b77a4ddf8c32af325c525a1a')
+    version('2.3.0', '4722c4e1c366748abcb18729881cffb8')
 
     #TODO: Add variants for plugins, and optional dependencies
 
