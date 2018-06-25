@@ -16,9 +16,9 @@ for prefix in chain_prefixes:
 parent_install_trees = []
 default = []
 for prefix in parent_prefixes:
-    default.append(os.path.join(prefix, 'opt', 'spack'))
-parent_install_trees = spack.config.get('config:parent_install_trees',
-                                        default=default)
+    parent_install_trees.append(os.path.join(prefix, 'opt', 'spack'))
+parent_install_trees.extend(spack.config.get('config:parent_install_trees',
+                                        default=default))
 parent_dbs = []
 parent_layouts = []
 for parent_install_tree in parent_install_trees:
