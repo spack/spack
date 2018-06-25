@@ -96,9 +96,10 @@ class Caliper(CMakePackage):
             args.append('-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc)
             args.append('-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
 
-        # allow some nonconforming code to compile
-        if spec.satisfies('%gcc'):
-            compile_flags = "-O3 -fpermissive"
-            args.append('-DCMAKE_CXX_FLAGS=%s' % compile_flags)
-
         return args
+
+    # allow some nonconforming code to compile
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%gcc') and name in ['cxxflags', 'cppflags']:
+            flags.append('-fpermissive')
+        return (None, None, flags)
