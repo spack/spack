@@ -767,20 +767,38 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return version_urls
 
     def nearest_url(self, version):
-        """Finds the URL for the next lowest version with a URL.
-           If there is no lower version with a URL, uses the
-           package url property. If that isn't there, uses a
-           *higher* URL, and if that isn't there raises an error.
-        """
-        version_urls = self.version_urls()
-        url = getattr(self.__class__, 'url', None)
+        """Returns the nearest URL for a target version.
 
-        for v in version_urls:
-            if v > version and url:
-                break
-            if version_urls[v]:
-                url = version_urls[v]
-        return url
+        The algorithm to compute the URL is the following:
+
+            1. If the target version is associated with a specific URL, that
+            URL will be returned.
+
+            2. Otherwise return the URL associated with the closest higher
+            version.
+
+            3. If there's no such a version return the default URL from
+            the package.
+
+        The idea of the algorithm is that the package-level URL should be
+        the default one for recent versions, and that once a version
+        overrides its URL that override is valid for all the versions that
+        are older.
+
+        Args:
+            version (Version): the target version
+
+        Returns:
+            Nearest URL
+        """
+        candidates = sorted([x for x in self.version_urls() if x >= version])
+
+        # If we don't have candidates, return the default. Here we let
+        # a class without url fail, as we don't have a sensible fallback.
+        if not candidates:
+            return getattr(self.__class__, 'url')
+
+        return self.version_urls()[candidates[0]]
 
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
