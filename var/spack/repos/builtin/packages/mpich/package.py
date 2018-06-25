@@ -82,7 +82,6 @@ spack package at this time.''',
     patch('mpich32_clang.patch', when='@3.2%clang')
 
     depends_on('libfabric', when='netmod=ofi')
-    depends_on('libfabric fabrics=verbs', when='+verbs netmod=ofi')
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
