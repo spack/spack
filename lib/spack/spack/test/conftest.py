@@ -254,6 +254,26 @@ def config(configuration_dir):
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
+@pytest.fixture(scope='function')
+def mutable_config(tmpdir_factory, configuration_dir, config):
+    """Like config, but tests can modify the configuration."""
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
+    configuration_dir.copy(mutable_dir)
+
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(mutable_dir))
+          for name in ['site', 'system', 'user']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+
 def _populate(mock_db):
     """Populate a mock database with packages.
 

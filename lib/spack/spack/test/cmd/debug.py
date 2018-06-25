@@ -22,19 +22,37 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+import os
+import os.path
+
+from spack.main import SpackCommand
+from spack.util.executable import which
+
+debug = SpackCommand('debug')
 
 
-class Rempi(AutotoolsPackage):
-    """ReMPI is a record-and-replay tool for MPI applications."""
-    homepage = "https://github.com/PRUNERS/ReMPI"
-    url      = "https://github.com/PRUNERS/ReMPI/releases/download/v1.0.0/ReMPI-1.0.0.tar.gz"
+def test_create_db_tarball(tmpdir, database):
+    with tmpdir.as_cwd():
+        debug('create-db-tarball')
 
-    version("1.1.0", "05b872a6f3e2f49a2fc6112a844c7f43")
-    version("1.0.0", "32c780a6a74627b5796bea161d4c4733")
+        files = os.listdir(os.getcwd())
+        tarball_name = files[0]
 
-    depends_on("mpi")
-    depends_on("zlib")
-    depends_on("autoconf", type='build')
-    depends_on("automake", type='build')
-    depends_on("libtool", type='build')
+        # debug command made an archive
+        assert os.path.exists(tarball_name)
+
+        # print contents of archive
+        tar = which('tar')
+        contents = tar('tzf', tarball_name, output=str)
+
+        # DB file is included
+        assert 'index.json' in contents
+
+        # spec.yamls from all installs are included
+        for spec in database.query():
+            # externals won't have a spec.yaml
+            if spec.external:
+                continue
+
+            spec_suffix = '%s/.spack/spec.yaml' % spec.dag_hash()
+            assert spec_suffix in contents

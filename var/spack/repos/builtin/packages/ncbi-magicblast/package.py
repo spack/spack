@@ -25,16 +25,17 @@
 from spack import *
 
 
-class Rempi(AutotoolsPackage):
-    """ReMPI is a record-and-replay tool for MPI applications."""
-    homepage = "https://github.com/PRUNERS/ReMPI"
-    url      = "https://github.com/PRUNERS/ReMPI/releases/download/v1.0.0/ReMPI-1.0.0.tar.gz"
+class NcbiMagicblast(AutotoolsPackage):
+    """Magic-BLAST is a tool for mapping large next-generation RNA or DNA
+    sequencing runs against a whole genome or transcriptome. """
 
-    version("1.1.0", "05b872a6f3e2f49a2fc6112a844c7f43")
-    version("1.0.0", "32c780a6a74627b5796bea161d4c4733")
+    homepage = "https://ncbi.github.io/magicblast/"
+    url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/magicblast/1.3.0/ncbi-magicblast-1.3.0-src.tar.gz"
 
-    depends_on("mpi")
-    depends_on("zlib")
-    depends_on("autoconf", type='build')
-    depends_on("automake", type='build')
-    depends_on("libtool", type='build')
+    version('1.3.0', '2615b919c1fe1bf7dc3d816392ab4420')
+
+    depends_on('lmdb')
+    configure_directory = 'c++'
+
+    def configure_args(self):
+        return ['--without-internal']

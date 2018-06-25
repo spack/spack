@@ -21,7 +21,7 @@ config:
 
   # Locations where templates should be found
   template_dirs:
-    - $spack/templates
+    - $spack/share/spack/templates
 
 
   # default directory layout
