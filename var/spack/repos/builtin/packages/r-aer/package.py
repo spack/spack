@@ -28,7 +28,8 @@ from spack import *
 class RAer(RPackage):
     """Functions, data sets, examples, demos, and vignettes
     for the book Christian Kleiber and Achim Zeileis (2008),
-    Applied Econometrics with R, Springer-Verlag, New York. ISBN 978-0-387-77316-2."""
+    Applied Econometrics with R, Springer-Verlag, New York.
+    ISBN 978-0-387-77316-2."""
 
     homepage = "https://cran.r-project.org/web/packages/AER/index.html"
     url      = "https://cran.r-project.org/src/contrib/AER_1.2-5.tar.gz"
