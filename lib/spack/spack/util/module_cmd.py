@@ -10,7 +10,6 @@ parsing environment modules.
 import subprocess
 import os
 import json
-from spack.util.executable import which
 
 
 # This list is not exhaustive. Currently we only use load and unload
