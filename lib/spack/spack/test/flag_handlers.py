@@ -17,7 +17,8 @@ from spack.pkgkit import inject_flags, env_flags, build_system_flags
 def temp_env():
     old_env = os.environ.copy()
     yield
-    os.environ = old_env
+    os.environ.clear()
+    os.environ.update(old_env)
 
 
 def add_o3_to_build_system_cflags(pkg, name, flags):
@@ -169,3 +170,4 @@ class TestFlagHandlers(object):
                         '-DCMAKE_CXX_STANDARD_LIBRARIES=-lfoo',
                         '-DCMAKE_Fortran_STANDARD_LIBRARIES=-lfoo'])
         assert set(pkg.cmake_flag_args) == expected
+

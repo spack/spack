@@ -6,14 +6,13 @@
 import pytest
 import subprocess
 import os
-from spack.util.module_cmd import (
-    get_path_from_module,
-    get_path_from_module_contents,
-    get_path_arg_from_module_line,
-    get_module_cmd_from_bash,
-    get_module_cmd,
-    ModuleError)
+import tempfile
 
+from spack.util.module_cmd import (
+    module
+    get_path_from_module,
+    get_argument_from_module_line
+)
 
 env = os.environ.copy()
 env['LC_ALL'] = 'C'
@@ -24,7 +23,13 @@ typeset_func = subprocess.Popen('module avail',
                                 shell=True)
 typeset_func.wait()
 typeset = typeset_func.stderr.read()
-MODULE_NOT_DEFINED = b'not found' in typeset
+MODULE_DEFINED = b'not found' not in typeset
+
+test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
+                     'setenv MOD_DIR /path/to',
+                     'setenv LDFLAGS -Wl,-rpath/path/to/lib',
+                     'setenv LDFLAGS -L/path/to/lib',
+                     'prepend-path PATH /path/to/bin']
 
 
 @pytest.fixture
@@ -40,15 +45,35 @@ def save_env():
         os.environ['BASH_FUNC_module()'] = old_bash_func
 
 
-def test_get_path_from_module(save_env):
-    lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
-             'prepend-path CRAY_LD_LIBRARY_PATH /path/to/lib',
-             'setenv MOD_DIR /path/to',
-             'setenv LDFLAGS -Wl,-rpath/path/to/lib',
-             'setenv LDFLAGS -L/path/to/lib',
-             'prepend-path PATH /path/to/bin']
+@pytest.fixture
+def tmp_module():
+    module_dir = tempfile.mkdtemp()
+    module_file = os.path.join(module_dir, 'mod')
 
-    for line in lines:
+    module('use', module_dir)
+
+    yield module_file
+
+    module('unuse', module_dir)
+    os.remove(module_file)
+    os.rmdir(module_dir)
+
+
+@pytest.mark.skipif(not MODULE_DEFINED, reason='Requires module() function')
+def test_get_path_from_module(tmp_module):
+    for line in test_module_lines:
+        with open(tmp_module, 'w') as f:
+            f.truncate()
+            f.write('#%Module1.0\n')
+            f.write(line)
+
+        path = get_path_from_module(os.path.basename(tmp_module))
+        assert path == '/path/to'
+
+
+@pytest.mark.skipif(MODULE_DEFINED, reason='Only works if module() undefined')
+def test_get_path_from_module_faked(save_env):
+    for line in test_module_lines:
         module_func = '() { eval `echo ' + line + ' bash filler`\n}'
         os.environ['BASH_FUNC_module()'] = module_func
         path = get_path_from_module('mod')
@@ -105,63 +130,4 @@ def test_get_argument_from_module_line():
     assert all(get_path_arg_from_module_line(l) == '/lib/path' for l in lines)
     for bl in bad_lines:
         with pytest.raises(ValueError):
-            get_path_arg_from_module_line(bl)
-
-
-@pytest.mark.skipif(MODULE_NOT_DEFINED, reason='Depends on defined module fn')
-def test_get_module_cmd_from_bash_using_modules():
-    module_list_proc = subprocess.Popen(['module list'],
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        executable='/bin/bash',
-                                        shell=True)
-    module_list_proc.wait()
-    module_list = module_list_proc.stdout.read()
-
-    module_cmd = get_module_cmd_from_bash()
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    # Lmod command reprints some env variables on every invocation.
-    # Test containment to avoid false failures on lmod systems.
-    assert module_list in module_cmd_list
-
-
-def test_get_module_cmd_from_bash_ticks(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*`\n}'
-
-    module_cmd = get_module_cmd()
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    assert module_cmd_list == 'python list\n'
-
-
-def test_get_module_cmd_from_bash_parens(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill sh $*)\n}'
-
-    module_cmd = get_module_cmd()
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    assert module_cmd_list == 'fill python list\n'
-
-
-def test_get_module_cmd_fails(save_env):
-    os.environ.pop('BASH_FUNC_module()')
-    os.environ.pop('PATH')
-    with pytest.raises(ModuleError):
-        module_cmd = get_module_cmd(b'--norc')
-        module_cmd()  # Here to avoid Flake F841 on previous line
-
-
-def test_get_module_cmd_from_which(tmpdir, save_env):
-    f = tmpdir.mkdir('bin').join('modulecmd')
-    f.write('#!/bin/bash\n'
-            'echo $*')
-    f.chmod(0o770)
-
-    os.environ['PATH'] = str(tmpdir.join('bin')) + ':' + os.environ['PATH']
-    os.environ.pop('BASH_FUNC_module()')
-
-    module_cmd = get_module_cmd(b'--norc')
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    assert module_cmd_list == 'python list\n'
+            get_argument_from_module_line(bl)
