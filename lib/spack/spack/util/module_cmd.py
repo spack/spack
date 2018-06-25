@@ -8,10 +8,8 @@ This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
 import subprocess
-import re
 import os
 import json
-import llnl.util.tty as tty
 from spack.util.executable import which
 
 
@@ -26,9 +24,9 @@ def module(*args):
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
         module_p  = subprocess.Popen('module ' + ' '.join(args) +
-                                    ' 2>&1 ; python -c %s' % py_cmd,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, shell=True)
+                                     ' 2>&1 ; python -c %s' % py_cmd,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, shell=True)
         env_dict = json.loads(module_p.communicate()[0])
         os.environ.clear()
         os.environ.update(env_dict)

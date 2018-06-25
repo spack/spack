@@ -57,7 +57,6 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-
             output = module('avail', cmp_cls.PrgEnv_compiler)
             version_regex = r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler
             matches = re.findall(version_regex, output)

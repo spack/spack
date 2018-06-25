@@ -170,4 +170,3 @@ class TestFlagHandlers(object):
                         '-DCMAKE_CXX_STANDARD_LIBRARIES=-lfoo',
                         '-DCMAKE_Fortran_STANDARD_LIBRARIES=-lfoo'])
         assert set(pkg.cmake_flag_args) == expected
-
