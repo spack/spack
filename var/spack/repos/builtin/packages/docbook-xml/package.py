@@ -32,7 +32,6 @@ class DocbookXml(Package):
     url = "http://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
 
     version('4.5', '03083e288e87a7e829e437358da7ef9e')
-    version('4.3', 'ab200202b9e136a144db1e0864c45074')
 
     def install(self, spec, prefix):
         for item in os.listdir('.'):
