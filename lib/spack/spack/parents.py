@@ -18,23 +18,36 @@ default = []
 for prefix in parent_prefixes:
     default.append(os.path.join(prefix, 'opt', 'spack'))
 parent_install_trees = spack.config.get('config:parent_install_trees',
-                                        default)
+                                        default=default)
 parent_dbs = []
 parent_layouts = []
 for parent_install_tree in parent_install_trees:
     parent_root = spack.util.path.canonicalize_path(parent_install_tree)
     if parent_root == default_root:
         break
-    parent_dbs.append(spack.database.Database(parent_root,
-                                              parent_db=parent_dbs[-1]))
-    parent_layouts.append(spack.directory_layout.YamlDirectoryLayout(
-                          parent_root,
-                          hash_len=spack.config.get(
-                              'config:' +
-                              'install_hash_length'
-                          ),
-                          path_scheme=spack.config.get(
-                              'config:' +
-                              'install_path_scheme'
-                          ),
-                          parent_layout=parent_layouts[-1]))
+    if not parent_dbs:
+        parent_dbs.append(spack.database.Database(parent_root))
+        parent_layouts.append(spack.directory_layout.YamlDirectoryLayout(
+                              parent_root,
+                              hash_len=spack.config.get(
+                                  'config:' +
+                                  'install_hash_length'
+                              ),
+                              path_scheme=spack.config.get(
+                                  'config:' +
+                                  'install_path_scheme'
+                              )))
+    else:
+        parent_dbs.append(spack.database.Database(parent_root,
+                                                  parent_db=parent_dbs[-1]))
+        parent_layouts.append(spack.directory_layout.YamlDirectoryLayout(
+                              parent_root,
+                              hash_len=spack.config.get(
+                                  'config:' +
+                                  'install_hash_length'
+                              ),
+                              path_scheme=spack.config.get(
+                                  'config:' +
+                                  'install_path_scheme'
+                              ),
+                              parent_layout=parent_layouts[-1]))

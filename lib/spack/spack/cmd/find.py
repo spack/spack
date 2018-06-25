@@ -36,7 +36,6 @@ description = "list and search installed packages"
 section = "basic"
 level = "short"
 
-
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument('-s', '--short',
@@ -152,7 +151,7 @@ def find(parser, args):
             msg = "No package matches the query: {0}"
             msg = msg.format(' '.join(args.constraint))
             tty.msg(msg)
-            return
+            next
 
         # If tags have been specified on the command line, filter by tags
         if args.tags:

@@ -25,7 +25,7 @@ config:
   chain_prefixes: []
   # If parent_install_trees is defined the search for the other spack install 
   # db uses the paths defined.
-  parent_install_trees: []
+  #parent_install_trees: []
 
   # Locations where templates should be found
   template_dirs:
