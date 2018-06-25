@@ -36,6 +36,7 @@ description = "list and search installed packages"
 section = "basic"
 level = "short"
 
+
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument('-s', '--short',
