@@ -137,7 +137,8 @@ def query_arguments(args):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    dbs = spack.parents.parent_dbs
+    dbs = [None]
+    dbs.extend(spack.parents.parent_dbs)
     dbs.append(spack.store.db)
     for db in dbs[1:]:
         q_args['db'] = db
