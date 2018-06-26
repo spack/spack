@@ -75,6 +75,12 @@ or refer to the full manual below.
    packaging_guide
    developer_guide
    docker_for_developers
+   testing_guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Docs
+
    Spack API Docs <spack>
    LLNL API Docs <llnl>
 
