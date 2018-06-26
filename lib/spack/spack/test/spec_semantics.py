@@ -561,6 +561,11 @@ class TestSpecSematics(object):
     # ========================================================================
     # Constraints
     # ========================================================================
+    def test_constrain_name(self):
+        """Ensure anonymous specs can be constrained."""
+        check_constrain('libelf@0.8.13%gcc@4.5', '%gcc@4.5', 'libelf@0.8.13')
+        check_constrain('libelf@4.6:4.7', '@4.5:4.7', 'libelf@4.6:4.8')
+
     def test_constrain_variants(self):
         check_constrain('libelf@2.1:2.5', 'libelf@0:2.5', 'libelf@2.1:3')
         check_constrain(
