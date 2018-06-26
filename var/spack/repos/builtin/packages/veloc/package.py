@@ -40,6 +40,7 @@ class Veloc(CMakePackage):
     depends_on('mpi')
     depends_on('er')
     depends_on('axl')
+    depends_on('cmake@3.9:', type='build')
 
     def cmake_args(self):
         args = []
