@@ -43,6 +43,8 @@ class Caliper(CMakePackage):
     # version 1.6.0 is broken b/c it downloads the wrong gotcha version
     version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
 
+    is_linux = sys.platform.startswith('linux')
+
     variant('mpi', default=True, 
             description='Enable MPI wrappers')
     variant('dyninst', default=False, 
@@ -53,12 +55,12 @@ class Caliper(CMakePackage):
     # pthread_self() signature is incompatible with PAPI_thread_init() on Mac
     variant('papi', default=sys.platform != 'darwin',
             description='Enable PAPI service')
-    variant('libpfm', default=sys.platform == 'linux2',
+    variant('libpfm', default=is_linux,
             description='Enable libpfm (perf_events) service')
     # gotcha doesn't work on Mac
     variant('gotcha', default=sys.platform != 'darwin',
             description='Enable GOTCHA support')
-    variant('sampler', default=sys.platform == 'linux2',
+    variant('sampler', default=is_linux,
             description='Enable sampling support on Linux')
     variant('sosflow', default=False,
             description='Enable SOSflow support')
