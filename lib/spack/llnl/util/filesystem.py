@@ -27,8 +27,10 @@ import errno
 import hashlib
 import fileinput
 import glob
+import grp
 import numbers
 import os
+import pwd
 import re
 import shutil
 import stat
@@ -210,6 +212,21 @@ def set_install_permissions(path):
         os.chmod(path, 0o755)
     else:
         os.chmod(path, 0o644)
+
+
+def group_ids(uid=None):
+    """Get group ids that a uid is a member of.
+
+    Arguments:
+        uid (int): id of user, or None for current user
+
+    Returns:
+        (list of int): gids of groups the user is a member of
+    """
+    if uid is None:
+        uid = os.getuid()
+    user = pwd.getpwuid(uid).pw_name
+    return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
 def copy_mode(src, dest):
