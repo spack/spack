@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,10 +24,18 @@
 ##############################################################################
 from spack import *
 
+
+class Librsvg(AutotoolsPackage):
+    """FIXME: Put a proper description of your package here."""
+
+    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://gitlab.gnome.org/GNOME/librsvg"
     url      = "http://ftp.gnome.org/pub/gnome/sources/librsvg/2.42/librsvg-2.42.1.tar.xz"
 
-    version('2.42.1', '874e540f57a347347bc268dd2584a812')
+    version('2.42.5', 'de247668212eb45591408487bf0f9232')
+
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')
 
     depends_on('libcroco')
     depends_on('pango')
@@ -35,8 +43,8 @@ from spack import *
     depends_on('glib')
     depends_on('gtkplus')
 
-    # def configure_args(self):
-    #     # FIXME: Add arguments other than --prefix
-    #     # FIXME: If not needed delete this function
-    #     args = []
-    #     return args
+    def configure_args(self):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete this function
+        args = []
+        return args
