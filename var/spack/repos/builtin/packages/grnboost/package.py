@@ -35,7 +35,7 @@ class Grnboost(Package):
 
     depends_on('sbt', type='build')
     depends_on('jdk', type=('build', 'run'))
-    depends_on('xgboost+jmi', type='run')
+    depends_on('xgboost+jvm-packages', type='run')
     depends_on('slf4j', type='run')
 
     def install(self, spec, prefix):
@@ -44,4 +44,7 @@ class Grnboost(Package):
         install_tree('target', prefix.target)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('GRNBOOST_JAR', [join_path(self.prefix, 'target', 'scala-2.11'), self.spec['xgboost'].prefix, self.spec['slf4j'].prefix])
+        run_env.set('GRNBOOST_JAR', join_path(self.prefix, 'target', 'scala-2.11'))
+        run_env.set('XGBOOST_JAR', self.spec['xgboost'].prefix)
+        run_env.set('SLF4J_JAR', self.spec['slf4j'].prefix.bin)
+        run_env.set('JAVA_HOME', self.spec['jdk'].prefix)
