@@ -35,7 +35,11 @@ class Veloc(CMakePackage):
     version('master', git='https://github.com/ecp-veloc/veloc.git',
             branch='master')
 
-    depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception~filesystem~graph~icu~iostreams~locale~log~math~mpi~multithreaded~numpy~program_options~python~random~regex~serialization~shared~signals~singlethreaded~system~taggedlayout~test~thread~timer~versionedlayout~wave')
+    depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception'
+               '~filesystem~graph~icu~iostreams~locale~log~math~mpi'
+               '~multithreaded~numpy~program_options~python~random~regex'
+               '~serialization~shared~signals~singlethreaded~system~taggedlayout'
+               '~test~thread~timer~versionedlayout~wave')
     depends_on('libpthread-stubs')
     depends_on('mpi')
     depends_on('er')
