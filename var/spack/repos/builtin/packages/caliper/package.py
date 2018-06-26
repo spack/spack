@@ -40,7 +40,8 @@ class Caliper(CMakePackage):
 
     version('master', git='https://github.com/LLNL/Caliper.git')
     version('1.7.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.7.0')
-    version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
+    # version 1.6.0 is broken b/c it downloads the wrong gotcha version
+    # version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
 
     variant('mpi', default=True, 
             description='Enable MPI wrappers')
@@ -60,6 +61,7 @@ class Caliper(CMakePackage):
     variant('sosflow', default=False,
             description='Enable SOSflow support')
 
+    depends_on('gotcha@1.0:', when='+gotcha')
     depends_on('dyninst', when='+dyninst')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='+libpfm')
@@ -86,6 +88,8 @@ class Caliper(CMakePackage):
             '-DWITH_MPIT=%s' % ('On' if spec.satisfies('^mpi@3:') else 'Off')
         ]
 
+        if '+gotcha' in spec:
+            args.append('-DUSE_EXTERNAL_GOTCHA=True')
         if '+papi' in spec:
             args.append('-DPAPI_PREFIX=%s'    % spec['papi'].prefix)
         if '+libpfm' in spec:
