@@ -34,7 +34,8 @@ def module(*args):
         module_p = subprocess.Popen('module ' + ' '.join(args) + ' 2>&1',
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, shell=True)
-        return module_p.communicate()[0]
+        # Decode and str to return a string object in both python 2 and 3
+        return str(module_p.communicate()[0].decode())
 
 
 def load_module(mod):
