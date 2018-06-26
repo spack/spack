@@ -766,40 +766,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 version_urls[v] = args['url']
         return version_urls
 
-    def nearest_url(self, version):
-        """Returns the nearest URL for a target version.
-
-        The algorithm to compute the URL is the following:
-
-            1. If the target version is associated with a specific URL, that
-            URL will be returned.
-
-            2. Otherwise return the URL associated with the closest higher
-            version.
-
-            3. If there's no such a version return the default URL from
-            the package.
-
-        The idea of the algorithm is that the package-level URL should be
-        the default one for recent versions, and that once a version
-        overrides its URL that override is valid for all the versions that
-        are older.
-
-        Args:
-            version (Version): the target version
-
-        Returns:
-            Nearest URL
-        """
-        candidates = sorted([x for x in self.version_urls() if x >= version])
-
-        # If we don't have candidates, return the default. Here we let
-        # a class without url fail, as we don't have a sensible fallback.
-        if not candidates:
-            return getattr(self.__class__, 'url')
-
-        return self.version_urls()[candidates[0]]
-
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL from which the specified version of this package
@@ -822,9 +788,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if version in version_urls:
             return version_urls[version]
 
-        # If we have no idea, try to substitute the version.
+        # If we have no idea, substitute the version into the default URL.
+        default_url = getattr(self.__class__, 'url', None)
         return spack.url.substitute_version(
-            self.nearest_url(version), self.url_version(version))
+            default_url, self.url_version(version))
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)

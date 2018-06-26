@@ -169,8 +169,7 @@ class TestPackage(object):
     @pytest.mark.regression('2737')
     def test_urls_for_versions(self):
         # Checks that a version directive without a 'url' argument
-        # specified uses the default url, or one that is specific
-        # to the closest newer version found.
+        # specified uses the default url
         for spec_str in ('url_override@0.9.0', 'url_override@1.0.0'):
             s = Spec(spec_str).concretized()
             url = s.package.url_for_version('0.9.0')
@@ -180,4 +179,4 @@ class TestPackage(object):
             assert url == 'http://www.doesnotexist.org/url_override-1.0.0.tar.gz'
 
             url = s.package.url_for_version('0.8.1')
-            assert url == 'http://www.anothersite.org/uo-0.8.1.tgz'
+            assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'
