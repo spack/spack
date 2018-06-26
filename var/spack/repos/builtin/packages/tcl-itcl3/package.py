@@ -25,7 +25,7 @@
 from spack import *
 
 
-class TclItcl3(AutotoolsPackage):
+class TclItcl(AutotoolsPackage):
     """[incr Tcl] is the most widely used O-O system for Tcl. The name is a
     play on C++, and [incr Tcl] provides a similar object model, including
     multiple inheritence and public and private classes and variables."""
