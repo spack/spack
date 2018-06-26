@@ -108,10 +108,10 @@ version numbers seen with most other Spack packages. For example, we have:
 
   $ spack info intel-parallel-studio
   …
-  Preferred version:  
+  Preferred version:
       professional.2018.2    http:…
 
-  Safe versions:  
+  Safe versions:
       professional.2018.2    http:…
       …
       composer.2018.2        http:…
@@ -649,7 +649,7 @@ Install steps
 
    then retry installing the large package. Spack normally cleans staging
    directories but certain failures may prevent it from doing so.
-   
+
    If the error persists, tell Spack to use an alternative location for
    temporary files:
 
@@ -667,7 +667,7 @@ Install steps
         This example uses Bourne shell syntax. Adapt for other shells as needed.
 
       * Alternatively, customize
-        :ref:`Spack's ``build_stage`` configuration setting <config-overrides_>`.
+        Spack's ``build_stage`` :ref:`configuration setting <config-overrides>`.
 
         .. code-block:: sh
 
@@ -680,7 +680,7 @@ Install steps
            config:
              build_stage:
              - /home/$user/spack-stage
-        
+
         Do not duplicate the ``config:`` line if it already is present.
         Adapt the location, which here is the same as in the preceeding example.
 
@@ -808,7 +808,7 @@ means:
   ``compiler:`` list. Consult the Spack documentation for
   :ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
   and
-  :ref:`Concretization Preferences <concretization-preferences`.
+  :ref:`Concretization Preferences <concretization-preferences>`.
 
 Example: ``etc/spack/packages.yaml`` might simply contain:
 
@@ -968,7 +968,7 @@ Footnotes
    .. warning:: Altering the naming scheme means that Spack will lose track of
       all packages it has installed for you so far. In a pinch, you can dive
       into old installation directories by hand until you delete them.
-      
+
       That said, *the time is right* for this kind of customization
       when you are lining up a new set of compilers.
 
