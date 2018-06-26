@@ -44,6 +44,7 @@ class Pumi(CMakePackage):
         branch='master')
 
     variant('zoltan', default=False, description='Enable Zoltan Features')
+    variant('fortran', default=False, description='Enable FORTRAN interface')
 
     depends_on('mpi')
     depends_on('cmake@3:', type='build')
@@ -57,6 +58,9 @@ class Pumi(CMakePackage):
             '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+            '-DPUMI_FORTRAN_INTERFACE=%s' %
+            ('ON' if '+fortran' in spec else 'OFF')
         ]
 
         return args
