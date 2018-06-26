@@ -35,8 +35,9 @@ def test_create_db_tarball(tmpdir, database):
     with tmpdir.as_cwd():
         debug('create-db-tarball')
 
+        # get the first non-dotfile to avoid coverage files in the directory
         files = os.listdir(os.getcwd())
-        tarball_name = files[0]
+        tarball_name = next(f for f in files if not f.startswith('.'))
 
         # debug command made an archive
         assert os.path.exists(tarball_name)
