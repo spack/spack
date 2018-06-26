@@ -24,21 +24,19 @@
 ##############################################################################
 from spack import *
 
-
-class Librsvg(AutotoolsPackage):
-    """"""
-
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://gitlab.gnome.org/GNOME/librsvg"
     url      = "http://ftp.gnome.org/pub/gnome/sources/librsvg/2.42/librsvg-2.42.1.tar.xz"
 
-    version('2.42.2', '6c142d792873a7c397b731e7486ac496')
+    version('2.42.1', '874e540f57a347347bc268dd2584a812')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on('libcroco')
+    depends_on('pango')
+    depends_on('rust')
+    depends_on('glib')
+    depends_on('gtkplus')
 
-    def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+    # def configure_args(self):
+    #     # FIXME: Add arguments other than --prefix
+    #     # FIXME: If not needed delete this function
+    #     args = []
+    #     return args
