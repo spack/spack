@@ -39,6 +39,7 @@ class Caliper(CMakePackage):
     url      = ""
 
     version('master', git='https://github.com/LLNL/Caliper.git')
+    version('1.7.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.7.0')
     version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
 
     variant('mpi', default=True, 

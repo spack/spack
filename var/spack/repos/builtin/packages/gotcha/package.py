@@ -38,6 +38,7 @@ class Gotcha(CMakePackage):
             branch="develop")
     version('master', git='https://github.com/LLNL/gotcha.git',
             branch="master")
+    version('1.0.2', git='https://github.com/LLNL/gotcha.git', tag="1.0.2")
     version('0.0.2', git='https://github.com/LLNL/gotcha.git', tag="0.0.2")
 
     def configure_args(self):
