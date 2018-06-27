@@ -276,9 +276,10 @@ environment variables. For example, cantera has the following option:
 
 In the case of cantera, using ``env_vars=all`` allows us to use
 Spack's compiler wrappers. If you don't see an option related to
-environment variables, try using Spack's compiler wrappers. The full
-path to these wrappers are stored in ``spack_cc`` and friends. If
-you pass them to the build and you see an error message like:
+environment variables, try using Spack's compiler wrappers by passing
+``spack_cc``, ``spack_cxx``, and ``spack_fc`` via the ``CC``, ``CXX``,
+and ``FC`` arguments, respectively. If you pass them to the build and
+you see an error message like:
 
 .. code-block:: none
 

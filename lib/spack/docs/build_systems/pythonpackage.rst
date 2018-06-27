@@ -719,9 +719,10 @@ and ``pip`` may be a perfectly valid alternative to using Spack. The
 main advantage of Spack over ``pip`` is its ability to compile
 non-Python dependencies. It can also build cythonized versions of a
 package or link to an optimized BLAS/LAPACK library like MKL,
-resulting in calculations that run orders of magnitude faster. If you
-only need Python tools like flake8 and sphinx, don't waste your time
-on Spack. But if you need packages with non-Python dependencies like
+resulting in calculations that run orders of magnitude faster.
+Spack does not offer a significant advantage to other python-management
+systems for installing and using tools like flake8 and sphinx.
+But if you need packages with non-Python dependencies like
 numpy and scipy, Spack will be very valuable to you.
 
 Anaconda is another great alternative to Spack, and comes with its own
@@ -730,7 +731,8 @@ non-Python dependencies. Anaconda contains many Python packages that
 are not yet in Spack, and Spack contains many Python packages that are
 not yet in Anaconda. The main advantage of Spack over Anaconda is its
 ability to choose a specific compiler and BLAS/LAPACK or MPI library.
-Spack also has better platform support for supercomputers.
+Spack also has better platform support for supercomputers. On the
+other hand, Anaconda offers Windows support.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation

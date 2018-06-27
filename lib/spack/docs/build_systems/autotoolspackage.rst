@@ -94,12 +94,11 @@ while ``automake`` is used to convert ``Makefile.am`` into ``Makefile.in``.
 ``Makefile`` for you. The following diagram provides a high-level overview
 of the process:
 
-.. image:: Autoconf-automake-process.*
+.. figure:: Autoconf-automake-process.*
    :target: https://commons.wikimedia.org/w/index.php?curid=15581407
 
-..
-   By Jdthood - Own work, based on https://commons.wikimedia.org/wiki/File:Autoconf.svg,
-   CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=15581407
+   `GNU autoconf and automake process for generating makefiles <https://commons.wikimedia.org/wiki/File:Autoconf-automake-process.svg>`_
+   by `Jdthood` under `CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0/deed.en>`_
 
 If a ``configure`` script is not present in your tarball, you will
 need to generate one yourself. Luckily, Spack already has an ``autoreconf``

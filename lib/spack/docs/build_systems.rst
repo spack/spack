@@ -5,9 +5,13 @@
 Build Systems
 =============
 
-This guide provides information specific to a particular
-`build system <https://en.wikipedia.org/wiki/List_of_build_automation_software>`_.
-It assumes knowledge of general Spack packaging capabilities and expands
+Spack defines a number of classes which understand how to use common
+`build systems  <https://en.wikipedia.org/wiki/List_of_build_automation_software>`_
+(Makefiles, CMake, etc.). Spack package definitions can inherit these
+classes in order to streamline their builds.
+
+This guide provides information specific to each particular build system.
+It assumes that you've read the :ref:`packaging-guide` and expands
 on these ideas for each distinct build system that Spack supports:
 
 .. toctree::

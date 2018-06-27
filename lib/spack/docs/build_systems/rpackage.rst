@@ -325,7 +325,7 @@ the latest release, you can use:
    > update.packages(ask = FALSE)
 
 
-This works great for users who has internet access, but those on an
+This works great for users who have internet access, but those on an
 air-gapped cluster will find it easier to let Spack build a download
 mirror and install these packages for you.
 
