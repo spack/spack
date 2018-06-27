@@ -74,8 +74,8 @@ __all__ = [
     'write_environ',
     'rewrite_environ_files',
     'mplib_content',
-    'foamAddPath',
-    'foamAddLib',
+    'foam_add_path',
+    'foam_add_lib',
     'OpenfoamArch',
 ]
 
@@ -204,12 +204,12 @@ def rewrite_environ_files(environ, **kwargs):
             filter_file(regex, replace, rcfile, backup=False)
 
 
-def foamAddPath(*args):
+def foam_add_path(*args):
     """A string with args prepended to 'PATH'"""
     return '"' + ':'.join(args) + ':${PATH}"'
 
 
-def foamAddLib(*args):
+def foam_add_lib(*args):
     """A string with args prepended to 'LD_LIBRARY_PATH'"""
     return '"' + ':'.join(args) + ':${LD_LIBRARY_PATH}"'
 
@@ -553,21 +553,21 @@ class OpenfoamCom(Package):
                 ('BOOST_ARCH_PATH', spec['boost'].prefix),
                 ('CGAL_ARCH_PATH',  spec['cgal'].prefix),
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(
+                 foam_add_lib(
                      pkglib(spec['boost'], '${BOOST_ARCH_PATH}'),
                      pkglib(spec['cgal'], '${CGAL_ARCH_PATH}'))),
             ],
             'FFTW': [
                 ('FFTW_ARCH_PATH', spec['fftw'].prefix),  # Absolute
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(
+                 foam_add_lib(
                      pkglib(spec['fftw'], '${BOOST_ARCH_PATH}'))),
             ],
             # User-defined MPI
             'mpi-user': [
                 ('MPI_ARCH_PATH', spec['mpi'].prefix),  # Absolute
-                ('LD_LIBRARY_PATH', foamAddLib(user_mpi['libdir'])),
-                ('PATH', foamAddPath(user_mpi['bindir'])),
+                ('LD_LIBRARY_PATH', foam_add_lib(user_mpi['libdir'])),
+                ('PATH', foam_add_path(user_mpi['bindir'])),
             ],
             'scotch': {},
             'kahip': {},
@@ -596,12 +596,12 @@ class OpenfoamCom(Package):
             }
 
         if '+paraview' in spec:
-            pvMajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
+            pvmajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
             self.etc_config['paraview'] = [
                 ('ParaView_DIR', spec['paraview'].prefix),
-                ('ParaView_INCLUDE_DIR', '${ParaView_DIR}/include/' + pvMajor),
-                ('PV_PLUGIN_PATH', '$FOAM_LIBBIN/' + pvMajor),
-                ('PATH', foamAddPath('${ParaView_DIR}/bin')),
+                ('ParaView_INCLUDE_DIR', '${ParaView_DIR}/include/' + pvmajor),
+                ('PV_PLUGIN_PATH', '$FOAM_LIBBIN/' + pvmajor),
+                ('PATH', foam_add_path('${ParaView_DIR}/bin')),
             ]
 
         if '+vtk' in spec:
