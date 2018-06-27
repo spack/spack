@@ -910,8 +910,9 @@ class Database(object):
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        if len(spack.parents.parent_dbs) > 0 and not spack.parents.parent_dbs[-1] == self:
-            self.parent_db=spack.parents.parent_dbs[-1]
+        if (len(spack.parents.parent_dbs) > 0 
+            and not spack.parents.parent_dbs[-1] == self):
+            self.parent_db = spack.parents.parent_dbs[-1]
             self.parent_db._read()
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
