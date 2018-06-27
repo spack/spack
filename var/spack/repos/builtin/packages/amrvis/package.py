@@ -59,14 +59,11 @@ class Amrvis(MakefilePackage):
     depends_on('libxext')
     depends_on('motif')
 
-    conflicts('%cce', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%clang', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%intel', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%nag', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%pgi', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%xl', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%xl_r', msg='Amrvis is only set to build with gcc currently')
-    conflicts('%intel', msg='Amrvis is only set to build with gcc currently')
+    conflicts('%cce', msg='Amrvis is only set to build with gcc, clang, and intel currently')
+    conflicts('%nag', msg='Amrvis is only set to build with gcc, clang, and intel currently')
+    conflicts('%pgi', msg='Amrvis is only set to build with gcc, clang, and intel currently')
+    conflicts('%xl', msg='Amrvis is only set to build with gcc, clang, and intel currently')
+    conflicts('%xl_r', msg='Amrvis is only set to build with gcc, clang, and intel currently')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
@@ -92,9 +89,9 @@ class Amrvis(MakefilePackage):
         filter_file(r'^COMM_PROFILE\s*=.*',
                     'COMM_PROFILE = FALSE',
                     'GNUmakefile')
-        # Only doing gcc at the moment
+        # Only doing gcc, clang, and intel at the moment
         filter_file(r'^COMP\s*=.*',
-                    'COMP = gnu',
+                    'COMP = {0}'.format(self.compiler.name),
                     'GNUmakefile')
         filter_file(r'^DEBUG\s*=.*',
                     'DEBUG = {0}'.format(spec.variants['debug'].value).upper(),
@@ -128,7 +125,7 @@ class Amrvis(MakefilePackage):
             contents = file.readlines()
         
         # Edit GNUmakefile INCLUDES and LIBRARIES to use Spack dependencies
-        line_offset = 63
+        line_offset = 63 # Assuming the default GNUmakefile doesn't change, this is the best place for LIBRARY_LOCATIONS and INCLUD_LOCATIONS
         contents.insert(line_offset+1, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.lib))
         contents.insert(line_offset+2, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.include))
         contents.insert(line_offset+3, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libice'].prefix.lib))
@@ -155,6 +152,23 @@ class Amrvis(MakefilePackage):
            build_env.set('MPIHOME', self.spec['mpi'].prefix)
 
     def install(self, spec, prefix):
-        exe = 'amrvis{0}d.gnu.ex'.format(spec.variants['dims'].value)
+        # Set exe name options
+        dim = spec.variants['dims'].value
+        comp = self.compiler.name
+        if spec.satisfies('%gcc'):
+            comp = 'gnu'
+        if '+mpi' in self.spec:
+            mpi = '.mpi'
+        else:
+            mpi = ''
+        if '+debug' in self.spec:
+            debug = '.debug'
+        else:
+            debug = ''
+
+        # Construct exe name
+        exe = 'amrvis%sd%s%s.gnu.ex' % (dim,mpi,debug)
+
+        # Install exe manually
         mkdirp(prefix.bin)
         install(exe, prefix.bin)
