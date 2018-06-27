@@ -41,14 +41,15 @@ class Arrow(CMakePackage):
 
     depends_on('boost@1.60:')
     depends_on('cmake@3.2.0:')
-    depends_on('flatbuffers@1.8.0')
+    depends_on('flatbuffers@1.8.0 build_type=Release')  # only Release contains flatc
     depends_on('rapidjson')
     depends_on('snappy')
     depends_on('zlib')
     depends_on('zstd')
 
-    variant('build_type', default='Release')
-    # variant('shared', default=False)
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'FastDebug', 'Release'))
 
     def cmake(self, spec, prefix):
         args = std_cmake_args + [
@@ -65,13 +66,9 @@ class Arrow(CMakePackage):
         with working_dir(self.build_directory, create=True):
             cmake(join_path(self.stage.source_path, 'cpp'), *args)
 
-    @run_after('cmake')
-    def patch_flags(self):
-        for root, dirs, files in os.walk(self.build_directory):
-            if 'flags.make' not in files:
-                continue
-            fn = os.path.join(root, 'flags.make')
-            with open(fn) as fd:
-                data = fd.read()
-            with open(fn, 'w') as fd:
-                fd.write(data.replace('-isystem /usr/include', ''))
+    def patch(self):
+        """Prevent `-isystem /usr/include` from appearing, since this confuses gcc.
+        """
+        filter_file(r'(include_directories\()SYSTEM ',
+                    r'\1',
+                    'cpp/cmake_modules/ThirdpartyToolchain.cmake')

@@ -34,9 +34,3 @@ class Flatbuffers(CMakePackage):
 
     version('1.9.0', '8be7513bf960034f6873326d09521a4b')
     version('1.8.0', '276cab8303c4189cbe3b8a70e0515d65')
-
-    variant('build_type', default='Release')
-
-    def cmake_args(self):
-        args = []
-        return args

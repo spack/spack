@@ -36,13 +36,13 @@ class Parquet(CMakePackage):
 
     depends_on('arrow')
     depends_on('boost')
-    depends_on('cmake@3.2.0:')
+    depends_on('cmake@3.2.0:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('thrift')
 
-    variant('build_type', default='Release')
-
-    parallel = False
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'FastDebug', 'Release'))
 
     def cmake_args(self):
         args = ['-DPARQUET_USE_SSE=OFF', '-DPARQUET_BUILD_TESTS=OFF']
