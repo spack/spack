@@ -31,6 +31,7 @@ class Kvtree(CMakePackage):
 
     homepage = "https://github.com/ECP-VeloC/KVTree"
     url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.0.zip"
+    tags     = ['ecp']
 
     version('1.0.1', 'f007b4b930d12fc0eb784b4dc3af823e')
     version('master', git='https://github.com/ecp-veloc/kvtree.git',

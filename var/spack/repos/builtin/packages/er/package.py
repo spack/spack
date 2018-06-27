@@ -30,6 +30,7 @@ class Er(CMakePackage):
 
     homepage = "https://github.com/ECP-VeloC/er"
     url      = "https://github.com/ECP-VeloC/er/archive/v0.0.1.zip"
+    tags     = ['ecp']
 
     version('0.0.2', '24ad8f87bce2b6d900f1fb67452c3672')
     version('master', git='https://github.com/ecp-veloc/er.git',

@@ -30,6 +30,7 @@ class Redset(CMakePackage):
 
     homepage = "https://github.com/ECP-VeloC/redset"
     url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.1.zip"
+    tags     = ['ecp']
 
     version('0.0.2', '370d4dd477ebcfdd28dcc6375c22f731')
     version('master', git='https://github.com/ecp-veloc/redset.git',
