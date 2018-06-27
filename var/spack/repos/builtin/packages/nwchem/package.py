@@ -107,9 +107,9 @@ class Nwchem(Package):
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
         # algebra (Blas, Lapack, Scalapack)
-        use32bitLinAlg = True
+        use_32_bit_lin_alg = True
 
-        if use32bitLinAlg:
+        if use_32_bit_lin_alg:
             args.extend([
                 'USE_64TO32=y',
                 'BLAS_SIZE=4',
@@ -135,7 +135,7 @@ class Nwchem(Package):
 
         with working_dir('src'):
             make('nwchem_config', *args)
-            if use32bitLinAlg:
+            if use_32_bit_lin_alg:
                 make('64_to_32', *args)
             make(*args)
 

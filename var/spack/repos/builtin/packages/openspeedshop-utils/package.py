@@ -188,11 +188,11 @@ class OpenspeedshopUtils(CMakePackage):
 
     build_directory = 'build_openspeedshop'
 
-    def set_CrayLoginNode_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable the appropriate
+    def set_cray_login_node_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable the appropriate
         # Cray login node libraries
 
-        CrayLoginNodeOptions = []
+        cray_login_node_options = []
         rt_platform = "cray"
 
         # How do we get the compute node (CNL) cbtf package install
@@ -205,12 +205,12 @@ class OpenspeedshopUtils(CMakePackage):
         # Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
         #               % <base dir>/cbtf_v2.3.1.release/compute)
-        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
-                                    % be_ck.prefix)
-        CrayLoginNodeOptions.append('-DRUNTIME_PLATFORM=%s'
-                                    % rt_platform)
+        cray_login_node_options.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+                                       % be_ck.prefix)
+        cray_login_node_options.append('-DRUNTIME_PLATFORM=%s'
+                                       % rt_platform)
 
-        cmakeOptions.extend(CrayLoginNodeOptions)
+        cmake_options.extend(cray_login_node_options)
 
     def cmake_args(self):
         # Appends base options to cmake_args
@@ -224,7 +224,7 @@ class OpenspeedshopUtils(CMakePackage):
         instrumentor_setting = "cbtf"
 
         if spec.satisfies('+runtime'):
-            self.set_defaultbase_cmakeOptions(spec, cmake_args)
+            self.set_defaultbase_cmake_options(spec, cmake_args)
 
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
@@ -237,7 +237,7 @@ class OpenspeedshopUtils(CMakePackage):
         else:
 
             # Appends base options to cmake_args
-            self.set_defaultbase_cmakeOptions(spec, cmake_args)
+            self.set_defaultbase_cmake_options(spec, cmake_args)
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
                  '-DCMAKE_C_FLAGS=%s' % compile_flags,
@@ -252,63 +252,63 @@ class OpenspeedshopUtils(CMakePackage):
                 # components/libraries first then pass
                 # those libraries to the openspeedshop
                 # login node build
-                self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
+                self.set_cray_login_node_cmake_options(spec, cmake_args)
 
         cmake_args.extend(['-DBUILD_QT3_GUI=FALSE'])
 
         return cmake_args
 
-    def set_defaultbase_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable
+    def set_defaultbase_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
         python_exe = spec['python'].command.path
         python_library = spec['python'].libs[0]
         python_include = spec['python'].headers.directories[0]
 
-        BaseOptions = []
+        base_options = []
 
-        BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
-        BaseOptions.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
-        BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
-        BaseOptions.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
-        BaseOptions.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
-        BaseOptions.append('-DPYTHON_LIBRARY=%s' % python_library)
-        BaseOptions.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
-        BaseOptions.append('-DBoost_NO_BOOST_CMAKE=TRUE')
-        BaseOptions.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
-        BaseOptions.append('-DBoost_DIR=%s' % spec['boost'].prefix)
-        BaseOptions.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
-        BaseOptions.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
+        base_options.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
+        base_options.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
+        base_options.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
+        base_options.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
+        base_options.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
+        base_options.append('-DPYTHON_LIBRARY=%s' % python_library)
+        base_options.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
+        base_options.append('-DBoost_NO_BOOST_CMAKE=TRUE')
+        base_options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
+        base_options.append('-DBoost_DIR=%s' % spec['boost'].prefix)
+        base_options.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
+        base_options.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
 
-        cmakeOptions.extend(BaseOptions)
+        cmake_options.extend(base_options)
 
-    def set_mpi_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable
+    def set_mpi_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable
         # the appropriate MPI implementations
 
-        MPIOptions = []
+        mpi_options = []
 
         # openmpi
         if spec.satisfies('+openmpi'):
-            MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
+            mpi_options.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
         if spec.satisfies('+mpich'):
-            MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
+            mpi_options.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
         if spec.satisfies('+mpich2'):
-            MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
+            mpi_options.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
         if spec.satisfies('+mvapich'):
-            MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
+            mpi_options.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
         if spec.satisfies('+mvapich2'):
-            MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
+            mpi_options.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
         if spec.satisfies('+mpt'):
-            MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
+            mpi_options.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
-        cmakeOptions.extend(MPIOptions)
+        cmake_options.extend(mpi_options)
 
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
