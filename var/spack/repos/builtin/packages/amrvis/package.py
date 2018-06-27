@@ -62,6 +62,8 @@ class Amrvis(MakefilePackage):
     depends_on('libxext')
     depends_on('motif')
 
+    # Only doing gcc and clang at the moment
+    # Intel currently fails searching for mpiicc, mpiicpc, etc
     conflicts('%intel',
               msg='Amrvis currently only builds with gcc and clang')
     conflicts('%cce',
@@ -81,6 +83,7 @@ class Amrvis(MakefilePackage):
              placement='amrex')
 
     def edit(self, spec, prefix):
+        # Set all available makefile options to values we want
         filter_file(r'^AMREX_HOME\s*=.*',
                     'AMREX_HOME = {0}'.format('./amrex'),
                     'GNUmakefile')
@@ -99,8 +102,6 @@ class Amrvis(MakefilePackage):
         filter_file(r'^COMM_PROFILE\s*=.*',
                     'COMM_PROFILE = FALSE',
                     'GNUmakefile')
-        # Only doing gcc and clang at the moment
-        # Intel currently fails searching for mpiicc, mpiicpc, etc
         filter_file(r'^COMP\s*=.*',
                     'COMP = {0}'.format(self.compiler.name),
                     'GNUmakefile')
