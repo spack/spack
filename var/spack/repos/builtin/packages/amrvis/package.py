@@ -33,20 +33,23 @@ class Amrvis(MakefilePackage):
     homepage = "https://github.com/AMReX-Codes/Amrvis"
     url      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('master', git='https://github.com/AMReX-Codes/Amrvis.git', tag='master')
+    version('master',
+            git='https://github.com/AMReX-Codes/Amrvis.git', tag='master')
 
-    variant('dims',
+    variant(
+        'dims',
         default='3',
         values=('1', '2', '3'),
         multi=False,
-        description='Number of spatial dimensions')
-
-    variant('prec',
+        description='Number of spatial dimensions'
+    )
+    variant(
+        'prec',
         default='DOUBLE',
         values=('FLOAT', 'DOUBLE'),
         multi=False,
-        description='Floating point precision')
-
+        description='Floating point precision'
+    )
     variant('mpi', default=False, description='Enable MPI parallel support')
     variant('debug', default=False, description='Enable debugging features')
 
@@ -59,11 +62,16 @@ class Amrvis(MakefilePackage):
     depends_on('libxext')
     depends_on('motif')
 
-    conflicts('%cce', msg='Amrvis is only set to build with gcc, clang, and intel currently')
-    conflicts('%nag', msg='Amrvis is only set to build with gcc, clang, and intel currently')
-    conflicts('%pgi', msg='Amrvis is only set to build with gcc, clang, and intel currently')
-    conflicts('%xl', msg='Amrvis is only set to build with gcc, clang, and intel currently')
-    conflicts('%xl_r', msg='Amrvis is only set to build with gcc, clang, and intel currently')
+    conflicts('%cce',
+              msg='Amrvis currently only builds with gcc, clang, and intel')
+    conflicts('%nag',
+              msg='Amrvis currently only builds with gcc, clang, and intel')
+    conflicts('%pgi',
+              msg='Amrvis currently only builds with gcc, clang, and intel')
+    conflicts('%xl',
+              msg='Amrvis currently only builds with gcc, clang, and intel')
+    conflicts('%xl_r',
+              msg='Amrvis currently only builds with gcc, clang, and intel')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
@@ -117,39 +125,83 @@ class Amrvis(MakefilePackage):
 
         # Delete all /usr and /opt X library default search paths in makefile
         filter_file(r'^.*\b(usr|opt)\b.*$',
-                    '##### Spack removed all INCLUDE_LOCATIONS and LIBRARY_LOCATIONS',
+                    '# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS',
                     'GNUmakefile')
 
         # Read GNUmakefile into array
         with open('GNUmakefile', 'r') as file:
             contents = file.readlines()
-        
-        # Edit GNUmakefile INCLUDES and LIBRARIES to use Spack dependencies
-        line_offset = 63 # Assuming the default GNUmakefile doesn't change, this is the best place for LIBRARY_LOCATIONS and INCLUD_LOCATIONS
-        contents.insert(line_offset+1, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.lib))
-        contents.insert(line_offset+2, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.include))
-        contents.insert(line_offset+3, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libice'].prefix.lib))
-        contents.insert(line_offset+4, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libice'].prefix.include))
-        contents.insert(line_offset+5, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxpm'].prefix.lib))
-        contents.insert(line_offset+6, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxpm'].prefix.include))
-        contents.insert(line_offset+7, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libx11'].prefix.lib))
-        contents.insert(line_offset+8, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libx11'].prefix.include))
-        contents.insert(line_offset+9, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxt'].prefix.lib))
-        contents.insert(line_offset+10, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxt'].prefix.include))
-        contents.insert(line_offset+11, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxext'].prefix.lib))
-        contents.insert(line_offset+12, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxext'].prefix.include))
-        contents.insert(line_offset+13, 'LIBRARY_LOCATIONS += {0}\n'.format(spec['motif'].prefix.lib))
-        contents.insert(line_offset+14, 'INCLUDE_LOCATIONS += {0}\n'.format(spec['motif'].prefix.include))
-        
+
+        # Edit GNUmakefile INCLUDES and LIBRARIES to use Spack dependencies.
+        # Assuming the default GNUmakefile doesn't change, this is the best
+        # place for LIBRARY_LOCATIONS and INCLUDE_LOCATIONS.
+        line_offset = 63
+        contents.insert(
+            line_offset + 1,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 2,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.include)
+        )
+        contents.insert(
+            line_offset + 3,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libice'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 4,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libice'].prefix.include)
+        )
+        contents.insert(
+            line_offset + 5,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxpm'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 6,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxpm'].prefix.include)
+        )
+        contents.insert(
+            line_offset + 7,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libx11'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 8,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libx11'].prefix.include)
+        )
+        contents.insert(
+            line_offset + 9,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxt'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 10,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxt'].prefix.include)
+        )
+        contents.insert(
+            line_offset + 11,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxext'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 12,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxext'].prefix.include)
+        )
+        contents.insert(
+            line_offset + 13,
+            'LIBRARY_LOCATIONS += {0}\n'.format(spec['motif'].prefix.lib)
+        )
+        contents.insert(
+            line_offset + 14,
+            'INCLUDE_LOCATIONS += {0}\n'.format(spec['motif'].prefix.include)
+        )
+
         # Write GNUmakefile
         with open('GNUmakefile', 'w') as file:
             file.writelines(contents)
 
     def setup_environment(self, build_env, run_env):
         if '+mpi' in self.spec:
-           # The location of the system MPI tree
-           build_env.set('MPI_HOME', self.spec['mpi'].prefix)
-           build_env.set('MPIHOME', self.spec['mpi'].prefix)
+            # Set MPI location
+            build_env.set('MPI_HOME', self.spec['mpi'].prefix)
+            build_env.set('MPIHOME', self.spec['mpi'].prefix)
 
     def install(self, spec, prefix):
         # Set exe name options
@@ -158,16 +210,16 @@ class Amrvis(MakefilePackage):
         if spec.satisfies('%gcc'):
             comp = 'gnu'
         if '+mpi' in self.spec:
-            mpi = '.mpi'
+            mpi = '.MPI'
         else:
             mpi = ''
         if '+debug' in self.spec:
-            debug = '.debug'
+            debug = '.DEBUG'
         else:
             debug = ''
 
         # Construct exe name
-        exe = 'amrvis%sd%s%s.gnu.ex' % (dim,mpi,debug)
+        exe = 'amrvis%sd.%s%s%s.ex' % (dim, comp, debug, mpi)
 
         # Install exe manually
         mkdirp(prefix.bin)
