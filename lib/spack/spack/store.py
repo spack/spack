@@ -51,6 +51,7 @@ import spack.config
 import spack.util.path
 import spack.database
 import spack.directory_layout
+import spack.parents
 
 #: default installation root, relative to the Spack install path
 default_root = os.path.join(spack.paths.opt_path, 'spack')
@@ -77,9 +78,19 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
-        self.db = spack.database.Database(root)
-        self.layout = spack.directory_layout.YamlDirectoryLayout(
-            root, hash_len=hash_length, path_scheme=path_scheme)
+        if len(spack.parents.parent_dbs) > 0:
+            self.db = spack.database.Database(root,
+                parent_db=spack.parents.parent_dbs[-1])
+        else: 
+            self.db = spack.database.Database(root, parent_db=None)
+        if len(spack.parents.parent_layouts) > 0:
+            self.layout = spack.directory_layout.YamlDirectoryLayout(
+                root, hash_len=hash_length, path_scheme=path_scheme,
+                parent_layout=spack.parents.parent_layouts[-1])
+        else:
+            self.layout = spack.directory_layout.YamlDirectoryLayout(
+                root, hash_len=hash_length, path_scheme=path_scheme,
+                parent_layout=None)
         self.extensions = spack.directory_layout.YamlExtensionsLayout(
             root, self.layout)
 
