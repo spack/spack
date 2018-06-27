@@ -53,6 +53,32 @@ from spack.spec import Spec
 from spack.version import Version
 
 
+# Hooks to add command line options or set other custom behaviors.
+# They must be placed here to be found by pytest. See:
+#
+# https://docs.pytest.org/en/latest/writing_plugins.html
+#
+def pytest_addoption(parser):
+    group = parser.getgroup("Spack specific command line options")
+    group.addoption(
+        '--fast', action='store_true', default=False,
+        help='runs only "fast" unit tests, instead of the whole suite')
+
+
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption('--fast'):
+        # --fast not given, run all the tests
+        return
+
+    slow_tests = ['db', 'network', 'maybeslow']
+    skip_as_slow = pytest.mark.skip(
+        reason='skipped slow test [--fast command line option given]'
+    )
+    for item in items:
+        if any(x in item.keywords for x in slow_tests):
+            item.add_marker(skip_as_slow)
+
+
 #
 # These fixtures are applied to all tests
 #
@@ -246,6 +272,26 @@ def config(configuration_dir):
 
     spack.config.config = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+          for name in ['site', 'system', 'user']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+
+@pytest.fixture(scope='function')
+def mutable_config(tmpdir_factory, configuration_dir, config):
+    """Like config, but tests can modify the configuration."""
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
+    configuration_dir.copy(mutable_dir)
+
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
 
     yield spack.config.config

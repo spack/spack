@@ -94,6 +94,7 @@ class Store(object):
         self.extensions = spack.directory_layout.YamlExtensionsLayout(
             root, self.layout)
 
+
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex(self.layout)
@@ -116,4 +117,3 @@ store = llnl.util.lang.Singleton(_store)
 root = llnl.util.lang.LazyReference(lambda: store.root)
 db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
-extensions = llnl.util.lang.LazyReference(lambda: store.extensions)
