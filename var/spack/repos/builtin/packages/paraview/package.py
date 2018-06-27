@@ -95,6 +95,9 @@ class Paraview(CMakePackage):
     # Broken installation (ui_pqExportStateWizard.h) - fixed in 5.2.0
     patch('ui_pqExportStateWizard.patch', when='@:5.1.2')
 
+    # Broken vtk-m config. Upstream catalyst changes
+    patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
+
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):

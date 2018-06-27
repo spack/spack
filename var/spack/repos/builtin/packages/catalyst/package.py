@@ -66,6 +66,9 @@ class Catalyst(CMakePackage):
     depends_on('libxt', when='+rendering')
     depends_on('cmake@3.3:', type='build')
 
+    # Broken vtk-m config. Upstream catalyst changes
+    patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
+
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
