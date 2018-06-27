@@ -36,7 +36,7 @@ class Openmc(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/openmc.git"
 
-    tags = ['proxy-app']
+    tags = ['ecp', 'ecp-apps']
 
     version('develop', git='https://github.com/ANL-CESAR/openmc.git')
 

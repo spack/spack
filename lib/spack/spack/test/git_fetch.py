@@ -25,8 +25,11 @@
 import os
 
 import pytest
-import spack
-from llnl.util.filesystem import working_dir, join_path, touch
+
+from llnl.util.filesystem import working_dir, touch
+
+import spack.repo
+import spack.config
 from spack.spec import Spec
 from spack.version import ver
 from spack.fetch_strategy import GitFetchStrategy
@@ -71,7 +74,7 @@ def test_fetch(type_of_test,
                secure,
                mock_git_repository,
                config,
-               refresh_builtin_mock,
+               mutable_mock_packages,
                git_version):
     """Tries to:
 
@@ -94,16 +97,13 @@ def test_fetch(type_of_test,
 
     # Enter the stage directory and check some properties
     with pkg.stage:
-        try:
-            spack.insecure = secure
+        with spack.config.override('config:verify_ssl', secure):
             pkg.do_stage()
-        finally:
-            spack.insecure = False
 
         with working_dir(pkg.stage.source_path):
             assert h('HEAD') == h(t.revision)
 
-            file_path = join_path(pkg.stage.source_path, t.file)
+            file_path = os.path.join(pkg.stage.source_path, t.file)
             assert os.path.isdir(pkg.stage.source_path)
             assert os.path.isfile(file_path)
 

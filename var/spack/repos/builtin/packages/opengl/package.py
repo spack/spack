@@ -31,13 +31,23 @@ class Opengl(Package):
     homepage = "https://www.opengl.org/"
     url      = "https://www.opengl.org/"
 
-    version('3.2', 'N/A')
+    # A second argument (usually the hash) must be supplied to the
+    # version directive, but 'n/a' is used here because this package
+    # is a placeholder for a system/vendor installation of OpenGL
+    version('3.2', 'n/a')
 
     provides('gl@:4.5', when='@4.5:')
     provides('gl@:4.4', when='@4.4:')
     provides('gl@:4.3', when='@4.3:')
+    provides('gl@:4.2', when='@4.2:')
+    provides('gl@:4.1', when='@4.1:')
+    provides('gl@:3.3', when='@3.3:')
 
-    def install(self, spec, prefix):
+    # Override the fetcher method to throw a useful error message;
+    # fixes GitHub issue (#7061) in which this package threw a
+    # generic, uninformative error during the `fetch` step,
+    @property
+    def fetcher(self):
         msg = """This package is intended to be a placeholder for
         system-provided OpenGL libraries from hardware vendors.  Please
         download and install OpenGL drivers/libraries for your graphics
@@ -53,6 +63,37 @@ class Opengl(Package):
         In that case, /opt/opengl/ should contain these two folders:
 
         include/GL/       (opengl headers, including "gl.h")
-        lib               (opengl libraries, including "libGL.so")"""
+        lib               (opengl libraries, including "libGL.so")
 
+        On Apple Darwin (e.g., OS X, macOS) systems, this package is
+        normally installed as part of the XCode Command Line Tools in
+        /usr/X11R6, so a working packages.yaml would be
+
+        packages:
+          opengl:
+            paths:
+              opengl@4.1: /usr/X11R6
+            buildable: False
+
+        In that case, /usr/X11R6 should contain
+
+        include/GL/      (OpenGL headers, including "gl.h")
+        lib              (OpenGL libraries, including "libGL.dylib")
+
+        On OS X/macOS, note that the version of OpenGL provided
+        depends on your hardware. Look at
+        https://support.apple.com/en-us/HT202823 to see what version
+        of OpenGL your Mac uses."""
         raise InstallError(msg)
+
+    def install(self, spec, prefix):
+        pass
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libGL', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs
+        return None

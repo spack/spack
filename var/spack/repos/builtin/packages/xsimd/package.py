@@ -37,10 +37,18 @@ class Xsimd(CMakePackage):
     version('4.0.0', '4186ec94985daa3fc284d9d0d4aa03e8')
     version('3.1.0', '29c1c525116cbda28f610e2bf24a827e')
 
-    depends_on('googletest', type='build')
+    depends_on('googletest', type='test')
 
     # C++14 support
     conflicts('%gcc@:4.8')
     conflicts('%clang@:3.6')
     # untested: conflicts('%intel@:15')
     # untested: conflicts('%pgi@:14')
+
+    def cmake_args(self):
+        args = [
+            '-DBUILD_TESTS:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF')
+        ]
+
+        return args

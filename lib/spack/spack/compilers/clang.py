@@ -29,8 +29,8 @@ from shutil import copytree, ignore_patterns
 
 import llnl.util.tty as tty
 
-import spack
-from spack.compiler import Compiler, _version_cache
+import spack.paths
+from spack.compiler import Compiler, _version_cache, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
 
@@ -43,12 +43,12 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['flang', 'gfortran']
+    f77_names = ['flang', 'gfortran', 'xlf_r']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['flang', 'gfortran']
+    fc_names = ['flang', 'gfortran', 'xlf90_r']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within lib/spack/env
     link_paths = {'cc': 'clang/clang',
                   'cxx': 'clang/clang++'}
 
@@ -57,6 +57,10 @@ class Clang(Compiler):
         # compilers.yaml
         link_paths['f77'] = 'clang/gfortran'
         link_paths['fc'] = 'clang/gfortran'
+    elif spack.architecture.sys_type() == 'linux-rhel7-ppc64le':
+        # This platform uses clang with IBM XL Fortran compiler
+        link_paths['f77'] = 'xl_r/xlf_r'
+        link_paths['fc'] = 'xl_r/xlf90_r'
     else:
         link_paths['f77'] = 'clang/flang'
         link_paths['fc'] = 'clang/flang'
@@ -69,7 +73,10 @@ class Clang(Compiler):
     @property
     def openmp_flag(self):
         if self.is_apple:
-            tty.die("Clang from Apple does not support Openmp yet.")
+            raise UnsupportedCompilerFlag(self,
+                                          "OpenMP",
+                                          "openmp_flag",
+                                          "Xcode {0}".format(self.version))
         else:
             return "-fopenmp"
 
@@ -77,14 +84,20 @@ class Clang(Compiler):
     def cxx11_flag(self):
         if self.is_apple:
             # Adapted from CMake's AppleClang-CXX rules
-            # Spack's AppleClang detection only valid form Xcode >= 4.6
+            # Spack's AppleClang detection only valid from Xcode >= 4.6
             if self.version < ver('4.0.0'):
-                tty.die("Only Apple LLVM 4.0 and above support c++11")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++11 standard",
+                                              "cxx11_flag",
+                                              "Xcode < 4.0.0")
             else:
                 return "-std=c++11"
         else:
             if self.version < ver('3.3'):
-                tty.die("Only Clang 3.3 and above support c++11.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++11 standard",
+                                              "cxx11_flag",
+                                              "< 3.3")
             else:
                 return "-std=c++11"
 
@@ -93,14 +106,20 @@ class Clang(Compiler):
         if self.is_apple:
             # Adapted from CMake's rules for AppleClang
             if self.version < ver('5.1.0'):
-                tty.die("Only Apple LLVM 5.1 and above support c++14.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++14 standard",
+                                              "cxx14_flag",
+                                              "Xcode < 5.1.0")
             elif self.version < ver('6.1.0'):
                 return "-std=c++1y"
             else:
                 return "-std=c++14"
         else:
             if self.version < ver('3.4'):
-                tty.die("Only Clang 3.4 and above support c++14.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++14 standard",
+                                              "cxx14_flag",
+                                              "< 3.5")
             elif self.version < ver('3.5'):
                 return "-std=c++1y"
             else:
@@ -111,14 +130,22 @@ class Clang(Compiler):
         if self.is_apple:
             # Adapted from CMake's rules for AppleClang
             if self.version < ver('6.1.0'):
-                tty.die("Only Apple LLVM 6.1 and above support c++17.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++17 standard",
+                                              "cxx17_flag",
+                                              "Xcode < 6.1.0")
             else:
                 return "-std=c++1z"
         else:
             if self.version < ver('3.5'):
-                tty.die("Only Clang 3.5 and above support c++17.")
-            else:
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++17 standard",
+                                              "cxx17_flag",
+                                              "< 5.0")
+            elif self.version < ver('5.0'):
                 return "-std=c++1z"
+            else:
+                return "-std=c++17"
 
     @property
     def pic_flag(self):
@@ -228,7 +255,7 @@ class Clang(Compiler):
             raise OSError(msg)
 
         real_root = os.path.dirname(os.path.dirname(real_root))
-        developer_root = os.path.join(spack.stage_path,
+        developer_root = os.path.join(spack.paths.stage_path,
                                       'xcode-select',
                                       self.name,
                                       str(self.version))
@@ -267,8 +294,9 @@ class Clang(Compiler):
                 for fname in os.listdir(dev_dir):
                     if fname in bins:
                         os.unlink(os.path.join(dev_dir, fname))
-                        os.symlink(os.path.join(spack.build_env_path, 'cc'),
-                                   os.path.join(dev_dir, fname))
+                        os.symlink(
+                            os.path.join(spack.paths.build_env_path, 'cc'),
+                            os.path.join(dev_dir, fname))
 
             os.symlink(developer_root, xcode_link)
 

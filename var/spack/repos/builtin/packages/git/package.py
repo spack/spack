@@ -44,6 +44,16 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.17.1',
+            'md5': 'e04bfbbe5f17a4faa9507c75b8505c13',
+            'md5_manpages': 'f1d5dfc1459c9f2885f790c5af7473d1'
+        },
+        {
+            'version': '2.17.0',
+            'md5': '8e0f5253eef3abeb76bd9c55386d3bee',
+            'md5_manpages': '1ce1ae78a559032810af8b455535935f'
+        },
+        {
             'version': '2.15.1',
             'md5': 'da59fc6baa55ab44684011e369af397d',
             'md5_manpages': '2cb428071c08c7df513cfc103610536e',
@@ -141,7 +151,7 @@ class Git(AutotoolsPackage):
     ]
 
     for release in releases:
-        version(release['version'], release['md5'])
+        version(release['version'], md5=release['md5'])
         resource(
             name='git-manpages',
             url="https://www.kernel.org/pub/software/scm/git/git-manpages-{0}.tar.xz".format(
@@ -149,6 +159,9 @@ class Git(AutotoolsPackage):
             md5=release['md5_manpages'],
             placement='git-manpages',
             when='@{0}'.format(release['version']))
+
+    variant('tcltk', default=False,
+            description='Gitk: provide Tcl/Tk in the run environment')
 
     depends_on('curl')
     depends_on('expat')
@@ -164,6 +177,7 @@ class Git(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
     # See the comment in setup_environment re EXTLIBS.
     def patch(self):
@@ -192,7 +206,7 @@ class Git(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        return [
+        configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
             '--with-iconv={0}'.format(spec['libiconv'].prefix),
@@ -201,6 +215,14 @@ class Git(AutotoolsPackage):
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
+
+        if '+tcltk' in self.spec:
+            configure_args.append('--with-tcltk={0}'.format(
+                self.spec['tk'].prefix.bin.wish))
+        else:
+            configure_args.append('--without-tcltk')
+
+        return configure_args
 
     @run_after('configure')
     def filter_rt(self):

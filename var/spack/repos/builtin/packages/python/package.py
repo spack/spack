@@ -27,15 +27,18 @@ import os
 import platform
 import re
 import sys
+import shutil
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import force_remove
+from llnl.util.filesystem import (force_remove, get_filetype,
+                                  path_contains_subdirectory)
 
-import spack
-from spack import *
-from spack.util.prefix import Prefix
+import spack.store
 import spack.util.spack_json as sjson
+from spack.util.environment import is_system_path
+from spack.util.prefix import Prefix
+from spack import *
 
 
 class Python(AutotoolsPackage):
@@ -59,7 +62,8 @@ class Python(AutotoolsPackage):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724', preferred=True)
+    version('2.7.15', '045fb3440219a1f6923fefdabde63342', preferred=True)
+    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
     version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
     version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
@@ -92,6 +96,10 @@ class Python(AutotoolsPackage):
         default=False,
         description='Enable expensive build-time optimizations, if available'
     )
+    # See https://legacy.python.org/dev/peps/pep-0394/
+    variant('pythoncmd', default=True,
+            description="Symlink 'python3' executable to 'python' "
+            "(not PEP 394 compliant)")
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -230,7 +238,7 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
-        if spec.satisfies('@3:'):
+        if spec.satisfies('@3:') and spec.satisfies('+pythoncmd'):
             os.symlink(os.path.join(prefix.bin, 'python3'),
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
@@ -543,7 +551,10 @@ class Python(AutotoolsPackage):
         # where a system provided python is run against the standard libraries
         # of a Spack built python. See issue #7128
         spack_env.set('PYTHONHOME', self.home)
-        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
+
+        path = os.path.dirname(self.command.path)
+        if not is_system_path(path):
+            spack_env.prepend_path('PATH', path)
 
         python_paths = []
         for d in dependent_spec.traverse(
@@ -667,33 +678,49 @@ class Python(AutotoolsPackage):
                         "sys.path[p:p]=new; "
                         "sys.__egginsert = p+len(new)\n")
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        super(Python, self).activate(ext_pkg, view, **args)
 
-        super(Python, self).activate(ext_pkg, **args)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-        self.write_easy_install_pth(
-            exts,
-            prefix=extensions_layout.extendee_target_directory(self))
+        self.write_easy_install_pth(exts, prefix=view.root)
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
-        super(Python, self).deactivate(ext_pkg, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        super(Python, self).deactivate(ext_pkg, view, **args)
 
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(
-                exts,
-                prefix=extensions_layout.extendee_target_directory(self))
+            self.write_easy_install_pth(exts, prefix=view.root)
+
+    def add_files_to_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        for src, dst in merge_map.items():
+            if not path_contains_subdirectory(src, bin_dir):
+                view.link(src, dst)
+            elif not os.path.islink(src):
+                shutil.copy2(src, dst)
+                if 'script' in get_filetype(src):
+                    filter_file(
+                        self.spec.prefix, os.path.abspath(view.root), dst)
+            else:
+                orig_link_target = os.path.realpath(src)
+                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                view.link(new_link_target, dst)
+
+    def remove_files_from_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        for src, dst in merge_map.items():
+            if not path_contains_subdirectory(src, bin_dir):
+                view.remove_file(src, dst)
+            else:
+                os.remove(dst)

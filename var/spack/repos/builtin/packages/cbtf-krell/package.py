@@ -53,8 +53,15 @@ class CbtfKrell(CMakePackage):
 
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    url = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
-    version('1.9.1', branch='master',
+    version('develop', branch='master',
+            git='https://github.com/OpenSpeedShop/cbtf-krell.git')
+
+    version('1.9.1.1', branch='1.9.1.1',
+            git='https://github.com/OpenSpeedShop/cbtf-krell.git')
+
+    version('1.9.1.0', branch='1.9.1.0',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
     # MPI variants
@@ -83,35 +90,61 @@ class CbtfKrell(CMakePackage):
     # Dependencies for cbtf-krell
     depends_on("cmake@3.0.2:", type='build')
 
-    # For binutils service
-    depends_on("binutils")
+    # For binutils
+    depends_on("binutils", when='@develop')
+    depends_on("binutils@2.29.1", when='@1.9.1.0:9999')
 
-    # collectionTool
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("dyninst@9.3.2")
-    depends_on("mrnet@5.0.1:+cti", when='+cti')
-    depends_on("mrnet@5.0.1:+lwthreads")
+    # For boost
+    depends_on("boost@1.50.0:", when='@develop')
+    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
 
-    depends_on("xerces-c@3.1.1:")
-    depends_on("cbtf")
-    depends_on("cbtf+cti", when='+cti')
-    depends_on("cbtf+runtime", when='+runtime')
+    # For Dyninst
+    depends_on("dyninst@develop", when='@develop')
+    depends_on("dyninst@9.3.2", when='@1.9.1.0:9999')
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
+
+    # For Xerces-C
+    depends_on("xerces-c@3.1.1:", when='@develop')
+    depends_on("xerces-c@3.1.4", when='@1.9.1.0:9999')
+
+    # For CBTF
+    depends_on("cbtf@develop", when='@develop')
+    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999')
+
+    # For CBTF with cti
+    depends_on("cbtf@develop+cti", when='@develop+cti')
+    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti')
+
+    # For CBTF with runtime
+    depends_on("cbtf@develop+runtime", when='@develop+runtime')
+    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # for services and collectors
     depends_on("libmonitor+krellpatch")
-    depends_on("libunwind")
-    depends_on("papi")
+
+    depends_on("libunwind", when='@develop')
+    depends_on("libunwind@1.1", when='@1.9.1.0:9999')
+
+    depends_on("papi", when='@develop')
+    depends_on("papi@5.5.1", when='@1.9.1.0:9999')
+
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
     # MPI Installations
-    # These have not worked either for build or execution, commenting out for
-    # now
     depends_on("openmpi", when='+openmpi')
     depends_on("mpich", when='+mpich')
     depends_on("mpich2", when='+mpich2')
     depends_on("mvapich2", when='+mvapich2')
     depends_on("mvapich", when='+mvapich')
     depends_on("mpt", when='+mpt')
+
+    depends_on("gotcha")
 
     parallel = False
 
@@ -219,6 +252,7 @@ class CbtfKrell(CMakePackage):
             '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
             '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
             '-DLIBIOMP_DIR=%s' % spec['llvm-openmp-ompt'].prefix,
+            '-DGOTCHA_DIR=%s' % spec['gotcha'].prefix,
             '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix]
 
         if self.spec.satisfies('+runtime'):

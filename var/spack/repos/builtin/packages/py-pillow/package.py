@@ -33,17 +33,10 @@ class PyPillow(PythonPackage):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url = "https://pypi.io/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
+    url = "https://pypi.io/packages/source/P/Pillow/Pillow-5.1.0.tar.gz"
 
-    # TODO: This version should be deleted once the next release comes out.
-    # TODO: It fixes a bug that prevented us from linking to Tk/Tcl.
-    # TODO: Tk/Tcl support is necessary for tkinter bitmap and photo images.
-    # TODO: If you require this support, run the following command:
-    # TODO:     `spack install py-pillow@3.3.0.dev0 ^python+tk`
-    version('3.3.0.dev0', git='https://github.com/python-pillow/Pillow.git',
-            commit='30eced62868141a6c859a4370efd40b9434a7c3f')
-
-    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510', preferred=True)
+    version('5.1.0', '308f9c13b376abce96ab6ebd6c889cc4')
+    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510')
     version('3.0.0', 'fc8ac44e93da09678eac7e30c9b7377d')
 
     provides('pil')
@@ -54,8 +47,7 @@ class PyPillow(PythonPackage):
     variant('tiff', default=False, description='Access to TIFF files')
     variant('freetype', default=False, description='Font related services')
     variant('lcms', default=False, description='Color management')
-    variant('jpeg2000', default=False,
-            description='Provide JPEG 2000 functionality')
+    variant('jpeg2000', default=False, description='Provide JPEG 2000 functionality')
 
     # Spack does not (yet) support these modes of building
     # variant('webp', default=False, description='Provide the WebP format')
@@ -94,8 +86,8 @@ class PyPillow(PythonPackage):
 
         if '+jpeg' in spec:
             setup.filter('JPEG_ROOT = None',
-                         'JPEG_ROOT = ("{0}", "{1}")'.format(
-                             spec['jpeg'].prefix.lib,
+                         'JPEG_ROOT=("{0}","{1}")'.format(
+                             spec['jpeg'].libs.directories[0],
                              spec['jpeg'].prefix.include))
         if '+zlib' in spec:
             setup.filter('ZLIB_ROOT = None',

@@ -36,6 +36,9 @@ class NetcdfFortran(AutotoolsPackage):
 
     depends_on('netcdf')
 
+    def configure_args(self):
+        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+
     @property
     def libs(self):
         libraries = ['libnetcdff']

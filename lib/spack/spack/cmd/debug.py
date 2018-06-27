@@ -30,7 +30,7 @@ from glob import glob
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
-import spack
+import spack.paths
 from spack.util.executable import which
 
 description = "debugging commands for troubleshooting Spack"
@@ -52,7 +52,7 @@ def _debug_tarball_suffix():
     if not git:
         return 'nobranch-nogit-%s' % suffix
 
-    with working_dir(spack.spack_root):
+    with working_dir(spack.paths.prefix):
         if not os.path.isdir('.git'):
             return 'nobranch.nogit.%s' % suffix
 
@@ -76,14 +76,14 @@ def create_db_tarball(args):
     tarball_name = "spack-db.%s.tar.gz" % _debug_tarball_suffix()
     tarball_path = os.path.abspath(tarball_name)
 
-    base = os.path.basename(spack.store.root)
+    base = os.path.basename(str(spack.store.root))
     transform_args = []
     if 'GNU' in tar('--version', output=str):
         transform_args = ['--transform', 's/^%s/%s/' % (base, tarball_name)]
     else:
         transform_args = ['-s', '/^%s/%s/' % (base, tarball_name)]
 
-    wd = os.path.dirname(spack.store.root)
+    wd = os.path.dirname(str(spack.store.root))
     with working_dir(wd):
         files = [spack.store.db._index_path]
         files += glob('%s/*/*/*/.spack/spec.yaml' % base)

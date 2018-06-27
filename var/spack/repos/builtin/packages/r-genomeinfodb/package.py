@@ -35,6 +35,7 @@ class RGenomeinfodb(RPackage):
     url      = "https://git.bioconductor.org/packages/GenomeInfoDb"
     list_url = homepage
 
+    version('1.14.0', git='https://git.bioconductor.org/packages/GenomeInfoDb', commit='4978308a57d887b764cc4ce83724ca1758f580f6')
     version('1.12.3', git='https://git.bioconductor.org/packages/GenomeInfoDb', commit='2deef3f0571b7f622483257bc22d2509ab5a0369')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
@@ -42,4 +43,4 @@ class RGenomeinfodb(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-genomeinfodbdata', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.3')
+    depends_on('r@3.4.0:3.4.9', when='@1.12.3:')

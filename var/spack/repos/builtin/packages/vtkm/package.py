@@ -39,7 +39,6 @@ class Vtkm(Package):
     url      = "https://gitlab.kitware.com/vtk/vtk-m/repository/v1.2.0/archive.tar.gz"
 
     version('1.2.0', "f77604c5a1c1747f2fb9b9bd96476875")
-
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
 
     version('master',

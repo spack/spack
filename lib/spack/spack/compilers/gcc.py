@@ -22,10 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
-import spack
-from spack.compiler import Compiler, get_compiler_version
+import spack.compilers.clang
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -47,7 +46,7 @@ class Gcc(Compiler):
     # Old compatibility versions may contain XY suffixes.
     suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
                   'cxx': 'gcc/g++',
                   'f77': 'gcc/gfortran',
@@ -61,9 +60,19 @@ class Gcc(Compiler):
         return "-fopenmp"
 
     @property
+    def cxx98_flag(self):
+        if self.version < ver('6.0'):
+            return ""
+        else:
+            return "-std=c++98"
+
+    @property
     def cxx11_flag(self):
         if self.version < ver('4.3'):
-            tty.die("Only gcc 4.3 and above support c++11.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          " < 4.3")
         elif self.version < ver('4.7'):
             return "-std=c++0x"
         else:
@@ -72,18 +81,28 @@ class Gcc(Compiler):
     @property
     def cxx14_flag(self):
         if self.version < ver('4.8'):
-            tty.die("Only gcc 4.8 and above support c++14.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++14 standard",
+                                          "cxx14_flag",
+                                          "< 4.8")
         elif self.version < ver('4.9'):
             return "-std=c++1y"
-        else:
+        elif self.version < ver('6.0'):
             return "-std=c++14"
+        else:
+            return ""
 
     @property
     def cxx17_flag(self):
         if self.version < ver('5.0'):
-            tty.die("Only gcc 5.0 and above support c++17.")
-        else:
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++17 standard",
+                                          "cxx17_flag",
+                                          "< 5.0")
+        elif self.version < ver('6.0'):
             return "-std=c++1z"
+        else:
+            return "-std=c++17"
 
     @property
     def pic_flag(self):
@@ -113,7 +132,7 @@ class Gcc(Compiler):
             return 'unknown'
 
         version = super(Gcc, cls).default_version(cc)
-        if version in ['7']:
+        if ver(version) >= ver('7'):
             version = get_compiler_version(cc, '-dumpfullversion')
         return version
 
@@ -142,7 +161,7 @@ class Gcc(Compiler):
         version = get_compiler_version(
             fc, '-dumpversion',
             r'(?:GNU Fortran \(GCC\) )?([\d.]+)')
-        if version in ['7']:
+        if ver(version) >= ver('7'):
             version = get_compiler_version(fc, '-dumpfullversion')
         return version
 

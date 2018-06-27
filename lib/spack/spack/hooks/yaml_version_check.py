@@ -36,8 +36,9 @@ def pre_run():
 
 
 def check_compiler_yaml_version():
-    config_scopes = spack.config.config_scopes
-    for scope in config_scopes.values():
+    config = spack.config.config
+
+    for scope in config.file_scopes:
         file_name = os.path.join(scope.path, 'compilers.yaml')
         data = None
         if os.path.isfile(file_name):

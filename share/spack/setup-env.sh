@@ -81,7 +81,7 @@ function spack {
     fi
 
     _sp_subcommand=$1; shift
-    _sp_spec="$@"
+    _sp_spec=("$@")
 
     # Filter out use and unuse.  For any other commands, just run the
     # command.
@@ -113,7 +113,7 @@ function spack {
                 shift
             done
 
-            _sp_spec="$@"
+            _sp_spec=("$@")
 
             # Here the user has run use or unuse with a spec.  Find a matching
             # spec using 'spack module find', then use the appropriate module
@@ -121,19 +121,19 @@ function spack {
             # If spack module command comes back with an error, do nothing.
             case $_sp_subcommand in
                 "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit "${_sp_spec[@]}"); then
                         use $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit "${_sp_spec[@]}"); then
                         unuse $_sp_module_args $_sp_full_spec
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl "${_sp_spec[@]}"); then
                         module load $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl "${_sp_spec[@]}"); then
                         module unload $_sp_module_args $_sp_full_spec
                     fi ;;
             esac
@@ -239,8 +239,8 @@ fi;
 
 _python_command=$(printf  "%s\\\n%s\\\n%s" \
 "print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))" \
-"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))" \
-"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))"
+"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get(\'config:module_roots\', {}).get(\'dotkit\'))))" \
+"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get(\'config:module_roots\', {}).get(\'tcl\'))))"
 )
 
 _assignment_command=$(spack-python -c "exec('${_python_command}')")

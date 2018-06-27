@@ -48,6 +48,10 @@ class PyNumpy(PythonPackage):
     # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
     # FIXME: Is this expected?
 
+    version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
+    version('1.14.2', '080f01a19707cf467393e426382c7619')
+    version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
+    version('1.14.0', 'c12d4bf380ac925fcdc8a59ada6c3298')
     version('1.13.3', '300a6f0528122128ac07c6deb5c95917')
     version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
     version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
@@ -68,9 +72,7 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.0.0:', type='test')
+    depends_on('py-nose@1.0.0:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
@@ -146,9 +148,13 @@ class PyNumpy(PythonPackage):
     def build_args(self, spec, prefix):
         args = []
 
-        # From NumPy 1.10.0 on it's possible to do a parallel build
+        # From NumPy 1.10.0 on it's possible to do a parallel build.
         if self.version >= Version('1.10.0'):
-            args = ['-j', str(make_jobs)]
+            # But Parallel build in Python 3.5+ is broken.  See:
+            # https://github.com/spack/spack/issues/7927
+            # https://github.com/scipy/scipy/issues/7112
+            if spec['python'].version < Version('3.5'):
+                args = ['-j', str(make_jobs)]
 
         return args
 

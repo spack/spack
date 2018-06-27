@@ -32,8 +32,11 @@ class Latte(CMakePackage):
     homepage = "https://github.com/lanl/latte"
     url      = "https://github.com/lanl/latte/tarball/v1.0"
 
-    version('develop', git='https://github.com/lanl/latte', branch='master')
+    tags = ['ecp', 'ecp-apps']
+
+    version('1.1.1', 'ab11867ba6235189681cf6e50a50cc50')
     version('1.0.1', 'd0b99edbcf7a19abe0a68a192d6f6234')
+    version('develop', git='https://github.com/lanl/latte', branch='master')
 
     variant('mpi', default=True,
             description='Build with mpi')
@@ -59,5 +62,10 @@ class Latte(CMakePackage):
             options.append('-DO_MPI=yes')
         if '+progress' in self.spec:
             options.append('-DPROGRESS=yes')
+
+        blas_list = ';'.join(self.spec['blas'].libs)
+        lapack_list = ';'.join(self.spec['lapack'].libs)
+        options.append('-DBLAS_LIBRARIES={0}'.format(blas_list))
+        options.append('-DLAPACK_LIBRARIES={0}'.format(lapack_list))
 
         return options

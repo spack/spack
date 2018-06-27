@@ -40,6 +40,8 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.5.0', 'c0455dbfa76ca807e4dfa93d49dcc817')
+    version('3.4.4', '9d6f73be072531e95884c7965ff80cd8')
     version('3.4.3', 'bc55db54f992fda9049201ca62d2a584')
     version('3.4.2', '1cd6d37850188e7f190f1eb94a24ca1f')
     version('3.4.1', '3a79c01dc0527c62e80ffb1c489297ea')
@@ -117,7 +119,7 @@ class R(AutotoolsPackage):
 
         if '+external-lapack' in spec:
             config_args.extend([
-                '--with-blas',
+                '--with-blas={0}'.format(spec['blas'].libs),
                 '--with-lapack'
             ])
 

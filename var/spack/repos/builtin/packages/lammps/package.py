@@ -36,6 +36,9 @@ class Lammps(CMakePackage):
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
 
+    tags = ['ecp', 'ecp-apps']
+
+    version('20180316', '25bad35679583e0dd8cb8753665bb84b')
     version('20180222', '4d0513e3183bd57721814d217fdaf957')
     version('20170922', '4306071f919ec7e759bda195c26cfd9a')
     version('20170901', '767e7f07289663f033474dfe974974e7')
@@ -69,7 +72,8 @@ class Lammps(CMakePackage):
     depends_on('netcdf+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
-    depends_on('latte', when='+latte')
+    depends_on('latte@1.0.1', when='@:20180222+latte')
+    depends_on('latte@1.1.1:', when='@20180316:+latte')
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
     depends_on('python', when='+python')

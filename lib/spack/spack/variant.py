@@ -29,11 +29,12 @@ variants both in packages and in specs.
 import functools
 import inspect
 import re
+from six import StringIO
 
 import llnl.util.lang as lang
-import spack
+
+import spack.directives
 import spack.error as error
-from six import StringIO
 
 
 class Variant(object):

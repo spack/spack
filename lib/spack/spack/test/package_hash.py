@@ -26,17 +26,17 @@ from spack.util.package_hash import package_hash, package_content
 from spack.spec import Spec
 
 
-def test_hash(tmpdir, builtin_mock, config):
+def test_hash(tmpdir, mock_packages, config):
     package_hash("hash-test1@1.2")
 
 
-def test_different_variants(tmpdir, builtin_mock, config):
+def test_different_variants(tmpdir, mock_packages, config):
     spec1 = Spec("hash-test1@1.2 +variantx")
     spec2 = Spec("hash-test1@1.2 +varianty")
     assert package_hash(spec1) == package_hash(spec2)
 
 
-def test_all_same_but_name(tmpdir, builtin_mock, config):
+def test_all_same_but_name(tmpdir, mock_packages, config):
     spec1 = Spec("hash-test1@1.2")
     spec2 = Spec("hash-test2@1.2")
     compare_sans_name(True, spec1, spec2)
@@ -46,7 +46,7 @@ def test_all_same_but_name(tmpdir, builtin_mock, config):
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_archive_hash(tmpdir, builtin_mock, config):
+def test_all_same_but_archive_hash(tmpdir, mock_packages, config):
     """
     Archive hash is not intended to be reflected in Package hash.
     """
@@ -55,19 +55,19 @@ def test_all_same_but_archive_hash(tmpdir, builtin_mock, config):
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_patch_contents(tmpdir, builtin_mock, config):
+def test_all_same_but_patch_contents(tmpdir, mock_packages, config):
     spec1 = Spec("hash-test1@1.1")
     spec2 = Spec("hash-test2@1.1")
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_patches_to_apply(tmpdir, builtin_mock, config):
+def test_all_same_but_patches_to_apply(tmpdir, mock_packages, config):
     spec1 = Spec("hash-test1@1.4")
     spec2 = Spec("hash-test2@1.4")
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_install(tmpdir, builtin_mock, config):
+def test_all_same_but_install(tmpdir, mock_packages, config):
     spec1 = Spec("hash-test1@1.5")
     spec2 = Spec("hash-test2@1.5")
     compare_sans_name(False, spec1, spec2)

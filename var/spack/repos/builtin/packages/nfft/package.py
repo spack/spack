@@ -31,9 +31,10 @@ class Nfft(AutotoolsPackage):
     size, and of complex data."""
 
     homepage = "https://www-user.tu-chemnitz.de/~potts/nfft"
-    url = "https://www-user.tu-chemnitz.de/~potts/nfft/download/nfft-3.3.2.tar.gz"
+    url = "https://github.com/NFFT/nfft/releases/download/3.4.1/nfft-3.4.1.tar.gz"
 
-    version('3.3.2', '550737c06f4d6ea6c156800169d8f0d9')
+    version('3.4.1', '9c2ad6cf86fe4a7bc0de8d2d92b101f4')
+    version('3.3.2', '13e48b923501ed6feb5130c3be115fc8')
 
     depends_on('fftw')
 

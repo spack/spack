@@ -1565,6 +1565,14 @@ correct way to specify this would be:
 
    depends_on('python@2.6.0:2.6.999')
 
+A spec can contain multiple version ranges separated by commas.
+For example, if you need Boost 1.59.0 or newer, but there are known
+issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
+
+.. code-block:: python
+
+   depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
+
 
 ^^^^^^^^^^^^^^^^
 Dependency types
@@ -1846,18 +1854,38 @@ from being linked in at activation time.
    ``depends_on('python')`` and ``extends(python)`` in the same
    package.  ``extends`` implies ``depends_on``.
 
+-----
+Views
+-----
+
+As covered in :ref:`filesystem-views`, the ``spack view`` command can be
+used to symlink a number of packages into a merged prefix. The methods of
+``PackageViewMixin`` can be overridden to customize how packages are added
+to views. Generally this can be used to create copies of specific files rather
+than symlinking them when symlinking does not work. For example, ``Python``
+overrides ``add_files_to_view`` in order to create a copy of the ``python``
+binary since the real path of the Python executable is used to detect
+extensions; as a consequence python extension packages (those inheriting from
+``PythonPackage``) likewise override ``add_files_to_view`` in order to rewrite
+shebang lines which point to the Python interpreter.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Activation & deactivation
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Adding an extension to a view is referred to as an activation. If the view is
+maintained in the Spack installation prefix of the extendee this is called a
+global activation. Activations may involve updating some centralized state
+that is maintained by the extendee package, so there can be additional work
+for adding extensions compared with non-extension packages.
+
 Spack's ``Package`` class has default ``activate`` and ``deactivate``
 implementations that handle symbolically linking extensions' prefixes
-into the directory of the parent package.  However, extendable
-packages can override these methods to add custom activate/deactivate
-logic of their own.  For example, the ``activate`` and ``deactivate``
-methods in the Python class use the symbolic linking, but they also
-handle details surrounding Python's ``.pth`` files, and other aspects
-of Python packaging.
+into a specified view. Extendable packages can override these methods
+to add custom activate/deactivate logic of their own.  For example,
+the ``activate`` and ``deactivate`` methods in the Python class handle
+symbolic linking of extensions, but they also handle details surrounding
+Python's ``.pth`` files, and other aspects of Python packaging.
 
 Spack's extensions mechanism is designed to be extensible, so that
 other packages (like Ruby, R, Perl, etc.)  can provide their own
@@ -1872,7 +1900,7 @@ Let's look at Python's activate function:
 
 This function is called on the *extendee* (Python).  It first calls
 ``activate`` in the superclass, which handles symlinking the
-extension package's prefix into this package's prefix.  It then does
+extension package's prefix into the specified view.  It then does
 some special handling of the ``easy-install.pth`` file, part of
 Python's setuptools.
 
@@ -2646,8 +2674,8 @@ In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
 alike. To that end the compiler classes in ``spack`` implement the
-following **properties**: ``openmp_flag``, ``cxx11_flag``,
-``cxx14_flag``, which can be accessed in a package by
+following **properties**: ``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``,
+``cxx14_flag``, and ``cxx17_flag``, which can be accessed in a package by
 ``self.compiler.cxx11_flag`` and alike. Note that the implementation is
 such that if a given compiler version does not support this feature, an
 error will be produced. Therefore package developers can also use these
@@ -2755,11 +2783,11 @@ Prefix Attribute        Location
 
 Of course, this only works if your file or directory is a valid Python
 variable name. If your file or directory contains dashes or dots, use
-``join_path`` instead:
+``join`` instead:
 
 .. code-block:: python
 
-   join_path(prefix.lib, 'libz.a')
+   prefix.lib.join('libz.a')
 
 
 .. _spec-objects:

@@ -34,6 +34,7 @@ class Hadoop(Package):
     homepage = "http://hadoop.apache.org/"
     url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
 
+    version('3.1.0', 'f036ebd3fa0ef66ee1819e351d15b6cb')
     version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
 
     depends_on('java', type='run')
