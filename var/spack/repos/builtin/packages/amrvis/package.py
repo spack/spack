@@ -204,6 +204,13 @@ class Amrvis(MakefilePackage):
             build_env.set('MPIHOME', self.spec['mpi'].prefix)
 
     def install(self, spec, prefix):
+        # Help force Amrvis to not pick up random system compilers
+        if '+mpi' in self.spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
+
         # Set exe name options
         dim = spec.variants['dims'].value
         comp = self.compiler.name
