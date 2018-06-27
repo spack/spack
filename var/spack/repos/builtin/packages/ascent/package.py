@@ -50,16 +50,17 @@ class Ascent(Package):
 
     maintainers = ['cyrush']
 
+    version('develop',
+            git='https://github.com/Alpine-DAV/ascent.git',
+            branch='develop',
+            submodules=True,
+            preferred=True)
 
     version('0.3.0',
             git='https://github.com/Alpine-DAV/ascent.git',
             tag='v0.3.0', 
             submodules=True)
 
-    version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            branch='develop',
-            submodules=True)
 
     
 
@@ -81,7 +82,7 @@ class Ascent(Package):
 
     variant("openmp", default=True, description="Build openmp support")
     variant("cuda", default=False, description="Build cuda support")
-
+    variant("mfem", default=False, description="Build MFEM filter support")
     variant("adios", default=False, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
@@ -125,6 +126,11 @@ class Ascent(Package):
     depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
     depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
+    depends_on("mfem+shared+mpi", when="+shared+mfem+mpi")
+    depends_on("mfem~shared+mpi", when="~shared+mfem+mpi")
+
+    depends_on("mfem+shared~mpi", when="+shared+mfem~mpi")
+    depends_on("mfem~shared~mpi", when="~shared+mfem~mpi")
 
     #depends_on("vtkh@develop~shared", when="+vtkh~shared")
 
@@ -360,6 +366,19 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
         else:
             cfg.write("# vtk-h not built by spack \n")
+
+        #######################
+        # MFEM
+        #######################
+        if "+mfem" in spec:
+            cfg.write("# mfem from spack \n")
+            cfg.write(cmake_cache_entry("MFEM_DIR", spec['mfem'].prefix))
+        else:
+            cfg.write("# mfem not built by spack \n")
+
+        #######################################################################
+        # Optional Dependencies
+        #######################################################################
 
         #######################
         # Adios
