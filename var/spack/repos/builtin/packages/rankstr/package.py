@@ -32,7 +32,8 @@ class Rankstr(CMakePackage):
     url      = "https://github.com/ECP-VeloC/rankstr/archive/v0.0.1.zip"
 
     version('0.0.1', 'abe06fa6a78cfe20ec0c78717ac2f2ed')
-    version('master', git='https://github.com/ecp-veloc/rankstr.git', branch='master')
+    version('master', git='https://github.com/ecp-veloc/rankstr.git',
+            branch='master')
 
     depends_on('mpi')
 

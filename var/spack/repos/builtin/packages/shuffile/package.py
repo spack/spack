@@ -32,7 +32,8 @@ class Shuffile(CMakePackage):
     url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.1.zip"
 
     version('0.0.2', 'eca45150d83e21ac51049133a2308d34')
-    version('master', git='https://github.com/ecp-veloc/shuffile.git', branch='master')
+    version('master', git='https://github.com/ecp-veloc/shuffile.git',
+            branch='master')
 
     depends_on('mpi')
     depends_on('kvtree')
