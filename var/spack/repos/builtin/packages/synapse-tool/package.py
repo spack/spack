@@ -22,25 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
 
 
-class Zstd(MakefilePackage):
-    """Zstandard, or zstd as short version, is a fast lossless compression
-    algorithm, targeting real-time compression scenarios at zlib-level and
-    better compression ratios."""
+class SynapseTool(CMakePackage):
+    """Synapse format utilities.
+    """
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/synapse-tool"
+    url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
-    homepage = "http://facebook.github.io/zstd/"
-    url      = "https://github.com/facebook/zstd/archive/v1.1.2.tar.gz"
+    version('dev-201806',
+            commit='8c4bbe548006d7221f215f32c077338f169ba015',
+            git=url,
+            preferred=True,
+            submodules=True)
 
-    version('1.3.0', '888660a850e33c2dcc7c4f9d0b04d347')
-    version('1.1.2', '4c57a080d194bdaac83f2d3251fc7ffc')
+    variant('mpi', default=True)
 
-    variant('pic', default=True, description='Build position independent code')
+    depends_on('boost@1.60:')
+    depends_on('hdf5@1.10:')
+    depends_on('hdf5@1.10:~mpi', when='~mpi')
+    depends_on('highfive@develop')
+    depends_on('highfive@develop+mpi', when='+mpi')
+    depends_on('mpi', when='+mpi')
 
-    def setup_environment(self, spack_env, run_env):
-        if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
-
-    def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+    def cmake_args(self):
+        args = [
+            '-DLIBHDF5_ROOT={}'.format(self.spec['hdf5'].prefix),
+            '-DBOOST_ROOT={}'.format(self.spec['boost'].prefix),
+        ]
+        if '+mpi' in self.spec:
+            args.extend([
+                '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
+                '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
+                '-DSYNTOOL_WITH_MPI=ON',
+            ])
+        return args

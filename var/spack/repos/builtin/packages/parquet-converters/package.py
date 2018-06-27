@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,25 +22,29 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
 
 
-class Zstd(MakefilePackage):
-    """Zstandard, or zstd as short version, is a fast lossless compression
-    algorithm, targeting real-time compression scenarios at zlib-level and
-    better compression ratios."""
+class ParquetConverters(CMakePackage):
+    """Parquet conversion tools developed by Blue Brain Project, EPFL
+    """
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/ParquetConverters"
+    url      = "ssh://bbpcode.epfl.ch/building/ParquetConverters"
 
-    homepage = "http://facebook.github.io/zstd/"
-    url      = "https://github.com/facebook/zstd/archive/v1.1.2.tar.gz"
+    version('develop', git=url, preferred=True)
 
-    version('1.3.0', '888660a850e33c2dcc7c4f9d0b04d347')
-    version('1.1.2', '4c57a080d194bdaac83f2d3251fc7ffc')
+    depends_on('hdf5')
+    depends_on('highfive')
+    depends_on('parquet')
+    depends_on('snappy ~shared')
+    depends_on('synapse-tool +mpi')
+    depends_on('mpi')
 
-    variant('pic', default=True, description='Build position independent code')
-
-    def setup_environment(self, spack_env, run_env):
-        if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
-
-    def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+    def cmake_args(self):
+        return [
+            '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
+            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
+            '-DNEURONPARQUET_USE_MPI=ON'
+        ]
