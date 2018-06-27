@@ -58,7 +58,7 @@ class NcbiToolkit(AutotoolsPackage):
                         'jpeg_start_compress(&cinfo, TRUE)',
                         'image_io_jpeg.cpp')
 
-        CompilerVersion=re.sub(r'\.', "", self.compiler.version.string)
+        CompilerVersion = re.sub(r'\.', "", self.compiler.version.string)
 
         with working_dir(join_path(
                 'GCC{0}-DebugMT64'.format(CompilerVersion), 'build')):
