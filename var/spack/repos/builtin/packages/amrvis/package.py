@@ -53,6 +53,7 @@ class Amrvis(MakefilePackage):
     variant('mpi', default=False, description='Enable MPI parallel support')
     variant('debug', default=False, description='Enable debugging features')
 
+    depends_on('gmake', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('libsm')
     depends_on('libice')
@@ -62,21 +63,15 @@ class Amrvis(MakefilePackage):
     depends_on('libxext')
     depends_on('motif')
 
-    # Only doing gcc and clang at the moment
-    # Intel currently fails searching for mpiicc, mpiicpc, etc
-    conflicts('%intel',
-              msg='Amrvis currently only builds with gcc and clang')
-    conflicts('%cce',
-              msg='Amrvis currently only builds with gcc and clang')
-    conflicts('%nag',
-              msg='Amrvis currently only builds with gcc and clang')
-    conflicts('%pgi',
-              msg='Amrvis currently only builds with gcc and clang')
-    conflicts('%xl',
-              msg='Amrvis currently only builds with gcc and clang')
-    conflicts('%xl_r',
-              msg='Amrvis currently only builds with gcc and clang')
+    # Only doing gcc and clang at the moment.
+    # Intel currently fails searching for mpiicc, mpiicpc, etc.
+    for comp in ['%intel', '%cce', '%nag', '%pgi', '%xl', '%xl_r']:
+        conflicts(
+            comp,
+            msg='Amrvis currently only builds with gcc and clang'
+        )
 
+    # Need to clone AMReX into Amrvis because Amrvis uses AMReX's source
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
              tag='master',
@@ -84,53 +79,70 @@ class Amrvis(MakefilePackage):
 
     def edit(self, spec, prefix):
         # Set all available makefile options to values we want
-        filter_file(r'^AMREX_HOME\s*=.*',
-                    'AMREX_HOME = {0}'.format('./amrex'),
-                    'GNUmakefile')
-        filter_file(r'^PRECISION\s*=.*',
-                    'PRECISION = {0}'.format(spec.variants['prec'].value),
-                    'GNUmakefile')
-        filter_file(r'^DIM\s*=.*',
-                    'DIM = {0}'.format(spec.variants['dims'].value),
-                    'GNUmakefile')
-        filter_file(r'^PROFILE\s*=.*',
-                    'PROFILE = FALSE',
-                    'GNUmakefile')
-        filter_file(r'^TRACE_PROFILE\s*=.*',
-                    'TRACE_PROFILE = FALSE',
-                    'GNUmakefile')
-        filter_file(r'^COMM_PROFILE\s*=.*',
-                    'COMM_PROFILE = FALSE',
-                    'GNUmakefile')
-        filter_file(r'^COMP\s*=.*',
-                    'COMP = {0}'.format(self.compiler.name),
-                    'GNUmakefile')
-        filter_file(r'^DEBUG\s*=.*',
-                    'DEBUG = {0}'.format(spec.variants['debug'].value).upper(),
-                    'GNUmakefile')
-        filter_file(r'^USE_ARRAYVIEW\s*=.*',
-                    'USE_ARRAY_VIEW = FALSE',
-                    'GNUmakefile')
-        filter_file(r'^USE_MPI\s*=.*',
-                    'USE_MPI = {0}'.format(spec.variants['mpi'].value).upper(),
-                    'GNUmakefile')
-        filter_file(r'^USE_CXX11\s*=.*',
-                    'USE_CXX11 = TRUE',
-                    'GNUmakefile')
-        filter_file(r'^USE_VOLRENDER\s*=.*',
-                    'USE_VOLRENDER = FALSE',
-                    'GNUmakefile')
-        filter_file(r'^USE_PARALLELVOLRENDER\s*=.*',
-                    'USE_PARALLELVOLRENDER = FALSE',
-                    'GNUmakefile')
-        filter_file(r'^USE_PROFPARSER\s*=.*',
-                    'USE_PROFPARSER = FALSE',
-                    'GNUmakefile')
+        makefile = FileFilter('GNUmakefile')
+        makefile.filter(
+            r'^AMREX_HOME\s*=.*',
+            'AMREX_HOME = {0}'.format('./amrex')
+        )
+        makefile.filter(
+            r'^PRECISION\s*=.*',
+            'PRECISION = {0}'.format(spec.variants['prec'].value)
+        )
+        makefile.filter(
+            r'^DIM\s*=.*',
+            'DIM = {0}'.format(spec.variants['dims'].value)
+        )
+        makefile.filter(
+            r'^PROFILE\s*=.*',
+            'PROFILE = FALSE'
+        )
+        makefile.filter(
+            r'^TRACE_PROFILE\s*=.*',
+            'TRACE_PROFILE = FALSE'
+        )
+        makefile.filter(
+            r'^COMM_PROFILE\s*=.*',
+            'COMM_PROFILE = FALSE'
+        )
+        makefile.filter(
+            r'^COMP\s*=.*',
+            'COMP = {0}'.format(self.compiler.name)
+        )
+        makefile.filter(
+            r'^DEBUG\s*=.*',
+            'DEBUG = {0}'.format(spec.variants['debug'].value).upper()
+        )
+        makefile.filter(
+            r'^USE_ARRAYVIEW\s*=.*',
+            'USE_ARRAY_VIEW = FALSE'
+        )
+        makefile.filter(
+            r'^USE_MPI\s*=.*',
+            'USE_MPI = {0}'.format(spec.variants['mpi'].value).upper()
+        )
+        makefile.filter(
+            r'^USE_CXX11\s*=.*',
+            'USE_CXX11 = TRUE'
+        )
+        makefile.filter(
+            r'^USE_VOLRENDER\s*=.*',
+            'USE_VOLRENDER = FALSE'
+        )
+        makefile.filter(
+            r'^USE_PARALLELVOLRENDER\s*=.*',
+            'USE_PARALLELVOLRENDER = FALSE'
+        )
+        makefile.filter(
+            r'^USE_PROFPARSER\s*=.*',
+            'USE_PROFPARSER = FALSE'
+        )
 
-        # Delete all /usr and /opt X library default search paths in makefile
-        filter_file(r'^.*\b(usr|opt)\b.*$',
-                    '# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS',
-                    'GNUmakefile')
+        # Making a big assumption here by deleting all /usr and /opt X
+        # library default search paths in makefile
+        makefile.filter(
+            r'^.*\b(usr|opt)\b.*$',
+            '# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS'
+        )
 
         # Read GNUmakefile into array
         with open('GNUmakefile', 'r') as file:
@@ -139,63 +151,19 @@ class Amrvis(MakefilePackage):
         # Edit GNUmakefile INCLUDES and LIBRARIES to use Spack dependencies.
         # Assuming the default GNUmakefile doesn't change, this is the best
         # place for LIBRARY_LOCATIONS and INCLUDE_LOCATIONS.
-        line_offset = 63
-        contents.insert(
-            line_offset + 1,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 2,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libsm'].prefix.include)
-        )
-        contents.insert(
-            line_offset + 3,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libice'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 4,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libice'].prefix.include)
-        )
-        contents.insert(
-            line_offset + 5,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxpm'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 6,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxpm'].prefix.include)
-        )
-        contents.insert(
-            line_offset + 7,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libx11'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 8,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libx11'].prefix.include)
-        )
-        contents.insert(
-            line_offset + 9,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxt'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 10,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxt'].prefix.include)
-        )
-        contents.insert(
-            line_offset + 11,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['libxext'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 12,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['libxext'].prefix.include)
-        )
-        contents.insert(
-            line_offset + 13,
-            'LIBRARY_LOCATIONS += {0}\n'.format(spec['motif'].prefix.lib)
-        )
-        contents.insert(
-            line_offset + 14,
-            'INCLUDE_LOCATIONS += {0}\n'.format(spec['motif'].prefix.include)
-        )
+        line_offset = 64
+        count = 0
+        for lib in ['libsm', 'libice', 'libxpm', 'libx11',
+                    'libxt', 'libxext', 'motif']:
+            contents.insert(
+                line_offset + count,
+                'LIBRARY_LOCATIONS += {0}\n'.format(spec[lib].prefix.lib)
+            )
+            contents.insert(
+                line_offset + count + 1,
+                'INCLUDE_LOCATIONS += {0}\n'.format(spec[lib].prefix.include)
+            )
+            count = count + 1
 
         # Write GNUmakefile
         with open('GNUmakefile', 'w') as file:
@@ -205,7 +173,6 @@ class Amrvis(MakefilePackage):
         if '+mpi' in self.spec:
             # Set MPI location
             build_env.set('MPI_HOME', self.spec['mpi'].prefix)
-            build_env.set('MPIHOME', self.spec['mpi'].prefix)
 
     def install(self, spec, prefix):
         # Help force Amrvis to not pick up random system compilers
