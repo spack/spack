@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 import platform
 
 
@@ -68,7 +68,7 @@ class Oce(Package):
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
     if (platform.system() == "Darwin") and (
-       macOS_version() == Version('10.12')):
+       macos_version() == Version('10.12')):
         patch('sierra.patch', when='@0.17.2:0.18.0')
 
     def install(self, spec, prefix):
@@ -99,7 +99,7 @@ class Oce(Package):
             ])
 
         if platform.system() == 'Darwin' and (
-           macOS_version() >= Version('10.12')):
+           macos_version() >= Version('10.12')):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

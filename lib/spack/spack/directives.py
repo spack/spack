@@ -80,7 +80,7 @@ class DirectiveMeta(type):
     _directive_names = set()
     _directives_to_be_executed = []
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
         # to be executed. Here we go reversed because we want to execute
         # commands:
@@ -109,8 +109,8 @@ class DirectiveMeta(type):
                 DirectiveMeta._directives_to_be_executed)
             DirectiveMeta._directives_to_be_executed = []
 
-        return super(DirectiveMeta, mcs).__new__(
-            mcs, name, bases, attr_dict)
+        return super(DirectiveMeta, cls).__new__(
+            cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure

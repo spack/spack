@@ -193,14 +193,13 @@ class Platform(object):
         return self.operating_sys.get(name, None)
 
     @classmethod
-    def setup_platform_environment(self, pkg, env):
+    def setup_platform_environment(cls, pkg, env):
         """ Subclass can override this method if it requires any
             platform-specific build environment modifications.
         """
-        pass
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         """ Subclass is responsible for implementing this method.
             Returns True if the Platform class detects that
             it is the current platform

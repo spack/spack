@@ -163,7 +163,7 @@ class PackageMeta(
     _InstallPhase_run_before = {}
     _InstallPhase_run_after = {}
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
 
         if 'phases' in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
@@ -176,7 +176,7 @@ class PackageMeta(
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(mcs, attr_name)
+            checks = getattr(cls, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
                     try:
@@ -202,12 +202,12 @@ class PackageMeta(
                             PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(mcs, attr_name, {})
+                setattr(cls, attr_name, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
 
-        return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
+        return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @staticmethod
     def register_callback(check_type, *phases):
@@ -1213,7 +1213,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                        " if the associated spec is not concrete")
             raise spack.error.SpackError(err_msg)
 
-        hashContent = list()
+        hash_content = list()
         source_id = fs.for_package_version(self, self.version).source_id()
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
@@ -1222,14 +1222,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # referenced by branch name rather than tag or commit ID.
             message = 'Missing a source id for {s.name}@{s.version}'
             tty.warn(message.format(s=self))
-            hashContent.append(''.encode('utf-8'))
+            hash_content.append(''.encode('utf-8'))
         else:
-            hashContent.append(source_id.encode('utf-8'))
-        hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                           for p in self.spec.patches)
-        hashContent.append(package_hash(self.spec, content))
+            hash_content.append(source_id.encode('utf-8'))
+        hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
+                            for p in self.spec.patches)
+        hash_content.append(package_hash(self.spec, content))
         return base64.b32encode(
-            hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()
+            hashlib.sha256(bytes().join(
+                sorted(hash_content))).digest()).lower()
 
     @property
     def namespace(self):
