@@ -62,16 +62,18 @@ class Amrvis(MakefilePackage):
     depends_on('libxext')
     depends_on('motif')
 
+    conflicts('%intel',
+              msg='Amrvis currently only builds with gcc and clang')
     conflicts('%cce',
-              msg='Amrvis currently only builds with gcc, clang, and intel')
+              msg='Amrvis currently only builds with gcc and clang')
     conflicts('%nag',
-              msg='Amrvis currently only builds with gcc, clang, and intel')
+              msg='Amrvis currently only builds with gcc and clang')
     conflicts('%pgi',
-              msg='Amrvis currently only builds with gcc, clang, and intel')
+              msg='Amrvis currently only builds with gcc and clang')
     conflicts('%xl',
-              msg='Amrvis currently only builds with gcc, clang, and intel')
+              msg='Amrvis currently only builds with gcc and clang')
     conflicts('%xl_r',
-              msg='Amrvis currently only builds with gcc, clang, and intel')
+              msg='Amrvis currently only builds with gcc and clang')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
@@ -97,7 +99,8 @@ class Amrvis(MakefilePackage):
         filter_file(r'^COMM_PROFILE\s*=.*',
                     'COMM_PROFILE = FALSE',
                     'GNUmakefile')
-        # Only doing gcc, clang, and intel at the moment
+        # Only doing gcc and clang at the moment
+        # Intel currently fails searching for mpiicc, mpiicpc, etc
         filter_file(r'^COMP\s*=.*',
                     'COMP = {0}'.format(self.compiler.name),
                     'GNUmakefile')
@@ -216,6 +219,8 @@ class Amrvis(MakefilePackage):
         comp = self.compiler.name
         if spec.satisfies('%gcc'):
             comp = 'gnu'
+        if spec.satisfies('%clang'):
+            comp = 'llvm'
         if '+mpi' in self.spec:
             mpi = '.MPI'
         else:
