@@ -137,10 +137,11 @@ def query_arguments(args):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    dbs = [None]
-    dbs.extend(spack.parents.parent_dbs)
+    dbs = []
+    for parent_store in spack.parents.parent_stores:
+        dbs.append(parent_store.db)
     dbs.append(spack.store.db)
-    for db in dbs[1:]:
+    for db in dbs:
         q_args['db'] = db
         q_args['include_parents'] = False
         if len(dbs) > 2:

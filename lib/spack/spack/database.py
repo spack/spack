@@ -52,7 +52,7 @@ from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
-
+import spack
 import spack.store
 import spack.repo
 import spack.spec
@@ -64,7 +64,6 @@ from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction
-
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -159,7 +158,7 @@ class Database(object):
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
 
-    def __init__(self, root, db_dir=None, parent_db=None):
+    def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -182,7 +181,6 @@ class Database(object):
 
         """
         self.root = root
-        self.parent_db = parent_db
 
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
@@ -660,8 +658,8 @@ class Database(object):
             dkey = dep.dag_hash()
             if not self.query_hash(dkey):
                 in_parent_db = False
-                if self.parent_db:
-                    if self.parent_db.query_hash(dkey):
+                for parent_store in spack.parents.parent_store:
+                    if parent_store.db.query_hash(dkey):
                         in_parent_db = True
                 if not in_parent_db:
                     extra_args = {
@@ -741,16 +739,19 @@ class Database(object):
     def _get_matching_key_spec(self, key):
         if self.query_hash(key):
             return self._data[key].spec
-        elif self.parent_db:
-            return self.parent_db._get_matching_key_spec(key)
         else:
-            return None
+            spec = None
+            for parent_store in spack.parents.parents_stores:
+                if parent_store.db.query_hash(key):
+                    spec = parent_store.db._data[key].spec
+            return spec
 
     @_autospec
     def get_record(self, spec, **kwargs):
         key = self._get_matching_spec_key(spec, **kwargs)
-        if key not in self._data and self.parent_db:
-            return self.parent_db.get_record(spec, **kwargs)
+        if key not in self._data:
+            for parent_store in spack.parents.parent_stores:
+                key = parent_store.db._get_matching_spec_key(spec, **kwargs)
         return self._data[key]
 
     def _decrement_ref_count(self, spec):
@@ -910,31 +911,37 @@ class Database(object):
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        if (len(spack.parents.parent_dbs) > 0 and not
-            spack.parents.parent_dbs[-1] == self):
-            self.parent_db = spack.parents.parent_dbs[-1]
-            self.parent_db._read()
+        for parent_store in spack.parents.parent_stores:
+            if parent_store.db == self:
+                break
+            parent_store.db._read()
+        self._read()
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
             if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
-
                 hash_key = query_spec.dag_hash()
                 if hash_key in self._data:
                     return [self._data[hash_key].spec]
                 else:
-                    if self.parent_db and include_parents:
-                        return self.parent_db.query(query_spec, known,
-                                                    installed, explicit)
+                    if include_parents:
+                        results = []
+                        for parent_store in spack.parents.parent_stores:
+                            if hash_key in parent_store.db._data:
+                                results.append(parent_store.db._data[hash_key].spec)
+                        if len(results) > 0:
+                            return [results[-1]]
+                        else:
+                            return results
                     else:
                         return []
 
             # Abstract specs require more work -- currently we test
             # against everything.
-            if self.parent_db and include_parents:
-                results = self.parent_db.query(query_spec, known, installed,
-                                               explicit)
-            else:
-                results = []
+            results = []
+            if include_parents:
+                for parent_store in spack.parents.parent_stores:
+                    results=[parent_store.db.query(query_spec, known,
+                                                   installed, explicit)]
             start_date = start_date or datetime.datetime.min
             end_date = end_date or datetime.datetime.max
 
