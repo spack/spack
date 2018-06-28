@@ -29,6 +29,7 @@ from spack import *
 import os
 import subprocess
 import llnl.util.tty as tty
+from spack.patch import absolute_path_for_package
 
 
 class Catalyst(CMakePackage):
@@ -66,8 +67,18 @@ class Catalyst(CMakePackage):
     depends_on('libxt', when='+rendering')
     depends_on('cmake@3.3:', type='build')
 
-    # Broken vtk-m config. Upstream catalyst changes
-    patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
+    @when('@5.5.0:5.5.2')
+    def patch(self):
+        """Apply the patch (it should be fixed in Paraview 5.6)
+        at the package dir to the source code in
+        root_cmakelists_dir."""
+        patch_name = 'vtkm-catalyst-pv551.patch'
+        pkg_dir = os.path.dirname(absolute_path_for_package(self))
+        patch = which("patch", required=True)
+        with working_dir(self.root_cmakelists_dir):
+            patch('-s', '-p', '1', '-i',
+                  join_path(pkg_dir, patch_name),
+                  "-d", '.')
 
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
