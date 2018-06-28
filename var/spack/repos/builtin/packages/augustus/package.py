@@ -33,6 +33,10 @@ class Augustus(MakefilePackage):
     url      = "http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.1.tar.gz"
     list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
+    version('3.3.1', '8363ece221c799eb169f47e545efb951')
+    version('3.3',   '93691d9aafc7d3d0e1adf31ec308507f')
+    version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830')
+
     depends_on('bamtools')
     depends_on('gsl')
     depends_on('boost')
