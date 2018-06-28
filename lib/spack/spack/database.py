@@ -670,7 +670,7 @@ class Database(object):
             if not self.query_hash(dkey):
                 self.set_parent()
                 in_parent_db = False
-                if not self.parent_db is None:
+                if self.parent_db is not None:
                     if self.parent_db.query_hash(dkey):
                         in_parent_db = True
                 if not in_parent_db:
@@ -751,7 +751,7 @@ class Database(object):
     def _get_matching_key_spec(self, key):
         if self.query_hash(key):
             return self._data[key].spec
-        elif not self.parent_db is None:
+        elif self.parent_db is not None:
             self.set_parent()
             return self.parent_db._get_matching_key_spec(key)
         else:
@@ -761,7 +761,7 @@ class Database(object):
     def get_record(self, spec, **kwargs):
         self.set_parent()
         key = self._get_matching_spec_key(spec, **kwargs)
-        if key not in self._data and not self.parent_db is None:
+        if key not in self._data and self.parent_db is not None:
             return self.parent_db.get_record(spec, **kwargs)
         return self._data[key]
 
@@ -930,7 +930,7 @@ class Database(object):
                 if hash_key in self._data:
                     return [self._data[hash_key].spec]
                 else:
-                    if not self.parent_db is None and include_parents:
+                    if self.parent_db is not None and include_parents:
                         return self.parent_db.query(query_spec, known,
                                                     installed, explicit)
                     else:
@@ -938,7 +938,7 @@ class Database(object):
 
             # Abstract specs require more work -- currently we test
             # against everything.
-            if not self.parent_db is None and include_parents:
+            if self.parent_db is not None and include_parents:
                 results = self.parent_db.query(query_spec, known, installed,
                                                explicit)
             else:
