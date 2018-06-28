@@ -47,5 +47,6 @@ class Parquet(CMakePackage):
     def cmake_args(self):
         args = ['-DPARQUET_USE_SSE=OFF', '-DPARQUET_BUILD_TESTS=OFF']
         for dep in ('arrow', 'thrift'):
-            args.append("-D{}_HOME={}".format(dep.upper(), self.spec[dep].prefix))
+            args.append("-D{}_HOME={}".format(dep.upper(),
+                                              self.spec[dep].prefix))
         return args
