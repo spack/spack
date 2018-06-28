@@ -1,35 +1,12 @@
-# The VTK-m changes are slated for paraview-5.5.x
-#
 # The catalyst changes (the working directory for output) are slated for
 # paraview-5.6.
 # They are API-compatible with paraview-5.5 but not ABI compatible.
 #
-# https://gitlab.kitware.com/vtk/vtk-m/merge_requests/1166
 # https://gitlab.kitware.com/paraview/paraview/merge_requests/2433
 # https://gitlab.kitware.com/paraview/paraview/merge_requests/2436
 #
---- ParaView-v5.5.0/VTK/ThirdParty/vtkm/vtk-m/CMake/VTKmDetermineVersion.cmake.orig	2018-04-06 22:03:33.000000000 +0200
-+++ ParaView-v5.5.0/VTK/ThirdParty/vtkm/vtk-m/CMake/VTKmDetermineVersion.cmake	2018-04-23 12:00:23.708544206 +0200
-@@ -51,6 +51,8 @@
-         ERROR_QUIET
-         OUTPUT_STRIP_TRAILING_WHITESPACE
-         ERROR_STRIP_TRAILING_WHITESPACE)
-+    else()
-+      set(output)
-     endif()
-   else()
-     set(result 0)
-@@ -75,7 +77,7 @@
- 
- # Extracts components from a version string. See determine_version() for usage.
- function(extract_version_components version_string var_prefix)
--  string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)[-]*(.*)"
-+  string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)[-]*(.*)$"
-     version_matches "${version_string}")
-   if(CMAKE_MATCH_0)
-     set(full ${CMAKE_MATCH_0})
---- ParaView-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.cxx.orig	2018-04-06 22:03:33.000000000 +0200
-+++ ParaView-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.cxx	2018-05-11 12:02:26.894772713 +0200
+--- Catalyst-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.cxx.orig	2018-04-06 22:03:33.000000000 +0200
++++ Catalyst-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.cxx	2018-05-11 12:02:26.894772713 +0200
 @@ -38,6 +38,7 @@
  #include "vtkStringArray.h"
  
@@ -193,8 +170,8 @@
      this->Controller->Finalize(1);
      this->Controller->Delete();
    }
---- ParaView-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.h.orig	2018-04-06 22:03:33.000000000 +0200
-+++ ParaView-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.h	2018-05-11 12:02:26.894772713 +0200
+--- Catalyst-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.h.orig	2018-04-06 22:03:33.000000000 +0200
++++ Catalyst-v5.5.0/CoProcessing/Catalyst/vtkCPProcessor.h	2018-05-11 12:02:26.894772713 +0200
 @@ -76,14 +76,16 @@
    virtual void RemoveAllPipelines();
  
@@ -250,8 +227,8 @@
  };
  
  #endif
---- ParaView-v5.5.0/CoProcessing/Catalyst/vtkCPXMLPWriterPipeline.cxx.orig	2018-04-06 22:03:33.000000000 +0200
-+++ ParaView-v5.5.0/CoProcessing/Catalyst/vtkCPXMLPWriterPipeline.cxx	2018-05-11 12:02:26.894772713 +0200
+--- Catalyst-v5.5.0/CoProcessing/Catalyst/vtkCPXMLPWriterPipeline.cxx.orig	2018-04-06 22:03:33.000000000 +0200
++++ Catalyst-v5.5.0/CoProcessing/Catalyst/vtkCPXMLPWriterPipeline.cxx	2018-05-11 12:02:26.894772713 +0200
 @@ -31,6 +31,7 @@
  #include <vtkSmartPointer.h>
  #include <vtkUnstructuredGrid.h>
@@ -278,8 +255,8 @@
          std::ostringstream o;
          if (this->Path.empty() == false)
          {
---- ParaView-v5.5.0/Wrapping/Python/paraview/coprocessing.py.orig	2018-04-06 22:03:33.000000000 +0200
-+++ ParaView-v5.5.0/Wrapping/Python/paraview/coprocessing.py	2018-05-11 12:02:27.038772408 +0200
+--- Catalyst-v5.5.0/Wrapping/Python/paraview/coprocessing.py.orig	2018-04-06 22:03:33.000000000 +0200
++++ Catalyst-v5.5.0/Wrapping/Python/paraview/coprocessing.py	2018-05-11 12:02:27.038772408 +0200
 @@ -11,22 +11,12 @@
  from paraview.vtk.vtkPVVTKExtensionsCore import *
  import math
