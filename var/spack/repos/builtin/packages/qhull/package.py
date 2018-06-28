@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.build_systems.utils import generate_pkgconfig_file
 
 
 class Qhull(CMakePackage):
@@ -46,3 +47,9 @@ class Qhull(CMakePackage):
     patch('qhull-unused-intel-17.02.patch', when='@2015.2')
 
     depends_on('cmake@2.6:', type='build')
+
+    @run_after('install')
+    def post_install(self):
+        pkgconfig_dir = join_path(self.prefix.lib, 'pkgconfig')
+        mkdirp(pkgconfig_dir)
+        generate_pkgconfig_file(self.spec, pkgconfig_dir, fname='libqhull')
