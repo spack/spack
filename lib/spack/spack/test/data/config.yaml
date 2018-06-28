@@ -1,5 +1,7 @@
 config:
   install_tree: $spack/opt/spack
+  parent_install_trees: []
+  chain_prefixes: []
   template_dirs:
   - $spack/share/spack/templates
   - $spack/lib/spack/spack/test/data/templates

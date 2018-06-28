@@ -25,3 +25,5 @@ for parent_install_tree in parent_install_trees:
                               spack.config.get('config:install_path_scheme'),
                               spack.config.get('config:install_hash_length'))
     parent_stores.append(store)
+
+parent_stores.append(spack.store.store)

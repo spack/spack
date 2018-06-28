@@ -181,6 +181,7 @@ class Database(object):
 
         """
         self.root = root
+        self.parent_db = None
 
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
@@ -207,6 +208,16 @@ class Database(object):
 
         # whether there was an error at the start of a read transaction
         self._error = None
+
+    def set_parent(self):
+        self.parent_db = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.db == self:
+                break
+        if index > 0:
+            self.parent_db = spack.parents.parent_stores[index - 1].db
 
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
@@ -657,9 +668,10 @@ class Database(object):
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
             if not self.query_hash(dkey):
+                self.set_parent()
                 in_parent_db = False
-                for parent_store in spack.parents.parent_store:
-                    if parent_store.db.query_hash(dkey):
+                if not self.parent_db is None:
+                    if self.parent_db.query_hash(dkey):
                         in_parent_db = True
                 if not in_parent_db:
                     extra_args = {
@@ -739,19 +751,18 @@ class Database(object):
     def _get_matching_key_spec(self, key):
         if self.query_hash(key):
             return self._data[key].spec
+        elif not self.parent_db is None:
+            self.set_parent()
+            return self.parent_db._get_matching_key_spec(key)
         else:
-            spec = None
-            for parent_store in spack.parents.parents_stores:
-                if parent_store.db.query_hash(key):
-                    spec = parent_store.db._data[key].spec
-            return spec
+            return None
 
     @_autospec
     def get_record(self, spec, **kwargs):
+        self.set_parent()
         key = self._get_matching_spec_key(spec, **kwargs)
-        if key not in self._data:
-            for parent_store in spack.parents.parent_stores:
-                key = parent_store.db._get_matching_spec_key(spec, **kwargs)
+        if key not in self._data and not self.parent_db is None:
+            return self.parent_db.get_record(spec, **kwargs)
         return self._data[key]
 
     def _decrement_ref_count(self, spec):
@@ -911,11 +922,7 @@ class Database(object):
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        for parent_store in spack.parents.parent_stores:
-            if parent_store.db == self:
-                break
-            parent_store.db._read()
-        self._read()
+        self.set_parent()
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
             if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
@@ -923,26 +930,19 @@ class Database(object):
                 if hash_key in self._data:
                     return [self._data[hash_key].spec]
                 else:
-                    if include_parents:
-                        results = []
-                        for parent_store in spack.parents.parent_stores:
-                            if hash_key in parent_store.db._data:
-                                results.append(
-                                    parent_store.db._data[hash_key].spec)
-                        if len(results) > 0:
-                            return [results[-1]]
-                        else:
-                            return results
+                    if not self.parent_db is None and include_parents:
+                        return self.parent_db.query(query_spec, known,
+                                                    installed, explicit)
                     else:
                         return []
 
             # Abstract specs require more work -- currently we test
             # against everything.
-            results = []
-            if include_parents:
-                for parent_store in spack.parents.parent_stores:
-                    results = [parent_store.db.query(query_spec, known,
-                                                     installed, explicit)]
+            if not self.parent_db is None and include_parents:
+                results = self.parent_db.query(query_spec, known, installed,
+                                               explicit)
+            else:
+                results = []
             start_date = start_date or datetime.datetime.min
             end_date = end_date or datetime.datetime.max
 
@@ -966,7 +966,6 @@ class Database(object):
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     if results.count(rec.spec) == 0:
                         results.append(rec.spec)
-
             return sorted(results)
 
     def query_one(self, query_spec, known=any, installed=True):

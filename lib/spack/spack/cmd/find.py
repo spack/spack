@@ -28,6 +28,8 @@ import llnl.util.tty as tty
 import llnl.util.lang
 
 import spack.repo
+import spack.store
+import spack.database
 import spack.parents
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
@@ -140,7 +142,6 @@ def find(parser, args):
     dbs = []
     for parent_store in spack.parents.parent_stores:
         dbs.append(parent_store.db)
-    dbs.append(spack.store.db)
     for db in dbs:
         q_args['db'] = db
         q_args['include_parents'] = False
