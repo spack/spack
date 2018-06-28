@@ -38,9 +38,9 @@ class Wcslib(AutotoolsPackage):
     variant('x',       default=False, description='Use the X Window System')
 
     depends_on('gmake', type='build')
-    depends_on('flex',  type='build')
+    depends_on('flex@2.5.9:', type='build')
     depends_on('cfitsio', when='+cfitsio')
-    depends_on('libx11',  when='+x')
+    depends_on('libx11', when='+x')
 
     def configure_args(self):
         spec = self.spec
