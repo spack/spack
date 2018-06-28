@@ -59,8 +59,8 @@ class Arrow(CMakePackage):
             "-DARROW_WITH_LZ4=OFF",
         ]
         for dep in ('flatbuffers', 'rapidjson', 'snappy', 'zlib', 'zstd'):
-            args.append("-D{}_HOME={}".format(dep.upper(), spec[dep].prefix))
-        args.append("-DZLIB_LIBRARIES={}".format(spec['zlib'].libs))
+            args.append("-D{0}_HOME={1}".format(dep.upper(), spec[dep].prefix))
+        args.append("-DZLIB_LIBRARIES={0}".format(spec['zlib'].libs))
         with working_dir(self.build_directory, create=True):
             cmake(join_path(self.stage.source_path, 'cpp'), *args)
 
