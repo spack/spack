@@ -127,6 +127,11 @@ class Cmake(Package):
             args.append('--')
             args.append('-DCMAKE_USE_OPENSSL=ON')
 
+        if 'CFLAGS' in env and env['CFLAGS']:
+            env['CFLAGS'] += ' ' + '-D_GNU_SOURCE'
+        else:
+            env['CFLAGS'] = '-D_GNU_SOURCE'
+
         return args
 
     def bootstrap(self, spec, prefix):
