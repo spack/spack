@@ -927,7 +927,8 @@ class Database(object):
                         results = []
                         for parent_store in spack.parents.parent_stores:
                             if hash_key in parent_store.db._data:
-                                results.append(parent_store.db._data[hash_key].spec)
+                                results.append(
+                                    parent_store.db._data[hash_key].spec)
                         if len(results) > 0:
                             return [results[-1]]
                         else:
@@ -940,8 +941,8 @@ class Database(object):
             results = []
             if include_parents:
                 for parent_store in spack.parents.parent_stores:
-                    results=[parent_store.db.query(query_spec, known,
-                                                   installed, explicit)]
+                    results = [parent_store.db.query(query_spec, known,
+                                                     installed, explicit)]
             start_date = start_date or datetime.datetime.min
             end_date = end_date or datetime.datetime.max
 

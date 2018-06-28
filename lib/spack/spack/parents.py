@@ -22,6 +22,6 @@ for parent_install_tree in parent_install_trees:
     if parent_root == default_root:
         break
     store = spack.store.Store(parent_root,
-                 spack.config.get('config:install_path_scheme'),
-                 spack.config.get('config:install_hash_length'))
+                              spack.config.get('config:install_path_scheme'),
+                              spack.config.get('config:install_hash_length'))
     parent_stores.append(store)
