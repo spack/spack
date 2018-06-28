@@ -163,6 +163,9 @@ class Catalyst(CMakePackage):
                                  'python{0}'.format(python_version),
                                  'site-packages'))
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('ParaView_DIR', self.prefix)
+
     @property
     def root_cmakelists_dir(self):
         """The relative path to the directory containing CMakeLists.txt
