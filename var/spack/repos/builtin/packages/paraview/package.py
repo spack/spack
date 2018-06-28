@@ -105,34 +105,64 @@ class Paraview(CMakePackage):
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
 
+    @property
+    def paraview_subdir(self):
+        """The paraview subdirectory name as paraview-major.minor"""
+        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
         spack_env.set('PARAVIEW_VTK_DIR',
-                      join_path(lib_dir, 'cmake', paraview_version))
+                      join_path(lib_dir, 'cmake', paraview_subdir))
 
+    @when('@:5.4.1')
     def setup_environment(self, spack_env, run_env):
+        # paraview 5.4 and earlier
+        # - cmake under lib/cmake/paraview-5.4
+        # - libs  under lib/paraview-5.4
+        # - python bits under lib/paraview-5.4/site-packages
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
-        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
+
         run_env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', paraview_version))
+                    join_path(lib_dir, 'cmake', paraview_subdir))
+
+        # Everything else under lib/paraview-5.4
+        lib_dir = join_path(lib_dir, paraview_subdir)
+        run_env.prepend_path('LIBRARY_PATH', lib_dir)
+        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+
         if '+python' in self.spec:
+            pv_pydir = join_path(lib_dir, 'site-packages')
+            run_env.prepend_path('PYTHONPATH', pv_pydir)
+            run_env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'vtk'))
+
+    def setup_environment(self, spack_env, run_env):
+        # paraview 5.5 and later
+        # - cmake under lib/cmake/paraview-5.5
+        # - libs  under lib
+        # - python bits under lib/python2.8/site-packages
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+
+        run_env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', paraview_subdir))
+
+        run_env.prepend_path('LIBRARY_PATH', lib_dir)
+        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+
+        if '+python' in self.spec:
+            python_version = self.spec['python'].version.up_to(2)
             run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages'))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages', 'vtk'))
+                                 'python{0}'.format(python_version),
+                                 'site-packages'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
