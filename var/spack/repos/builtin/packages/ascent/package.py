@@ -126,11 +126,11 @@ class Ascent(Package):
     depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
     depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
-    depends_on("mfem+shared+mpi", when="+shared+mfem+mpi")
-    depends_on("mfem~shared+mpi", when="~shared+mfem+mpi")
+    depends_on("mfem+shared+mpi+conduit", when="+shared+mfem+mpi")
+    depends_on("mfem~shared+mpi+conduit", when="~shared+mfem+mpi")
 
-    depends_on("mfem+shared~mpi", when="+shared+mfem~mpi")
-    depends_on("mfem~shared~mpi", when="~shared+mfem~mpi")
+    depends_on("mfem+shared~mpi+conduit", when="+shared+mfem~mpi")
+    depends_on("mfem~shared~mpi+conduit", when="~shared+mfem~mpi")
 
     #depends_on("vtkh@develop~shared", when="+vtkh~shared")
 
