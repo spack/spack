@@ -879,9 +879,10 @@ use instead:
 
 .. code-block:: yaml
 
-      all:
+    all:
       providers:
         mpi:       [intel-parallel-studio+mpi, openmpi, mpich, ]
+        # Note: +mpi vs. +mkl
         blas:      [intel-parallel-studio+mkl, ]
         lapack:    [intel-parallel-studio+mkl, ]
         scalapack: [intel-parallel-studio+mkl, ]
