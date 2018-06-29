@@ -72,10 +72,10 @@ from multiprocessing import Process
 
 import pytest
 
+import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch, group_ids
 
 import spack.util.lock
-from spack.util.multiproc import Barrier
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
 
@@ -205,7 +205,7 @@ def lock_path(lock_dir):
 
 def local_multiproc_test(*functions):
     """Order some processes using simple barrier synchronization."""
-    b = Barrier(len(functions), timeout=barrier_timeout)
+    b = mp.Barrier(len(functions), timeout=barrier_timeout)
     procs = [Process(target=f, args=(b,)) for f in functions]
 
     for p in procs:

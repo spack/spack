@@ -79,14 +79,14 @@ import os
 import inspect
 import platform as py_platform
 
-from llnl.util.lang import memoized, list_modules, key_ordering
+import llnl.util.multiproc as mp
 import llnl.util.tty as tty
+from llnl.util.lang import memoized, list_modules, key_ordering
 
 import spack.paths
 import spack.error as serr
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
-from spack.util.multiproc import parmap
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -280,9 +280,9 @@ class OperatingSystem(object):
         # NOTE: we import spack.compilers here to avoid init order cycles
         import spack.compilers
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(lambda cmp_cls:
-                                self.find_compiler(cmp_cls, *filtered_path),
-                                types)
+        compiler_lists = mp.parmap(
+            lambda cmp_cls: self.find_compiler(cmp_cls, *filtered_path),
+            types)
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
@@ -300,7 +300,7 @@ class OperatingSystem(object):
            prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
            be grouped with g++-mp-4.7 and gfortran-mp-4.7.
         """
-        dicts = parmap(
+        dicts = mp.parmap(
             lambda t: cmp_cls._find_matches_in_path(*t),
             [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
              (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(path),
