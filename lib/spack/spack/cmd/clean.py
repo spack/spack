@@ -59,7 +59,7 @@ def setup_parser(subparser):
         '-p', '--python-cache', action='store_true',
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdm", nargs=0
+        '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
     )
     subparser.add_argument(
         'specs',
