@@ -74,3 +74,21 @@ def command_paths(*paths):
         extension = extension_name(path)
         if extension:
             yield os.path.join(path, extension, 'cmd')
+
+
+def path_for_extension(target_name, *paths):
+    """Return the test root dir for a given extension.
+
+    Args:
+        target_name (str): name of the extension to test
+        *paths: paths where the extensions reside
+
+    Returns:
+        Root directory where tests should reside or None
+    """
+    for path in paths:
+        name = extension_name(path)
+        if name == target_name:
+            return path
+    else:
+        raise IOError('extension "{0}" not found'.format(target_name))
