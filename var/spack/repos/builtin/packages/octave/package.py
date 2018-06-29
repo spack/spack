@@ -186,9 +186,9 @@ class Octave(AutotoolsPackage):
 
         if '+jdk' in spec:
             config_args.extend([
-                "--with-java-homedir=%s"    % spec['java'].prefix,
-                "--with-java-includedir=%s" % spec['java'].prefix.include,
-                "--with-java-libdir=%s"     % spec['java'].prefix.lib
+                "--with-java-homedir=%s"    % spec['java'].home,
+                "--with-java-includedir=%s" % spec['java'].home.include,
+                "--with-java-libdir=%s"     % spec['java'].libs.directories[0]
             ])
         else:
             config_args.append("--disable-java")
