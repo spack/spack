@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import itertools
 import os
 import re
 import sys
@@ -17,6 +18,7 @@ from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack.config
+import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
@@ -31,9 +33,6 @@ ignore_files = r'^\.|^__init__.py$|^#'
 
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
-
-#: Names of all commands
-all_commands = []
 
 
 def python_name(cmd_name):
@@ -60,11 +59,18 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         _all_commands = []
-        for file in os.listdir(spack.paths.command_path):
-            if file.endswith(".py") and not re.search(ignore_files, file):
-                cmd = re.sub(r'.py$', '', file)
-                _all_commands.append(cmd_name(cmd))
-        _all_commands.sort()
+        extensions = spack.config.get('config:extensions') or []
+        command_paths = itertools.chain(
+            [spack.paths.command_path],
+            spack.extensions.command_paths(*extensions)
+        )
+        for path in command_paths:
+            for file in os.listdir(path):
+                if file.endswith(".py") and not re.search(ignore_files, file):
+                    cmd = re.sub(r'.py$', '', file)
+                    _all_commands.append(cmd_name(cmd))
+            _all_commands.sort()
+
     return _all_commands
 
 
@@ -85,10 +91,24 @@ def get_module(cmd_name):
             (contains ``-``, not ``_``).
     """
     pname = python_name(cmd_name)
-    module_name = "%s.%s" % (__name__, pname)
-    module = __import__(module_name,
-                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
-                        level=0)
+
+    try:
+        # Try to import the command from the built-in directory
+        module_name = "%s.%s" % (__name__, pname)
+        module = __import__(module_name,
+                            fromlist=[pname, SETUP_PARSER, DESCRIPTION],
+                            level=0)
+        tty.debug('Imported {0} from built-in commands'.format(pname))
+    except ImportError:
+        # If built-in failed the import search the extension
+        # directories in order
+        extensions = spack.config.get('config:extensions') or []
+        for folder in extensions:
+            module = spack.extensions.load_command_extension(cmd_name, folder)
+            if module:
+                break
+        else:
+            raise
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")

@@ -2,7 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import itertools
+import os
 import textwrap
 
 import jinja2
@@ -72,8 +73,12 @@ def make_environment(dirs=None):
     """Returns an configured environment for template rendering."""
     if dirs is None:
         # Default directories where to search for templates
+        builtins = spack.config.get('config:template_dirs')
+        extension_dirs = spack.config.get('config:extensions') or []
+        extensions = [os.path.join(x, 'templates') for x in extension_dirs]
         dirs = [canonicalize_path(d)
-                for d in spack.config.get('config:template_dirs')]
+                for d in itertools.chain(builtins, extensions)]
+
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
     # Environment of the template engine
