@@ -38,18 +38,29 @@ class Arrow(CMakePackage):
     version('0.8.0', '56436f6f61ccc68686b7e0ea30bf4d09')
 
     depends_on('boost@1.60:')
-    depends_on('cmake@3.2.0:')
+    depends_on('cmake@3.2.0:', type='build')
     depends_on('flatbuffers@1.8.0 build_type=Release')  # only Release contains flatc
     depends_on('rapidjson')
-    depends_on('snappy')
-    depends_on('zlib')
-    depends_on('zstd')
+    depends_on('snappy~shared')
+    depends_on('zlib+pic')
+    depends_on('zstd+pic')
 
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'FastDebug', 'Release'))
 
-    def cmake(self, spec, prefix):
+    def patch(self):
+        """Prevent `-isystem /usr/include` from appearing, since this confuses gcc.
+        """
+        filter_file(r'(include_directories\()SYSTEM ',
+                    r'\1',
+                    'cpp/cmake_modules/ThirdpartyToolchain.cmake')
+
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'cpp')
+
+    def cmake_args(self):
         args = std_cmake_args + [
             "-DARROW_USE_SSE=ON",
             "-DARROW_BUILD_SHARED=ON",
@@ -59,14 +70,7 @@ class Arrow(CMakePackage):
             "-DARROW_WITH_LZ4=OFF",
         ]
         for dep in ('flatbuffers', 'rapidjson', 'snappy', 'zlib', 'zstd'):
-            args.append("-D{0}_HOME={1}".format(dep.upper(), spec[dep].prefix))
-        args.append("-DZLIB_LIBRARIES={0}".format(spec['zlib'].libs))
-        with working_dir(self.build_directory, create=True):
-            cmake(join_path(self.stage.source_path, 'cpp'), *args)
-
-    def patch(self):
-        """Prevent `-isystem /usr/include` from appearing, since this confuses gcc.
-        """
-        filter_file(r'(include_directories\()SYSTEM ',
-                    r'\1',
-                    'cpp/cmake_modules/ThirdpartyToolchain.cmake')
+            args.append("-D{0}_HOME={1}".format(dep.upper(),
+                                                self.spec[dep].prefix))
+        args.append("-DZLIB_LIBRARIES={0}".format(self.spec['zlib'].libs))
+        return args

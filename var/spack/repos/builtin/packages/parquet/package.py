@@ -38,7 +38,7 @@ class Parquet(CMakePackage):
     depends_on('boost')
     depends_on('cmake@3.2.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('thrift')
+    depends_on('thrift+pic')
 
     variant('build_type', default='Release',
             description='CMake build type',

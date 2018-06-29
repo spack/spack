@@ -48,10 +48,11 @@ class Snappy(CMakePackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
-        if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
-            spack_env.append_flags('CXXFLAGS', self.compiler.pic_flag)
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
+            flags.append(self.compiler.pic_flag)
+        return (None, None, flags)
 
     @run_after('install')
     def install_pkgconfig(self):
