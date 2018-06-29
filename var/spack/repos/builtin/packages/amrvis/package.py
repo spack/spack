@@ -22,6 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Amrvis(MakefilePackage):
@@ -171,37 +172,17 @@ class Amrvis(MakefilePackage):
             file.writelines(contents)
 
     def setup_environment(self, build_env, run_env):
-        if '+mpi' in self.spec:
-            # Set MPI location
-            build_env.set('MPI_HOME', self.spec['mpi'].prefix)
-
-    def install(self, spec, prefix):
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
+            build_env.set('MPI_HOME', self.spec['mpi'].prefix)
             env['CC'] = spec['mpi'].mpicc
             env['CXX'] = spec['mpi'].mpicxx
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
 
-        # Set exe name options
-        dim = spec.variants['dims'].value
-        comp = self.compiler.name
-        if spec.satisfies('%gcc'):
-            comp = 'gnu'
-        if spec.satisfies('%clang'):
-            comp = 'llvm'
-        if '+mpi' in self.spec:
-            mpi = '.MPI'
-        else:
-            mpi = ''
-        if '+debug' in self.spec:
-            debug = '.DEBUG'
-        else:
-            debug = ''
-
-        # Construct exe name
-        exe = 'amrvis%sd.%s%s%s.ex' % (dim, comp, debug, mpi)
-
+    def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        install(exe, prefix.bin)
+        exes = glob.iglob('armvis*.ex')
+        for exe in exes:
+            install(exe, prefix.bin)
