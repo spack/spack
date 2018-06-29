@@ -183,6 +183,6 @@ class Amrvis(MakefilePackage):
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        exes = glob.glob('*.ex')
+        exes = glob.iglob('*.ex')
         for exe in exes:
             install(exe, prefix.bin)
