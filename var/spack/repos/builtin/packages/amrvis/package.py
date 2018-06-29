@@ -137,7 +137,7 @@ class Amrvis(MakefilePackage):
             'USE_PROFPARSER = FALSE'
         )
 
-        # Making a big assumption here by deleting all /usr and /opt X
+        # A bit risky here deleting all /usr and /opt X
         # library default search paths in makefile
         makefile.filter(
             r'^.*\b(usr|opt)\b.*$',
@@ -148,10 +148,11 @@ class Amrvis(MakefilePackage):
         with open('GNUmakefile', 'r') as file:
             contents = file.readlines()
 
-        # Edit GNUmakefile INCLUDES and LIBRARIES to use Spack dependencies.
-        # Assuming the default GNUmakefile doesn't change, this is the best
-        # place for LIBRARY_LOCATIONS and INCLUDE_LOCATIONS.
-        line_offset = 64
+        # Edit GNUmakefile includes and libraries to point to Spack
+        # dependencies.
+        # The safest bet is to put the LIBRARY_LOCATIONS and
+        # INCLUDE_LOCATIONS at the beginning of the makefile.
+        line_offset = 0
         count = 0
         for lib in ['libsm', 'libice', 'libxpm', 'libx11',
                     'libxt', 'libxext', 'motif']:
