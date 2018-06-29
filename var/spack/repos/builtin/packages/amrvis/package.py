@@ -171,18 +171,18 @@ class Amrvis(MakefilePackage):
         with open('GNUmakefile', 'w') as file:
             file.writelines(contents)
 
-    def setup_environment(self, build_env, run_env):
+    def setup_environment(self, spack_env, run_env):
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
-            build_env.set('MPI_HOME', self.spec['mpi'].prefix)
-            env['CC'] = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
-            env['F77'] = spec['mpi'].mpif77
-            env['FC'] = spec['mpi'].mpifc
+            spack_env.set('MPI_HOME', self.spec['mpi'].prefix)
+            spack_env.set('CC', spec['mpi'].mpicc)
+            spack_env.set('CXX', spec['mpi'].mpicxx)
+            spack_env.set('F77', spec['mpi'].mpif77)
+            spack_env.set('FC', spec['mpi'].mpifc)
 
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        exes = glob.iglob('armvis*.ex')
+        exes = glob.glob('*.ex')
         for exe in exes:
             install(exe, prefix.bin)
