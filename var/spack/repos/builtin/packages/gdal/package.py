@@ -83,6 +83,7 @@ class Gdal(AutotoolsPackage):
     variant('perl',      default=False, description='Enable perl bindings')
     variant('python',    default=False, description='Enable python bindings')
     variant('java',      default=False, description='Include Java support')
+    variant('mdb',       default=False, description='Include MDB driver')
     variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
@@ -117,7 +118,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf', when='+netcdf')
-    depends_on('jasper@1.900.1', patches=patch('uuid.patch'), when='+jasper')
+    depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
     depends_on('expat', when='+expat')
@@ -136,7 +137,8 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java', type=('build', 'run'), when='+java')
+    depends_on('java', type=('build', 'link', 'run'), when='+java')
+    depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
@@ -148,6 +150,8 @@ class Gdal(AutotoolsPackage):
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
+
+    conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     def setup_environment(self, spack_env, run_env):
         # Needed to install Python bindings to GDAL installation
@@ -355,10 +359,23 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-python=no')
 
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
         if '+java' in spec:
-            args.append('--with-java={0}'.format(spec['java'].prefix))
+            args.extend([
+                '--with-java={0}'.format(spec['java'].home),
+                '--with-jvm-lib={0}'.format(
+                    spec['java'].libs.directories[0]),
+                '--with-jvm-lib-add-rpath'
+            ])
         else:
             args.append('--with-java=no')
+
+        # https://trac.osgeo.org/gdal/wiki/mdbtools
+        # http://www.gdal.org/drv_mdb.html
+        if '+mdb' in spec:
+            args.append('--with-mdb=yes')
+        else:
+            args.append('--with-mdb=no')
 
         if '+armadillo' in spec:
             args.append('--with-armadillo={0}'.format(
@@ -410,8 +427,6 @@ class Gdal(AutotoolsPackage):
             '--with-pam=no',
             '--with-podofo=no',
             '--with-php=no',
-            # https://trac.osgeo.org/gdal/wiki/mdbtools
-            '--with-mdb=no',
             '--with-rasdaman=no',
         ])
 
