@@ -46,7 +46,7 @@ class Xhmm(MakefilePackage):
     def build(self, spec, prefix):
         if '^openblas' in spec:
             lapacklib = 'openblas'
-        #TODO: Add more BLAS libs
+        # TODO: Add more BLAS libs
         make('LAPACK_LIBS=%s' % lapacklib)
 
     def install(self, spec, prefix):
