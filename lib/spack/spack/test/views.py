@@ -22,31 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 
-import pytest
-
-
-# Hooks to add command line options or set other custom behaviors.
-# They must be placed here to be found by pytest. See:
-#
-# https://docs.pytest.org/en/latest/writing_plugins.html
-#
-def pytest_addoption(parser):
-    group = parser.getgroup("Spack specific command line options")
-    group.addoption(
-        '--fast', action='store_true', default=False,
-        help='runs only "fast" unit tests, instead of the whole suite')
+from spack.spec import Spec
 
 
-def pytest_collection_modifyitems(config, items):
-    if not config.getoption('--fast'):
-        # --fast not given, run all the tests
-        return
+def test_global_activation(install_mockery, mock_fetch):
+    """This test ensures that views which are maintained inside of an extendee
+       package's prefix are maintained as expected and are compatible with
+       global activations prior to #7152.
+    """
+    spec = Spec('extension1').concretized()
+    pkg = spec.package
+    pkg.do_install()
+    pkg.do_activate()
 
-    slow_tests = ['db', 'network', 'maybeslow']
-    skip_as_slow = pytest.mark.skip(
-        reason='skipped slow test [--fast command line option given]'
-    )
-    for item in items:
-        if any(x in item.keywords for x in slow_tests):
-            item.add_marker(skip_as_slow)
+    extendee_spec = spec['extendee']
+    extendee_pkg = spec['extendee'].package
+    view = extendee_pkg.view()
+    assert pkg.is_activated(view)
+
+    expected_path = os.path.join(
+        extendee_spec.prefix, '.spack', 'extensions.yaml')
+    assert (view.extensions_layout.extension_file_path(extendee_spec) ==
+            expected_path)

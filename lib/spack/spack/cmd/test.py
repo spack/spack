@@ -97,7 +97,7 @@ def test(parser, args, unknown_args):
         return
 
     # pytest.ini lives in the root of the spack repository.
-    with working_dir(spack.paths.prefix):
+    with working_dir(spack.paths.test_path):
         # --list and --long-list print the test output better.
         if args.list or args.long_list:
             do_list(args, unknown_args)

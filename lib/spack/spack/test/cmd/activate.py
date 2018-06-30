@@ -22,18 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-from spack.filesystem_view import YamlFilesystemView
+from spack.main import SpackCommand
+
+activate = SpackCommand('activate')
+deactivate = SpackCommand('deactivate')
+install = SpackCommand('install')
+extensions = SpackCommand('extensions')
 
 
-def pre_uninstall(spec):
-    pkg = spec.package
-    assert spec.concrete
+def test_activate(
+        mock_packages, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extension1')
+    activate('extension1')
+    output = extensions('--show', 'activated', 'extendee')
+    assert 'extension1' in output
 
-    if pkg.is_extension:
-        target = pkg.extendee_spec.prefix
-        view = YamlFilesystemView(target, spack.store.layout)
 
-        if pkg.is_activated(view):
-            # deactivate globally
-            pkg.do_deactivate(force=True)
+def test_deactivate(
+        mock_packages, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extension1')
+    activate('extension1')
+    deactivate('extension1')
+    output = extensions('--show', 'activated', 'extendee')
+    assert 'extension1' not in output
+
+
+def test_deactivate_all(
+        mock_packages, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extension1')
+    install('extension2')
+    activate('extension1')
+    activate('extension2')
+    deactivate('--all', 'extendee')
+    output = extensions('--show', 'activated', 'extendee')
+    assert 'extension1' not in output

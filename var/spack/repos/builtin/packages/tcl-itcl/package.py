@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,18 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-from spack.filesystem_view import YamlFilesystemView
+from spack import *
 
 
-def pre_uninstall(spec):
-    pkg = spec.package
-    assert spec.concrete
+class TclItcl(AutotoolsPackage):
+    """[incr Tcl] is the most widely used O-O system for Tcl. The name is a
+    play on C++, and [incr Tcl] provides a similar object model, including
+    multiple inheritence and public and private classes and variables."""
 
-    if pkg.is_extension:
-        target = pkg.extendee_spec.prefix
-        view = YamlFilesystemView(target, spack.store.layout)
+    homepage = "https://sourceforge.net/projects/incrtcl/"
+    url      = "https://sourceforge.net/projects/incrtcl/files/%5Bincr%20Tcl_Tk%5D-4-source/itcl%204.0.4/itcl4.0.4.tar.gz"
 
-        if pkg.is_activated(view):
-            # deactivate globally
-            pkg.do_deactivate(force=True)
+    version('4.0.4', 'c9c52afdd9435490e2db17c3c6c95ab4')
+
+    extends('tcl')
+
+    def configure_args(self):
+        args = [
+            '--enable-shared',
+            '--enable-threads',
+            '--with-tcl=' + self.spec['tcl'].tcl_lib_dir,
+        ]
+        return args
