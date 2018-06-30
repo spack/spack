@@ -31,6 +31,9 @@ class Log4cplus(CMakePackage):
     granular control over log management and configuration."""
 
     homepage = "https://sourceforge.net/projects/log4cplus/"
-    url      = "https://nchc.dl.sourceforge.net/project/log4cplus/log4cplus-stable/1.2.0/log4cplus-1.2.0.tar.gz"
+    url      = "https://download.sourceforge.net/project/log4cplus/log4cplus-stable/1.0.3/log4cplus-1.0.3.tar.bz2"
 
+    version('2.0.1', 'ec01c03241ebd31127a44d1880830d8f')
+    version('1.2.0', '7f98418ab25273a5b44cb377b54cbbfb')
     version('1.2.0', 'e250f0f431c0723f8b625323e7b6465d')
+    version('1.0.4.3', 'deb06620c5932b45adc5e9782c1c9c9e')
