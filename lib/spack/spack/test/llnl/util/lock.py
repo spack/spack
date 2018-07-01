@@ -62,13 +62,14 @@ actually on a shared filesystem.
 
 """
 import os
+import socket
 import shutil
 import tempfile
 import traceback
 import glob
 import getpass
 from contextlib import contextmanager
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 import pytest
 
@@ -201,17 +202,21 @@ def lock_path(lock_dir):
         os.unlink(lock_file)
 
 
-def local_multiproc_test(*functions):
+def local_multiproc_test(*functions, **kwargs):
     """Order some processes using simple barrier synchronization."""
     b = mp.Barrier(len(functions), timeout=barrier_timeout)
-    procs = [Process(target=f, args=(b,)) for f in functions]
+
+    args = (b,) + tuple(kwargs.get('extra_args', ()))
+    procs = [Process(target=f, args=args, name=f.__name__)
+             for f in functions]
 
     for p in procs:
         p.start()
 
     for p in procs:
         p.join()
-        assert p.exitcode == 0
+
+    assert all(p.exitcode == 0 for p in procs)
 
 
 def mpi_multiproc_test(*functions):
@@ -907,3 +912,74 @@ def test_transaction_with_context_manager_and_exception(lock_path):
     assert vals['exception']
     assert not vals['exited_fn']
     assert not vals['exception_fn']
+
+
+def test_lock_debug_output(lock_path):
+    host = socket.getfqdn()
+
+    def p1(barrier, q1, q2):
+        # exchange pids
+        p1_pid = os.getpid()
+        q1.put(p1_pid)
+        p2_pid = q2.get()
+
+        # set up lock
+        lock = lk.Lock(lock_path, debug=True)
+
+        with lk.WriteTransaction(lock):
+            # p1 takes write lock and writes pid/host to file
+            barrier.wait()  # ------------------------------------ 1
+
+        assert lock.pid == p1_pid
+        assert lock.host == host
+
+        # wait for p2 to verify contents of file
+        barrier.wait()  # ---------------------------------------- 2
+
+        # wait for p2 to take a write lock
+        barrier.wait()  # ---------------------------------------- 3
+
+        # verify pid/host info again
+        with lk.ReadTransaction(lock):
+            assert lock.old_pid == p1_pid
+            assert lock.old_host == host
+
+            assert lock.pid == p2_pid
+            assert lock.host == host
+
+        barrier.wait()  # ---------------------------------------- 4
+
+    def p2(barrier, q1, q2):
+        # exchange pids
+        p2_pid = os.getpid()
+        p1_pid = q1.get()
+        q2.put(p2_pid)
+
+        # set up lock
+        lock = lk.Lock(lock_path, debug=True)
+
+        # p1 takes write lock and writes pid/host to file
+        barrier.wait()  # ---------------------------------------- 1
+
+        # verify that p1 wrote information to lock file
+        with lk.ReadTransaction(lock):
+            assert lock.pid == p1_pid
+            assert lock.host == host
+
+        barrier.wait()  # ---------------------------------------- 2
+
+        # take a write lock on the file and verify pid/host info
+        with lk.WriteTransaction(lock):
+            assert lock.old_pid == p1_pid
+            assert lock.old_host == host
+
+            assert lock.pid == p2_pid
+            assert lock.host == host
+
+            barrier.wait()  # ------------------------------------ 3
+
+        # wait for p1 to verify pid/host info
+        barrier.wait()  # ---------------------------------------- 4
+
+    q1, q2 = Queue(), Queue()
+    local_multiproc_test(p2, p1, extra_args=(q1, q2))

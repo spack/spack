@@ -51,7 +51,7 @@ class Lock(object):
     is enabled) and recent NFS versions.
     """
 
-    def __init__(self, path, start=0, length=0):
+    def __init__(self, path, start=0, length=0, debug=False):
         """Construct a new lock on the file at ``path``.
 
         By default, the lock applies to the whole file.  Optionally,
@@ -72,7 +72,10 @@ class Lock(object):
         self._start = start
         self._length = length
 
-        # PID and host of lock holder
+        # enable debug mode
+        self.debug = debug
+
+        # PID and host of lock holder (only used in debug mode)
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
@@ -118,12 +121,14 @@ class Lock(object):
                 fcntl.lockf(self._file, op | fcntl.LOCK_NB,
                             self._length, self._start, os.SEEK_SET)
 
-                # All locks read the owner PID and host
-                self._read_lock_data()
+                # help for debugging distributed locking
+                if self.debug:
+                    # All locks read the owner PID and host
+                    self._read_debug_data()
 
-                # Exclusive locks write their PID/host
-                if op == fcntl.LOCK_EX:
-                    self._write_lock_data()
+                    # Exclusive locks write their PID/host
+                    if op == fcntl.LOCK_EX:
+                        self._write_debug_data()
 
                 return
 
@@ -148,15 +153,19 @@ class Lock(object):
                     e.errno == errno.EISDIR):
                 raise
 
-    def _read_lock_data(self):
+    def _read_debug_data(self):
         """Read PID and host data out of the file if it is there."""
+        self.old_pid = self.pid
+        self.old_host = self.host
+
         line = self._file.read()
         if line:
             pid, host = line.strip().split(',')
             _, _, self.pid = pid.rpartition('=')
             _, _, self.host = host.rpartition('=')
+            self.pid = int(self.pid)
 
-    def _write_lock_data(self):
+    def _write_debug_data(self):
         """Write PID and host data to the file, recording old values."""
         self.old_pid = self.pid
         self.old_host = self.host
