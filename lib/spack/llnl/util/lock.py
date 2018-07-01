@@ -32,7 +32,8 @@ import llnl.util.tty as tty
 
 
 __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
-           'LockError']
+           'LockError', 'LockTimeoutError',
+           'LockPermissionError', 'LockROFileError', 'CantCreateLockError']
 
 
 # Default timeout in seconds, after which locks will raise exceptions.
@@ -80,7 +81,7 @@ class Lock(object):
         self.host = self.old_host = None
 
     def _lock(self, op, timeout=_default_timeout):
-        """This takes a lock using POSIX locks (``fnctl.lockf``).
+        """This takes a lock using POSIX locks (``fcntl.lockf``).
 
         The lock is implemented as a spin lock using a nonblocking call
         to ``lockf()``.
@@ -91,32 +92,36 @@ class Lock(object):
 
         If the lock times out, it raises a ``LockError``.
         """
+        assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
+
         start_time = time.time()
         while (time.time() - start_time) < timeout:
+            # Create file and parent directories if they don't exist.
+            if self._file is None:
+                parent = self._ensure_parent_directory()
+
+                # Open writable files as 'r+' so we can upgrade to write later
+                os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
+                if os.path.exists(self.path):
+                    if not os.access(self.path, os.W_OK):
+                        if op == fcntl.LOCK_SH:
+                            # can still lock read-only files if we open 'r'
+                            os_mode, fd_mode = os.O_RDONLY, 'r'
+                        else:
+                            raise LockROFileError(self.path)
+
+                elif not os.access(parent, os.W_OK):
+                    raise CantCreateLockError(self.path)
+
+                fd = os.open(self.path, os_mode)
+                self._file = os.fdopen(fd, fd_mode)
+
+            elif op == fcntl.LOCK_EX and self._file.mode == 'r':
+                # Attempt to upgrade to write lock w/a read-only file.
+                # If the file were writable, we'd have opened it 'r+'
+                raise LockROFileError(self.path)
+
             try:
-                # If we could write the file, we'd have opened it 'r+'.
-                # Raise an error when we attempt to upgrade to a write lock.
-                if op == fcntl.LOCK_EX:
-                    if self._file and self._file.mode == 'r':
-                        raise LockError(
-                            "Can't take exclusive lock on read-only file: %s"
-                            % self.path)
-
-                # Create file and parent directories if they don't exist.
-                if self._file is None:
-                    self._ensure_parent_directory()
-
-                    # Prefer to open 'r+' to allow upgrading to write
-                    # lock later if possible.  Open read-only if we can't
-                    # write the lock file at all.
-                    os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
-                    if os.path.exists(self.path) and not os.access(
-                            self.path, os.W_OK):
-                        os_mode, fd_mode = os.O_RDONLY, 'r'
-
-                    fd = os.open(self.path, os_mode)
-                    self._file = os.fdopen(fd, fd_mode)
-
                 # Try to get the lock (will raise if not available.)
                 fcntl.lockf(self._file, op | fcntl.LOCK_NB,
                             self._length, self._start, os.SEEK_SET)
@@ -138,20 +143,21 @@ class Lock(object):
                     pass
                 else:
                     raise
+
             time.sleep(_sleep_time)
 
-        raise LockError("Timed out waiting for lock.")
+        raise LockTimeoutError("Timed out waiting for lock.")
 
     def _ensure_parent_directory(self):
         parent = os.path.dirname(self.path)
         try:
             os.makedirs(parent)
-            return True
         except OSError as e:
             # makedirs can fail when diretory already exists.
             if not (e.errno == errno.EEXIST and os.path.isdir(parent) or
                     e.errno == errno.EISDIR):
                 raise
+        return parent
 
     def _read_debug_data(self):
         """Read PID and host data out of the file if it is there."""
@@ -340,7 +346,7 @@ class LockTransaction(object):
 
 
 class ReadTransaction(LockTransaction):
-
+    """LockTransaction context manager that does a read and releases it."""
     def _enter(self):
         return self._lock.acquire_read(self._timeout)
 
@@ -349,7 +355,7 @@ class ReadTransaction(LockTransaction):
 
 
 class WriteTransaction(LockTransaction):
-
+    """LockTransaction context manager that does a write and releases it."""
     def _enter(self):
         return self._lock.acquire_write(self._timeout)
 
@@ -358,4 +364,27 @@ class WriteTransaction(LockTransaction):
 
 
 class LockError(Exception):
+    """Raised for any errors related to locks."""
+
+
+class LockTimeoutError(LockError):
     """Raised when an attempt to acquire a lock times out."""
+
+
+class LockPermissionError(LockError):
+    """Raised when there are permission issues with a lock."""
+
+
+class LockROFileError(LockPermissionError):
+    """Tried to take an exclusive lock on a read-only file."""
+    def __init__(self, path):
+        msg = "Can't take write lock on read-only file: %s" % path
+        super(LockROFileError, self).__init__(msg)
+
+
+class CantCreateLockError(LockPermissionError):
+    """Attempt to create a lock in an unwritable location."""
+    def __init__(self, path):
+        msg = "cannot create lock '%s': " % path
+        msg += "file does not exist and location is not writable"
+        super(LockError, self).__init__(msg)
