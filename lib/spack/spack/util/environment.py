@@ -376,7 +376,7 @@ class EnvironmentModifications(object):
         """Stores a request to unset an environment variable.
 
         Args:
-            name: name of the environment variable to be set
+            name: name of the environment variable to be unset
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
