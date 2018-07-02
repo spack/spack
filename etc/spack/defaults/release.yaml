@@ -1,0 +1,74 @@
+# -------------------------------------------------------------------------
+# This is the default spack release package list file.
+# -------------------------------------------------------------------------
+spec-set:
+    include: []
+    exclude: []
+    matrix:
+        - packages:
+            binutils:
+                versions: [2.24, 2.26, 2.27]
+            bzip2:
+                versions: [1.0.6]
+            expat:
+                versions: [2.2.5]
+            freetype:
+                versions: [2.7.1]
+            gdbm:
+                versions: [1.14.1]
+            glew:
+                versions: [2.0.0]
+            hdf5:
+                versions: [1.10.2]
+            hwloc:
+                versions: [2.0.1]
+            jsoncpp:
+                versions: [1.7.3]
+            libbsd:
+                versions: [0.8.6]
+            libharu:
+                versions: [2.3.0]
+            libjpeg:
+                versions: ["9c"]
+            libpciaccess:
+                versions: [0.13.5]
+            libpng:
+                versions: [1.6.34]
+            libtiff:
+                versions: [4.0.9]
+            libxml2:
+                versions: [2.9.8]
+            lz4:
+                versions: [1.8.1.2]
+            ncurses:
+                versions: [6.1]
+            netcdf:
+                versions: [4.6.1]
+            numactl:
+                versions: [2.0.11]
+            openmpi:
+                versions: [3.1.0]
+            openssl:
+                versions: ["1.1.0g"]
+            python:
+                versions: [2.7.14, 3.6.5]
+            readline:
+                versions: [7.0]
+            sqlite:
+                versions: [3.23.1]
+            tk:
+                versions: [8.6.5, 8.6.3]
+            transset:
+                versions: [1.0.1]
+            vtk:
+                versions: [8.0.1]
+            xz:
+                versions: [5.2.4]
+            zlib:
+                versions: [1.2.11]
+        - compilers:
+            gcc:
+                versions: [5.4, 4.9]
+            clang:
+                versions: [3.5, 3.6]
+    cdash: ["https://spack.io/cdash/submit.php?project=spack"]
