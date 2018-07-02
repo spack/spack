@@ -98,6 +98,8 @@ def clean(parser, args):
     if args.python_cache:
         tty.msg('Removing python cache files')
         for root, dirs, files in os.walk(spack_root):
+            if root.startswith(os.path.join(spack_root, 'opt')):
+                continue
             for f in files:
                 if f.endswith('.pyc') or f.endswith('.pyo'):
                     fname = os.path.join(root, f)
