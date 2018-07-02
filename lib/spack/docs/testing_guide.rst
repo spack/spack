@@ -141,7 +141,7 @@ Here's an example file:
    #
    # This YAML file describes a Spack test suite
    #
-   test-suite:
+   spec-set:
        #
        # Optional include/exclude spec lists and upload information.
        #
@@ -231,7 +231,7 @@ test suite was run.  For example, consider this ``test.yaml`` file:
 
 .. code-block:: yaml
 
-   test-suite:
+   spec-set:
      packages:
        libelf:
          versions: [0.8.12]

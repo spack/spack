@@ -1,5 +1,5 @@
 ---
-test-suite:
+spec-set:
     include: [ ape, atompaw, transset]
     exclude: [binutils,tk]
     packages:
