@@ -31,18 +31,13 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'setenv LDFLAGS -L/path/to/lib',
                      'prepend-path PATH /path/to/bin']
 
-
 @pytest.fixture
-def save_env():
-    old_path = os.environ.get('PATH', None)
-    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
+def save_module_func():
+    old_func = spack.util.module_cmd.module
 
     yield
 
-    if old_path:
-        os.environ['PATH'] = old_path
-    if old_bash_func:
-        os.environ['BASH_FUNC_module()'] = old_bash_func
+    spack.util.module_cmd.module = old_func
 
 
 @pytest.fixture
@@ -71,18 +66,14 @@ def test_get_path_from_module(tmp_module):
         assert path == '/path/to'
 
 
-@pytest.mark.skipif(MODULE_DEFINED, reason='Only works if module() undefined')
-def test_get_path_from_module_faked(save_env):
+def test_get_path_from_module_faked(save_module_func):
     for line in test_module_lines:
-        module_func = '() { eval `echo ' + line + ' bash filler`\n}'
-        os.environ['BASH_FUNC_module()'] = module_func
+        def fake_module(*args):
+            return line
+        spack.util.module_cmd.module = fake_module
+
         path = get_path_from_module('mod')
         assert path == '/path/to'
-
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
-    path = get_path_from_module('mod')
-
-    assert path is None
 
 
 def test_get_path_from_module_contents():
