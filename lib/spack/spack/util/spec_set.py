@@ -60,11 +60,11 @@ class CombinatorialSpecSet:
             # otherwise try to load it.
             self.data = syaml.load(yaml_like)
 
-        # validate against the test suite schema
-        schema.validate(self.data, schema.test_suite.schema)
+        # validate against the spec set schema
+        schema.validate(self.data, schema.spec_set.schema)
 
-        # chop off the initial test-suite label after valiation.
-        self.data = self.data['test-suite']
+        # chop off the initial spec-set label after valiation.
+        self.data = self.data['spec-set']
 
         # initialize these from data.
         self.cdash = self.data.get('cdash', None)

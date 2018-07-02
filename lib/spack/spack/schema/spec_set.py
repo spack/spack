@@ -22,9 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for Spack test-suite configuration file.
+"""Schema for Spack spec-set configuration file.
 
-.. literalinclude:: ../spack/schema/test_suite.py
+.. literalinclude:: ../spack/schema/spec_set.py
    :lines: 32-
 """
 
@@ -91,7 +91,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'properties': {
-        'test-suite': {
+        'spec-set': {
             'type': 'object',
             'additionalProperties': False,
             'required': ['matrix'],

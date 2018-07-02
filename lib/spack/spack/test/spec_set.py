@@ -33,7 +33,7 @@ pytestmark = pytest.mark.usefixtures('config')
 
 
 basic_yaml_file = {
-    'test-suite': {
+    'spec-set': {
         'include': ['gmake'],
         'matrix': [
             {'packages': {
@@ -61,7 +61,7 @@ def test_spec_set_basic():
 
 def test_spec_set_no_include():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'matrix': [
                 {'packages': {
                     'gmake': {
@@ -85,7 +85,7 @@ def test_spec_set_no_include():
 
 def test_spec_set_exclude():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'include': ['gmake'],
             'exclude': ['gmake'],
             'matrix': [
@@ -111,7 +111,7 @@ def test_spec_set_exclude():
 
 def test_spec_set_include_limited_packages():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'include': ['gmake'],
             'matrix': [
                 {'packages': {
@@ -142,7 +142,7 @@ def test_spec_set_include_limited_packages():
 
 def test_spec_set_simple_spec_list():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'matrix': [
                 {'specs': [
                     'gmake@4.0',
@@ -159,7 +159,7 @@ def test_spec_set_simple_spec_list():
 
 def test_spec_set_with_specs():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'include': ['gmake', 'appres'],
             'matrix': [
                 {'specs': [
@@ -184,7 +184,7 @@ def test_spec_set_with_specs():
 
 def test_spec_set_compilers_bad_property():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'foobar': ['gmake'],
             'matrix': [
                 {'packages': {
@@ -203,7 +203,7 @@ def test_spec_set_compilers_bad_property():
 
 def test_spec_set_packages_no_matrix():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'include': ['gmake'],
             'packages': {
                 'gmake': {
@@ -224,7 +224,7 @@ def test_spec_set_packages_no_matrix():
 
 def test_spec_set_get_cdash_string():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'cdash': 'http://example.com/cdash',
             'project': 'testproj',
             'matrix': [
@@ -246,7 +246,7 @@ def test_spec_set_get_cdash_string():
 
 def test_spec_set_get_cdash_array():
     yaml_file = {
-        'test-suite': {
+        'spec-set': {
             'cdash': ['http://example.com/cdash', 'http://example.com/cdash2'],
             'project': 'testproj',
             'matrix': [
