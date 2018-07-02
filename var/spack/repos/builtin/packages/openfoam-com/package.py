@@ -281,6 +281,7 @@ class OpenfoamCom(Package):
     list_url = "https://sourceforge.net/projects/openfoamplus/files/"
     list_depth = 2
 
+    version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
