@@ -196,7 +196,15 @@ class Mfem(Package):
     #            when='+petsc')
     depends_on('mpfr', when='+mpfr')
     depends_on('netcdf', when='+netcdf')
-    depends_on('libunwind', when='+libunwind')
+
+    # What I really want to say here is that MFEM should depend on
+    # libunwind when '+libunwind' and the compiler isn't clang; LLVM
+    # includes its own libunwind, and the non-LLVM libunwind
+    # won't build on my Mac with clang@8.1.0-apple or clang@6.0.0
+    depends_on('libunwind', when='+libunwind %gcc')
+    depends_on('libunwind', when='+libunwind %pgi')
+    depends_on('libunwind', when='+libunwind %intel')
+
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:', when='+conduit')
@@ -375,15 +383,16 @@ class Mfem(Package):
                 ld_flags_from_dirs([spec['gnutls'].prefix.lib], ['gnutls'])]
 
         if '+libunwind' in spec:
-            libunwind = spec['libunwind']
-            headers = find_headers('libunwind', libunwind.prefix.include)
-            headers.add_macro('-g')
-            libs = find_optional_library('libunwind', libunwind.prefix)
-            # When mfem uses libunwind, it also needs 'libdl'.
-            libs += LibraryList(find_system_libraries('libdl'))
-            options += [
-                'LIBUNWIND_OPT=%s' % headers.cpp_flags,
-                'LIBUNWIND_LIB=%s' % ld_flags_from_LibraryList(libs)]
+            if '%clang' not in spec:
+                libunwind = spec['libunwind']
+                headers = find_headers('libunwind', libunwind.prefix.include)
+                headers.add_macro('-g')
+                libs = find_optional_library('libunwind', libunwind.prefix)
+                # When mfem uses libunwind, it also needs 'libdl'.
+                libs += LibraryList(find_system_libraries('libdl'))
+                options += [
+                    'LIBUNWIND_OPT=%s' % headers.cpp_flags,
+                    'LIBUNWIND_LIB=%s' % ld_flags_from_LibraryList(libs)]
 
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
