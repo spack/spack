@@ -32,6 +32,7 @@ class Kokkos(Package):
     homepage = "https://github.com/kokkos/kokkos"
     url      = "https://github.com/kokkos/kokkos/archive/2.03.00.tar.gz"
 
+    version('2.7.00',  'b357f9374c1008754babb4495f95e392')
     version('2.5.00',  '2db83c56587cb83b772d0c81a3228a21')
     version('2.04.11', 'd4849cee6eb9001d61c30f1d9fe74336')
     version('2.04.04', '2c6d1c2569b91c9fcd4117296438e65c')
@@ -46,7 +47,43 @@ class Kokkos(Package):
 
     variant('qthreads', default=False, description="enable Qthreads backend")
     variant('cuda', default=False, description="enable Cuda backend")
-    variant('openmp', default=True, description="enable OpenMP backend")
+    variant('openmp', default=False, description="enable OpenMP backend")
+
+    gpu_values = ('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
+                  'Maxwell50', 'Maxwell52', 'Maxwell53',
+                  'Pascal60', 'Pascal61')
+
+    # Host architecture variant
+    variant(
+        'host_arch',
+        default=None,
+        values=('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
+                'Power7', 'Power8', 'Power9',
+                'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
+        description='Set the host architecture to use'
+    )
+
+    # GPU architecture variant
+    variant(
+        'gpu_arch',
+        default=None,
+        values=gpu_values,
+        description='Set the GPU architecture to use'
+    )
+
+    # Check that we haven't specified a gpu architecture
+    # without specifying CUDA
+    for p in gpu_values:
+        conflicts('gpu_arch={0}'.format(p), when='~cuda',
+            msg='Must specify CUDA backend to use a GPU architecture.')
+
+    # conflicts on kokkos version and cuda enabled
+    # see kokkos issue #1296
+    # https://github.com/kokkos/kokkos/issues/1296
+    conflicts('+cuda', when='@2.5.00:develop',
+        msg='Kokkos build system has issue when CUDA enabled'
+        ' in version 2.5.00, 2.7.00, and develop until '
+        'issue #1296 is resolved.')
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
@@ -62,12 +99,24 @@ class Kokkos(Package):
                 '--with-hwloc=%s' % spec['hwloc'].prefix,
                 '--with-serial'
             ]
+            arch_args = []
+            # Backends
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
             if 'qthreads' in spec:
                 g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
             if 'cuda' in spec:
                 g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
+            # Host architectures
+            host_arch = spec.variants['host_arch'].value
+            # GPU architectures
+            gpu_arch  = spec.variants['gpu_arch'].value
+            if host_arch:
+                arch_args.append(host_arch)
+            if gpu_arch:
+                arch_args.append(gpu_arch)
+            if arch_args:
+                g_args.append('--arch={0}'.format(','.join(arch_args)))
 
             generate(*g_args)
             make()

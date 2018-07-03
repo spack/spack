@@ -30,11 +30,12 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-from spack import *
 import os
 from contextlib import contextmanager
-import spack
+
 from llnl.util.lang import match_predicate
+
+from spack import *
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -74,6 +75,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
 
+    # Fix build on Fedora 28
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
+    patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing
@@ -83,6 +88,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     variant('shared', default=True,
             description='Build a shared libperl.so library')
+
+    variant('threads', default=True,
+            description='Build perl with threads support')
 
     resource(
         name="cpanm",
@@ -130,6 +138,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         if '+shared' in spec:
             config_args.append('-Duseshrplib')
+
+        if '+threads' in spec:
+            config_args.append('-Dusethreads')
 
         return config_args
 
@@ -255,27 +266,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         return match_predicate(ignore_arg, patterns)
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.perl_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Perl, self).activate(ext_pkg, **args)
+        super(Perl, self).activate(ext_pkg, view, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view, **args):
         ignore = self.perl_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Perl, self).deactivate(ext_pkg, **args)
+        super(Perl, self).deactivate(ext_pkg, view, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:

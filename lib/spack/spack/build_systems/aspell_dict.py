@@ -27,6 +27,7 @@
 from llnl.util.filesystem import filter_file
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.directives import extends
+from spack.package import ExtensionError
 from spack.util.executable import which
 
 
@@ -41,6 +42,17 @@ class AspellDictPackage(AutotoolsPackage):
     """Specialized class for builing aspell dictionairies."""
 
     extends('aspell')
+
+    def view_destination(self, view):
+        aspell_spec = self.spec['aspell']
+        if view.root != aspell_spec.prefix:
+            raise ExtensionError(
+                'aspell does not support non-global extensions')
+        aspell = aspell_spec.command
+        return aspell('dump', 'config', 'dict-dir', output=str).strip()
+
+    def view_source(self):
+        return self.prefix.lib
 
     def patch(self):
         filter_file(r'^dictdir=.*$', 'dictdir=/lib', 'configure')

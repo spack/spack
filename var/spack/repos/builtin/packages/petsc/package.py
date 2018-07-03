@@ -39,9 +39,12 @@ class Petsc(Package):
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
+    version('develop', git='https://bitbucket.org/petsc/petsc.git', branch='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
+    version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
+    version('3.9.1', 'd3a229a188dbeef9b3f29b9a63622fad')
     version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
     version('3.8.4', 'd7767fe2919536aa393eb22841899306')
     version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
@@ -72,7 +75,6 @@ class Petsc(Package):
             description='Activates support for metis and parmetis')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
-    variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     # Mumps is disabled by default, because it depends on Scalapack
@@ -117,7 +119,6 @@ class Petsc(Package):
     depends_on('python@2.6:2.8', type='build')
 
     # Other dependencies
-    depends_on('boost', when='@:3.5+boost')
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
     depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
     depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
@@ -193,7 +194,10 @@ class Petsc(Package):
                    '--with-x=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0']
+                   '--download-hwloc=0',
+                   'COPTFLAGS=',
+                   'FOPTFLAGS=',
+                   'CXXOPTFLAGS=']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -213,6 +217,8 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
+            if spec.satisfies('^trilinos+boost'):
+                options.append('--with-boost=1')
 
         if self.spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
@@ -232,7 +238,7 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
+        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(

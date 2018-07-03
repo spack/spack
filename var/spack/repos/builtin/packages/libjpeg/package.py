@@ -33,7 +33,7 @@ class Libjpeg(AutotoolsPackage):
     homepage = "http://www.ijg.org"
     url      = "http://www.ijg.org/files/jpegsrc.v9c.tar.gz"
 
-    version('9c', '7794e558c60605424fb1025d836fbf47')
+    version('9c', '93c62597eeef81a84d988bccbda1e990')
     version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
     version('9a', '3353992aecaee1805ef4109aadd433e7')
 

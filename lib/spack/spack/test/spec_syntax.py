@@ -25,7 +25,7 @@
 import pytest
 import shlex
 
-import spack
+import spack.store
 import spack.spec as sp
 from spack.parse import Token
 from spack.spec import Spec, parse, parse_anonymous_spec
@@ -261,7 +261,7 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_spec_by_hash(self, database):
-        specs = database.mock.db.query()
+        specs = database.query()
         assert len(specs)  # make sure something's in the DB
 
         for spec in specs:
@@ -269,9 +269,9 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_dep_spec_by_hash(self, database):
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        zmpi = database.mock.db.query_one('zmpi')
-        fake = database.mock.db.query_one('fake')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        zmpi = database.query_one('zmpi')
+        fake = database.query_one('fake')
 
         assert 'fake' in mpileaks_zmpi
         assert 'zmpi' in mpileaks_zmpi
@@ -297,8 +297,8 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_multiple_specs_with_hash(self, database):
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        callpath_mpich2 = database.mock.db.query_one('callpath ^mpich2')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        callpath_mpich2 = database.query_one('callpath ^mpich2')
 
         # name + hash + separate hash
         specs = sp.parse('mpileaks /' + mpileaks_zmpi.dag_hash() +
@@ -336,8 +336,8 @@ class TestSpecSyntax(object):
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
-        database.mock.db.add(x1, spack.store.layout)
-        database.mock.db.add(x2, spack.store.layout)
+        database.add(x1, spack.store.layout)
+        database.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
         self._check_raises(AmbiguousHashError, ['/x'])
@@ -347,11 +347,11 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_invalid_hash(self, database):
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        zmpi = database.mock.db.query_one('zmpi')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        zmpi = database.query_one('zmpi')
 
-        mpileaks_mpich = database.mock.db.query_one('mpileaks ^mpich')
-        mpich = database.mock.db.query_one('mpich')
+        mpileaks_mpich = database.query_one('mpileaks ^mpich')
+        mpich = database.query_one('mpich')
 
         # name + incompatible hash
         self._check_raises(InvalidHashError, [
@@ -366,7 +366,7 @@ class TestSpecSyntax(object):
     @pytest.mark.db
     def test_nonexistent_hash(self, database):
         """Ensure we get errors for nonexistant hashes."""
-        specs = database.mock.db.query()
+        specs = database.query()
 
         # This hash shouldn't be in the test DB.  What are the odds :)
         no_such_hash = 'aaaaaaaaaaaaaaa'
@@ -385,11 +385,11 @@ class TestSpecSyntax(object):
         specs only raise errors if constraints cause a contradiction?
 
         """
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        callpath_zmpi = database.mock.db.query_one('callpath ^zmpi')
-        dyninst = database.mock.db.query_one('dyninst')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        callpath_zmpi = database.query_one('callpath ^zmpi')
+        dyninst = database.query_one('dyninst')
 
-        mpileaks_mpich2 = database.mock.db.query_one('mpileaks ^mpich2')
+        mpileaks_mpich2 = database.query_one('mpileaks ^mpich2')
 
         redundant_specs = [
             # redudant compiler

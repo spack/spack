@@ -155,21 +155,36 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
     # check that the combination of variants makes sense
-    conflicts('^openblas+ilp64', when='@:8.5.1')
-    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
-    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
-    conflicts('+assimp', when='@:8.5.1')
-    conflicts('+gmsh', when='@:8.5.1')
-    conflicts('+nanoflann', when='@:8.5.1')
-    conflicts('+scalapack', when='@:8.5.1')
-    conflicts('+sundials', when='@:8.5.1')
-    conflicts('+adol-c', when='@:8.5.1')
-    conflicts('+slepc', when='~petsc')
-    conflicts('+gsl',    when='@:8.4.2')
-    conflicts('+python', when='@:8.4.2')
-    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc', '+scalapack',
-              '+slepc', '+trilinos']:
-        conflicts(p, when='~mpi')
+    # 64-bit BLAS:
+    for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
+        conflicts('^{0}+ilp64'.format(p), when='@:8.5.1',
+                  msg='64bit BLAS is only supported from 9.0.0')
+
+    # interfaces added in 9.0.0:
+    for p in ['assimp', 'gmsh', 'nanoflann', 'scalapack', 'sundials',
+              'adol-c']:
+        conflicts('+{0}'.format(p), when='@:8.5.1',
+                  msg='The interface to {0} is supported from version 9.0.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    conflicts('+slepc', when='~petsc',
+              msg='It is not possible to enable slepc interfaces '
+                  'without petsc.')
+
+    # interfaces added in 8.5.0:
+    for p in ['gsl', 'python']:
+        conflicts('+{0}'.format(p), when='@:8.4.2',
+                  msg='The interface to {0} is supported from version 8.5.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # MPI requirements:
+    for p in ['arpack', 'hdf5', 'netcdf', 'p4est', 'petsc', 'scalapack',
+              'slepc', 'trilinos']:
+        conflicts('+{0}'.format(p), when='~mpi',
+                  msg='To enable {0} it is necessary to build deal.II with '
+                      'MPI support enabled.'.format(p))
 
     def cmake_args(self):
         spec = self.spec
