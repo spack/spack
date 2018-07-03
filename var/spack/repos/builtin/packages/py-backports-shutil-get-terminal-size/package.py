@@ -32,6 +32,8 @@ class PyBackportsShutilGetTerminalSize(PythonPackage):
     homepage = "https://pypi.python.org/pypi/backports.shutil_get_terminal_size"
     url      = "https://pypi.io/packages/source/b/backports.shutil_get_terminal_size/backports.shutil_get_terminal_size-1.0.0.tar.gz"
 
+    py_namespace = 'backports'
+
     version('1.0.0', '03267762480bd86b50580dc19dff3c66')
 
     # newer setuptools version mess with "namespace" packages in an

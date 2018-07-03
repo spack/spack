@@ -64,11 +64,11 @@ class Xsdk(Package):
     depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra+nox~ifpack2~zoltan2~amesos2~exodus',
                when='@develop')
 
-    depends_on('petsc@3.8.2+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@3.8.2+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@0.3.0')
-    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@xsdk-0.2.0')
-    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@develop')
 
     depends_on('pflotran@xsdk-0.3.0', when='@0.3.0')
@@ -82,7 +82,7 @@ class Xsdk(Package):
     depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0')
     depends_on('sundials@3.1.0~int64+hypre', when='@develop')
 
-    depends_on('plasma@17.1', when='@develop %gcc@4.9:')
+    depends_on('plasma@17.2:', when='@develop %gcc@6.0:')
 
     depends_on('magma@2.2.0', when='@0.3.0 +cuda')
     depends_on('magma@2.2.0', when='@develop +cuda')

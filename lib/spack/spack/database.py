@@ -58,6 +58,7 @@ import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
+from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
@@ -823,7 +824,8 @@ class Database(object):
         the given spec
         """
         if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+            view = YamlFilesystemView(extendee_spec.prefix, spack.store.layout)
+            extensions_layout = view.extensions_layout
         for spec in self.query():
             try:
                 extensions_layout.check_activated(extendee_spec, spec)

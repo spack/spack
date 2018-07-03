@@ -36,6 +36,8 @@ class Lammps(CMakePackage):
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
 
+    tags = ['ecp', 'ecp-apps']
+
     version('20180316', '25bad35679583e0dd8cb8753665bb84b')
     version('20180222', '4d0513e3183bd57721814d217fdaf957')
     version('20170922', '4306071f919ec7e759bda195c26cfd9a')

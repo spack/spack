@@ -32,6 +32,10 @@ class Latte(CMakePackage):
     homepage = "https://github.com/lanl/latte"
     url      = "https://github.com/lanl/latte/tarball/v1.0"
 
+    tags = ['ecp', 'ecp-apps']
+
+    version('1.2.1', '56db44afaba2a89e6ca62ac565c3c012')
+    version('1.2.0', 'b9bf8f84a0e0cf7b0e278a1bc7751b3d')
     version('1.1.1', 'ab11867ba6235189681cf6e50a50cc50')
     version('1.0.1', 'd0b99edbcf7a19abe0a68a192d6f6234')
     version('develop', git='https://github.com/lanl/latte', branch='master')

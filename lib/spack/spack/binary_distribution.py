@@ -34,7 +34,7 @@ from contextlib import closing
 import yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree
+from llnl.util.filesystem import mkdirp, install_tree, get_filetype
 
 import spack.cmd
 import spack.fetch_strategy as fs
@@ -148,7 +148,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  of files potentially needing relocation
             if relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
-                filetype = relocate.get_filetype(path_name)
+                filetype = get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
