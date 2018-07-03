@@ -31,6 +31,7 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'setenv LDFLAGS -L/path/to/lib',
                      'prepend-path PATH /path/to/bin']
 
+
 @pytest.fixture
 def save_module_func():
     old_func = spack.util.module_cmd.module
