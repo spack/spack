@@ -25,12 +25,19 @@
 from spack import *
 
 
-class PyPyserial(PythonPackage):
-    """Python Serial Port Extension"""
+class Pxz(MakefilePackage):
+    """Pxz is a parallel LZMA compressor using liblzma."""
 
-    homepage = "https://github.com/pyserial/pyserial"
-    url      = "https://pypi.io/packages/source/p/pyserial/pyserial-3.1.1.tar.gz"
+    homepage = "https://jnovy.fedorapeople.org/pxz/pxz.html"
+    url      = "http://jnovy.fedorapeople.org/pxz/pxz-4.999.9beta.20091201git.tar.xz"
 
-    version('3.1.1', '2f72100de3e410b36d575e12e82e9d27')
+    version('develop', git='https://github.com/jnovy/pxz') 
+    version('4.999.9beta.20091201git', '4ae3926185978f5c95c9414dc4634451')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('lzma')
+
+    conflicts('platform=darwin', msg='Pxz runs only on Linux.')
+
+    def install(self, spec, prefix):
+        make('install', "DESTDIR=%s" % prefix,
+             "BINDIR=/bin", "MANDIR=/share/man")

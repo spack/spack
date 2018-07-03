@@ -44,10 +44,7 @@ class Xhmm(MakefilePackage):
         filter_file('GCC =gcc', '', 'sources/hmm++/config_defs.Makefile')
 
     def build(self, spec, prefix):
-        if '^openblas' in spec:
-            lapacklib = 'openblas'
-        # TODO: Add more BLAS libs
-        make('LAPACK_LIBS=%s' % lapacklib)
+        make('LAPACK_LIBS=%s' % ''.join(spec['lapack'].libs.names))
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
