@@ -33,10 +33,6 @@ class Log4cplus(CMakePackage):
     homepage = "https://sourceforge.net/projects/log4cplus/"
     url      = "https://download.sourceforge.net/project/log4cplus/log4cplus-stable/2.0.1/log4cplus-2.0.1.tar.bz2"
 
-    def url_for_version(self, version):
-        url = 'https://download.sourceforge.net/project/log4cplus/log4cplus-stable/{0}/log4cplus-{1}.tar.bz2'
-        return url.format(version.up_to(3), version)
-
     version('2.0.1', 'ec01c03241ebd31127a44d1880830d8f')
     version('1.2.1', 'e4e6c38b065b70b5d6efc238a5106bc9')
     version('1.2.0', 'e250f0f431c0723f8b625323e7b6465d')
