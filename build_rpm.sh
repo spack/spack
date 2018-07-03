@@ -19,6 +19,8 @@ for pkg in ["jdk@8u172-b11%gcc@4.8.5",
             "ant@1.9.9%gcc@4.8.5",
             "sbt@0.13.12%gcc@4.8.5",
             "environment-modules@3.2.10",
+            "intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune  %intel@16.0.4 threads=openmp",
+            "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune  %intel@17.0.5 threads=openmp",
             "intel-parallel-studio@cluster.2018.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune  %intel@18.0.1 threads=openmp"]:
           os.system("spack install {}".format(pkg))
 
