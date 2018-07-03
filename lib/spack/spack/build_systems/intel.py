@@ -940,6 +940,12 @@ class IntelPackage(PackageBase):
            $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
            [and likewise for MKL, MPI, and other components]
         """
+        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_environment
+        # 
+        #   spack_env   –> Applied when dependent is built within Spack.
+        #                  Not used here.
+        #   run_env     –> Applied to the modulefile of dependent.
+        #
         # NOTE: Spack runs setup_environment twice, once pre-build to set up
         # the build environment, and once post-installation to determine
         # the environment variables needed at run-time to add to the module
@@ -966,9 +972,19 @@ class IntelPackage(PackageBase):
         run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # NB: This function is overwritten by package intel-mpi. There, the
-        #     _setup_dependent_env_callback() is called as well, but with the
-        #     compilers_of_client{} arg present and populated.
+        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_dependent_environment
+        #
+        #   spack_env   –> Applied when dependent is built within Spack.
+        #   run_env     –> Applied to the modulefile of dependent.
+        #                  Not used here.
+        #
+        # NB: This function is overwritten by 'mpi' provider packages:
+        #
+        # ../../../../var/spack/repos/builtin/packages/intel-mpi/package.py
+        # ../../../../var/spack/repos/builtin/packages/intel-parallel-studio/package.py
+        #
+        # They call _setup_dependent_env_callback() as well, but with the
+        # dictionary kwarg compilers_of_client{} present and populated.
 
         # Handle everything in a callback version.
         self._setup_dependent_env_callback(spack_env, run_env, dependent_spec)
@@ -1002,6 +1018,10 @@ class IntelPackage(PackageBase):
                 raise InstallError('compilers_of_client arg required for MPI')
 
     def setup_dependent_package(self, module, dep_spec):
+        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_dependent_package
+        # Reminder: "module" refers to Python module.
+        # Called before the install() method of dependents.
+
         if '+mpi' in self.spec or self.provides('mpi'):
             compiler_wrapper_commands = self.mpi_compiler_wrappers
             self.spec.mpicc  = compiler_wrapper_commands['MPICC']
