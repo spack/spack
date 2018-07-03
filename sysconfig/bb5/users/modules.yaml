@@ -30,7 +30,9 @@ modules:
     naming_scheme: '${PACKAGE}/${VERSION}/${COMPILERNAME}'
     hash_length: 0
     whitelist:
+      - 'functionalizer'
       - 'neurodamus'
+      - 'touchdetector'
     blacklist:
       - '%gcc'
       - '%intel'

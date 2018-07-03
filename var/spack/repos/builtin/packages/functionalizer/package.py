@@ -25,26 +25,48 @@
 from spack import *
 
 
-class Hpctools(CMakePackage):
-    """Tools from the BBP HPC team
+class Functionalizer(CMakePackage):
+    """Apply several steps of filtering on touches
     """
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/HPCTools"
-    url      = "ssh://bbpcode.epfl.ch/hpc/HPCTools"
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Functionalizer"
+    url      = "ssh://bbpcode.epfl.ch/building/Functionalizer"
 
-    version('3.5.1', tag='3.5.1', git=url, preferred=True)
-    version('3.1.0', tag='3.1.0', git=url)
-
-    variant('openmp', default=True, description='Enables OpenMP support')
+    version('develop',
+            git=url,
+            submodules=True)
+    version('3.11.0',
+            commit='50c83265c100cec66a27eea9311b58a9b652cb5f',
+            git=url,
+            preferred=True,
+            submodules=True)
+    version('gap-junctions',
+            commit='6095a851119d8125a81f2858c7a0de2ff6f012d6',
+            git=url,
+            submodules=True)
 
     depends_on('boost@1.50:')
     depends_on('cmake', type='build')
+    depends_on('cmake@:3.0.0', type='build', when='@gap-junctions')
+    depends_on('hpctools')
+    depends_on('hpctools@:3.1', when='@gap-junctions')
+    depends_on('hdf5@1.8:')
     depends_on('libxml2')
+    depends_on('pkg-config', type='build')
     depends_on('mpi')
+    depends_on('zlib')
+
+    def patch(self):
+        """Prevent `-isystem /usr/include` from appearing, since this confuses gcc.
+        """
+        if self.spec.satisfies('@gap-junctions'):
+            return
+        filter_file(r'(include_directories\()SYSTEM ',
+                    r'\1',
+                    'functionalizer/CMakeLists.txt')
 
     def cmake_args(self):
         args = [
-            '-DUSE_OPENMP:BOOL={}'.format('+openmp' in self.spec),
             '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
+            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx)
         ]
         return args
