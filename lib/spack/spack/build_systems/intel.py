@@ -26,6 +26,7 @@
 import os
 import sys
 import glob
+import tempfile
 import re
 import inspect
 import xml.etree.ElementTree as ET
@@ -178,6 +179,9 @@ class IntelPackage(PackageBase):
         if not self._has_compilers:
             return ['ALL']
 
+        # tty.warn('DEBUG: installing ALL components')
+        # return ['ALL']
+
         # Always include compilers and closely related components.
         # Pre-2016 compiler components have different names - throw in all.
         # Later releases have overlapping minor parts that differ by "edition".
@@ -279,7 +283,7 @@ class IntelPackage(PackageBase):
             return ''
 
     @property
-    def _version_yearlike(self):
+    def version_yearlike(self):
         '''Return the version in a unified style, suitable for Version class
         conditionals.
         '''
@@ -491,7 +495,7 @@ class IntelPackage(PackageBase):
         if cs is None and component_path.startswith('ism'):
             cs = 'parallel_studio_xe'
 
-        v = self._version_yearlike
+        v = self.version_yearlike
 
         # Glob to complete component_suite_dir. The alternatives could be
         # merged, but using separate ones is clearer and likely more reliable.
@@ -611,7 +615,7 @@ class IntelPackage(PackageBase):
             'intel-mpi':             ['mpi/{libarch}/bin/mpivars',  None],
         }
         key = self.name
-        if self._version_yearlike.satisfies(ver(':2015')):
+        if self.version_yearlike.satisfies(ver(':2015')):
             # Same file as 'intel' but 'None' for component_suite_dir will
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
@@ -817,7 +821,7 @@ class IntelPackage(PackageBase):
         # mpiicc works.
         bindir = self.component_bin_dir('mpi')
         if self.compiler.name == 'intel':
-            return {
+            wrapper_vars = {
                 # eschew Prefix objects -- emphasize the command strings.
                 'MPICC':  os.path.join(bindir, 'mpiicc'),
                 'MPICXX': os.path.join(bindir, 'mpiicpc'),
@@ -826,13 +830,15 @@ class IntelPackage(PackageBase):
                 'MPIFC':  os.path.join(bindir, 'mpiifort'),
             }
         else:
-            return {
+            wrapper_vars = {
                 'MPICC':  os.path.join(bindir, 'mpicc'),
                 'MPICXX': os.path.join(bindir, 'mpicxx'),
                 'MPIF77': os.path.join(bindir, 'mpif77'),
                 'MPIF90': os.path.join(bindir, 'mpif90'),
                 'MPIFC':  os.path.join(bindir, 'mpif90'),
             }
+        #debug_print("wrapper_vars =", wrapper_vars)
+        return wrapper_vars
 
     def mpi_setup_dependent_environment(
             self, spack_env, run_env, dependent_spec, compilers_of_client={}):
@@ -848,15 +854,15 @@ class IntelPackage(PackageBase):
                 from the scope of dependent packages; constructed in caller.
         '''
         # See also: setup_dependent_package()
-
-        spack_env.set('I_MPI_CC',  compilers_of_client['CC'])
-        spack_env.set('I_MPI_CXX', compilers_of_client['CXX'])
-        spack_env.set('I_MPI_F77', compilers_of_client['F77'])
-        spack_env.set('I_MPI_F90', compilers_of_client['F90'])
-        spack_env.set('I_MPI_FC',  compilers_of_client['FC'])
-
-        # NB: Normally set by the modulefile, but that is not active here:
-        spack_env.set('I_MPI_ROOT', self.normalize_path('mpi'))
+        wrapper_vars = {
+            'I_MPI_CC':   compilers_of_client['CC'],
+            'I_MPI_CXX':  compilers_of_client['CXX'],
+            'I_MPI_F77':  compilers_of_client['F77'],
+            'I_MPI_F90':  compilers_of_client['F90'],
+            'I_MPI_FC':   compilers_of_client['FC'],
+            # NB: Normally set by the modulefile, but that is not active here:
+            'I_MPI_ROOT': self.normalize_path('mpi'),
+        }
 
         # CAUTION - SIMILAR code in:
         #   var/spack/repos/builtin/packages/mpich/package.py
@@ -866,16 +872,25 @@ class IntelPackage(PackageBase):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
         if 'platform=cray' in self.spec:
             # TODO: Confirm
-            spack_env.set('MPICC',  compilers_of_client['CC'])
-            spack_env.set('MPICXX', compilers_of_client['CXX'])
-            spack_env.set('MPIF77', compilers_of_client['F77'])
-            spack_env.set('MPIF90', compilers_of_client['F90'])
+            wrapper_vars.update({
+                'MPICC':  compilers_of_client['CC'],
+                'MPICXX': compilers_of_client['CXX'],
+                'MPIF77': compilers_of_client['F77'],
+                'MPIF90': compilers_of_client['F90'],
+            })
         else:
             compiler_wrapper_commands = self.mpi_compiler_wrappers
-            spack_env.set('MPICC',  compiler_wrapper_commands['MPICC'])
-            spack_env.set('MPICXX', compiler_wrapper_commands['MPICXX'])
-            spack_env.set('MPIF77', compiler_wrapper_commands['MPIF77'])
-            spack_env.set('MPIF90', compiler_wrapper_commands['MPIF90'])
+            wrapper_vars.update({
+                'MPICC':  compiler_wrapper_commands['MPICC'],
+                'MPICXX': compiler_wrapper_commands['MPICXX'],
+                'MPIF77': compiler_wrapper_commands['MPIF77'],
+                'MPIF90': compiler_wrapper_commands['MPIF90'],
+            })
+
+        for key, value in wrapper_vars.items():
+            spack_env.set(key, value)
+
+        debug_print("adding to spack_env:", wrapper_vars)
 
     # ---------------------------------------------------------------------
     # General support for child packages
@@ -951,6 +966,10 @@ class IntelPackage(PackageBase):
         run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # NB: This function is overwritten by package intel-mpi. There, the
+        #     _setup_dependent_env_callback() is called as well, but with the
+        #     compilers_of_client{} arg present and populated.
+
         # Handle everything in a callback version.
         self._setup_dependent_env_callback(spack_env, run_env, dependent_spec)
 
@@ -962,14 +981,23 @@ class IntelPackage(PackageBase):
         if '+mkl' in self.spec or self.provides('mkl'):
             # Spack's env philosophy demands that we replicate some of the
             # settings normally handled by file_to_source ...
-            spack_env.set('MKLROOT', self.normalize_path('mkl'))
-            spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                  self.component_lib_dir('mkl'))
+            env_vars = {
+                'MKLROOT': self.normalize_path('mkl'),
+                'SPACK_COMPILER_EXTRA_RPATHS': self.component_lib_dir('mkl'),
+            }
+            spack_env.set(env_vars['MKLROOT'])
+            spack_env.append_path(env_vars['SPACK_COMPILER_EXTRA_RPATHS'])
+            debug_print("adding/modifying spack_env:", env_vars)
 
         if '+mpi' in self.spec or self.provides('mpi'):
             if compilers_of_client:
                 self.mpi_setup_dependent_environment(
                     spack_env, run_env, dependent_spec, compilers_of_client)
+                # We could forego this nonce function and inline its code here,
+                # but (a) it sisters mpi_compiler_wrappers() [needed twice]
+                # which performs dizzyingly similar but necessarily different
+                # actions, and (b) function code leaves a bit more breathing
+                # room within the suffocating corset of flake8 line length.
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 
@@ -980,6 +1008,8 @@ class IntelPackage(PackageBase):
             self.spec.mpicxx = compiler_wrapper_commands['MPICXX']
             self.spec.mpif77 = compiler_wrapper_commands['MPIF77']
             self.spec.mpifc  = compiler_wrapper_commands['MPIFC']
+            debug_print("spec '%s' received .mpi* properties:" % self.spec,
+                compiler_wrapper_commands)
 
     # ---------------------------------------------------------------------
     # Specifics for installation phase
@@ -1091,10 +1121,23 @@ class IntelPackage(PackageBase):
         f.close()
 
     def install(self, spec, prefix):
-        """Runs the install.sh installation script."""
+        '''Runs Intel's install.sh installation script. Afterwards, save the
+        installer config and logs to <prefix>/.spack
+        '''
+        # prepare
+        tmpdir = tempfile.mkdtemp(prefix='spack-intel-')
 
         install_script = Executable('./install.sh')
+        install_script.add_default_env('TMPDIR', tmpdir)
+
+        # perform
         install_script('--silent', 'silent.cfg')
+
+        # preserve config and logs
+        dst = os.path.join(self.prefix, '.spack')
+        install('silent.cfg', dst)
+        for f in glob.glob('%s/intel*log' % tmpdir):
+            install(f, dst)
 
     @run_after('install')
     def configure_rpath(self):
@@ -1124,11 +1167,6 @@ class IntelPackage(PackageBase):
                      'mpiifort'.split():
                 f = os.path.join(bin_dir, f)
                 filter_file('-Xlinker --enable-new-dtags', ' ', f, string=True)
-
-    @run_after('install')
-    def preserve_cfg(self):
-        """Copies the silent.cfg configuration file to <prefix>/.spack."""
-        install('silent.cfg', os.path.join(self.prefix, '.spack'))
 
     @run_after('install')
     def uninstall_ism(self):
