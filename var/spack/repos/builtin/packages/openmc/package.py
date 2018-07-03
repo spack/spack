@@ -36,6 +36,8 @@ class Openmc(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/openmc.git"
 
+    tags = ['ecp', 'ecp-apps']
+
     version('develop', git='https://github.com/ANL-CESAR/openmc.git')
 
     build_directory = 'src'

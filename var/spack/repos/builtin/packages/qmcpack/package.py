@@ -34,6 +34,8 @@ class Qmcpack(CMakePackage):
     homepage = "http://www.qmcpack.org/"
     url      = "https://github.com/QMCPACK/qmcpack.git"
 
+    tags = ['ecp', 'ecp-apps']
+
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.

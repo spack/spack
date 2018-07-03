@@ -31,6 +31,7 @@
   default unorderd dict.
 
 """
+from ordereddict_backport import OrderedDict
 from six import string_types, StringIO
 
 import yaml
@@ -41,7 +42,6 @@ from yaml.constructor import ConstructorError
 from llnl.util.tty.color import colorize, clen, cextra
 
 import spack.error
-from spack.util.ordereddict import OrderedDict
 
 # Only export load and dump
 __all__ = ['load', 'dump', 'SpackYAMLError']

@@ -555,6 +555,9 @@ class Singleton(object):
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
+    def __getitem__(self, name):
+        return self.instance[name]
+
     def __str__(self):
         return str(self.instance)
 
@@ -570,6 +573,9 @@ class LazyReference(object):
 
     def __getattr__(self, name):
         return getattr(self.ref_function(), name)
+
+    def __getitem__(self, name):
+        return self.ref_function()[name]
 
     def __str__(self):
         return str(self.ref_function())

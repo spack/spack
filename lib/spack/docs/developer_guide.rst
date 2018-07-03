@@ -119,7 +119,7 @@ etc.) but we wanted to make Spack *very* easy to use.  The simple layout
 spares users from the need to install Spack into a Python environment.
 Many users don't have write access to a Python installation, and installing
 an entire new instance of Python to bootstrap Spack would be very complicated.
-Users should not have to install install a big, complicated package to
+Users should not have to install a big, complicated package to
 use the thing that's supposed to spare them from the details of big,
 complicated packages.  The end result is that Spack works out of the
 box: clone it and add ``bin`` to your PATH and you're ready to go.

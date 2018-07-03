@@ -72,10 +72,9 @@ from multiprocessing import Process
 
 import pytest
 
-from llnl.util.filesystem import touch
+from llnl.util.filesystem import touch, group_ids
 
 import spack.util.lock
-from spack.util.executable import which
 from spack.util.multiproc import Barrier
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
@@ -936,14 +935,16 @@ def test_disable_locking(private_lock_path):
 
 
 def test_lock_checks_user(tmpdir):
-    """Ensure lock checks work."""
-    path = str(tmpdir)
+    """Ensure lock checks work with a self-owned, self-group repo."""
     uid = os.getuid()
+    if uid not in group_ids():
+        pytest.skip("user has no group with gid == uid")
 
     # self-owned, own group
     tmpdir.chown(uid, uid)
 
     # safe
+    path = str(tmpdir)
     tmpdir.chmod(0o744)
     spack.util.lock.check_lock_safety(path)
 
@@ -966,23 +967,17 @@ def test_lock_checks_user(tmpdir):
 
 
 def test_lock_checks_group(tmpdir):
-    path = str(tmpdir)
+    """Ensure lock checks work with a self-owned, non-self-group repo."""
     uid = os.getuid()
-
-    id_cmd = which('id')
-    if not id_cmd:
-        pytest.skip("Can't determine user's groups.")
-
-    # find a legal gid to user that is NOT the user's uid
-    gids = [int(gid) for gid in id_cmd('-G', output=str).split(' ')]
-    gid = next((g for g in gids if g != uid), None)
-    if gid is None:
-        pytest.skip("Can't determine user's groups.")
+    gid = next((g for g in group_ids() if g != uid), None)
+    if not gid:
+        pytest.skip("user has no group with gid != uid")
 
     # self-owned, another group
     tmpdir.chown(uid, gid)
 
     # safe
+    path = str(tmpdir)
     tmpdir.chmod(0o744)
     spack.util.lock.check_lock_safety(path)
 

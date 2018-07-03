@@ -32,6 +32,7 @@ class Kokkos(Package):
     homepage = "https://github.com/kokkos/kokkos"
     url      = "https://github.com/kokkos/kokkos/archive/2.03.00.tar.gz"
 
+    version('2.7.00',  'b357f9374c1008754babb4495f95e392')
     version('2.5.00',  '2db83c56587cb83b772d0c81a3228a21')
     version('2.04.11', 'd4849cee6eb9001d61c30f1d9fe74336')
     version('2.04.04', '2c6d1c2569b91c9fcd4117296438e65c')
@@ -81,7 +82,7 @@ class Kokkos(Package):
     # https://github.com/kokkos/kokkos/issues/1296
     conflicts('+cuda', when='@2.5.00:develop',
         msg='Kokkos build system has issue when CUDA enabled'
-        ' in version 2.5.00, and develop until '
+        ' in version 2.5.00, 2.7.00, and develop until '
         'issue #1296 is resolved.')
 
     # Specify that v1.x is required as v2.x has API changes
