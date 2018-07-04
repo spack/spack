@@ -49,6 +49,8 @@ class Arrow(CMakePackage):
             description='CMake build type',
             values=('Debug', 'FastDebug', 'Release'))
 
+    root_cmakelists_dir = 'cpp'
+
     def patch(self):
         """Prevent `-isystem /usr/include` from appearing, since this confuses gcc.
         """
@@ -56,12 +58,8 @@ class Arrow(CMakePackage):
                     r'\1',
                     'cpp/cmake_modules/ThirdpartyToolchain.cmake')
 
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'cpp')
-
     def cmake_args(self):
-        args = std_cmake_args + [
+        args = [
             "-DARROW_USE_SSE=ON",
             "-DARROW_BUILD_SHARED=ON",
             "-DARROW_BUILD_STATIC=OFF",
