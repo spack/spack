@@ -25,22 +25,12 @@
 from spack import *
 
 
-class Zstd(MakefilePackage):
-    """Zstandard, or zstd as short version, is a fast lossless compression
-    algorithm, targeting real-time compression scenarios at zlib-level and
-    better compression ratios."""
+class Flatbuffers(CMakePackage):
+    """Memory Efficient Serialization Library
+    """
 
-    homepage = "http://facebook.github.io/zstd/"
-    url      = "https://github.com/facebook/zstd/archive/v1.1.2.tar.gz"
+    homepage = "http://google.github.io/flatbuffers/"
+    url      = "https://github.com/google/flatbuffers/archive/v1.9.0.tar.gz"
 
-    version('1.3.0', '888660a850e33c2dcc7c4f9d0b04d347')
-    version('1.1.2', '4c57a080d194bdaac83f2d3251fc7ffc')
-
-    variant('pic', default=True, description='Build position independent code')
-
-    def setup_environment(self, spack_env, run_env):
-        if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
-
-    def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+    version('1.9.0', '8be7513bf960034f6873326d09521a4b')
+    version('1.8.0', '276cab8303c4189cbe3b8a70e0515d65')
