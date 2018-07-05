@@ -13,8 +13,8 @@ packages:
         version: [3.0.4]
     boost:
         paths:
-            boost@1.53.0: /usr
-        version: [1.53.0]
+            boost@1.67.0: /gpfs/bbp.cscs.ch/apps/hpc/spack-deployments/18-06-2018/install/linux-rhel7-x86_64/gcc-4.8.5/boost-1.67.0-xqlo3y
+        version: [1.67.0]
     bzip2:
         paths:
             bzip2@1.0.6: /usr
