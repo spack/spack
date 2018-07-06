@@ -252,7 +252,8 @@ class Compiler(object):
         suffixes = [''] + cls.suffixes
 
         def check_cmp_key(check):
-            idx = compiler_names.index(check[2])
+            name = os.path.basename(check[0])
+            idx = compiler_names.index(name)
             return idx
 
         checks = []
@@ -268,11 +269,11 @@ class Compiler(object):
 
                 prod = itertools.product(prefixes, compiler_names, suffixes)
                 for pre, name, suf in prod:
-                    regex = r'^(%s)(%s)(%s)$' % (pre, re.escape(name), suf)
+                    regex = r'^(%s)%s(%s)$' % (pre, re.escape(name), suf)
 
                     match = re.match(regex, exe)
                     if match:
-                        key = (full_path,) + match.groups()
+                        key = (full_path,) + match.groups() + (detect_version,)
                         dir_checks.append(key)
 
             # sort dir_checks by compiler name order
