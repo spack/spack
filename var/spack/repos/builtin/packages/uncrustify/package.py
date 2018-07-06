@@ -45,6 +45,6 @@ class Uncrustify(Package):
 
     @when('@:0.62')
     def install(self, spec, prefix):
-        configure('--prefix={}'.format(self.prefix))
+        configure('--prefix={0}'.format(self.prefix))
         make()
         make('install')
