@@ -48,4 +48,3 @@ class Uncrustify(Package):
         configure('--prefix={}'.format(self.prefix))
         make()
         make('install')
-
