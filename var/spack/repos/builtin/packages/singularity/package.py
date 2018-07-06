@@ -29,15 +29,21 @@ class Singularity(AutotoolsPackage):
     """Singularity is a container platform focused on supporting 'Mobility of
        Compute'"""
 
-    homepage = "http://singularity.lbl.gov/"
-    url      = "https://github.com/singularityware/singularity/archive/2.4.tar.gz"
+    homepage = "https://www.sylabs.io/singularity/"
+    url      = "https://github.com/singularityware/singularity/releases/download/2.5.2/singularity-2.5.2.tar.gz"
 
-    version('2.4.5', '9afa903ee019448104b4f40be77a46e7')
-    version('2.4', 'd357ce68ef2f8149edd84155731531465dbe74148c37719f87f168fc39384377')
-    version('2.3.1', '292ff7fe3db09c854b8accf42f763f62')
+    # Versions before 2.5.2 suffer from a serious security problem.
+    # https://nvd.nist.gov/vuln/detail/CVE-2018-12021
+    version('2.5.2', '2edc1a8ac9a4d7d26fba6244f1c5fd95')
     version('develop', git='https://github.com/singularityware/singularity.git', branch='master')
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
+    depends_on('libarchive', when='@2.5.2:')
+    # these are only needed if we're grabbing the unreleased tree
+    depends_on('m4',       type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+
+    # When installing as root, the copy has to run before chmod runs
+    def install(self, spec, prefix):
+        make('install', parallel=False)
