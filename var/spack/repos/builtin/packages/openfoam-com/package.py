@@ -442,6 +442,7 @@ class OpenfoamCom(Package):
                     ])
 
                 run_env.extend(mods)
+                spack_env.extend(mods)
                 minimal = False
                 tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
@@ -452,8 +453,11 @@ class OpenfoamCom(Package):
             tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
             run_env.set('FOAM_PROJECT_DIR', self.projectdir)
             run_env.set('WM_PROJECT_DIR', self.projectdir)
+            spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+            spack_env.set('WM_PROJECT_DIR', self.projectdir)
             for d in ['wmake', self.archbin]:  # bin added automatically
                 run_env.prepend_path('PATH', join_path(self.projectdir, d))
+                spack_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Location of the OpenFOAM project directory.
@@ -461,7 +465,8 @@ class OpenfoamCom(Package):
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
         """
-        spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+        #spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+        self.setup_environment(spack_env, run_env)
 
     @property
     def projectdir(self):
