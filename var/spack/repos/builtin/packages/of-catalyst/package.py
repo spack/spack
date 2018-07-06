@@ -65,7 +65,7 @@ class OfCatalyst(CMakePackage):
 
     #variant('source', default=True, description='Install library source')
 
-    depends_on('openfoam-com@develop', when='@develop', type=('build', 'link'))
+    depends_on('openfoam-com@1806:', when='@develop', type=('build', 'link', 'run'))
     depends_on('catalyst@5.5:')
 
     def setup_environment(self, spack_env, run_env):
