@@ -34,6 +34,8 @@ class PyPytorch(PythonPackage):
 
     version('0.3.1', git='https://github.com/pytorch/pytorch.git',
             tag='v0.3.1', submodules=True)
+    version('0.4.0', git='https://github.com/pytorch/pytorch.git',
+            tag='v0.4.0', submodules=True)
 
     variant('cuda', default='False', description='Add GPU support')
     variant('cudnn', default='False', description='Add cuDNN support')
@@ -61,7 +63,8 @@ class PyPytorch(PythonPackage):
 
     def setup_environment(self, build_env, run_env):
         build_env.set('MAX_JOBS', make_jobs)
-        # build_env.set('NO_DISTRIBUTED', 'TRUE')
+        #build_env.set('NO_DISTRIBUTED', 'TRUE')
+
         if '+cuda' in self.spec:
             build_env.set('CUDA_HOME', self.spec['cuda'].prefix)
         else:
