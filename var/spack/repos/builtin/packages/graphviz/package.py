@@ -29,11 +29,15 @@ import sys
 
 class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
-    homepage = 'http://www.graphviz.org'
+
+    homepage = "http://www.graphviz.org"
+    url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz.tar.gz"
 
     # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', git='https://gitlab.com/graphviz/graphviz.git',
             commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
+    version('2.40.0', '4ea6fd64603536406166600bcc296fc8')
+    version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
