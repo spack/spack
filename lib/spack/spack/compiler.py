@@ -251,8 +251,13 @@ class Compiler(object):
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
 
+        def check_cmp_key(check):
+            idx = compiler_names.index(check[2])
+            return idx
+
         checks = []
         for directory in path:
+            dir_checks = []
             if not (os.path.isdir(directory) and
                     os.access(directory, os.R_OK | os.X_OK)):
                 continue
@@ -263,12 +268,34 @@ class Compiler(object):
 
                 prod = itertools.product(prefixes, compiler_names, suffixes)
                 for pre, name, suf in prod:
-                    regex = r'^(%s)%s(%s)$' % (pre, re.escape(name), suf)
+                    regex = r'^(%s)(%s)(%s)$' % (pre, re.escape(name), suf)
 
                     match = re.match(regex, exe)
                     if match:
-                        key = (full_path,) + match.groups() + (detect_version,)
-                        checks.append(key)
+                        key = (full_path,) + match.groups()
+                        dir_checks.append(key)
+
+            # sort dir_checks by compiler name order
+            # this allows us to prioritize compiler names in subclass
+            dir_checks = sorted(dir_checks, key=check_cmp_key)
+            checks.extend(dir_checks)
+
+        def check(key):
+            try:
+                full_path, prefix, name, suffix = key
+                version = detect_version(full_path)
+                return (version, prefix, suffix, full_path)
+            except ProcessError as e:
+                tty.debug(
+                    "Couldn't get version for compiler %s" % full_path, e)
+                return None
+            except Exception as e:
+                # Catching "Exception" here is fine because it just
+                # means something went wrong running a candidate executable.
+                tty.debug("Error while executing candidate compiler %s"
+                          % full_path,
+                          "%s: %s" % (e.__class__.__name__, e))
+                return None
 
         successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
                       if k is not None]
