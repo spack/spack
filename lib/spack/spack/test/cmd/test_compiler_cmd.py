@@ -52,7 +52,7 @@ done
 
 @pytest.fixture()
 def mock_two_compiler_dirs(tmpdir):
-    """Return two directory containing a fake, but detectable compiler,
+    """Return two directories containing a fake, but detectable compiler,
     with the same compiler spec."""
 
     tmpdir.ensure('compiler1/bin', dir=True)
