@@ -35,7 +35,6 @@ class Git(AutotoolsPackage):
 
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
-    # url      = "https://github.com/git/git/archive/v2.12.0.tar.gz"
 
     # In order to add new versions here, add a new list entry with:
     # * version: {version}
