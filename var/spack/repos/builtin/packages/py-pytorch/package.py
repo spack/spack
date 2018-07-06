@@ -32,10 +32,10 @@ class PyPytorch(PythonPackage):
     homepage = "http://pytorch.org/"
     url      = "https://github.com/pytorch/pytorch/archive/v0.3.1.tar.gz"
 
-    version('0.3.1', git='https://github.com/pytorch/pytorch.git',
-            tag='v0.3.1', submodules=True)
     version('0.4.0', git='https://github.com/pytorch/pytorch.git',
             tag='v0.4.0', submodules=True)
+    version('0.3.1', git='https://github.com/pytorch/pytorch.git',
+            tag='v0.3.1', submodules=True)
 
     variant('cuda', default='False', description='Add GPU support')
     variant('cudnn', default='False', description='Add cuDNN support')
@@ -51,15 +51,15 @@ class PyPytorch(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cffi', type='build')
     depends_on('py-numpy', type=('run', 'build'))
-    depends_on('blas', type=('run', 'build'))
-    depends_on('lapack', type=('run', 'build'))
+    depends_on('blas', type='build')
+    depends_on('lapack', type='build')
     depends_on('py-pyyaml', type=('run', 'build'))
     depends_on('py-typing', when='@0.3.2:', type=('run', 'build'))
-    depends_on('intel-mkl', when='+mkl', type=('build', 'run'))
+    depends_on('intel-mkl', when='+mkl', type='build')
     depends_on('cuda', when='+cuda', type=('build', 'run'))
-    depends_on('cudnn', when='+cuda+cudnn', type=('build', 'run'))
-    depends_on('nccl', when='+cuda+nccl', type=('build', 'run'))
-    depends_on('magma+shared', when='+cuda+magma', type=('build', 'run'))
+    depends_on('cudnn', when='+cuda+cudnn', type='build')
+    depends_on('nccl', when='+cuda+nccl', type='build')
+    depends_on('magma+shared', when='+cuda+magma', type='build')
 
     def setup_environment(self, build_env, run_env):
         build_env.set('MAX_JOBS', make_jobs)
