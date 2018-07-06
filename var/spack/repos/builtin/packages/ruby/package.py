@@ -30,11 +30,10 @@ class Ruby(AutotoolsPackage):
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
-    url      = "http://cache.ruby-lang.org/pub/ruby/2.5/ruby-2.5.1.tar.gz"
+    url      = "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
     list_url = "http://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
-    version('2.5.1', '23867bc8c16c55e43b14dfe0614bcfa8')
     version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
 
     variant('openssl', default=True, description="Enable OpenSSL support")
