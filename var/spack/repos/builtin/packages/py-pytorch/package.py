@@ -63,7 +63,6 @@ class PyPytorch(PythonPackage):
 
     def setup_environment(self, build_env, run_env):
         build_env.set('MAX_JOBS', make_jobs)
-        #build_env.set('NO_DISTRIBUTED', 'TRUE')
 
         if '+cuda' in self.spec:
             build_env.set('CUDA_HOME', self.spec['cuda'].prefix)
