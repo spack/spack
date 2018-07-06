@@ -203,7 +203,17 @@ to update them.
       ImportError: No module named pkg_resources
 
    that means Flake8 couldn't find setuptools in your ``PYTHONPATH``.
+   
+   If running ``spack flake8`` produces the following message
+   
+   .. code-block:: console
 
+      ==> Error: spack requires 'flake8'. Make sure it is in your path.
+   
+   , and you have installed ``py-flake8``, then try loading the ``py-flake8`` module
+   (``module av py-flake8`` to find the suffix on modules name,
+   then ``module load py-flake8<suffix>``), and re-running ``spack flake8``.
+    
 ^^^^^^^^^^^^^^^^^^^
 Documentation Tests
 ^^^^^^^^^^^^^^^^^^^
