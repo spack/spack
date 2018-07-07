@@ -63,17 +63,12 @@ class Axl(CMakePackage):
             args.append("-DAXL_LINK_STATIC=ON")
         args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
 
-        # Set up the async APIs to enable
-        if self.spec.satisfies('async_api=cray_dw'):
-            args.append("-DAXL_ASYNC_API=CRAY_DW")
-        elif self.spec.satisfies('async_api=ibm_bbapi'):
-            args.append("-DAXL_ASYNC_API=IBM_BBAPI")
-        else:
-            args.append("-DAXL_ASYNC_API=NONE")
+        apis = self.spec.variants['async_api'].value.split(',')
+        if 'daemon' in apis:
+            args.append('-DAXL_ASYNC_DAEMON=ON')
+            apis.remove('daemon')
 
-        if self.spec.satisfies('async_api=daemon'):
-            args.append("-DAXL_ASYNC_DAEMON=ON")
-        else:
-            args.append("-DAXL_ASYNC_DAEMON=OFF")
+        for api in apis:
+            args.append('-DAXL_ASYNC_API={0}'.format(api))
 
         return args
