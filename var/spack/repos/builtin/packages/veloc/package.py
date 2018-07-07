@@ -48,16 +48,17 @@ class Veloc(CMakePackage):
     depends_on('axl')
     depends_on('cmake@3.9:', type='build')
 
-    def cmake_args(self):
-        args = []
-        args.append("-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix)
-        args.append("-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix)
-        args.append("-DBOOST_ROOT=%s" % self.spec['boost'].prefix)
 
         # requires C++11
         if 'CXXFLAGS' in env and env['CXXFLAGS']:
             env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
         else:
             env['CXXFLAGS'] = self.compiler.cxx11_flag
+    def cmake_args(self):
+        args = [
+            "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
+            "-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix,
+            "-DBOOST_ROOT=%s" % self.spec['boost'].prefix
+        ]
 
         return args
