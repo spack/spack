@@ -48,12 +48,13 @@ class Veloc(CMakePackage):
     depends_on('axl')
     depends_on('cmake@3.9:', type='build')
 
+    # requires C++11
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+        return (None, None, flags)
 
-        # requires C++11
-        if 'CXXFLAGS' in env and env['CXXFLAGS']:
-            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-        else:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
     def cmake_args(self):
         args = [
             "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
