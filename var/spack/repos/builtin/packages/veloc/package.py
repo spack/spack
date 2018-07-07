@@ -26,7 +26,8 @@ from spack import *
 
 
 class Veloc(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Very-Low Overhead Checkpointing System. VELOC is a multi-level
+    checkpoint-restart runtime for HPC supercomputing infrastructures"""
 
     homepage = "https://github.com/ECP-VeloC/VELOC"
     url      = "https://github.com/ECP-VeloC/VELOC/archive/veloc-1.0rc1.zip"
