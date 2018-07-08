@@ -35,10 +35,8 @@ class GtkorvoAtl(CMakePackage):
 
     version('develop', git='https://github.com/GTkorvo/atl.git',
             branch='master')
-    version('2.1', 'b2324ff041bccba127330a0e1b241978')
-
-    depends_on('gtkorvo-cercs-env')
+    version('2.2', 'f0e3581e4b4c6943bf4b203685630564')
 
     def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DENABLE_BUILD_STATIC=STATIC"]
+        args = ["-DENABLE_TESTING=0", "-DENABLE_BUILD_LIBS=OFF"]
         return args
