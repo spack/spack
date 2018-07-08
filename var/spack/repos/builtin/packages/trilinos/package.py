@@ -192,7 +192,7 @@ class Trilinos(CMakePackage):
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
-             tag='master',
+             tag='dtk-3.0',
              placement='DataTransferKit',
              when='+dtk')
     resource(name='fortrilinos',
@@ -253,6 +253,8 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~kokkos')
     conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
+    # Only allow DTK-3.0 with Trilinos 12.14
+    conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master,develop')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')
