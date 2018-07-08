@@ -38,16 +38,12 @@ class Libffs(CMakePackage):
 
     version('develop', git='https://github.com/GTkorvo/ffs.git',
             branch='master')
-    version('1.1.1', 'aa1c8ad5cf35e8cf76735e3a60891509')
-    version('1.1', '561c6b3abc53e12b3c01192e8ef2ffbc')
+    version('1.5', 'c41c5f5f448b627740deecd695b7bbf8')
 
-    depends_on('flex')
-    depends_on('bison')
     depends_on('gtkorvo-atl')
     depends_on('gtkorvo-dill')
-    depends_on('gtkorvo-cercs-env')
 
     def cmake_args(self):
         args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                "-DBUILD_SHARED_STATIC=STATIC"]
+                "-DBUILD_SHARED_LIBS=OFF"]
         return args
