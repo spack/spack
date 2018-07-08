@@ -37,6 +37,8 @@ class Libevpath(CMakePackage):
 
     version('develop', git='https://github.com/GTkorvo/evpath.git',
             branch='master')
+    version('4.4.0', 'd8630eb358ec90ae2d188e0e6c74022a')
+    version('4.2.4', '757ce010a6b7564dc62d3c79edd861d5')
     version('4.2.1', 'f928dc0dee41668afc91634c7051ce1a')
     version('4.1.2', '1a187f55431c991ae7040e3ff041d75c')
     version('4.1.1', '65a8db820f396ff2926e3d31908d123d')
@@ -44,6 +46,10 @@ class Libevpath(CMakePackage):
     depends_on('libffs')
 
     def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                "-DBUILD_SHARED_STATIC=STATIC"]
+        if self.spec.satisfies('@4.4.0:'):
+            args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
+                    "-DBUILD_SHARED_LIBS=OFF"]
+        else:
+            args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
+                    "-DBUILD_SHARED_STATIC=STATIC"]
         return args
