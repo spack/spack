@@ -21,15 +21,17 @@
 ##############################################################################
 
 from spack import *
-import os
 from distutils.dir_util import copy_tree 
+import os
 
-class MofemUsersModules(CMakePackage):
-    """mofem users modules"""
+class MofemMinimalSurfaceEquation(CMakePackage):
+    """mofem minimal surface equation"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
+    url = "https://bitbucket.org/likask/mofem_um_minimal_surface_equation"
+
+    version('0.3.6', git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation', tag='v0.3.6')
+    version('develop', git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation', branch='develop')
 
     depends_on("mofem-cephas")
     extends('mofem-cephas')
@@ -38,7 +40,6 @@ class MofemUsersModules(CMakePackage):
 	    description='Copy user modules directory instead if making ling to source')
     variant('with_metaio', default=False,
             description='Install MetaIO with MoFEM users modules')
-
 
     @property
     def root_cmakelists_dir(self):
@@ -70,4 +71,13 @@ class MofemUsersModules(CMakePackage):
 
     phases = ['cmake', 'build']
 
-       
+    @run_before('cmake')
+    def copy_source_code_to_users_modules(self):
+	spec = self.spec
+	source = self.stage.source_path
+	prefix = spec['mofem-cephas'].prefix
+        mkdirp(prefix.users_modules.minimal_surface_equation)
+	copy_tree(source,prefix.users_modules.minimal_surface_equation)
+
+
+ 

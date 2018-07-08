@@ -1,7 +1,4 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
-#
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
@@ -37,15 +34,11 @@ class MofemFractureModule(CMakePackage):
     version('0.9.37', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', tag='v0.9.37')
     version('develop', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', branch='develop')
 
-    homepage = "http://mofem.eng.gla.ac.uk"
-    version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
-
     depends_on("mofem-cephas")
     extends('mofem-cephas')
 
     variant('copy_user_modules', default=True,
-	    description='Copy user modules directory insetad if making ling to source')
+	    description='Copy user modules directory instead if making ling to source')
     variant('with_metaio', default=False,
             description='Install MetaIO with MoFEM users modules')
 
