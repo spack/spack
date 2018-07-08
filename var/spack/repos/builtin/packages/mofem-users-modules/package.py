@@ -24,18 +24,11 @@
 ##############################################################################
 
 from spack import *
-from distutils.dir_util import copy_tree 
 import os
+from distutils.dir_util import copy_tree 
 
-class MofemFractureModule(CMakePackage):
-    """mofem fracture module"""
-
-    homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem_um_fracture_mechanics"
-
-    version('0.9.38', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', tag='v0.9.38')
-    version('0.9.37', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', tag='v0.9.37')
-    version('develop', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', branch='develop')
+class MofemUsersModules(CMakePackage):
+    """mofem users modules"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
     version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
@@ -48,6 +41,7 @@ class MofemFractureModule(CMakePackage):
 	    description='Copy user modules directory insetad if making ling to source')
     variant('with_metaio', default=False,
             description='Install MetaIO with MoFEM users modules')
+
 
     @property
     def root_cmakelists_dir(self):
@@ -79,13 +73,4 @@ class MofemFractureModule(CMakePackage):
 
     phases = ['cmake', 'build']
 
-    @run_before('cmake')
-    def copy_source_code_to_users_modules(self):
-	spec = self.spec
-	source = self.stage.source_path
-	prefix = spec['mofem-cephas'].prefix
-        mkdirp(prefix.users_modules.fracture_mechanics)
-	copy_tree(source,prefix.users_modules.fracture_mechanics)
-
-
- 
+       

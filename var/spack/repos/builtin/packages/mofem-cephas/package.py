@@ -27,7 +27,9 @@ from spack import *
 import os
 
 class MofemCephas(CMakePackage):
-    """mofem-cephas core library."""
+    """mofem-cephas core library"""
+
+    extendable = True
 
     @property
     def root_cmakelists_dir(self):
