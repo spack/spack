@@ -36,3 +36,4 @@ class GtkorvoEnet(AutotoolsPackage):
     url = "https://github.com/GTkorvo/enet/archive/v1.3.13.tar.gz"
 
     version('1.3.13', '3490f924a4d421e4832e45850e6ec142')
+    version('1.3.14', '05272cac1a8cb0500995eeca310e7fac')
