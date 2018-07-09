@@ -52,7 +52,6 @@ class Express(CMakePackage):
                     edit.filter('#include <api', '#include <%s' % self.spec[
                                 'bamtools'].prefix.include.bamtools.api)
             edit = FileFilter('CMakeLists.txt')
-            # really ugly way to escape the $ in CMakeLists.txt
             edit.filter('\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
                         'libbamtools.a', '%s' % self.spec['bamtools'].libs)
 
