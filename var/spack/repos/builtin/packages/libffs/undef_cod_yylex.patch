@@ -1,0 +1,13 @@
+diff --git a/cod/cod.y b/cod/cod.y
+index b923aec..91bce64 100644
+--- a/cod/cod.y
++++ b/cod/cod.y
+@@ -116,7 +116,7 @@ gen_anon()
+ }
+ 
+ #define yyparse cod_yyparse
+-#define yylex cod_yylex
++//#define yylex cod_yylex
+ #define yyrestart cod_yyrestart
+ #define yywrap cod_yywrap
+ #define yyerror cod_yyerror
