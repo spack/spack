@@ -555,6 +555,26 @@ you'll see that now the module for ``gcc@7.2.0`` has reappeared:
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
 
 
+An additional possibility that you can leverage to unclutter the environment
+is that of preventing the generation of module files for implicitly installed
+packages. In this case all one needs to do is to add the following line:
+
+.. code-block:: yaml
+  :emphasize-lines: 3
+
+  modules:
+    tcl:
+      blacklist_implicits: true
+      whitelist:
+        -  gcc
+      blacklist:
+        -  '%gcc@5.4.0'
+      all:
+        filter:
+          environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+
+to ``modules.yaml`` and regenerate the module file tree as above.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Change module file naming
 ^^^^^^^^^^^^^^^^^^^^^^^^^
