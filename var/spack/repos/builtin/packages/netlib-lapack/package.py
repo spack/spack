@@ -68,6 +68,16 @@ class NetlibLapack(CMakePackage):
     depends_on('netlib-xblas+fortran+plain_blas', when='+xblas')
     depends_on('python@2.7:', type='test')
 
+    # We need to run every phase twice in order to get static and shared
+    # versions of the libraries. When ~shared, we run the default
+    # implementations of the CMakePackage's phases and get only one building
+    # directory 'spack-build-static' with -DBUILD_SHARED_LIBS:BOOL=OFF (see
+    # implementations of self.build_directory and self.cmake_args() below).
+    # When +shared, we run the overridden methods for the phases, each
+    # running the default implementation twice with different values for
+    # self._building_shared. As a result, we get two building directories:
+    # 'spack-build-static' with -DBUILD_SHARED_LIBS:BOOL=OFF and
+    # 'spack-build-shared' with -DBUILD_SHARED_LIBS:BOOL=ON.
     _building_shared = False
 
     def patch(self):
