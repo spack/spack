@@ -49,7 +49,7 @@ class Coreneuron(CMakePackage):
     variant('report', default=True, description="Enable reports using ReportingLib")
     variant('shared', default=True, description="Build shared library")
     variant('tests', default=False, description="Enable building tests")
-
+    variant('test_slurm',default=False, description="Enable building tests")
     depends_on('boost', when='+tests')
     depends_on('cmake@3:', type='build')
     depends_on('cuda', when='+gpu')
@@ -99,6 +99,7 @@ class Coreneuron(CMakePackage):
                    '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
                    '-DCORENEURON_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
                    '-DUNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+                   '-DAUTO_TEST_WITH_SLURM=%s' % ('ON' if '+test_slurm' in spec else 'OFF'),
                    '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF')
                    ]
 
