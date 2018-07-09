@@ -148,49 +148,44 @@ class NetlibLapack(CMakePackage):
                          else 'spack-build-static')
 
     def cmake_args(self):
-        args = [
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if self._building_shared else 'OFF'),
-            '-DLAPACKE:BOOL=%s' % (
-                'ON' if '+lapacke' in self.spec else 'OFF'),
-            '-DLAPACKE_WITH_TMG:BOOL=%s' % (
-                'ON' if '+lapacke' in self.spec else 'OFF')]
+        args = ['-DBUILD_SHARED_LIBS:BOOL=' +
+                ('ON' if self._building_shared else 'OFF')]
+
+        if self.spec.satisfies('+lapacke'):
+            args.extend(['-DLAPACKE:BOOL=ON', '-DLAPACKE_WITH_TMG:BOOL=ON'])
+        else:
+            args.extend(['-DLAPACKE:BOOL=OFF', '-DLAPACKE_WITH_TMG:BOOL=OFF'])
 
         if self.spec.satisfies('@3.6.0:'):
-            args.extend(['-DCBLAS=ON'])  # always build CBLAS
+            args.append('-DCBLAS=ON')  # always build CBLAS
 
         if self.spec.satisfies('%intel'):
             # Intel compiler finds serious syntax issues when trying to
             # build CBLAS and LapackE
-            args.extend(['-DCBLAS=OFF'])
-            args.extend(['-DLAPACKE:BOOL=OFF'])
+            args.extend(['-DCBLAS=OFF', '-DLAPACKE:BOOL=OFF'])
 
         if self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
             # use F77 compiler if IBM XL
-            args.extend([
-                '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
-                '-DCMAKE_Fortran_FLAGS=%s' % (
-                    ' '.join(self.spec.compiler_flags['fflags'])),
-            ])
+            args.extend(['-DCMAKE_Fortran_COMPILER=' + self.compiler.f77,
+                         '-DCMAKE_Fortran_FLAGS=' +
+                         (' '.join(self.spec.compiler_flags['fflags']))])
 
         # deprecated routines are commonly needed by, for example, suitesparse
         # Note that OpenBLAS spack is built with deprecated routines
-        args.extend(['-DBUILD_DEPRECATED:BOOL=ON'])
+        args.append('-DBUILD_DEPRECATED:BOOL=ON')
 
-        if '+external-blas' in self.spec:
-            args.extend([
-                '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
-                '-DBLAS_LIBRARIES:PATH=%s' % self.spec['blas'].libs.joined(';')
-            ])
+        if self.spec.satisfies('+external-blas'):
+            args.extend(['-DUSE_OPTIMIZED_BLAS:BOOL=ON',
+                         '-DBLAS_LIBRARIES:PATH=' +
+                         self.spec['blas'].libs.joined(';')])
 
         if self.spec.satisfies('+xblas'):
-            xblas_include_dir = self.spec['netlib-xblas'].prefix.include
-            xblas_library = self.spec['netlib-xblas'].libs.joined(';')
-            args.extend([
-                '-DXBLAS_INCLUDE_DIR={0}'.format(xblas_include_dir),
-                '-DXBLAS_LIBRARY={0}'.format(xblas_library)])
+            args.extend(['-DXBLAS_INCLUDE_DIR=' +
+                         self.spec['netlib-xblas'].prefix.include,
+                         '-DXBLAS_LIBRARY=' +
+                         self.spec['netlib-xblas'].libs.joined(';')])
 
-        args.append('-DBUILD_TESTING:BOOL=%s' %
+        args.append('-DBUILD_TESTING:BOOL=' +
                     ('ON' if self.run_tests else 'OFF'))
 
         return args
@@ -199,20 +194,20 @@ class NetlibLapack(CMakePackage):
     # libraries when +shared
     @when('+shared')
     def cmake(self, spec, prefix):
-        for self._building_shared in range(2):
+        for self._building_shared in (False, True):
             super(NetlibLapack, self).cmake(spec, prefix)
 
     @when('+shared')
     def build(self, spec, prefix):
-        for self._building_shared in range(2):
+        for self._building_shared in (False, True):
             super(NetlibLapack, self).build(spec, prefix)
 
     @when('+shared')
     def install(self, spec, prefix):
-        for self._building_shared in range(2):
+        for self._building_shared in (False, True):
             super(NetlibLapack, self).install(spec, prefix)
 
     @when('+shared')
     def check(self):
-        for self._building_shared in range(2):
+        for self._building_shared in (False, True):
             super(NetlibLapack, self).check()
