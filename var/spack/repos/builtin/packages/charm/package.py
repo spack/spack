@@ -235,3 +235,9 @@ class Charm(Package):
                     except (IOError, OSError):
                         pass
         shutil.rmtree(join_path(prefix, "tmp"))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        make('-C', join_path(self.stage.path, 'charm/tests'),
+             'test', parallel=False)
