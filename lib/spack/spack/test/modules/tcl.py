@@ -274,3 +274,24 @@ class TestTcl(object):
 
         short_description = 'module-whatis "This package updates the context for TCL modulefiles."'  # NOQA: ignore=E501
         assert short_description in content
+
+    @pytest.mark.regression('4400')
+    @pytest.mark.db
+    def test_blacklist_implicits(
+            self, modulefile_content, module_configuration, database
+    ):
+        module_configuration('blacklist_implicits')
+
+        # mpileaks has been installed explicitly when setting up
+        # the tests database
+        mpileaks_specs = database.query('mpileaks')
+        for item in mpileaks_specs:
+            writer = writer_cls(item)
+            assert not writer.conf.blacklisted
+
+        # callpath is a dependency of mpileaks, and has been pulled
+        # in implicitly
+        callpath_specs = database.query('callpath')
+        for item in callpath_specs:
+            writer = writer_cls(item)
+            assert writer.conf.blacklisted

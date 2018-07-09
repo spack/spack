@@ -327,7 +327,7 @@ def _populate(mock_db):
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
         pkg = spack.repo.get(s)
-        pkg.do_install(fake=True)
+        pkg.do_install(fake=True, explicit=True)
 
     # Transaction used to avoid repeated writes.
     with mock_db.write_transaction():
