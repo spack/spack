@@ -49,4 +49,4 @@ class Libbeagle(AutotoolsPackage):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         prefix = self.prefix
-        spack_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        spack_env.prepend_path('BEAST_LIB', prefix.lib)
