@@ -256,17 +256,6 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     return
 
 
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable('file')
-    file.add_default_env('LC_ALL', 'C')
-    output = file('-b', '-h', '%s' % path_name,
-                  output=str, error=str)
-    return output.strip()
-
-
 def strings_contains_installroot(path_name, root_dir):
     """
     Check if the file contain the install root string.

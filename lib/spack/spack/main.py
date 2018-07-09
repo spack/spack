@@ -314,8 +314,13 @@ def make_argument_parser(**kwargs):
     stat_lines = list(zip(*(iter(stat_names),) * 7))
 
     parser.add_argument(
-        '-h', '--help', action='store_true',
+        '-h', '--help',
+        dest='help', action='store_const', const='short', default=None,
         help="show this help message and exit")
+    parser.add_argument(
+        '-H', '--all-help',
+        dest='help', action='store_const', const='long', default=None,
+        help="show help for all commands (same as spack help --all)")
     parser.add_argument(
         '--color', action='store', default='auto',
         choices=('always', 'never', 'auto'),
@@ -563,15 +568,17 @@ def main(argv=None):
         parser.print_help()
         return 1
 
-    # -h and -V are special as they do not require a command, but all the
-    # other options do nothing without a command.
-    if not args.command:
-        if args.version:
-            print(spack.spack_version)
-            return 0
-        else:
-            parser.print_help()
-            return 0 if args.help else 1
+    # -h, -H, and -V are special as they do not require a command, but
+    # all the other options do nothing without a command.
+    if args.version:
+        print(spack.spack_version)
+        return 0
+    elif args.help:
+        sys.stdout.write(parser.format_help(level=args.help))
+        return 0
+    elif not args.command:
+        parser.print_help()
+        return 1
 
     # Try to load the particular command the caller asked for.  If there
     # is no module for it, just die.
@@ -585,14 +592,6 @@ def main(argv=None):
 
     # Re-parse with the proper sub-parser added.
     args, unknown = parser.parse_known_args()
-
-    # we now know whether options go with spack or the command
-    if args.version:
-        print(spack.spack_version)
-        return 0
-    elif args.help:
-        parser.print_help()
-        return 0
 
     # now we can actually execute the command.
     command = spack.cmd.get_command(cmd_name)

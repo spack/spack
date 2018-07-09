@@ -3186,7 +3186,10 @@ class Spec(object):
             return None
         try:
             record = spack.store.db.get_record(self)
-            return record.installed
+            if record:
+                return record.installed
+            else:
+                return None
         except KeyError:
             return None
 

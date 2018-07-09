@@ -950,11 +950,11 @@ directly when you run ``python``:
    ImportError: No module named numpy
    >>>
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Extensions & Environment Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+Using Extensions
+^^^^^^^^^^^^^^^^
 
-There are two ways to get ``numpy`` working in Python.  The first is
+There are three ways to get ``numpy`` working in Python.  The first is
 to use :ref:`shell-support`.  You can simply ``use`` or ``load`` the
 module for the extension, and it will be added to the ``PYTHONPATH``
 in your current shell.
@@ -976,15 +976,26 @@ or, for dotkit:
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
 
-^^^^^^^^^^^^^^^^^^^^^
-Activating Extensions
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Activating Extensions in a View
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is often desirable to have certain packages *always* available as
-part of a Python installation.  Spack offers a more permanent solution
-for this case.  Instead of requiring users to load particular
-environment modules, you can *activate* the package within the Python
-installation:
+The second way to use extensions is to create a view, which merges the
+python installation along with the extensions into a single prefix.
+See :ref:`filesystem-views` for a more in-depth description of views and
+:ref:`cmd-spack-view` for usage of the ``spack view`` command.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Activating Extensions Globally
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As an alternative to creating a merged prefix with Python and its extensions,
+and prior to support for views, Spack has provided a means to install the
+extension into the Spack installation prefix for the extendee. This has
+typically been useful since extendable packages typically search their own
+installation path for addons by default.
+
+Global activations are performed with the ``spack activate`` command:
 
 .. _cmd-spack-activate:
 
@@ -1044,11 +1055,11 @@ the ``py-numpy`` into the prefix of the ``python`` package.  To the
 python interpreter, it looks like ``numpy`` is installed in the
 ``site-packages`` directory.
 
-The only limitation of activation is that you can only have a *single*
+The only limitation of global activation is that you can only have a *single*
 version of an extension activated at a time.  This is because multiple
 versions of the same extension would conflict if symbolically linked
 into the same prefix.  Users who want a different version of a package
-can still get it by using environment modules, but they will have to
+can still get it by using environment modules or views, but they will have to
 explicitly load their preferred version.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

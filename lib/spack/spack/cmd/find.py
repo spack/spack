@@ -28,6 +28,8 @@ import llnl.util.tty as tty
 import llnl.util.lang
 
 import spack.repo
+import spack.store
+import spack.database
 import spack.parents
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
@@ -137,9 +139,11 @@ def query_arguments(args):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    dbs = spack.parents.parent_dbs
-    dbs.append(spack.store.db)
-    for db in dbs[1:]:
+    dbs = []
+    for parent_store in spack.parents.parent_stores[:-1]:
+        dbs.append(parent_store.db)
+    dbs.append(spack.store.store.db)
+    for db in dbs:
         q_args['db'] = db
         q_args['include_parents'] = False
         if len(dbs) > 2:
@@ -151,7 +155,7 @@ def find(parser, args):
             msg = "No package matches the query: {0}"
             msg = msg.format(' '.join(args.constraint))
             tty.msg(msg)
-            return
+            next
 
         # If tags have been specified on the command line, filter by tags
         if args.tags:

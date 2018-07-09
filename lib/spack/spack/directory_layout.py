@@ -33,6 +33,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.spec
+import spack
 from spack.error import SpackError
 
 
@@ -51,6 +52,7 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.parent_layout = None
 
     @property
     def hidden_file_paths(self):
@@ -63,6 +65,16 @@ class DirectoryLayout(object):
 
         """
         raise NotImplementedError()
+
+    def set_parent(self):
+        self.parent_layout = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.layout == self:
+                break
+        if index > 0:
+            self.parent_layout = spack.parents.parent_stores[index - 1].layout
 
     def all_specs(self):
         """To be implemented by subclasses to traverse all specs for which there is
@@ -91,11 +103,11 @@ class DirectoryLayout(object):
     def path_for_spec(self, spec):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
-
+        self.set_parent()
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
         spec_path = os.path.join(self.root, path)
-        if os.path.isdir(spec_path) or spec.new or not self.parent_layout:
+        if os.path.isdir(spec_path) or spec.new or self.parent_layout is None:
             return spec_path
         else:
             return self.parent_layout.path_for_spec(spec)
@@ -132,7 +144,6 @@ class ExtensionsLayout(object):
     """
     def __init__(self, root, **kwargs):
         self.root = root
-        self.link = kwargs.get("link", os.symlink)
 
     def add_extension(self, spec, ext_spec):
         """Add to the list of currently installed extensions."""
@@ -193,7 +204,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${ARCHITECTURE}/"
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
-        self.parent_layout = kwargs.get('parent_layout') or None
+        self.parent_layout = None
         if self.hash_len is not None:
             if re.search('\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
@@ -206,6 +217,16 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.build_log_name      = 'build.out'  # build log.
         self.build_env_name      = 'build.env'  # build environment
         self.packages_dir        = 'repos'      # archive of package.py files
+
+    def set_parent(self):
+        self.parent_layout = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.layout == self:
+                break
+        if index > 0:
+            self.parent_layout = spack.parents.parent_stores[index - 1].layout
 
     @property
     def hidden_file_paths(self):
@@ -275,9 +296,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
-
+        self.set_parent()
         if not os.path.isdir(path):
-            if self.parent_layout:
+            if self.parent_layout is not None:
                 return self.parent_layout.check_installed(spec)
             else:
                 return None
@@ -321,14 +342,14 @@ class YamlDirectoryLayout(DirectoryLayout):
         return by_hash
 
 
-class YamlExtensionsLayout(ExtensionsLayout):
-    """Implements globally activated extensions within a YamlDirectoryLayout.
+class YamlViewExtensionsLayout(ExtensionsLayout):
+    """Maintain extensions within a view.
     """
     def __init__(self, root, layout):
         """layout is the corresponding YamlDirectoryLayout object for which
            we implement extensions.
         """
-        super(YamlExtensionsLayout, self).__init__(root)
+        super(YamlViewExtensionsLayout, self).__init__(root)
         self.layout = layout
         self.extension_file_name = 'extensions.yaml'
 
@@ -362,18 +383,28 @@ class YamlExtensionsLayout(ExtensionsLayout):
             raise NoSuchExtensionError(spec, ext_spec)
 
     def extension_file_path(self, spec):
-        """Gets full path to an installed package's extension file"""
+        """Gets full path to an installed package's extension file, which
+           keeps track of all the extensions for that package which have been
+           added to this view.
+        """
         _check_concrete(spec)
-        return os.path.join(self.layout.metadata_path(spec),
-                            self.extension_file_name)
+        normalize_path = lambda p: (
+            os.path.abspath(p).rstrip(os.path.sep))
+        if normalize_path(spec.prefix) == normalize_path(self.root):
+            # For backwards compatibility, when the root is the extended
+            # package's installation directory, do not include the spec name
+            # as a subdirectory.
+            components = [self.root, self.layout.metadata_dir,
+                          self.extension_file_name]
+        else:
+            components = [self.root, self.layout.metadata_dir, spec.name,
+                          self.extension_file_name]
+        return os.path.join(*components)
 
     def extension_map(self, spec):
         """Defensive copying version of _extension_map() for external API."""
         _check_concrete(spec)
         return self._extension_map(spec).copy()
-
-    def extendee_target_directory(self, extendee):
-        return extendee.prefix
 
     def remove_extension(self, spec, ext_spec):
         _check_concrete(spec)
@@ -427,6 +458,8 @@ class YamlExtensionsLayout(ExtensionsLayout):
 
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)
+        mkdirp(dirname)
+
         tmp = tempfile.NamedTemporaryFile(
             prefix=basename, dir=dirname, delete=False)
 
@@ -442,23 +475,6 @@ class YamlExtensionsLayout(ExtensionsLayout):
 
         # Atomic update by moving tmpfile on top of old one.
         os.rename(tmp.name, path)
-
-
-class YamlViewExtensionsLayout(YamlExtensionsLayout):
-    """Governs the directory layout present when creating filesystem views in a
-    certain root folder.
-
-    Meant to replace YamlDirectoryLayout when working with filesystem views.
-    """
-
-    def extension_file_path(self, spec):
-        """Gets the full path to an installed package's extension file."""
-        _check_concrete(spec)
-        return os.path.join(self.root, self.layout.metadata_dir, spec.name,
-                            self.extension_file_name)
-
-    def extendee_target_directory(self, extendee):
-        return self.root
 
 
 class DirectoryLayoutError(SpackError):

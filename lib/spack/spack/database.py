@@ -52,18 +52,18 @@ from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
-
+import spack
 import spack.store
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
+from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction
-
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -158,7 +158,7 @@ class Database(object):
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
 
-    def __init__(self, root, db_dir=None, parent_db=None):
+    def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -181,7 +181,7 @@ class Database(object):
 
         """
         self.root = root
-        self.parent_db = parent_db
+        self.parent_db = None
 
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
@@ -208,6 +208,16 @@ class Database(object):
 
         # whether there was an error at the start of a read transaction
         self._error = None
+
+    def set_parent(self):
+        self.parent_db = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.db == self:
+                break
+        if index > 0:
+            self.parent_db = spack.parents.parent_stores[index - 1].db
 
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
@@ -658,8 +668,9 @@ class Database(object):
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
             if not self.query_hash(dkey):
+                self.set_parent()
                 in_parent_db = False
-                if self.parent_db:
+                if self.parent_db is not None:
                     if self.parent_db.query_hash(dkey):
                         in_parent_db = True
                 if not in_parent_db:
@@ -740,15 +751,17 @@ class Database(object):
     def _get_matching_key_spec(self, key):
         if self.query_hash(key):
             return self._data[key].spec
-        elif self.parent_db:
+        elif self.parent_db is not None:
+            self.set_parent()
             return self.parent_db._get_matching_key_spec(key)
         else:
             return None
 
     @_autospec
     def get_record(self, spec, **kwargs):
+        self.set_parent()
         key = self._get_matching_spec_key(spec, **kwargs)
-        if key not in self._data and self.parent_db:
+        if key not in self._data and self.parent_db is not None:
             return self.parent_db.get_record(spec, **kwargs)
         return self._data[key]
 
@@ -849,7 +862,8 @@ class Database(object):
         the given spec
         """
         if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+            view = YamlFilesystemView(extendee_spec.prefix, spack.store.layout)
+            extensions_layout = view.extensions_layout
         for spec in self.query():
             try:
                 extensions_layout.check_activated(extendee_spec, spec)
@@ -908,17 +922,15 @@ class Database(object):
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        if self.parent_db:
-            self.parent_db._read()
+        self.set_parent()
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
             if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
-
                 hash_key = query_spec.dag_hash()
                 if hash_key in self._data:
                     return [self._data[hash_key].spec]
                 else:
-                    if self.parent_db and include_parents:
+                    if self.parent_db is not None and include_parents:
                         return self.parent_db.query(query_spec, known,
                                                     installed, explicit)
                     else:
@@ -926,7 +938,7 @@ class Database(object):
 
             # Abstract specs require more work -- currently we test
             # against everything.
-            if self.parent_db and include_parents:
+            if self.parent_db is not None and include_parents:
                 results = self.parent_db.query(query_spec, known, installed,
                                                explicit)
             else:
@@ -954,7 +966,6 @@ class Database(object):
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     if results.count(rec.spec) == 0:
                         results.append(rec.spec)
-
             return sorted(results)
 
     def query_one(self, query_spec, known=any, installed=True):
