@@ -42,7 +42,7 @@ class GtkorvoAtl(CMakePackage):
 
     def cmake_args(self):
         if self.spec.satisfies('@2.2:'):
-            args = ["-DENABLE_TESTING=0", "-DENABLE_BUILD_LIBS=OFF"]
+            args = ["-DENABLE_TESTING=0", "-DBUILD_SHARED_LIBS=OFF"]
         else:
             args = ["-DENABLE_TESTING=0", "-DENABLE_BUILD_STATIC=STATIC"]
         return args
