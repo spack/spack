@@ -40,8 +40,15 @@ class GtkorvoDill(CMakePackage):
     version('2.1', '14c835e79b66c9acd2beee01d56e6200')
 
     def cmake_args(self):
+        args = []
         if self.spec.satisfies('@2.4:'):
-            args = ["-DENABLE_TESTING=0", "-DBUILD_SHARED_LIBS=OFF"]
+            args.append("-DBUILD_SHARED_LIBS=OFF")
         else:
-            args = ["-DENABLE_TESTING=0", "-DBUILD_SHARED_STATIC=STATIC"]
+            args.append("-DENABLE_BUILD_STATIC=STATIC")
+
+        if self.run_tests:
+            args.append('-DENABLE_TESTING=1')
+        else:
+            args.append('-DENABLE_TESTING=0')
+
         return args
