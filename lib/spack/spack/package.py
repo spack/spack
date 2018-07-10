@@ -308,6 +308,31 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
+def inject_flags(pkg, name, flags):
+    """
+    flag_handler that injects all flags through the compiler wrapper.
+    """
+    return (flags, None, None)
+
+
+def env_flags(pkg, name, flags):
+    """
+    flag_handler that adds all flags to canonical environment variables.
+    """
+    return (None, flags, None)
+
+
+def build_system_flags(pkg, name, flags):
+    """
+    flag_handler that passes flags to the build system arguments.  Any
+    package using `build_system_flags` must also implement
+    `flags_to_build_system_args`, or derive from a class that
+    implements it.  Currently, AutotoolsPackage and CMakePackage
+    implement it.
+    """
+    return (None, None, flags)
+
+
 class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
@@ -1913,28 +1938,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 package's spec is available as ``self.spec``.
         """
         pass
-
-    def inject_flags(self, name, flags):
-        """
-        flag_handler that injects all flags through the compiler wrapper.
-        """
-        return (flags, None, None)
-
-    def env_flags(self, name, flags):
-        """
-        flag_handler that adds all flags to canonical environment variables.
-        """
-        return (None, flags, None)
-
-    def build_system_flags(self, name, flags):
-        """
-        flag_handler that passes flags to the build system arguments.  Any
-        package using `build_system_flags` must also implement
-        `flags_to_build_system_args`, or derive from a class that
-        implements it.  Currently, AutotoolsPackage and CMakePackage
-        implement it.
-        """
-        return (None, None, flags)
 
     flag_handler = inject_flags
     # The flag handler method is called for each of the allowed compiler flags.
