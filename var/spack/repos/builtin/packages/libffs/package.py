@@ -42,17 +42,22 @@ class Libffs(CMakePackage):
     version('1.1.1', 'aa1c8ad5cf35e8cf76735e3a60891509')
     version('1.1', '561c6b3abc53e12b3c01192e8ef2ffbc')
 
-    depends_on('flex', type='build', when='@:1.1.1')
-    depends_on('bison', type='build', when='@:1.1.1')
-    depends_on('gtkorvo-cercs-env', type='build', when='@:1.1.1')
+    depends_on('flex', type='build', when='@:1.4')
+    depends_on('bison', type='build', when='@:1.4')
+    depends_on('gtkorvo-cercs-env', type='build', when='@:1.4')
     depends_on('gtkorvo-atl')
     depends_on('gtkorvo-dill')
 
     def cmake_args(self):
+        args = ["-DTARGET_CNL=1"]
         if self.spec.satisfies('@1.5:'):
-            args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                    "-DBUILD_SHARED_LIBS=OFF"]
+            args.append("-DBUILD_SHARED_LIBS=OFF")
         else:
-            args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                    "-DBUILD_SHARED_STATIC=STATIC"]
+            args.append("-DENABLE_BUILD_STATIC=STATIC")
+
+        if self.run_tests:
+            args.append('-DENABLE_TESTING=0')
+        else:
+            args.append('-DENABLE_TESTING=0')
+
         return args
