@@ -43,7 +43,6 @@ class GtkorvoAtl(CMakePackage):
     def cmake_args(self):
         args = []
         if self.spec.satisfies('@2.2:'):
-            args.append("-DTARGET_CNL=1")
             args.append("-DBUILD_SHARED_LIBS=OFF")
         else:
             args.append("-DENABLE_BUILD_STATIC=STATIC")
