@@ -542,7 +542,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        tty.msg("Trying to get go resource:", self.url)
+        tty.msg("Getting go resource:", self.url)
 
         with working_dir(self.stage.path):
             try:
@@ -641,7 +641,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         elif self.branch:
             args = 'on branch %s' % self.branch
 
-        tty.msg("Trying to clone git repository: %s %s" % (self.url, args))
+        tty.msg("Cloning git repository: %s %s" % (self.url, args))
 
         git = self.git
         if self.commit:
@@ -788,7 +788,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
             tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
-        tty.msg("Trying to check out svn repository: %s" % self.url)
+        tty.msg("Checking out subversion repository: %s" % self.url)
 
         args = ['checkout', '--force', '--quiet']
         if self.revision:
@@ -894,7 +894,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         args = []
         if self.revision:
             args.append('at revision %s' % self.revision)
-        tty.msg("Trying to clone Mercurial repository:", self.url, *args)
+        tty.msg("Cloning mercurial repository:", self.url, *args)
 
         args = ['clone']
 
