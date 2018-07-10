@@ -202,14 +202,22 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
+    recursive = True
     # Iterate through packages and download all safe tarballs for each
+    visited = set()
     for spec in version_specs:
-        add_single_spec(spec, mirror_root, categories, **kwargs)
+        if recursive:
+            to_add = set(spec.traverse()) - visited
+        else:
+            to_add = set([spec]) if spec not in visited else set()
+
+        for child_spec in to_add:
+            add_single_spec(child_spec, mirror_root, categories, **kwargs)
 
     return categories['present'], categories['mirrored'], categories['error']
 
 
-def fetch_and_archive(name, fetcher, archive_path):
+def _fetch_and_archive(name, fetcher, archive_path, do_checksum):
     subdir = os.path.dirname(archive_path)
     mkdirp(subdir)
 
@@ -218,7 +226,7 @@ def fetch_and_archive(name, fetcher, archive_path):
     else:
         spec_exists_in_mirror = False
         fetcher.fetch()
-        if not kwargs.get('no_checksum', False):
+        if do_checksum:
             fetcher.check()
             tty.msg("{name} : checksum passed".format(name=name))
 
@@ -231,6 +239,7 @@ def fetch_and_archive(name, fetcher, archive_path):
 def add_single_spec(spec, mirror_root, categories, **kwargs):
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
     spec_exists_in_mirror = True
+    do_checksum = not kwargs.get('no_checksum', False)
     try:
         with spec.package.stage:
             for ii, stage in enumerate(spec.package.stage):
@@ -248,7 +257,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.cformat("$_$@"))
 
-                fetch_and_archive(name, fetcher, archive_path)
+                _fetch_and_archive(name, fetcher, archive_path, do_checksum)
 
             for patch in spec.patches:
                 try:
@@ -256,12 +265,16 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 except AttributeError:
                     continue
                 archive_path = os.path.abspath(os.path.join(
+                    mirror_root,
                     patch.mirror_archive_path(spec.package.stage)))
                 name = "{patch} ({pkg})".format(
-                    os.path.basename(patch.path_or_url),
+                    patch=os.path.basename(patch.path_or_url),
                     pkg=spec.cformat("$_$@"))
 
-                fetch_and_archive(name, fetcher, archive_path)
+                patch_stage = spack.stage.Stage(
+                    fetcher, mirror_path=archive_path)
+                patch_stage.create()
+                _fetch_and_archive(name, fetcher, archive_path, do_checksum)
 
         if spec_exists_in_mirror:
             categories['present'].append(spec)
