@@ -171,3 +171,8 @@ class Fftw2(AutotoolsPackage):
             configure('--enable-float', *(options + float_options))
             make()
             make("install")
+        ## fftw.h and fftw_mpi.h
+        options.remove('--enable-type-prefix')
+        configure(options)
+        make()
+        make("install")
