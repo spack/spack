@@ -25,30 +25,28 @@
 from spack import *
 
 
-class Glog(Package):
-    """C++ implementation of the Google logging module."""
+class Er(CMakePackage):
+    """Encoding and redundancy on a file set"""
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+    homepage = "https://github.com/ECP-VeloC/er"
+    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.1.zip"
+    tags     = ['ecp']
 
-    version('0.3.5', '5df6d78b81e51b90ac0ecd7ed932b0d4')
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('0.0.2', '24ad8f87bce2b6d900f1fb67452c3672')
+    version('master', git='https://github.com/ecp-veloc/er.git',
+            branch='master')
 
-    depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
+    depends_on('mpi')
+    depends_on('kvtree')
+    depends_on('redset')
+    depends_on('shuffile')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make('install')
-
-    @when('@0.3.5:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make()
-            make('install')
+    def cmake_args(self):
+        args = []
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        if self.spec.satisfies('platform=cray'):
+            args.append("-DER_LINK_STATIC=ON")
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
+        args.append("-DWITH_REDSET_PREFIX=%s" % self.spec['redset'].prefix)
+        args.append("-DWITH_SHUFFILE_PREFIX=%s" % self.spec['shuffile'].prefix)
+        return args

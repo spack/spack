@@ -113,8 +113,10 @@ Modules                    Dotkit
 =========================  ==========================
 
 And you can use the same shortened names you use everywhere else in
-Spack.  For example, this will add the ``mpich`` package built with
-``gcc`` to your path:
+Spack.
+
+For example, if you are using dotkit, this will add the ``mpich``
+package built with ``gcc`` to your path:
 
 .. code-block:: console
 
@@ -122,16 +124,16 @@ Spack.  For example, this will add the ``mpich`` package built with
 
    # ... wait for install ...
 
-   $ spack use mpich %gcc@4.4.7
+   $ spack use mpich %gcc@4.4.7     # dotkit
    Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
-Or, similarly with modules, you could type:
+Or, similarly if you are using modules, you could type:
 
 .. code-block:: console
 
-   $ spack load mpich %gcc@4.4.7
+   $ spack load mpich %gcc@4.4.7    # modules
 
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer

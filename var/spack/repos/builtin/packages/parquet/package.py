@@ -25,30 +25,28 @@
 from spack import *
 
 
-class Glog(Package):
-    """C++ implementation of the Google logging module."""
+class Parquet(CMakePackage):
+    """C++ bindings for the Apache Parquet columnar data format.
+    """
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+    homepage = "https://github.com/apache/parquet-cpp"
+    url = "https://github.com/apache/parquet-cpp/archive/apache-parquet-cpp-1.4.0.tar.gz"
 
-    version('0.3.5', '5df6d78b81e51b90ac0ecd7ed932b0d4')
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('1.4.0', '3a3659e65052ef5a76fb88e4922283b9')
 
-    depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
+    depends_on('arrow')
+    depends_on('boost')
+    depends_on('cmake@3.2.0:', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('thrift+pic')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make('install')
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'FastDebug', 'Release'))
 
-    @when('@0.3.5:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make()
-            make('install')
+    def cmake_args(self):
+        args = ['-DPARQUET_USE_SSE=OFF', '-DPARQUET_BUILD_TESTS=OFF']
+        for dep in ('arrow', 'thrift'):
+            args.append("-D{0}_HOME={1}".format(dep.upper(),
+                                                self.spec[dep].prefix))
+        return args

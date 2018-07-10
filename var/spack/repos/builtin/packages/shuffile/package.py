@@ -25,30 +25,24 @@
 from spack import *
 
 
-class Glog(Package):
-    """C++ implementation of the Google logging module."""
+class Shuffile(CMakePackage):
+    """Shuffle files between MPI ranks"""
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+    homepage = "https://github.com/ECP-VeloC/shuffile"
+    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.1.zip"
+    tags     = ['ecp']
 
-    version('0.3.5', '5df6d78b81e51b90ac0ecd7ed932b0d4')
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('0.0.2', 'eca45150d83e21ac51049133a2308d34')
+    version('master', git='https://github.com/ecp-veloc/shuffile.git',
+            branch='master')
 
-    depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
+    depends_on('mpi')
+    depends_on('kvtree')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make('install')
-
-    @when('@0.3.5:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make()
-            make('install')
+    def cmake_args(self):
+        args = []
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        if self.spec.satisfies('platform=cray'):
+            args.append("-DSHUFFILE_LINK_STATIC=ON")
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
+        return args
