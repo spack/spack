@@ -2616,13 +2616,13 @@ Here are the definitions of the three built-in flag handlers:
 
 .. code-block:: python
 
-   def inject_flags(self, name, flags):
+   def inject_flags(pkg, name, flags):
        return (flags, None, None)
 
-   def env_flags(self, name, flags):
+   def env_flags(pkg, name, flags):
        return (None, flags, None)
 
-   def build_system_flags(self, name, flags):
+   def build_system_flags(pkg, name, flags):
        return (None, None, flags)
 
 .. note::
@@ -2635,10 +2635,7 @@ the built-in flag handlers,
 
 .. code-block:: python
 
-   flag_handler = <PackageClass>.env_flags
-
-where ``<PackageClass>`` can be any of the subclasses of PackageBase
-discussed in :ref:`installation_procedure`,
+   flag_handler = env_flags
 
 or by implementing the flag_handler method. Suppose for a package
 ``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
@@ -2664,7 +2661,7 @@ method of the ``EnvironmentModifications`` class to append values to a
 list of flags whenever the flag handler is ``env_flags``. If the
 package passes flags through the environment or the build system
 manually (in the install method, for example), we recommend using the
-default flag handler, or removind manual references and implementing a
+default flag handler, or removing manual references and implementing a
 custom flag handler method that adds the desired flags to export as
 environment variables or pass to the build system. Manual flag passing
 is likely to interfere with the ``env_flags`` and

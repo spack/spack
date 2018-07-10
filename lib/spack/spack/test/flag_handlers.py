@@ -29,6 +29,7 @@ import spack.spec
 import spack.repo
 import spack.build_environment
 
+from spack.pkgkit import inject_flags, env_flags, build_system_flags
 
 @pytest.fixture()
 def temp_env():
@@ -62,23 +63,11 @@ class TestFlagHandlers(object):
         assert 'SPACK_CPPFLAGS' not in os.environ
         assert 'CPPFLAGS' not in os.environ
 
-    def test_unbound_method(self, temp_env):
-        # Other tests test flag_handlers set as bound methods and functions.
-        # This tests an unbound method in python2 (no change in python3).
-        s = spack.spec.Spec('mpileaks cppflags=-g')
-        s.concretize()
-        pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.__class__.inject_flags
-        spack.build_environment.setup_package(pkg, False)
-
-        assert os.environ['SPACK_CPPFLAGS'] == '-g'
-        assert 'CPPFLAGS' not in os.environ
-
     def test_inject_flags(self, temp_env):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.inject_flags
+        pkg.flag_handler = inject_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert os.environ['SPACK_CPPFLAGS'] == '-g'
@@ -88,7 +77,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.env_flags
+        pkg.flag_handler = env_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert os.environ['CPPFLAGS'] == '-g'
@@ -98,7 +87,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_CPPFLAGS' not in os.environ
@@ -112,7 +101,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('libelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_CPPFLAGS' not in os.environ
@@ -124,7 +113,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
 
         # Test the command line flags method raises a NotImplementedError
         try:
@@ -161,7 +150,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath ldflags=-mthreads')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_LDFLAGS' not in os.environ
@@ -177,7 +166,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath ldlibs=-lfoo')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_LDLIBS' not in os.environ
