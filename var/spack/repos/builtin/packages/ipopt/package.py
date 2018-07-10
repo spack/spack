@@ -56,7 +56,7 @@ class Ipopt(AutotoolsPackage):
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
 
-    flag_handler = AutotoolsPackage.build_system_flags
+    flag_handler = build_system_flags
     build_directory = 'spack-build'
 
     # IPOPT does not build correctly in parallel on OS X

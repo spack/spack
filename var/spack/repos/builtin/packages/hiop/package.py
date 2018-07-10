@@ -49,7 +49,7 @@ class Hiop(CMakePackage):
     depends_on('lapack')
     depends_on('blas')
 
-    flag_handler = CMakePackage.build_system_flags
+    flag_handler = build_system_flags
 
     def cmake_args(self):
         args = []
