@@ -173,6 +173,6 @@ class Fftw2(AutotoolsPackage):
             make("install")
         ## fftw.h and fftw_mpi.h
         options.remove('--enable-type-prefix')
-        configure(options)
+        configure(*options)
         make()
         make("install")
