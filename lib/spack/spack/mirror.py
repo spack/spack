@@ -209,15 +209,30 @@ def create(path, specs, **kwargs):
     return categories['present'], categories['mirrored'], categories['error']
 
 
+def fetch_and_archive(name, fetcher, archive_path):
+    subdir = os.path.dirname(archive_path)
+    mkdirp(subdir)
+
+    if os.path.exists(archive_path):
+        tty.msg("{name} : already added".format(name=name))
+    else:
+        spec_exists_in_mirror = False
+        fetcher.fetch()
+        if not kwargs.get('no_checksum', False):
+            fetcher.check()
+            tty.msg("{name} : checksum passed".format(name=name))
+
+        # Fetchers have to know how to archive their files.  Use
+        # that to move/copy/create an archive in the mirror.
+        fetcher.archive(archive_path)
+        tty.msg("{name} : added".format(name=name))
+
+
 def add_single_spec(spec, mirror_root, categories, **kwargs):
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
     spec_exists_in_mirror = True
     try:
         with spec.package.stage:
-            # fetcher = stage.fetcher
-            # fetcher.fetch()
-            # ...
-            # fetcher.archive(archive_path)
             for ii, stage in enumerate(spec.package.stage):
                 fetcher = stage.fetcher
                 if ii == 0:
@@ -232,22 +247,21 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                         mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.cformat("$_$@"))
-                subdir = os.path.dirname(archive_path)
-                mkdirp(subdir)
 
-                if os.path.exists(archive_path):
-                    tty.msg("{name} : already added".format(name=name))
-                else:
-                    spec_exists_in_mirror = False
-                    fetcher.fetch()
-                    if not kwargs.get('no_checksum', False):
-                        fetcher.check()
-                        tty.msg("{name} : checksum passed".format(name=name))
+                fetch_and_archive(name, fetcher, archive_path)
 
-                    # Fetchers have to know how to archive their files.  Use
-                    # that to move/copy/create an archive in the mirror.
-                    fetcher.archive(archive_path)
-                    tty.msg("{name} : added".format(name=name))
+            for patch in spec.patches:
+                try:
+                    fetcher = patch.fetcher()
+                except AttributeError:
+                    continue
+                archive_path = os.path.abspath(os.path.join(
+                    patch.mirror_archive_path(spec.package.stage)))
+                name = "{patch} ({pkg})".format(
+                    os.path.basename(patch.path_or_url),
+                    pkg=spec.cformat("$_$@"))
+
+                fetch_and_archive(name, fetcher, archive_path)
 
         if spec_exists_in_mirror:
             categories['present'].append(spec)
