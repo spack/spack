@@ -193,7 +193,6 @@ class Root(CMakePackage):
     depends_on('xxhash', when='@6.13.02:')
     depends_on('xz')
     depends_on('pcre')
-    # depends_on('xxhash') - not supported (using builtin for now)
     depends_on('freetype')
     depends_on('libpng')
     depends_on('ncurses')
@@ -445,7 +444,7 @@ class Root(CMakePackage):
                 'ON' if '+xrootd' in spec else 'OFF'),  # default ON
 
             # Fixed options
-            '-Dafdsmrgd=OFF'  # not supported
+            '-Dafdsmrgd=OFF',  # not supported
             '-Dafs=OFF',      # not supported
             '-Dalien=OFF',
             '-Dcastor=OFF',   # not supported
@@ -485,6 +484,9 @@ class Root(CMakePackage):
         )
 
         return options
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PYTHONPATH', self.prefix.lib)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('ROOTSYS', self.prefix)
