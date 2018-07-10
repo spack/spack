@@ -123,18 +123,26 @@ function spack {
                 "use")
                     if _sp_full_spec=$(command spack $_sp_flags dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         use $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "unuse")
                     if _sp_full_spec=$(command spack $_sp_flags dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         unuse $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "load")
                     if _sp_full_spec=$(command spack $_sp_flags tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         module load $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "unload")
                     if _sp_full_spec=$(command spack $_sp_flags tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         module unload $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
             esac
             ;;

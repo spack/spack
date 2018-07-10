@@ -71,7 +71,9 @@ def setup_parser(subparser):
         help='display full path to module file',
         action='store_true'
     )
-    arguments.add_common_arguments(find_parser, ['constraint'])
+    arguments.add_common_arguments(
+        find_parser, ['constraint', 'recurse_dependencies']
+    )
 
     rm_parser = sp.add_parser('rm', help='remove module files')
     arguments.add_common_arguments(
@@ -180,17 +182,36 @@ def find(module_type, specs, args):
     spec = one_spec_or_raise(specs)
 
     # Check if the module file is present
-    writer = spack.modules.module_types[module_type](spec)
-    if not os.path.isfile(writer.layout.filename):
+    def module_exists(spec):
+        writer = spack.modules.module_types[module_type](spec)
+        return os.path.isfile(writer.layout.filename)
+
+    if not module_exists(spec):
         msg = 'Even though {1} is installed, '
         msg += 'no {0} module has been generated for it.'
         tty.die(msg.format(module_type, spec))
 
+    # Check if we want to recurse and load all dependencies. In that case
+    # modify the list of specs adding all the dependencies in post order
+    if args.recurse_dependencies:
+        specs = [
+            item for item in spec.traverse(order='post', cover='nodes')
+            if module_exists(item)
+        ]
+
     # ... and if it is print its use name or full-path if requested
-    if args.full_path:
-        print(writer.layout.filename)
-    else:
-        print(writer.layout.use_name)
+    def module_str(specs):
+        modules = []
+        for x in specs:
+            writer = spack.modules.module_types[module_type](x)
+            if args.full_path:
+                modules.append(writer.layout.filename)
+            else:
+                modules.append(writer.layout.use_name)
+
+        return ' '.join(modules)
+
+    print(module_str(specs))
 
 
 def rm(module_type, specs, args):

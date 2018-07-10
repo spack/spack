@@ -93,3 +93,43 @@ def test_remove_and_add_tcl(database, parser):
 def test_find(database, cli_args):
     """Tests 'spack tcl find' under a few common scenarios."""
     tcl(*(['find'] + cli_args))
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+@pytest.mark.regression('2215')
+def test_find_fails_on_multiple_matches():
+    # As we installed multiple versions of mpileaks, the command will
+    # fail because of multiple matches
+    out = tcl('find', 'mpileaks', fail_on_error=False)
+    assert tcl.returncode == 1
+    assert 'matches multiple packages' in out
+
+    # Passing multiple packages from the command line also results in the
+    # same failure
+    out = tcl('find', 'mpileaks ^mpich', 'libelf', fail_on_error=False)
+    assert tcl.returncode == 1
+    assert 'matches multiple packages' in out
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+@pytest.mark.regression('2570')
+def test_find_fails_on_non_existing_packages():
+    # Another way the command might fail is if the package does not exist
+    out = tcl('find', 'doesnotexist', fail_on_error=False)
+    assert tcl.returncode == 1
+    assert 'matches no package' in out
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_find_recursive():
+    # If we call find without options it should return only one module
+    out = tcl('find', 'mpileaks ^zmpi')
+    assert len(out.split()) == 1
+
+    # If instead we call it with the recursive option the length should
+    # be greater
+    out = tcl('find', '-r', 'mpileaks ^zmpi')
+    assert len(out.split()) > 1
