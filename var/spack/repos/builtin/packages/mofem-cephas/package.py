@@ -39,20 +39,12 @@ class MofemCephas(CMakePackage):
         """
         return os.path.join(self.stage.source_path, 'mofem')
 
-
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://likask@bitbucket.org/likask/mofem-cephas.git"
 
+    version('0.7.28', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.28')
     version('0.7.27', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.27')
     version('develop', git='https://likask@bitbucket.org/likask/mofem-cephas.git', branch='develop')
-
-    depends_on("openmpi") 
-    depends_on("parmetis") 
-    depends_on("hdf5@1.8.19 hl=True") 
-    depends_on("petsc@3.9.2 ^hdf5@1.8.19 mumps=True")
-    depends_on("moab@5.0.0 ^hdf5@1.8.19")
-    depends_on("cmake")
-    # depends_on('doxygen', type='build')
 
     variant('with_adol_c', default=True,
             description='Install ADOL-C with MoFEM')
@@ -61,18 +53,47 @@ class MofemCephas(CMakePackage):
     variant('with_med', default=True,
             description='Install MED with MoFEM')
     variant('copy_user_modules', default=True,
-	    description='Copy user modules directory insetad if making ling to source')
+	    description='Copy user modules directory instead if making ling to source')
+    variant('slepc', default=False, description='Compile with Slepc')
+    variant('doxygen', default=False, description='Install doxygen')
+
+    depends_on("openmpi") 
+    depends_on("parmetis") 
+    depends_on("hdf5@1.8.19 hl=True") 
+    depends_on("petsc@3.9.2 ^hdf5@1.8.19 mumps=True")
+    depends_on("moab@5.0.0 ^hdf5@1.8.19")
+    depends_on("cmake")
+    depends_on('doxygen+graphviz', when='+doxygen')
+    depends_on('graphviz', when='+doxygen')
+    depends_on('slepc', when='+slepc')
 
     def cmake_args(self):
         spec = self.spec
-        return [
+        options = []
+
+        """ obligatory options """
+        options.extend([
             '-DWITH_SPACK=1',
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
             '-DPETSC_ARCH=',  
-            '-DMOAB_DIR=%s' % spec['moab'].prefix,
+            '-DMOAB_DIR=%s' % spec['moab'].prefix])
+
+        """ mofem extensions compiled with mofem """
+        options.extend([
             '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol_c' in spec else 'NO'),
             '-DWITH_TETGEN=%s' % ('YES' if '+with_tetgen' in spec else 'NO'),
-            '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO'),
-	    '-DSTAND_ALLONE_USERS_MODULES=%s' % ('YES' if '+copy_user_modules' in spec else 'NO')]
+            '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO')]
+        )
+
+        """ variant packages """
+        if '+slepc' in spec:
+                options.extend(['-DSLEPC_DIR=%s' % spec['slepc'].prefix])
+
+        """ copy users modules, i.e. stand alone vs linked users modules"""
+        options.extend([
+               '-DSTAND_ALLONE_USERS_MODULES=%s' % ('YES' if '+copy_user_modules' in spec else 'NO') 
+        ])
+        
+        return options
 
 
