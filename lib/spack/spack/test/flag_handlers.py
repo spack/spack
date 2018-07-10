@@ -31,6 +31,7 @@ import spack.build_environment
 
 from spack.pkgkit import inject_flags, env_flags, build_system_flags
 
+
 @pytest.fixture()
 def temp_env():
     old_env = os.environ.copy()
