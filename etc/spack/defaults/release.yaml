@@ -65,10 +65,8 @@ spec-set:
             xz:
                 versions: [5.2.4]
             zlib:
-                versions: [1.2.11]
+                versions: [1.2.8, 1.2.11]
         - compilers:
             gcc:
-                versions: [5.4, 4.9]
-            clang:
-                versions: [3.5, 3.6]
+                versions: [5.4.0]
     cdash: ["https://spack.io/cdash/submit.php?project=spack"]
