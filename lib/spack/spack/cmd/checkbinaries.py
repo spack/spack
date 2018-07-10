@@ -34,11 +34,15 @@ import yaml
 
 import llnl.util.tty as tty
 
+import spack.binary_distribution as bindist
 import spack.cmd
 import spack.config
+from spack.dependency import default_deptype
 from spack.error import SpackError
+from spack.graph import graph_dot
+from spack.paths import etc_path
 from spack.spec import Spec
-from spack.util.executable import which
+from spack.util.spec_set import CombinatorialSpecSet
 
 
 description = "check if binaries need to be rebuilt"
@@ -46,84 +50,19 @@ section = "developer"
 level = "long"
 
 
-_buildcache_path = os.path.join('build_cache')
 _pkg_match_regex = re.compile(r'packages[/\\]([^/\\]+)[/\\]package\.py')
 _pkg_yaml_match_regex = re.compile(r'<a href=[^>]+\>\s*([^<]+)\s*\<')
 
 
-def changed_package_files(args):
-    """Get list of changed package.py files in the Spack repository."""
-
-    git = which('git', required=True)
-
-    range = "{0}...".format(args.base)
-
-    git_args = [
-        # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', range],
-        # Add changed files that have been staged but not yet committed
-        ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
-        # Add changed files that are unstaged
-        ['diff', '--name-only', '--diff-filter=ACMR'],
-    ]
-
-    changed = set()
-
-    for arg_list in git_args:
-        files = git(*arg_list, output=str).split('\n')
-
-        for f in files:
-            # Look only for modified package.py files
-            m = _pkg_match_regex.search(f)
-            if m:
-                changed.add(m.group(1))
-
-    return sorted(changed)
-
-
-def compute_local_hash(pkg_name, spec_yaml):
-    local_spec = Spec.from_yaml(spec_yaml)
-    tty.msg('local dag hash for %s: %s' % (pkg_name, local_spec.dag_hash()))
-    local_spec.concretize()
-    return local_spec.full_hash()
-
-
-def compute_remote_hash(pkg_name, spec_yaml):
-    parsed_yaml = yaml.load(spec_yaml)
-    if 'full_hash' in parsed_yaml:
-        return parsed_yaml['full_hash']
-
-    msg = 'Binary mirror yaml file is missing full_hash attribute, aborting'
-    raise SpackError(msg)
-
-
-def check_needs_rebuild(pkg_name, spec_yaml):
-    local_pkg_hash = compute_local_hash(pkg_name, spec_yaml)
-    remote_pkg_hash = compute_remote_hash(pkg_name, spec_yaml)
-
-    tty.msg('  %s' % pkg_name)
-    tty.msg('    local hash: %s' % local_pkg_hash)
-    tty.msg('    remote hash: %s' % remote_pkg_hash)
-
-    if local_pkg_hash != remote_pkg_hash:
-        return True
-
-    return False
-
-
-def parse_yaml_list(index_html_contents):
-    result = []
-    match_list = _pkg_yaml_match_regex.findall(index_html_contents)
-    if match_list:
-        result = match_list
-    return result
-
-
-def get_mirror_rebuilds(mirror_name, mirror_url, pkg_change_set):
+def get_mirror_rebuilds(mirror_name, mirror_url, release_spec_set):
     tty.msg('Checking for built specs on %s' % mirror_name)
 
-    # First fetch the index.html
-    index_path = os.path.join(mirror_url, _buildcache_path, 'index.html')
+    # FIXME: Can uncomment once changes to buildcache are accepted...
+    # build_cache_dir = bindist.build_cache_directory(mirror_url)
+    build_cache_dir = os.path.join(mirror_url, 'build_cache')
+
+    # First fetch the index.json
+    index_path = os.path.join(build_cache_dir, 'index.json')
     index_contents = None
 
     try:
@@ -140,61 +79,51 @@ def get_mirror_rebuilds(mirror_name, mirror_url, pkg_change_set):
     index_contents = url.read()
 
     if not index_contents:
-        tty.error('Unable to retrieve index from mirror')
+        tty.error('Unable to read index from mirror')
         return None
 
-    yaml_list = parse_yaml_list(index_contents)
+    remote_pkg_index = json.loads(index_contents)
 
     rebuild_list = []
 
-    for pkg_name in pkg_change_set:
-        tty.msg('yamls associated with %s' % pkg_name)
+    for release_spec in release_spec_set:
+        pkg_name = release_spec.name
+        pkg_version = release_spec.version
+        pkg_short_hash = release_spec.dag_hash()
+        release_spec.concretize()
+        pkg_full_hash = release_spec.full_hash()
 
-        for pkg_yaml in yaml_list:
-            try:
-                pkg_yaml.index('-%s-' % pkg_name)
-                tty.msg('  %s' % pkg_yaml)
-            except Exception as expn:
-                continue
+        print('Checking %s-%s' % (pkg_name, pkg_version))
 
-            yaml_path = os.path.join(mirror_url, _buildcache_path, pkg_yaml)
-            yaml_contents = None
-
-            try:
-                yaml_url = urlopen(yaml_path)
-            except URLError as urlErr:
-                tty.error('Unable to open yaml url %s' % yaml_path)
-                tty.error('Mirror (%s: %s)' % (mirror_name, mirror_url))
-                tty.error(urlErr)
-                return None
-            except Exception as expn:
-                tty.error('Error getting yaml file: %s' % yaml_path)
-                tty.error('Mirror (%s: %s)' % (mirror_name, mirror_url))
-                tty.error(expn)
-                return None
-
-            yaml_contents = yaml_url.read()
-
-            if not yaml_contents:
-                tty.error('Error getting yaml contents: %s' % yaml_path)
-                tty.error('Mirror (%s: %s)' % (mirror_name, mirror_url))
-                return None
-
-            needs_rebuild = check_needs_rebuild(pkg_name, yaml_contents)
-
-            if needs_rebuild:
-                rebuild_list.append(pkg_yaml)
+        if pkg_short_hash in remote_pkg_index:
+            # At least remote binary mirror knows about it, so if the
+            # full_hash doesn't match (or remote end doesn't know about
+            # the full_hash), then we trigger a rebuild.
+            remote_pkg_info = remote_pkg_index[pkg_short_hash]
+            if not 'full_hash' in remote_pkg_info or \
+                remote_pkg_info['full_hash'] != pkg_full_hash:
+                    rebuild_list.append({
+                        'short_spec': release_spec.short_spec,
+                        'short_hash': pkg_short_hash
+                    })
+        else:
+            # remote binary mirror doesn't know about this package, we
+            # should probably just rebuild it
+            rebuild_list.append({
+                'short_spec': release_spec.short_spec,
+                'short_hash': pkg_short_hash
+            })
 
     return rebuild_list
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-b', '--base', action='store', default='develop',
-        help="select base branch for collecting list of modified files")
+        '-m', '--mirror_url', default=None, help='Additional mirror url')
 
     subparser.add_argument(
-        '-m', '--mirror_url', default=None, help='Additional mirror url')
+        '-o', '--output_file', default='rebuilds.json',
+        help='File where rebuild info should be written')
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -207,16 +136,23 @@ def setup_parser(subparser):
 
 
 def checkbinaries(parser, args):
-    # First step is to find package.py files which have changed
-    change_set = changed_package_files(args)
-    if not change_set:
-        tty.msg('No changed package files, all done.')
-        return
+    release_specs_path = \
+        os.path.join(etc_path, 'spack', 'defaults', 'release.yaml')
 
-    tty.msg('\nchanged packages:')
-    for f in change_set:
-        tty.msg('  %s' % f)
-    tty.msg('\n')
+    release_spec_set = None
+
+    with open(release_specs_path, 'r') as fin:
+        release_specs_contents = fin.read()
+        release_specs_yaml = yaml.load(release_specs_contents)
+
+        # For now, turn off ignoring invalid specs, as it blocks iterating
+        # the specs if the specified compilers can't be found.
+        release_spec_set = CombinatorialSpecSet(release_specs_yaml,
+                                                ignore_invalid=False)
+
+    if not release_spec_set:
+        tty.msg('No configured release specs, exiting.')
+        return
 
     # Next see if there are any configured binary mirrors
     configured_mirrors = spack.config.get('mirrors', scope=args.scope)
@@ -230,18 +166,24 @@ def checkbinaries(parser, args):
 
     # There are some binary mirrors, check each one against changed pkg list
     tty.msg('checking mirrors:')
-    rebuilds = []
+    rebuilds = {}
     for mirror in configured_mirrors.keys():
         tty.msg('  %s -> %s' % (mirror, configured_mirrors[mirror]))
         mirror_url = configured_mirrors[mirror]
-        mirror_rebuilds = get_mirror_rebuilds(mirror, mirror_url, change_set)
+        mirror_rebuilds = get_mirror_rebuilds(mirror, mirror_url, release_spec_set)
         if len(mirror_rebuilds) > 0:
-            rebuilds.append({
+            rebuilds[mirror_url] = {
                 'mirrorName': mirror,
-                'mirrorUrl': configured_mirrors[mirror],
+                'mirrorUrl': mirror_url,
                 'rebuildSpecs': mirror_rebuilds
-            })
+            }
 
-    tty.msg('')
-    tty.msg(json.dumps(rebuilds))
-    tty.msg('')
+    with open(args.output_file, 'w') as outf:
+        outf.write(json.dumps(rebuilds))
+
+
+# from spack.dependency import default_deptype
+# from spack.error import SpackError
+# from spack.graph import graph_dot
+# print('topologically sorted: ')
+# graph_dot(rebuild['rebuildSpecs'], deptype=default_deptype, static=False)
