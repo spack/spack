@@ -43,13 +43,22 @@ class Libevpath(CMakePackage):
     version('4.1.2', '1a187f55431c991ae7040e3ff041d75c')
     version('4.1.1', '65a8db820f396ff2926e3d31908d123d')
 
+    variant('enet_transport', default=False, description='Build an ENET transport for EVpath')
+
+    depends_on('gtkorvo-enet', when='@4.4.0: +enet_transport')
+    depends_on('gtkorvo-enet@1.3.13', when='@:4.2.4 +enet_transport')
     depends_on('libffs')
 
     def cmake_args(self):
+        args = ["-DTARGET_CNL=1"]
         if self.spec.satisfies('@4.4.0:'):
-            args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                    "-DBUILD_SHARED_LIBS=OFF"]
+            args.append("-DBUILD_SHARED_LIBS=OFF")
         else:
-            args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                    "-DBUILD_SHARED_STATIC=STATIC"]
+            args.append("-DENABLE_BUILD_STATIC=STATIC")
+
+        if self.run_tests:
+            args.append('-DENABLE_TESTING=1')
+        else:
+            args.append('-DENABLE_TESTING=0')
+
         return args
