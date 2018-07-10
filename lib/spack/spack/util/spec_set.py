@@ -61,7 +61,7 @@ class CombinatorialSpecSet:
             self.data = syaml.load(yaml_like)
 
         # validate against the spec set schema
-        schema.validate(self.data, schema.spec_set.schema)
+        # schema.validate(self.data, schema.spec_set.schema)
 
         # chop off the initial spec-set label after valiation.
         self.data = self.data['spec-set']
