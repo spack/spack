@@ -281,6 +281,7 @@ class OpenfoamCom(Package):
     list_url = "https://sourceforge.net/projects/openfoamplus/files/"
     list_depth = 2
 
+    version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
@@ -303,8 +304,10 @@ class OpenfoamCom(Package):
     # TODO?# variant('scalasca', default=False,
     # TODO?#         description='With scalasca profiling')
     variant('mgridgen', default=False, description='With mgridgen support')
-    variant('paraview', default=True,
+    variant('paraview', default=False,
             description='Build paraview plugins and runtime post-processing')
+    variant('vtk', default=False,
+            description='With VTK runTimePostProcessing')
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
@@ -319,7 +322,9 @@ class OpenfoamCom(Package):
     depends_on('fftw')
     depends_on('boost')
     depends_on('cgal')
-    depends_on('flex',  type='build')
+    # The flex restriction is ONLY to deal with a spec resolution clash
+    # introduced by the restriction within scotch!
+    depends_on('flex@:2.6.1,2.6.4:', type='build')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
@@ -331,6 +336,8 @@ class OpenfoamCom(Package):
     # mgridgen is statically linked
     depends_on('parmgridgen',  when='+mgridgen', type='build')
     depends_on('zoltan',       when='+zoltan')
+    depends_on('vtk',          when='+vtk')
+
     # TODO?# depends_on('scalasca',     when='+scalasca')
 
     # For OpenFOAM plugins and run-time post-processing this should just be
@@ -568,6 +575,7 @@ class OpenfoamCom(Package):
             'ensight': {},     # Disable settings
             'paraview': [],
             'gperftools': [],  # Currently unused
+            'vtk': [],
         }
 
         if '+scotch' in spec:
@@ -594,6 +602,13 @@ class OpenfoamCom(Package):
                 ('ParaView_INCLUDE_DIR', '${ParaView_DIR}/include/' + pvMajor),
                 ('PV_PLUGIN_PATH', '$FOAM_LIBBIN/' + pvMajor),
                 ('PATH', foamAddPath('${ParaView_DIR}/bin')),
+            ]
+
+        if '+vtk' in spec:
+            self.etc_config['vtk'] = [
+                ('VTK_DIR', spec['vtk'].prefix),
+                ('LD_LIBRARY_PATH',
+                 foamAddLib(pkglib(spec['vtk'], '${VTK_DIR}'))),
             ]
 
         # Optional

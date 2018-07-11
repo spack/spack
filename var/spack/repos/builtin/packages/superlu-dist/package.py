@@ -33,7 +33,7 @@ class SuperluDist(Package):
     homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
     url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
-    version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
+    version('develop', git='https://github.com/xiaoyeli/superlu_dist', branch='master')
     version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')
     version('5.4.0', 'e64645c5be352ae2c88327af2cac66e1')
     version('5.3.0', '35d5aa8e0a246efaf327988b20106714')

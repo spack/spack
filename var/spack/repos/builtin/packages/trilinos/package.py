@@ -251,6 +251,9 @@ class Trilinos(CMakePackage):
     conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+dtk', when='~intrepid2')
+    conflicts('+dtk', when='~kokkos')
+    conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
@@ -280,6 +283,7 @@ class Trilinos(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf+mpi', when="~pnetcdf")
     depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
+    depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
     # Trilinos' Tribits config system is limited which makes it very tricky to

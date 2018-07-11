@@ -5,7 +5,15 @@ export FOAM_INST_DIR=$(cd .. && pwd -L)
 mkdir -p $FOAM_APPBIN $FOAM_LIBBIN 2>/dev/null  # Allow interrupt
 echo "Build openfoam with SPACK ($@)"
 echo WM_PROJECT_DIR = $WM_PROJECT_DIR
-./Allwmake $@                                   # Pass arguments
+
+# Prefer spack-specific Allwmake if it exists
+if [ -f Allwmake-spack ]
+then
+    ./Allwmake-spack $@   # Pass arguments
+else
+    ./Allwmake $@         # Pass arguments
+fi
+
 
 # Link non-dummy MPI_FOAM type to parent-dir, where rpath can find it
 if [ "${FOAM_MPI:=dummy}" != dummy -a -d "$FOAM_LIBBIN/$FOAM_MPI" ]

@@ -22,14 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import filecmp
 import functools as ft
 import os
 import re
 import shutil
 import sys
 
-from llnl.util.link_tree import LinkTree
+from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
+from llnl.util.lang import match_predicate
 
 import spack.spec
 import spack.store
@@ -223,20 +225,9 @@ class YamlFilesystemView(FilesystemView):
                      % colorize_spec(spec))
             return True
 
-        try:
-            if not spec.package.is_activated(self.extensions_layout):
-                spec.package.do_activate(
-                    ignore_conflicts=self.ignore_conflicts,
-                    with_dependencies=False,  # already taken care of
-                                              # in add_specs()
-                    verbose=self.verbose,
-                    extensions_layout=self.extensions_layout)
-
-        except ExtensionAlreadyInstalledError:
-            # As we use sets in add_specs(), the order in which packages get
-            # activated is essentially random. So this spec might have already
-            # been activated as dependency of another package -> fail silently
-            pass
+        if not spec.package.is_activated(self):
+            spec.package.do_activate(
+                self, verbose=self.verbose, with_dependencies=False)
 
         # make sure the meta folder is linked as well (this is not done by the
         # extension-activation mechnism)
@@ -274,28 +265,65 @@ class YamlFilesystemView(FilesystemView):
                                         long=False)
                 return False
 
-        tree = LinkTree(spec.prefix)
+        self.merge(spec)
 
-        if not self.ignore_conflicts:
-            conflict = tree.find_conflict(self.root)
-            if conflict is not None:
-                tty.error(self._croot +
-                          "Cannot link package %s, file already exists: %s"
-                          % (spec.name, conflict))
-                return False
-
-        conflicts = tree.merge(self.root, link=self.link,
-                               ignore=ignore_metadata_dir,
-                               ignore_conflicts=self.ignore_conflicts)
         self.link_meta_folder(spec)
-
-        if self.ignore_conflicts:
-            for c in conflicts:
-                tty.warn(self._croot + "Could not link: %s" % c)
 
         if self.verbose:
             tty.info(self._croot + 'Linked package: %s' % colorize_spec(spec))
         return True
+
+    def merge(self, spec, ignore=None):
+        pkg = spec.package
+        view_source = pkg.view_source()
+        view_dst = pkg.view_destination(self)
+
+        tree = LinkTree(view_source)
+
+        ignore = ignore or (lambda f: False)
+        ignore_file = match_predicate(
+            self.layout.hidden_file_paths, ignore)
+
+        # check for dir conflicts
+        conflicts = tree.find_dir_conflicts(view_dst, ignore_file)
+
+        merge_map = tree.get_file_map(view_dst, ignore_file)
+        if not self.ignore_conflicts:
+            conflicts.extend(pkg.view_file_conflicts(self, merge_map))
+
+        if conflicts:
+            raise MergeConflictError(conflicts[0])
+
+        # merge directories with the tree
+        tree.merge_directories(view_dst, ignore_file)
+
+        pkg.add_files_to_view(self, merge_map)
+
+    def unmerge(self, spec, ignore=None):
+        pkg = spec.package
+        view_source = pkg.view_source()
+        view_dst = pkg.view_destination(self)
+
+        tree = LinkTree(view_source)
+
+        ignore = ignore or (lambda f: False)
+        ignore_file = match_predicate(
+            self.layout.hidden_file_paths, ignore)
+
+        merge_map = tree.get_file_map(view_dst, ignore_file)
+        pkg.remove_files_from_view(self, merge_map)
+
+        # now unmerge the directory tree
+        tree.unmerge_directories(view_dst, ignore_file)
+
+    def remove_file(self, src, dest):
+        if not os.path.islink(dest):
+            raise ValueError("%s is not a link tree!" % dest)
+        # remove if dest is a hardlink/symlink to src; this will only
+        # be false if two packages are merged into a prefix and have a
+        # conflicting file
+        if filecmp.cmp(src, dest, shallow=True):
+            os.remove(dest)
 
     def check_added(self, spec):
         assert spec.concrete
@@ -364,11 +392,11 @@ class YamlFilesystemView(FilesystemView):
 
         # The spec might have been deactivated as depdency of another package
         # already
-        if spec.package.is_activated(self.extensions_layout):
+        if spec.package.is_activated(self):
             spec.package.do_deactivate(
+                self,
                 verbose=self.verbose,
-                remove_dependents=with_dependents,
-                extensions_layout=self.extensions_layout)
+                remove_dependents=with_dependents)
         self.unlink_meta_folder(spec)
 
     def remove_standalone(self, spec):
@@ -380,8 +408,7 @@ class YamlFilesystemView(FilesystemView):
                      'Skipping package not linked in view: %s' % spec.name)
             return
 
-        tree = LinkTree(spec.prefix)
-        tree.unmerge(self.root, ignore=ignore_metadata_dir)
+        self.unmerge(spec)
         self.unlink_meta_folder(spec)
 
         if self.verbose:
@@ -545,7 +572,3 @@ def get_dependencies(specs):
     retval = set()
     set(map(retval.update, (set(s.traverse()) for s in specs)))
     return retval
-
-
-def ignore_metadata_dir(f):
-    return f in spack.store.layout.hidden_file_paths
