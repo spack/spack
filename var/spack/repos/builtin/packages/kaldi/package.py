@@ -38,6 +38,8 @@ class Kaldi(Package):    # Does not use Autotools
     url      = "https://github.com/kaldi-asr/kaldi/archive/master.zip"
 
     version('master', git='https://github.com/kaldi-asr/kaldi.git')
+    version('6f2140', git='https://github.com/kaldi-asr/kaldi.git',
+            commit='6f2140b032b0108bc313eefdca65151289642773')
     version('c024e8', git='https://github.com/kaldi-asr/kaldi.git',
             commit='c024e8aa0a727bf76c91a318f76a1f8b0b59249e')
 
@@ -54,17 +56,14 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('sctk', type='run')
     depends_on('speex', type='run')
     depends_on('openfst@1.4.1-patch', when='@c024e8')
-    depends_on('openfst')
+    depends_on('openfst@1.6.0:', when='@6f2140')
 
     patch('openfst-1.4.1.patch', when='@c024e8')
 
     def install(self, spec, prefix):
         configure_args = ['--fst-root=' + spec['openfst'].prefix]
-
-        if spec.satisfies('c024e8'):
-            configure_args.append('--speex-root=' + spec['speex'].prefix)
-            configure_args.append('--fst-version=' +
-                                  str(spec['openfst'].version))
+        configure_args.append('--fst-version=' + str(spec['openfst'].version))
+        configure_args.append('--speex-root=' + spec['speex'].prefix)
 
         if '~shared' in spec:
             configure_args.append('--static')
