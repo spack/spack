@@ -77,7 +77,8 @@ class Conduit(Package):
     variant("mpi", default=True, description="Build Conduit MPI Support")
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
     variant("silo", default=False, description="Build Conduit Silo support")
-
+    variant("adios", default=False, description="Build Conduit ADIOS support")
+    
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
     # doxygen support is wip, since doxygen has several dependencies
@@ -119,6 +120,11 @@ class Conduit(Package):
     depends_on("silo~fortran", when="+silo+shared")
     depends_on("silo~shared~fortran", when="+silo~shared")
 
+    depends_on("adios+mpi~hdf5+shared",       when="+adios+mpi+shared")
+    depends_on("adios+mpi~hdf5~shared~blosc", when="+adios+mpi~shared")
+    depends_on("adios~mpi~hdf5+shared",       when="+adios~mpi+shared")
+    depends_on("adios~mpi~hdf5~shared~blosc", when="+adios~mpi~shared")
+    
     #######################
     # MPI
     #######################
@@ -356,6 +362,17 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("SILO_DIR", spec['silo'].prefix))
         else:
             cfg.write("# silo not built by spack \n")
+
+        #######################
+        # ADIOS
+        #######################
+
+        cfg.write("# ADIOS from spack \n")
+
+        if "+adios" in spec:
+            cfg.write(cmake_cache_entry("ADIOS_DIR", spec['adios'].prefix))
+        else:
+            cfg.write("# adios not built by spack \n")
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
