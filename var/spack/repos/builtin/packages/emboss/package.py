@@ -41,6 +41,6 @@ class Emboss(AutotoolsPackage):
 
     def install(self, spec, prefix):
         # Delete $(bindir)/embossupdate to skip update checks
-        mkefile = FileFilter('Makefile')
+        makefile = FileFilter('Makefile')
         makefile.filter('$(bindir)/embossupdate', '', string=True)
         make('install')
