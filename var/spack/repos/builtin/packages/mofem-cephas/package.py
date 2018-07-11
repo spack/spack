@@ -42,6 +42,7 @@ class MofemCephas(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://likask@bitbucket.org/likask/mofem-cephas.git"
 
+    version('0.7.29', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.29')
     version('0.7.28', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.28')
     version('0.7.27', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.27')
     version('develop', git='https://likask@bitbucket.org/likask/mofem-cephas.git', branch='develop')
