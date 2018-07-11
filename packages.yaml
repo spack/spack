@@ -24,6 +24,7 @@ packages:
 
     intel-parallel-studio:
         paths:
+            intel-parallel-studio@cluster.2016.4%intel@16.0.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ybjjq75tqpzgzjc4drolyijzm45g5qul
             intel-parallel-studio@cluster.2017.5%intel@17.0.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.5/intel-parallel-studio-cluster.2017.5-h4hjkh276hoh7gcbkvhfqep3oadt6nck
             intel-parallel-studio@cluster.2018.1%intel@18.0.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-18.0.1/intel-parallel-studio-cluster.2018.1-krilumgdhss3rpqeb5o57ulnuhmviemo
         buildable: False
