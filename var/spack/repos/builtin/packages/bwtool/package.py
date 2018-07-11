@@ -25,14 +25,12 @@
 from spack import *
 
 
-class PyDev(PythonPackage):
-    """libraries and tools for Python development"""
+class Bwtool(AutotoolsPackage):
+    """bwtool is a command-line utility for bigWig files."""
 
-    homepage = "https://pypi.python.org/pypi/dev"
-    url      = "https://pypi.io/packages/source/d/dev/dev-0.4.0.tar.gz"
+    homepage = "https://github.com/CRG-Barcelona/bwtool"
+    url      = "https://github.com/CRG-Barcelona/bwtool/archive/1.0.tar.gz"
 
-    version('0.4.0', '00449cf0b347c32da9c840adcb4cf24b')
+    version('1.0', 'cdd7a34ae457b587edfe7dc8a0bdbedd')
 
-    patch('__init__.py.patch')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('libbeato')
