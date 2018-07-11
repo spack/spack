@@ -1,0 +1,23 @@
+--- libmatheval-1.1.11/configure.in	2013-08-14 22:22:08.000000000 +0200
++++ libmatheval-1.1.11/configure.ac	2018-06-26 10:26:46.364866000 +0200
+@@ -60,10 +60,11 @@
+ AC_CHECK_FUNCS([bzero memset], [break])
+ 
+ dnl Additional Guile feature checks.
+-AC_CHECK_TYPE([scm_t_bits], [AC_DEFINE([HAVE_SCM_T_BITS], [1], [Define to 1 if you have the `scm_t_bits' type.])], [], [#include <libguile.h>])
+-AC_CHECK_LIB([guile], [scm_c_define_gsubr], [AC_DEFINE([HAVE_SCM_C_DEFINE_GSUBR], [1], [Define to 1 if you have the `scm_c_define_gsubr' function.])], [], [$GUILE_LDFLAGS])
+-AC_CHECK_LIB([guile], [scm_make_gsubr], [AC_DEFINE([HAVE_SCM_MAKE_GSUBR], [1], [Define to 1 if you have the `scm_make_gsubr' function.])], [], [$GUILE_LDFLAGS])
+-AC_CHECK_LIB([guile], [scm_num2dbl], [AC_DEFINE([HAVE_SCM_NUM2DBL], [1], [Define to 1 if you have the `scm_num2dbl' function.])], [], [$GUILE_LDFLAGS])
++CPPFLAGS="$GUILE_CFLAGS $CPPFLAGS"
++AC_CHECK_TYPE([scm_t_bits], [AC_DEFINE([HAVE_SCM_T_BITS], [1], [Define to 1 if you have the 'scm_t_bits' type.])], [], [#include <libguile.h>])
++AC_CHECK_LIB([guile-$GUILE_EFFECTIVE_VERSION], [scm_c_define_gsubr], [AC_DEFINE([HAVE_SCM_C_DEFINE_GSUBR], [1], [Define to 1 if you have the 'scm_c_define_gsubr' function.])], [], [$GUILE_LDFLAGS])
++AC_CHECK_LIB([guile-$GUILE_EFFECTIVE_VERSION], [scm_make_gsubr],     [AC_DEFINE([HAVE_SCM_MAKE_GSUBR],     [1], [Define to 1 if you have the 'scm_make_gsubr' function.])],     [], [$GUILE_LDFLAGS])
++AC_CHECK_LIB([guile-$GUILE_EFFECTIVE_VERSION], [scm_num2dbl],        [AC_DEFINE([HAVE_SCM_NUM2DBL],        [1], [Define to 1 if you have the 'scm_num2dbl' function.])],        [], [$GUILE_LDFLAGS])
+ 
+ AC_CONFIG_FILES([Makefile doc/Makefile lib/Makefile])
+ AC_OUTPUT(libmatheval.pc)
+diff -Naur libmatheval-1.1.11/config/config.rpath config/config.rpath
+--- libmatheval-1.1.11/config/config.rpath	1970-01-01 01:00:00.000000000 +0100
++++ libmatheval-1.1.11/config/config.rpath	2018-06-26 10:55:19.473396000 +0200
+@@ -0,0 +1 @@
++# no rpaths
