@@ -40,7 +40,7 @@ class Kaldi(Package):    # Does not use Autotools
     version('master', git='https://github.com/kaldi-asr/kaldi.git')
     version('2018-07-11', git='https://github.com/kaldi-asr/kaldi.git',
             commit='6f2140b032b0108bc313eefdca65151289642773')
-    version('c024e8', git='https://github.com/kaldi-asr/kaldi.git',
+    version('2015-10-07', git='https://github.com/kaldi-asr/kaldi.git',
             commit='c024e8aa0a727bf76c91a318f76a1f8b0b59249e')
 
     variant('shared', default=True,
@@ -55,11 +55,11 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('sph2pipe', type='run')
     depends_on('sctk', type='run')
     depends_on('speex', type='run')
-    depends_on('openfst@1.4.1-patch', when='@c024e8')
-    depends_on('openfst@1.6.0:', when='2018-07-11')
+    depends_on('openfst@1.4.1-patch', when='@2015-10-07')
+    depends_on('openfst@1.6.0:', when='@2018-07-11')
     depends_on('openfst')
 
-    patch('openfst-1.4.1.patch', when='@c024e8')
+    patch('openfst-1.4.1.patch', when='@2015-10-07')
 
     def install(self, spec, prefix):
         configure_args = ['--fst-root=' + spec['openfst'].prefix]
