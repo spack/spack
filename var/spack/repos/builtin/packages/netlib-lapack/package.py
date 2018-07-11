@@ -60,6 +60,11 @@ class NetlibLapack(CMakePackage):
     patch('ibm-xl.patch', when='@3.7: %xl')
     patch('ibm-xl.patch', when='@3.7: %xl_r')
 
+    # https://github.com/Reference-LAPACK/lapack/issues/228
+    # TODO: update 'when' once the version of lapack
+    # containing the fix is released and added to Spack.
+    patch('undefined_declarations.patch', when='@3.8.0:')
+
     # virtual dependency
     provides('blas', when='~external-blas')
     provides('lapack')
