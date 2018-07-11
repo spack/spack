@@ -339,6 +339,13 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
         ]
 
+        # Add extra_rpaths dirs from compilers.yaml into link wrapper
+        rpaths = [self.compiler.cc_rpath_arg + path
+                  for path in self.compiler.extra_rpaths]
+        config_args.extend([
+            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
+        ])
+
         # According to this comment on github:
         #
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
