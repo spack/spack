@@ -93,8 +93,8 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake@3.8.2:3.9.999")
-    depends_on("conduit+python@0.3.1", when="+python+shared")
-    depends_on("conduit~shared~python@0.3.1", when="~shared")
+    depends_on("conduit+python", when="+python+shared")
+    depends_on("conduit~shared~python", when="~shared")
 
     #######################
     # Python
@@ -126,8 +126,8 @@ class Ascent(Package):
     depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
     depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
-    depends_on("mfem+shared+mpi+conduit", when="+shared+mfem+mpi")
-    depends_on("mfem~shared+mpi+conduit", when="~shared+mfem+mpi")
+    depends_on("mfem+shared~mpi+conduit", when="+shared+mfem+mpi")
+    depends_on("mfem~shared~mpi+conduit", when="~shared+mfem+mpi")
 
     depends_on("mfem+shared~mpi+conduit", when="+shared+mfem~mpi")
     depends_on("mfem~shared~mpi+conduit", when="~shared+mfem~mpi")
