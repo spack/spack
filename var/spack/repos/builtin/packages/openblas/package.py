@@ -78,7 +78,7 @@ class Openblas(MakefilePackage):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     #  UPD: the patch has been merged starting version 0.2.20
     patch('openblas_icc.patch', when='@:0.2.19%intel')
-    patch('openblas_icc_openmp.patch', when='%intel@16.0:')
+    patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
 

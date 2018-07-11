@@ -25,14 +25,24 @@
 from spack import *
 
 
-class PyDev(PythonPackage):
-    """libraries and tools for Python development"""
+class Shuffile(CMakePackage):
+    """Shuffle files between MPI ranks"""
 
-    homepage = "https://pypi.python.org/pypi/dev"
-    url      = "https://pypi.io/packages/source/d/dev/dev-0.4.0.tar.gz"
+    homepage = "https://github.com/ECP-VeloC/shuffile"
+    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.1.zip"
+    tags     = ['ecp']
 
-    version('0.4.0', '00449cf0b347c32da9c840adcb4cf24b')
+    version('0.0.2', 'eca45150d83e21ac51049133a2308d34')
+    version('master', git='https://github.com/ecp-veloc/shuffile.git',
+            branch='master')
 
-    patch('__init__.py.patch')
+    depends_on('mpi')
+    depends_on('kvtree')
 
-    depends_on('py-setuptools', type='build')
+    def cmake_args(self):
+        args = []
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        if self.spec.satisfies('platform=cray'):
+            args.append("-DSHUFFILE_LINK_STATIC=ON")
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
+        return args

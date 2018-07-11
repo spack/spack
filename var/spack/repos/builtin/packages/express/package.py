@@ -52,11 +52,8 @@ class Express(CMakePackage):
                     edit.filter('#include <api', '#include <%s' % self.spec[
                                 'bamtools'].prefix.include.bamtools.api)
             edit = FileFilter('CMakeLists.txt')
-            # really ugly way to escape the $ in CMakeLists.txt
-            edit.filter('{CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
-                        'libbamtools.a', '$')
-            edit.filter('\\$\\$', '%s' % join_path(self.spec[
-                        'bamtools'].prefix.lib.bamtools, 'libbamtools.a'))
+            edit.filter('\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
+                        'libbamtools.a', '%s' % self.spec['bamtools'].libs)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('CPATH', self.spec[

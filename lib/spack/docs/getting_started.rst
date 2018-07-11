@@ -805,7 +805,7 @@ encountered on a Macintosh during ``spack install julia-master``:
 
 .. code-block:: console
 
-   ==> Trying to clone git repository:
+   ==> Cloning git repository:
      https://github.com/JuliaLang/julia.git
      on branch master
    Cloning into 'julia'...
