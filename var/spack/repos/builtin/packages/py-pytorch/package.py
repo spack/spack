@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,39 +26,68 @@ from spack import *
 
 
 class PyPytorch(PythonPackage):
-    """
-    PyTorch is a python package that provides
-    tensor computation (like numpy) with strong GPU accelerationi and
-    deep neural networks built on a tape-based autodiff system
-    """
+    """Tensors and Dynamic neural networks in Python
+    with strong GPU acceleration."""
 
     homepage = "http://pytorch.org/"
-    url      = "https://github.com/pytorch/pytorch/archive/v0.4.0.tar.gz"
+    url      = "https://github.com/pytorch/pytorch/archive/v0.3.1.tar.gz"
 
-    import_modules = ['torch']
+    version('0.4.0', git='https://github.com/pytorch/pytorch.git',
+            tag='v0.4.0', submodules=True)
+    version('0.3.1', git='https://github.com/pytorch/pytorch.git',
+            tag='v0.3.1', submodules=True)
 
-    version('0.4.0', '897f24fd108f88a755a4dcf5ffa1f5cd')
+    variant('cuda', default='False', description='Add GPU support')
+    variant('cudnn', default='False', description='Add cuDNN support')
+    variant('nccl', default='False', description='Add NCCL support')
+    variant('mkldnn', default='False', description='Add Intel MKL DNN support')
+    variant('magma', default='False', description='Add MAGMA support')
 
-    variant('cuda', default=False, description='Builds with CUDA support')
-    variant('gloo', default=False, description='Builds gloo distributed training.')
+    conflicts('+cudnn', when='~cuda')
+    conflicts('+nccl', when='~cuda')
+    conflicts('+magma', when='~cuda')
+    conflicts('+mkldnn', when='@:0.3.2')
 
-    # depends_on('cmake', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cffi', type='build')
+    depends_on('py-numpy', type=('run', 'build'))
     depends_on('blas')
-    depends_on('aten')
-    depends_on('python@2.7:2.8,3.5:3.6')
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cffi', type=('build', 'run'))
-    depends_on('py-typing', type=('build', 'run'))
-    depends_on('magma', when='+cuda')
-    depends_on('nccl', when='+cuda')
-    depends_on('gloo', when='+gloo')
+    depends_on('lapack')
+    depends_on('py-pyyaml', type=('run', 'build'))
+    depends_on('py-typing', when='@0.3.2:', type=('run', 'build'))
+    depends_on('intel-mkl', when='+mkl')
+    depends_on('cuda', when='+cuda', type=('build', 'link', 'run'))
+    depends_on('cudnn', when='+cuda+cudnn')
+    depends_on('nccl', when='+cuda+nccl')
+    depends_on('magma+shared', when='+cuda+magma')
 
-    def install_test(self):
-        # Change directories due to the following error:
-        #
-        # ImportError: Error importing torch: you should not try to import
-        #       torch from its source directory; please exit the torch
-        #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
-            python('-c', 'import torch')
+    def setup_environment(self, build_env, run_env):
+        build_env.set('MAX_JOBS', make_jobs)
+
+        if '+cuda' in self.spec:
+            build_env.set('CUDA_HOME', self.spec['cuda'].prefix)
+        else:
+            build_env.set('NO_CUDA', 'TRUE')
+
+        if '+cudnn' in self.spec:
+            build_env.set('CUDNN_LIB_DIR',
+                          self.spec['cudnn'].prefix.lib)
+            build_env.set('CUDNN_INCLUDE_DIR',
+                          self.spec['cudnn'].prefix.include)
+        else:
+            build_env.set('NO_CUDNN', 'TRUE')
+
+        if '+nccl' in self.spec:
+            build_env.set('NCCL_ROOT_DIR', self.spec['nccl'].prefix)
+        else:
+            build_env.set('NO_SYSTEM_NCCL', 'TRUE')
+
+        if '+mkldnn' in self.spec:
+            build_env.set('MKLDNN_HOME', self.spec['intel-mkl'].prefix)
+        else:
+            build_env.set('NO_MKLDNN', 'TRUE')
+
+        build_env.set('NO_NNPACK', 'TRUE')
+
+        build_env.set('PYTORCH_BUILD_VERSION', str(self.version))
+        build_env.set('PYTORCH_BUILD_NUMBER', 0)
