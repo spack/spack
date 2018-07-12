@@ -218,22 +218,26 @@ def create(path, specs, **kwargs):
 
 
 def _fetch_and_archive(name, fetcher, archive_path, do_checksum):
+    # This function returns whether the archive path already exists (and the
+    # fetcher did not need to retrieve the source)
+    if os.path.exists(archive_path):
+        tty.msg("{name} : already added".format(name=name))
+        return True
+
     subdir = os.path.dirname(archive_path)
     mkdirp(subdir)
 
-    if os.path.exists(archive_path):
-        tty.msg("{name} : already added".format(name=name))
-    else:
-        spec_exists_in_mirror = False
-        fetcher.fetch()
-        if do_checksum:
-            fetcher.check()
-            tty.msg("{name} : checksum passed".format(name=name))
+    spec_exists_in_mirror = False
+    fetcher.fetch()
+    if do_checksum:
+        fetcher.check()
+        tty.msg("{name} : checksum passed".format(name=name))
 
-        # Fetchers have to know how to archive their files.  Use
-        # that to move/copy/create an archive in the mirror.
-        fetcher.archive(archive_path)
-        tty.msg("{name} : added".format(name=name))
+    # Fetchers have to know how to archive their files.  Use
+    # that to move/copy/create an archive in the mirror.
+    fetcher.archive(archive_path)
+    tty.msg("{name} : added".format(name=name))
+    return False
 
 
 def add_single_spec(spec, mirror_root, categories, **kwargs):
@@ -253,7 +257,8 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.cformat("$_$@"))
 
-                _fetch_and_archive(name, fetcher, archive_path, do_checksum)
+                spec_exists_in_mirror &= _fetch_and_archive(
+                    name, fetcher, archive_path, do_checksum)
 
             for patch in spec.patches:
                 try:
