@@ -25,10 +25,11 @@
 from spack import *
 
 
-class PyPly(PythonPackage):
-    """PLY is nothing more than a straightforward lex/yacc implementation."""
-    homepage = "http://www.dabeaz.com/ply"
-    url      = "https://github.com/dabeaz/ply/archive/3.11.tar.gz"
+class PerlMathCephes(PerlPackage):
+    """This module provides an interface to over 150 functions of the
+       cephes math library of Stephen Moshier."""
 
-    version('3.11', '6465f602e656455affcd7c5734c638f8')
-    version('3.8', '94726411496c52c87c2b9429b12d5c50', url='http://www.dabeaz.com/ply/ply-3.8.tar.gz')
+    homepage = "http://search.cpan.org/~shlomif/Math-Cephes/lib/Math/Cephes.pod"
+    url      = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Math-Cephes-0.5305.tar.gz"
+
+    version('0.5305', '30922dd213783aaaf91a47626f6a1853')

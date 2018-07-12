@@ -37,6 +37,7 @@ class Transdecoder(MakefilePackage):
     version('3.0.1', 'f62b86a15fcb78b1dada9f80cc25f300')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('perl-uri-escape', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

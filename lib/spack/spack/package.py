@@ -766,22 +766,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 version_urls[v] = args['url']
         return version_urls
 
-    def nearest_url(self, version):
-        """Finds the URL for the next lowest version with a URL.
-           If there is no lower version with a URL, uses the
-           package url property. If that isn't there, uses a
-           *higher* URL, and if that isn't there raises an error.
-        """
-        version_urls = self.version_urls()
-        url = getattr(self.__class__, 'url', None)
-
-        for v in version_urls:
-            if v > version and url:
-                break
-            if version_urls[v]:
-                url = version_urls[v]
-        return url
-
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL from which the specified version of this package
@@ -804,9 +788,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if version in version_urls:
             return version_urls[version]
 
-        # If we have no idea, try to substitute the version.
+        # If we have no idea, substitute the version into the default URL.
+        default_url = getattr(self.__class__, 'url', None)
         return spack.url.substitute_version(
-            self.nearest_url(version), self.url_version(version))
+            default_url, self.url_version(version))
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
