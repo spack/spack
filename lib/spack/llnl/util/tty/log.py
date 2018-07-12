@@ -449,7 +449,7 @@ class log_output(object):
                     # Without the last parameter (timeout) select will
                     # wait until at least one of the two streams are
                     # ready. This may cause the function to hang.
-                    rlist, _, xlist = select.select(istreams, [], [], 0)
+                    rlist, _, xlist = select.select(istreams, [], [])
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
