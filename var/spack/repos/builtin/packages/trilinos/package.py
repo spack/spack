@@ -251,6 +251,9 @@ class Trilinos(CMakePackage):
     conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+dtk', when='~intrepid2')
+    conflicts('+dtk', when='~kokkos')
+    conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')

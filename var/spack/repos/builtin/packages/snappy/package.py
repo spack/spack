@@ -34,6 +34,7 @@ class Snappy(CMakePackage):
     version('1.1.7', 'ee9086291c9ae8deb4dac5e0b85bf54a')
 
     variant('shared', default=True, description='Build shared libraries')
+    variant('pic', default=True, description='Build position independent code')
 
     def cmake_args(self):
         spec = self.spec
@@ -46,6 +47,12 @@ class Snappy(CMakePackage):
         ]
 
         return args
+
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
+            flags.append(self.compiler.pic_flag)
+        return (None, None, flags)
 
     @run_after('install')
     def install_pkgconfig(self):

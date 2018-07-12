@@ -51,9 +51,7 @@ class PyScipy(PythonPackage):
 
     version('1.1.0', 'aa6bcc85276b6f25e17bcfc4dede8718')
     version('1.0.0', '53fa34bd3733a9a4216842b6000f7316')
-    # See https://github.com/spack/spack/issues/2737
-    version('0.19.1', '6b4d91b62f1926282b127194a06b72b3',
-            url="https://pypi.io/packages/source/s/scipy/scipy-0.19.1.tar.gz")
+    version('0.19.1', '6b4d91b62f1926282b127194a06b72b3')
     version('0.19.0', '91b8396231eec780222a57703d3ec550',
             url="https://pypi.io/packages/source/s/scipy/scipy-0.19.0.zip")
     version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
