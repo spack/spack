@@ -45,5 +45,5 @@ class Libmatheval(AutotoolsPackage):
     @run_before('autoreconf')
     def check_reconf_needed(self):
         if '^guile@2.0:' in self.spec:
-            force_autoreconf = True
+            self.force_autoreconf = True
             force_remove(self.configure_abs_path)
