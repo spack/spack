@@ -29,6 +29,7 @@ parsing environment modules.
 import subprocess
 import re
 import os
+import llnl.util.tty as tty
 from spack.util.executable import which
 
 
@@ -36,20 +37,16 @@ def get_module_cmd(bashopts=''):
     try:
         return get_module_cmd_from_bash(bashopts)
     except ModuleError:
-        # Given that we HAVE another method, quietly move on and use it.
-        # A warning would just get tiresome, since it would appear each t
-        # on a Spack install/module/... command.
-        # tty.warn("Could not detect module function from bash."
-        #         " Trying to detect modulecmd from `which`")
-        pass
-
-    try:
-        return get_module_cmd_from_which()
-    except ModuleError:
-        raise ModuleError(
-            'Spack requires "modulecmd" or a "module" function.'
-            ' Ensure that either "modulecmd" is in your path or that'
-            ' a "module" function is defined in your bash environment.')
+        # Don't catch the exception this time; we have no other way to do it.
+        tty.warn("Could not detect module function from bash."
+                 " Trying to detect modulecmd from `which`")
+        try:
+            return get_module_cmd_from_which()
+        except ModuleError:
+            raise ModuleError('Spack requires modulecmd or a defined module'
+                              ' fucntion. Make sure modulecmd is in your path'
+                              ' or the function "module" is defined in your'
+                              ' bash environment.')
 
 
 def get_module_cmd_from_which():
@@ -212,4 +209,4 @@ def get_path_from_module(mod):
 
 
 class ModuleError(Exception):
-    """Failure to interface with evironment modules."""
+    """Raised the the module_cmd utility to indicate errors."""
