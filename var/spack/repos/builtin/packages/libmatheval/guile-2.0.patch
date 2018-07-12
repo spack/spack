@@ -1,5 +1,5 @@
---- libmatheval-1.1.11/configure.in	2013-08-14 22:22:08.000000000 +0200
-+++ libmatheval-1.1.11/configure.ac	2018-06-26 10:26:46.364866000 +0200
+--- libmatheval-1.1.11-old/configure.in	2013-08-14 22:22:08.000000000 +0200
++++ libmatheval-1.1.11/configure.in	2018-06-26 10:26:46.364866000 +0200
 @@ -60,10 +60,11 @@
  AC_CHECK_FUNCS([bzero memset], [break])
  
