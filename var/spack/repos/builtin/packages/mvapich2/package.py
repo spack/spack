@@ -199,6 +199,9 @@ class Mvapich2(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
+        # mvapich2 complains during configure if is F90 set, which Intel does
+        if spec.satisfies('%intel'):
+            spack_env.unset('F90')
         if 'process_managers=slurm' in spec:
             run_env.set('SLURM_MPI_TYPE', 'pmi2')
 
