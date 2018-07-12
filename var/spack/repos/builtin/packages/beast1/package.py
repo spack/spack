@@ -32,6 +32,8 @@ class Beast1(Package):
     homepage = "http://beast.community/"
     url      = "https://github.com/beast-dev/beast-mcmc/releases/download/v1.8.4/BEASTv1.8.4.tgz"
 
+    version('1.10.0', 'bcf2f2c074319360ec8a2ebad57d2e57', 
+            url='https://github.com/beast-dev/beast-mcmc/releases/download/v1.10.0/BEAST_v1.10.0.tgz')
     version('1.8.4', 'cb8752340c1f77a22d39ca4fe09687b0')
 
     depends_on('java', type='run')

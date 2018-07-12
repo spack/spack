@@ -171,6 +171,16 @@ class Gcc(AutotoolsPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
+    # Older versions do not compile with newer versions of glibc
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
+    patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
+    patch('ucontext_t-java.patch', when='@4.9,5.1:5.4,6.1:6.4 languages=java')
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81066
+    patch('stack_t-4.9.patch', when='@4.9')
+    patch('stack_t.patch', when='@5.1:5.4,6.1:6.4,7.1')
+    # https://bugs.busybox.net/show_bug.cgi?id=10061
+    patch('signal.patch', when='@4.9,5.1:5.4')
+
     build_directory = 'spack-build'
 
     def url_for_version(self, version):

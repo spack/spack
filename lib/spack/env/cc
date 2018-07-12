@@ -342,7 +342,15 @@ case "$mode" in
         args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
 esac
 
-full_command=("$command" "${args[@]}")
+#ccache only supports C languages, so filtering out Fortran
+if [[ ( ${lang_flags} = "C" || ${lang_flags} = "CXX" ) && ${SPACK_CCACHE_BINARY} ]]; then
+    full_command=("${SPACK_CCACHE_BINARY}" "$command" "${args[@]}")
+    # #3761#issuecomment-294352232
+    # workaround for stage being a temp folder
+    export CCACHE_NOHASHDIR=yes
+else
+   full_command=("$command" "${args[@]}")
+fi
 
 # In test command mode, write out full command for Spack tests.
 if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
