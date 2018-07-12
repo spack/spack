@@ -92,8 +92,8 @@ class Charm(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
-    # FIXME: backend=mpi also provides mpi, but this can't be expressed in
-    # spack currently
+    # FIXME: backend=mpi also provides mpi, but spack does not support
+    # depends_on("mpi") and provides("mpi") in the same package currently.
     for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
               'pamilrts']:
         provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
