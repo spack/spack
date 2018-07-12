@@ -41,9 +41,3 @@ class Libmatheval(AutotoolsPackage):
     # Only needed for unit tests, but configure crashes without it
     depends_on('guile', type='build')
     patch('guile-2.0.patch', when='^guile@2.0:')
-
-    @run_before('autoreconf')
-    def check_reconf_needed(self):
-        if '^guile@2.0:' in self.spec:
-            self.force_autoreconf = True
-            force_remove(self.configure_abs_path)
