@@ -244,16 +244,12 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
         with spec.package.stage:
             for ii, stage in enumerate(spec.package.stage):
                 fetcher = stage.fetcher
+                archive_path = os.path.abspath(os.path.join(
+                        mirror_root, stage.mirror_path))
                 if ii == 0:
-                    # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(os.path.join(
-                        mirror_root, mirror_archive_path(spec, fetcher)))
                     name = spec.cformat("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = os.path.abspath(os.path.join(
-                        mirror_root,
-                        mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.cformat("$_$@"))
 
