@@ -36,5 +36,5 @@ class PyCutadapt(PythonPackage):
     version('1.13', '2d2d14e0c20ad53d7d84b57bc3e63b4c')
 
     depends_on('python@2.6:', type=('build', 'run'))
-    depends_on('py-setuptools',        type=('build'))
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-xopen@0.1.1:', type=('build', 'run'))
