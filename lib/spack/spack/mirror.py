@@ -227,7 +227,6 @@ def _fetch_and_archive(name, fetcher, archive_path, do_checksum):
     subdir = os.path.dirname(archive_path)
     mkdirp(subdir)
 
-    spec_exists_in_mirror = False
     fetcher.fetch()
     if do_checksum:
         fetcher.check()
@@ -249,7 +248,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             for ii, stage in enumerate(spec.package.stage):
                 fetcher = stage.fetcher
                 archive_path = os.path.abspath(os.path.join(
-                        mirror_root, stage.mirror_path))
+                    mirror_root, stage.mirror_path))
                 if ii == 0:
                     name = spec.cformat("$_$@")
                 else:
