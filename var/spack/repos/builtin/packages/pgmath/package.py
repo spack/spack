@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2018, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,3 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+from spack import *
+
+
+class Pgmath(CMakePackage):
+    """Flang's math library"""
+    homepage = "https://github.com/flang-compiler/flang"
+    url      = "https://github.com/flang-compiler/flang/archive/pgmath_20180319.tar.gz"
+
+    version('develop', git='https://github.com/flang-compiler/flang', branch='master')
+
+    conflicts("%gcc@:7.1.9999")
+    root_cmakelists_dir = 'runtime/libpgmath'
