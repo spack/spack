@@ -77,7 +77,7 @@ class MofemFractureModule(CMakePackage):
 	    spec = self.spec
 	    source = self.stage.source_path
 	    prefix = spec['mofem-cephas'].prefix
-            mkdirp(prefix.users_modules.fracture_mechanics)
+        mkdirp(prefix.users_modules.fracture_mechanics)
 	    copy_tree(source,prefix.users_modules.fracture_mechanics)
 
 
