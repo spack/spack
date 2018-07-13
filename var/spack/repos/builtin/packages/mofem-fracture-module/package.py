@@ -74,11 +74,11 @@ class MofemFractureModule(CMakePackage):
 
     @run_before('cmake')
     def copy_source_code_to_users_modules(self):
-	spec = self.spec
-	source = self.stage.source_path
-	prefix = spec['mofem-cephas'].prefix
-        mkdirp(prefix.users_modules.fracture_mechanics)
-	copy_tree(source,prefix.users_modules.fracture_mechanics)
+	    spec = self.spec
+	    source = self.stage.source_path
+	    prefix = spec['mofem-cephas'].prefix
+            mkdirp(prefix.users_modules.fracture_mechanics)
+	    copy_tree(source,prefix.users_modules.fracture_mechanics)
 
 
  
