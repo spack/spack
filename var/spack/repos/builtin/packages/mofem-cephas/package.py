@@ -49,23 +49,27 @@ class MofemCephas(CMakePackage):
     version('0.7.27', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.27')
     version('develop', git='https://likask@bitbucket.org/likask/mofem-cephas.git', branch='develop')
 
-    variant('with_adol_c', default=True,
+    # Variants of packages installed as extensions with MoFEM, to indicate this 
+    # specific type of variant prefox with_ is added.
+    variant('with_adol-c', default=True,
             description='Install ADOL-C with MoFEM')
     variant('with_tetgen', default=True,
             description='Install TetGen with MoFEM')
     variant('with_med', default=True,
             description='Install MED with MoFEM')
+
     variant('copy_user_modules', default=True,
 	    description='Copy user modules directory instead if making ling to source')
     variant('slepc', default=False, description='Compile with Slepc')
     variant('doxygen', default=False, description='Install doxygen')
 
-    depends_on("openmpi") 
-    depends_on("parmetis") 
-    depends_on("hdf5@1.8.19 hl=True") 
-    depends_on("petsc@3.9.2 ^hdf5@1.8.19 mumps=True")
-    depends_on("moab@5.0.0 ^hdf5@1.8.19")
-    depends_on("cmake")
+    depends_on("mpi") 
+    depends_on("parmetis")
+    # Fixed version of hdf5, 
+    # to remove some problems with dependent packages, f.e. MED format
+    depends_on("hdf5@:1.8.19+hl") 
+    depends_on("petsc@:3.9.2+mumps ^hdf5@:1.8.19")
+    depends_on("moab ^hdf5@1.8.19")
     depends_on('doxygen+graphviz', when='+doxygen')
     depends_on('graphviz', when='+doxygen')
     depends_on('slepc', when='+slepc')
@@ -83,7 +87,7 @@ class MofemCephas(CMakePackage):
 
         """ mofem extensions compiled with mofem """
         options.extend([
-            '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol_c' in spec else 'NO'),
+            '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol-c' in spec else 'NO'),
             '-DWITH_TETGEN=%s' % ('YES' if '+with_tetgen' in spec else 'NO'),
             '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO')]
         )
