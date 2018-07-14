@@ -331,7 +331,7 @@ def copy_tree(src, dest, symlinks=True):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?
             target = os.readlink(s)
-            os.symlink(target, d)
+            os.symlink(os.path.abspath(target), d)
         elif os.path.isdir(s):
             mkdirp(d)
         else:
@@ -366,7 +366,7 @@ def install_tree(src, dest, symlinks=True):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?
             target = os.readlink(s)
-            os.symlink(target, d)
+            os.symlink(os.path.abspath(target), d)
         elif os.path.isdir(s):
             mkdirp(d)
         else:

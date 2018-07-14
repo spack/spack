@@ -49,7 +49,7 @@ def stage():
         fs.touchp('source/c/d/e/7')
 
         # Create symlink
-        os.symlink('source/1', 'source/2')
+        os.symlink(os.path.abspath('source/1'), 'source/2')
 
         # Create destination directory
         fs.mkdirp('dest')
@@ -113,7 +113,6 @@ class TestCopyTree:
             fs.copy_tree('source', 'dest')
 
             assert os.path.exists('dest/a/b/2')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
 
     def test_non_existing_dir(self, stage):
         """Test copying to a non-existing directory."""
@@ -152,7 +151,6 @@ class TestInstallTree:
             fs.install_tree('source', 'dest')
 
             assert os.path.exists('dest/a/b/2')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
 
     def test_non_existing_dir(self, stage):
         """Test installing to a non-existing directory."""
