@@ -48,16 +48,6 @@ class MofemCephas(CMakePackage):
         git='https://likask@bitbucket.org/likask/mofem-cephas.git',
         branch='develop')
 
-    # Obsolete:
-    # Variants of packages installed as extensions with MoFEM, to indicate this
-    # specific type of variant prefox with_ is added.
-    # variant('with_adol-c', default=False,
-    #         description='Install ADOL-C with MoFEM')
-    # variant('with_tetgen', default=False,
-    #         description='Install TetGen with MoFEM')
-    # variant('with_med', default=False,
-    #         description='Install MED with MoFEM')
-
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking to source')
@@ -65,7 +55,7 @@ class MofemCephas(CMakePackage):
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
     variant('slepc', default=True, description='Compile with Slepc')
-    variant('documentation', default=False, description='Install doxygen')
+    variant('doxygen', default=False, description='Install doxygen')
 
     conflicts('+adol-c', when='+with_adol-c')
     conflicts('+tetgen', when='+with_tetgen')
@@ -99,14 +89,6 @@ class MofemCephas(CMakePackage):
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
             '-DPETSC_ARCH=',
             '-DMOAB_DIR=%s' % spec['moab'].prefix])
-
-        # Obsolete:
-        # mofem extensions compiled with mofem
-        # options.extend([
-        #     '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol-c' in spec else 'NO'),
-        #     '-DWITH_TETGEN=%s' % ('YES' if '+with_tetgen' in spec else 'NO'),
-        #     '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO')]
-        # )
 
         # variant packages
         if '+adol-c' in spec:
