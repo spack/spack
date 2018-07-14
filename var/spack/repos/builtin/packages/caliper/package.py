@@ -39,7 +39,11 @@ class Caliper(CMakePackage):
     url      = ""
 
     version('master', git='https://github.com/LLNL/Caliper.git')
+    version('1.7.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.7.0')
+    # version 1.6.0 is broken b/c it downloads the wrong gotcha version
     version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
+
+    is_linux = sys.platform.startswith('linux')
 
     variant('mpi', default=True, 
             description='Enable MPI wrappers')
@@ -51,14 +55,17 @@ class Caliper(CMakePackage):
     # pthread_self() signature is incompatible with PAPI_thread_init() on Mac
     variant('papi', default=sys.platform != 'darwin',
             description='Enable PAPI service')
-    variant('libpfm', default=sys.platform == 'linux2',
+    variant('libpfm', default=is_linux,
             description='Enable libpfm (perf_events) service')
     # gotcha doesn't work on Mac
     variant('gotcha', default=sys.platform != 'darwin',
             description='Enable GOTCHA support')
+    variant('sampler', default=is_linux,
+            description='Enable sampling support on Linux')
     variant('sosflow', default=False,
             description='Enable SOSflow support')
 
+    depends_on('gotcha@1.0:', when='+gotcha')
     depends_on('dyninst', when='+dyninst')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='+libpfm')
@@ -81,10 +88,13 @@ class Caliper(CMakePackage):
             '-DWITH_PAPI=%s'     % ('On' if '+papi'     in spec else 'Off'),
             '-DWITH_LIBPFM=%s'   % ('On' if '+libpfm'   in spec else 'Off'),
             '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
+            '-DWITH_SAMPLER=%s'  % ('On' if '+sampler'  in spec else 'Off'),
             '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
             '-DWITH_MPIT=%s' % ('On' if spec.satisfies('^mpi@3:') else 'Off')
         ]
 
+        if '+gotcha' in spec:
+            args.append('-DUSE_EXTERNAL_GOTCHA=True')
         if '+papi' in spec:
             args.append('-DPAPI_PREFIX=%s'    % spec['papi'].prefix)
         if '+libpfm' in spec:

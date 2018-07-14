@@ -75,6 +75,7 @@ from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
+from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
@@ -260,7 +261,54 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
-class PackageBase(with_metaclass(PackageMeta, object)):
+class PackageViewMixin(object):
+    """This collects all functionality related to adding installed Spack
+    package to views. Packages can customize how they are added to views by
+    overriding these functions.
+    """
+    def view_source(self):
+        """The source root directory that will be added to the view: files are
+        added such that their path relative to the view destination matches
+        their path relative to the view source.
+        """
+        return self.spec.prefix
+
+    def view_destination(self, view):
+        """The target root directory: each file is added relative to this
+        directory.
+        """
+        return view.root
+
+    def view_file_conflicts(self, view, merge_map):
+        """Report any files which prevent adding this package to the view. The
+        default implementation looks for any files which already exist.
+        Alternative implementations may allow some of the files to exist in
+        the view (in this case they would be omitted from the results).
+        """
+        return set(dst for dst in merge_map.values() if os.path.exists(dst))
+
+    def add_files_to_view(self, view, merge_map):
+        """Given a map of package files to destination paths in the view, add
+        the files to the view. By default this adds all files. Alternative
+        implementations may skip some files, for example if other packages
+        linked into the view already include the file.
+        """
+        for src, dst in merge_map.items():
+            if not os.path.exists(dst):
+                view.link(src, dst)
+
+    def remove_files_from_view(self, view, merge_map):
+        """Given a map of package files to files currently linked in the view,
+        remove the files from the view. The default implementation removes all
+        files. Alternative implementations may not remove all files. For
+        example if two packages include the same file, it should only be
+        removed when both packages are removed.
+        """
+        for src, dst in merge_map.items():
+            view.remove_file(src, dst)
+
+
+class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -718,22 +766,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 version_urls[v] = args['url']
         return version_urls
 
-    def nearest_url(self, version):
-        """Finds the URL for the next lowest version with a URL.
-           If there is no lower version with a URL, uses the
-           package url property. If that isn't there, uses a
-           *higher* URL, and if that isn't there raises an error.
-        """
-        version_urls = self.version_urls()
-        url = getattr(self.__class__, 'url', None)
-
-        for v in version_urls:
-            if v > version and url:
-                break
-            if version_urls[v]:
-                url = version_urls[v]
-        return url
-
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL from which the specified version of this package
@@ -756,9 +788,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if version in version_urls:
             return version_urls[version]
 
-        # If we have no idea, try to substitute the version.
+        # If we have no idea, substitute the version into the default URL.
+        default_url = getattr(self.__class__, 'url', None)
         return spack.url.substitute_version(
-            self.nearest_url(version), self.url_version(version))
+            default_url, self.url_version(version))
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
@@ -942,13 +975,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         s = self.extendee_spec
         return s and spec.satisfies(s)
 
-    def is_activated(self, extensions_layout=None):
+    def is_activated(self, view):
         """Return True if package is activated."""
         if not self.is_extension:
             raise ValueError(
-                "is_extension called on package that is not an extension.")
-        if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+                "is_activated called on package that is not an extension.")
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
@@ -1979,8 +2011,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, with_dependencies=True, ignore_conflicts=False,
-                    verbose=True, extensions_layout=None):
+    def do_activate(self, view=None, with_dependencies=True, verbose=True):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
@@ -1991,9 +2022,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         self._sanity_check_extension()
+        if not view:
+            view = YamlFilesystemView(
+                self.extendee_spec.prefix, spack.store.layout)
 
-        if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+        extensions_layout = view.extensions_layout
 
         extensions_layout.check_extension_conflict(
             self.extendee_spec, self.spec)
@@ -2001,17 +2034,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Activate any package dependencies that are also extensions.
         if with_dependencies:
             for spec in self.dependency_activations():
-                if not spec.package.is_activated(
-                        extensions_layout=extensions_layout):
+                if not spec.package.is_activated(view):
                     spec.package.do_activate(
-                        with_dependencies=with_dependencies,
-                        ignore_conflicts=ignore_conflicts,
-                        verbose=verbose,
-                        extensions_layout=extensions_layout)
+                        view, with_dependencies=with_dependencies,
+                        verbose=verbose)
 
         self.extendee_spec.package.activate(
-            self, extensions_layout=extensions_layout,
-            ignore_conflicts=ignore_conflicts, **self.extendee_args)
+            self, view, **self.extendee_args)
 
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
@@ -2025,41 +2054,22 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
-    def activate(self, extension, ignore_conflicts=False, **kwargs):
-        """Make extension package usable by linking all its files to a target
-        provided by the directory layout (depending if the user wants to
-        activate globally or in a specified file system view).
-
-        Package authors can override this method to support other
-        extension mechanisms.  Spack internals (commands, hooks, etc.)
-        should call do_activate() method so that proper checks are
-        always executed.
-
+    def activate(self, extension, view, **kwargs):
         """
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
-        target = extensions_layout.extendee_target_directory(self)
+        Add the extension to the specified view.
 
-        def ignore(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
+        Package authors can override this function to maintain some
+        centralized state related to the set of activated extensions
+        for a package.
 
-        tree = LinkTree(extension.prefix)
+        Spack internals (commands, hooks, etc.) should call
+        do_activate() method so that proper checks are always executed.
+        """
+        view.merge(extension.spec, ignore=kwargs.get('ignore', None))
 
-        conflict = tree.find_conflict(target, ignore=ignore)
-        if not conflict:
-            pass
-        elif ignore_conflicts:
-            tty.warn("While activating %s, found conflict %s" %
-                     (self.spec.cshort_spec, conflict))
-        else:
-            raise ExtensionConflictError(conflict)
-
-        tree.merge(target, ignore=ignore, link=extensions_layout.link,
-                   ignore_conflicts=ignore_conflicts)
-
-    def do_deactivate(self, **kwargs):
-        """Called on the extension to invoke extendee's deactivate() method.
+    def do_deactivate(self, view=None, **kwargs):
+        """Remove this extension package from the specified view. Called
+        on the extension to invoke extendee's deactivate() method.
 
         `remove_dependents=True` deactivates extensions depending on this
         package instead of raising an error.
@@ -2068,8 +2078,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         force = kwargs.get('force', False)
         verbose = kwargs.get("verbose", True)
         remove_dependents = kwargs.get("remove_dependents", False)
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
+
+        if not view:
+            view = YamlFilesystemView(
+                self.extendee_spec.prefix, spack.store.layout)
+        extensions_layout = view.extensions_layout
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
@@ -2094,13 +2107,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
-            self,
-            extensions_layout=extensions_layout,
-            **self.extendee_args)
+            self, view, **self.extendee_args)
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
-        if self.is_activated(extensions_layout):
+        if self.is_activated(view):
             extensions_layout.remove_extension(
                 self.extendee_spec, self.spec)
 
@@ -2110,26 +2121,23 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 (self.spec.short_spec,
                  self.extendee_spec.cformat("$_$@$+$%@")))
 
-    def deactivate(self, extension, **kwargs):
-        """Unlinks all files from extension out of this package's install dir
-        or the corresponding filesystem view.
+    def deactivate(self, extension, view, **kwargs):
+        """
+        Remove all extension files from the specified view.
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
         should call do_deactivate() method so that proper checks are
         always executed.
-
         """
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
-        target = extensions_layout.extendee_target_directory(self)
+        view.unmerge(extension.spec, ignore=kwargs.get('ignore', None))
 
-        def ignore(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
-
-        tree = LinkTree(extension.prefix)
-        tree.unmerge(target, ignore=ignore)
+    def view(self):
+        """Create a view with the prefix of this package as the root.
+        Extensions added to this view will modify the installation prefix of
+        this package.
+        """
+        return YamlFilesystemView(self.prefix, spack.store.layout)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
@@ -2407,13 +2415,6 @@ class NoURLError(PackageError):
 class ExtensionError(PackageError):
 
     pass
-
-
-class ExtensionConflictError(ExtensionError):
-
-    def __init__(self, path):
-        super(ExtensionConflictError, self).__init__(
-            "Extension blocked by file: %s" % path)
 
 
 class ActivationError(ExtensionError):

@@ -1,31 +1,55 @@
 version: '3'
 services:
   arch:
-    build: ./spack_arch
+    build:
+      context: build
+      dockerfile: arch.dockerfile
     volumes:
       - '../../..:/spack'
     environment:
       PROMPT: "${PROMPT:-0}"
   centos:
-    build: ./spack_centos
+    build:
+      context: build
+      dockerfile: centos.dockerfile
     volumes:
       - '../../..:/spack'
     environment:
       PROMPT: "${PROMPT:-0}"
   fedora:
-    build: ./spack_fedora
+    build:
+      context: build
+      dockerfile: fedora.dockerfile
     volumes:
       - '../../..:/spack'
     environment:
       PROMPT: "${PROMPT:-0}"
   opensuse:
-    build: ./spack_opensuse
+    build:
+      context: build
+      dockerfile: opensuse.dockerfile
+    volumes:
+      - '../../..:/spack'
+    environment:
+      PROMPT: "${PROMPT:-0}"
+  scilinux:
+    build:
+      context: build
+      dockerfile: scilinux.dockerfile
+    volumes:
+      - '../../..:/spack'
+    environment:
+      PROMPT: "${PROMPT:-0}"
+  scilinux:
+    build: ./spack_scilinux
     volumes:
       - '../../..:/spack'
     environment:
       PROMPT: "${PROMPT:-0}"
   ubuntu:
-    build: ./spack_ubuntu
+    build:
+      context: build
+      dockerfile: ubuntu.dockerfile
     volumes:
       - '../../..:/spack'
     environment:

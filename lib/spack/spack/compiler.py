@@ -27,11 +27,11 @@ import re
 import itertools
 
 import llnl.util.tty as tty
+import llnl.util.multiproc as mp
 
 import spack.error
 import spack.spec
 import spack.architecture
-from spack.util.multiproc import parmap
 from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
@@ -280,7 +280,7 @@ class Compiler(object):
                         key = (full_path,) + match.groups() + (detect_version,)
                         checks.append(key)
 
-        successful = [k for k in parmap(_get_versioned_tuple, checks)
+        successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
                       if k is not None]
 
         # The 'successful' list is ordered like the input paths.

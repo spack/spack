@@ -21,7 +21,7 @@ config:
 
   # Locations where templates should be found
   template_dirs:
-    - $spack/templates
+    - $spack/share/spack/templates
 
 
   # default directory layout
@@ -90,3 +90,7 @@ config:
   # If set to 4, for example, `spack install` will run `make -j4`.
   # If not set, all available cores are used by default.
   # build_jobs: 4
+
+
+  # If set to true, spack will use ccache to cache c compiles.
+  ccache: false
