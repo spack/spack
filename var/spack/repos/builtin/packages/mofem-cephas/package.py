@@ -40,39 +40,32 @@ class MofemCephas(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://likask@bitbucket.org/likask/mofem-cephas.git"
 
-    version('0.8.2', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.2', submodules=True)
-    version('0.8.1', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.1', submodules=True)
-    version('0.8.0', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.0', submodules=True)
-    version('0.7.29', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.7.29')
-    version('0.7.28', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.7.28')
-    version('0.7.27', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.7.27')
+    maintainers = ['likask']
+
+    version('0.8.3', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.3', submodules=True)
     version('develop',
         git='https://likask@bitbucket.org/likask/mofem-cephas.git',
         branch='develop')
 
+    # Obsolete:
     # Variants of packages installed as extensions with MoFEM, to indicate this
     # specific type of variant prefox with_ is added.
-    variant('with_adol-c', default=False,
-            description='Install ADOL-C with MoFEM')
-    variant('with_tetgen', default=False,
-            description='Install TetGen with MoFEM')
-    variant('with_med', default=False,
-            description='Install MED with MoFEM')
+    # variant('with_adol-c', default=False,
+    #         description='Install ADOL-C with MoFEM')
+    # variant('with_tetgen', default=False,
+    #         description='Install TetGen with MoFEM')
+    # variant('with_med', default=False,
+    #         description='Install MED with MoFEM')
 
-    # This option cab ne only used for development of core lib
+    # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking to source')
     variant('adol-c', default=True, description='Compile with Adol-C')
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
     variant('slepc', default=True, description='Compile with Slepc')
-    variant('doxygen', default=False, description='Install doxygen')
+    variant('documentation', default=False, description='Install doxygen')
 
     conflicts('+adol-c', when='+with_adol-c')
     conflicts('+tetgen', when='+with_tetgen')
@@ -80,13 +73,15 @@ class MofemCephas(CMakePackage):
 
     depends_on("mpi")
     depends_on("parmetis")
-    # Fixed version of hdf5,
-    # to remove some problems with dependent packages, f.e. MED format
-    depends_on("hdf5@:1.8.19+hl") 
-    depends_on("petsc@:3.9.2+mumps")
+    # Fixed version of hdf5, to remove some problems with dependent
+    # packages, f.e. MED format
+    depends_on("hdf5@:1.8.19+hl+mpi")
+    depends_on("petsc@:3.9.2+mumps+mpi")
     depends_on('slepc', when='+slepc')
     depends_on("moab")
-    depends_on("adol-c", when="+adol-c")
+    # Upper bound set to ADOL-C until issues with memory leaks
+    # for versions 2.6: fully resolved
+    depends_on("adol-c@2.5.2~examples", when="+adol-c")
     depends_on("tetgen", when="+tetgen")
     depends_on("med", when='+med')
     depends_on('doxygen+graphviz', when='+doxygen')
@@ -105,12 +100,13 @@ class MofemCephas(CMakePackage):
             '-DPETSC_ARCH=',
             '-DMOAB_DIR=%s' % spec['moab'].prefix])
 
+        # Obsolete:
         # mofem extensions compiled with mofem
-        options.extend([
-            '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol-c' in spec else 'NO'),
-            '-DWITH_TETGEN=%s' % ('YES' if '+with_tetgen' in spec else 'NO'),
-            '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO')]
-        )
+        # options.extend([
+        #     '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol-c' in spec else 'NO'),
+        #     '-DWITH_TETGEN=%s' % ('YES' if '+with_tetgen' in spec else 'NO'),
+        #     '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO')]
+        # )
 
         # variant packages
         if '+adol-c' in spec:
