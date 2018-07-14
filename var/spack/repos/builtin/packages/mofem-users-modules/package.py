@@ -31,6 +31,8 @@ class MofemUsersModules(CMakePackage):
     version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
 
+    maintainers = ['likask']
+
     extends('mofem-cephas')
 
     variant('copy_user_modules', default=True,
@@ -56,8 +58,7 @@ class MofemUsersModules(CMakePackage):
 
         :return: directory where to build the package
         """
-        spec = self.spec
-        return spec['mofem-cephas'].prefix
+        return os.path.join(self.prefix, 'build_basic')
 
     def cmake_args(self):
         spec = self.spec
