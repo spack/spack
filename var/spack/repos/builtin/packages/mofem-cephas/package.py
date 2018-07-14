@@ -38,14 +38,14 @@ class MofemCephas(CMakePackage):
         return 'mofem'
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://likask@bitbucket.org/likask/mofem-cephas.git"
+    url = "https://bitbucket.org/likask/mofem-cephas.git"
 
     maintainers = ['likask']
 
-    version('0.8.3', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+    version('0.8.3', git='https://bitbucket.org/likask/mofem-cephas.git',
         tag='v0.8.3', submodules=True)
     version('develop',
-        git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        git='https://bitbucket.org/likask/mofem-cephas.git',
         branch='develop')
 
     # This option can be only used for development of core lib
