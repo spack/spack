@@ -21,8 +21,9 @@
 ##############################################################################
 
 from spack import *
-from distutils.dir_util import copy_tree 
+from distutils.dir_util import copy_tree
 import os
+
 
 class MofemFractureModule(CMakePackage):
     """mofem fracture module"""
@@ -30,15 +31,21 @@ class MofemFractureModule(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem_um_fracture_mechanics"
 
-    version('0.9.38', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', tag='v0.9.38')
-    version('0.9.37', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', tag='v0.9.37')
-    version('develop', git='https://bitbucket.org/likask/mofem_um_fracture_mechanics', branch='develop')
+    version('0.9.38',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.38')
+    version('0.9.37',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.37')
+    version('develop',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        branch='develop')
 
-    depends_on("mofem-cephas")
     extends('mofem-cephas')
 
+    # This option cab ne only used for development of core lib
     variant('copy_user_modules', default=True,
-	    description='Copy user modules directory instead if making ling to source')
+        description='Copy user modules directory instead link')
     variant('with_metaio', default=False,
             description='Install MetaIO with MoFEM users modules')
 
@@ -63,22 +70,19 @@ class MofemFractureModule(CMakePackage):
         spec = self.spec
         return spec['mofem-cephas'].prefix
 
-
     def cmake_args(self):
         spec = self.spec
         return [
-	    '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
-	    '-DSTAND_ALLONE_USERS_MODULES=%s' % ('YES' if '+copy_user_modules' in spec else 'NO')]
+            '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
+            '-DSTAND_ALLONE_USERS_MODULES=%s'
+            % ('YES' if '+copy_user_modules' in spec else 'NO')]
 
     phases = ['cmake', 'build']
 
     @run_before('cmake')
     def copy_source_code_to_users_modules(self):
-	    spec = self.spec
-	    source = self.stage.source_path
-	    prefix = spec['mofem-cephas'].prefix
+        spec = self.spec
+        source = self.stage.source_path
+        prefix = spec['mofem-cephas'].prefix
         mkdirp(prefix.users_modules.fracture_mechanics)
-	    copy_tree(source,prefix.users_modules.fracture_mechanics)
-
-
- 
+        copy_tree(source, prefix.users_modules.fracture_mechanics)

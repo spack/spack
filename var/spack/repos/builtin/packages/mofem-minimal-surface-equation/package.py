@@ -21,8 +21,9 @@
 ##############################################################################
 
 from spack import *
-from distutils.dir_util import copy_tree 
+from distutils.dir_util import copy_tree
 import os
+
 
 class MofemMinimalSurfaceEquation(CMakePackage):
     """mofem minimal surface equation"""
@@ -30,14 +31,17 @@ class MofemMinimalSurfaceEquation(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem_um_minimal_surface_equation"
 
-    version('0.3.6', git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation', tag='v0.3.6')
-    version('develop', git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation', branch='develop')
+    version('0.3.6',
+        git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
+        tag='v0.3.6')
+    version('develop',
+        git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
+        branch='develop')
 
-    depends_on("mofem-cephas")
     extends('mofem-cephas')
 
     variant('copy_user_modules', default=True,
-	    description='Copy user modules directory instead if making ling to source')
+        description='Copy user modules directory instead linking')
     variant('with_metaio', default=False,
             description='Install MetaIO with MoFEM users modules')
 
@@ -62,22 +66,19 @@ class MofemMinimalSurfaceEquation(CMakePackage):
         spec = self.spec
         return spec['mofem-cephas'].prefix
 
-
     def cmake_args(self):
         spec = self.spec
         return [
-	    '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
-	    '-DSTAND_ALLONE_USERS_MODULES=%s' % ('YES' if '+copy_user_modules' in spec else 'NO')]
+            '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
+            '-DSTAND_ALLONE_USERS_MODULES=%s'
+            % ('YES' if '+copy_user_modules' in spec else 'NO')]
 
     phases = ['cmake', 'build']
 
     @run_before('cmake')
     def copy_source_code_to_users_modules(self):
-	spec = self.spec
-	source = self.stage.source_path
-	prefix = spec['mofem-cephas'].prefix
+        spec = self.spec
+        source = self.stage.source_path
+        prefix = spec['mofem-cephas'].prefix
         mkdirp(prefix.users_modules.minimal_surface_equation)
-	copy_tree(source,prefix.users_modules.minimal_surface_equation)
-
-
- 
+        copy_tree(source, prefix.users_modules.minimal_surface_equation)

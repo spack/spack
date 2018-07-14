@@ -22,7 +22,7 @@
 
 from spack import *
 import os
-from distutils.dir_util import copy_tree 
+
 
 class MofemUsersModules(CMakePackage):
     """mofem users modules"""
@@ -31,14 +31,12 @@ class MofemUsersModules(CMakePackage):
     version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
 
-    depends_on("mofem-cephas")
     extends('mofem-cephas')
 
     variant('copy_user_modules', default=True,
-	    description='Copy user modules directory instead if making ling to source')
+        description='Copy user modules directory instead linking')
     variant('with_metaio', default=False,
             description='Install MetaIO with MoFEM users modules')
-
 
     @property
     def root_cmakelists_dir(self):
@@ -61,13 +59,11 @@ class MofemUsersModules(CMakePackage):
         spec = self.spec
         return spec['mofem-cephas'].prefix
 
-
     def cmake_args(self):
         spec = self.spec
         return [
-	    '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
-	    '-DSTAND_ALLONE_USERS_MODULES=%s' % ('YES' if '+copy_user_modules' in spec else 'NO')]
+            '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
+            '-DSTAND_ALLONE_USERS_MODULES=%s' %
+            ('YES' if '+copy_user_modules' in spec else 'NO')]
 
     phases = ['cmake', 'build']
-
-       

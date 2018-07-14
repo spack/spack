@@ -21,12 +21,10 @@
 ##############################################################################
 
 from spack import *
-import os
+
 
 class MofemCephas(CMakePackage):
     """mofem-cephas core library"""
-
-    extendable = True
 
     @property
     def root_cmakelists_dir(self):
@@ -37,70 +35,98 @@ class MofemCephas(CMakePackage):
 
         :return: directory containing CMakeLists.txt
         """
-        return os.path.join(self.stage.source_path, 'mofem')
+        return 'mofem'
 
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://likask@bitbucket.org/likask/mofem-cephas.git"
 
-    version('0.8.1', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.8.1', submodules=True)
-    version('0.8.0', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.8.0', submodules=True)
-    version('0.7.29', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.29')
-    version('0.7.28', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.28')
-    version('0.7.27', git='https://likask@bitbucket.org/likask/mofem-cephas.git', tag='v0.7.27')
-    version('develop', git='https://likask@bitbucket.org/likask/mofem-cephas.git', branch='develop')
+    version('0.8.2', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.2', submodules=True)
+    version('0.8.1', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.1', submodules=True)
+    version('0.8.0', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.0', submodules=True)
+    version('0.7.29', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.7.29')
+    version('0.7.28', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.7.28')
+    version('0.7.27', git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.7.27')
+    version('develop',
+        git='https://likask@bitbucket.org/likask/mofem-cephas.git',
+        branch='develop')
 
-    # Variants of packages installed as extensions with MoFEM, to indicate this 
+    # Variants of packages installed as extensions with MoFEM, to indicate this
     # specific type of variant prefox with_ is added.
-    variant('with_adol-c', default=True,
+    variant('with_adol-c', default=False,
             description='Install ADOL-C with MoFEM')
-    variant('with_tetgen', default=True,
+    variant('with_tetgen', default=False,
             description='Install TetGen with MoFEM')
-    variant('with_med', default=True,
+    variant('with_med', default=False,
             description='Install MED with MoFEM')
 
+    # This option cab ne only used for development of core lib
     variant('copy_user_modules', default=True,
-	    description='Copy user modules directory instead if making ling to source')
-    variant('slepc', default=False, description='Compile with Slepc')
+        description='Copy user modules directory instead linking to source')
+    variant('adol-c', default=True, description='Compile with Adol-C')
+    variant('tetgen', default=True, description='Compile with Tetgen')
+    variant('med', default=True, description='Compile with Med')
+    variant('slepc', default=True, description='Compile with Slepc')
     variant('doxygen', default=False, description='Install doxygen')
 
-    depends_on("mpi") 
+    conflicts('+adol-c', when='+with_adol-c')
+    conflicts('+tetgen', when='+with_tetgen')
+    conflicts('+med', when='+with_med')
+
+    depends_on("mpi")
     depends_on("parmetis")
-    # Fixed version of hdf5, 
+    # Fixed version of hdf5,
     # to remove some problems with dependent packages, f.e. MED format
     depends_on("hdf5@:1.8.19+hl") 
-    depends_on("petsc@:3.9.2+mumps ^hdf5@:1.8.19")
-    depends_on("moab ^hdf5@1.8.19")
+    depends_on("petsc@:3.9.2+mumps")
+    depends_on('slepc', when='+slepc')
+    depends_on("moab")
+    depends_on("adol-c", when="+adol-c")
+    depends_on("tetgen", when="+tetgen")
+    depends_on("med", when='+med')
     depends_on('doxygen+graphviz', when='+doxygen')
     depends_on('graphviz', when='+doxygen')
-    depends_on('slepc', when='+slepc')
+
+    extendable = True
 
     def cmake_args(self):
         spec = self.spec
         options = []
 
-        """ obligatory options """
+        # obligatory options
         options.extend([
             '-DWITH_SPACK=1',
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
-            '-DPETSC_ARCH=',  
+            '-DPETSC_ARCH=',
             '-DMOAB_DIR=%s' % spec['moab'].prefix])
 
-        """ mofem extensions compiled with mofem """
+        # mofem extensions compiled with mofem
         options.extend([
             '-DWITH_ADOL-C=%s' % ('YES' if '+with_adol-c' in spec else 'NO'),
             '-DWITH_TETGEN=%s' % ('YES' if '+with_tetgen' in spec else 'NO'),
             '-DWITH_MED=%s' % ('YES' if '+with_med' in spec else 'NO')]
         )
 
-        """ variant packages """
+        # variant packages
+        if '+adol-c' in spec:
+            options.extend(['-DADOL-C_DIR=%s' % spec['adol-c'].prefix])
+
+        if '+tetgen' in spec:
+            options.extend(['-DTETGEN_DIR=%s' % spec['tetgen'].prefix])
+
+        if '+med' in spec:
+            options.extend(['-DMED_DIR=%s' % spec['med'].prefix])
+
         if '+slepc' in spec:
-                options.extend(['-DSLEPC_DIR=%s' % spec['slepc'].prefix])
+            options.extend(['-DSLEPC_DIR=%s' % spec['slepc'].prefix])
 
-        """ copy users modules, i.e. stand alone vs linked users modules"""
+        # copy users modules, i.e. stand alone vs linked users modules
         options.extend([
-               '-DSTAND_ALLONE_USERS_MODULES=%s' % ('YES' if '+copy_user_modules' in spec else 'NO') 
-        ])
-        
+            '-DSTAND_ALLONE_USERS_MODULES=%s' %
+            ('YES' if '+copy_user_modules' in spec else 'NO')])
         return options
-
-
