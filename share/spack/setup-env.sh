@@ -199,16 +199,6 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 export SPACK_ROOT=${_sp_prefix}
 
 #
-# Try to determine which shell is being used if
-# SPACK_SHELL has not already been set by the user.
-# This variable is used for the environment-modules
-# 'module' function/command to envoke 'modulecmd' with
-# the correct shell.
-#
-SPACK_SHELL=${SPACK_SHELL:-$(basename ${SHELL})}
-export SPACK_SHELL
-
-#
 # Check whether a function of the given name is defined
 #
 function _spack_fn_exists() {
@@ -231,7 +221,7 @@ if [ "${need_module}" = "yes" ]; then
         #activate it!
         export MODULE_PREFIX=${module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        module() { eval $(${MODULE_PREFIX}/Modules/bin/modulecmd $(basename ${SHELL}) $*); }
     fi;
 fi;
 
