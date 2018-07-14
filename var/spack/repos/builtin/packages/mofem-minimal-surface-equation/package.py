@@ -31,9 +31,11 @@ class MofemMinimalSurfaceEquation(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem_um_minimal_surface_equation"
 
-    version('0.3.6',
+    maintainers = ['likask']
+
+    version('0.3.7',
         git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
-        tag='v0.3.6')
+        tag='v0.3.7')
     version('develop',
         git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
         branch='develop')
@@ -63,22 +65,22 @@ class MofemMinimalSurfaceEquation(CMakePackage):
 
         :return: directory where to build the package
         """
-        spec = self.spec
-        return spec['mofem-cephas'].prefix
+        return os.path.join(self.prefix, 'build_minimal_surface_equation')
+
+    @run_before('cmake')
+    def copy_source_code_to_users_modules(self):
+        source = self.stage.source_path
+        ex_prefix = self.prefix
+        mkdirp(ex_prefix.users_modules.minimal_surface_equation)
+        copy_tree(source, ex_prefix.users_modules.minimal_surface_equation)
 
     def cmake_args(self):
         spec = self.spec
         return [
+            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' %
+            os.path.join(self.prefix, 'users_modules'),
             '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
             '-DSTAND_ALLONE_USERS_MODULES=%s'
             % ('YES' if '+copy_user_modules' in spec else 'NO')]
 
     phases = ['cmake', 'build']
-
-    @run_before('cmake')
-    def copy_source_code_to_users_modules(self):
-        spec = self.spec
-        source = self.stage.source_path
-        prefix = spec['mofem-cephas'].prefix
-        mkdirp(prefix.users_modules.minimal_surface_equation)
-        copy_tree(source, prefix.users_modules.minimal_surface_equation)
