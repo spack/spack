@@ -23,12 +23,12 @@ class Eigen(CMakePackage):
     version('3.2.8', '64f4aef8012a424c7e079eaf0be71793ab9bc6e0')
     version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184')
 
-    variant('metis', default=True, description='Enables metis backend')
-    variant('scotch', default=True, description='Enables scotch backend')
-    variant('fftw', default=True, description='Enables FFTW backend')
-    variant('suitesparse', default=True,
+    variant('metis', default=False, description='Enables metis backend')
+    variant('scotch', default=False, description='Enables scotch backend')
+    variant('fftw', default=False, description='Enables FFTW backend')
+    variant('suitesparse', default=False,
             description='Enables SuiteSparse support')
-    variant('mpfr', default=True,
+    variant('mpfr', default=False,
             description='Enables support for multi-precisions FP via mpfr')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
