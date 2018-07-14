@@ -89,7 +89,7 @@ class PyNumpy(PythonPackage):
     def patch(self):
         spec = self.spec
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
-        lapackblas = LibraryList('')
+        lapackblas = []
         if '+lapack' in spec:
             lapackblas += spec['lapack'].libs
 
@@ -131,6 +131,21 @@ class PyNumpy(PythonPackage):
                 elif '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n'   % names)
+                elif '^netlib-lapack' in spec:
+                    # netlib requires blas and lapack listed
+                    # separately so that scipy can find them
+                    f.write('[blas]\n')
+                    f.write('blas_libs=%s\n'    % names)
+                    f.write('library_dirs=%s\n' % dirs)
+                    if not ((platform.system() == "Darwin") and
+                            (platform.mac_ver()[0] == '10.12')):
+                        f.write('rpath=%s\n' % dirs)
+                    f.write('[lapack]\n')
+                    f.write('lapack_libs=%s\n'    % names)
+                    f.write('library_dirs=%s\n'   % dirs)
+                    if not ((platform.system() == "Darwin") and
+                            (platform.mac_ver()[0] == '10.12')):
+                        f.write('rpath=%s\n' % dirs)
                 else:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
