@@ -199,6 +199,9 @@ class Mvapich2(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
+        # mvapich2 configure fails when F90 and F90FLAGS are set
+        spack_env.unset('F90')
+        spack_env.unset('F90FLAGS')
         if 'process_managers=slurm' in spec:
             run_env.set('SLURM_MPI_TYPE', 'pmi2')
 
