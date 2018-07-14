@@ -27,7 +27,6 @@ import os
 import platform
 import re
 import sys
-import shutil
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
@@ -709,7 +708,7 @@ class Python(AutotoolsPackage):
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
             elif not os.path.islink(src):
-                shutil.copy2(src, dst)
+                copy(src, dst)
                 if 'script' in get_filetype(src):
                     filter_file(
                         self.spec.prefix, os.path.abspath(view.root), dst)
