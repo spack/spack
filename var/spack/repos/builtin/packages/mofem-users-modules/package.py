@@ -21,6 +21,7 @@
 ##############################################################################
 
 from spack import *
+from distutils.dir_util import copy_tree
 import os
 
 
@@ -33,12 +34,22 @@ class MofemUsersModules(CMakePackage):
 
     maintainers = ['likask']
 
-    extends('mofem-cephas')
-
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')
     variant('with_metaio', default=False,
-            description='Install MetaIO with MoFEM users modules')
+        description='Install MetaIO with MoFEM users modules')
+
+    variant('mofem-fracture-module', default=False,
+        description="Install fracture mechanics module")
+    variant('mofem-minimal-surface-equation', default=False,
+        description="Install minimal surface equation module")
+
+    extends('mofem-cephas')
+
+    depends_on("mofem-fracture-module", type='build',
+        when='+mofem-fracture-module')
+    depends_on("mofem-minimal-surface-equation", type='build', 
+        when='+mofem-minimal-surface-equation')
 
     @property
     def root_cmakelists_dir(self):
@@ -58,11 +69,32 @@ class MofemUsersModules(CMakePackage):
 
         :return: directory where to build the package
         """
-        return os.path.join(self.prefix, 'build_basic')
+        return os.path.join(self.prefix, 'build')
+
+    @run_before('cmake')
+    def copy_source_code_to_users_modules(self):
+        spec = self.spec
+        ex_prefix = self.prefix
+
+        if '+mofem-fracture-module' in spec:
+            mkdirp(ex_prefix.users_modules.fracture_mechanics)
+            copy_tree(
+                spec['mofem-fracture-module'].
+                prefix.users_modules.fracture_mechanics,
+                ex_prefix.users_modules.fracture_mechanics) 
+
+        if '+mofem-minimal-surface-equation' in spec:
+            mkdirp(ex_prefix.users_modules.minimal_surface_equation)
+            copy_tree(
+                spec['mofem-minimal-surface-equation'].
+                prefix.users_modules.minimal_surface_equation,
+                ex_prefix.users_modules.minimal_surface_equation) 
 
     def cmake_args(self):
         spec = self.spec
         return [
+            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' %
+            os.path.join(self.prefix, 'users_modules'),
             '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
             ('YES' if '+copy_user_modules' in spec else 'NO')]
