@@ -25,18 +25,20 @@
 from spack import *
 
 
-class Yasm(AutotoolsPackage):
-    """Yasm is a complete rewrite of the NASM-2.11.06 assembler. It
-       supports the x86 and AMD64 instruction sets, accepts NASM and
-       GAS assembler syntaxes and outputs binary, ELF32 and ELF64
-       object formats."""
-    homepage = "http://yasm.tortall.net"
-    url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
+class PyOpentuner(PythonPackage):
+    """An extensible framework for program autotuning."""
 
-    version('develop', git='https://github.com/yasm/yasm/')
-    version('1.3.0', 'fc9e586751ff789b34b1f21d572d96af')
+    homepage = "http://opentuner.org/"
+    url      = "https://github.com/jansel/opentuner"
 
-    depends_on('autoconf', when='@develop')
-    depends_on('automake', when='@develop')
-    depends_on('libtool', when='@develop')
-    depends_on('m4', when='@develop')
+    version('0.8.0', git='https://github.com/jansel/opentuner', commit='4cb9135')
+
+    # No support for Python 3 yet
+    depends_on('python@2.7:2.8', type=('build', 'run'))
+
+    depends_on('py-argparse@1.2.1:', type=('build', 'run'))
+    depends_on('py-fn@0.2.12:', type=('build', 'run'))
+    depends_on('py-numpy@1.8.0:', type=('build', 'run'))
+    depends_on('py-pysqlite@2.6.3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-sqlalchemy@0.8.2:', type=('build', 'run'))
