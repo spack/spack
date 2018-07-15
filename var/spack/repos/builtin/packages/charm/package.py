@@ -64,7 +64,7 @@ class Charm(Package):
         "build-target",
         default="LIBS",
         # AMPI also builds charm++, LIBS also builds AMPI and charm++
-        values=("charm++", "AMPI", "LIBS"), 
+        values=("charm++", "AMPI", "LIBS"),
         description="Specify the target to build"
     )
 
