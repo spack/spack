@@ -75,14 +75,15 @@ that can be used to set or override the appropriate variables:
 Environment variables
 """""""""""""""""""""
 
-Make has multiple types of assignment operators. Some Makefiles
-use ``=`` to assign variables. The only way to override these
-variables is to edit the Makefile or override them on the command-line.
-However, Makefiles that use ``?=`` for assignment honor environment
-variables. Since Spack already sets ``CC``, ``CXX``, ``F77``, and ``FC``,
-you won't need to worry about setting these variables. If there are
-any other variables you need to set, you can do this in the ``edit``
-method:
+Make has multiple types of
+`assignment operators <https://www.gnu.org/software/make/manual/make.html#Setting>`_.
+Some Makefiles use ``=`` to assign variables. The only way to override
+these variables is to edit the Makefile or override them on the
+command-line. However, Makefiles that use ``?=`` for assignment honor
+environment variables. Since Spack already sets ``CC``, ``CXX``, ``F77``,
+and ``FC``, you won't need to worry about setting these variables. If
+there are any other variables you need to set, you can do this in the
+``edit`` method:
 
 .. code-block:: python
 
@@ -214,7 +215,11 @@ configuration variables.
 Variables to watch out for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following is a list of common variables to watch out for:
+The following is a list of common variables to watch out for. The first
+two sections are
+`implicit variables <https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html>`_
+defined by Make and will always use the same name, while the rest are
+user-defined variables and may vary from package to package.
 
 * **Compilers**
 

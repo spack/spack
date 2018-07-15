@@ -4,10 +4,9 @@
 CMakePackage
 ------------
 
-Like Autotools, CMake is a build-script generator. Designed by Kitware,
-CMake is a popular up-and-coming build system. It is
-`becoming the dominant build system <https://trends.google.com/trends/explore?date=all&q=autoconf,automake,cmake,scons>`_
-used by new projects, and many older projects are switching to it as well.
+Like Autotools, CMake is a widely-used build-script generator. Designed
+by Kitware, CMake is the most popular build system for new C, C++, and
+Fortran projects, and many older projects are switching to it as well.
 
 Unlike Autotools, CMake can generate build scripts for builders other
 than Make: Ninja, Visual Studio, etc. It is therefore cross-platform,
