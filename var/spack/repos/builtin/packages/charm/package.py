@@ -70,7 +70,7 @@ class Charm(Package):
     # Communication mechanisms (choose exactly one)
     variant(
         "backend",
-        default="mpi",
+        default="netlrts",
         values=("mpi", "multicore", "netlrts", "verbs", "gni",
                 "ofi", "pami", "pamilrts"),
         description="Set the backend to use"
