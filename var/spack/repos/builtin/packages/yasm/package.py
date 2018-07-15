@@ -33,4 +33,10 @@ class Yasm(AutotoolsPackage):
     homepage = "http://yasm.tortall.net"
     url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
 
+    version('develop', git='https://github.com/yasm/yasm/')
     version('1.3.0', 'fc9e586751ff789b34b1f21d572d96af')
+
+    depends_on('autoconf', when='@develop')
+    depends_on('automake', when='@develop')
+    depends_on('libtool', when='@develop')
+    depends_on('m4', when='@develop')
