@@ -89,7 +89,7 @@ class PyNumpy(PythonPackage):
     def patch(self):
         spec = self.spec
 
-        def writeLibraryDirs(f,dirs):
+        def writeLibraryDirs(f, dirs):
             f.write('library_dirs=%s\n' % dirs)
             if not ((platform.system() == "Darwin") and
                     (platform.mac_ver()[0] == '10.12')):
