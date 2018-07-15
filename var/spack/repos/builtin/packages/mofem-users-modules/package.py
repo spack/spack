@@ -48,7 +48,7 @@ class MofemUsersModules(CMakePackage):
 
     depends_on("mofem-fracture-module", type='build',
         when='+mofem-fracture-module')
-    depends_on("mofem-minimal-surface-equation", type='build', 
+    depends_on("mofem-minimal-surface-equation", type='build',
         when='+mofem-minimal-surface-equation')
 
     @property
@@ -81,14 +81,14 @@ class MofemUsersModules(CMakePackage):
             copy_tree(
                 spec['mofem-fracture-module'].
                 prefix.users_modules.fracture_mechanics,
-                ex_prefix.users_modules.fracture_mechanics) 
+                ex_prefix.users_modules.fracture_mechanics)
 
         if '+mofem-minimal-surface-equation' in spec:
             mkdirp(ex_prefix.users_modules.minimal_surface_equation)
             copy_tree(
                 spec['mofem-minimal-surface-equation'].
                 prefix.users_modules.minimal_surface_equation,
-                ex_prefix.users_modules.minimal_surface_equation) 
+                ex_prefix.users_modules.minimal_surface_equation)
 
     def cmake_args(self):
         spec = self.spec

@@ -23,6 +23,7 @@
 from spack import *
 from distutils.dir_util import copy_tree
 
+
 class MofemFractureModule(Package):
     """mofem fracture module"""
 

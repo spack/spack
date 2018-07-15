@@ -23,6 +23,7 @@
 from spack import *
 from distutils.dir_util import copy_tree
 
+
 class MofemMinimalSurfaceEquation(Package):
     """mofem minimal surface equation"""
 
@@ -32,7 +33,7 @@ class MofemMinimalSurfaceEquation(Package):
     maintainers = ['likask']
 
     version('0.3.7',
-        git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
+        git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',   
         tag='v0.3.7')
     version('develop',
         git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
