@@ -88,19 +88,19 @@ class MofemCephas(CMakePackage):
 
         # variant packages
         if '+adol-c' in spec:
-            options.extend(['-DADOL-C_DIR=%s' % spec['adol-c'].prefix])
+            options.append('-DADOL-C_DIR=%s' % spec['adol-c'].prefix)
 
         if '+tetgen' in spec:
-            options.extend(['-DTETGEN_DIR=%s' % spec['tetgen'].prefix])
+            options.append('-DTETGEN_DIR=%s' % spec['tetgen'].prefix)
 
         if '+med' in spec:
-            options.extend(['-DMED_DIR=%s' % spec['med'].prefix])
+            options.append('-DMED_DIR=%s' % spec['med'].prefix)
 
         if '+slepc' in spec:
-            options.extend(['-DSLEPC_DIR=%s' % spec['slepc'].prefix])
+            options.append('-DSLEPC_DIR=%s' % spec['slepc'].prefix)
 
         # copy users modules, i.e. stand alone vs linked users modules
-        options.extend([
+        options.append(
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
-            ('YES' if '+copy_user_modules' in spec else 'NO')])
+            ('YES' if '+copy_user_modules' in spec else 'NO'))
         return options
