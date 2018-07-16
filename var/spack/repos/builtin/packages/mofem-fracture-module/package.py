@@ -21,7 +21,6 @@
 ##############################################################################
 
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class MofemFractureModule(Package):
@@ -44,6 +43,6 @@ class MofemFractureModule(Package):
     def install(self, spec, prefix):
         source = self.stage.source_path
         mkdirp(prefix.users_modules.fracture_mechanics)
-        copy_tree(source, prefix.users_modules.fracture_mechanics)
+        install_tree(source, prefix.users_modules.fracture_mechanics)
 
     phases = ['install']

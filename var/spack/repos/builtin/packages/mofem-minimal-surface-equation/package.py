@@ -21,7 +21,6 @@
 ##############################################################################
 
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class MofemMinimalSurfaceEquation(Package):
@@ -44,6 +43,6 @@ class MofemMinimalSurfaceEquation(Package):
     def install(self, spec, prefix):
         source = self.stage.source_path
         mkdirp(prefix.users_modules.minimal_surface_equation)
-        copy_tree(source, prefix.users_modules.minimal_surface_equation)
+        install_tree(source, prefix.users_modules.minimal_surface_equation)
 
     phases = ['install']
