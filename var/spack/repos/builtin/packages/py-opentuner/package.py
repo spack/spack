@@ -25,16 +25,20 @@
 from spack import *
 
 
-class PyNumexpr(PythonPackage):
-    """Fast numerical expression evaluator for NumPy"""
-    homepage = "https://pypi.python.org/pypi/numexpr"
-    url      = "https://pypi.io/packages/source/n/numexpr/numexpr-2.6.5.tar.gz"
+class PyOpentuner(PythonPackage):
+    """An extensible framework for program autotuning."""
 
-    version('2.6.5', 'c9b5859c11bd6da092f6c8a84a472e77')
-    version('2.6.1', '6365245705b446426df9543ad218dd8e')
-    version('2.5',   '84f66cced45ba3e30dcf77a937763aaa')
-    version('2.4.6', '17ac6fafc9ea1ce3eb970b9abccb4fbd')
+    homepage = "http://opentuner.org/"
+    url      = "https://github.com/jansel/opentuner"
 
-    depends_on('python@2.6:')
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
+    version('0.8.0', git='https://github.com/jansel/opentuner', commit='4cb9135')
+
+    # No support for Python 3 yet
+    depends_on('python@2.7:2.8', type=('build', 'run'))
+
+    depends_on('py-argparse@1.2.1:', type=('build', 'run'))
+    depends_on('py-fn@0.2.12:', type=('build', 'run'))
+    depends_on('py-numpy@1.8.0:', type=('build', 'run'))
+    depends_on('py-pysqlite@2.6.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-sqlalchemy@0.8.2:', type=('build', 'run'))
