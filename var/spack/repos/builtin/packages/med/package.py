@@ -36,12 +36,12 @@ class Med(CMakePackage):
 
     version('3.2.0', 'eb61df92f0624feb6328f517cd756a23')
 
-    depends_on('mpi')
-    depends_on('hdf5@:1.8.19+mpi')
-
     variant('api23', default=True, description='Enable API2.3')
     variant('tests', default=False, description='Build tests')
     variant('documentation', default=False, description='Install documentation')
+
+    depends_on('mpi')
+    depends_on('hdf5@:1.8.19+mpi')
 
     # FIXME This is minimal installation.
 
