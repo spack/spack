@@ -64,16 +64,7 @@ class MofemCephas(CMakePackage):
 
     extendable = True
 
-    @property
-    def root_cmakelists_dir(self):
-        """The relative path to the directory containing CMakeLists.txt
-
-        This path is relative to the root of the extracted tarball,
-        not to the ``build_directory``. Defaults to the current directory.
-
-        :return: directory containing CMakeLists.txt
-        """
-        return 'mofem'
+    root_cmakelists_dir = 'mofem'
 
     def cmake_args(self):
         spec = self.spec
