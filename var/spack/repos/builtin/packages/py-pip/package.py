@@ -31,6 +31,7 @@ class PyPip(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pip"
     url      = "https://pypi.io/packages/source/p/pip/pip-9.0.1.tar.gz"
 
+    version('10.0.1', '83a177756e2c801d0b3a6f7b0d4f3f7e')
     version('9.0.1', '35f01da33009719497f01a4ba69d63c9')
 
     depends_on('python@2.6:2.8,3.3:')

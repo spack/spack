@@ -41,7 +41,7 @@ class Elfutils(AutotoolsPackage):
 
     version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
     version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
+    version('0.163', '77ce87f259987d2e54e4d87b86cbee41')
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')

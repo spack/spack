@@ -92,6 +92,9 @@ class Flann(CMakePackage):
     # Example uses hdf5.
     depends_on("hdf5", when="+examples")
 
+    depends_on('hdf5', type='test')
+    depends_on('gtest', type='test')
+
     def patch(self):
         # Fix up the python setup.py call inside the install(CODE
         filter_file("setup.py install",
@@ -108,10 +111,6 @@ class Flann(CMakePackage):
         filter_file("install( FILES",
                     "# install( FILES",
                     "src/python/CMakeLists.txt", string=True)
-
-    # TODO: revisit after https://github.com/spack/spack/issues/1279
-    # depends_on('hdf5', type='test')
-    # depends_on('gtest', type='test')
 
     def cmake_args(self):
         spec = self.spec

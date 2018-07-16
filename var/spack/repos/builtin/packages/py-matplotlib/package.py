@@ -95,9 +95,8 @@ class PyMatplotlib(PythonPackage):
     depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-    # depends_on('py-mock', type='test')
+    depends_on('py-nose', type='test')
+    depends_on('py-mock', type='test')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')

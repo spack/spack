@@ -42,5 +42,4 @@ class PyQtconsole(PythonPackage):
     depends_on('py-traitlets',           type=('build', 'run'))
     depends_on('py-sphinx@1.3:',         type=('build', 'run'), when='+docs')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-mock', type='test', when='^python@2.7:2.8')
+    depends_on('py-mock', type='test', when='^python@2.7:2.8')

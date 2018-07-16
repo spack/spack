@@ -71,6 +71,7 @@ import spack.main
 import spack.paths
 import spack.store
 from spack.environment import EnvironmentModifications, validate
+from spack.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import (load_module, get_path_from_module,
@@ -98,6 +99,7 @@ SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
+SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 
 
 # Platform-specific library suffix.
@@ -131,7 +133,7 @@ class MakeExecutable(Executable):
 
 
 def set_compiler_environment_variables(pkg, env):
-    assert(pkg.spec.concrete)
+    assert pkg.spec.concrete
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
@@ -334,6 +336,13 @@ def set_build_environment_variables(pkg, env, dirty):
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
+
+    # Find ccache binary and hand it to build environment
+    if spack.config.get('config:ccache'):
+        ccache = Executable('ccache')
+        if not ccache:
+            raise RuntimeError("No ccache binary found in PATH")
+        env.set(SPACK_CCACHE_BINARY, ccache)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     for prefix in build_link_prefixes:
@@ -618,20 +627,26 @@ def setup_package(pkg, dirty):
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
 
-    # All module loads that otherwise would belong in previous functions
-    # have to occur after the spack_env object has its modifications applied.
-    # Otherwise the environment modifications could undo module changes, such
-    # as unsetting LD_LIBRARY_PATH after a module changes it.
-    for mod in pkg.compiler.modules:
-        # Fixes issue https://github.com/spack/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
+    # Loading modules, in particular if they are meant to be used outside
+    # of Spack, can change environment variables that are relevant to the
+    # build of packages. To avoid a polluted environment, preserve the
+    # value of a few, selected, environment variables
+    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
+        # All module loads that otherwise would belong in previous
+        # functions have to occur after the spack_env object has its
+        # modifications applied. Otherwise the environment modifications
+        # could undo module changes, such as unsetting LD_LIBRARY_PATH
+        # after a module changes it.
+        for mod in pkg.compiler.modules:
+            # Fixes issue https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                load_module("cce")
+            load_module(mod)
 
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
+        if pkg.architecture.target.module_name:
+            load_module(pkg.architecture.target.module_name)
 
-    load_external_modules(pkg)
+        load_external_modules(pkg)
 
 
 def fork(pkg, function, dirty, fake):

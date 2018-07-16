@@ -43,7 +43,7 @@ def setup_parser(subparser):
         help="name of the remote to clone from", default='origin')
     subparser.add_argument(
         'prefix',
-        help="names of prefix where we should install spack")
+        help="name of prefix where we should install spack")
 
 
 def get_origin_info(remote):

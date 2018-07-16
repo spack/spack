@@ -65,3 +65,9 @@ class OmegaH(CMakePackage):
         else:
             args.append('-DTPL_ENABLE_ZLIB:BOOL=OFF')
         return args
+
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+        return (None, None, flags)

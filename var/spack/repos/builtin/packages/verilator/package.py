@@ -55,10 +55,11 @@ class Verilator(AutotoolsPackage):
     url      = "https://www.veripool.org/ftp/verilator-3.920.tgz"
 
     version('3.920', '71de7b9ddb27a72e96ed2a04e5ccf933')
+    version('3.904', '7d4dc8e61d5e0e564c3016a06f0b9d07')
 
-    depends_on('bison')
-    depends_on('flex')
-    depends_on('perl')
+    depends_on('bison', type='build')
+    depends_on('flex',  type='build')
+    depends_on('perl',  type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('VERILATOR_ROOT', self.prefix)

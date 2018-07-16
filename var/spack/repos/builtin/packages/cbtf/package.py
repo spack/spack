@@ -72,25 +72,23 @@ class Cbtf(CMakePackage):
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
-    depends_on("cmake@3.11.1", when='@1.9.1.0:', type='build')
-    depends_on("cmake@3.0.2:", when='@develop', type='build')
+    depends_on("cmake@3.0.2:", type='build')
 
-    depends_on("boost@1.66.0", when='@1.9.1.0:')
+    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
     depends_on("boost@1.50.0:", when='@develop')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:+cti')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
 
     # For Xerces-C
     depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4", when='@1.9.1.0:')
+    depends_on("xerces-c@3.1.4:", when='@1.9.1.0:9999')
 
     # For XML2
-    depends_on("libxml2", when='@develop')
-    depends_on("libxml2@2.9.4", when='@1.9.1.0:')
+    depends_on("libxml2")
 
     parallel = False
 
