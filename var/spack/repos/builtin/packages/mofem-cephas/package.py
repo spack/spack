@@ -26,17 +26,6 @@ from spack import *
 class MofemCephas(CMakePackage):
     """mofem-cephas core library"""
 
-    @property
-    def root_cmakelists_dir(self):
-        """The relative path to the directory containing CMakeLists.txt
-
-        This path is relative to the root of the extracted tarball,
-        not to the ``build_directory``. Defaults to the current directory.
-
-        :return: directory containing CMakeLists.txt
-        """
-        return 'mofem'
-
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem-cephas.git"
 
@@ -57,10 +46,6 @@ class MofemCephas(CMakePackage):
     variant('slepc', default=True, description='Compile with Slepc')
     variant('doxygen', default=False, description='Install doxygen')
 
-    conflicts('+adol-c', when='+with_adol-c')
-    conflicts('+tetgen', when='+with_tetgen')
-    conflicts('+med', when='+with_med')
-
     depends_on("mpi")
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
@@ -78,6 +63,17 @@ class MofemCephas(CMakePackage):
     depends_on('graphviz', when='+doxygen')
 
     extendable = True
+
+    @property
+    def root_cmakelists_dir(self):
+        """The relative path to the directory containing CMakeLists.txt
+
+        This path is relative to the root of the extracted tarball,
+        not to the ``build_directory``. Defaults to the current directory.
+
+        :return: directory containing CMakeLists.txt
+        """
+        return 'mofem'
 
     def cmake_args(self):
         spec = self.spec
