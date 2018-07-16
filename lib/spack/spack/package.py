@@ -995,7 +995,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def installed(self):
+        """Installation status of a package.
 
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
         has_prefix = os.path.isdir(self.prefix)
         try:
             # If the spec is in the DB, check the installed
@@ -1662,11 +1666,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
         """Check for leftover files from partially-completed prior install to
-           prepare for a new install attempt. Options control whether these
-           files are reused (vs. destroyed). This function considers a package
-           fully-installed if there is a DB entry for it (in that way, it is
-           more strict than Package.installed). The return value is used to
-           indicate when the prefix exists but the install is not complete.
+        prepare for a new install attempt.
+
+        Options control whether these files are reused (vs. destroyed).
+
+        Args:
+            keep_prefix (bool): True if the installation prefix needs to be
+                kept, False otherwise
+            restage (bool): False if the stage has to be kept, True otherwise
+
+        Returns:
+            True if the prefix exists but the install is not complete, False
+            otherwise.
         """
         if self.spec.external:
             raise ExternalPackageError("Attempted to repair external spec %s" %
