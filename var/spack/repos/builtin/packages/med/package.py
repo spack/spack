@@ -56,7 +56,8 @@ class Med(CMakePackage):
 
         options.extend([
             '-DMEDFILE_USE_MPI=YES'
-            '-DMEDFILE_BUILD_TESTS=OFF',
+            '-DMEDFILE_BUILD_TESTS={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
             '-DMEDFILE_BUILD_PYTHON=OFF',
             '-DMEDFILE_INSTALL_DOC=OFF',
             '-DMEDFILE_BUILD_SHARED_LIBS=OFF',
