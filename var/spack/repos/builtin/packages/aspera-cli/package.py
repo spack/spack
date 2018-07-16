@@ -37,8 +37,7 @@ class AsperaCli(Package):
             expand=False)
 
     def setup_environment(self, spack_env, run_env):
-        spec = self.spec
-        run_env.prepend_path('PATH', join_path(self.prefix, 'cli', 'bin'))
+        run_env.prepend_path('PATH', self.prefix.cli.bin)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.path, 'aspera-cli*.sh'))[0]
