@@ -93,8 +93,7 @@ class MofemUsersModules(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' %
-            os.path.join(self.prefix, 'users_modules'),
+            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' % self.prefix.users_modules,
             '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
             ('YES' if '+copy_user_modules' in spec else 'NO')]
