@@ -47,7 +47,7 @@ class Neurodamus(NeurodamusBase):
 
     depends_on('neurodamus-base@master', when='@master')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
-    depends_on('neurodamus-base@plasticity', when='@plasicity')
+    depends_on('neurodamus-base@plasticity', when='@plasticity')
 
     depends_on("neuron+profile", when='+profile')
     depends_on('reportinglib+profile', when='+profile')
