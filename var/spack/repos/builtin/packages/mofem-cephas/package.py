@@ -44,7 +44,7 @@ class MofemCephas(CMakePackage):
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
     variant('slepc', default=True, description='Compile with Slepc')
-    variant('doxygen', default=False, description='Install doxygen')
+    variant('docs', default=False, description='Install doxygen')
 
     depends_on("mpi")
     depends_on("boost")
@@ -60,8 +60,8 @@ class MofemCephas(CMakePackage):
     depends_on("adol-c@2.5.2~examples", when="+adol-c")
     depends_on("tetgen", when="+tetgen")
     depends_on("med", when='+med')
-    depends_on('doxygen+graphviz', when='+doxygen')
-    depends_on('graphviz', when='+doxygen')
+    depends_on('doxygen+graphviz', when='+docs')
+    depends_on('graphviz', when='+docs')
 
     extendable = True
 
