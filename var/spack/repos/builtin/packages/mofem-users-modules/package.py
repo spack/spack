@@ -25,7 +25,15 @@ import os
 
 
 class MofemUsersModules(CMakePackage):
-    """mofem users modules"""
+    """MofemUsersModules collects all user-provided modules and extends
+    mofem-cephas package. The CMakeList.txt file for user modules is located
+    in mofem-cephas/user_modules prefix. MofemUsersModules itself does not
+    contain any code (is a dummy with a single dummy version). We build in
+    the self.prefix/build and provide sources location of user modules, i.e.
+    mofem-fracture-module. Those are kept as a stand-alone package (instead
+    of resources) as they have different versions and developers. For more
+    information how to work with Spack and MoFEM see
+    http://mofem.eng.gla.ac.uk/mofem/html/install_spack.html"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"

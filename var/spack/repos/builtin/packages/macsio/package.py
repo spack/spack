@@ -52,7 +52,7 @@ class Macsio(CMakePackage):
     depends_on('json-cwx')
     depends_on('mpi', when="+mpi")
     depends_on('silo', when="+silo")
-    depends_on('hdf5', when="+hdf5")
+    depends_on('hdf5+hl', when="+hdf5")
     # depends_on('hdf5+szip', when="+szip")
     depends_on('exodusii', when="+exodus")
     # pdb is packaged with silo
