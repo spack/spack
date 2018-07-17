@@ -88,6 +88,8 @@ class Fftw(AutotoolsPackage):
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+    # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
+    conflicts('%gcc@8:8.9999', when="@3.3.7")
 
     @property
     def libs(self):
