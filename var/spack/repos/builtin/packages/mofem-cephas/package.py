@@ -47,6 +47,7 @@ class MofemCephas(CMakePackage):
     variant('doxygen', default=False, description='Install doxygen')
 
     depends_on("mpi")
+    depends_on("boost")
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
@@ -75,7 +76,8 @@ class MofemCephas(CMakePackage):
             '-DWITH_SPACK=1',
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
             '-DPETSC_ARCH=',
-            '-DMOAB_DIR=%s' % spec['moab'].prefix])
+            '-DMOAB_DIR=%s' % spec['moab'].prefix,
+            '-DBOOST_DIR=%s' % spec['boost'].prefix])
 
         # variant packages
         if '+adol-c' in spec:
