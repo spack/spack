@@ -76,24 +76,22 @@ class MofemUsersModules(CMakePackage):
         spec = self.spec
         ex_prefix = self.prefix
 
-        if '+mofem-fracture-module' in spec:
-            mkdirp(ex_prefix.users_modules.fracture_mechanics)
+            mkdirp(prefix.ex_users_modules.fracture_mechanics)
             copy_tree(
                 spec['mofem-fracture-module'].
-                prefix.users_modules.fracture_mechanics,
-                ex_prefix.users_modules.fracture_mechanics)
+                prefix.ext_users_modules.fracture_mechanics,
+                prefix.ext_users_modules.fracture_mechanics)
 
-        if '+mofem-minimal-surface-equation' in spec:
-            mkdirp(ex_prefix.users_modules.minimal_surface_equation)
+            mkdirp(prefix.ext_users_modules.minimal_surface_equation)
             copy_tree(
                 spec['mofem-minimal-surface-equation'].
-                prefix.users_modules.minimal_surface_equation,
-                ex_prefix.users_modules.minimal_surface_equation)
+                prefix.ext_users_modules.minimal_surface_equation,
+                prefix.ext_users_modules.minimal_surface_equation)
 
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' % self.prefix.users_modules,
+            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' % self.prefix.ext_users_modules,
             '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
             ('YES' if '+copy_user_modules' in spec else 'NO')]

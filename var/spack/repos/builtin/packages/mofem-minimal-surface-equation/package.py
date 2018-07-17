@@ -42,4 +42,4 @@ class MofemMinimalSurfaceEquation(Package):
 
     def install(self, spec, prefix):
         source = self.stage.source_path
-        install_tree(source, prefix.users_modules.minimal_surface_equation)
+        install_tree(source, prefix.ext_users_modules.minimal_surface_equation)
