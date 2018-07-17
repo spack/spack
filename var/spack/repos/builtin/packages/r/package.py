@@ -62,7 +62,7 @@ class R(AutotoolsPackage):
             description='Links to externally installed BLAS/LAPACK')
     variant('X', default=False,
             description='Enable X11 support (call configure --with-x)')
-    variant('memory-profiling', default=False,
+    variant('memory_profiling', default=False,
             description='Enable memory profiling')
 
     # Virtual dependencies
@@ -130,7 +130,7 @@ class R(AutotoolsPackage):
         else:
             config_args.append('--without-x')
 
-        if '+memory-profiling' in spec:
+        if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
 
         return config_args
