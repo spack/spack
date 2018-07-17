@@ -27,6 +27,7 @@ These tests check the database is functioning properly,
 both in memory and in its file
 """
 import datetime
+import functools
 import multiprocessing
 import os
 import pytest
@@ -40,6 +41,23 @@ from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
+
+
+@pytest.fixture()
+def usr_folder_exists(monkeypatch):
+    """The ``/usr`` folder is assumed to be existing in some tests. This
+    fixture makes it such that its existence is mocked, so we have no
+    requirements on the system running tests.
+    """
+    isdir = os.path.isdir
+
+    @functools.wraps(os.path.isdir)
+    def mock_isdir(path):
+        if path == '/usr':
+            return True
+        return isdir(path)
+
+    monkeypatch.setattr(os.path, 'isdir', mock_isdir)
 
 
 def _print_ref_counts():
@@ -436,3 +454,18 @@ def test_external_entries_in_db(database):
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True
+
+
+@pytest.mark.regression('8036')
+def test_regression_issue_8036(mutable_database, usr_folder_exists):
+    # The test ensures that the external package prefix is treated as
+    # existing. Even when the package prefix exists, the package should
+    # not be considered installed until it is added to the database with
+    # do_install.
+    s = spack.spec.Spec('externaltool@0.9')
+    s.concretize()
+    assert not s.package.installed
+
+    # Now install the external package and check again the `installed` property
+    s.package.do_install(fake=True)
+    assert s.package.installed
