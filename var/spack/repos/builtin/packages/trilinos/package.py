@@ -313,7 +313,7 @@ class Trilinos(CMakePackage):
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
-    patch('xlf_seacas.patch', when='@12.12.1 %clang')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %clang')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1:%clang')
