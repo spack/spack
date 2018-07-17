@@ -72,7 +72,7 @@ class Dependency(object):
     This class differs from ``spack.spec.DependencySpec`` because it
     represents metadata at the ``Package`` level.
     ``spack.spec.DependencySpec`` is a descriptor for an actual package
-    confiuguration, while ``Dependency`` is a descriptor for a package's
+    configuration, while ``Dependency`` is a descriptor for a package's
     dependency *requirements*.
 
     A dependency is a requirement for a configuration of another package

@@ -62,7 +62,8 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.1.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.1.0: +mpi', when='+mpi +adios2')
     # ideally we want 2.3.0+ for full C++11 CT function signature support
-    depends_on('py-pybind11@2.2.1:', when='+python')
+    depends_on('py-pybind11@2.2.3:', when='+python')
+    depends_on('py-numpy', when='+python', type=['test', 'run'])
 
     extends('python', when='+python')
 
@@ -83,11 +84,15 @@ class OpenpmdApi(CMakePackage):
             #     'ON' if '+json' in spec else 'OFF'),
             '-DopenPMD_USE_PYTHON:BOOL={0}'.format(
                 'ON' if '+python' in spec else 'OFF'),
+            # tests and examples
             '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+                'ON' if self.run_tests else 'OFF'),
+            '-DBUILD_EXAMPLES:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
         ]
 
         if spec.satisfies('+python'):
+            args.append('-DopenPMD_USE_INTERNAL_PYBIND11:BOOL=OFF')
             args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
                         self.spec['python'].command.path))
 

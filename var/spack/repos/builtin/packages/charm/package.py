@@ -63,6 +63,7 @@ class Charm(Package):
     variant(
         "build-target",
         default="LIBS",
+        # AMPI also builds charm++, LIBS also builds AMPI and charm++
         values=("charm++", "AMPI", "LIBS"),
         description="Specify the target to build"
     )
@@ -70,7 +71,7 @@ class Charm(Package):
     # Communication mechanisms (choose exactly one)
     variant(
         "backend",
-        default="mpi",
+        default="netlrts",
         values=("mpi", "multicore", "netlrts", "verbs", "gni",
                 "ofi", "pami", "pamilrts"),
         description="Set the backend to use"
@@ -91,6 +92,25 @@ class Charm(Package):
     variant("shared", default=True, description="Enable shared link support")
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
+
+    # FIXME: backend=mpi also provides mpi, but spack does not support
+    # depends_on("mpi") and provides("mpi") in the same package currently.
+    for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
+              'pamilrts']:
+        provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
+        provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('MPICC',  join_path(self.prefix.bin, 'ampicc'))
+        spack_env.set('MPICXX', join_path(self.prefix.bin, 'ampicxx'))
+        spack_env.set('MPIF77', join_path(self.prefix.bin, 'ampif77'))
+        spack_env.set('MPIF90', join_path(self.prefix.bin, 'ampif90'))
+
+    def setup_dependent_package(self, module, dependent_spec):
+        self.spec.mpicc = join_path(self.prefix.bin, 'ampicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'ampicxx')
+        self.spec.mpifc = join_path(self.prefix.bin, 'ampif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'ampif77')
 
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
@@ -235,3 +255,9 @@ class Charm(Package):
                     except (IOError, OSError):
                         pass
         shutil.rmtree(join_path(prefix, "tmp"))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        make('-C', join_path(self.stage.path, 'charm/tests'),
+             'test', parallel=False)

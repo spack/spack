@@ -49,7 +49,7 @@ class Boxlib(CMakePackage):
 
         options.extend([
             '-DBL_SPACEDIM=%d' % int(spec.variants['dims'].value),
-            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON',
             '-DENABLE_FBASELIB=ON',
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,

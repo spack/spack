@@ -33,6 +33,8 @@ class Nwchem(Package):
     homepage = "http://www.nwchem-sw.org"
     url      = "http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz"
 
+    tags = ['ecp', 'ecp-apps']
+
     version('6.8', '50b18116319f4c15d1cb7eaa1b433006',
             url='https://github.com/nwchemgit/nwchem/archive/v6.8-release.tar.gz')
     version('6.6', 'c581001c004ea5e5dfacb783385825e3',

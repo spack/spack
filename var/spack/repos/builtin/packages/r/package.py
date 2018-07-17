@@ -62,6 +62,8 @@ class R(AutotoolsPackage):
             description='Links to externally installed BLAS/LAPACK')
     variant('X', default=False,
             description='Enable X11 support (call configure --with-x)')
+    variant('memory_profiling', default=False,
+            description='Enable memory profiling')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -119,7 +121,7 @@ class R(AutotoolsPackage):
 
         if '+external-lapack' in spec:
             config_args.extend([
-                '--with-blas',
+                '--with-blas={0}'.format(spec['blas'].libs),
                 '--with-lapack'
             ])
 
@@ -127,6 +129,9 @@ class R(AutotoolsPackage):
             config_args.append('--with-x')
         else:
             config_args.append('--without-x')
+
+        if '+memory_profiling' in spec:
+            config_args.append('--enable-memory-profiling')
 
         return config_args
 

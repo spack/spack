@@ -402,31 +402,6 @@ Numpy, core Python, BLAS/LAPACK and anything else needed:
 
    spack module loads --dependencies py-scipy
 
-^^^^^^^^^^^^^^^^^^
-Extension Packages
-^^^^^^^^^^^^^^^^^^
-
-:ref:`packaging_extensions` may be used as an alternative to loading
-Python (and similar systems) packages directly.  If extensions are
-activated, then ``spack load python`` will also load all the
-extensions activated for the given ``python``.  This reduces the need
-for users to load a large number of modules.
-
-However, Spack extensions have two potential drawbacks:
-
-#. Activated packages that involve compiled C extensions may still
-   need their dependencies to be loaded manually.  For example,
-   ``spack load openblas`` might be required to make ``py-numpy``
-   work.
-
-#. Extensions "break" a core feature of Spack, which is that multiple
-   versions of a package can co-exist side-by-side.  For example,
-   suppose you wish to run a Python package in two different
-   environments but the same basic Python --- one with
-   ``py-numpy@1.7`` and one with ``py-numpy@1.8``.  Spack extensions
-   will not support this potential debugging use case.
-
-
 ^^^^^^^^^^^^^^
 Dummy Packages
 ^^^^^^^^^^^^^^
@@ -446,6 +421,8 @@ consistent.  This means that you can reliably build software against
 it.  A disadvantage is the set of packages will be consistent; this
 means you cannot load up two applications this way if they are not
 consistent with each other.
+
+.. _filesystem-views:
 
 ^^^^^^^^^^^^^^^^
 Filesystem Views
@@ -587,6 +564,29 @@ symlinks.  At any time one can delete ``/path/to/MYVIEW`` or use
 ``spack view`` to manage it surgically.  None of this will affect the
 real Spack install area.
 
+^^^^^^^^^^^^^^^^^^
+Global Activations
+^^^^^^^^^^^^^^^^^^
+
+:ref:`cmd-spack-activate` may be used as an alternative to loading
+Python (and similar systems) packages directly or creating a view.
+If extensions are globally activated, then ``spack load python`` will
+also load all the extensions activated for the given ``python``.
+This reduces the need for users to load a large number of modules.
+
+However, Spack global activations have two potential drawbacks:
+
+#. Activated packages that involve compiled C extensions may still
+   need their dependencies to be loaded manually.  For example,
+   ``spack load openblas`` might be required to make ``py-numpy``
+   work.
+
+#. Global activations "break" a core feature of Spack, which is that
+   multiple versions of a package can co-exist side-by-side.  For example,
+   suppose you wish to run a Python package in two different
+   environments but the same basic Python --- one with
+   ``py-numpy@1.7`` and one with ``py-numpy@1.8``.  Spack extensions
+   will not support this potential debugging use case.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Discussion: Running Binaries
