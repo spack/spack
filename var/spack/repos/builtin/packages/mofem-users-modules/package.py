@@ -39,17 +39,17 @@ class MofemUsersModules(CMakePackage):
     variant('with_metaio', default=False,
         description='Install MetaIO with MoFEM users modules')
 
-    variant('mofem-fracture-module', default=False,
+    variant('mofem_fracture_module', default=False,
         description="Install fracture mechanics module")
-    variant('mofem-minimal-surface-equation', default=False,
+    variant('mofem_minimal_surface_equation', default=False,
         description="Install minimal surface equation module")
 
     extends('mofem-cephas')
 
     depends_on("mofem-fracture-module", type='build',
-        when='+mofem-fracture-module')
+        when='+mofem_fracture_module')
     depends_on("mofem-minimal-surface-equation", type='build',
-        when='+mofem-minimal-surface-equation')
+        when='+mofem_minimal_surface_equation')
 
     @property
     def root_cmakelists_dir(self):
@@ -76,12 +76,14 @@ class MofemUsersModules(CMakePackage):
         spec = self.spec
         ex_prefix = self.prefix
 
+        if '+mofem_fracture_module' in spec:
             mkdirp(prefix.ex_users_modules.fracture_mechanics)
             copy_tree(
                 spec['mofem-fracture-module'].
                 prefix.ext_users_modules.fracture_mechanics,
                 prefix.ext_users_modules.fracture_mechanics)
 
+        if '+mofem_minimal_surface_equation' in spec:
             mkdirp(prefix.ext_users_modules.minimal_surface_equation)
             copy_tree(
                 spec['mofem-minimal-surface-equation'].
