@@ -29,8 +29,8 @@ class MofemUsersModules(CMakePackage):
     """mofem users modules"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
+    version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
 
     maintainers = ['likask']
 
