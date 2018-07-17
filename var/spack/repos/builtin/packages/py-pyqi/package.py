@@ -26,10 +26,12 @@ from spack import *
 
 
 class PyPyqi(PythonPackage):
-    """pyqi (canonically pronounced pie chee) is a Python framework designed to support wrapping general commands in multiple types of interfaces, including at the command line, HTML, and API levels."""
+    """pyqi (canonically pronounced pie chee) is a Python framework designed
+       to support wrapping general commands in multiple types of interfaces,
+       including at the command line, HTML, and API levels."""
 
     homepage = "https://pyqi.readthedocs.io"
-    url      = "https://files.pythonhosted.org/packages/0e/99/5bcbfb4323468de771d66f5f830e5e3aeb14ce85a7b3f6905fb2f1db3be0/pyqi-0.3.2.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyqi/pyqi-0.3.2.tar.gz"
 
     version('0.3.2', '9507c06eeb22a816d963c860ad8e92ae')
 
