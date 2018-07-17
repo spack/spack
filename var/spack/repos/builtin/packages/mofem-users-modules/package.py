@@ -61,7 +61,7 @@ class MofemUsersModules(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return os.path.join(spec['mofem-cephas'].prefix, 'users_modules')
+        return os.path.join(spec['mofem-cephas'].prefix.users_modules)
 
     @property
     def build_directory(self):
