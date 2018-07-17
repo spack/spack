@@ -74,7 +74,6 @@ class MofemUsersModules(CMakePackage):
     @run_before('cmake')
     def copy_source_code_to_users_modules(self):
         spec = self.spec
-        ex_prefix = self.prefix
 
         if '+mofem_fracture_module' in spec:
             mkdirp(prefix.ex_users_modules.fracture_mechanics)
