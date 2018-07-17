@@ -79,7 +79,7 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.1.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
