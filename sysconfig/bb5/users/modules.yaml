@@ -32,6 +32,7 @@ modules:
     whitelist:
       - 'functionalizer'
       - 'neurodamus'
+      - 'parquet-converters'
       - 'touchdetector'
     blacklist:
       - '%gcc'

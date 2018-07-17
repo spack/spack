@@ -31,6 +31,9 @@ class Touchdetector(CMakePackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/TouchDetector"
     url      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
 
+    version('develop',
+            git=url,
+            submodules=True)
     version('4.3.2',
             commit='8b52245181b216876d59ae197a87064ef7478e3e',
             git=url,
@@ -41,8 +44,8 @@ class Touchdetector(CMakePackage):
 
     depends_on('boost@1.50:')
     depends_on('cmake', type='build')
-    depends_on('hpctools')
     depends_on('hpctools~openmp', when='~openmp')
+    depends_on('hpctools+openmp', when='+openmp')
     depends_on('hdf5@1.8:')
     depends_on('libxml2')
     depends_on('mpi')
