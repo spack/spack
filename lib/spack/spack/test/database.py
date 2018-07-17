@@ -458,8 +458,10 @@ def test_external_entries_in_db(database):
 
 @pytest.mark.regression('8036')
 def test_regression_issue_8036(mutable_database, usr_folder_exists):
-    # This version should not be installed on entry, but it points to /usr
-    # which is a directory that most likely exists everywhere (see #8036)
+    # The test ensures that the external package prefix is treated as
+    # existing. Even when the package prefix exists, the package should
+    # not be considered installed until it is added to the database with
+    # do_install.
     s = spack.spec.Spec('externaltool@0.9')
     s.concretize()
     assert not s.package.installed
