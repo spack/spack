@@ -38,6 +38,7 @@ class Grnboost(Package):
     depends_on('jdk', type=('build', 'run'))
     depends_on('xgboost+jvm-packages', type='run')
     depends_on('joda-time', type='run')
+    depends_on('slf4j', type='run')
     depends_on('spark', type='run')
 
     def setup_environment(self, spack_env, run_env):
@@ -53,6 +54,7 @@ class Grnboost(Package):
         run_env.set('JAVA_HOME', self.spec['jdk'].prefix)
         run_env.set('CLASSPATH', xgboost_jar)
         run_env.prepend_path('CLASSPATH', jodatime_jar)
+        run_env.set('XGBOOST_JAR', xgboost_jar)
 
     def install(self, spec, prefix):
         sbt = which('sbt')
