@@ -22,30 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack import *
+from glob import glob
 
-#
-# This file is part of Spack and sets up the spack environment for
-# csh and tcsh.  This includes dotkit support, module support, and
-# it also puts spack in your path.  Source it like this:
-#
-#    setenv SPACK_ROOT /path/to/spack
-#    source $SPACK_ROOT/share/spack/setup-env.csh
-#
-if ($?SPACK_ROOT) then
-    set _spack_source_file = $SPACK_ROOT/share/spack/setup-env.csh
-    set _spack_share_dir   = $SPACK_ROOT/share/spack
 
-    # Command aliases point at separate source files
-    alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
-    alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
+class AsperaCli(Package):
+    """The Aspera CLI client for the Fast and Secure Protocol (FASP)."""
 
-    # Set variables needed by this script
-    eval `spack --print-shell-vars csh`
+    homepage = "https://asperasoft.com"
+    url      = "https://download.asperasoft.com/download/sw/cli/3.7.7/aspera-cli-3.7.7.608.927cce8-linux-64-release.sh"
 
-    # Set up modules and dotkit search paths in the user environment
-    _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
-    _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-    _spack_pathadd PATH       "$SPACK_ROOT/bin"
-else
-    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
-endif
+    version('3.7.7', 'e92140d809e7e65112a5d1cd49c442cf',
+            url='https://download.asperasoft.com/download/sw/cli/3.7.7/aspera-cli-3.7.7.608.927cce8-linux-64-release.sh',
+            expand=False)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.prefix.cli.bin)
+
+    def install(self, spec, prefix):
+        runfile = glob(join_path(self.stage.path, 'aspera-cli*.sh'))[0]
+        # Update destination path
+        filter_file('INSTALL_DIR=~/.aspera',
+                    'INSTALL_DIR=%s' % prefix,
+                    runfile,
+                    string=True)
+        # Install
+        chmod = which('chmod')
+        chmod('+x', runfile)
+        runfile = which(runfile)
+        runfile()

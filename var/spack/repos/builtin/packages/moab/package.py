@@ -124,6 +124,8 @@ class Moab(AutotoolsPackage):
 #       else:
 #           options.append('--without-mpi')
 
+        options.append('--with-blas=%s' % spec['blas'].libs)
+
         if '+hdf5' in spec:
             options.append('--with-hdf5=%s' % spec['hdf5'].prefix)
         else:

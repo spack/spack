@@ -41,12 +41,15 @@ import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
 
 import spack
+import spack.architecture
 import spack.config
 import spack.cmd
 import spack.hooks
 import spack.paths
 import spack.repo
+import spack.store
 import spack.util.debug
+import spack.util.path
 from spack.error import SpackError
 
 
@@ -362,6 +365,10 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '-V', '--version', action='store_true',
         help='show version number and exit')
+    parser.add_argument(
+        '--print-shell-vars', action='store',
+        help="print info needed by setup-env.[c]sh")
+
     return parser
 
 
@@ -547,6 +554,46 @@ def _profile_wrapper(command, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
+def print_setup_info(*info):
+    """Print basic information needed by setup-env.[c]sh.
+
+    Args:
+        info (list of str): list of things to print: comma-separated list
+            of 'csh', 'sh', or 'modules'
+
+    This is in ``main.py`` to make it fast; the setup scripts need to
+    invoke spack in login scripts, and it needs to be quick.
+
+    """
+    shell = 'csh' if 'csh' in info else 'sh'
+
+    def shell_set(var, value):
+        if shell == 'sh':
+            print("%s='%s'" % (var, value))
+        elif shell == 'csh':
+            print("set %s = '%s'" % (var, value))
+        else:
+            tty.die('shell must be sh or csh')
+
+    # print sys type
+    shell_set('_sp_sys_type', spack.architecture.sys_type())
+
+    # print roots for all module systems
+    module_roots = spack.config.get('config:module_roots')
+    for name, path in module_roots.items():
+        path = spack.util.path.canonicalize_path(path)
+        shell_set('_sp_%s_root' % name, path)
+
+    # print environment module system if available. This can be expensive
+    # on clusters, so skip it if not needed.
+    if 'modules' in info:
+        specs = spack.store.db.query('environment-modules')
+        if specs:
+            shell_set('module_prefix', specs[-1].prefix)
+        else:
+            shell_set('module_prefix', 'not_installed')
+
+
 def main(argv=None):
     """This is the entry point for the Spack command.
 
@@ -561,6 +608,10 @@ def main(argv=None):
     parser = make_argument_parser()
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
+
+    if args.print_shell_vars:
+        print_setup_info(*args.print_shell_vars.split(','))
+        return 0
 
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
