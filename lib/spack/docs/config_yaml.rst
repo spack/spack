@@ -191,3 +191,22 @@ to 4, for example, commands like ``spack install`` will run ``make -j4``
 instead of hogging every core.
 
 To build all software in serial, set ``build_jobs`` to 1.
+
+--------------------
+``ccache``
+--------------------
+
+When set to ``true`` Spack will use ccache to cache compiles. This is
+useful specifically un two cases: (1) Use with ``spack setup``, (2)
+Build the same package with many different variants. The default is
+``false``.
+
+When enabled Spack will look inside your ``PATH`` for a ``ccache``
+executable and stop if it is not found. Some systems come with
+``ccache``, but it can also be installed using ``spack install
+ccache``. ``ccache`` comes with reasonable defaults for cache size
+and location. (See the *Configuration settings* secion of ``man
+ccache`` to learn more about the default settings and how change
+them.) Please note that we currently disable ccache's ``hash_dir``
+feature to avoid an issue with the stage directory (see
+https://github.com/LLNL/spack/pull/3761#issuecomment-294352232 ).

@@ -25,14 +25,12 @@
 from spack import *
 
 
-class PyDev(PythonPackage):
-    """libraries and tools for Python development"""
+class Flatbuffers(CMakePackage):
+    """Memory Efficient Serialization Library
+    """
 
-    homepage = "https://pypi.python.org/pypi/dev"
-    url      = "https://pypi.io/packages/source/d/dev/dev-0.4.0.tar.gz"
+    homepage = "http://google.github.io/flatbuffers/"
+    url      = "https://github.com/google/flatbuffers/archive/v1.9.0.tar.gz"
 
-    version('0.4.0', '00449cf0b347c32da9c840adcb4cf24b')
-
-    patch('__init__.py.patch')
-
-    depends_on('py-setuptools', type='build')
+    version('1.9.0', '8be7513bf960034f6873326d09521a4b')
+    version('1.8.0', '276cab8303c4189cbe3b8a70e0515d65')

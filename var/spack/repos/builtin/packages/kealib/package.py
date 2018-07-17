@@ -42,21 +42,36 @@ class Kealib(CMakePackage):
     Development work on this project has been funded by Landcare Research.
     """
     homepage = "http://www.kealib.org/"
-    url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.7.tar.gz"
+    url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.9.tar.gz"
 
     version('develop', hg='https://bitbucket.org/chchrsc/kealib')
+    version('1.4.9', 'a095d0b9d6de1d609ffaf242e00cc2b6')
     version('1.4.8', '1af2514c908f9168ff6665cc012815ad')
     version('1.4.7', '6139e31e50f552247ddf98f489948893')
 
     depends_on('cmake@2.8.10:', type='build')
     depends_on('hdf5+cxx+hl')
 
-    root_cmakelists_dir = 'trunk'
-
     patch('cmake.patch', when='@1.4.7')
 
+    @property
+    def root_cmakelists_dir(self):
+        if self.version >= Version('1.4.9'):
+            return '.'
+        else:
+            return 'trunk'
+
     def cmake_args(self):
-        return [
-            '-DHDF5_INCLUDE_DIR=%s' % self.spec['hdf5'].headers.directories[0],
-            '-DHDF5_LIB_PATH=%s' % self.spec['hdf5'].libs.directories[0],
-        ]
+        spec = self.spec
+
+        if self.version >= Version('1.4.9'):
+            return [
+                '-DHDF5_ROOT={0}'.format(spec['hdf5'].prefix)
+            ]
+        else:
+            return [
+                '-DHDF5_INCLUDE_DIR={0}'.format(
+                    spec['hdf5'].headers.directories[0]),
+                '-DHDF5_LIB_PATH={0}'.format(
+                    spec['hdf5'].libs.directories[0])
+            ]

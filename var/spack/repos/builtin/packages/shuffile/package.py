@@ -22,3 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack import *
+
+
+class Shuffile(CMakePackage):
+    """Shuffle files between MPI ranks"""
+
+    homepage = "https://github.com/ECP-VeloC/shuffile"
+    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.1.zip"
+    tags     = ['ecp']
+
+    version('0.0.2', 'eca45150d83e21ac51049133a2308d34')
+    version('master', git='https://github.com/ecp-veloc/shuffile.git',
+            branch='master')
+
+    depends_on('mpi')
+    depends_on('kvtree')
+
+    def cmake_args(self):
+        args = []
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        if self.spec.satisfies('platform=cray'):
+            args.append("-DSHUFFILE_LINK_STATIC=ON")
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
+        return args
