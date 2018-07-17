@@ -46,3 +46,4 @@ class PyBiomFormat(PythonPackage):
     depends_on('py-scipy@0.13.0:', type=('build', 'run'))
     depends_on('py-pandas@0.19.2:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))
+    depends_on('py-pyqi', type=('build', 'run'))
