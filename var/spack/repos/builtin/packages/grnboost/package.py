@@ -39,7 +39,7 @@ class Grnboost(Package):
     depends_on('xgboost+jvm-packages', type='run')
     depends_on('joda-time', type='run')
     depends_on('slf4j', type='run')
-    depends_on('spark', type='run')
+    depends_on('spark+hadoop', type='run')
 
     def setup_environment(self, spack_env, run_env):
         grnboost_jar = join_path(self.prefix, 'target',
@@ -50,11 +50,17 @@ class Grnboost(Package):
         jodatime_version = self.spec['joda-time'].version.string
         jodatime_jar = join_path(self.spec['joda-time'].prefix.bin,
                                  'joda-time-'+jodatime_version+'.jar')
+        slf4j_version = self.spec['slf4j'].version.string
+        slf4j_jar = join_path(self.spec['slf4j'].prefix.bin,
+                              'slf4j-api-'+slf4j_version+'.jar')
         run_env.set('GRNBOOST_JAR', grnboost_jar)
         run_env.set('JAVA_HOME', self.spec['jdk'].prefix)
         run_env.set('CLASSPATH', xgboost_jar)
         run_env.prepend_path('CLASSPATH', jodatime_jar)
+        run_env.prepend_path('CLASSPATH', slf4j_jar)
         run_env.set('XGBOOST_JAR', xgboost_jar)
+        run_env.set('JODATIME_JAR', jodatime_jar)
+        run_env.set('SLF4J_JAR', slf4j_jar)
 
     def install(self, spec, prefix):
         sbt = which('sbt')
