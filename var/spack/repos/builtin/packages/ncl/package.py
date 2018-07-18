@@ -37,6 +37,9 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
+    version('6.5.0', 'b70819091cef3ae2d5eb106ecbc50b2c',
+            url='https://codeload.github.com/NCAR/ncl/tar.gz/6.5.0',
+            extension='tar.gz')
     version('6.4.0', 'd891452cda7bb25afad9b6c876c73986',
             url='https://codeload.github.com/NCAR/ncl/tar.gz/6.4.0',
             extension='tar.gz')
