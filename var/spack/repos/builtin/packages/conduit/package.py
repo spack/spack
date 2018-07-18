@@ -59,7 +59,8 @@ class Conduit(Package):
     version('master',
             git='https://github.com/LLNL/conduit.git',
             branch="master",
-            submodules=True)
+            submodules=True,
+            preferred=True)
 
     ###########################################################################
     # package variants
