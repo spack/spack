@@ -61,15 +61,15 @@ class Verrou(AutotoolsPackage):
     resource(name='valgrind-3.13.0',
              git='git://sourceware.org/git/valgrind.git',
              commit='1378ec95f22235e0a8c972cf1cd0abef0b9610d4',
-             when='@1.1:,master')
+             when='@1.1.0:,master')
     resource(name='valgrind-3.12.0',
              git='git://sourceware.org/git/valgrind.git',
              commit='36923ab298c8d2791d6c86b6cd5c0667c07449f6',
-             when='@1.0')
+             when='@1.0.0:1.0.999')
     resource(name='valgrind-3.10.1',
              git='git://sourceware.org/git/valgrind.git',
              commit='cfc3175a6eb132a5600fcf705f3fa326d71483bf',
-             when='@0.9')
+             when='@0.9.0:0.9.999')
 
     conflicts('valgrind')
 
