@@ -207,6 +207,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -434,6 +435,10 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
+        if '+cxx_exceptions' in spec:
+            config_args.append('--enable-cxx-exceptions')
+        else:
+            config_args.append('--disable-cxx-exceptions')
         return config_args
 
     @run_after('install')
