@@ -93,7 +93,7 @@ class Conduit(Package):
     # CMake
     #######################
     # cmake 3.8.2 or newer
-    depends_on("cmake@3.8.2:", when="+cmake", type='build'))
+    depends_on("cmake@3.8.2:", when="+cmake", type='build')
 
     #######################
     # Python
