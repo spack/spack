@@ -76,6 +76,11 @@ class Verrou(AutotoolsPackage):
     variant('fma', default=True,
             description='Activates fused multiply-add support for Verrou')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+
     def patch(self):
         # The current setup gives us the verrou source tree, with a "valgrind"
         # subdirectory. But we want the reverse layout. Let's fix this.
@@ -90,10 +95,6 @@ class Verrou(AutotoolsPackage):
 
         # Once this is done, we can patch valgrind
         which('patch')('-p0', '--input=verrou/valgrind.diff')
-
-    def autoreconf(self, spec, prefix):
-        # Needed because we patched valgrind
-        which("bash")("autogen.sh")
 
     def configure_args(self):
         spec = self.spec
