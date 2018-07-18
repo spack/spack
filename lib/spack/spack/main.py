@@ -589,9 +589,9 @@ def print_setup_info(*info):
     if 'modules' in info:
         specs = spack.store.db.query('environment-modules')
         if specs:
-            shell_set('module_prefix', specs[-1].prefix)
+            shell_set('_sp_module_prefix', specs[-1].prefix)
         else:
-            shell_set('module_prefix', 'not_installed')
+            shell_set('_sp_module_prefix', 'not_installed')
 
 
 def main(argv=None):
