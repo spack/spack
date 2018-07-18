@@ -40,36 +40,28 @@ class Verrou(AutotoolsPackage):
     """
 
     homepage = "https://github.com/edf-hpc/verrou"
-    url      = "https://github.com/edf-hpc/verrou.git"
+    url      = "https://github.com/edf-hpc/verrou/archive/v2.0.0.tar.gz"
 
-    version('master',
+    version('develop',
             git='https://github.com/edf-hpc/verrou.git',
             branch='master')
 
-    version('2.0.0',
-            git='https://github.com/edf-hpc/verrou.git',
-            commit='a614ad695d060abdfcd3cec11022d6f044a0980d')
-    version('1.1.0',
-            git='https://github.com/edf-hpc/verrou.git',
-            commit='d69787e89507519e14f5ec44150c1882930f692e')
-    version('1.0.0',
-            git='https://github.com/edf-hpc/verrou.git',
-            commit='519dd9a83738f72da8446322e9c403e608940b7a')
-    version('0.9.0',
-            git='https://github.com/edf-hpc/verrou.git',
-            commit='ebabfcf7f4e9a02b130e9819ba6c19e0450eb73d')
+    version('2.0.0', '388d493df3f253c9b049ce0ceae55fd6')
+    version('1.1.0', '9752d776fb534890e5e29f9721ee6125')
+    version('1.0.0', '01e90416aa4ac0dbde9bd165afe4cbfe')
+    version('0.9.0', '42d69fc7dbdc7c374a14375084f72392')
 
     resource(name='valgrind-3.13.0',
-             git='git://sourceware.org/git/valgrind.git',
-             commit='1378ec95f22235e0a8c972cf1cd0abef0b9610d4',
+             url='https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2',
+             sha256='d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b',
              when='@1.1.0:,master')
-    resource(name='valgrind-3.12.0',
-             git='git://sourceware.org/git/valgrind.git',
-             commit='36923ab298c8d2791d6c86b6cd5c0667c07449f6',
+    resource(name='valgrind-3.13.0',
+             url='https://sourceware.org/pub/valgrind/valgrind-3.12.0.tar.bz2',
+             sha256='67ca4395b2527247780f36148b084f5743a68ab0c850cb43e4a5b4b012cf76a1',
              when='@1.0.0:1.0.999')
-    resource(name='valgrind-3.10.1',
-             git='git://sourceware.org/git/valgrind.git',
-             commit='cfc3175a6eb132a5600fcf705f3fa326d71483bf',
+    resource(name='valgrind-3.13.0',
+             url='https://sourceware.org/pub/valgrind/valgrind-3.10.1.tar.bz2',
+             sha256='fa253dc26ddb661b6269df58144eff607ea3f76a9bcfe574b0c7726e1dfcb997',
              when='@0.9.0:0.9.999')
 
     variant('fma', default=True,
@@ -81,16 +73,22 @@ class Verrou(AutotoolsPackage):
     depends_on('m4', type='build')
 
     def patch(self):
-        # The current setup gives us the verrou source tree, with a "valgrind"
-        # subdirectory. But we want the reverse layout. Let's fix this.
+        # We start with the verrou source tree and a "valgrind-x.y.z" subdir.
+        # But we actually need a valgrind source tree with a "verrou" subdir.
+        # First, let's locate the valgrind sources...
+        valgrind_dirs = glob.glob('valgrind-*')
+        assert len(valgrind_dirs) == 1
+        valgrind_dir = valgrind_dirs[0]
+
+        # ...then we can flip the directory organization around
         verrou_files = os.listdir('.')
-        verrou_files.remove('valgrind')
+        verrou_files.remove(valgrind_dir)
         os.mkdir('verrou')
         for name in verrou_files:
             os.rename(name, os.path.join('verrou', name))
-        for name in os.listdir('valgrind'):
-            os.rename(os.path.join('valgrind', name), name)
-        os.rmdir('valgrind')
+        for name in os.listdir(valgrind_dir):
+            os.rename(os.path.join(valgrind_dir, name), name)
+        os.rmdir(valgrind_dir)
 
         # Once this is done, we can patch valgrind
         which('patch')('-p0', '--input=verrou/valgrind.diff')
@@ -106,8 +104,8 @@ class Verrou(AutotoolsPackage):
         spec = self.spec
         options = ['--enable-only64bit']
 
-        if spec.satisfies('+fma'):
-            options.append('--enable-verrou-fma')
+        options.append('--{}-verrou-fma'
+                       .format('enable' if 'fma' in spec else 'disable'))
 
         if sys.platform == 'darwin':
             options.append('--build=amd64-darwin')
