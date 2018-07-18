@@ -40,12 +40,12 @@ if ($?SPACK_ROOT) then
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
 
     # Set variables needed by this script
+    _spack_pathadd PATH "$SPACK_ROOT/bin"
     eval `spack --print-shell-vars csh`
 
     # Set up modules and dotkit search paths in the user environment
     _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
     _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-    _spack_pathadd PATH       "$SPACK_ROOT/bin"
 else
     echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
 endif
