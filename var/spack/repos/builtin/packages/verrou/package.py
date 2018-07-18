@@ -72,8 +72,6 @@ class Verrou(AutotoolsPackage):
              commit='cfc3175a6eb132a5600fcf705f3fa326d71483bf',
              when='@0.9.0:0.9.999')
 
-    conflicts('valgrind')
-
     variant('fma', default=True,
             description='Activates fused multiply-add support for Verrou')
 
