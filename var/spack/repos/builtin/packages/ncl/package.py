@@ -37,18 +37,15 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.5.0', 'b70819091cef3ae2d5eb106ecbc50b2c',
-            url='https://codeload.github.com/NCAR/ncl/tar.gz/6.5.0',
-            extension='tar.gz')
     version('6.4.0', 'd891452cda7bb25afad9b6c876c73986',
             url='https://codeload.github.com/NCAR/ncl/tar.gz/6.4.0',
             extension='tar.gz')
 
-    patch('spack_ncl.patch')
+    patch('spack_ncl.patch', when="@6.4.0")
     # Make ncl compile with hdf5 1.10
-    patch('hdf5.patch')
+    patch('hdf5.patch', when="@6.4.0")
     # ymake-filter's buffer may overflow
-    patch('ymake-filter.patch')
+    patch('ymake-filter.patch', when="@6.4.0")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
