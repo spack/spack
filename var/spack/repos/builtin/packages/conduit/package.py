@@ -93,7 +93,7 @@ class Conduit(Package):
     # CMake
     #######################
     # cmake 3.8.2 or newer
-    depends_on("cmake@3.8.2:", when="+cmake")
+    depends_on("cmake@3.8.2:", when="+cmake", type='build'))
 
     #######################
     # Python
@@ -102,7 +102,7 @@ class Conduit(Package):
     # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared", when="+python")
     extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=('build', 'run'))
+    depends_on("py-numpy", when="+python")
 
     #######################
     # I/O Packages
@@ -296,12 +296,13 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
         if "+doc" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
+            if "+python" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
-            cfg.write("# sphinx from spack \n")
-            sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
-                                         "sphinx-build")
-            cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
+                cfg.write("# sphinx from spack \n")
+                sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
+                                             "sphinx-build")
+                cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
             if "+doxygen" in spec:
                 cfg.write("# doxygen from uberenv\n")
                 doxygen_exe = spec['doxygen'].command.path
