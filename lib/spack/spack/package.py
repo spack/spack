@@ -658,6 +658,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # stage used to build this package.
         self._stage = None
 
+        # records whether the package is installed in an upstream Spack
+        # instance
+        self._installed_upstream = False
+
         # Init fetch strategy and url to None
         self._fetcher = None
         self.url = getattr(self.__class__, 'url', None)
@@ -1462,6 +1466,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # consists in module file generation and registration in the DB
         if self.spec.external:
             return self._process_external_package(explicit)
+
+        if self._installed_upstream:
+            tty.msg("{0.name} is installed in an upstream Spack instance"
+                    " at {0.prefix}".format(self))
 
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)

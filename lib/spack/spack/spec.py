@@ -1932,6 +1932,18 @@ class Spec(object):
         if matches:
             raise ConflictsInSpecError(self, matches)
 
+        dbs = spack.store.retrieve_upstream_dbs()
+        for x in self.traverse():
+            for db in dbs:
+                try:
+                    result = db.get_record(x)
+                    if result.installed:
+                        x.prefix = result.path
+                        x.package._installed_upstream = True
+                        break
+                except KeyError:
+                    pass
+
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 

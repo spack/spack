@@ -103,3 +103,8 @@ store = llnl.util.lang.Singleton(_store)
 root = llnl.util.lang.LazyReference(lambda: store.root)
 db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
+
+
+def retrieve_upstream_dbs():
+    other_spack_instances = spack.config.get('config:upstream_spack_installations')
+    return [spack.database.Database(path) for path in other_spack_instances]

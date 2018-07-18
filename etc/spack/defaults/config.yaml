@@ -34,6 +34,8 @@ config:
     lmod:   $spack/share/spack/lmod
     dotkit: $spack/share/spack/dotkit
 
+  upstream_spack_installations:
+    - /g/g17/scheibel/repos/test-upstream-spack/spack/opt/spack
 
   # Temporary locations Spack can try to use for builds.
   #
