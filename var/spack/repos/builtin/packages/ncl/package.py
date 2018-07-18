@@ -37,8 +37,8 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.4.0', 'a981848ddcaf1c263279648265f24766',
-            url='https://www.earthsystemgrid.org/download/fileDownload.html?logicalFileId=86b9bec2-fa01-11e6-a976-00c0f03d5b7c',
+    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986',
+            url='https://codeload.github.com/NCAR/ncl/tar.gz/6.4.0',
             extension='tar.gz')
 
     patch('spack_ncl.patch')
