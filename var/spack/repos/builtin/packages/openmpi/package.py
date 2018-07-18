@@ -436,7 +436,9 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--without-cuda')
 
         if '+cxx_exceptions' in spec:
-                config_args.append('--enable-cxx-exceptions')
+            config_args.append('--enable-cxx-exceptions')
+        else:
+            config_args.append('--disable-cxx-exceptions')
         return config_args
 
     @run_after('install')
