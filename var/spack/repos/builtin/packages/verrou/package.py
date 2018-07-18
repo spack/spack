@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import subprocess
 import sys
 
 
@@ -90,8 +89,7 @@ class Verrou(AutotoolsPackage):
         os.rmdir('valgrind')
 
         # Once this is done, we can patch valgrind
-        with open('verrou/valgrind.diff') as patchfile:
-            subprocess.call(['patch', '-p0'], stdin=patchfile)
+        which('patch')('-p0', '--input=verrou/valgrind.diff')
 
     def autoreconf(self, spec, prefix):
         # Needed because we patched valgrind
