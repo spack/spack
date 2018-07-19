@@ -30,6 +30,43 @@ from distutils import dir_util
 def simmodsuite_releases():
     releases = [
     {
+      'version': '12.0-180713',
+      'components': {
+           'fdcore': ['f94e6811e8a3b8b5561f1977f8b32654', 'base'],
+           'gmvoxel': ['135b9345a41b54938823a5e6eafba306', 'voxel'],
+           'aciskrnl': ['f9ddc559bd1468999e64941dd98bd63f', 'acis'],
+           'msadapt': ['102ba29161961e659574e1bb141e5955', 'base'],
+           'gmimport': ['1f11765282d32eccb2267582e9471112', 'import'],
+           'discrete': ['a46af8f50e8eee5601011270d50bd70f', 'discrete'],
+           'mscore': ['af56e845f30ab50ac37834b9af0c60ef', 'base'],
+           'gmadv': ['e9641e24c934e9ad879fa72a714e4876', 'advmodel'],
+           'msparalleladapt': ['cd1a7aaee0534da96db0a13b8cbd708e', 'paralleladapt'],
+           'gmcore': ['6b3082559c4b72ea1679050055b38094', 'base'],
+           'pskrnl': ['6565bfbbe5d71a0140edd700f1efa740', 'parasolid'],
+           'msparallelmesh': ['655348b93ffa39424e35d1a5de393e26', 'parallelmesh'],
+           'msadv': ['469045a87c48bab75a26d58dc389caa6', 'adv'],
+           'gmabstract': ['0c9cebf2e45a80e48693990b3eda611d', 'abstract'],
+           'psint': ['5f3260aa3f8daac06a3560113809c79f', 'parasolid'],
+        },
+        'docs': {
+           'GeomSimSolidWorks': ['e44a532c5911278f95bfc141476cbd40', 'parasolid'],
+           'MeshSim': ['b4b9e3d0022117c46878c69be3bb7bed', 'base'],
+           'MeshSimAdapt': ['2eaef5ff82571822d976dc1844e59b28', 'base'],
+           'GeomSimProe': ['7b95bbf5946c3bc4c701dfa166fd2ae9', 'granite'],
+           'GeomSimAdvanced': ['e501e90d88f16ba58ffd01dcd1747300', 'advmodel'],
+           'ParallelMeshSim': ['c193f9cc545ad72275fa6fa21f02a51b', 'parallelmesh'],
+           'GeomSimVoxel': ['2637412c0cb5755abe284fb3281e7caf', 'voxel'],
+           'GeomSimAcis': ['9818c2b84e2473cfdcc2c49bf00887e3', 'acis'],
+           'ParallelMeshSimAdapt': ['22a40ddc8722a5556d0c94f84b2aa5b9', 'paralleladapt'],
+           'GeomSimImport': ['470048d8a0bfbe2fe1557ddeb7801ab0', 'import'],
+           'GeomSim': ['fbda330d478c21f98df9b1f4f8e4fd9c', 'base'],
+           'GeomSimAbstract': ['dfe7cf16119e699aa1714159629bf8ba', 'abstract'],
+           'GeomSimParasolid': ['c385375cec376582c5dc3e67669cd502', 'parasolid'],
+           'FieldSim': ['9a2aa744bf76975329f8e119d406e114', 'base'],
+           'GeomSimDiscrete': ['c395c01a42d1fe4f6c412df3eab6c944', 'discrete'],
+        }
+    },
+    {
       'version': '12.0-180606dev',
       'components': {
          'mscore': ['82640540d1ad80efd403d7768c80e9f8', 'base'],
@@ -79,6 +116,12 @@ def simmetrix_getWordSz():
     return "64"
 
 
+def simmetrix_getLibDir(os):
+    osLibDir = {'rhel6': 'x64_rhel6_gcc44',
+                'rhel7': 'x64_rhel7_gcc48'}
+    return osLibDir[os]
+
+
 def simmetrix_makeComponentUrl(name):
     """only supporting the linux libraries"""
     prefix = "file://{0}/".format(os.getcwd())
@@ -91,6 +134,13 @@ def simmetrix_makeDocUrl(name):
     prefix = "file://{0}/".format(os.getcwd())
     suffix = '.zip'
     return prefix + name + suffix
+
+
+def simmetrix_setKernelCMakePrefixPath(spec, path, run_env):
+    if '+acis' in spec:
+        run_env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'acisKrnl'))
+    if '+parasolid' in spec:
+        run_env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'psKrnl'))
 
 
 def simmetrix_resource(name, url, md5, condition):
@@ -129,8 +179,8 @@ class SimmetrixSimmodsuite(Package):
     license_required = True
     license_vars     = ['SIM_LICENSE_FILE']
 
-    variant('rhel7', default=True, description='libraries built on RedHat 7 Enterprise Linux')
-    variant('rhel6', default=False, description='libraries built on RedHat 6 Enterprise Linux')
+    variant('sim_os', default='rhel7', values=('rhel7', 'rhel6'),
+      description='installs libraries built on RedHat 6 or 7 Enterprise Linux')
     variant('base', default=True, description='enable the base components')
     variant('advmodel', default=False, description='enable advaced modeling')
     variant('abstract', default=False, description='enable abstract modeling')
@@ -171,6 +221,18 @@ class SimmetrixSimmodsuite(Package):
             url = simmetrix_makeDocUrl(name)
             condition = "@{0}+{1}".format(simVersion, feature)
             simmetrix_resource(name, url, md5, condition)
+
+    def setup_environment(self, spack_env, run_env):
+        if self.spec.satisfies('sim_os=rhel7'):
+            oslib = simmetrix_getLibDir('rhel7')
+            archlib = join_path(prefix.lib, oslib)
+            run_env.append_path('CMAKE_PREFIX_PATH', archlib)
+            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, run_env)
+        elif self.spec.satisfies('sim_os=rhel6'):
+            oslib = simmetrix_getLibDir('rhel6')
+            archlib = join_path(prefix.lib, oslib)
+            run_env.append_path('CMAKE_PREFIX_PATH', archlib)
+            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, run_env)
 
     def install(self, spec, prefix):
         source_path = self.stage.source_path
@@ -216,9 +278,9 @@ class SimmetrixSimmodsuite(Package):
                      "OPTFLAGS=-O2 -DNDEBUG -fPIC")
                 libname = 'libSimPartitionWrapper-' + mpi_id + '.a'
                 wrapperLibPath = join_path(workdir, 'lib', libname)
-                if '+rhel7' in spec:
-                    install(wrapperLibPath,
-                            join_path(prefix.lib, 'x64_rhel7_gcc48'))
-                if '+rhel6' in spec:
-                    install(wrapperLibPath,
-                            join_path(prefix.lib, 'x64_rhel6_gcc44'))
+                if spec.satisfies('sim_os=rhel7'):
+                    osdir = simmetrix_getLibDir('rhel7')
+                    install(wrapperLibPath, join_path(prefix.lib, osdir))
+                elif spec.satisfies('sim_os=rhel6'):
+                    osdir = simmetrix_getLibDir('rhel6')
+                    install(wrapperLibPath, join_path(prefix.lib, osdir))
