@@ -97,7 +97,7 @@ class Paraview(CMakePackage):
         else:
             lib_dir = self.prefix.lib
         spack_env.set('PARAVIEW_VTK_DIR',
-                      join_path(lib_dir, 'cmake', paraview_subdir))
+                      join_path(lib_dir, 'cmake', self.paraview_subdir))
 
     @when('@:5.4.1')
     def setup_environment(self, spack_env, run_env):
@@ -111,10 +111,10 @@ class Paraview(CMakePackage):
             lib_dir = self.prefix.lib
 
         run_env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', paraview_subdir))
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
 
         # Everything else under lib/paraview-5.4
-        lib_dir = join_path(lib_dir, paraview_subdir)
+        lib_dir = join_path(lib_dir, self.paraview_subdir)
         run_env.prepend_path('LIBRARY_PATH', lib_dir)
         run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
 
@@ -134,7 +134,7 @@ class Paraview(CMakePackage):
             lib_dir = self.prefix.lib
 
         run_env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', paraview_subdir))
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
 
         run_env.prepend_path('LIBRARY_PATH', lib_dir)
         run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
