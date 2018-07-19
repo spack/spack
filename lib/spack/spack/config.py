@@ -542,9 +542,9 @@ def _validate_section(data, schema):
     """
     import jsonschema
     if not hasattr(_validate_section, 'validator'):
-        DefaultSettingValidator = _extend_with_default(
+        default_setting_validator = _extend_with_default(
             jsonschema.Draft4Validator)
-        _validate_section.validator = DefaultSettingValidator
+        _validate_section.validator = default_setting_validator
 
     try:
         _validate_section.validator(schema).validate(data)

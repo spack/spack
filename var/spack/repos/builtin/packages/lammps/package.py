@@ -38,6 +38,7 @@ class Lammps(CMakePackage):
 
     tags = ['ecp', 'ecp-apps']
 
+    version('20180629', '6d5941863ee25ad2227ff3b7577d5e7c')
     version('20180316', '25bad35679583e0dd8cb8753665bb84b')
     version('20180222', '4d0513e3183bd57721814d217fdaf957')
     version('20170922', '4306071f919ec7e759bda195c26cfd9a')
@@ -73,7 +74,8 @@ class Lammps(CMakePackage):
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
     depends_on('latte@1.0.1', when='@:20180222+latte')
-    depends_on('latte@1.1.1:', when='@20180316:+latte')
+    depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
+    depends_on('latte@1.2.1:', when='@20180629:+latte')
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
     depends_on('python', when='+python')
@@ -81,7 +83,7 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
 
-    conflicts('+body', when='+poems')
+    conflicts('+body', when='+poems@:20180628')
     conflicts('+latte', when='@:20170921')
     conflicts('+python', when='~lib')
     conflicts('+qeq', when='~manybody')
@@ -98,15 +100,25 @@ class Lammps(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        mpi_prefix = 'ENABLE'
+        pkg_prefix = 'ENABLE'
+        if spec.satisfies('@20180629:'):
+            mpi_prefix = 'BUILD'
+            pkg_prefix = 'PKG'
+
         args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
                 'ON' if '+lib' in spec else 'OFF'),
-            '-DENABLE_MPI={0}'.format(
+            '-D{0}_MPI={1}'.format(
+                mpi_prefix,
                 'ON' if '+mpi' in spec else 'OFF')
         ]
 
+        if spec.satisfies('@20180629:+lib'):
+            args.append('-DBUILD_LIB=ON')
+
         for pkg in self.supported_packages:
-            opt = '-DENABLE_{0}'.format(pkg.upper())
+            opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())
             if '+{0}'.format(pkg) in spec:
                 args.append('{0}=ON'.format(opt))
             else:

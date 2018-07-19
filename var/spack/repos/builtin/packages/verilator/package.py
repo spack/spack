@@ -74,7 +74,7 @@ class Verilator(AutotoolsPackage):
     # we need to fix the CXX and LINK paths, as they point to the spack
     # wrapper scripts which aren't usable without spack
     @run_after('install')
-    def patch_CXX(self):
+    def patch_cxx(self):
         filter_file(r'^CXX\s*=.*', 'CXX = {0}'.format(self.compiler.cxx),
                     join_path(self.prefix.include, 'verilated.mk'))
         filter_file(r'^LINK\s*=.*', 'LINK = {0}'.format(self.compiler.cxx),

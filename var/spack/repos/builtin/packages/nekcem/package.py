@@ -56,32 +56,32 @@ class Nekcem(Package):
 
     @run_after('install')
     def test_install(self):
-        NekCEM_test = join_path(self.prefix.bin, 'NekCEM', 'tests', '2dboxpec')
-        with working_dir(NekCEM_test):
+        nekcem_test = join_path(self.prefix.bin, 'NekCEM', 'tests', '2dboxpec')
+        with working_dir(nekcem_test):
             makenek = Executable(join_path(self.prefix.bin, 'makenek'))
-            makenek(os.path.basename(NekCEM_test))
+            makenek(os.path.basename(nekcem_test))
             if not os.path.isfile('nekcem'):
-                msg = 'Cannot build example: %s' % NekCEM_test
+                msg = 'Cannot build example: %s' % nekcem_test
                 raise RuntimeError(msg)
 
     def install(self, spec, prefix):
-        binDir = 'bin'
+        bin_dir = 'bin'
         nek = 'nek'
-        cNek = 'configurenek'
-        mNek = 'makenek'
+        configurenek = 'configurenek'
+        makenek = 'makenek'
 
-        FC = self.compiler.f77
-        CC = self.compiler.cc
+        fc = self.compiler.f77
+        cc = self.compiler.cc
 
         fflags = spec.compiler_flags['fflags']
         cflags = spec.compiler_flags['cflags']
         ldflags = spec.compiler_flags['ldflags']
 
         if '+mpi' in spec:
-            FC = spec['mpi'].mpif77
-            CC = spec['mpi'].mpicc
+            fc = spec['mpi'].mpif77
+            cc = spec['mpi'].mpicc
 
-        with working_dir(binDir):
+        with working_dir(bin_dir):
             fflags = ['-O3'] + fflags
             cflags = ['-O3'] + cflags
             fflags += ['-I.']
@@ -104,14 +104,14 @@ class Nekcem(Package):
             if '+mpi' in spec:
                 fflags += ['-DMPI', '-DMPIIO']
                 cflags += ['-DMPI', '-DMPIIO']
-            blasLapack = spec['lapack'].libs + spec['blas'].libs
+            blas_lapack = spec['lapack'].libs + spec['blas'].libs
             pthread_lib = find_system_libraries('libpthread')
-            ldflags += (blasLapack + pthread_lib).ld_flags.split()
+            ldflags += (blas_lapack + pthread_lib).ld_flags.split()
             all_arch = {
                 'spack-arch': {
-                    'FC': FC, 'FFLAGS': fflags,
-                    'CC': CC, 'CFLAGS': cflags,
-                    'LD': FC, 'LDFLAGS': ldflags
+                    'FC': fc, 'FFLAGS': fflags,
+                    'CC': cc, 'CFLAGS': cflags,
+                    'LD': fc, 'LDFLAGS': ldflags
                 }
             }
             os.rename('arch.json', 'arch.json.orig')
@@ -125,6 +125,7 @@ class Nekcem(Package):
         install_tree('../NekCEM', prefix.bin.NekCEM)
         # Create symlinks to makenek, nek and configurenek scripts
         with working_dir(prefix.bin):
-            os.symlink(os.path.join('NekCEM', binDir, mNek), mNek)
-            os.symlink(os.path.join('NekCEM', binDir, cNek), cNek)
-            os.symlink(os.path.join('NekCEM', binDir, nek), nek)
+            os.symlink(os.path.join('NekCEM', bin_dir, makenek), makenek)
+            os.symlink(
+                os.path.join('NekCEM', bin_dir, configurenek), configurenek)
+            os.symlink(os.path.join('NekCEM', bin_dir, nek), nek)

@@ -194,9 +194,9 @@ def get_path_from_module(mod):
 
     # If it lists a -L instruction, use that
     for line in text:
-        L = line.find('-L/')
-        if L >= 0:
-            return line[L + 2:line.find('/lib')]
+        lib_paths = line.find('-L/')
+        if lib_paths >= 0:
+            return line[lib_paths + 2:line.find('/lib')]
 
     # If it sets the PATH, use it
     for line in text:

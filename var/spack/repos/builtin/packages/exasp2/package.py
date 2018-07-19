@@ -81,8 +81,8 @@ class Exasp2(MakefilePackage):
         math_includes += " -I" + spec['blas'].prefix.include
         targets.append('SPACKBLASINCLUDES=' + math_includes)
         # And BML
-        bmlLibDirs = spec['bml'].libs.directories[0]
-        targets.append('BML_PATH=' + bmlLibDirs)
+        bml_lib_dirs = spec['bml'].libs.directories[0]
+        targets.append('BML_PATH=' + bml_lib_dirs)
         targets.append('--file=Makefile.vanilla')
         return targets
 

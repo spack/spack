@@ -163,7 +163,7 @@ class PackageMeta(
     _InstallPhase_run_before = {}
     _InstallPhase_run_after = {}
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
 
         if 'phases' in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
@@ -176,7 +176,7 @@ class PackageMeta(
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(mcs, attr_name)
+            checks = getattr(cls, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
                     try:
@@ -202,12 +202,12 @@ class PackageMeta(
                             PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(mcs, attr_name, {})
+                setattr(cls, attr_name, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
 
-        return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
+        return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @staticmethod
     def register_callback(check_type, *phases):
@@ -995,7 +995,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def installed(self):
-        return os.path.isdir(self.prefix)
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        has_prefix = os.path.isdir(self.prefix)
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            rec = spack.store.db.get_record(self.spec)
+            db_says_installed = rec.installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            db_says_installed = False
+
+        return has_prefix and db_says_installed
 
     @property
     def prefix(self):
@@ -1213,7 +1229,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                        " if the associated spec is not concrete")
             raise spack.error.SpackError(err_msg)
 
-        hashContent = list()
+        hash_content = list()
         source_id = fs.for_package_version(self, self.version).source_id()
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
@@ -1222,14 +1238,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # referenced by branch name rather than tag or commit ID.
             message = 'Missing a source id for {s.name}@{s.version}'
             tty.warn(message.format(s=self))
-            hashContent.append(''.encode('utf-8'))
+            hash_content.append(''.encode('utf-8'))
         else:
-            hashContent.append(source_id.encode('utf-8'))
-        hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                           for p in self.spec.patches)
-        hashContent.append(package_hash(self.spec, content))
+            hash_content.append(source_id.encode('utf-8'))
+        hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
+                            for p in self.spec.patches)
+        hash_content.append(package_hash(self.spec, content))
         return base64.b32encode(
-            hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()
+            hashlib.sha256(bytes().join(
+                sorted(hash_content))).digest()).lower()
 
     @property
     def namespace(self):
@@ -1272,43 +1289,68 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dump_packages(self.spec, packages_dir)
 
     def _if_make_target_execute(self, target):
-        try:
-            # Check if we have a makefile
-            file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
-            file = file.pop()
-        except IndexError:
+        make = inspect.getmodule(self).make
+
+        # Check if we have a Makefile
+        for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
+            if os.path.exists(makefile):
+                break
+        else:
             tty.msg('No Makefile found in the build directory')
             return
 
-        # Check if 'target' is in the makefile
-        regex = re.compile('^' + target + ':')
-        with open(file, 'r') as f:
-            matches = [line for line in f.readlines() if regex.match(line)]
-
-        if not matches:
-            tty.msg("Target '" + target + ":' not found in Makefile")
+        # Check if 'target' is a valid target
+        #
+        # -q, --question
+        #       ``Question mode''. Do not run any commands, or print anything;
+        #       just return an exit status that is zero if the specified
+        #       targets are already up to date, nonzero otherwise.
+        #
+        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        #
+        # The exit status of make is always one of three values:
+        #
+        # 0     The exit status is zero if make is successful.
+        #
+        # 2     The exit status is two if make encounters any errors.
+        #       It will print messages describing the particular errors.
+        #
+        # 1     The exit status is one if you use the '-q' flag and make
+        #       determines that some target is not already up to date.
+        #
+        # https://www.gnu.org/software/make/manual/html_node/Running.html
+        #
+        # NOTE: This only works for GNU Make, not NetBSD Make.
+        make('-q', target, fail_on_error=False)
+        if make.returncode == 2:
+            tty.msg("Target '" + target + "' not found in " + makefile)
             return
 
         # Execute target
-        inspect.getmodule(self).make(target)
+        make(target)
 
     def _if_ninja_target_execute(self, target):
-        # Check if we have a ninja build script
+        ninja = inspect.getmodule(self).ninja
+
+        # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
-            tty.msg('No ninja build script found in the build directory')
+            tty.msg('No Ninja build script found in the build directory')
             return
 
-        # Check if 'target' is in the ninja build script
-        regex = re.compile('^build ' + target + ':')
-        with open('build.ninja', 'r') as f:
-            matches = [line for line in f.readlines() if regex.match(line)]
+        # Get a list of all targets in the Ninja build script
+        # https://ninja-build.org/manual.html#_extra_tools
+        all_targets = ninja('-t', 'targets', output=str).split('\n')
+
+        # Check if 'target' is a valid target
+        matches = [line for line in all_targets
+                   if line.startswith(target + ':')]
 
         if not matches:
-            tty.msg("Target 'build " + target + ":' not found in build.ninja")
+            tty.msg("Target '" + target + "' not found in build.ninja")
             return
 
         # Execute target
-        inspect.getmodule(self).ninja(target)
+        ninja(target)
 
     def _get_needed_resources(self):
         resources = []
@@ -1650,11 +1692,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
         """Check for leftover files from partially-completed prior install to
-           prepare for a new install attempt. Options control whether these
-           files are reused (vs. destroyed). This function considers a package
-           fully-installed if there is a DB entry for it (in that way, it is
-           more strict than Package.installed). The return value is used to
-           indicate when the prefix exists but the install is not complete.
+        prepare for a new install attempt.
+
+        Options control whether these files are reused (vs. destroyed).
+
+        Args:
+            keep_prefix (bool): True if the installation prefix needs to be
+                kept, False otherwise
+            restage (bool): False if the stage has to be kept, True otherwise
+
+        Returns:
+            True if the prefix exists but the install is not complete, False
+            otherwise.
         """
         if self.spec.external:
             raise ExternalPackageError("Attempted to repair external spec %s" %
