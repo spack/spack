@@ -52,7 +52,7 @@ class Verrou(AutotoolsPackage):
     resource(name='valgrind-3.13.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2',
              sha256='d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b',
-             when='@1.1.0:,master')
+             when='@1.1.0:,develop')
 
     variant('fma', default=True,
             description='Activates fused multiply-add support for Verrou')
@@ -90,11 +90,15 @@ class Verrou(AutotoolsPackage):
                         '#! /usr/bin/env perl',
                         link_tool_in)
 
+    def autoreconf(self, spec, prefix):
+        # Needed because we patched valgrind
+        which("bash")("autogen.sh")
+
     def configure_args(self):
         spec = self.spec
         options = [
             '--enable-only64bit',
-            '--{0}-verrou-fma'.format('enable' if 'fma' in spec else 'disable')
+            '--{0}-verrou-fma'.format('enable' if '+fma' in spec else 'disable')
         ]
 
         if sys.platform == 'darwin':
