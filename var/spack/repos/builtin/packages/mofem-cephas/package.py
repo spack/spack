@@ -31,8 +31,8 @@ class MofemCephas(CMakePackage):
 
     maintainers = ['likask']
 
-    version('0.8.4', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.4', submodules=True)
+    version('0.8.6', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.6', submodules=True)
     version('develop',
         git='https://bitbucket.org/likask/mofem-cephas.git',
         branch='develop')
@@ -60,8 +60,6 @@ class MofemCephas(CMakePackage):
     depends_on("adol-c@2.5.2~examples", when="+adol-c")
     depends_on("tetgen", when="+tetgen")
     depends_on("med", when='+med')
-    depends_on('doxygen+graphviz', when='+docs')
-    depends_on('graphviz', when='+docs')
 
     extendable = True
 
@@ -73,11 +71,15 @@ class MofemCephas(CMakePackage):
 
         # obligatory options
         options.extend([
-            '-DWITH_SPACK=1',
+            '-DWITH_SPACK=YES',
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
             '-DPETSC_ARCH=',
             '-DMOAB_DIR=%s' % spec['moab'].prefix,
             '-DBOOST_DIR=%s' % spec['boost'].prefix])
+
+        # build tests
+        options.append('-DMOFEM_BUILD_TETS={0}'.format(
+            'ON' if self.run_tests else 'OFF'))
 
         # variant packages
         if '+adol-c' in spec:

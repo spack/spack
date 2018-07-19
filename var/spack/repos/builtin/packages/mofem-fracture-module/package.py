@@ -21,9 +21,9 @@
 ##############################################################################
 
 from spack import *
+import os
 
-
-class MofemFractureModule(Package):
+class MofemFractureModule(CMakePackage):
     """mofem fracture module"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
@@ -31,15 +31,54 @@ class MofemFractureModule(Package):
 
     maintainers = ['likask']
 
-    version('0.9.40',
+    version('0.9.41',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
-        tag='v0.9.40')
+        tag='v0.9.41')
     version('develop',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
         branch='develop')
 
     extends('mofem-cephas')
+    depends_on("mofem-users-modules", type=('build', 'link', 'run'))
 
-    def install(self, spec, prefix):
+    @property
+    def root_cmakelists_dir(self):
+        """The relative path to the directory containing CMakeLists.txt
+
+        This path is relative to the root of the extracted tarball,
+        not to the ``build_directory``. Defaults to the current directory.
+
+        :return: directory containing CMakeLists.txt
+        """
+        spec = self.spec
+        return os.path.join(spec['mofem-cephas'].prefix.users_modules)
+
+
+    def cmake_args(self):
+        spec = self.spec
         source = self.stage.source_path
+
+        options = []
+
+        # obligatory options
+        options.extend([
+            '-DWITH_SPACK=YES',
+            '-DEXTERNAL_MODULES_BUILD=YES',
+            '-DUM_INSTALL_BREFIX=%s' % spec['mofem-users-modules'].prefix,
+            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' % source,
+            '-DSTAND_ALLONE_USERS_MODULES=%s' %
+            ('YES' if '+copy_user_modules' in spec else 'NO')])
+
+        # build tests
+        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+            'ON' if self.run_tests else 'OFF'))
+
+        return options
+
+    phases = ['cmake', 'build', 'install']
+
+    @run_after('install')
+    def copy_source_code(self):
+        source = self.stage.source_path
+        prefix = self.prefix
         install_tree(source, prefix.ext_users_modules.fracture_mechanics)

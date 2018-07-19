@@ -43,20 +43,8 @@ class MofemUsersModules(CMakePackage):
 
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')
-    variant('with_metaio', default=False,
-        description='Install MetaIO with MoFEM users modules')
-
-    variant('mofem_fracture_module', default=False,
-        description="Install fracture mechanics module")
-    variant('mofem_minimal_surface_equation', default=False,
-        description="Install minimal surface equation module")
 
     extends('mofem-cephas')
-
-    depends_on("mofem-fracture-module", type=('build', 'link', 'run'),
-        when='+mofem_fracture_module')
-    depends_on("mofem-minimal-surface-equation", type=('build', 'link', 'run'),
-        when='+mofem_minimal_surface_equation')
 
     @property
     def root_cmakelists_dir(self):
@@ -70,14 +58,6 @@ class MofemUsersModules(CMakePackage):
         spec = self.spec
         return os.path.join(spec['mofem-cephas'].prefix.users_modules)
 
-    @property
-    def build_directory(self):
-        """Returns the directory to use when building the package
-
-        :return: directory where to build the package
-        """
-        return os.path.join(self.prefix, 'build')
-
     def cmake_args(self):
         spec = self.spec
 
@@ -85,21 +65,14 @@ class MofemUsersModules(CMakePackage):
 
         # obligatory options
         options.extend([
-            '-DWITH_METAIO=%s' % ('YES' if '+with_metaio' in spec else 'NO'),
+            '-DWITH_SPACK=YES',
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
             ('YES' if '+copy_user_modules' in spec else 'NO')])
 
-        ext_um_modules_opt = '-DEXTERNAL_MODULE_SOURCE_DIRS='
-        if '+mofem_fracture_module' in spec:
-            ext_um_modules_opt += '%s;' % \
-                spec['mofem-fracture-module'].prefix.ext_users_modules
-
-        if '+mofem_minimal_surface_equation' in spec:
-            ext_um_modules_opt += '%s;' % \
-                spec['mofem-minimal-surface-equation'].prefix.ext_users_modules
-
-        options.append(ext_um_modules_opt)
+        # build tests
+        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+            'ON' if self.run_tests else 'OFF'))
 
         return options
 
-    phases = ['cmake', 'build']
+    phases = ['cmake', 'build', 'install']
