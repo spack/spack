@@ -25,6 +25,7 @@
 import os
 from datetime import datetime
 
+import boto3
 import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -96,6 +97,19 @@ def setup_parser(subparser):
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.cmd.default_list_scope(),
         help="configuration scope to read from")
+
+    # Binary
+    upload_parser = sp.add_parser('binary', help=mirror_binary.__doc__)
+    upload_parser.add_argument('-d', '--directory', default=None,
+                               help="directory containing binaries for mirroring")
+    upload_parser.add_argument('-f', '--file', default=None,
+                               help="a file to upload to the mirror")
+    upload_parser.add_argument('-k', '--key', default=None,
+                               help="the s3 key")
+    upload_parser.add_argument('-b', '--bucket', default=None,
+                               help="name of s3 bucket")
+    upload_parser.add_argument('-p', '--profile', default=None,
+                               help="name of AWS profile")
 
 
 def mirror_add(args):
@@ -226,11 +240,45 @@ def mirror_create(args):
             colify(s.cformat("$_$@") for s in error)
 
 
+def mirror_binary(args):
+    """Mirror binary files to AWS S3 bucket"""
+    client = _get_s3_client(args.profile);
+    if args.directory is not None:
+        length = len(args.directory) + 1  #account for path separator
+        for root, subdir, files in os.walk(args.directory):
+            for file in files:
+                key = os.path.join(root[length:], file)
+                path = os.path.join(root, file)
+                mirror_binary_file(client, args.bucket, path, key)
+    elif args.file is not None:
+        mirror_binary_file(client, args.bucket, args.file, args.key)
+
+
+def mirror_binary_file(client, bucket, file, key):
+    # depending on the structure of the mirror, the key argument may be superfluous
+    root = os.getcwd()
+    filename = os.path.join(root, file)
+    client.upload_file(filename, bucket, key)
+    tty.msg("Uploaded %s to %s as %s" % (file, bucket, key))
+
+
+def _get_s3_client(profile):
+    """Create AWS s3 client"""
+    if profile:
+        session = boto3.Session(profile_name=profile)
+        client = session.client('s3')
+    else:
+        client = boto3.client('s3')
+
+    return client
+
+
 def mirror(parser, args):
     action = {'create': mirror_create,
               'add': mirror_add,
               'remove': mirror_remove,
               'rm': mirror_remove,
-              'list': mirror_list}
+              'list': mirror_list,
+              'binary': mirror_binary}
 
     action[args.mirror_command](args)
