@@ -27,7 +27,7 @@ import os.path
 from shutil import copyfile
 
 
-class RQorts(RPackage):
+class Qorts(RPackage):
     """The QoRTs software package is a fast, efficient, and portable
     multifunction toolkit designed to assist in the analysis, quality
     control, and data management of RNA-Seq and DNA-Seq datasets. Its
@@ -40,7 +40,7 @@ class RQorts(RPackage):
 
     version('1.2.42', '7d46162327b0da70bfe483fe2f2b7829')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     resource(
         name='QoRTs.jar',
