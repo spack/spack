@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from distutils.dir_util import copy_tree
+import distutils.dir_util as dir_util
 import subprocess
 from spack import *
 
@@ -44,5 +44,5 @@ class DotnetCoreSdk(Package):
     def install(self, spec, prefix):
         mkdirp('bin')
         subprocess.call(['ln', '-rsf', 'dotnet', 'bin/'])
-        copy_tree(".", join_path(prefix), preserve_symlinks=1)
+        dir_util.copy_tree(".", join_path(prefix), preserve_symlinks=1)
 
