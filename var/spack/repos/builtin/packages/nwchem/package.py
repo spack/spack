@@ -45,7 +45,7 @@ class Nwchem(Package):
     depends_on('mpi')
     depends_on('scalapack')
 
-    depends_on('python@2.7:2.8', type=('build', 'run'))
+    depends_on('python@2.7:2.8', type=('build', 'link', 'run'))
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
