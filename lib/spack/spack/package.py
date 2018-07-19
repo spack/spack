@@ -2280,7 +2280,6 @@ class ExternalPackageError(InstallError):
 
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
-
     def __init__(self, spec, dependents):
         super(PackageStillNeededError, self).__init__("Cannot uninstall %s" %
                                                       spec)
@@ -2290,14 +2289,12 @@ class PackageStillNeededError(InstallError):
 
 class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
-
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
 
 
 class PackageVersionError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
-
     def __init__(self, version):
         super(PackageVersionError, self).__init__(
             "Cannot determine a URL automatically for version %s" % version,
@@ -2313,19 +2310,17 @@ class NoURLError(PackageError):
 
 
 class ExtensionError(PackageError):
-
-    pass
+    """Superclass for all errors having to do with extension packages."""
 
 
 class ActivationError(ExtensionError):
-
+    """Raised when there are problems activating an extension."""
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 
 
 class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
-
     def __init__(self, conflict):
         super(DependencyConflictError, self).__init__(
             "%s conflicts with another file in the flattened directory." % (
