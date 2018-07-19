@@ -971,9 +971,18 @@ def args_are_for(args, fetcher):
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
-    # If it's not a known version, extrapolate one.
+    if not isinstance(version, Version):
+        version = Version(version)
+
+    # If it's not a known version, extrapolate one by URL.
     if version not in pkg.versions:
-        url = pkg.url_for_version(version)
+        try:
+            url = pkg.url_for_version(version)
+        except spack.package.NoURLError:
+            msg = ("Can't extrapolate a URL for version %s "
+                   "because package %s defines no URLs")
+            raise ExtrapolationError(msg % (version, pkg.name))
+
         if not url:
             raise InvalidArgsError(pkg, version)
         return URLFetchStrategy(url)
@@ -987,10 +996,11 @@ def for_package_version(pkg, version):
             return fetcher(**args)
 
     # If nothing matched for a *specific* version, test all strategies
-    # against
+    # against attributes in the version directives and on the package
     for fetcher in all_strategies:
-        attrs = dict((attr, getattr(pkg, attr, None))
-                     for attr in fetcher.required_attributes)
+        attrs = dict((attr, getattr(pkg, attr))
+                     for attr in fetcher.required_attributes
+                     if hasattr(pkg, attr))
         if 'url' in attrs:
             attrs['url'] = pkg.url_for_version(version)
         attrs.update(args)
@@ -1078,6 +1088,10 @@ class NoArchiveFileError(FetchError):
 
 class NoDigestError(FetchError):
     """Raised after attempt to checksum when URL has no digest."""
+
+
+class ExtrapolationError(FetchError):
+    """Raised when we can't extrapolate a version for a package."""
 
 
 class InvalidArgsError(FetchError):
