@@ -52,7 +52,7 @@ class Verrou(AutotoolsPackage):
     resource(name='valgrind-3.13.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2',
              sha256='d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b',
-             when='@1.1.0:,develop')
+             when='@1.1.0:')
 
     variant('fma', default=True,
             description='Activates fused multiply-add support for Verrou')
