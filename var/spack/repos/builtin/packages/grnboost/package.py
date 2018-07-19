@@ -28,7 +28,7 @@ from spack import *
 class Grnboost(Package):
     """GRNBoost is a library built on top of Apache Spark that implements a
     scalable strategy for gene regulatory network (GRN) inference.
-    
+
     See https://github.com/aertslab/GRNBoost/blob/master/docs/user_guide.md
     for the user guide. The location of xgboost4j-<version>.jar and
     GRNBoost.jar are set to $XGBOOST_JAR and $GRNBOOST_JAR. Path to
@@ -49,7 +49,7 @@ class Grnboost(Package):
                                  'scala-2.11', 'GRNBoost.jar')
         xgboost_version = self.spec['xgboost'].version.string
         xgboost_jar = join_path(self.spec['xgboost'].prefix,
-                                'xgboost4j-'+xgboost_version+'.jar')
+                                'xgboost4j-' + xgboost_version + '.jar')
         run_env.set('GRNBOOST_JAR', grnboost_jar)
         run_env.set('JAVA_HOME', self.spec['jdk'].prefix)
         run_env.set('CLASSPATH', xgboost_jar)
