@@ -27,7 +27,12 @@ from spack import *
 
 class Grnboost(Package):
     """GRNBoost is a library built on top of Apache Spark that implements a
-    scalable strategy for gene regulatory network (GRN) inference."""
+    scalable strategy for gene regulatory network (GRN) inference.
+    
+    See https://github.com/aertslab/GRNBoost/blob/master/docs/user_guide.md
+    for the user guide. The location of xgboost4j-<version>.jar and
+    GRNBoost.jar are set to $XGBOOST_JAR and $GRNBOOST_JAR. Path to
+    xgboost4j-<version>.jar is also added to CLASSPATH."""
 
     homepage = "https://github.com/aertslab/GRNBoost"
 
@@ -37,8 +42,6 @@ class Grnboost(Package):
     depends_on('sbt', type='build')
     depends_on('jdk', type=('build', 'run'))
     depends_on('xgboost+jvm-packages', type='run')
-    depends_on('joda-time', type='run')
-    depends_on('slf4j', type='run')
     depends_on('spark+hadoop', type='run')
 
     def setup_environment(self, spack_env, run_env):
@@ -47,20 +50,10 @@ class Grnboost(Package):
         xgboost_version = self.spec['xgboost'].version.string
         xgboost_jar = join_path(self.spec['xgboost'].prefix,
                                 'xgboost4j-'+xgboost_version+'.jar')
-        jodatime_version = self.spec['joda-time'].version.string
-        jodatime_jar = join_path(self.spec['joda-time'].prefix.bin,
-                                 'joda-time-'+jodatime_version+'.jar')
-        slf4j_version = self.spec['slf4j'].version.string
-        slf4j_jar = join_path(self.spec['slf4j'].prefix.bin,
-                              'slf4j-api-'+slf4j_version+'.jar')
         run_env.set('GRNBOOST_JAR', grnboost_jar)
         run_env.set('JAVA_HOME', self.spec['jdk'].prefix)
         run_env.set('CLASSPATH', xgboost_jar)
-        run_env.prepend_path('CLASSPATH', jodatime_jar)
-        run_env.prepend_path('CLASSPATH', slf4j_jar)
         run_env.set('XGBOOST_JAR', xgboost_jar)
-        run_env.set('JODATIME_JAR', jodatime_jar)
-        run_env.set('SLF4J_JAR', slf4j_jar)
 
     def install(self, spec, prefix):
         sbt = which('sbt')
