@@ -23,6 +23,7 @@
 from spack import *
 import os
 
+
 class MofemFractureModule(CMakePackage):
     """mofem fracture module"""
 
@@ -52,7 +53,6 @@ class MofemFractureModule(CMakePackage):
         """
         spec = self.spec
         return os.path.join(spec['mofem-cephas'].prefix.users_modules)
-
 
     def cmake_args(self):
         spec = self.spec
