@@ -58,13 +58,13 @@ class Qorts(RPackage):
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "QoRTs.sh")
-        script = join_path(self.prefix.bin, "QoRTs")
+        script = self.prefix.bin.QoRTs
         copyfile(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['java'].prefix.bin, 'java')
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'backup': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('QoRTs.jar', join_path(self.prefix.bin, 'QoRTs.jar'),
