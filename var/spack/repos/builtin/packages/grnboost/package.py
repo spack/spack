@@ -40,7 +40,7 @@ class Grnboost(Package):
             commit='26c836b3dcbb85852d3c6f4b8340e8655434da02')
 
     depends_on('sbt', type='build')
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('xgboost+jvm-packages', type='run')
     depends_on('spark+hadoop', type='run')
 
@@ -51,7 +51,7 @@ class Grnboost(Package):
         xgboost_jar = join_path(self.spec['xgboost'].prefix,
                                 'xgboost4j-' + xgboost_version + '.jar')
         run_env.set('GRNBOOST_JAR', grnboost_jar)
-        run_env.set('JAVA_HOME', self.spec['jdk'].prefix)
+        run_env.set('JAVA_HOME', self.spec['java'].prefix)
         run_env.set('CLASSPATH', xgboost_jar)
         run_env.set('XGBOOST_JAR', xgboost_jar)
 
