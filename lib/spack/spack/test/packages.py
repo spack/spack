@@ -26,6 +26,7 @@ import os.path
 import pytest
 
 import spack.repo
+import spack.fetch_strategy
 from spack.paths import mock_packages_path
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
@@ -166,17 +167,106 @@ class TestPackage(object):
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa
 
-    @pytest.mark.regression('2737')
-    def test_urls_for_versions(self):
-        # Checks that a version directive without a 'url' argument
-        # specified uses the default url
-        for spec_str in ('url_override@0.9.0', 'url_override@1.0.0'):
-            s = Spec(spec_str).concretized()
-            url = s.package.url_for_version('0.9.0')
-            assert url == 'http://www.anothersite.org/uo-0.9.0.tgz'
 
-            url = s.package.url_for_version('1.0.0')
-            assert url == 'http://www.doesnotexist.org/url_override-1.0.0.tar.gz'
+@pytest.mark.regression('2737')
+def test_urls_for_versions(mock_packages, config):
+    """Version directive without a 'url' argument should use default url."""
+    for spec_str in ('url_override@0.9.0', 'url_override@1.0.0'):
+        s = Spec(spec_str).concretized()
+        url = s.package.url_for_version('0.9.0')
+        assert url == 'http://www.anothersite.org/uo-0.9.0.tgz'
 
-            url = s.package.url_for_version('0.8.1')
-            assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'
+        url = s.package.url_for_version('1.0.0')
+        assert url == 'http://www.doesnotexist.org/url_override-1.0.0.tar.gz'
+
+        url = s.package.url_for_version('0.8.1')
+        assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'
+
+
+def test_url_for_version_with_no_urls():
+    pkg = spack.repo.get('git-test')
+    with pytest.raises(spack.package.NoURLError):
+        pkg.url_for_version('1.0')
+
+    with pytest.raises(spack.package.NoURLError):
+        pkg.url_for_version('1.1')
+
+
+def test_url_for_version_with_only_overrides(mock_packages, config):
+    spec = Spec('url-only-override')
+    spec.concretize()
+
+    pkg = spack.repo.get(spec)
+
+    # these exist and should just take the URL provided in the package
+    assert pkg.url_for_version('1.0.0') == 'http://a.example.com/url_override-1.0.0.tar.gz'
+    assert pkg.url_for_version('0.9.0') == 'http://b.example.com/url_override-0.9.0.tar.gz'
+    assert pkg.url_for_version('0.8.1') == 'http://c.example.com/url_override-0.8.1.tar.gz'
+
+    # these don't exist but should still work, even if there are only overrides
+    assert pkg.url_for_version('1.0.5') == 'http://a.example.com/url_override-1.0.5.tar.gz'
+    assert pkg.url_for_version('0.9.5') == 'http://b.example.com/url_override-0.9.5.tar.gz'
+    assert pkg.url_for_version('0.8.5') == 'http://c.example.com/url_override-0.8.5.tar.gz'
+    assert pkg.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
+
+
+def test_url_for_version_with_only_overrides_with_gaps(mock_packages, config):
+    spec = Spec('url-only-override-with-gaps')
+    spec.concretize()
+
+    pkg = spack.repo.get(spec)
+
+    # same as for url-only-override -- these are specific
+    assert pkg.url_for_version('1.0.0') == 'http://a.example.com/url_override-1.0.0.tar.gz'
+    assert pkg.url_for_version('0.9.0') == 'http://b.example.com/url_override-0.9.0.tar.gz'
+    assert pkg.url_for_version('0.8.1') == 'http://c.example.com/url_override-0.8.1.tar.gz'
+
+    # these don't have specific URLs, but should still work by extrapolation
+    assert pkg.url_for_version('1.0.5') == 'http://a.example.com/url_override-1.0.5.tar.gz'
+    assert pkg.url_for_version('0.9.5') == 'http://b.example.com/url_override-0.9.5.tar.gz'
+    assert pkg.url_for_version('0.8.5') == 'http://c.example.com/url_override-0.8.5.tar.gz'
+    assert pkg.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
+
+
+def test_git_top_level(mock_packages, config):
+    """Ensure that top-level git attribute can be used as a default."""
+    pkg = spack.repo.get('git-top-level')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+
+
+def test_svn_top_level(mock_packages, config):
+    """Ensure that top-level svn attribute can be used as a default."""
+    pkg = spack.repo.get('svn-top-level')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    assert isinstance(fetcher, spack.fetch_strategy.SvnFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/svn/repo'
+
+
+def test_hg_top_level(mock_packages, config):
+    """Ensure that top-level hg attribute can be used as a default."""
+    pkg = spack.repo.get('hg-top-level')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    assert isinstance(fetcher, spack.fetch_strategy.HgFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/hg/repo'
+
+
+def test_no_extrapolate_without_url(mock_packages, config):
+    """Verify that we can't extrapolate versions for non-URL packages."""
+    pkg = spack.repo.get('git-top-level')
+
+    with pytest.raises(spack.fetch_strategy.ExtrapolationError):
+        spack.fetch_strategy.for_package_version(pkg, '1.1')
+
+
+def test_git_and_url_top_level(mock_packages, config):
+    """Verify that URL takes precedence over other top-level attributes."""
+    pkg = spack.repo.get('git-and-url-top-level')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
