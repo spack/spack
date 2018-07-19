@@ -35,16 +35,12 @@
 # OpenFOAM distribution.
 #
 ##############################################################################
-import os
-
-import llnl.util.tty as tty
-
 from spack import *
 
 
 class OfCatalyst(CMakePackage):
     """Of-catalyst is a library for OpenFOAM that provides a runtime-selectable
-    function object for embedding ParaView Catalyst in-situ visualization 
+    function object for embedding ParaView Catalyst in-situ visualization
     into arbitrary OpenFOAM simulations.
     Supports in-situ conversion of the following types:
       - finite volume meshes and fields. Single or multi-region.
@@ -62,8 +58,6 @@ class OfCatalyst(CMakePackage):
     gitrepo  = "https://develop.openfoam.com/Community/catalyst.git"
 
     version('develop', branch='develop', git=gitrepo)
-
-    #variant('source', default=True, description='Install library source')
 
     depends_on('openfoam-com@1806:', when='@develop', type=('build', 'link', 'run'))
     depends_on('catalyst@5.5:')
@@ -85,13 +79,11 @@ class OfCatalyst(CMakePackage):
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
-        spec = self.spec
-
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=%s' % join_path(self.stage.source_path, 
-                                                                   'spack-build'),
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=%s' % join_path(
+                self.stage.source_path,
+                'spack-build'),
             '-DCMAKE_INSTALL_PREFIX:PATH=%s' % self.prefix
         ]
 
         return cmake_args
-
