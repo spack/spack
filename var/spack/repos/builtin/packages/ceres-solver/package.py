@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017-2018, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2018, The VOTCA Development Team (http://www.votca.org)
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -21,25 +21,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class VotcaCtp(CMakePackage):
-    """Versatile Object-oriented Toolkit for Coarse-graining
-       Applications (VOTCA) is a package intended to reduce the amount of
-       routine work when doing systematic coarse-graining of various
-       systems. The core is written in C++.
-
-       This package contains the VOTCA charge transport engine.
+class CeresSolver(CMakePackage):
+    """Ceres Solver is an open source C++ library for modeling and solving
+    large, complicated optimization problems. It can be used to solve
+    Non-linear Least Squares problems with bounds constraints and general
+    unconstrained optimization problems. It is a mature, feature rich, and
+    performant library that has been used in production at Google since 2010.
     """
-    homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/ctp/tarball/v1.4"
 
-    version('develop', git='https://github.com/votca/ctp', branch='master')
+    homepage = "http://ceres-solver.org"
+    url      = "http://ceres-solver.org/ceres-solver-1.12.0.tar.gz"
 
-    depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-csg@develop", when='@develop')
-    depends_on("gsl")
+    version('1.12.0', '278a7b366881cc45e258da71464114d9')
+
+    depends_on('eigen@3:')
+    depends_on('lapack')
+    depends_on('glog')
+
+    def cmake_args(self):
+        args = [
+            '-DSUITESPARSE=OFF',
+            '-DCXSPARSE=OFF',
+            '-DEIGENSPARSE=ON',
+            '-DLAPACK=ON',
+            '-DBUILD_SHARED_LIBS=ON',
+            '-DSCHUR_SPECIALIZATIONS=OFF'
+        ]
+        return args
