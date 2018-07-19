@@ -33,7 +33,7 @@ class DotnetCoreSdk(Package):
 
     homepage = "https://www.microsoft.com/net/"
     url      = "https://github.com/dotnet/core/"
-   
+
     version('2.1.300', 
             url='https://download.microsoft.com/download/8/8/5/88544F33-836A'
                 '-49A5-8B67-451C24709A8F/dotnet-sdk-2.1.300-linux-x64.tar.gz',
@@ -45,4 +45,3 @@ class DotnetCoreSdk(Package):
         mkdirp('bin')
         subprocess.call(['ln', '-rsf', 'dotnet', 'bin/'])
         dir_util.copy_tree(".", join_path(prefix), preserve_symlinks=1)
-
