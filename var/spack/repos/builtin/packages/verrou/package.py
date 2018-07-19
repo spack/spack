@@ -98,7 +98,7 @@ class Verrou(AutotoolsPackage):
         spec = self.spec
         options = [
             '--enable-only64bit',
-            '--{0}-verrou-fma'.format('enable' if '+fma' in spec else 'disable')
+            '--{0}able-verrou-fma'.format('en' if '+fma' in spec else 'dis')
         ]
 
         if sys.platform == 'darwin':
