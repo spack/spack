@@ -40,7 +40,6 @@ class Templight(CMakePackage):
     # - The one that will be used in Spack specifications
     # - The git branch that we need to fetch from in the templight repo
     # - The svn tag that we need to fetch from in the LLVM repos
-
     version('develop', branch='master')
     resource(name='llvm-trunk',
              svn='http://llvm.org/svn/llvm-project/llvm/trunk',
@@ -52,18 +51,6 @@ class Templight(CMakePackage):
              destination='llvm/tools',
              placement='clang',
              when='@develop')
-
-    version('clang6.0', branch='release_60')
-    resource(name='llvm-6.0',
-             svn='http://llvm.org/svn/llvm-project/llvm/branches/release_60',
-             destination='.',
-             placement='llvm',
-             when='@clang6.0')
-    resource(name='clang-6.0',
-             svn='http://llvm.org/svn/llvm-project/cfe/branches/release_60',
-             destination='llvm/tools',
-             placement='clang',
-             when='@clang6.0')
 
     # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
     # are doing before switching to them
