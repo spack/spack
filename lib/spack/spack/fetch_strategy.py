@@ -56,7 +56,7 @@ import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 from spack.util.executable import which
-from spack.util.string import comma_or
+from spack.util.string import comma_or, comma_and, quote
 from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
@@ -968,9 +968,26 @@ def args_are_for(args, fetcher):
     fetcher.matches(args)
 
 
+def check_attributes(pkg):
+    """Find ambiguous top-level fetch attributes in a package."""
+    # a single package cannot have required attributes from multiple
+    # fetch strategies *unless* they are the same attribute.
+    conflicts = set(
+        sum([[a for a in s.required_attributes if hasattr(pkg, a)]
+             for s in all_strategies],
+            []))
+
+    if len(conflicts) > 1:
+        raise FetcherConflict(
+            'Package %s cannot specify %s together. Must pick only one.'
+            % (pkg.name, comma_and(quote(conflicts))))
+
+
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
+    check_attributes(pkg)
+
     if not isinstance(version, Version):
         version = Version(version)
 
@@ -1092,6 +1109,10 @@ class NoDigestError(FetchError):
 
 class ExtrapolationError(FetchError):
     """Raised when we can't extrapolate a version for a package."""
+
+
+class FetcherConflict(FetchError):
+    """Raised for packages with invalid fetch attributes."""
 
 
 class InvalidArgsError(FetchError):
