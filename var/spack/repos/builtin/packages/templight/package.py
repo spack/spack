@@ -40,32 +40,30 @@ class Templight(CMakePackage):
     # - The one that will be used in Spack specifications
     # - The git branch that we need to fetch from in the templight repo
     # - The svn tag that we need to fetch from in the LLVM repos
-    versions = [
-        { 'spack':     'develop',
-          'templight': 'master',
-          'llvm':      'trunk' },
-        { 'spack':     'clang5.0',
-          'templight': 'release_50',
-          'llvm':      'release_50' },
-        { 'spack':     'clang6.0',
-          'templight': 'release_60',
-          'llvm':      'release_60' }
-    ]
 
-    # ...from these triplets, we can generate version & resource statements
-    for ver in versions:
-        version(ver['spack'],
-                branch=ver['templight'])
-        resource(name='llvm-{0}'.format(ver['llvm']),
-                 svn='http://llvm.org/svn/llvm-project/llvm/{0}'
-                     .format(ver['llvm']),
-                 destination='llvm',
-                 when='@{0}'.format(ver['spack']))
-        resource(name='clang-{0}'.format(ver['llvm']),
-                 svn='http://llvm.org/svn/llvm-project/cfe/{0}'
-                     .format(ver['llvm']),
-                 destination='llvm/tools/clang',
-                 when='@{0}'.format(ver['spack']))
+    version('develop', branch='master')
+    resource(name='llvm-trunk',
+             svn='http://llvm.org/svn/llvm-project/llvm/trunk',
+             destination='.',
+             placement='llvm',
+             when='@develop')
+    resource(name='clang-trunk',
+             svn='http://llvm.org/svn/llvm-project/cfe/trunk',
+             destination='llvm/tools',
+             placement='clang',
+             when='@develop')
+
+    version('clang6.0', branch='release_60')
+    resource(name='llvm-6.0',
+             svn='http://llvm.org/svn/llvm-project/llvm/branches/release_60',
+             destination='.',
+             placement='llvm',
+             when='@clang6.0')
+    resource(name='clang-6.0',
+             svn='http://llvm.org/svn/llvm-project/cfe/branches/release_60',
+             destination='llvm/tools',
+             placement='clang',
+             when='@clang6.0')
 
     # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
     # are doing before switching to them
