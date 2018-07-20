@@ -32,12 +32,15 @@ class MofemMinimalSurfaceEquation(CMakePackage):
 
     maintainers = ['likask']
 
-    version('0.3.8',
+    version('0.3.9',
         git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',   
-        tag='v0.3.8')
+        tag='v0.3.9')
     version('develop',
         git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
         branch='develop')
+
+    variant('copy_user_modules', default=True,
+        description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))
@@ -74,8 +77,6 @@ class MofemMinimalSurfaceEquation(CMakePackage):
             'ON' if self.run_tests else 'OFF'))
 
         return options
-
-    phases = ['cmake', 'build', 'install']
 
     @run_after('install')
     def copy_source_code(self):

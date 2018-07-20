@@ -32,12 +32,15 @@ class MofemFractureModule(CMakePackage):
 
     maintainers = ['likask']
 
-    version('0.9.41',
+    version('0.9.42',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
-        tag='v0.9.41')
+        tag='v0.9.42')
     version('develop',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
         branch='develop')
+
+    variant('copy_user_modules', default=True,
+        description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))
@@ -69,13 +72,23 @@ class MofemFractureModule(CMakePackage):
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
             ('YES' if '+copy_user_modules' in spec else 'NO')])
 
+        # Set module version
+        if self.spec.version[0] == 'develop':
+            options.extend([
+                '-DFM_VERSION_MAJOR=%s' % 0,
+                '-DFM_VERSION_MINOR=%s' % 0,
+                '-DFM_VERSION_BUILD=%s' % 0])
+        else:
+            options.extend([
+                '-DFM_VERSION_MAJOR=%s' % self.spec.version[0],
+                '-DFM_VERSION_MINOR=%s' % self.spec.version[1],
+                '-DFM_VERSION_BUILD=%s' % self.spec.version[2]])
+
         # build tests
         options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         return options
-
-    phases = ['cmake', 'build', 'install']
 
     @run_after('install')
     def copy_source_code(self):
