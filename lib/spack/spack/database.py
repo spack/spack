@@ -307,11 +307,7 @@ class Database(object):
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:
-            if lock:
-                with self.read_transaction():
-                    if hash_key in self._data:
-                        return False, self._data[hash_key]
-            else:
+            with self.read_transaction():
                 if hash_key in self._data:
                     return False, self._data[hash_key]
         for db in self.upstream_dbs:
@@ -716,7 +712,7 @@ class Database(object):
             # Connect dependencies from the DB to the new copy.
             for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
                 dkey = dep.spec.dag_hash()
-                upstream, record = self.query_by_spec_hash(dkey, lock=False)
+                upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
                 if not upstream:
                     record.ref_count += 1
