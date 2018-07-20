@@ -52,10 +52,25 @@ class Templight(CMakePackage):
              destination='llvm/tools',
              placement='clang',
              when='@develop')
-    patch('develop-20180720.patch', when='@develop')
 
-    # FIXME: Building on top of templight's develop branch and LLVM's trunk is
-    #        too brittle for the long term, find something more stable!
+    # Templight has no stable release yet, and is supposed to be built against
+    # the LLVM trunk. As this is a ridiculously brittle combination, I decided
+    # to artificially create a stable release based on something which works
+    # today. Please remove this configuration once templight has stabilized.
+    version('2018.07.20', commit='91589f95427620dd0a2346bd69ba922f374aa42a')
+    resource(name='llvm-r337566',
+             svn='http://llvm.org/svn/llvm-project/llvm/trunk',
+             revision=337566,
+             destination='.',
+             placement='llvm',
+             when='@2018.07.20')
+    resource(name='clang-r337566',
+             svn='http://llvm.org/svn/llvm-project/cfe/trunk',
+             revision=337566,
+             destination='llvm/tools',
+             placement='clang',
+             when='@2018.07.20')
+    patch('develop-20180720.patch', when='@2018.07.20')
 
     # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
     # are doing before switching to them
