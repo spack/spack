@@ -52,9 +52,10 @@ class Templight(CMakePackage):
              destination='llvm/tools',
              placement='clang',
              when='@develop')
-    # FIXME: Add templight patch for the current develop version
+    patch('develop-20180720.patch', when='@develop')
 
-    # FIXME: Building on top of develop is brittle, find something more stable
+    # FIXME: Building on top of templight's develop branch and LLVM's trunk is
+    #        too brittle for the long term, find something more stable!
 
     # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
     # are doing before switching to them
