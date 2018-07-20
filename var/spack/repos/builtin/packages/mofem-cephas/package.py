@@ -44,7 +44,6 @@ class MofemCephas(CMakePackage):
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
     variant('slepc', default=True, description='Compile with Slepc')
-    variant('docs', default=False, description='Install doxygen')
 
     depends_on("mpi")
     depends_on("boost")

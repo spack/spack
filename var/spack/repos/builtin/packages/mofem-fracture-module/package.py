@@ -21,7 +21,6 @@
 ##############################################################################
 
 from spack import *
-import os
 
 
 class MofemFractureModule(CMakePackage):
@@ -45,6 +44,12 @@ class MofemFractureModule(CMakePackage):
     extends('mofem-cephas')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))
 
+    # The CMakeLists.txt installed with mofem-cephas package set cmake
+    # environment to install extension from extension repository. It searches
+    # for modules in user provides paths, for example in Spack source path.Also
+    # it finds all cmake exported targets installed in lib directory, which are
+    # built with dependent extensions, f.e.mofem - users - modules or others if
+    # needed.
     @property
     def root_cmakelists_dir(self):
         """The relative path to the directory containing CMakeLists.txt
@@ -55,7 +60,7 @@ class MofemFractureModule(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return os.path.join(spec['mofem-cephas'].prefix.users_modules)
+        return spec['mofem-cephas'].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
@@ -73,7 +78,7 @@ class MofemFractureModule(CMakePackage):
             ('YES' if '+copy_user_modules' in spec else 'NO')])
 
         # Set module version
-        if self.spec.version[0] == 'develop':
+        if self.spec.version == Version('develop'):
             options.extend([
                 '-DFM_VERSION_MAJOR=%s' % 0,
                 '-DFM_VERSION_MINOR=%s' % 0,
@@ -90,6 +95,11 @@ class MofemFractureModule(CMakePackage):
 
         return options
 
+    # This function is not needed to run code installed by extension, nor in
+    # the install process. However for users like to have access to source code
+    # to play and make with it. Having source code at hand one can compile in
+    # own build directory it in mofem-cephas view when the extension is
+    # activated.
     @run_after('install')
     def copy_source_code(self):
         source = self.stage.source_path

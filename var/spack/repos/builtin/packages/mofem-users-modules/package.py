@@ -21,18 +21,24 @@
 ##############################################################################
 
 from spack import *
-import os
 
 
 class MofemUsersModules(CMakePackage):
     """MofemUsersModules creates installation environment for user-provided
-    modules and extends of mofem-cephas package. The CMakeList.txt file for user
-    modules is located in mofem-cephas/user_modules prefix. MofemUsersModules
-    itself does not contain any code (is a dummy with a single dummy
-    version). It provide sources location of users modules, i.e.
+    modules and extends of mofem-cephas package. The CMakeList.txt file for
+    user modules is located in mofem-cephas/user_modules prefix.
+    MofemUsersModules itself does not contain any code (is a dummy with a
+    single dummy version). It provide sources location of users modules, i.e.
     mofem-fracture-module. Those are kept as a stand-alone package (instead
-    of resources) as they have different versions and developers. For more
-    information how to work with Spack and MoFEM see
+    of resources) as they have different versions and developers. One can
+    install the extension, f.e. spack installs extension spack install
+    mofem-fracture-module. Next, create a symlink to run the code, f.e. spack
+    view symlink um_view mofem-cephas, and activate the extension, i.e. spack
+    activate um_view mofem-minimal-surface-equation. Basic mofem
+    functionality is available when with spack install mofem-users-modules,
+    it provides simple examples for calculating elasticity problems,
+    magnetostatics, saturated and unsaturated flow and a couple more. For
+    more information how to work with Spack and MoFEM see
     http://mofem.eng.gla.ac.uk/mofem/html/install_spack.html"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
@@ -56,7 +62,7 @@ class MofemUsersModules(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return os.path.join(spec['mofem-cephas'].prefix.users_modules)
+        return spec['mofem-cephas'].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
