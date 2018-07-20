@@ -303,8 +303,17 @@ class Database(object):
         spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
-    def _query_by_spec_hash(self, hash_key):
-        return self._data.get(hash_key, None)
+    def query_by_spec_hash(self, hash_key, data=None):
+        if data and hash_key in data:
+            return False, data[hash_key]
+        if not data:
+            with self.read_transaction():
+                if hash_key in self._data:
+                    return False, self._data[hash_key]
+        for db in self.upstream_dbs:
+            if hash_key in db._data:
+                return True, db._data[hash_key]
+        return False, None
 
     def _assign_dependencies(self, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
@@ -323,13 +332,8 @@ class Database(object):
                 # then Y gets installed upstream, and then we install X'->Y?
                 # If we don't have a system like always using the local version
                 # if it's here, then we could run into errors.
-                if dhash in data:
-                    child = data[dhash].spec
-                if not child:
-                    for db in self.upstream_dbs:
-                        child = db._query_by_spec_hash(dhash)
-                        if child:
-                            break
+                upstream, record = self.query_by_spec_hash(dhash, data=data)
+                child = record.spec if record else None
 
                 if not child:
                     tty.warn("Missing dependency not in database: ",
@@ -337,7 +341,6 @@ class Database(object):
                                  spec.cformat('$_$/'), dname, dhash[:7]))
                     continue
 
-                child = data[dhash].spec
                 spec._add_dependency(child, dtypes)
 
     def _read_from_file(self, stream, format='json'):
@@ -347,7 +350,6 @@ class Database(object):
 
         Does not do any locking.
         """
-        import pdb; pdb.set_trace()
         if format.lower() == 'json':
             load = sjson.load
         elif format.lower() == 'yaml':
