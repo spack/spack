@@ -303,11 +303,15 @@ class Database(object):
         spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
-    def query_by_spec_hash(self, hash_key, data=None):
+    def query_by_spec_hash(self, hash_key, data=None, lock=True):
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:
-            with self.read_transaction():
+            if lock:
+                with self.read_transaction():
+                    if hash_key in self._data:
+                        return False, self._data[hash_key]
+            else:
                 if hash_key in self._data:
                     return False, self._data[hash_key]
         for db in self.upstream_dbs:
@@ -712,8 +716,10 @@ class Database(object):
             # Connect dependencies from the DB to the new copy.
             for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
                 dkey = dep.spec.dag_hash()
-                new_spec._add_dependency(self._data[dkey].spec, dep.deptypes)
-                self._data[dkey].ref_count += 1
+                upstream, record = self.query_by_spec_hash(dkey, lock=False)
+                new_spec._add_dependency(record.spec, dep.deptypes)
+                if not upstream:
+                    record.ref_count += 1
 
             # Mark concrete once everything is built, and preserve
             # the original hash of concrete specs.
