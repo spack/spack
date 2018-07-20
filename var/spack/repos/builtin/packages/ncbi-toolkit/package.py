@@ -58,8 +58,8 @@ class NcbiToolkit(AutotoolsPackage):
                         'image_io_jpeg.cpp', string=True)
 
     def build(self, spec, prefix):
-        CompilerVersion = self.compiler.version.joined
+        compiler_version = self.compiler.version.joined
 
         with working_dir(join_path(
-                'GCC{0}-DebugMT64'.format(CompilerVersion), 'build')):
+                'GCC{0}-DebugMT64'.format(compiler_version), 'build')):
             make('all_r')
