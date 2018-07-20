@@ -159,7 +159,8 @@ class Database(object):
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
 
-    def __init__(self, root, db_dir=None, upstream_dbs=None):
+    def __init__(self, root, db_dir=None, upstream_dbs=None,
+                 is_upstream=False):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -207,6 +208,7 @@ class Database(object):
         self._data = {}
 
         self.upstream_dbs = upstream_dbs or []
+        self.is_upstream = is_upstream
 
         # whether there was an error at the start of a read transaction
         self._error = None
@@ -447,6 +449,10 @@ class Database(object):
         Locks the DB if it isn't locked already.
 
         """
+        if self.is_upstream:
+            # TODO: other write operations should likely be guarded
+            raise ValueError("Cannot reindex an upstream database")
+
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
