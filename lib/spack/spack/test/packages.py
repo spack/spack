@@ -264,9 +264,8 @@ def test_no_extrapolate_without_url(mock_packages, config):
 
 
 def test_git_and_url_top_level(mock_packages, config):
-    """Verify that URL takes precedence over other top-level attributes."""
-    pkg = spack.repo.get('git-and-url-top-level')
+    """Verify conflict when url and git are specified together."""
 
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
-    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
+    pkg = spack.repo.get('git-and-url-top-level')
+    with pytest.raises(spack.fetch_strategy.FetcherConflict):
+        spack.fetch_strategy.for_package_version(pkg, '1.0')

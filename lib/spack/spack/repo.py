@@ -831,7 +831,12 @@ class Repo(object):
         package_class = self.get_pkg_class(spec.name)
         try:
             return package_class(spec)
+        except spack.error.SpackError:
+            # pass these through as their error messages will be fine.
+            raise
         except Exception:
+            # make sure other errors in constructors hit the error
+            # handler by wrapping them
             if spack.config.get('config:debug'):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
