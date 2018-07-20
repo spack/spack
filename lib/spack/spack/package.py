@@ -1470,6 +1470,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self._installed_upstream:
             tty.msg("{0.name} is installed in an upstream Spack instance"
                     " at {0.prefix}".format(self))
+            # TODO: post install hooks? perhaps we can regenerate a module
+            # file according to the expectations of this Spack installation.
+            # On the other hand the upstream installation may have generated
+            # the module for the package with special considerations.
+            return
 
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)

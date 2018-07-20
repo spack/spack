@@ -159,7 +159,7 @@ class Database(object):
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
 
-    def __init__(self, root, db_dir=None):
+    def __init__(self, root, db_dir=None, upstream_dbs=None):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -205,6 +205,8 @@ class Database(object):
         # initialize rest of state.
         self.lock = Lock(self._lock_path)
         self._data = {}
+
+        self.upstream_dbs = upstream_dbs or []
 
         # whether there was an error at the start of a read transaction
         self._error = None
@@ -301,6 +303,9 @@ class Database(object):
         spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
+    def _query_by_spec_hash(self, hash_key):
+        return self._data.get(hash_key, None)
+
     def _assign_dependencies(self, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
@@ -311,7 +316,22 @@ class Database(object):
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
                     yaml_deps):
-                if dhash not in data:
+                # TODO: need to be careful because if the
+                # installed spec depends on a hash that exists in our DB and in
+                # the upstream DB, then we want to know which one our spec
+                # depends on. What happens if X->Y, we install X and Y locally,
+                # then Y gets installed upstream, and then we install X'->Y?
+                # If we don't have a system like always using the local version
+                # if it's here, then we could run into errors.
+                if dhash in data:
+                    child = data[dhash].spec
+                if not child:
+                    for db in self.upstream_dbs:
+                        child = db._query_by_spec_hash(dhash)
+                        if child:
+                            break
+
+                if not child:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
                                  spec.cformat('$_$/'), dname, dhash[:7]))
@@ -327,6 +347,7 @@ class Database(object):
 
         Does not do any locking.
         """
+        import pdb; pdb.set_trace()
         if format.lower() == 'json':
             load = sjson.load
         elif format.lower() == 'yaml':
@@ -647,6 +668,9 @@ class Database(object):
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
+        if spec.package._installed_upstream:
+            return
+
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
@@ -834,7 +858,7 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(
+    def _query(
             self,
             query_spec=any,
             known=any,
@@ -882,43 +906,68 @@ class Database(object):
         # TODO: wildcard spec object, and should specs have attributes
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
+
+        # Just look up concrete specs with hashes; no fancy search.
+        if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
+
+            hash_key = query_spec.dag_hash()
+            if hash_key in self._data:
+                return [self._data[hash_key].spec]
+            else:
+                return []
+
+        # Abstract specs require more work -- currently we test
+        # against everything.
+        start_date = start_date or datetime.datetime.min
+        end_date = end_date or datetime.datetime.max
+
+        results = []
+        for key, rec in self._data.items():
+            if installed is not any and rec.installed != installed:
+                continue
+
+            if explicit is not any and rec.explicit != explicit:
+                continue
+
+            if known is not any and spack.repo.path.exists(
+                    rec.spec.name) != known:
+                continue
+
+            inst_date = datetime.datetime.fromtimestamp(
+                rec.installation_time
+            )
+            if not (start_date < inst_date < end_date):
+                continue
+
+            if query_spec is any or rec.spec.satisfies(query_spec):
+                results.append(rec.spec)
+
+        return results
+
+    def query(
+            self,
+            query_spec=any,
+            known=any,
+            installed=True,
+            explicit=any,
+            start_date=None,
+            end_date=None
+    ):
+        kwargs = {'query_spec': query_spec, 'known': known,
+                  'installed': installed, 'explicit': explicit,
+                  'start_date': start_date, 'end_date': end_date}
+
+        results = []
+        for upstream_db in self.upstream_dbs:
+            # queries for upstream DBs need to *not* lock - we may not
+            # have permissions to do this and the upstream DBs won't know about
+            # us anyway (so e.g. they should never uninstall specs)
+            results.extend(upstream_db._query(**kwargs) or [])
+
         with self.read_transaction():
-            # Just look up concrete specs with hashes; no fancy search.
-            if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
+            results.extend(self._query(**kwargs))
 
-                hash_key = query_spec.dag_hash()
-                if hash_key in self._data:
-                    return [self._data[hash_key].spec]
-                else:
-                    return []
-
-            # Abstract specs require more work -- currently we test
-            # against everything.
-            results = []
-            start_date = start_date or datetime.datetime.min
-            end_date = end_date or datetime.datetime.max
-
-            for key, rec in self._data.items():
-                if installed is not any and rec.installed != installed:
-                    continue
-
-                if explicit is not any and rec.explicit != explicit:
-                    continue
-
-                if known is not any and spack.repo.path.exists(
-                        rec.spec.name) != known:
-                    continue
-
-                inst_date = datetime.datetime.fromtimestamp(
-                    rec.installation_time
-                )
-                if not (start_date < inst_date < end_date):
-                    continue
-
-                if query_spec is any or rec.spec.satisfies(query_spec):
-                    results.append(rec.spec)
-
-            return sorted(results)
+        return sorted(results)
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.
