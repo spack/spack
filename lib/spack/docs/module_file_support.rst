@@ -180,9 +180,9 @@ To identify just the one built with the Intel compiler.
 
 .. _cmd-spack-module-loads:
 
-^^^^^^^^^^^^^^^^^^^^^^
-``spack tcl loads``
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack module tcl loads``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some cases, it is desirable to load not just a module, but also all
 the modules it depends on.  This is not required for most modules
@@ -195,13 +195,13 @@ Scripts to load modules recursively may be made with the command:
 
 .. code-block:: console
 
-    $ spack tcl loads --dependencies <spec>
+    $ spack module tcl loads --dependencies <spec>
 
 An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
 
 .. code-block :: console
 
-    $ source <( spack tcl loads --dependencies <spec> )
+    $ source <( spack module tcl loads --dependencies <spec> )
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -211,12 +211,12 @@ Module Commands for Shell Scripts
 Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
 commands inside a shell script.  By adding the ``--shell`` flag,
-``spack tcl find`` may also be used to generate code that can be
+``spack module tcl find`` may also be used to generate code that can be
 cut-and-pasted into a shell script.  For example:
 
 .. code-block:: console
 
-    $ spack tcl loads --dependencies py-numpy git
+    $ spack module tcl loads --dependencies py-numpy git
     # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
     module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
     # ncurses@6.0%gcc@4.9.3=linux-x86_64
@@ -256,9 +256,9 @@ Module Prefixes
 ^^^^^^^^^^^^^^^
 
 On some systems, modules are automatically prefixed with a certain
-string; ``spack tcl loads`` needs to know about that prefix when it
+string; ``spack module tcl loads`` needs to know about that prefix when it
 issues ``module load`` commands.  Add the ``--prefix`` option to your
-``spack tcl loads`` commands if this is necessary.
+``spack module tcl loads`` commands if this is necessary.
 
 For example, consider the following on one system:
 
@@ -267,11 +267,11 @@ For example, consider the following on one system:
     $ module avail
     linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
 
-    $ spack tcl loads antlr    # WRONG!
+    $ spack module tcl loads antlr    # WRONG!
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
     module load antlr-2.7.7-gcc-5.3.0-bdpl46y
 
-    $ spack tcl loads --prefix linux-SuSE11-x86_64/ antlr
+    $ spack module tcl loads --prefix linux-SuSE11-x86_64/ antlr
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
     module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
 
@@ -626,9 +626,9 @@ Maintaining Module Files
 Each type of module file has a command with the same name associated
 with it. The actions these commands permit are usually associated
 with the maintenance of a production environment. Here's, for instance,
-a sample of the features of the ``spack tcl`` command:
+a sample of the features of the ``spack module tcl`` command:
 
-.. command-output:: spack tcl --help
+.. command-output:: spack module tcl --help
 
 .. _cmd-spack-module-refresh:
 
@@ -639,7 +639,7 @@ Refresh the set of modules
 The subcommand that regenerates module files to update their content or
 their layout is ``refresh``:
 
-.. command-output:: spack tcl refresh --help
+.. command-output:: spack module tcl refresh --help
 
 A set of packages can be selected using anonymous specs for the optional
 ``constraint`` positional argument. Optionally the entire tree can be deleted
@@ -654,7 +654,7 @@ Delete module files
 If instead what you need is just to delete a few module files, then the right
 subcommand is ``rm``:
 
-.. command-output:: spack tcl rm --help
+.. command-output:: spack module tcl rm --help
 
 .. note::
   We care about your module files!

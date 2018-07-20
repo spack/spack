@@ -22,29 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import functools
 import os
 
 import llnl.util.filesystem
 import spack.cmd.common.arguments
-import spack.cmd.common.modules
-
-description = "manipulate hierarchical module files"
-section = "environment"
-level = "short"
-
-#: Type of the modules managed by this command
-_module_type = 'lmod'
+import spack.cmd.modules
 
 
-def setup_parser(subparser):
-    sp = spack.cmd.common.modules.setup_parser(subparser)
+def add_command(parser, command_dict):
+    lmod_parser = parser.add_parser(
+        'lmod', help='manipulate hierarchical module files'
+    )
+    sp = spack.cmd.modules.setup_parser(lmod_parser)
 
     # Set default module file for a package
-    setdefault = sp.add_parser(
+    setdefault_parser = sp.add_parser(
         'setdefault', help='set the default module file for a package'
     )
     spack.cmd.common.arguments.add_common_arguments(
-        setdefault, ['constraint']
+        setdefault_parser, ['constraint']
+    )
+
+    callbacks = dict(spack.cmd.modules.callbacks.items())
+    callbacks['setdefault'] = setdefault
+
+    command_dict['lmod'] = functools.partial(
+        spack.cmd.modules.modules_cmd, module_type='lmod', callbacks=callbacks
     )
 
 
@@ -54,8 +58,8 @@ def setdefault(module_type, specs, args):
     #
     # https://lmod.readthedocs.io/en/latest/060_locating.html#marking-a-version-as-default
     #
-    spack.cmd.common.modules.one_spec_or_raise(specs)
-    writer = spack.modules.module_types[_module_type](specs[0])
+    spack.cmd.modules.one_spec_or_raise(specs)
+    writer = spack.modules.module_types['lmod'](specs[0])
 
     module_folder = os.path.dirname(writer.layout.filename)
     module_basename = os.path.basename(writer.layout.filename)
@@ -63,13 +67,3 @@ def setdefault(module_type, specs, args):
         if os.path.exists('default') and os.path.islink('default'):
             os.remove('default')
         os.symlink(module_basename, 'default')
-
-
-callbacks = dict(spack.cmd.common.modules.callbacks.items())
-callbacks['setdefault'] = setdefault
-
-
-def lmod(parser, args):
-    spack.cmd.common.modules.modules_cmd(
-        parser, args, module_type=_module_type, callbacks=callbacks
-    )

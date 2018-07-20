@@ -22,21 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.cmd.common.modules
+import functools
 
-description = "manipulate dotkit module files"
-section = "environment"
-level = "short"
-
-#: Type of the modules managed by this command
-_module_type = 'dotkit'
+import spack.cmd.modules
 
 
-def setup_parser(subparser):
-    spack.cmd.common.modules.setup_parser(subparser)
+def add_command(parser, command_dict):
+    dotkit_parser = parser.add_parser(
+        'dotkit', help='manipulate dotkit module files'
+    )
+    spack.cmd.modules.setup_parser(dotkit_parser)
 
-
-def dotkit(parser, args):
-    spack.cmd.common.modules.modules_cmd(
-        parser, args, module_type=_module_type
+    command_dict['dotkit'] = functools.partial(
+        spack.cmd.modules.modules_cmd, module_type='dotkit'
     )
