@@ -22,9 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Contains all the functions that are common to the implementation of
-each module file command.
-"""
+"""Implementation details of the ``spack module`` command."""
 
 import collections
 import os.path
@@ -41,15 +39,6 @@ import spack.cmd.common.arguments as arguments
 description = "manipulate module files"
 section = "environment"
 level = "short"
-
-
-#: Dictionary that will be populated with the list of sub-commands
-#: Each sub-command must be callable and accept 3 arguments:
-#:
-#:   - mtype : the type of the module file
-#:   - specs : the list of specs to be processed
-#:   - args : namespace containing the parsed command line arguments
-callbacks = {}
 
 
 def setup_parser(subparser):

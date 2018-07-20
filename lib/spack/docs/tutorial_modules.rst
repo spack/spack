@@ -166,7 +166,7 @@ The fastest way to set-up your environment is to :ref:`use a Docker image <workf
 .. code-block:: console
 
   $ docker pull alalazo/spack:module_tutorial
-  $ docker run --rm -h module-file-tutorial -it alalazo/spack:module_tutorial
+  $ docker run --rm -h module-file-tutorial -it spack/module-tutorial:latest
   root@module-file-tutorial:/#
 
 If you arrived at this point you should be ready to start, as all the software needed is
@@ -185,7 +185,7 @@ pre-installed in the image:
 
   -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
   bzip2@1.0.6   mpich@3.2.1          netlib-scalapack@2.0.2  netlib-scalapack@2.0.2  openssl@1.0.2o   py-scipy@1.1.0        readline@7.0
-  cmake@3.11.4  ncurses@6.1          netlib-scalapack@2.0.2  openblas@0.3.0          pkgconf@1.4.2    py-setuptools@39.2.0  sqlite@3.23.1
+  cmake@3.12.0  ncurses@6.1          netlib-scalapack@2.0.2  openblas@0.3.0          pkgconf@1.4.2    py-setuptools@39.2.0  sqlite@3.23.1
   gdbm@1.14.1   netlib-lapack@3.8.0  netlib-scalapack@2.0.2  openmpi@1.10.2          py-numpy@1.14.3  python@2.7.15         zlib@1.2.11
 
 Go to :ref:`module_file_tutorial_non_hierarchical` to proceed with the tutorial.
@@ -364,17 +364,17 @@ If you arrived to this point you should have an environment that looks similar t
      autoconf-2.69-gcc-5.4.0-cbvv5rj              lua-luaposix-33.4.0-gcc-5.4.0-i7w7ynf       perl-5.26.2-gcc-5.4.0-n2k4mza
      automake-1.16.1-gcc-5.4.0-lykrrr4            m4-1.4.18-gcc-5.4.0-3z33ecf                 pkgconf-1.4.2-gcc-5.4.0-fovrh7a
      bzip2-1.0.6-gcc-7.2.0-mwamumj                mpc-1.1.0-gcc-5.4.0-56lbd3h                 pkgconf-1.4.2-gcc-7.2.0-yoxwmgb
-     cmake-3.11.4-gcc-7.2.0-h24ofjs               mpfr-4.0.1-gcc-5.4.0-dy5r7hi                py-numpy-1.14.3-gcc-7.2.0-t3loxvu
+     cmake-3.12.0-gcc-7.2.0-6ovorxs               mpfr-4.0.1-gcc-5.4.0-dy5r7hi                py-numpy-1.14.3-gcc-7.2.0-t3loxvu
      gcc-7.2.0-gcc-5.4.0-wwhgyej                  mpich-3.2.1-gcc-7.2.0-vt5xcat               py-scipy-1.1.0-gcc-7.2.0-fdiryak
      gdbm-1.14.1-gcc-5.4.0-q4fpyuo                ncurses-6.1-gcc-5.4.0-3o765ou               py-setuptools-39.2.0-gcc-7.2.0-jqhycal
      gdbm-1.14.1-gcc-7.2.0-zk5lhob                ncurses-6.1-gcc-7.2.0-xcgzqdv               python-2.7.15-gcc-7.2.0-c7pnzul
-     git-2.9.4-gcc-5.4.0-mkaoyhz                  netlib-lapack-3.8.0-gcc-7.2.0-bcikpen       readline-7.0-gcc-5.4.0-nxhwrg7
-     gmp-6.1.2-gcc-5.4.0-qc4qcfz                  netlib-scalapack-2.0.2-gcc-7.2.0-d3lertf    readline-7.0-gcc-7.2.0-ccruj2i
-     isl-0.19-gcc-5.4.0-hsl7f52                   netlib-scalapack-2.0.2-gcc-7.2.0-jae3ilo    sqlite-3.23.1-gcc-7.2.0-5ltus3a
-     libsigsegv-2.11-gcc-5.4.0-fypapcp            netlib-scalapack-2.0.2-gcc-7.2.0-lqfhvfh    tcl-8.6.8-gcc-5.4.0-qhwyccy
-     libtool-2.4.6-gcc-5.4.0-o2pfwjf              netlib-scalapack-2.0.2-gcc-7.2.0-uhzmwog    zlib-1.2.11-gcc-5.4.0-5nus6kn
+     git-2.9.4-gcc-5.4.0-mkaoyhz                  netlib-lapack-3.8.0-gcc-7.2.0-7apabqu       readline-7.0-gcc-5.4.0-nxhwrg7
+     gmp-6.1.2-gcc-5.4.0-qc4qcfz                  netlib-scalapack-2.0.2-gcc-7.2.0-3bz5rxx    readline-7.0-gcc-7.2.0-ccruj2i
+     isl-0.19-gcc-5.4.0-hsl7f52                   netlib-scalapack-2.0.2-gcc-7.2.0-6i5qsqx    sqlite-3.23.1-gcc-7.2.0-5ltus3a
+     libsigsegv-2.11-gcc-5.4.0-fypapcp            netlib-scalapack-2.0.2-gcc-7.2.0-uhzmwog    tcl-8.6.8-gcc-5.4.0-qhwyccy
+     libtool-2.4.6-gcc-5.4.0-o2pfwjf              netlib-scalapack-2.0.2-gcc-7.2.0-z52ltyy    zlib-1.2.11-gcc-5.4.0-5nus6kn
      lmod-7.7.29-gcc-5.4.0-wl6mywv                openblas-0.3.0-gcc-7.2.0-pdatzbi            zlib-1.2.11-gcc-7.2.0-ezuwp4p
-     lua-5.3.4-gcc-5.4.0-izvaota                  openmpi-1.10.2-gcc-7.2.0-2h6xmxh
+     lua-5.3.4-gcc-5.4.0-izvaota                  openmpi-1.10.2-gcc-7.2.0-6oewzwj
      lua-luafilesystem-1_6_3-gcc-5.4.0-ywlmaou    openssl-1.0.2o-gcc-7.2.0-cvldq3v
 
   Use "module spider" to find all possible modules.
@@ -433,7 +433,7 @@ Next you should regenerate all the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh
+  root@module-file-tutorial:/# spack module tcl refresh
   ==> You are about to regenerate tcl module files for:
 
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
@@ -444,11 +444,11 @@ Next you should regenerate all the module files:
   mkaoyhz git@2.9.4        wl6mywv lmod@7.7.29      56lbd3h mpc@1.1.0                nxhwrg7 readline@7.0
 
   -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
-  mwamumj bzip2@1.0.6   bcikpen netlib-lapack@3.8.0     pdatzbi openblas@0.3.0   fdiryak py-scipy@1.1.0        ezuwp4p zlib@1.2.11
-  h24ofjs cmake@3.11.4  d3lertf netlib-scalapack@2.0.2  2h6xmxh openmpi@1.10.2   jqhycal py-setuptools@39.2.0
+  mwamumj bzip2@1.0.6   7apabqu netlib-lapack@3.8.0     pdatzbi openblas@0.3.0   fdiryak py-scipy@1.1.0        ezuwp4p zlib@1.2.11
+  6ovorxs cmake@3.12.0  6i5qsqx netlib-scalapack@2.0.2  6oewzwj openmpi@1.10.2   jqhycal py-setuptools@39.2.0
   zk5lhob gdbm@1.14.1   uhzmwog netlib-scalapack@2.0.2  cvldq3v openssl@1.0.2o   c7pnzul python@2.7.15
-  vt5xcat mpich@3.2.1   lqfhvfh netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2    ccruj2i readline@7.0
-  xcgzqdv ncurses@6.1   jae3ilo netlib-scalapack@2.0.2  t3loxvu py-numpy@1.14.3  5ltus3a sqlite@3.23.1
+  vt5xcat mpich@3.2.1   3bz5rxx netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2    ccruj2i readline@7.0
+  xcgzqdv ncurses@6.1   z52ltyy netlib-scalapack@2.0.2  t3loxvu py-numpy@1.14.3  5ltus3a sqlite@3.23.1
 
   ==> Do you want to proceed? [y/n] y
   ==> Regenerating tcl module files
@@ -503,7 +503,7 @@ and regenerate the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh --delete-tree
+  root@module-file-tutorial:/# spack module tcl refresh --delete-tree
   ==> You are about to regenerate tcl module files for:
 
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
@@ -514,11 +514,11 @@ and regenerate the module files:
   mkaoyhz git@2.9.4        wl6mywv lmod@7.7.29      56lbd3h mpc@1.1.0                nxhwrg7 readline@7.0
 
   -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
-  mwamumj bzip2@1.0.6   bcikpen netlib-lapack@3.8.0     pdatzbi openblas@0.3.0   fdiryak py-scipy@1.1.0        ezuwp4p zlib@1.2.11
-  h24ofjs cmake@3.11.4  d3lertf netlib-scalapack@2.0.2  2h6xmxh openmpi@1.10.2   jqhycal py-setuptools@39.2.0
+  mwamumj bzip2@1.0.6   7apabqu netlib-lapack@3.8.0     pdatzbi openblas@0.3.0   fdiryak py-scipy@1.1.0        ezuwp4p zlib@1.2.11
+  6ovorxs cmake@3.12.0  6i5qsqx netlib-scalapack@2.0.2  6oewzwj openmpi@1.10.2   jqhycal py-setuptools@39.2.0
   zk5lhob gdbm@1.14.1   uhzmwog netlib-scalapack@2.0.2  cvldq3v openssl@1.0.2o   c7pnzul python@2.7.15
-  vt5xcat mpich@3.2.1   lqfhvfh netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2    ccruj2i readline@7.0
-  xcgzqdv ncurses@6.1   jae3ilo netlib-scalapack@2.0.2  t3loxvu py-numpy@1.14.3  5ltus3a sqlite@3.23.1
+  vt5xcat mpich@3.2.1   3bz5rxx netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2    ccruj2i readline@7.0
+  xcgzqdv ncurses@6.1   z52ltyy netlib-scalapack@2.0.2  t3loxvu py-numpy@1.14.3  5ltus3a sqlite@3.23.1
 
   ==> Do you want to proceed? [y/n] y
   ==> Regenerating tcl module files
@@ -526,13 +526,13 @@ and regenerate the module files:
   root@module-file-tutorial:/# module avail
 
   -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     bzip2-1.0.6-gcc-7.2.0-mwamumj               netlib-scalapack-2.0.2-gcc-7.2.0-jae3ilo    py-numpy-1.14.3-gcc-7.2.0-t3loxvu
-     cmake-3.11.4-gcc-7.2.0-h24ofjs              netlib-scalapack-2.0.2-gcc-7.2.0-lqfhvfh    py-scipy-1.1.0-gcc-7.2.0-fdiryak
-     gdbm-1.14.1-gcc-7.2.0-zk5lhob               netlib-scalapack-2.0.2-gcc-7.2.0-uhzmwog    py-setuptools-39.2.0-gcc-7.2.0-jqhycal
+     bzip2-1.0.6-gcc-7.2.0-mwamumj               netlib-scalapack-2.0.2-gcc-7.2.0-6i5qsqx    py-numpy-1.14.3-gcc-7.2.0-t3loxvu
+     cmake-3.12.0-gcc-7.2.0-6ovorxs              netlib-scalapack-2.0.2-gcc-7.2.0-uhzmwog    py-scipy-1.1.0-gcc-7.2.0-fdiryak
+     gdbm-1.14.1-gcc-7.2.0-zk5lhob               netlib-scalapack-2.0.2-gcc-7.2.0-z52ltyy    py-setuptools-39.2.0-gcc-7.2.0-jqhycal
      mpich-3.2.1-gcc-7.2.0-vt5xcat               openblas-0.3.0-gcc-7.2.0-pdatzbi            python-2.7.15-gcc-7.2.0-c7pnzul
-     ncurses-6.1-gcc-7.2.0-xcgzqdv               openmpi-1.10.2-gcc-7.2.0-2h6xmxh            readline-7.0-gcc-7.2.0-ccruj2i
-     netlib-lapack-3.8.0-gcc-7.2.0-bcikpen       openssl-1.0.2o-gcc-7.2.0-cvldq3v            sqlite-3.23.1-gcc-7.2.0-5ltus3a
-     netlib-scalapack-2.0.2-gcc-7.2.0-d3lertf    pkgconf-1.4.2-gcc-7.2.0-yoxwmgb             zlib-1.2.11-gcc-7.2.0-ezuwp4p
+     ncurses-6.1-gcc-7.2.0-xcgzqdv               openmpi-1.10.2-gcc-7.2.0-6oewzwj            readline-7.0-gcc-7.2.0-ccruj2i
+     netlib-lapack-3.8.0-gcc-7.2.0-7apabqu       openssl-1.0.2o-gcc-7.2.0-cvldq3v            sqlite-3.23.1-gcc-7.2.0-5ltus3a
+     netlib-scalapack-2.0.2-gcc-7.2.0-3bz5rxx    pkgconf-1.4.2-gcc-7.2.0-yoxwmgb             zlib-1.2.11-gcc-7.2.0-ezuwp4p
 
   Use "module spider" to find all possible modules.
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
@@ -562,7 +562,7 @@ exceptions to the blacklist rules you can use ``whitelist``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh -y
+  root@module-file-tutorial:/# spack module tcl refresh -y
   ==> Regenerating tcl module files
 
 
@@ -626,7 +626,7 @@ If you try to regenerate the module files now you will get an error:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh --delete-tree -y
+  root@module-file-tutorial:/# spack module tcl refresh --delete-tree -y
   ==> Error: Name clashes detected in module files:
 
   file: /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/netlib-scalapack-2.0.2-gcc-7.2.0
@@ -673,14 +673,14 @@ Regenerating module files now we obtain:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh --delete-tree -y
+  root@module-file-tutorial:/# spack module tcl refresh --delete-tree -y
   ==> Regenerating tcl module files
 
   root@module-file-tutorial:/# module av
 
   -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
      bzip2-1.0.6-gcc-7.2.0     netlib-lapack-3.8.0-gcc-7.2.0                        openmpi-1.10.2-gcc-7.2.0              python-2.7.15-gcc-7.2.0
-     cmake-3.11.4-gcc-7.2.0    netlib-scalapack-2.0.2-gcc-7.2.0-netlib-mpich        openssl-1.0.2o-gcc-7.2.0              readline-7.0-gcc-7.2.0
+     cmake-3.12.0-gcc-7.2.0    netlib-scalapack-2.0.2-gcc-7.2.0-netlib-mpich        openssl-1.0.2o-gcc-7.2.0              readline-7.0-gcc-7.2.0
      gcc-7.2.0-gcc-5.4.0       netlib-scalapack-2.0.2-gcc-7.2.0-netlib-openmpi      pkgconf-1.4.2-gcc-7.2.0               sqlite-3.23.1-gcc-7.2.0
      gdbm-1.14.1-gcc-7.2.0     netlib-scalapack-2.0.2-gcc-7.2.0-openblas-mpich      py-numpy-1.14.3-gcc-7.2.0-openblas    zlib-1.2.11-gcc-7.2.0
      mpich-3.2.1-gcc-7.2.0     netlib-scalapack-2.0.2-gcc-7.2.0-openblas-openmpi    py-scipy-1.1.0-gcc-7.2.0-openblas
@@ -720,13 +720,13 @@ The final result should look like:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh --delete-tree -y
+  root@module-file-tutorial:/# spack module tcl refresh --delete-tree -y
   ==> Regenerating tcl module files
   root@module-file-tutorial:/# module av
 
   -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
      bzip2/1.0.6-gcc-7.2.0                            netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi          py-scipy/1.1.0-gcc-7.2.0-openblas
-     cmake/3.11.4-gcc-7.2.0                           netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          py-setuptools/39.2.0-gcc-7.2.0
+     cmake/3.12.0-gcc-7.2.0                           netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          py-setuptools/39.2.0-gcc-7.2.0
      gcc/7.2.0-gcc-5.4.0                              netlib-scalapack/2.0.2-gcc-7.2.0-openblas-openmpi (D)    python/2.7.15-gcc-7.2.0
      gdbm/1.14.1-gcc-7.2.0                            openblas/0.3.0-gcc-7.2.0                                 readline/7.0-gcc-7.2.0
      mpich/3.2.1-gcc-7.2.0                            openmpi/1.10.2-gcc-7.2.0                                 sqlite/3.23.1-gcc-7.2.0
@@ -794,7 +794,7 @@ Regenerating the module files results in something like:
 .. code-block:: console
   :emphasize-lines: 15
 
-  root@module-file-tutorial:/# spack tcl refresh -y
+  root@module-file-tutorial:/# spack module tcl refresh -y
   ==> Regenerating tcl module files
 
   root@module-file-tutorial:/# module show gcc
@@ -870,10 +870,10 @@ This time we will be more selective and regenerate only the ``gcc`` and
 
 .. code-block:: console
 
-  root@module-file-tutorial:/#  spack tcl refresh -y gcc
+  root@module-file-tutorial:/#  spack module tcl refresh -y gcc
   ==> Regenerating tcl module files
 
-  root@module-file-tutorial:/# spack tcl refresh -y openmpi
+  root@module-file-tutorial:/# spack module tcl refresh -y openmpi
   ==> Regenerating tcl module files
 
   root@module-file-tutorial:/# module show gcc
@@ -981,7 +981,7 @@ and regenerating the module files for every package that depends on ``python``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack tcl refresh -y ^python
+  root@module-file-tutorial:/# spack module tcl refresh -y ^python
   ==> Regenerating tcl module files
 
 Now the ``py-scipy`` module will be:
@@ -1165,7 +1165,7 @@ If we now regenerate the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack lmod refresh --delete-tree -y
+  root@module-file-tutorial:/# spack module lmod refresh --delete-tree -y
   ==> Regenerating lmod module files
 
 and update ``MODULEPATH`` to point to the ``Core``:
@@ -1198,7 +1198,7 @@ the ``Compiler`` part of the hierarchy:
 
   ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
      bzip2/1.0.6     mpich/3.2.1            openblas/0.3.0    pkgconf/1.4.2               py-setuptools/39.2.0    sqlite/3.23.1
-     cmake/3.11.4    ncurses/6.1            openmpi/1.10.2    py-numpy/1.14.3-openblas    python/2.7.15           zlib/1.2.11
+     cmake/3.12.0    ncurses/6.1            openmpi/1.10.2    py-numpy/1.14.3-openblas    python/2.7.15           zlib/1.2.11
      gdbm/1.14.1     netlib-lapack/3.8.0    openssl/1.0.2o    py-scipy/1.1.0-openblas     readline/7.0
 
   ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
@@ -1223,7 +1223,7 @@ either ``mpich`` or ``openmpi``. Let's start by loading ``mpich``:
 
   ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
      bzip2/1.0.6     mpich/3.2.1         (L)    openblas/0.3.0    pkgconf/1.4.2               py-setuptools/39.2.0    sqlite/3.23.1
-     cmake/3.11.4    ncurses/6.1                openmpi/1.10.2    py-numpy/1.14.3-openblas    python/2.7.15           zlib/1.2.11
+     cmake/3.12.0    ncurses/6.1                openmpi/1.10.2    py-numpy/1.14.3-openblas    python/2.7.15           zlib/1.2.11
      gdbm/1.14.1     netlib-lapack/3.8.0        openssl/1.0.2o    py-scipy/1.1.0-openblas     readline/7.0
 
   ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
@@ -1357,7 +1357,7 @@ After module files have been regenerated as usual:
 
   root@module-file-tutorial:/# module purge
 
-  root@module-file-tutorial:/# spack lmod refresh --delete-tree -y
+  root@module-file-tutorial:/# spack module lmod refresh --delete-tree -y
   ==> Regenerating lmod module files
 
 we can see that now we have additional components in the hierarchy:
@@ -1369,11 +1369,11 @@ we can see that now we have additional components in the hierarchy:
   root@module-file-tutorial:/# module avail
 
   ----------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------------------
-     py-numpy/1.14.3-openblas    py-scipy/1.1.0-openblas
+     py-numpy/1.14.3    py-scipy/1.1.0
 
   ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
      bzip2/1.0.6     mpich/3.2.1            openblas/0.3.0 (L)    pkgconf/1.4.2           readline/7.0
-     cmake/3.11.4    ncurses/6.1            openmpi/1.10.2        py-setuptools/39.2.0    sqlite/3.23.1
+     cmake/3.12.0    ncurses/6.1            openmpi/1.10.2        py-setuptools/39.2.0    sqlite/3.23.1
      gdbm/1.14.1     netlib-lapack/3.8.0    openssl/1.0.2o        python/2.7.15           zlib/1.2.11
 
   ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
@@ -1389,11 +1389,11 @@ we can see that now we have additional components in the hierarchy:
   root@module-file-tutorial:/# module load openmpi
   root@module-file-tutorial:/# module avail
 
-  ------------------ /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openmpi/1.10.2-2h6xmxh/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------
-     netlib-scalapack/2.0.2-openblas
+  ------------------ /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openmpi/1.10.2-6oewzwj/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------
+     netlib-scalapack/2.0.2
 
   ----------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------------------
-     py-numpy/1.14.3-openblas    py-scipy/1.1.0-openblas
+     py-numpy/1.14.3    py-scipy/1.1.0
 
   ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
      bzip2/1.0.6     mpich/3.2.1            openblas/0.3.0 (L)    pkgconf/1.4.2           readline/7.0
@@ -1420,18 +1420,15 @@ Both ``MPI`` and ``LAPACK`` providers will now benefit from the same safety feat
 
 
   Due to MODULEPATH changes, the following have been reloaded:
-    1) netlib-scalapack/2.0.2-openblas
+    1) netlib-scalapack/2.0.2
 
-  root@module-file-tutorial:/# module load netlib-lapack
+  root@module-file-tutorial:/# module load mpich
 
-  Lmod is automatically replacing "openblas/0.3.0" with "netlib-lapack/3.8.0".
+  Lmod is automatically replacing "openmpi/1.10.2" with "mpich/3.2.1".
 
 
-  Inactive Modules:
-    1) py-numpy
-
-  The following have been reloaded with a version change:
-    1) netlib-scalapack/2.0.2-openblas => netlib-scalapack/2.0.2-netlib
+  Due to MODULEPATH changes, the following have been reloaded:
+    1) netlib-scalapack/2.0.2
 
 Because we only compiled ``py-numpy`` with ``openblas`` the module
 is made inactive when we switch the ``LAPACK`` provider. The user
@@ -1589,7 +1586,7 @@ If we regenerate the module files one last time:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack lmod refresh -y netlib-scalapack
+  root@module-file-tutorial:/# spack module lmod refresh -y netlib-scalapack
   ==> Regenerating lmod module files
 
 we'll find the following at the end of each ``netlib-scalapack`` module file:

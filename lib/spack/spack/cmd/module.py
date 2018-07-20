@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,21 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.cmd.common.modules
+import spack.cmd.modules.dotkit
+import spack.cmd.modules.lmod
+import spack.cmd.modules.tcl
 
-description = "manipulate non-hierarchical module files"
+description = "manipulate module files"
 section = "environment"
 level = "short"
 
-#: Type of the modules managed by this command
-_module_type = 'tcl'
+
+_subcommands = {}
 
 
 def setup_parser(subparser):
-    spack.cmd.common.modules.setup_parser(subparser)
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_type')
+    spack.cmd.modules.dotkit.add_command(sp, _subcommands)
+    spack.cmd.modules.lmod.add_command(sp, _subcommands)
+    spack.cmd.modules.tcl.add_command(sp, _subcommands)
 
 
-def tcl(parser, args):
-    spack.cmd.common.modules.modules_cmd(
-        parser, args, module_type=_module_type
-    )
+def module(parser, args):
+    _subcommands[args.module_type](parser, args)
