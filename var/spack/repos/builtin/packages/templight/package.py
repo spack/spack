@@ -26,6 +26,7 @@ from spack import *
 import os
 
 
+# FIXME: If this works, take more inspiration from llvm recipe
 class Templight(CMakePackage):
     """Templight is a Clang-based tool to profile the time and memory
        consumption of template instantiations and to perform interactive
@@ -51,6 +52,9 @@ class Templight(CMakePackage):
              destination='llvm/tools',
              placement='clang',
              when='@develop')
+    # FIXME: Add templight patch for the current develop version
+
+    # FIXME: Building on top of develop is brittle, find something more stable
 
     # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
     # are doing before switching to them
@@ -58,13 +62,9 @@ class Templight(CMakePackage):
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
-    # FIXME: Add templight patch for the current develop version
-
     depends_on('cmake@3.4.3:', type='build')
     depends_on('python')
     depends_on('py-lit', type=('build', 'run'))
-
-    # FIXME: If this works, take more inspiration from llvm recipe
 
     def patch(self):
         # We start with the templight source tree and an "llvm" subdir.
