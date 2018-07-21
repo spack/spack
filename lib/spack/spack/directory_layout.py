@@ -36,7 +36,6 @@ import spack.config
 import spack.spec
 from spack.error import SpackError
 
-
 def _check_concrete(spec):
     """If the spec is not concrete, raise a ValueError"""
     if not spec.concrete:
@@ -263,7 +262,11 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        mkdirp(self.metadata_path(spec))
+        # Create install directory with properly configured permissions
+        # Cannot import at top of file
+        from spack.package_prefs import get_package_permissions_mask
+        mask = get_package_permissions_mask(spec)
+        mkdirp(self.metadata_path(spec), mode=mask)
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):

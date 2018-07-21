@@ -78,6 +78,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
+from spack.package_prefs import get_package_permissions_mask
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1527,6 +1528,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
+            else:
+                # Check for proper permissions
+                mode = os.stat(self.prefix).st_mode
+                mask = get_package_permissions_mask(self.spec)
+                if mode & ~mask:
+                    os.chmod(self.prefix, mode & mask)
 
             # Fork a child to do the actual installation
             # we preserve verbosity settings across installs.
