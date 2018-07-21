@@ -22,15 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import stat
 import os
 import grp
-import spack
 from spack.package_prefs import get_package_permissions_mask, get_package_group
 
 
 def forall_files(path, fn, args):
-    for root, dirs, files in os.walk(path):  
+    for root, dirs, files in os.walk(path):
         for d in dirs:
             fn(os.path.join(root, d), *args)
         for f in files:

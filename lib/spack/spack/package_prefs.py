@@ -275,6 +275,7 @@ def get_package_permissions_mask(spec):
 
     return perm_mask
 
+
 def get_package_group(spec):
     """Return the unix group associated with the spec"""
     allpkgs = get_packages_config()
@@ -284,6 +285,7 @@ def get_package_group(spec):
         return allpkgs['all']['group']
     else:
         return ''
+
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):
     """Raised when a disallowed virtual is found in packages.yaml"""
