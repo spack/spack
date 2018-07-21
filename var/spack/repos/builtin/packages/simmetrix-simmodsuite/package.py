@@ -101,6 +101,44 @@ def simmodsuite_releases():
          'ParallelMeshSimAdapt': ['f82a8f60760503f524714634ffe85cfb', 'paralleladapt'],
          'ParallelMeshSim': ['17596e3618f91c8d4a8be750051271a5', 'parallelmesh']
       }
+    },
+    {
+      'version': '11.0-180619',
+      'components': {
+         'gmvoxel': ['b3fef983a5a23b9cdc17d69dcd4d7689', 'voxel'],
+         'msadapt': ['b762d2429bdccf83085f9766beba8799', 'base'],
+         'mscore': ['ef694c4b928893bb9021eec8c9273230', 'base'],
+         'fdcore': ['1f9bb2ff299e323ec7cbafc3c633f481', 'base'],
+         'msadv': ['c625d3aaa59db0977cef36c887f902ca', 'adv'],
+         'psint': ['6e52c7be443f8b0fffc0e8489d6e7965', 'parasolid'],
+         'aciskrnl': ['201a136fb8f5aea6799db630548acdc0', 'acis'],
+         'discrete': ['289c21baf8690b5cdda3f5499f97fda0', 'discrete'],
+         'gmimport': ['7b5c9b1a75dc9eb283dce80e5e0747eb', 'import'],
+         'gmadv': ['1d1a01752efc3d2c38ec6f2e9aa8727b', 'advmodel'],
+         'msparallelmesh': ['fc014dab94e5e1dcbc82db68dd99262c', 'parallelmesh'],
+         'gmabstract': ['249ca5620801439bff8cec6d7f9dd0d0', 'abstract'],
+         'gmcore': ['1b6b3874f5ed4027681a27a6a7c9369c', 'base'],
+         'pskrnl': ['6ea83d632484bdd0a05511e66fe5fa67', 'parasolid'],
+         'msparalleladapt': ['d8882e5cb680805f1174df5ceea11414', 'paralleladapt'],
+      },
+      'docs': {
+         'MeshSimAdv': ['f5c2c0f58aeaeebbe04527d681386eeb', 'adv'],
+         'GeomSimAcis': ['9da1c3486fac8ed7deb5d65f163cd4e0', 'acis'],
+         'GeomSimImport': ['828d1db75cad7d8920471a31fb777c4b', 'import'],
+         'GeomSimSolidWorks': ['4fcdc8a9a73e1b2a65d77d6875bc5fc9', 'parasolid'],
+         'ParallelMeshSimAdapt': ['f11d765df98175c806a67a8fbc0aaf5a', 'paralleladapt'],
+         'GeomSimVoxel': ['0a20ab050ae67a9e7d8c10a3ca6d33b9', 'voxel'],
+         'GeomSim': ['3d9c30616475636f4d2c0da85684274c', 'base'],
+         'GeomSimAdvanced': ['d178a1ad442147b54d6eeb00480506dc', 'advmodel'],
+         'MeshSimAdapt': ['ea2272dd9577f8d52fd749efc33e9c15', 'base'],
+         'ParallelMeshSim': ['2729d1a03764a1fe015eac881c4ca73a', 'parallelmesh'],
+         'MeshSim': ['ea2246f55e1fcf732355afb832252b0c', 'base'],
+         'FieldSim': ['aeca95adfa92710bc6b731108124d961', 'base'],
+         'GeomSimParasolid': ['59680124b20a45fe3122f364be485398', 'parasolid'],
+         'GeomSimAbstract': ['dfe2559a7d1fb837a39afd9b24f12a26', 'abstract'],
+         'GeomSimDiscrete': ['233fa79ef98483ad69d45647ec409e48', 'discrete'],
+         'GeomSimProe': ['b2587521678eb121384d22d686b5456d', 'granite'],
+      }
     }
     ]
     return releases
