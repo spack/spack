@@ -413,12 +413,14 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def mkdirp(*paths):
+def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed."""
+    mode = kwargs.get('mode', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     for path in paths:
         if not os.path.exists(path):
             try:
-                os.makedirs(path)
+                os.makedirs(path, mode)
+                os.chmod(path, mode)  # For systems that ignore makedirs mode
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
