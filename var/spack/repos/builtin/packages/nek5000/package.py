@@ -97,25 +97,20 @@ class Nek5000(Package):
 
     @run_after('install')
     def test_install(self):
-        currentDir = os.getcwd()
-        eddyDir = 'short_tests/eddy'
-        os.chdir(eddyDir)
-
-        os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
-        if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
-            msg = 'Cannot build example: short_tests/eddy.'
-            raise RuntimeError(msg)
-
-        os.chdir(currentDir)
+        with working_dir('short_tests/eddy'):
+            os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
+            if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
+                msg = 'Cannot build example: short_tests/eddy.'
+                raise RuntimeError(msg)
 
     def install(self, spec, prefix):
-        toolsDir   = 'tools'
-        binDir     = 'bin'
+        tools_dir   = 'tools'
+        bin_dir     = 'bin'
 
         # Do not use the Spack compiler wrappers.
         # Use directly the compilers:
-        FC  = self.compiler.f77
-        CC  = self.compiler.cc
+        fc  = self.compiler.f77
+        cc  = self.compiler.cc
 
         fflags = spec.compiler_flags['fflags']
         cflags = spec.compiler_flags['cflags']
@@ -149,10 +144,10 @@ class Nek5000(Package):
 
         # Build the tools, maketools copy them to Nek5000/bin by default.
         # We will then install Nek5000/bin under prefix after that.
-        with working_dir(toolsDir):
+        with working_dir(tools_dir):
             # Update the maketools script to use correct compilers
-            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
-            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(fc), 'maketools')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'maketools')
             if fflags:
                 filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
                             'maketools')
@@ -194,31 +189,31 @@ class Nek5000(Package):
             maxnel = self.spec.variants['MAXNEL'].value
             filter_file(r'^#MAXNEL\s*=.*', 'MAXNEL=' + maxnel, 'maketools')
 
-            makeTools = Executable('./maketools')
+            maketools = Executable('./maketools')
 
             # Build the tools
             if '+genbox' in spec:
-                makeTools('genbox')
+                maketools('genbox')
             # "ERROR: int_tp does not exist!"
             # if '+int_tp' in spec:
-            #     makeTools('int_tp')
+            #     maketools('int_tp')
             if '+n2to3' in spec:
-                makeTools('n2to3')
+                maketools('n2to3')
             if '+postnek' in spec:
-                makeTools('postnek')
+                maketools('postnek')
             if '+reatore2' in spec:
-                makeTools('reatore2')
+                maketools('reatore2')
             if '+genmap' in spec:
-                makeTools('genmap')
+                maketools('genmap')
             if '+nekmerge' in spec:
-                makeTools('nekmerge')
+                maketools('nekmerge')
             if '+prenek' in spec:
-                makeTools('prenek')
+                maketools('prenek')
 
-        with working_dir(binDir):
+        with working_dir(bin_dir):
             if '+mpi' in spec:
-                FC  = spec['mpi'].mpif77
-                CC  = spec['mpi'].mpicc
+                fc  = spec['mpi'].mpif77
+                cc  = spec['mpi'].mpicc
             else:
                 filter_file(r'^#MPI=0', 'MPI=0', 'makenek')
 
@@ -232,8 +227,8 @@ class Nek5000(Package):
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
-            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'makenek')
-            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'makenek')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(fc), 'makenek')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'makenek')
             filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
                         prefix.bin.Nek5000 + '\"',  'makenek')
             if fflags:
@@ -254,7 +249,7 @@ class Nek5000(Package):
                             '$(FC) -c -qextname $(L0)', 'makefile.template')
 
         # Install Nek5000/bin in prefix/bin
-        install_tree(binDir, prefix.bin)
+        install_tree(bin_dir, prefix.bin)
 
         # Copy Nek5000 source to prefix/bin
         install_tree('../Nek5000', prefix.bin.Nek5000)

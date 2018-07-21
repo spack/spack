@@ -203,13 +203,13 @@ def tarball_path_name(spec, ext):
 
 def checksum_tarball(file):
     # calculate sha256 hash of tar file
-    BLOCKSIZE = 65536
+    block_size = 65536
     hasher = hashlib.sha256()
     with open(file, 'rb') as tfile:
-        buf = tfile.read(BLOCKSIZE)
+        buf = tfile.read(block_size)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = tfile.read(BLOCKSIZE)
+            buf = tfile.read(block_size)
     return hasher.hexdigest()
 
 

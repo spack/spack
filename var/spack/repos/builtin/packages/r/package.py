@@ -107,16 +107,16 @@ class R(AutotoolsPackage):
         spec   = self.spec
         prefix = self.prefix
 
-        tclConfig_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
-        tkConfig_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
+        tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
+        tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
 
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
             '--enable-R-shlib',
             '--enable-BLAS-shlib',
             '--enable-R-framework=no',
-            '--with-tcl-config={0}'.format(tclConfig_path),
-            '--with-tk-config={0}'.format(tkConfig_path),
+            '--with-tcl-config={0}'.format(tcl_config_path),
+            '--with-tk-config={0}'.format(tk_config_path),
         ]
 
         if '+external-lapack' in spec:

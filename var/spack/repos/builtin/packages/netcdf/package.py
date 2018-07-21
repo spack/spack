@@ -153,10 +153,10 @@ class Netcdf(AutotoolsPackage):
                   r'\1{0}\2'.format(max_vars))
 
     def configure_args(self):
-        CFLAGS = []
-        CPPFLAGS = []
-        LDFLAGS = []
-        LIBS = []
+        cflags = []
+        cppflags = []
+        ldflags = []
+        libs = []
 
         config_args = ['--enable-v2',
                        '--enable-utilities',
@@ -177,7 +177,7 @@ class Netcdf(AutotoolsPackage):
         if '~shared' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            CFLAGS.append(self.compiler.pic_flag)
+            cflags.append(self.compiler.pic_flag)
 
         config_args += self.enable_or_disable('dap')
         # config_args += self.enable_or_disable('cdmremote')
@@ -189,10 +189,10 @@ class Netcdf(AutotoolsPackage):
             # undefined reference to `SSL_CTX_use_certificate_chain_file
             curl = self.spec['curl']
             curl_libs = curl.libs
-            LIBS.append(curl_libs.link_flags)
-            LDFLAGS.append(curl_libs.search_flags)
+            libs.append(curl_libs.link_flags)
+            ldflags.append(curl_libs.search_flags)
             # TODO: figure out how to get correct flags via headers.cpp_flags
-            CPPFLAGS.append('-I' + curl.prefix.include)
+            cppflags.append('-I' + curl.prefix.include)
 
         if self.spec.satisfies('@4.4:'):
             if '+mpi' in self.spec:
@@ -204,16 +204,16 @@ class Netcdf(AutotoolsPackage):
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
         # used instead.
         hdf5_hl = self.spec['hdf5:hl']
-        CPPFLAGS.append(hdf5_hl.headers.cpp_flags)
-        LDFLAGS.append(hdf5_hl.libs.search_flags)
+        cppflags.append(hdf5_hl.headers.cpp_flags)
+        ldflags.append(hdf5_hl.libs.search_flags)
 
         if '+parallel-netcdf' in self.spec:
             config_args.append('--enable-pnetcdf')
             pnetcdf = self.spec['parallel-netcdf']
-            CPPFLAGS.append(pnetcdf.headers.cpp_flags)
+            cppflags.append(pnetcdf.headers.cpp_flags)
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
-            LDFLAGS.append('-L' + pnetcdf.prefix.lib)
+            ldflags.append('-L' + pnetcdf.prefix.lib)
         else:
             config_args.append('--disable-pnetcdf')
 
@@ -223,26 +223,26 @@ class Netcdf(AutotoolsPackage):
         config_args += self.enable_or_disable('hdf4')
         if '+hdf4' in self.spec:
             hdf4 = self.spec['hdf']
-            CPPFLAGS.append(hdf4.headers.cpp_flags)
+            cppflags.append(hdf4.headers.cpp_flags)
             # TODO: change to hdf4.libs.search_flags once 'hdf'
             # package gets custom implementation of 'libs' property.
-            LDFLAGS.append('-L' + hdf4.prefix.lib)
+            ldflags.append('-L' + hdf4.prefix.lib)
             # TODO: change to self.spec['jpeg'].libs.link_flags once the
             # implementations of 'jpeg' virtual package get 'jpeg_libs'
             # property.
-            LIBS.append('-ljpeg')
+            libs.append('-ljpeg')
             if '+szip' in hdf4:
                 # This should also come from hdf4.libs
-                LIBS.append('-lsz')
+                libs.append('-lsz')
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # Use the netcdf-fortran package to install Fortran support.
 
-        config_args.append('CFLAGS=' + ' '.join(CFLAGS))
-        config_args.append('CPPFLAGS=' + ' '.join(CPPFLAGS))
-        config_args.append('LDFLAGS=' + ' '.join(LDFLAGS))
-        config_args.append('LIBS=' + ' '.join(LIBS))
+        config_args.append('CFLAGS=' + ' '.join(cflags))
+        config_args.append('CPPFLAGS=' + ' '.join(cppflags))
+        config_args.append('LDFLAGS=' + ' '.join(ldflags))
+        config_args.append('LIBS=' + ' '.join(libs))
 
         return config_args
 
