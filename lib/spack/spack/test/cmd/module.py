@@ -43,6 +43,7 @@ def _module_files(module_type, *specs):
         ['rm', 'doesnotexist'],  # Try to remove a non existing module
         ['find', 'mpileaks'],  # Try to find a module with multiple matches
         ['find', 'doesnotexist'],  # Try to find a module with no matches
+        ['find', '--unkown_args'],  # Try to give an unknown argument
     ]
 )
 def failure_args(request):
@@ -65,6 +66,17 @@ def module_type(request):
 def test_exit_with_failure(database, module_type, failure_args):
     with pytest.raises(spack.main.SpackCommandError):
         module(module_type, *failure_args)
+
+
+@pytest.mark.db
+@pytest.mark.parametrize('deprecated_command', [
+    ('refresh', '-m', 'tcl', 'mpileaks'),
+    ('rm', '-m', 'tcl', '-m', 'lmod', 'mpileaks'),
+    ('find', 'mpileaks'),
+])
+def test_deprecated_command(database, deprecated_command):
+    with pytest.raises(spack.main.SpackCommandError):
+        module(*deprecated_command)
 
 
 @pytest.mark.db
