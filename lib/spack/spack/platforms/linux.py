@@ -49,5 +49,5 @@ class Linux(Platform):
         self.add_operating_system(str(linux_dist), linux_dist)
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return 'linux' in platform.system().lower()

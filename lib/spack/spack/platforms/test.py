@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.architecture import Platform, Target
-from spack.architecture import OperatingSystem as OS
+from spack.architecture import OperatingSystem
 
 
 class Test(Platform):
@@ -41,9 +41,11 @@ class Test(Platform):
         self.add_target(self.default, Target(self.default))
         self.add_target(self.front_end, Target(self.front_end))
 
-        self.add_operating_system(self.default_os, OS('debian', 6))
-        self.add_operating_system(self.front_os, OS('redhat', 6))
+        self.add_operating_system(
+            self.default_os, OperatingSystem('debian', 6))
+        self.add_operating_system(
+            self.front_os, OperatingSystem('redhat', 6))
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return True

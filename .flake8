@@ -16,6 +16,9 @@
 # These are required to get the package.py files to test clean:
 # - F999: syntax error in doctest
 #
+# Exempt to allow decorator classes to be lowercase, but follow otherwise:
+# - N801: CapWords for class names.
+#
 [flake8]
-ignore = E129,E221,E241,E272,E731,F999
+ignore = E129,E221,E241,E272,E731,F999,N801
 max-line-length = 79
