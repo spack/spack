@@ -37,7 +37,7 @@ def temp_env():
     os.environ = old_env
 
 
-def add_O3_to_build_system_cflags(pkg, name, flags):
+def add_o3_to_build_system_cflags(pkg, name, flags):
     build_system_flags = []
     if name == 'cflags':
         build_system_flags.append('-O3')
@@ -137,7 +137,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('libelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = add_O3_to_build_system_cflags
+        pkg.flag_handler = add_o3_to_build_system_cflags
         spack.build_environment.setup_package(pkg, False)
 
         assert '-g' in os.environ['SPACK_CPPFLAGS']
@@ -149,7 +149,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = add_O3_to_build_system_cflags
+        pkg.flag_handler = add_o3_to_build_system_cflags
         spack.build_environment.setup_package(pkg, False)
 
         assert '-g' in os.environ['SPACK_CPPFLAGS']

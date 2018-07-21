@@ -171,11 +171,11 @@ class TestLmod(object):
         path = module.layout.filename
         mpi_spec = spec['mpi']
 
-        mpiElement = "{0}/{1}-{2}/".format(
+        mpi_element = "{0}/{1}-{2}/".format(
             mpi_spec.name, mpi_spec.version, mpi_spec.dag_hash(length=7)
         )
 
-        assert mpiElement in path
+        assert mpi_element in path
 
         mpileaks_spec = spec
         mpileaks_element = "{0}/{1}.lua".format(

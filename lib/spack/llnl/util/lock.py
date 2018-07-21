@@ -150,6 +150,11 @@ class Lock(object):
 
     def _ensure_parent_directory(self):
         parent = os.path.dirname(self.path)
+
+        # relative paths to lockfiles in the current directory have no parent
+        if not parent:
+            return '.'
+
         try:
             os.makedirs(parent)
         except OSError as e:

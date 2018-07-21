@@ -676,8 +676,8 @@ def create(parser, args):
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
-    PackageClass = templates[build_system]
-    package = PackageClass(name, url, versions)
+    package_class = templates[build_system]
+    package = package_class(name, url, versions)
     tty.msg("Created template for {0} package".format(package.name))
 
     # Create a directory for the new package
