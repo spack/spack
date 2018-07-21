@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import stat
 from six import string_types
 from six import iteritems
 
@@ -251,6 +252,38 @@ def is_spec_buildable(spec):
         return True
     return allpkgs[spec.name]['buildable']
 
+
+def get_package_permissions_mask(spec):
+    """Return the permissions configured for the spec"""
+    allpkgs = get_packages_config()
+    if spec.name in allpkgs:
+        perms = allpkgs[spec.name]['permissions']
+    elif 'all' in allpkgs:
+        perms = allpkgs['all']['permissions']
+    else:
+        perms = 'ugo'
+
+    # rwx permissions set by build_system
+    # Only ugo granularity configurable
+    perm_mask = 0
+    if 'u' in perms:
+        perm_mask |= stat.S_IRWXU
+    if 'g' in perms:
+        perm_mask |= stat.S_IRWXG
+    if 'o' in perms:
+        perm_mask |= stat.S_IRWXO
+
+    return perm_mask
+
+def get_package_group(spec):
+    """Return the unix group associated with the spec"""
+    allpkgs = get_packages_config()
+    if spec.name in allpkgs:
+        return allpkgs[spec.name]['group']
+    elif 'all' in allpkgs:
+        return allpkgs['all']['group']
+    else:
+        return ''
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):
     """Raised when a disallowed virtual is found in packages.yaml"""

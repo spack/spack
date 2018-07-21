@@ -59,6 +59,14 @@ schema = {
                             'type':  'boolean',
                             'default': True,
                         },
+                        'permissions': {
+                            'type':  'string',
+                            'default': 'ugo',
+                        },
+                        'group': {
+                            'type':  'string',
+                            'default': '',
+                        },
                         'modules': {
                             'type': 'object',
                             'default': {},
