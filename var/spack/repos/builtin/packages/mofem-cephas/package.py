@@ -43,7 +43,7 @@ class MofemCephas(CMakePackage):
     variant('adol-c', default=True, description='Compile with Adol-C')
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
-    variant('slepc', default=True, description='Compile with Slepc')
+    variant('slepc', default=False, description='Compile with Slepc')
 
     depends_on("mpi")
     depends_on("boost")
