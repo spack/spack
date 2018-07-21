@@ -37,9 +37,9 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986',
-            url='https://codeload.github.com/NCAR/ncl/tar.gz/6.4.0',
-            extension='tar.gz')
+    url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
+
+    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
 
     patch('spack_ncl.patch', when="@6.4.0")
     # Make ncl compile with hdf5 1.10
