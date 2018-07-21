@@ -46,9 +46,9 @@ def post_install(spec):
     if not spec.external:
         perms_mask = get_package_permissions_mask(spec)
         group = get_package_group(spec)
-        
+
         forall_files(spec.prefix, chmod_mask, [perms_mask])
-        
+
         if group:
             gid = grp.getgrnam(group).gr_gid
             forall_files(spec.prefix, os.chown, [-1, gid])
