@@ -78,13 +78,13 @@ class Pumi(CMakePackage):
             ('ON' if '+fortran' in spec else 'OFF')
         ]
         if self.spec.satisfies('simmodsuite=base'):
-          args.append('-DENABLE_SIMMETRIX=ON')
+            args.append('-DENABLE_SIMMETRIX=ON')
         if self.spec.satisfies('simmodsuite=kernels') or \
            self.spec.satisfies('simmodsuite=full'):
-          args.append('-DENABLE_SIMMETRIX=ON')
-          args.append('-DSIM_PARASOLID=ON')
-          args.append('-DSIM_ACIS=ON')
-          args.append('-DSIM_DISCRETE=ON')
-          mpi_id = spec['mpi'].name + spec['mpi'].version.string
-          args.append('-DSIM_MPI=' +  mpi_id)
+            args.append('-DENABLE_SIMMETRIX=ON')
+            args.append('-DSIM_PARASOLID=ON')
+            args.append('-DSIM_ACIS=ON')
+            args.append('-DSIM_DISCRETE=ON')
+            mpi_id = spec['mpi'].name + spec['mpi'].version.string
+            args.append('-DSIM_MPI=' + mpi_id)
         return args
