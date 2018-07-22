@@ -32,13 +32,12 @@ import pytest
 
 
 @pytest.fixture()
-def stage():
+def stage(tmpdir_factory):
     """Creates a stage with the directory structure for the tests."""
 
-    s = Stage('copy-install-test')
-    s.create()
+    s = tmpdir_factory.mktemp('filesystem_test')
 
-    with fs.working_dir(s.path):
+    with s.as_cwd():
         # Create source file hierarchy
         fs.touchp('source/1')
         fs.touchp('source/a/b/2')
@@ -56,8 +55,6 @@ def stage():
 
     yield s
 
-    s.destroy()
-
 
 class TestCopy:
     """Tests for ``filesystem.copy``"""
@@ -65,7 +62,7 @@ class TestCopy:
     def test_file_dest(self, stage):
         """Test using a filename as the destination."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.copy('source/1', 'dest/1')
 
             assert os.path.exists('dest/1')
@@ -74,7 +71,7 @@ class TestCopy:
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.copy('source/1', 'dest')
 
             assert os.path.exists('dest/1')
@@ -87,7 +84,7 @@ class TestInstall:
     def test_file_dest(self, stage):
         """Test using a filename as the destination."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.install('source/1', 'dest/1')
 
             assert os.path.exists('dest/1')
@@ -96,7 +93,7 @@ class TestInstall:
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.install('source/1', 'dest')
 
             assert os.path.exists('dest/1')
@@ -109,7 +106,7 @@ class TestCopyTree:
     def test_existing_dir(self, stage):
         """Test copying to an existing directory."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.copy_tree('source', 'dest')
 
             assert os.path.exists('dest/a/b/2')
@@ -117,7 +114,7 @@ class TestCopyTree:
     def test_non_existing_dir(self, stage):
         """Test copying to a non-existing directory."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.copy_tree('source', 'dest/sub/directory')
 
             assert os.path.exists('dest/sub/directory/a/b/2')
@@ -125,7 +122,7 @@ class TestCopyTree:
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.copy_tree('source', 'dest', symlinks=True)
 
             assert os.path.exists('dest/2')
@@ -134,7 +131,7 @@ class TestCopyTree:
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.copy_tree('source', 'dest', symlinks=False)
 
             assert os.path.exists('dest/2')
@@ -147,7 +144,7 @@ class TestInstallTree:
     def test_existing_dir(self, stage):
         """Test installing to an existing directory."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.install_tree('source', 'dest')
 
             assert os.path.exists('dest/a/b/2')
@@ -155,7 +152,7 @@ class TestInstallTree:
     def test_non_existing_dir(self, stage):
         """Test installing to a non-existing directory."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.install_tree('source', 'dest/sub/directory')
 
             assert os.path.exists('dest/sub/directory/a/b/2')
@@ -163,7 +160,7 @@ class TestInstallTree:
     def test_symlinks_true(self, stage):
         """Test installing with symlink preservation."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.install_tree('source', 'dest', symlinks=True)
 
             assert os.path.exists('dest/2')
@@ -172,7 +169,7 @@ class TestInstallTree:
     def test_symlinks_false(self, stage):
         """Test installing without symlink preservation."""
 
-        with fs.working_dir(stage.path):
+        with fs.working_dir(str(stage)):
             fs.install_tree('source', 'dest', symlinks=False)
 
             assert os.path.exists('dest/2')
