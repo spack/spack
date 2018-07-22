@@ -993,6 +993,27 @@ def check_pkg_attributes(pkg):
             % (pkg.name, comma_and(quote(conflicts))))
 
 
+def _check_version_attributes(fetcher, pkg, version):
+    """Ensure that the fetcher for a version is not ambiguous.
+
+    This assumes that we have already determined the fetcher for the
+    specific version using ``for_package_version()``
+    """
+    all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
+
+    args = pkg.versions[version]
+    extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr])
+    extra.intersection_update(all_optionals)
+
+    if extra:
+        legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
+        raise FetcherConflict(
+            "%s version '%s' has extra arguments: %s"
+            % (pkg.name, version, comma_and(quote(extra))),
+            "Valid arguments for a %s fetcher are: \n    %s"
+            % (fetcher.url_attr, comma_and(quote(legal_attrs))))
+
+
 def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
@@ -1033,6 +1054,7 @@ def for_package_version(pkg, version):
     # If the version specifies a `url_attr` directly, use that.
     for fetcher in all_strategies:
         if fetcher.url_attr in args:
+            _check_version_attributes(fetcher, pkg, version)
             return fetcher(**args)
 
     # if a version's optional attributes imply a particular fetch
@@ -1041,6 +1063,7 @@ def for_package_version(pkg, version):
         if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == 'url':
             optionals = fetcher.optional_attrs
             if optionals and any(a in args for a in optionals):
+                _check_version_attributes(fetcher, pkg, version)
                 return _from_merged_attrs(fetcher, pkg, version)
 
     # if the optional attributes tell us nothing, then use any `url_attr`
@@ -1048,6 +1071,7 @@ def for_package_version(pkg, version):
     # defined first in this file.
     for fetcher in all_strategies:
         if hasattr(pkg, fetcher.url_attr):
+            _check_version_attributes(fetcher, pkg, version)
             return _from_merged_attrs(fetcher, pkg, version)
 
     raise InvalidArgsError(pkg, version, **args)
