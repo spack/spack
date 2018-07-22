@@ -25,12 +25,13 @@
 from spack import *
 
 
-class GitAndUrlTopLevel(Package):
+class GitSvnTopLevel(Package):
     """Mock package that uses git for fetching."""
     homepage = "http://www.git-fetch-example.com"
 
+    # can't have two VCS fetchers.
     git = 'https://example.com/some/git/repo'
-    url = 'https://example.com/some/tarball-1.0.tar.gz'
+    svn = 'https://example.com/some/svn/repo'
 
     version('2.0')
 
