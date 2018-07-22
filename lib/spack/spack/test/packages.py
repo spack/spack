@@ -275,8 +275,8 @@ def test_two_vcs_fetchers_top_level(mock_packages, config):
         spack.fetch_strategy.for_package_version(pkg, '1.0')
 
 
-def test_git_url_top_level(mock_packages, config):
-    """Test fetch strategy inference when url is specified with a VCS."""
+def test_git_url_top_level_url_versions(mock_packages, config):
+    """Test URL fetch strategy inference when url is specified with git."""
 
     pkg = spack.repo.get('git-url-top-level')
 
@@ -299,6 +299,12 @@ def test_git_url_top_level(mock_packages, config):
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.3.tar.gz'
     assert fetcher.digest == 'abc23'
+
+
+def test_git_url_top_level_git_versions(mock_packages, config):
+    """Test git fetch strategy inference when url is specified with git."""
+
+    pkg = spack.repo.get('git-url-top-level')
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '3.0')
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
@@ -341,3 +347,21 @@ def test_git_url_top_level(mock_packages, config):
     assert fetcher.tag is None
     assert fetcher.commit is None
     assert fetcher.branch == 'develop'
+
+
+def test_git_url_top_level_conflicts(mock_packages, config):
+    """Test git fetch strategy inference when url is specified with git."""
+
+    pkg = spack.repo.get('git-url-top-level')
+
+    with pytest.raises(spack.fetch_strategy.FetcherConflict):
+        spack.fetch_strategy.for_package_version(pkg, '1.0')
+
+    with pytest.raises(spack.fetch_strategy.FetcherConflict):
+        spack.fetch_strategy.for_package_version(pkg, '1.1')
+
+    with pytest.raises(spack.fetch_strategy.FetcherConflict):
+        spack.fetch_strategy.for_package_version(pkg, '1.2')
+
+    with pytest.raises(spack.fetch_strategy.FetcherConflict):
+        spack.fetch_strategy.for_package_version(pkg, '1.3')
