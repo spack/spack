@@ -266,7 +266,7 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def copy(src, dest):
+def copy(src, dest, permissions=False):
     """Copies the file *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
@@ -276,25 +276,10 @@ def copy(src, dest):
         src (str): the file to copy
         dest (str): the destination file or directory
     """
-    tty.debug('Copying {0} to {1}'.format(src, dest))
-
-    shutil.copy(src, dest)
-
-
-def install(src, dest):
-    """Installs the file *src* to the file or directory *dest*.
-
-    If *dest* specifies a directory, the file will be installed into *dest*
-    using the base filename from *src*.
-
-    Works similarly to :py:func:`copy` with the addition of setting proper
-    permissions on the installed file.
-
-    Parameters:
-        src (str): the file to install
-        dest (str): the destination file or directory
-    """
-    tty.debug('Installing {0} to {1}'.format(src, dest))
+    if permissions:
+        tty.debug('Installing {0} to {1}'.format(src, dest))
+    else:
+        tty.debug('Copying {0} to {1}'.format(src, dest))
 
     # Expand dest to its eventual full path if it is a directory.
     if os.path.isdir(dest):
@@ -302,11 +287,25 @@ def install(src, dest):
 
     shutil.copy(src, dest)
 
-    set_install_permissions(dest)
-    copy_mode(src, dest)
+    if permissions:
+        set_install_permissions(dest)
+        copy_mode(src, dest)
 
 
-def copy_tree(src, dest, symlinks=True):
+def install(src, dest, permissions=True):
+    """Installs the file *src* to the file or directory *dest*.
+
+    Same as :py:func:`copy` with the addition of setting proper
+    permissions on the installed file.
+
+    Parameters:
+        src (str): the file to install
+        dest (str): the destination file or directory
+    """
+    copy(src, dest, permissions)
+
+
+def copy_tree(src, dest, symlinks=True, permissions=False):
     """Recursively copy an entire directory tree rooted at *src*.
 
     If the destination directory *dest* does not already exist, it will
@@ -322,7 +321,10 @@ def copy_tree(src, dest, symlinks=True):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
     """
-    tty.debug('Copying {0} to {1}'.format(src, dest))
+    if permissions:
+        tty.debug('Installing {0} to {1}'.format(src, dest))
+    else:
+        tty.debug('Copying {0} to {1}'.format(src, dest))
 
     mkdirp(dest)
 
@@ -337,19 +339,15 @@ def copy_tree(src, dest, symlinks=True):
         else:
             shutil.copyfile(s, d)
 
+        if permissions:
+            set_install_permissions(d)
+            copy_mode(s, d)
 
-def install_tree(src, dest, symlinks=True):
+
+def install_tree(src, dest, symlinks=True, permissions=True):
     """Recursively install an entire directory tree rooted at *src*.
 
-    If the destination directory *dest* does not already exist, it will
-    be created as well as missing parent directories.
-
-    If *symlinks* is true, symbolic links in the source tree are represented
-    as symbolic links in the new tree and the metadata of the original links
-    will be copied as far as the platform allows; if false, the contents and
-    metadata of the linked files are installed to the new tree.
-
-    Works similarly to :py:func:`copy_tree` with the addition of setting proper
+    Same as :py:func:`copy_tree` with the addition of setting proper
     permissions on the installed files and directories.
 
     Parameters:
@@ -357,23 +355,7 @@ def install_tree(src, dest, symlinks=True):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
     """
-    tty.debug('Installing {0} to {1}'.format(src, dest))
-
-    mkdirp(dest)
-
-    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
-        if symlinks and os.path.islink(s):
-            # Note that this won't rewrite absolute links into the old
-            # root to point at the new root. Should we handle that case?
-            target = os.readlink(s)
-            os.symlink(os.path.abspath(target), d)
-        elif os.path.isdir(s):
-            mkdirp(d)
-        else:
-            shutil.copyfile(s, d)
-
-        set_install_permissions(d)
-        copy_mode(s, d)
+    copy_tree(src, dest, symlinks, permissions)
 
 
 def is_exe(path):
