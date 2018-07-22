@@ -174,11 +174,11 @@ def simmetrix_makeDocUrl(name):
     return prefix + name + suffix
 
 
-def simmetrix_setKernelCMakePrefixPath(spec, path, run_env):
+def simmetrix_setKernelCMakePrefixPath(spec, path, env):
     if '+acis' in spec:
-        run_env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'acisKrnl'))
+        env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'acisKrnl'))
     if '+parasolid' in spec:
-        run_env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'psKrnl'))
+        env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'psKrnl'))
 
 
 def simmetrix_resource(name, url, md5, condition):
@@ -259,6 +259,18 @@ class SimmetrixSimmodsuite(Package):
             url = simmetrix_makeDocUrl(name)
             condition = "@{0}+{1}".format(simVersion, feature)
             simmetrix_resource(name, url, md5, condition)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        if self.spec.satisfies('sim_os=rhel7'):
+            oslib = simmetrix_getLibDir('rhel7')
+            archlib = join_path(prefix.lib, oslib)
+            spack_env.append_path('CMAKE_PREFIX_PATH', archlib)
+            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, spack_env)
+        elif self.spec.satisfies('sim_os=rhel6'):
+            oslib = simmetrix_getLibDir('rhel6')
+            archlib = join_path(prefix.lib, oslib)
+            spack_env.append_path('CMAKE_PREFIX_PATH', archlib)
+            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, spack_env)
 
     def setup_environment(self, spack_env, run_env):
         if self.spec.satisfies('sim_os=rhel7'):
