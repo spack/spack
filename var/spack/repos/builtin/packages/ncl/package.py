@@ -37,15 +37,15 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.4.0', 'a981848ddcaf1c263279648265f24766',
-            url='https://www.earthsystemgrid.org/download/fileDownload.html?logicalFileId=86b9bec2-fa01-11e6-a976-00c0f03d5b7c',
-            extension='tar.gz')
+    url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
 
-    patch('spack_ncl.patch')
+    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
+
+    patch('spack_ncl.patch', when="@6.4.0")
     # Make ncl compile with hdf5 1.10
-    patch('hdf5.patch')
+    patch('hdf5.patch', when="@6.4.0")
     # ymake-filter's buffer may overflow
-    patch('ymake-filter.patch')
+    patch('ymake-filter.patch', when="@6.4.0")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
