@@ -263,9 +263,81 @@ def test_no_extrapolate_without_url(mock_packages, config):
         spack.fetch_strategy.for_package_version(pkg, '1.1')
 
 
-def test_git_and_url_top_level(mock_packages, config):
-    """Verify conflict when url and git are specified together."""
+def test_two_vcs_fetchers_top_level(mock_packages, config):
+    """Verify conflict when two VCS strategies are specified together."""
 
-    pkg = spack.repo.get('git-and-url-top-level')
+    pkg = spack.repo.get('git-url-svn-top-level')
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
         spack.fetch_strategy.for_package_version(pkg, '1.0')
+
+    pkg = spack.repo.get('git-svn-top-level')
+    with pytest.raises(spack.fetch_strategy.FetcherConflict):
+        spack.fetch_strategy.for_package_version(pkg, '1.0')
+
+
+def test_git_url_top_level(mock_packages, config):
+    """Test fetch strategy inference when url is specified with a VCS."""
+
+    pkg = spack.repo.get('git-url-top-level')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
+    assert fetcher.digest == 'abc20'
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.1')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/tarball-2.1.tar.gz'
+    assert fetcher.digest == 'abc21'
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.2')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.url == 'https://www.example.com/foo2.2.tar.gz'
+    assert fetcher.digest == 'abc22'
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.3')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.url == 'https://www.example.com/foo2.3.tar.gz'
+    assert fetcher.digest == 'abc23'
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.0')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag == 'v3.0'
+    assert fetcher.commit is None
+    assert fetcher.branch is None
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.1')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag == 'v3.1'
+    assert fetcher.commit == 'abc31'
+    assert fetcher.branch is None
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.2')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag is None
+    assert fetcher.commit is None
+    assert fetcher.branch == 'releases/v3.2'
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.3')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag is None
+    assert fetcher.commit == 'abc33'
+    assert fetcher.branch == 'releases/v3.3'
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.4')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag is None
+    assert fetcher.commit == 'abc34'
+    assert fetcher.branch is None
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, 'develop')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag is None
+    assert fetcher.commit is None
+    assert fetcher.branch == 'develop'
