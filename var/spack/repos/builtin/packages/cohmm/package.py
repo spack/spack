@@ -35,10 +35,9 @@ class Cohmm(MakefilePackage):
     tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/cohmm.html"
-    url = "https://github.com/exmatex/CoHMM/archive/sad.tar.gz"
+    git      = "https://github.com/exmatex/CoHMM.git"
 
-    version('develop', git='https://github.com/exmatex/CoHMM.git',
-            branch='sad')
+    version('develop', branch='sad')
 
     variant('openmp', default=True, description='Build with OpenMP Support')
     variant('gnuplot', default=False, description='Enable gnu plot Support')

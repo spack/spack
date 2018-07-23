@@ -29,12 +29,10 @@ class Cityhash(AutotoolsPackage):
     """CityHash, a family of hash functions for strings."""
 
     homepage = "https://github.com/google/cityhash"
-    url      = "https://github.com/google/cityhash"
+    git      = "https://github.com/google/cityhash.git"
 
-    version('2013-07-31', git='https://github.com/google/cityhash.git',
-            commit='8af9b8c2b889d80c22d6bc26ba0df1afb79a30db')
-    version('master', branch='master',
-            git='https://github.com/google/cityhash.git')
+    version('master', branch='master')
+    version('2013-07-31', commit='8af9b8c2b889d80c22d6bc26ba0df1afb79a30db')
 
     def configure_args(self):
         return ['--enable-sse4.2']

@@ -31,11 +31,11 @@ class Amrex(CMakePackage):
     """
 
     homepage = "https://ccse.lbl.gov/AMReX/index.html"
-    url      = "https://github.com/AMReX-Codes/amrex.git"
+    git      = "https://github.com/AMReX-Codes/amrex.git"
 
-    version('17.06', git='https://github.com/AMReX-Codes/amrex.git', commit='836d3c7')
-    version('master', git='https://github.com/AMReX-Codes/amrex.git', tag='master')
-    version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='development')
+    version('develop', tag='development')
+    version('master', tag='master')
+    version('17.06', commit='836d3c7')
 
     variant('dims',
         default='3',
