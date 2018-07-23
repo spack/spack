@@ -14,17 +14,12 @@ branches:
 jobs:
   fast_finish: true
   include:
-    - stage: 'flake8 + documentation'
+    - stage: 'style checks'
       python: '2.7'
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'flake8 + documentation'
-      python: '3.6'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
-    - stage: 'unit tests'
+    - stage: 'unit tests + documentation'
       python: '2.6'
       os: linux
       language: python
@@ -49,6 +44,10 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - python: '3.6'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
     - stage: 'unit tests - osx'
       os: osx
       language: generic
@@ -96,8 +95,8 @@ jobs:
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
 
 stages:
-  - 'flake8 + documentation'
-  - 'unit tests'
+  - 'style checks'
+  - 'unit tests + documentation'
   - 'build tests'
   - name: 'unit tests - osx'
     if: type IN (cron)
