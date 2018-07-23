@@ -26,7 +26,6 @@ from spack import *
 import os
 
 
-# FIXME: If this works, take more inspiration from llvm recipe
 class Templight(CMakePackage):
     """Templight is a Clang-based tool to profile the time and memory
        consumption of template instantiations and to perform interactive
@@ -34,8 +33,12 @@ class Templight(CMakePackage):
        instantiation process."""
 
     homepage = "https://github.com/mikael-s-persson/templight"
+    # NOTE: Removing this relies on a currently-unmerged PR
     # url      = "https://github.com/mikael-s-persson/templight"
     git      = "https://github.com/mikael-s-persson/templight.git"
+    llvm_svn = "http://llvm.org/svn/llvm-project/{0}/trunk"
+
+    family = 'compiler'  # Used by lmod
 
     # Templight is a patch to clang, so we have three versions to care about:
     # - The one that will be used in Spack specifications
@@ -43,29 +46,29 @@ class Templight(CMakePackage):
     # - The svn tag that we need to fetch from in the LLVM repos
     version('develop', branch='master')
     resource(name='llvm-trunk',
-             svn='http://llvm.org/svn/llvm-project/llvm/trunk',
+             svn=llvm_svn.format('llvm'),
              destination='.',
              placement='llvm',
              when='@develop')
     resource(name='clang-trunk',
-             svn='http://llvm.org/svn/llvm-project/cfe/trunk',
+             svn=llvm_svn.format('cfe'),
              destination='llvm/tools',
              placement='clang',
              when='@develop')
 
     # Templight has no stable release yet, and is supposed to be built against
-    # the LLVM trunk. As this is a ridiculously brittle combination, I decided
-    # to artificially create a stable release based on something which works
-    # today. Please remove this configuration once templight has stabilized.
+    # the LLVM trunk. As this is a brittle combination, I decided to
+    # artificially create a stable release based on what works today. Please
+    # feel free to remove this version once templight has stabilized.
     version('2018.07.20', commit='91589f95427620dd0a2346bd69ba922f374aa42a')
     resource(name='llvm-r337566',
-             svn='http://llvm.org/svn/llvm-project/llvm/trunk',
+             svn=llvm_svn.format('llvm'),
              revision=337566,
              destination='.',
              placement='llvm',
              when='@2018.07.20')
     resource(name='clang-r337566',
-             svn='http://llvm.org/svn/llvm-project/cfe/trunk',
+             svn=llvm_svn.format('cfe'),
              revision=337566,
              destination='llvm/tools',
              placement='clang',
@@ -77,6 +80,11 @@ class Templight(CMakePackage):
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    # NOTE: LLVM has many configurable tweaks and optional tools/extensions.
+    #       I did not think that  propagating all of these to a debugging and
+    #       performance analysis tool was worth the maintenance burden. But
+    #       if you disagree, the llvm package can be used for inspiration.
 
     depends_on('cmake@3.4.3:', type='build')
     depends_on('python')
