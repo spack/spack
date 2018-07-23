@@ -38,5 +38,4 @@ class PyPkgconfig(PythonPackage):
 
     depends_on('pkgconfig', type=('build', 'run'))
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.0:', type='test')
+    depends_on('py-nose@1.0:', type=('build', 'test'))

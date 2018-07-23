@@ -44,13 +44,13 @@ class RemoveDocstrings(ast.NodeTransformer):
         self.generic_visit(node)
         return node
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # noqa
         return self.remove_docstring(node)
 
-    def visit_ClassDef(self, node):
+    def visit_ClassDef(self, node):  # noqa
         return self.remove_docstring(node)
 
-    def visit_Module(self, node):
+    def visit_Module(self, node):  # noqa
         return self.remove_docstring(node)
 
 
@@ -69,7 +69,7 @@ class RemoveDirectives(ast.NodeTransformer):
                 node.targets and isinstance(node.targets[0], ast.Name) and
                 node.targets[0].id in spack.package.Package.metadata_attrs)
 
-    def visit_ClassDef(self, node):
+    def visit_ClassDef(self, node):  # noqa
         if node.name == spack.util.naming.mod_to_class(self.spec.name):
             node.body = [
                 c for c in node.body
@@ -83,7 +83,7 @@ class TagMultiMethods(ast.NodeVisitor):
         self.spec = spec
         self.methods = {}
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # noqa
         nodes = self.methods.setdefault(node.name, [])
         if node.decorator_list:
             dec = node.decorator_list[0]
@@ -112,7 +112,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
                 result = n
         return result
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # noqa
         if self.resolve(node) is node:
             node.decorator_list = []
             return node

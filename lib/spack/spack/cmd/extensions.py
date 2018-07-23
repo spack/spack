@@ -31,7 +31,7 @@ import spack.cmd
 import spack.cmd.find
 import spack.repo
 import spack.store
-from spack.directory_layout import YamlViewExtensionsLayout
+from spack.filesystem_view import YamlFilesystemView
 
 description = "list extensions for package"
 section = "extensions"
@@ -113,10 +113,12 @@ def extensions(parser, args):
             tty.msg("%d extensions:" % len(extensions))
             colify(ext.name for ext in extensions)
 
-    layout = spack.store.extensions
-    if args.view is not None:
-        layout = YamlViewExtensionsLayout(
-            args.view, spack.store.layout)
+    if args.view:
+        target = args.view
+    else:
+        target = spec.prefix
+
+    view = YamlFilesystemView(target, spack.store.layout)
 
     if show_installed:
         #
@@ -137,7 +139,7 @@ def extensions(parser, args):
         #
         # List specs of activated extensions.
         #
-        activated = layout.extension_map(spec)
+        activated = view.extensions_layout.extension_map(spec)
         if show_all:
             print
         if not activated:

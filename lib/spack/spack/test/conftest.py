@@ -28,6 +28,7 @@ import os
 import shutil
 import re
 
+import ordereddict_backport
 import py
 import pytest
 
@@ -42,15 +43,40 @@ import spack.paths
 import spack.platforms.test
 import spack.repo
 import spack.stage
-import spack.util.ordereddict
 import spack.util.executable
-import spack.util.pattern
+from spack.util.pattern import Bunch
 from spack.dependency import Dependency
 from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
+
+
+# Hooks to add command line options or set other custom behaviors.
+# They must be placed here to be found by pytest. See:
+#
+# https://docs.pytest.org/en/latest/writing_plugins.html
+#
+def pytest_addoption(parser):
+    group = parser.getgroup("Spack specific command line options")
+    group.addoption(
+        '--fast', action='store_true', default=False,
+        help='runs only "fast" unit tests, instead of the whole suite')
+
+
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption('--fast'):
+        # --fast not given, run all the tests
+        return
+
+    slow_tests = ['db', 'network', 'maybeslow']
+    skip_as_slow = pytest.mark.skip(
+        reason='skipped slow test [--fast command line option given]'
+    )
+    for item in items:
+        if any(x in item.keywords for x in slow_tests):
+            item.add_marker(skip_as_slow)
 
 
 #
@@ -139,10 +165,10 @@ def mock_fetch_cache(monkeypatch):
     and raises on fetch.
     """
     class MockCache(object):
-        def store(self, copyCmd, relativeDst):
+        def store(self, copy_cmd, relative_dest):
             pass
 
-        def fetcher(self, targetPath, digest, **kwargs):
+        def fetcher(self, target_path, digest, **kwargs):
             return MockCacheFetcher()
 
     class MockCacheFetcher(object):
@@ -246,6 +272,26 @@ def config(configuration_dir):
 
     spack.config.config = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+          for name in ['site', 'system', 'user']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+
+@pytest.fixture(scope='function')
+def mutable_config(tmpdir_factory, configuration_dir, config):
+    """Like config, but tests can modify the configuration."""
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
+    configuration_dir.copy(mutable_dir)
+
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
 
     yield spack.config.config
@@ -462,7 +508,6 @@ def mock_git_repository(tmpdir_factory):
         r1 = rev_hash(branch)
         r1_file = branch_file
 
-    Bunch = spack.util.pattern.Bunch
     checks = {
         'master': Bunch(
             revision='master', file=r0_file, args={'git': str(repodir)}
@@ -515,7 +560,6 @@ def mock_hg_repository(tmpdir_factory):
         hg('commit', '-m' 'revision 1', '-u', 'test')
         r1 = get_rev()
 
-    Bunch = spack.util.pattern.Bunch
     checks = {
         'default': Bunch(
             revision=r1, file=r1_file, args={'hg': str(repodir)}
@@ -572,7 +616,6 @@ def mock_svn_repository(tmpdir_factory):
         r0 = '1'
         r1 = '2'
 
-    Bunch = spack.util.pattern.Bunch
     checks = {
         'default': Bunch(
             revision=r1, file=r1_file, args={'svn': url}),
@@ -603,7 +646,7 @@ class MockPackage(object):
                  versions=None):
         self.name = name
         self.spec = None
-        self.dependencies = spack.util.ordereddict.OrderedDict()
+        self.dependencies = ordereddict_backport.OrderedDict()
 
         assert len(dependencies) == len(dependency_types)
         for dep, dtype in zip(dependencies, dependency_types):

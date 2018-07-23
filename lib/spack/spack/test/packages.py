@@ -71,6 +71,8 @@ class TestPackage(object):
     def test_content_hash_all_same_but_patch_contents(self):
         spec1 = Spec("hash-test1@1.1")
         spec2 = Spec("hash-test2@1.1")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)
@@ -81,6 +83,8 @@ class TestPackage(object):
     def test_content_hash_different_variants(self):
         spec1 = Spec("hash-test1@1.2 +variantx")
         spec2 = Spec("hash-test2@1.2 ~variantx")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)
@@ -91,6 +95,8 @@ class TestPackage(object):
     def test_all_same_but_archive_hash(self):
         spec1 = Spec("hash-test1@1.3")
         spec2 = Spec("hash-test2@1.3")
+        spec1.concretize()
+        spec2.concretize()
         content1 = package_content(spec1)
         content1 = content1.replace(spec1.package.__class__.__name__, '')
         content2 = package_content(spec2)
@@ -159,3 +165,18 @@ class TestPackage(object):
         import spack.pkg.builtin.mock                   # noqa
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa
+
+    @pytest.mark.regression('2737')
+    def test_urls_for_versions(self):
+        # Checks that a version directive without a 'url' argument
+        # specified uses the default url
+        for spec_str in ('url_override@0.9.0', 'url_override@1.0.0'):
+            s = Spec(spec_str).concretized()
+            url = s.package.url_for_version('0.9.0')
+            assert url == 'http://www.anothersite.org/uo-0.9.0.tgz'
+
+            url = s.package.url_for_version('1.0.0')
+            assert url == 'http://www.doesnotexist.org/url_override-1.0.0.tar.gz'
+
+            url = s.package.url_for_version('0.8.1')
+            assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'

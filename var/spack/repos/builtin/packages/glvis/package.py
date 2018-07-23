@@ -28,8 +28,10 @@ from spack import *
 class Glvis(MakefilePackage):
     """GLVis: an OpenGL tool for visualization of FEM meshes and functions"""
 
-    homepage = "http://glvis.org/"
-    url      = "https://github.com/GLvis/glvis/archive/v3.3.tar.gz"
+    homepage = "http://glvis.org"
+    url      = "https://github.com/GLVis/glvis"
+
+    maintainers = ['goxberry', 'v-dobrev', 'tzanio']
 
     # glvis (like mfem) is downloaded from a URL shortener at request
     # of upstream author Tzanio Kolev <tzanio@llnl.gov>.  See here:
@@ -52,18 +54,23 @@ class Glvis(MakefilePackage):
 
     version('develop', git='https://github.com/glvis/glvis', branch='master')
 
+    version('3.4',
+            '289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
+            url='https://bit.ly/glvis-3-4',
+            extension='.tar.gz')
+
     version('3.3',
-            '1201a76d1b0c38240186c06f6478de77',
+            'e24d7c5cb53f208b691c872fe82ea898242cfdc0fd68dd0579c739e070dcd800',
             url='http://goo.gl/C0Oadw',
             extension='.tar.gz')
 
     version('3.2',
-            '4575a03a50d4730c07b5d4018e936707',
+            'c82cb110396e63b6436a770c55eb6d578441eaeaf3f9cc20436c242392e44e80',
             url='http://goo.gl/hzupg1',
             extension='.tar.gz')
 
     version('3.1',
-            '3ce8a53209c6593e066e568dbbf2bbf6',
+            '793e984ddfbf825dcd13dfe1ca00eccd686cd40ad30c8789ba80ee175a1b488c',
             url='http://goo.gl/gQZuu9',
             extension='tar.gz')
 
@@ -75,6 +82,7 @@ class Glvis(MakefilePackage):
             description='Use antialiased fonts via freetype & fontconfig')
 
     depends_on('mfem@develop', when='@develop')
+    depends_on('mfem@3.4', when='@3.4')
     depends_on('mfem@3.3', when='@3.3')
     depends_on('mfem@3.2', when='@3.2')
     depends_on('mfem@3.1', when='@3.1')

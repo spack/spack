@@ -126,6 +126,11 @@ class Boost(Package):
         variant(lib, default=(lib not in default_noinstall_libs),
                 description="Compile with {0} library".format(lib))
 
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
     variant('debug', default=False,
             description='Switch to the debug version of Boost')
     variant('shared', default=True,
@@ -172,6 +177,7 @@ class Boost(Package):
     patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
+    patch('boost_1.67.0_pgi.patch', when='@1.67.0%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
@@ -211,10 +217,10 @@ class Boost(Package):
             spec['python'].libs[0]
         )
 
-    def determine_bootstrap_options(self, spec, withLibs, options):
-        boostToolsetId = self.determine_toolset(spec)
-        options.append('--with-toolset=%s' % boostToolsetId)
-        options.append("--with-libraries=%s" % ','.join(withLibs))
+    def determine_bootstrap_options(self, spec, with_libs, options):
+        boost_toolset_id = self.determine_toolset(spec)
+        options.append('--with-toolset=%s' % boost_toolset_id)
+        options.append("--with-libraries=%s" % ','.join(with_libs))
 
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
@@ -228,7 +234,7 @@ class Boost(Package):
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
-                f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
                                                        spack_cxx))
 
             if '+mpi' in spec:
@@ -250,6 +256,26 @@ class Boost(Package):
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
+    def cxxstd_to_flag(self, std):
+        flag = ''
+        if self.spec.variants['cxxstd'].value == '98':
+            flag = self.compiler.cxx98_flag
+        elif self.spec.variants['cxxstd'].value == '11':
+            flag = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            flag = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            flag = self.compiler.cxx17_flag
+        elif self.spec.variants['cxxstd'].value == 'default':
+            # Let the compiler do what it usually does.
+            pass
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
+                    "cxxstd={0}".format(spec.variants['cxxstd'].value))
+        return flag
+
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
             options.append('variant=debug')
@@ -266,16 +292,16 @@ class Boost(Package):
                 '-s', 'ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
                 '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib])
 
-        linkTypes = ['static']
+        link_types = ['static']
         if '+shared' in spec:
-            linkTypes.append('shared')
+            link_types.append('shared')
 
-        threadingOpts = []
+        threading_opts = []
         if '+multithreaded' in spec:
-            threadingOpts.append('multi')
+            threading_opts.append('multi')
         if '+singlethreaded' in spec:
-            threadingOpts.append('single')
-        if not threadingOpts:
+            threading_opts.append('single')
+        if not threading_opts:
             raise RuntimeError("At least one of {singlethreaded, " +
                                "multithreaded} must be enabled")
 
@@ -284,13 +310,13 @@ class Boost(Package):
         elif '+versionedlayout' in spec:
             layout = 'versioned'
         else:
-            if len(threadingOpts) > 1:
+            if len(threading_opts) > 1:
                 raise RuntimeError("Cannot build both single and " +
                                    "multi-threaded targets with system layout")
             layout = 'system'
 
         options.extend([
-            'link=%s' % ','.join(linkTypes),
+            'link=%s' % ','.join(link_types),
             '--layout=%s' % layout
         ])
 
@@ -299,6 +325,19 @@ class Boost(Package):
                 'toolset=%s' % self.determine_toolset(spec)
             ])
 
+        # Other C++ flags.
+        cxxflags = []
+
+        # Deal with C++ standard.
+        if spec.satisfies('@1.66:'):
+            if spec.variants['cxxstd'].value != 'default':
+                options.append('cxxstd={0}'.format(
+                    spec.variants['cxxstd'].value))
+        else:  # Add to cxxflags for older Boost.
+            flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
+            if flag:
+                cxxflags.append(flag)
+
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
@@ -306,11 +345,14 @@ class Boost(Package):
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
+                cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
-                                'cxxflags="-stdlib=libc++"',
                                 'linkflags="-stdlib=libc++"'])
 
-        return threadingOpts
+        if cxxflags:
+            options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
+
+        return threading_opts
 
     def add_buildopt_symlinks(self, prefix):
         with working_dir(prefix.lib):
@@ -329,11 +371,11 @@ class Boost(Package):
             force_symlink('/usr/bin/libtool', join_path(newdir, 'libtool'))
             env['PATH'] = newdir + ':' + env['PATH']
 
-        withLibs = list()
+        with_libs = list()
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
-                withLibs.append(lib)
-        if not withLibs:
+                with_libs.append(lib)
+        if not with_libs:
             # if no libraries are specified for compilation, then you dont have
             # to configure/build anything, just copy over to the prefix
             # directory.
@@ -345,19 +387,19 @@ class Boost(Package):
 
         # Remove libraries that the release version does not support
         if not spec.satisfies('@1.54.0:'):
-            withLibs.remove('log')
+            with_libs.remove('log')
         if not spec.satisfies('@1.53.0:'):
-            withLibs.remove('atomic')
+            with_libs.remove('atomic')
         if not spec.satisfies('@1.48.0:'):
-            withLibs.remove('locale')
+            with_libs.remove('locale')
         if not spec.satisfies('@1.47.0:'):
-            withLibs.remove('chrono')
+            with_libs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
-            withLibs.remove('random')
+            with_libs.remove('random')
         if not spec.satisfies('@1.39.0:'):
-            withLibs.remove('exception')
+            with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
-            withLibs.append('graph_parallel')
+            with_libs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path
@@ -365,7 +407,7 @@ class Boost(Package):
         bootstrap = Executable('./bootstrap.sh')
 
         bootstrap_options = ['--prefix=%s' % prefix]
-        self.determine_bootstrap_options(spec, withLibs, bootstrap_options)
+        self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         bootstrap(*bootstrap_options)
 
@@ -384,13 +426,13 @@ class Boost(Package):
                 self.stage.source_path, 'user-config.jam')
         ]
 
-        threadingOpts = self.determine_b2_options(spec, b2_options)
+        threading_opts = self.determine_b2_options(spec, b2_options)
 
         b2('--clean')
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threadingOpt in threadingOpts:
+        for threadingOpt in threading_opts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
 
         if '+multithreaded' in spec and '~taggedlayout' in spec:

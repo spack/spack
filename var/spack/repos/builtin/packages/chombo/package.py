@@ -36,6 +36,8 @@ class Chombo(MakefilePackage):
     homepage = "https://commons.lbl.gov/display/chombo"
     url      = "http://bitbucket.org/drhansj/chombo-xsdk.git"
 
+    tags = ['ecp', 'ecp-apps']
+
     # Use whatever path Brian V. and Terry L. agreed upon, but preserve version
     version('3.2', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')

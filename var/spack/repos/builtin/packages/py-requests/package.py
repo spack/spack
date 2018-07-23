@@ -49,8 +49,7 @@ class PyRequests(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest@2.8.0:',        type='test')
-    # depends_on('py-pytest-cov',           type='test')
-    # depends_on('py-pytest-httpbin@0.0.7', type='test')
-    # depends_on('py-pytest-mock',          type='test')
+    depends_on('py-pytest@2.8.0:',        type='test')
+    depends_on('py-pytest-cov',           type='test')
+    depends_on('py-pytest-httpbin@0.0.7', type='test')
+    depends_on('py-pytest-mock',          type='test')

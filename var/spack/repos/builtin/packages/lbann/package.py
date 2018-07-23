@@ -58,9 +58,9 @@ class Lbann(CMakePackage):
                when=('build_type=Debug' '@0.95:'))
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug' '@:0.90'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
                when=('+gpu' '@0.95:'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
                when=('+gpu' '@:0.90'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
                when=('build_type=Debug' '@0.95:' '+gpu'))
@@ -94,19 +94,19 @@ class Lbann(CMakePackage):
     def common_config_args(self):
         spec = self.spec
         # Environment variables
-        CPPFLAGS = []
-        CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
+        cppflags = []
+        cppflags.append('-DLBANN_SET_EL_RNG -ldl')
 
         return [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
-            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
+            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
             '-DLBANN_VERSION=spack',
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
-    @when('@:0.90' or '@0.94:')
+    @when('@:0.90,0.94:')
     def cmake_args(self):
         spec = self.spec
         args = self.common_config_args

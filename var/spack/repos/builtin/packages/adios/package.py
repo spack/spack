@@ -121,9 +121,6 @@ class Adios(AutotoolsPackage):
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
-    # Fix ADIOS <=1.13.1 serial compile against parallel library
-    #   https://github.com/ornladios/ADIOS/pull/182
-    patch('nompi.patch', when='@1.10.0:1.13.1')
 
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time

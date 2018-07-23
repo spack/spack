@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2017-2018, The VOTCA Development Team (http://www.votca.org)
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -43,6 +43,13 @@ class VotcaTools(CMakePackage):
     depends_on("cmake@2.8:", type='build')
     depends_on("expat")
     depends_on("fftw")
-    depends_on("gsl")
+    depends_on("gsl", when="@:1.4.9999")
+    depends_on("eigen@3.3:", when="@1.5:")
     depends_on("boost")
     depends_on("sqlite")
+
+    def cmake_args(self):
+        args = [
+            '-DWITH_RC_FILES=OFF'
+        ]
+        return args
