@@ -89,7 +89,7 @@ class PyNumpy(PythonPackage):
     def patch(self):
         spec = self.spec
 
-        def writeLibraryDirs(f, dirs):
+        def write_library_dirs(f, dirs):
             f.write('library_dirs=%s\n' % dirs)
             if not ((platform.system() == "Darwin") and
                     (platform.mac_ver()[0] == '10.12')):
@@ -117,7 +117,7 @@ class PyNumpy(PythonPackage):
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
-                    writeLibraryDirs(f, dirs)
+                    write_library_dirs(f, dirs)
                 elif '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
@@ -136,11 +136,11 @@ class PyNumpy(PythonPackage):
                     # and using LD_LIBRARY_PATH throughout Spack.
                     f.write('[mkl]\n')
                     f.write('mkl_libs=%s\n'     % 'mkl_rt')
-                    writeLibraryDirs(f, dirs)
+                    write_library_dirs(f, dirs)
                 elif '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n'   % names)
-                    writeLibraryDirs(f, dirs)
+                    write_library_dirs(f, dirs)
                 elif '^netlib-lapack' in spec:
                     # netlib requires blas and lapack listed
                     # separately so that scipy can find them
@@ -148,7 +148,7 @@ class PyNumpy(PythonPackage):
                         if '+' + library in spec:
                             f.write('[%s]\n' % library)
                             f.write('%s_libs=%s\n' % (library, names))
-                            writeLibraryDirs(f, dirs)
+                            write_library_dirs(f, dirs)
                 else:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
@@ -157,7 +157,7 @@ class PyNumpy(PythonPackage):
                     else:
                         f.write('[ALL]\n')
                     f.write('libraries=%s\n'    % names)
-                    writeLibraryDirs(f, dirs)
+                    write_library_dirs(f, dirs)
 
     def build_args(self, spec, prefix):
         args = []
