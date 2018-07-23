@@ -181,19 +181,18 @@ class URLFetchStrategy(FetchStrategy):
     enabled = True
     required_attributes = ['url']
 
-    def __init__(self, url=None, digest=None, **kwargs):
+    def __init__(self, url=None, checksum=None, **kwargs):
         super(URLFetchStrategy, self).__init__()
 
-        # If URL or digest are provided in the kwargs, then prefer
-        # those values.
-        self.url = kwargs.get('url', None)
-        if not self.url:
-            self.url = url
+        # Prefer values in kwargs to the positionals.
+        self.url = kwargs.get('url', url)
 
-        self.digest = next((kwargs[h] for h in crypto.hashes if h in kwargs),
-                           None)
-        if not self.digest:
-            self.digest = digest
+        # digest can be set as the first argument, or from an explicit
+        # kwarg by the hash name.
+        self.digest = kwargs.get('checksum', checksum)
+        for h in crypto.hashes:
+            if h in kwargs:
+                self.digest = kwargs[h]
 
         self.expand_archive = kwargs.get('expand', True)
         self.extra_curl_options = kwargs.get('curl_options', [])
@@ -1009,15 +1008,25 @@ def from_list_url(pkg):
         try:
             versions = pkg.fetch_remote_versions()
             try:
+                # get a URL, and a checksum if we have it
                 url_from_list = versions[pkg.version]
-                digest = None
-                if pkg.version in pkg.versions:
-                    digest = pkg.versions[pkg.version].get('md5', None)
-                return URLFetchStrategy(url=url_from_list, digest=digest)
+                checksum = None
+
+                # try to find a known checksum for version, from the package
+                version = pkg.version
+                if version in pkg.versions:
+                    args = pkg.versions[version]
+                    checksum = next(
+                        (v for k, v in args.items() if k in crypto.hashes),
+                        args.get('checksum'))
+
+                # construct a fetcher
+                return URLFetchStrategy(url_from_list, checksum)
             except KeyError:
-                tty.msg("Can not find version %s in url_list" %
-                        pkg.version)
+                tty.msg("Cannot find version %s in url_list" % pkg.version)
+
         except BaseException:
+            # TODO: Don't catch BaseException here! Be more specific.
             tty.msg("Could not determine url from list_url.")
 
 
