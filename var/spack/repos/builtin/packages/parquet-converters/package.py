@@ -35,11 +35,11 @@ class ParquetConverters(CMakePackage):
 
     version('develop', git=url, preferred=True)
 
-    depends_on('hdf5')
-    depends_on('highfive')
+    depends_on('hdf5+mpi')
+    depends_on('highfive+mpi')
     depends_on('parquet')
-    depends_on('snappy ~shared')
-    depends_on('synapse-tool +mpi')
+    depends_on('snappy~shared')
+    depends_on('synapsetool+mpi')
     depends_on('mpi')
 
     def cmake_args(self):

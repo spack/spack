@@ -22,41 +22,36 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
 
 
-class SynapseTool(CMakePackage):
-    """Synapse format utilities.
-    """
+class Synapsetool(CMakePackage):
+    """Synapsetool provides a C++ and a python API to read / write neuron
+       connectivity informations. Synapsetool is designed to support large
+       connectivity data with billions of connections."""
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/synapse-tool"
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
-    version('dev-201806',
-            commit='8c4bbe548006d7221f215f32c077338f169ba015',
-            git=url,
-            preferred=True,
-            submodules=True)
+    version('develop', git=url, submodules=True)
+    version('0.2', git=url, commit='a384860cd3d338201', submodules=True)
 
-    variant('mpi', default=True)
+    variant('mpi', default=False, description="Enable MPI backend")
 
-    depends_on('boost@1.60:')
-    depends_on('hdf5@1.10:')
-    depends_on('hdf5@1.10:~mpi', when='~mpi')
-    depends_on('highfive@develop')
-    depends_on('highfive@develop+mpi', when='+mpi')
+    depends_on('boost@1.55:')
+    depends_on('cmake', type='build')
+    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
+    depends_on('highfive+mpi', when='+mpi')
+    depends_on('highfive~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
+    depends_on('python')
 
     def cmake_args(self):
-        args = [
-            '-DLIBHDF5_ROOT={}'.format(self.spec['hdf5'].prefix),
-            '-DBOOST_ROOT={}'.format(self.spec['boost'].prefix),
-        ]
-        if '+mpi' in self.spec:
+        args = []
+        if self.spec.satisfies('+mpi'):
             args.extend([
-                '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-                '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
-                '-DSYNTOOL_WITH_MPI=ON',
+                '-DCMAKE_C_COMPILER:STRING={}'.format(self.spec['mpi'].mpicc),
+                '-DCMAKE_CXX_COMPILER:STRING={}'.format(self.spec['mpi'].mpicxx),
+                '-DSYNTOOL_WITH_MPI:BOOL=ON',
             ])
         return args
