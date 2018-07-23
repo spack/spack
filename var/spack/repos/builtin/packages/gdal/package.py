@@ -93,7 +93,7 @@ class Gdal(AutotoolsPackage):
     # GDAL depends on GNUmake on Unix platforms.
     # https://trac.osgeo.org/gdal/wiki/BuildingOnUnix
     depends_on('gmake', type='build')
-    depends_on('pkg-config@0.25:', type='build')
+    depends_on('pkgconfig', type='build')
 
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
