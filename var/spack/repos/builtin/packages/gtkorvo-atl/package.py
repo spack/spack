@@ -35,10 +35,21 @@ class GtkorvoAtl(CMakePackage):
 
     version('develop', git='https://github.com/GTkorvo/atl.git',
             branch='master')
+    version('2.2', 'f0e3581e4b4c6943bf4b203685630564')
     version('2.1', 'b2324ff041bccba127330a0e1b241978')
 
     depends_on('gtkorvo-cercs-env')
 
     def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DENABLE_BUILD_STATIC=STATIC"]
+        args = []
+        if self.spec.satisfies('@2.2:'):
+            args.append("-DBUILD_SHARED_LIBS=OFF")
+        else:
+            args.append("-DENABLE_BUILD_STATIC=STATIC")
+
+        if self.run_tests:
+            args.append('-DENABLE_TESTING=1')
+        else:
+            args.append('-DENABLE_TESTING=0')
+
         return args

@@ -34,6 +34,8 @@ class Nalu(CMakePackage):
     homepage = "https://github.com/NaluCFD/Nalu"
     url      = "https://github.com/NaluCFD/Nalu.git"
 
+    tags = ['ecp', 'ecp-apps']
+
     variant('openfast', default=False,
             description='Compile with OpenFAST support')
     variant('tioga', default=False,

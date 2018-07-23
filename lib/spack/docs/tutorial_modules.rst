@@ -1385,11 +1385,12 @@ Module file templates
 ^^^^^^^^^^^^^^^^^^^^^
 
 The templates that Spack uses to generate module files are stored in the
-``templates/module`` directory, and they all share the same common structure.
-Usually, they start with a header that identifies the type of
-module being generated. In the case of hierarchical module files it's:
+``share/spack/templates/module`` directory within the Spack prefix, and
+they all share the same common structure.  Usually, they start with a
+header that identifies the type of module being generated. In the case of
+hierarchical module files it's:
 
-.. literalinclude:: ../../../templates/modules/modulefile.lua
+.. literalinclude:: ../../../share/spack/templates/modules/modulefile.lua
   :language: jinja
   :lines: 1-6
 
@@ -1403,7 +1404,7 @@ that can be overridden or extended by users, if need be.
 , delimited by ``{% ... %}``,
 are also permitted in the template language:
 
-.. literalinclude:: ../../../templates/modules/modulefile.lua
+.. literalinclude:: ../../../share/spack/templates/modules/modulefile.lua
   :language: jinja
   :lines: 73-88
 

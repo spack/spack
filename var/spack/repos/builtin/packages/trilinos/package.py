@@ -25,7 +25,7 @@
 import os
 import sys
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -251,6 +251,9 @@ class Trilinos(CMakePackage):
     conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+dtk', when='~intrepid2')
+    conflicts('+dtk', when='~kokkos')
+    conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
@@ -308,11 +311,11 @@ class Trilinos(CMakePackage):
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
-    patch('xlf_seacas.patch', when='@12.10.1:%xl')
-    patch('xlf_seacas.patch', when='@12.10.1:%xl_r')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %clang')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl')
     patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
-    patch('xlf_seacas.patch', when='@12.12.1:%clang')
     patch('xlf_tpetra.patch', when='@12.12.1:%clang')
 
     def url_for_version(self, version):
@@ -700,7 +703,7 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
 
-        if sys.platform == 'darwin' and macOS_version() >= Version('10.12'):
+        if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

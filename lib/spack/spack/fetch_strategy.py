@@ -542,7 +542,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        tty.msg("Trying to get go resource:", self.url)
+        tty.msg("Getting go resource:", self.url)
 
         with working_dir(self.stage.path):
             try:
@@ -641,7 +641,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         elif self.branch:
             args = 'on branch %s' % self.branch
 
-        tty.msg("Trying to clone git repository: %s %s" % (self.url, args))
+        tty.msg("Cloning git repository: %s %s" % (self.url, args))
 
         git = self.git
         if self.commit:
@@ -788,7 +788,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
             tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
-        tty.msg("Trying to check out svn repository: %s" % self.url)
+        tty.msg("Checking out subversion repository: %s" % self.url)
 
         args = ['checkout', '--force', '--quiet']
         if self.revision:
@@ -894,7 +894,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         args = []
         if self.revision:
             args.append('at revision %s' % self.revision)
-        tty.msg("Trying to clone Mercurial repository:", self.url, *args)
+        tty.msg("Cloning mercurial repository:", self.url, *args)
 
         args = ['clone']
 
@@ -1026,7 +1026,7 @@ class FsCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
-    def store(self, fetcher, relativeDst):
+    def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
             return
@@ -1035,12 +1035,12 @@ class FsCache(object):
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = os.path.join(self.root, relativeDst)
+        dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
-    def fetcher(self, targetPath, digest, **kwargs):
-        path = os.path.join(self.root, targetPath)
+    def fetcher(self, target_path, digest, **kwargs):
+        path = os.path.join(self.root, target_path)
         return CacheURLFetchStrategy(path, digest, **kwargs)
 
     def destroy(self):

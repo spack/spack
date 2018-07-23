@@ -44,3 +44,4 @@ class VotcaCsg(CMakePackage):
     depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
     depends_on("votca-tools@develop", when='@develop')
     depends_on("gromacs~mpi@5.1:")
+    depends_on("hdf5~mpi")
