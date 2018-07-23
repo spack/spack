@@ -1,0 +1,10 @@
+config:
+  install_tree: $SOFTS_DIR_PATH/install
+  source_cache: $SOFTS_DIR_PATH/.cache
+  module_roots:
+    tcl: $SOFTS_DIR_PATH/modules/tcl
+  build_stage:
+    - $tempdir
+    - $SOFTS_DIR_PATH/.stage
+  install_path_scheme: '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:6}'
+  build_jobs: 16
