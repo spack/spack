@@ -28,6 +28,9 @@ import llnl.util.tty as tty
 import llnl.util.lang
 
 import spack.repo
+import spack.store
+import spack.database
+import spack.parents
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
@@ -136,22 +139,32 @@ def query_arguments(args):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    query_specs = args.specs(**q_args)
+    dbs = []
+    for parent_store in spack.parents.parent_stores[:-1]:
+        dbs.append(parent_store.db)
+    dbs.append(spack.store.store.db)
+    for db in dbs:
+        q_args['db'] = db
+        q_args['include_parents'] = False
+        if len(dbs) > 2:
+            tty.msg("In {0}:".format(db.root))
+        query_specs = args.specs(**q_args)
 
-    # Exit early if no package matches the constraint
-    if not query_specs and args.constraint:
-        msg = "No package matches the query: {0}"
-        msg = msg.format(' '.join(args.constraint))
-        tty.msg(msg)
-        return
+        # Exit early if no package matches the constraint
+        if not query_specs and args.constraint:
+            msg = "No package matches the query: {0}"
+            msg = msg.format(' '.join(args.constraint))
+            tty.msg(msg)
+            next
 
-    # If tags have been specified on the command line, filter by tags
-    if args.tags:
-        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
-        query_specs = [x for x in query_specs if x.name in packages_with_tags]
+        # If tags have been specified on the command line, filter by tags
+        if args.tags:
+            packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+            query_specs = [x for x in query_specs
+                           if x.name in packages_with_tags]
 
-    # Display the result
-    if sys.stdout.isatty():
-        tty.msg("%d installed packages." % len(query_specs))
+        # Display the result
+        if sys.stdout.isatty():
+            tty.msg("%d installed packages." % len(query_specs))
 
-    display_specs(query_specs, args)
+        display_specs(query_specs, args)

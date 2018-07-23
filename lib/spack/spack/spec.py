@@ -1090,6 +1090,10 @@ class Spec(object):
 
         self._full_hash = kwargs.get('full_hash', None)
 
+        # Allow spec to indicate that it is not expected to be
+        # found in chained installations
+        self._new = False
+
     @property
     def external(self):
         return bool(self.external_path) or bool(self.external_module)
@@ -1399,6 +1403,17 @@ class Spec(object):
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
         return self.cformat('$_$@$%@$+$=$/')
+
+    def set_new(self, value):
+        self._new = value
+        self._prefix = None
+
+    @property
+    def new(self):
+        if hasattr(self, '_new'):
+            return self._new
+        else:
+            return False
 
     @property
     def prefix(self):
@@ -3171,7 +3186,10 @@ class Spec(object):
             return None
         try:
             record = spack.store.db.get_record(self)
-            return record.installed
+            if record:
+                return record.installed
+            else:
+                return None
         except KeyError:
             return None
 

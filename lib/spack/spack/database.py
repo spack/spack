@@ -52,7 +52,7 @@ from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
-
+import spack
 import spack.store
 import spack.repo
 import spack.spec
@@ -64,7 +64,6 @@ from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction
-
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -182,6 +181,7 @@ class Database(object):
 
         """
         self.root = root
+        self.parent_db = None
 
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
@@ -208,6 +208,16 @@ class Database(object):
 
         # whether there was an error at the start of a read transaction
         self._error = None
+
+    def set_parent(self):
+        self.parent_db = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.db == self:
+                break
+        if index > 0:
+            self.parent_db = spack.parents.parent_stores[index - 1].db
 
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
@@ -311,13 +321,15 @@ class Database(object):
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
                     yaml_deps):
-                if dhash not in data:
+                if dhash in data:
+                    child = data[dhash].spec
+                else:
+                    child = self._get_matching_key_spec(dhash)
+                if not child:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
                                  spec.cformat('$_$/'), dname, dhash[:7]))
                     continue
-
-                child = data[dhash].spec
                 spec._add_dependency(child, dtypes)
 
     def _read_from_file(self, stream, format='json'):
@@ -612,6 +624,9 @@ class Database(object):
                 self._write(None, None, None)
             self.reindex(spack.store.layout)
 
+    def query_hash(self, hash):
+        return hash in self._data
+
     def _add(
             self,
             spec,
@@ -652,12 +667,18 @@ class Database(object):
 
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
-            if dkey not in self._data:
-                extra_args = {
-                    'explicit': False,
-                    'installation_time': installation_time
-                }
-                self._add(dep, directory_layout, **extra_args)
+            if not self.query_hash(dkey):
+                self.set_parent()
+                in_parent_db = False
+                if self.parent_db is not None:
+                    if self.parent_db.query_hash(dkey):
+                        in_parent_db = True
+                if not in_parent_db:
+                    extra_args = {
+                        'explicit': False,
+                        'installation_time': installation_time
+                    }
+                    self._add(dep, directory_layout, **extra_args)
 
         key = spec.dag_hash()
         if key not in self._data:
@@ -686,8 +707,13 @@ class Database(object):
             # Connect dependencies from the DB to the new copy.
             for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
                 dkey = dep.spec.dag_hash()
-                new_spec._add_dependency(self._data[dkey].spec, dep.deptypes)
-                self._data[dkey].ref_count += 1
+                if self.query_hash(dkey):
+                    new_spec._add_dependency(self._data[dkey].spec,
+                                             dep.deptypes)
+                    self._data[dkey].ref_count += 1
+                else:
+                    new_spec._add_dependency(self._get_matching_key_spec(dkey),
+                                             dep.deptypes)
 
             # Mark concrete once everything is built, and preserve
             # the original hash of concrete specs.
@@ -722,9 +748,21 @@ class Database(object):
             raise KeyError("No such spec in database! %s" % spec)
         return key
 
+    def _get_matching_key_spec(self, key):
+        if self.query_hash(key):
+            return self._data[key].spec
+        elif self.parent_db is not None:
+            self.set_parent()
+            return self.parent_db._get_matching_key_spec(key)
+        else:
+            return None
+
     @_autospec
     def get_record(self, spec, **kwargs):
+        self.set_parent()
         key = self._get_matching_spec_key(spec, **kwargs)
+        if key not in self._data and self.parent_db is not None:
+            return self.parent_db.get_record(spec, **kwargs)
         return self._data[key]
 
     def _decrement_ref_count(self, spec):
@@ -841,7 +879,8 @@ class Database(object):
             installed=True,
             explicit=any,
             start_date=None,
-            end_date=None
+            end_date=None,
+            include_parents=True
     ):
         """Run a query on the database
 
@@ -882,19 +921,28 @@ class Database(object):
         # TODO: wildcard spec object, and should specs have attributes
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
+
+        self.set_parent()
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
             if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
-
                 hash_key = query_spec.dag_hash()
                 if hash_key in self._data:
                     return [self._data[hash_key].spec]
                 else:
-                    return []
+                    if self.parent_db is not None and include_parents:
+                        return self.parent_db.query(query_spec, known,
+                                                    installed, explicit)
+                    else:
+                        return []
 
             # Abstract specs require more work -- currently we test
             # against everything.
-            results = []
+            if self.parent_db is not None and include_parents:
+                results = self.parent_db.query(query_spec, known, installed,
+                                               explicit)
+            else:
+                results = []
             start_date = start_date or datetime.datetime.min
             end_date = end_date or datetime.datetime.max
 
@@ -916,8 +964,8 @@ class Database(object):
                     continue
 
                 if query_spec is any or rec.spec.satisfies(query_spec):
-                    results.append(rec.spec)
-
+                    if results.count(rec.spec) == 0:
+                        results.append(rec.spec)
             return sorted(results)
 
     def query_one(self, query_spec, known=any, installed=True):

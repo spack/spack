@@ -1490,7 +1490,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return self._process_external_package(explicit)
 
         restage = kwargs.get('restage', False)
+
+        # do not search spack chain for unfinished installations
+        self.spec.set_new(True)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
+        self.spec.set_new(False)
 
         # Ensure package is not already installed
         layout = spack.store.layout
@@ -1548,6 +1552,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
+
+        # Set the new property to indicate that the spec should
+        # not be found in parent databases.
+        self.spec.set_new(True)
 
         # Then install the package itself.
         def build_process():

@@ -33,6 +33,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.spec
+import spack
 from spack.error import SpackError
 
 
@@ -51,6 +52,7 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.parent_layout = None
 
     @property
     def hidden_file_paths(self):
@@ -63,6 +65,16 @@ class DirectoryLayout(object):
 
         """
         raise NotImplementedError()
+
+    def set_parent(self):
+        self.parent_layout = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.layout == self:
+                break
+        if index > 0:
+            self.parent_layout = spack.parents.parent_stores[index - 1].layout
 
     def all_specs(self):
         """To be implemented by subclasses to traverse all specs for which there is
@@ -91,10 +103,14 @@ class DirectoryLayout(object):
     def path_for_spec(self, spec):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
-
+        self.set_parent()
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
-        return os.path.join(self.root, path)
+        spec_path = os.path.join(self.root, path)
+        if os.path.isdir(spec_path) or spec.new or self.parent_layout is None:
+            return spec_path
+        else:
+            return self.parent_layout.path_for_spec(spec)
 
     def remove_install_directory(self, spec):
         """Removes a prefix and any empty parent directories from the root.
@@ -188,6 +204,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${ARCHITECTURE}/"
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
+        self.parent_layout = None
         if self.hash_len is not None:
             if re.search('\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
@@ -200,6 +217,16 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.build_log_name      = 'build.out'  # build log.
         self.build_env_name      = 'build.env'  # build environment
         self.packages_dir        = 'repos'      # archive of package.py files
+
+    def set_parent(self):
+        self.parent_layout = None
+        index = -1
+        for parent_store in spack.parents.parent_stores:
+            index = spack.parents.parent_stores.index(parent_store)
+            if parent_store.layout == self:
+                break
+        if index > 0:
+            self.parent_layout = spack.parents.parent_stores[index - 1].layout
 
     @property
     def hidden_file_paths(self):
@@ -269,9 +296,12 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
-
+        self.set_parent()
         if not os.path.isdir(path):
-            return None
+            if self.parent_layout is not None:
+                return self.parent_layout.check_installed(spec)
+            else:
+                return None
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(

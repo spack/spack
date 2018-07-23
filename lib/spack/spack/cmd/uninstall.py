@@ -93,7 +93,7 @@ def find_matching_specs(specs, allow_multiple_matches=False, force=False):
     specs_from_cli = []
     has_errors = False
     for spec in specs:
-        matching = spack.store.db.query(spec)
+        matching = spack.store.db.query(spec, include_parents=False)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
