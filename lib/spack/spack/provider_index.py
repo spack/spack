@@ -153,7 +153,7 @@ class ProviderIndex(object):
         result = {}
         for lspec, rspec in iproduct(lmap, rmap):
             try:
-                constrained = lspec.constrained(rspec)
+                constrained = spack.spec.constrained(lspec, rspec)
             except spack.spec.UnsatisfiableSpecError:
                 continue
 
@@ -161,7 +161,9 @@ class ProviderIndex(object):
             for lp_spec, rp_spec in iproduct(lmap[lspec], rmap[rspec]):
                 if lp_spec.name == rp_spec.name:
                     try:
-                        const = lp_spec.constrained(rp_spec, deps=False)
+                        const = spack.spec.constrained(
+                            lp_spec, rp_spec, deps=False
+                        )
                         result.setdefault(constrained, set()).add(const)
                     except spack.spec.UnsatisfiableSpecError:
                         continue

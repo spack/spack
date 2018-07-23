@@ -138,7 +138,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     # we can't use output capture here because it interferes with Spack's
     # logging. TODO: see whether we can get multiple log_outputs to work
     # when nested AND in pytest
-    spec = Spec('printing-package').concretized()
+    spec = spack.spec.concretized(Spec('printing-package'))
     pkg = spec.package
     pkg.do_install(verbose=True)
 
@@ -178,7 +178,7 @@ def test_install_with_source(
         mock_packages, mock_archive, mock_fetch, config, install_mockery):
     """Verify that source has been copied into place."""
     install('--source', '--keep-stage', 'trivial-install-test-package')
-    spec = Spec('trivial-install-test-package').concretized()
+    spec = spack.spec.concretized(Spec('trivial-install-test-package'))
     src = os.path.join(
         spec.prefix.share, 'trivial-install-test-package', 'src')
     assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),

@@ -66,7 +66,7 @@ def check_spec(abstract, concrete):
 
 def check_concretize(abstract_spec):
     abstract = Spec(abstract_spec)
-    concrete = abstract.concretized()
+    concrete = spack.spec.concretized(abstract)
     assert not abstract.concrete
     assert concrete.concrete
     check_spec(abstract, concrete)

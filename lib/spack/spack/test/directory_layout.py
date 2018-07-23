@@ -158,7 +158,9 @@ def test_read_and_write_spec(
         assert norm.eq_dag(spec_from_file)
 
         # TODO: revise this when build deps are in dag_hash
-        conc = read_separately.concretized().copy(deps=stored_deptypes)
+        conc = spack.spec.concretized(read_separately).copy(
+            deps=stored_deptypes
+        )
         assert conc == spec_from_file
         assert conc.eq_dag(spec_from_file)
 
@@ -232,7 +234,7 @@ def test_find(layout_and_dir, config, mock_packages):
         if pkg.name.startswith('external'):
             # External package tests cannot be installed
             continue
-        spec = pkg.spec.concretized()
+        spec = spack.spec.concretized(pkg.spec)
         installed_specs[spec.name] = spec
         layout.create_install_directory(spec)
 

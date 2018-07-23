@@ -143,6 +143,7 @@ from yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
+    'concretized',
     'parse',
     'parse_anonymous_spec',
     'SpecError',
@@ -204,26 +205,6 @@ _any_version = VersionList([':'])
 
 #: Max integer helps avoid passing too large a value to cyaml.
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
-
-
-def colorize_spec(spec):
-    """Returns a spec colorized according to the colors specified in
-       color_formats."""
-    class insert_color:
-
-        def __init__(self):
-            self.last = None
-
-        def __call__(self, match):
-            # ignore compiler versions (color same as compiler)
-            sep = match.group(0)
-            if self.last == '%' and sep == '@':
-                return cescape(sep)
-            self.last = sep
-
-            return '%s%s' % (color_formats[sep], cescape(sep))
-
-    return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
 
 @key_ordering
@@ -1094,13 +1075,6 @@ class Spec(object):
     def external(self):
         return bool(self.external_path) or bool(self.external_module)
 
-    def get_dependency(self, name):
-        dep = self._dependencies.get(name)
-        if dep is not None:
-            return dep
-        raise InvalidDependencyError(
-            self.name + " does not depend on " + comma_or(name))
-
     def _find_deps(self, where, deptype):
         deptype = canonical_deptype(deptype)
 
@@ -1944,14 +1918,6 @@ class Spec(object):
             s._normal = value
             s._concrete = value
 
-    def concretized(self):
-        """This is a non-destructive version of concretize().  First clones,
-           then returns a concrete version of this package without modifying
-           this package. """
-        clone = self.copy(caches=False)
-        clone.concretize()
-        return clone
-
     def flat_dependencies(self, **kwargs):
         """Return a DependencyMap containing all of this spec's
            dependencies with their constraints merged.
@@ -2143,9 +2109,11 @@ class Spec(object):
             except UnsatisfiableSpecError as e:
                 fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
                 fmt += ' constraint has been detected for spec:'
-                fmt += '\n\n{0}\n\n'.format(spec_deps[dep.name].tree(indent=4))
+                fmt += '\n\n{0}\n\n'.format(
+                    tree(spec_deps[dep.name], indent=4)
+                )
                 fmt += 'while trying to concretize the partial spec:'
-                fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
+                fmt += '\n\n{0}\n\n'.format(tree(self, indent=4))
                 fmt += '{0} requires {1} {2} {3}, but spec asked for {4}'
 
                 e.message = fmt.format(
@@ -2406,7 +2374,7 @@ class Spec(object):
 
         # Update with additional constraints from other spec
         for name in other.dep_difference(self):
-            dep_spec_copy = other.get_dependency(name)
+            dep_spec_copy = other._dependencies[name]
             dep_copy = dep_spec_copy.spec
             deptypes = dep_spec_copy.deptypes
             self._add_dependency(dep_copy.copy(), deptypes)
@@ -2421,12 +2389,6 @@ class Spec(object):
         common.intersection_update(
             s.name for s in other.traverse(root=False))
         return common
-
-    def constrained(self, other, deps=True):
-        """Return a constrained copy without modifying this spec."""
-        clone = self.copy(deps=deps)
-        clone.constrain(other, deps)
-        return clone
 
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
@@ -2914,9 +2876,6 @@ class Spec(object):
             self._cmp_key_cache = key
         return key
 
-    def colorized(self):
-        return colorize_spec(self)
-
     def format(self, format_string='$_$@$%@+$+$=', **kwargs):
         """Prints out particular pieces of a spec, depending on what is
         in the format string.
@@ -3165,16 +3124,6 @@ class Spec(object):
         ret = self.format() + self.dep_string()
         return ret.strip()
 
-    def _install_status(self):
-        """Helper for tree to print DB install status."""
-        if not self.concrete:
-            return None
-        try:
-            record = spack.store.db.get_record(self)
-            return record.installed
-        except KeyError:
-            return None
-
     def _installed_explicitly(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
@@ -3184,61 +3133,6 @@ class Spec(object):
             return record.explicit
         except KeyError:
             return None
-
-    def tree(self, **kwargs):
-        """Prints out this spec and its dependencies, tree-formatted
-           with indentation."""
-        color = kwargs.pop('color', get_color_when())
-        depth = kwargs.pop('depth', False)
-        hashes = kwargs.pop('hashes', False)
-        hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', False)
-        cover = kwargs.pop('cover', 'nodes')
-        indent = kwargs.pop('indent', 0)
-        fmt = kwargs.pop('format', '$_$@$%@+$+$=')
-        prefix = kwargs.pop('prefix', None)
-        show_types = kwargs.pop('show_types', False)
-        deptypes = kwargs.pop('deptypes', ('build', 'link'))
-        check_kwargs(kwargs, self.tree)
-
-        out = ""
-        for d, dep_spec in self.traverse_edges(
-                order='pre', cover=cover, depth=True, deptypes=deptypes):
-            node = dep_spec.spec
-
-            if prefix is not None:
-                out += prefix(node)
-            out += " " * indent
-
-            if depth:
-                out += "%-4d" % d
-
-            if install_status:
-                status = node._install_status()
-                if status is None:
-                    out += "     "  # Package isn't installed
-                elif status:
-                    out += colorize("@g{[+]}  ", color=color)  # installed
-                else:
-                    out += colorize("@r{[-]}  ", color=color)  # missing
-
-            if hashes:
-                out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
-
-            if show_types:
-                out += '['
-                if dep_spec.deptypes:
-                    for t in all_deptypes:
-                        out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
-                else:
-                    out += ' ' * len(all_deptypes)
-                out += ']  '
-
-            out += ("    " * d)
-            if d > 0:
-                out += "^"
-            out += node.format(fmt, color=color) + "\n"
-        return out
 
     def __repr__(self):
         return str(self)
@@ -3255,6 +3149,152 @@ class LazySpecCache(collections.defaultdict):
         value = self.default_factory(key)
         self[key] = value
         return value
+
+
+def concretized(spec):
+    """Returns a concretized copy of a spec
+
+    Args:
+        spec (Spec): spec to be copied and concretized
+
+    Returns:
+        concretized copy of ``spec``
+    """
+    clone = spec.copy(caches=False)
+    clone.concretize()
+    return clone
+
+
+def constrained(spec, other, deps=True):
+    """Returns a constrained copy of a spec
+
+    Args:
+        spec (Spec): spec to be copied and constrained
+        other (Spec): spec containing the constraints
+        deps (bool or deptype): specifies which dependency types
+            should be copied
+
+    Returns:
+        constrained copy of ``spec``
+    """
+    clone = spec.copy(deps=deps)
+    clone.constrain(other, deps)
+    return clone
+
+
+def colorized(spec):
+    """Returns a spec colorized according to the colors specified in
+    color_formats.
+
+    Args:
+        spec (Spec): spec to be colorized
+
+    Returns:
+        colorized string representation of the spec
+    """
+    class insert_color:
+
+        def __init__(self):
+            self.last = None
+
+        def __call__(self, match):
+            # ignore compiler versions (color same as compiler)
+            sep = match.group(0)
+            if self.last == '%' and sep == '@':
+                return cescape(sep)
+            self.last = sep
+
+            return '%s%s' % (color_formats[sep], cescape(sep))
+
+    return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
+
+
+def tree(spec, **kwargs):
+    """Returns a string where ``spec`` and its dependencies are tree-formatted
+    with indentation.
+
+    Args:
+        spec (Spec): input spec
+        **kwargs: the following list of keywords is supported
+
+            - color (bool): whether or not the output should be colored
+            - depth:
+            - hashes (bool): show the hash of each node
+            - hashlen (int): length of the hash if shown
+            - install_status (bool): show the install status of each node
+            - cover (str):
+            - indent (int): spaces per indentation level
+            - format (str): format string to be used for specs
+            - prefix:
+            - show_types (bool): show the dependency types in the
+                formatted string
+            - deptypes: iterable of dependency types to be considered
+
+    Returns:
+        formatted string
+    """
+    color = kwargs.pop('color', get_color_when())
+    depth = kwargs.pop('depth', False)
+    hashes = kwargs.pop('hashes', False)
+    hlen = kwargs.pop('hashlen', None)
+    install_status = kwargs.pop('install_status', False)
+    cover = kwargs.pop('cover', 'nodes')
+    indent = kwargs.pop('indent', 0)
+    fmt = kwargs.pop('format', '$_$@$%@+$+$=')
+    prefix = kwargs.pop('prefix', None)
+    show_types = kwargs.pop('show_types', False)
+    deptypes = kwargs.pop('deptypes', ('build', 'link'))
+    check_kwargs(kwargs, tree)
+
+    def get_install_status(spec):
+        """Helper for tree to print DB install status."""
+        if not spec.concrete:
+            return None
+        try:
+            record = spack.store.db.get_record(spec)
+            return record.installed
+        except KeyError:
+            return None
+
+    out = ""
+    for d, dep_spec in spec.traverse_edges(
+            order='pre', cover=cover, depth=True, deptypes=deptypes):
+        node = dep_spec.spec
+
+        if prefix is not None:
+            out += prefix(node)
+        out += " " * indent
+
+        if depth:
+            out += "%-4d" % d
+
+        if install_status:
+            status = get_install_status(node)
+            if status is None:
+                out += "     "  # Package isn't installed
+            elif status:
+                out += colorize("@g{[+]}  ", color=color)  # installed
+            else:
+                out += colorize("@r{[-]}  ", color=color)  # missing
+
+        if hashes:
+            out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
+
+        if show_types:
+            out += '['
+            if dep_spec.deptypes:
+                for t in all_deptypes:
+                    out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
+            else:
+                    out += ' ' * len(all_deptypes)
+            out += ']  '
+
+        out += ("    " * d)
+        if d > 0:
+            out += "^"
+        out += node.format(fmt, color=color) + "\n"
+
+    return out
 
 
 #
@@ -3789,7 +3829,7 @@ class ConflictsInSpecError(SpecError, RuntimeError):
             if s not in visited:
                 visited.add(s)
                 long_message += 'List of matching conflicts for spec:\n\n'
-                long_message += s.tree(indent=4) + '\n'
+                long_message += spack.spec.tree(s, indent=4) + '\n'
 
             if msg is None:
                 long_message += match_fmt_default.format(idx + 1, c, w)

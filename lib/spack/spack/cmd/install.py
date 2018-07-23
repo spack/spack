@@ -36,6 +36,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy
 import spack.report
+import spack.spec
 from spack.error import SpackError
 
 
@@ -221,13 +222,13 @@ def install(parser, args, **kwargs):
         with open(file, 'r') as f:
             s = spack.spec.Spec.from_yaml(f)
 
-        if s.concretized().dag_hash() != s.dag_hash():
+        if spack.spec.concretized(s).dag_hash() != s.dag_hash():
             msg = 'skipped invalid file "{0}". '
             msg += 'The file does not contain a concrete spec.'
             tty.warn(msg.format(file))
             continue
 
-        specs.append(s.concretized())
+        specs.append(spack.spec.concretized(s))
 
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
