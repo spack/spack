@@ -31,11 +31,12 @@ class Aspect(CMakePackage):
 
     homepage = "https://aspect.geodynamics.org"
     url      = "https://github.com/geodynamics/aspect/releases/download/v2.0.0/aspect-2.0.0.tar.gz"
+    git      = "https://github.com/geodynamics/aspect.git"
 
     maintainers = ['tjhei']
 
+    version('develop', branch='master')
     version('2.0.0', 'dfecc571fb221f28a0800034cd29c95c')
-    version('develop', git='https://github.com/geodynamics/aspect.git', branch='master')
 
     variant('build_type', default='Release',
             description='The build type to build',

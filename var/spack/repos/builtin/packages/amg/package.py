@@ -35,8 +35,8 @@ class Amg(MakefilePackage):
     homepage = "https://codesign.llnl.gov/amg2013.php"
     git      = "https://github.com/LLNL/AMG"
 
-    version('1.0', git=git, tag='1.0')
-    version('develop', git=git, branch='master')
+    version('develop', branch='master')
+    version('1.0', tag='1.0')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('optflags', default=False, description='Additional optimizations')

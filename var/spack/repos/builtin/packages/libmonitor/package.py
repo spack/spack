@@ -27,9 +27,12 @@ from spack import *
 
 class Libmonitor(AutotoolsPackage):
     """Libmonitor is a library for process and thread control."""
+
     homepage = "https://github.com/HPCToolkit/libmonitor"
-    version('20130218', git='https://github.com/HPCToolkit/libmonitor.git',
-            commit='4f2311e')
+    git      = "https://github.com/HPCToolkit/libmonitor.git"
+
+    version('20130218', commit='4f2311e')
+
     variant('krellpatch', default=False,
             description="build with openspeedshop based patch.")
 

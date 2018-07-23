@@ -38,9 +38,9 @@ class Charm(Package):
 
     homepage = "http://charmplusplus.org"
     url      = "http://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
+    git      = "https://github.com/UIUC-PPL/charm"
 
-    version("develop", git="https://github.com/UIUC-PPL/charm")
-
+    version("develop", git=git)
     version("6.8.2", "a887a34b638a5b2f7fcf7ff3c262496d")
     version("6.8.1", "3e95ffa760909154ef16b643c9bb8193")
     version("6.8.0", "54df066a5aefb0bbc1a263c2383c2bba")

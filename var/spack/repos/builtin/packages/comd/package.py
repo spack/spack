@@ -41,9 +41,10 @@ class Comd(MakefilePackage):
 
     homepage = "http://www.exmatex.org/comd.html"
     url      = "https://github.com/ECP-copa/CoMD/archive/v1.1.tar.gz"
+    git      = "https://github.com/ECP-copa/CoMD.git"
 
+    version('develop', branch='master')
     version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
-    version('develop', git='https://github.com/ECP-copa/CoMD', branch='master')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')

@@ -48,13 +48,10 @@ class CbtfArgonavisGui(QMakePackage):
        performance information by loading in the Sqlite database files.
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
-    url = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
+    git      = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
-    version('1.3.0.0', branch='1.3.0.0',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
+    version('develop', branch='master')
+    version('1.3.0.0', branch='1.3.0.0')
 
     depends_on("cmake@3.0.2:", type='build')
 
