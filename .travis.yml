@@ -11,6 +11,13 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
+
+# Adding the keyword dist to permit an `allow_failures` section
+# under `matrix.include`. More information here:
+#
+# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
+dist: trusty
+
 jobs:
   fast_finish: true
   include:
@@ -42,6 +49,12 @@ jobs:
       env: TEST_SUITE=unit
     - python: '3.6'
       os: linux
+      language: python
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - python: '3.7'
+      os: linux
+      dist: xenial
+      sudo: true
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.6'
@@ -93,6 +106,8 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+  allow_failures:
+    - dist: xenial
 
 stages:
   - 'style checks'
