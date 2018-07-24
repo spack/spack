@@ -34,10 +34,9 @@ class RRtracklayer(RPackage):
        current viewport."""
 
     homepage = "http://bioconductor.org/packages/rtracklayer/"
-    url      = "https://git.bioconductor.org/packages/rtracklayer"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/rtracklayer.git"
 
-    version('1.36.6', git='https://git.bioconductor.org/packages/rtracklayer', commit='8c0ac7230f94e0c5a981acbb178c8de70e968131')
+    version('1.36.6', commit='8c0ac7230f94e0c5a981acbb178c8de70e968131')
 
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))

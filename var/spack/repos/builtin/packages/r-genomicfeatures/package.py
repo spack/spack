@@ -36,10 +36,9 @@ class RGenomicfeatures(RPackage):
        desired features in a convenient format."""
 
     homepage = "http://bioconductor.org/packages/GenomicFeatures/"
-    url      = "https://git.bioconductor.org/packages/GenomicFeatures"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/GenomicFeatures.git"
 
-    version('1.28.5', git='https://git.bioconductor.org/packages/GenomicFeatures', commit='ba92381ae93cb1392dad5e6acfab8f6c1d744834')
+    version('1.28.5', commit='ba92381ae93cb1392dad5e6acfab8f6c1d744834')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))

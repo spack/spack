@@ -34,9 +34,9 @@ class RDirichletmultinomial(RPackage):
     further in the man page for this package, ?DirichletMultinomial."""
 
     homepage = "https://bioconductor.org/packages/DirichletMultinomial/"
-    url      = "https://git.bioconductor.org/packages/DirichletMultinomial"
+    git      = "https://git.bioconductor.org/packages/DirichletMultinomial.git"
 
-    version('1.20.0', git='https://git.bioconductor.org/packages/DirichletMultinomial', commit='251529f301da1482551142240aeb6baf8dab2272')
+    version('1.20.0', commit='251529f301da1482551142240aeb6baf8dab2272')
 
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))

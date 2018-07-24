@@ -30,10 +30,9 @@ class RSpem(RPackage):
     series data"""
 
     homepage = "https://bioconductor.org/packages/SPEM/"
-    url      = "https://git.bioconductor.org/packages/SPEM"
+    git      = "https://git.bioconductor.org/packages/SPEM.git"
 
-    version('1.18.0', git='https://git.bioconductor.org/packages/SPEM',
-            commit='3ab425dd9889885eac328d26b73366a875cd250b')
+    version('1.18.0', commit='3ab425dd9889885eac328d26b73366a875cd250b')
 
     depends_on('r-rsolnp', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
