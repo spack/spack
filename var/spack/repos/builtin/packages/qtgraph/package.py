@@ -40,6 +40,7 @@
 # Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Qtgraph(QMakePackage):
@@ -69,11 +70,22 @@ class Qtgraph(QMakePackage):
         spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
         spack_env.set('INSTALL_ROOT', self.prefix)
 
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+
         # The implementor has set up the library and include paths in
         # a non-conventional way.  We reflect that here.
-        run_env.prepend_path(
-            'LD_LIBRARY_PATH', join_path(
-                self.prefix.lib64,
-                '{0}'.format(self.spec['qt'].version.up_to(3))))
+        qtgraphlibs = join_path(
+            self.spec['qtgraph'].libs,
+            '{0}'.format(self.spec['qt'].version.up_to(3)))
 
-        run_env.prepend_path('CPATH', self.prefix.include.QtGraph)
+        if os.path.isfile(qtgraphlibs):
+            run_env.prepend_path(
+                'LD_LIBRARY_PATH', qtgraphlibs)
+            run_env.prepend_path('CPATH', self.prefix.include.QtGraph)
