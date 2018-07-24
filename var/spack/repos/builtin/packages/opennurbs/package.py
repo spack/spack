@@ -32,13 +32,11 @@ class Opennurbs(Package):
     """
 
     homepage = "https://github.com/OpenNURBS/OpenNURBS"
-    url      = "https://github.com/OpenNURBS/OpenNURBS.git"
+    git      = "https://github.com/OpenNURBS/OpenNURBS.git"
 
     maintainers = ['jrood-nrel']
 
-    version('develop',
-            git='https://github.com/OpenNURBS/OpenNURBS.git',
-            branch='develop')
+    version('develop', branch='develop')
 
     version('percept', '59163fd085a24c7a4c2170c70bb60fea',
             url='https://github.com/PerceptTools/percept/raw/master/build-cmake/opennurbs-percept.tar.gz')

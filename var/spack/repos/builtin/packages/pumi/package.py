@@ -36,12 +36,10 @@ class Pumi(CMakePackage):
        and dynamic load balancing."""
 
     homepage = "https://www.scorec.rpi.edu/pumi"
-    url      = "https://github.com/SCOREC/core.git"
+    git      = "https://github.com/SCOREC/core.git"
 
-    version('2.1.0', git='https://github.com/SCOREC/core.git',
-        commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
-    version('develop', git='https://github.com/SCOREC/core.git',
-        branch='master')
+    version('develop', branch='master')
+    version('2.1.0', commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
 
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')

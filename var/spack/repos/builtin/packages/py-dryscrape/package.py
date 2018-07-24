@@ -31,9 +31,9 @@ class PyDryscrape(PythonPackage):
 
     homepage = "https://github.com/niklasb/dryscrape"
     url      = "https://pypi.io/packages/source/d/dryscrape/dryscrape-1.0.tar.gz"
+    git      = "https://github.com/niklasb/dryscrape.git"
 
-    version('develop', git="https://github.com/niklasb/dryscrape",
-            branch="master")
+    version('develop', branch='master')
     version('1.0', '267e380a8efaf9cd8fd94de1639d3198')
 
     depends_on('py-lxml', type=('build', 'run'))

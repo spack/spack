@@ -27,15 +27,12 @@ class MofemCephas(CMakePackage):
     """mofem-cephas core library"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem-cephas.git"
+    git      = "https://bitbucket.org/likask/mofem-cephas.git"
 
     maintainers = ['likask']
 
-    version('0.8.7', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.7', submodules=True)
-    version('develop',
-        git='https://bitbucket.org/likask/mofem-cephas.git',
-        branch='develop', submodules=True)
+    version('develop', branch='develop', submodules=True)
+    version('0.8.7', tag='v0.8.7', submodules=True)
 
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,

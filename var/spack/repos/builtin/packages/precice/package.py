@@ -32,10 +32,10 @@ class Precice(CMakePackage):
     a simulation."""
 
     homepage = 'https://www.precice.org'
-    gitrepo  = 'https://github.com/precice/precice.git'
+    git      = 'https://github.com/precice/precice.git'
 
     # Skip version 1.1.1 entirely, the cmake was lacking install.
-    version('develop', branch='develop', git=gitrepo)
+    version('develop', branch='develop')
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('petsc', default=False, description='Enable PETSc support')
