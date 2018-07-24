@@ -37,13 +37,13 @@ class UrlListTest(Package):
     list_url = 'file://' + web_data_path + '/index.html'
     list_depth = 3
 
-    version('0.0.0')
-    version('1.0.0')
-    version('3.0')
-    version('4.5')
-    version('2.0.0b2')
-    version('3.0a1')
-    version('4.5-rc5')
+    version('0.0.0',   'abc000')
+    version('1.0.0',   'abc100')
+    version('3.0',     'abc30')
+    version('4.5',     'abc45')
+    version('2.0.0b2', 'abc200b2')
+    version('3.0a1',   'abc30a1')
+    version('4.5-rc5', 'abc45rc5')
 
     def install(self, spec, prefix):
         pass

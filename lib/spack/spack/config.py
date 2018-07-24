@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 """This module implements Spack's configuration file handling.
 
 This implements Spack's configuration system, which handles merging
@@ -206,6 +208,19 @@ class ConfigScope(object):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
 
 
+class ImmutableConfigScope(ConfigScope):
+    """A configuration scope that cannot be written to.
+
+    This is used for ConfigScopes passed on the command line.
+    """
+
+    def write_section(self, section):
+        raise ConfigError("Cannot write to immutable scope %s" % self)
+
+    def __repr__(self):
+        return '<ImmutableConfigScope: %s: %s>' % (self.name, self.path)
+
+
 class InternalConfigScope(ConfigScope):
     """An internal configuration scope that is not persisted to a file.
 
@@ -274,9 +289,8 @@ class Configuration(object):
 
     @property
     def file_scopes(self):
-        """List of scopes with an associated file (non-internal scopes)."""
-        return [s for s in self.scopes.values()
-                if not isinstance(s, InternalConfigScope)]
+        """List of writable scopes with an associated file."""
+        return [s for s in self.scopes.values() if type(s) == ConfigScope]
 
     def highest_precedence_scope(self):
         """Non-internal scope with highest precedence."""
@@ -455,17 +469,65 @@ class Configuration(object):
 
 
 @contextmanager
-def override(path, value):
-    """Simple way to override config settings within a context."""
-    overrides = InternalConfigScope('overrides')
+def override(path_or_scope, value=None):
+    """Simple way to override config settings within a context.
 
-    config.push_scope(overrides)
-    config.set(path, value, scope='overrides')
+    Arguments:
+        path_or_scope (ConfigScope or str): scope or single option to override
+        value (object, optional): value for the single option
 
-    yield config
+    Temporarily push a scope on the current configuration, then remove it
+    after the context completes. If a single option is provided, create
+    an internal config scope for it and push/pop that scope.
 
-    scope = config.pop_scope()
-    assert scope is overrides
+    """
+    if isinstance(path_or_scope, ConfigScope):
+        config.push_scope(path_or_scope)
+        yield config
+        config.pop_scope(path_or_scope)
+
+    else:
+        overrides = InternalConfigScope('overrides')
+
+        config.push_scope(overrides)
+        config.set(path_or_scope, value, scope='overrides')
+
+        yield config
+
+        scope = config.pop_scope()
+        assert scope is overrides
+
+
+#: configuration scopes added on the command line
+#: set by ``spack.main.main()``.
+command_line_scopes = []
+
+
+def _add_platform_scope(cfg, scope_type, name, path):
+    """Add a platform-specific subdirectory for the current platform."""
+    platform = spack.architecture.platform().name
+    plat_name = '%s/%s' % (name, platform)
+    plat_path = os.path.join(path, platform)
+    cfg.push_scope(scope_type(plat_name, plat_path))
+
+
+def _add_command_line_scopes(cfg, command_line_scopes):
+    """Add additional scopes from the --config-scope argument.
+
+    Command line scopes are named after their position in the arg list.
+    """
+    for i, path in enumerate(command_line_scopes):
+        # We ensure that these scopes exist and are readable, as they are
+        # provided on the command line by the user.
+        if not os.path.isdir(path):
+            raise ConfigError("config scope is not a directory: '%s'" % path)
+        elif not os.access(path, os.R_OK):
+            raise ConfigError("config scope is not readable: '%s'" % path)
+
+        # name based on order on the command line
+        name = 'cmd_scope_%d' % i
+        cfg.push_scope(ImmutableConfigScope(name, path))
+        _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
 
 def _config():
@@ -485,16 +547,15 @@ def _config():
     defaults = InternalConfigScope('_builtin', config_defaults)
     cfg.push_scope(defaults)
 
-    # Each scope can have per-platfom overrides in subdirectories
-    platform = spack.architecture.platform().name
-
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
         cfg.push_scope(ConfigScope(name, path))
 
-        plat_name = '%s/%s' % (name, platform)
-        plat_path = os.path.join(path, platform)
-        cfg.push_scope(ConfigScope(plat_name, plat_path))
+        # Each scope can have per-platfom overrides in subdirectories
+        _add_platform_scope(cfg, ConfigScope, name, path)
+
+    # add command-line scopes
+    _add_command_line_scopes(cfg, command_line_scopes)
 
     # we make a special scope for spack commands so that they can
     # override configuration options.
@@ -542,9 +603,9 @@ def _validate_section(data, schema):
     """
     import jsonschema
     if not hasattr(_validate_section, 'validator'):
-        DefaultSettingValidator = _extend_with_default(
+        default_setting_validator = _extend_with_default(
             jsonschema.Draft4Validator)
-        _validate_section.validator = DefaultSettingValidator
+        _validate_section.validator = default_setting_validator
 
     try:
         _validate_section.validator(schema).validate(data)

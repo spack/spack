@@ -22,16 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This is where most of the action happens in Spack.
-See the Package docs for detailed instructions on how the class works
-and on how to write your own packages.
+"""This is where most of the action happens in Spack.
 
-The spack package structure is based strongly on Homebrew
-(http://wiki.github.com/mxcl/homebrew/), mainly because
-Homebrew makes it very easy to create packages.  For a complete
-rundown on spack and how it differs from homebrew, look at the
-README.
+The spack package class structure is based strongly on Homebrew
+(http://brew.sh/), mainly because Homebrew makes it very easy to create
+packages.
+
 """
 import base64
 import contextlib
@@ -163,7 +159,7 @@ class PackageMeta(
     _InstallPhase_run_before = {}
     _InstallPhase_run_after = {}
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
 
         if 'phases' in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
@@ -176,7 +172,7 @@ class PackageMeta(
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(mcs, attr_name)
+            checks = getattr(cls, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
                     try:
@@ -202,12 +198,12 @@ class PackageMeta(
                             PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(mcs, attr_name, {})
+                setattr(cls, attr_name, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
 
-        return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
+        return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @staticmethod
     def register_callback(check_type, *phases):
@@ -313,208 +309,38 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     ***The Package class***
 
-    Package is where the bulk of the work of installing packages is done.
-
-    A package defines how to fetch, verfiy (via, e.g., md5), build, and
-    install a piece of software.  A Package also defines what other
+    A package defines how to fetch, verify (via, e.g., sha256), build,
+    and install a piece of software.  A Package also defines what other
     packages it depends on, so that dependencies can be installed along
-    with the package itself.  Packages are written in pure python.
+    with the package itself.  Packages are written in pure python by
+    users of Spack.
 
-    Packages live in repositories (see repo.py).  If spack is installed
-    in ``$prefix``, all of its built-in package files are in the builtin
-    repo at ``$prefix/var/spack/repos/builtin/packages``.
+    There are two main parts of a Spack package:
 
-    All you have to do to create a package is make a new subclass of Package
-    in this directory.  Spack automatically scans the python files there
-    and figures out which one to import when you invoke it.
+      1. **The package class**.  Classes contain ``directives``, which are
+         special functions, that add metadata (versions, patches,
+         dependencies, and other information) to packages (see
+         ``directives.py``). Directives provide the constraints that are
+         used as input to the concretizer.
 
-    **An example package**
+      2. **Package instances**. Once instantiated, a package is
+         essentially an installer for a particular piece of
+         software. Spack calls methods like ``do_install()`` on the
+         ``Package`` object, and it uses those to drive user-implemented
+         methods like ``patch()``, ``install()``, and other build steps.
+         To install software, An instantiated package needs a *concrete*
+         spec, which guides the behavior of the various install methods.
 
-    Let's look at the cmake package to start with.  This package lives in
-    ``$prefix/var/spack/repos/builtin/packages/cmake/package.py``:
+    Packages are imported from repos (see ``repo.py``).
 
-    .. code-block:: python
+    **Package DSL**
 
-       from spack import *
-       class Cmake(Package):
-           homepage  = 'https://www.cmake.org'
-           url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
-           md5       = '097278785da7182ec0aea8769d06860c'
-
-           def install(self, spec, prefix):
-               configure('--prefix=%s'   % prefix,
-                         '--parallel=%s' % make_jobs)
-               make()
-               make('install')
-
-    **Naming conventions**
-
-    There are two names you should care about:
-
-    1. The module name, ``cmake``.
-
-       * User will refers to this name, e.g. 'spack install cmake'.
-       * It can include ``_``, ``-``, and numbers (it can even start with a
-         number).
-
-    2. The class name, "Cmake".  This is formed by converting `-` or
-       ``_`` in the module name to camel case.  If the name starts with
-       a number, we prefix the class name with ``_``. Examples:
-
-          ===========  ==========
-          Module Name  Class Name
-          ===========  ==========
-          foo_bar      FooBar
-          docbook-xml  DocbookXml
-          FooBar       Foobar
-          3proxy       _3proxy
-          ===========  ==========
-
-        The class name is what spack looks for when it loads a package module.
-
-    **Required Attributes**
-
-    Aside from proper naming, here is the bare minimum set of things you
-    need when you make a package:
-
-    homepage:
-        informational URL, so that users know what they're
-        installing.
-
-    url or url_for_version(self, version):
-      If url, then the URL of the source archive that spack will fetch.
-      If url_for_version(), then a method returning the URL required
-      to fetch a particular version.
-
-    install():
-        This function tells spack how to build and install the
-        software it downloaded.
-
-    **Optional Attributes**
-
-    You can also optionally add these attributes, if needed:
-
-        list_url:
-            Webpage to scrape for available version strings. Default is the
-            directory containing the tarball; use this if the default isn't
-            correct so that invoking 'spack versions' will work for this
-            package.
-
-        url_version(self, version):
-            When spack downloads packages at particular versions, it just
-            converts version to string with str(version).  Override this if
-            your package needs special version formatting in its URL.  boost
-            is an example of a package that needs this.
-
-    ***Creating Packages***
-
-    As a package creator, you can probably ignore most of the preceding
-    information, because you can use the 'spack create' command to do it
-    all automatically.
-
-    You as the package creator generally only have to worry about writing
-    your install function and specifying dependencies.
-
-    **spack create**
-
-    Most software comes in nicely packaged tarballs, like this one
-
-    http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-
-    Taking a page from homebrew, spack deduces pretty much everything it
-    needs to know from the URL above.  If you simply type this::
-
-        spack create http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-
-    Spack will download the tarball, generate an md5 hash, figure out the
-    version and the name of the package from the URL, and create a new
-    package file for you with all the names and attributes set correctly.
-
-    Once this skeleton code is generated, spack pops up the new package in
-    your $EDITOR so that you can modify the parts that need changes.
-
-    **Dependencies**
-
-    If your package requires another in order to build, you can specify that
-    like this:
-
-    .. code-block:: python
-
-       class Stackwalker(Package):
-           ...
-           depends_on("libdwarf")
-           ...
-
-    This tells spack that before it builds stackwalker, it needs to build
-    the libdwarf package as well.  Note that this is the module name, not
-    the class name (The class name is really only used by spack to find
-    your package).
-
-    Spack will download and install each dependency before it installs your
-    package.  In addtion, it will add -L, -I, and rpath arguments to your
-    compiler and linker for each dependency.  In most cases, this allows you
-    to avoid specifying any dependencies in your configure or cmake line;
-    you can just run configure or cmake without any additional arguments and
-    it will find the dependencies automatically.
-
-    **The Install Function**
-
-    The install function is designed so that someone not too terribly familiar
-    with Python could write a package installer.  For example, we put a number
-    of commands in install scope that you can use almost like shell commands.
-    These include make, configure, cmake, rm, rmtree, mkdir, mkdirp, and
-    others.
-
-    You can see above in the cmake script that these commands are used to run
-    configure and make almost like they're used on the command line.  The
-    only difference is that they are python function calls and not shell
-    commands.
-
-    It may be puzzling to you where the commands and functions in install live.
-    They are NOT instance variables on the class; this would require us to
-    type 'self.' all the time and it makes the install code unnecessarily long.
-    Rather, spack puts these commands and variables in *module* scope for your
-    Package subclass.  Since each package has its own module, this doesn't
-    pollute other namespaces, and it allows you to more easily implement an
-    install function.
-
-    For a full list of commands and variables available in module scope, see
-    the add_commands_to_module() function in this class. This is where most
-    of them are created and set on the module.
-
-    **Parallel Builds**
-
-    By default, Spack will run make in parallel when you run make() in your
-    install function.  Spack figures out how many cores are available on
-    your system and runs make with -j<cores>.  If you do not want this
-    behavior, you can explicitly mark a package not to use parallel make:
-
-    .. code-block:: python
-
-       class SomePackage(Package):
-           ...
-           parallel = False
-           ...
-
-    This changes the default behavior so that make is sequential.  If you still
-    want to build some parts in parallel, you can do this in your install
-    function:
-
-    .. code-block:: python
-
-       make(parallel=True)
-
-    Likewise, if you do not supply parallel = True in your Package, you can
-    keep the default parallel behavior and run make like this when you want a
-    sequential build:
-
-    .. code-block:: python
-
-       make(parallel=False)
+    Look in ``lib/spack/docs`` or check https://spack.readthedocs.io for
+    the full documentation of the package domain-specific language.  That
+    used to be partially documented here, but as it grew, the docs here
+    became increasingly out of date.
 
     **Package Lifecycle**
-
-    This section is really only for developers of new spack commands.
 
     A package's lifecycle over a run of Spack looks something like this:
 
@@ -541,8 +367,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     package writers to override, and doing so may break the functionality
     of the Package class.
 
-    Package creators override functions like install() (all of them do this),
-    clean() (some of them do this), and others to provide custom behavior.
+    Package creators have a lot of freedom, and they could technically
+    override anything in this class.  That is not usually required.
+
+    For most use cases.  Package creators typically just add attributes
+    like ``url`` and ``homepage``, or functions like ``install()``.
+    There are many custom ``Package`` subclasses in the
+    ``spack.build_systems`` package that make things even easier for
+    specific build systems.
 
     """
     #
@@ -766,22 +598,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 version_urls[v] = args['url']
         return version_urls
 
-    def nearest_url(self, version):
-        """Finds the URL for the next lowest version with a URL.
-           If there is no lower version with a URL, uses the
-           package url property. If that isn't there, uses a
-           *higher* URL, and if that isn't there raises an error.
-        """
-        version_urls = self.version_urls()
-        url = getattr(self.__class__, 'url', None)
-
-        for v in version_urls:
-            if v > version and url:
-                break
-            if version_urls[v]:
-                url = version_urls[v]
-        return url
-
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL from which the specified version of this package
@@ -804,9 +620,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if version in version_urls:
             return version_urls[version]
 
-        # If we have no idea, try to substitute the version.
+        # If we have no idea, substitute the version into the default URL.
+        default_url = getattr(self.__class__, 'url', None)
         return spack.url.substitute_version(
-            self.nearest_url(version), self.url_version(version))
+            default_url, self.url_version(version))
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
@@ -1010,7 +827,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def installed(self):
-        return os.path.isdir(self.prefix)
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        has_prefix = os.path.isdir(self.prefix)
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            rec = spack.store.db.get_record(self.spec)
+            db_says_installed = rec.installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            db_says_installed = False
+
+        return has_prefix and db_says_installed
 
     @property
     def prefix(self):
@@ -1228,7 +1061,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                        " if the associated spec is not concrete")
             raise spack.error.SpackError(err_msg)
 
-        hashContent = list()
+        hash_content = list()
         source_id = fs.for_package_version(self, self.version).source_id()
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
@@ -1237,14 +1070,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # referenced by branch name rather than tag or commit ID.
             message = 'Missing a source id for {s.name}@{s.version}'
             tty.warn(message.format(s=self))
-            hashContent.append(''.encode('utf-8'))
+            hash_content.append(''.encode('utf-8'))
         else:
-            hashContent.append(source_id.encode('utf-8'))
-        hashContent.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                           for p in self.spec.patches)
-        hashContent.append(package_hash(self.spec, content))
+            hash_content.append(source_id.encode('utf-8'))
+        hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
+                            for p in self.spec.patches)
+        hash_content.append(package_hash(self.spec, content))
         return base64.b32encode(
-            hashlib.sha256(bytes().join(sorted(hashContent))).digest()).lower()
+            hashlib.sha256(bytes().join(
+                sorted(hash_content))).digest()).lower()
 
     @property
     def namespace(self):
@@ -1287,43 +1121,68 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dump_packages(self.spec, packages_dir)
 
     def _if_make_target_execute(self, target):
-        try:
-            # Check if we have a makefile
-            file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
-            file = file.pop()
-        except IndexError:
+        make = inspect.getmodule(self).make
+
+        # Check if we have a Makefile
+        for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
+            if os.path.exists(makefile):
+                break
+        else:
             tty.msg('No Makefile found in the build directory')
             return
 
-        # Check if 'target' is in the makefile
-        regex = re.compile('^' + target + ':')
-        with open(file, 'r') as f:
-            matches = [line for line in f.readlines() if regex.match(line)]
-
-        if not matches:
-            tty.msg("Target '" + target + ":' not found in Makefile")
+        # Check if 'target' is a valid target
+        #
+        # -q, --question
+        #       ``Question mode''. Do not run any commands, or print anything;
+        #       just return an exit status that is zero if the specified
+        #       targets are already up to date, nonzero otherwise.
+        #
+        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        #
+        # The exit status of make is always one of three values:
+        #
+        # 0     The exit status is zero if make is successful.
+        #
+        # 2     The exit status is two if make encounters any errors.
+        #       It will print messages describing the particular errors.
+        #
+        # 1     The exit status is one if you use the '-q' flag and make
+        #       determines that some target is not already up to date.
+        #
+        # https://www.gnu.org/software/make/manual/html_node/Running.html
+        #
+        # NOTE: This only works for GNU Make, not NetBSD Make.
+        make('-q', target, fail_on_error=False)
+        if make.returncode == 2:
+            tty.msg("Target '" + target + "' not found in " + makefile)
             return
 
         # Execute target
-        inspect.getmodule(self).make(target)
+        make(target)
 
     def _if_ninja_target_execute(self, target):
-        # Check if we have a ninja build script
+        ninja = inspect.getmodule(self).ninja
+
+        # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
-            tty.msg('No ninja build script found in the build directory')
+            tty.msg('No Ninja build script found in the build directory')
             return
 
-        # Check if 'target' is in the ninja build script
-        regex = re.compile('^build ' + target + ':')
-        with open('build.ninja', 'r') as f:
-            matches = [line for line in f.readlines() if regex.match(line)]
+        # Get a list of all targets in the Ninja build script
+        # https://ninja-build.org/manual.html#_extra_tools
+        all_targets = ninja('-t', 'targets', output=str).split('\n')
+
+        # Check if 'target' is a valid target
+        matches = [line for line in all_targets
+                   if line.startswith(target + ':')]
 
         if not matches:
-            tty.msg("Target 'build " + target + ":' not found in build.ninja")
+            tty.msg("Target '" + target + "' not found in build.ninja")
             return
 
         # Execute target
-        inspect.getmodule(self).ninja(target)
+        ninja(target)
 
     def _get_needed_resources(self):
         resources = []
@@ -1665,11 +1524,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
         """Check for leftover files from partially-completed prior install to
-           prepare for a new install attempt. Options control whether these
-           files are reused (vs. destroyed). This function considers a package
-           fully-installed if there is a DB entry for it (in that way, it is
-           more strict than Package.installed). The return value is used to
-           indicate when the prefix exists but the install is not complete.
+        prepare for a new install attempt.
+
+        Options control whether these files are reused (vs. destroyed).
+
+        Args:
+            keep_prefix (bool): True if the installation prefix needs to be
+                kept, False otherwise
+            restage (bool): False if the stage has to be kept, True otherwise
+
+        Returns:
+            True if the prefix exists but the install is not complete, False
+            otherwise.
         """
         if self.spec.external:
             raise ExternalPackageError("Attempted to repair external spec %s" %

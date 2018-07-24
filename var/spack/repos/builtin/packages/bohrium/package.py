@@ -41,7 +41,7 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     version("develop", git="https://github.com/bh107/bohrium.git",
             branch="master")
-    version('0.9.0', checksum="6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93")
+    version('0.9.0', sha256="6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93")
 
     #
     # Variants

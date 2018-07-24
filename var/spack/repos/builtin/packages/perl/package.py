@@ -102,6 +102,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     phases = ['configure', 'build', 'install']
 
+    # On a lustre filesystem, patch may fail when files
+    # aren't writeable so make pp.c user writeable
+    # before patching. This should probably walk the
+    # source and make everything writeable in the future.
+    def do_stage(self, mirror_only=False):
+        # Do Spack's regular stage
+        super(Perl, self).do_stage(mirror_only)
+        # Add write permissions on file to be patched
+        filename = join_path(self.stage.source_path, 'pp.c')
+        perm = os.stat(filename).st_mode
+        os.chmod(filename, perm | 0o200)
+
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
