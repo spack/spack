@@ -38,6 +38,7 @@ class Czmq(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('pkgconfig', type='build')
+    depends_on("libuuid")
     depends_on('zeromq')
 
     def configure_args(self):
