@@ -42,16 +42,14 @@ class Nek5000(Package):
        dynamics"""
 
     homepage = "https://nek5000.mcs.anl.gov/"
-    url      = "https://github.com/Nek5000/Nek5000"
+    url      = "https://github.com/Nek5000/Nek5000/releases/download/v17.0/Nek5000-v17.0.tar.gz"
+    git      = "https://github.com/Nek5000/Nek5000.git"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
             'spectral-elements', 'fluid', 'ecp', 'ecp-apps']
 
-    version('17.0', '6a13bfad2ce023897010dd88f54a0a87',
-            url="https://github.com/Nek5000/Nek5000/releases/download/"
-                    "v17.0/Nek5000-v17.0.tar.gz")
-    version('develop', git='https://github.com/Nek5000/Nek5000.git',
-        branch='master')
+    version('develop', branch='master')
+    version('17.0', '6a13bfad2ce023897010dd88f54a0a87')
 
     # MPI, Profiling and Visit variants
     variant('mpi',       default=True, description='Build with MPI.')

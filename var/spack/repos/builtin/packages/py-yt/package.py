@@ -35,8 +35,8 @@ class PyYt(PythonPackage):
        interdisciplinary community.
     """
     homepage = "http://yt-project.org"
-    url = "https://github.com/yt-project/yt/archive/yt-3.4.0.tar.gz"
-    git = "https://github.com/yt-project/yt.git"
+    url      = "https://github.com/yt-project/yt/archive/yt-3.4.0.tar.gz"
+    git      = "https://github.com/yt-project/yt.git"
 
     version("develop", branch="master")
 
