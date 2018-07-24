@@ -62,14 +62,13 @@ def handle_deprecated_command(args, unknown_args):
     command = args.module_command
     unknown = ' '.join(unknown_args)
 
-    module_types = args.module_type or 'tcl'
+    module_types = args.module_type or ['tcl']
 
-    msg = '`spack module {0} {1} ...` has been moved. Try this instead:\n'
+    msg = '`spack module {0} {1}` has moved. Use these commands instead:\n'
     msg = msg.format(command, ' '.join('-m ' + x for x in module_types))
     for x in module_types:
         msg += '\n\t$ spack module {0} {1} {2}'.format(x, command, unknown)
     msg += '\n'
-
     tty.die(msg)
 
 
