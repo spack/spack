@@ -64,22 +64,14 @@ class Lua(Package):
         else:
             target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
-             'MYCFLAGS=%s' % (
-                 self.compiler.pic_flag),
              'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncursesw',
-             'CC=%s -std=gnu99' % spack_cc,
+             'CC=%s -std=gnu99 %s' % (spack_cc,
+                                      self.compiler.pic_flag),
              target)
         make('INSTALL_TOP=%s' % prefix,
-             'MYCFLAGS=%s' % (
-                 self.compiler.pic_flag),
-             'MYLDFLAGS=-L%s -L%s' % (
-                 spec['readline'].prefix.lib,
-                 spec['ncurses'].prefix.lib),
-             'MYLIBS=-lncursesw',
-             'CC=%s -std=gnu99' % spack_cc,
              'install')
 
         static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
