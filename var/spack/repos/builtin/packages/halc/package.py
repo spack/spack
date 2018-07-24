@@ -44,7 +44,7 @@ class Halc(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)
-        dos2unix=which('dos2unix')
+        dos2unix = which('dos2unix')
         dos2unix(join_path(self.prefix.bin, 'runHALC.py'))
 
     def setup_environment(self, spack_env, run_env):
