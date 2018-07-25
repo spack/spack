@@ -30,7 +30,6 @@ class Openglu(Package):
        vendors"""
 
     homepage = "https://www.opengl.org/resources/libraries"
-    url      = "https://www.opengl.org/resources/libraries"
 
     # A second argument (usually the has) must be supplied to the
     # version directive, but 'n/a' is used here because this package

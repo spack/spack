@@ -34,7 +34,7 @@ class Pegtl(CMakePackage):
     """
 
     homepage = "https://github.com/taocpp/PEGTL"
-    url      = "https://github.com/taocpp/PEGTL/tarball/1.3.1"
+    url      = "https://github.com/taocpp/PEGTL/tarball/2.1.4"
     git      = "https://github.com/taocpp/PEGTL.git"
 
     version('develop', branch='master')

@@ -29,7 +29,7 @@ class Shuffile(CMakePackage):
     """Shuffle files between MPI ranks"""
 
     homepage = "https://github.com/ECP-VeloC/shuffile"
-    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.1.zip"
+    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.2.zip"
     git      = "https://github.com/ecp-veloc/shuffile.git"
 
     tags = ['ecp']
