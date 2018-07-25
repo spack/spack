@@ -34,7 +34,7 @@ class Hpctoolkit(Package):
     and attributes them to the full calling context in which they occur."""
 
     homepage = "http://hpctoolkit.org"
-    git      = "https://github.com/HPCToolkit/hpctoolkit"
+    git      = "https://github.com/HPCToolkit/hpctoolkit.git"
 
     version('master')
     version('2017.06', tag='release-2017.06')

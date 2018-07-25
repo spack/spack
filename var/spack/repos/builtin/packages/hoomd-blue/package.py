@@ -37,7 +37,7 @@ class HoomdBlue(CMakePackage):
     and perform in situ analysis."""
 
     homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
-    git      = "https://bitbucket.org/glotzer/hoomd-blue"
+    git      = "https://bitbucket.org/glotzer/hoomd-blue.git"
 
     version('develop', submodules=True)
 

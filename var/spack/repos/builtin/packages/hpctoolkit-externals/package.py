@@ -30,7 +30,7 @@ class HpctoolkitExternals(Package):
     HpctoolkitExternals package provides all these prerequisites."""
 
     homepage = "http://hpctoolkit.org"
-    git      = "https://github.com/HPCToolkit/hpctoolkit-externals"
+    git      = "https://github.com/HPCToolkit/hpctoolkit-externals.git"
 
     version('master')
     version('2017.06', tag='release-2017.06')
