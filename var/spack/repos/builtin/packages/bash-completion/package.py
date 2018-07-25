@@ -32,7 +32,7 @@ class BashCompletion(AutotoolsPackage):
     url      = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
     git      = "https://github.com/scop/bash-completion.git"
 
-    version('develop',  git=git)
+    version('develop', branch='master')
     version('2.7', 'f72c9e2e877d188c3159956a3496a450e7279b76')
     version('2.3', '67e50f5f3c804350b43f2b664c33dde811d24292')
 

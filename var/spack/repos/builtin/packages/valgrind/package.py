@@ -40,7 +40,7 @@ class Valgrind(AutotoolsPackage):
     url      = "https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2"
     git      = "git://sourceware.org/git/valgrind.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('3.13.0', '817dd08f1e8a66336b9ff206400a5369')
     version('3.12.0', '6eb03c0c10ea917013a7622e483d61bb')
     version('3.11.0', '4ea62074da73ae82e0162d6550d3f129')

@@ -37,7 +37,7 @@ class Lrzip(Package):
     url      = 'https://github.com/ckolivas/lrzip/archive/v0.630.tar.gz'
     git      = 'https://github.com/ckolivas/lrzip.git'
 
-    version('master', git=git)
+    version('master', branch='master')
     version('0.630', '3ca7f1d1365aa105089d1fbfc6b0924a')
     version('0.621', '1f07227b39ae81a98934411e8611e341')
     version('0.616', 'd40bdb046d0807ef602e36b1e9782cc0')

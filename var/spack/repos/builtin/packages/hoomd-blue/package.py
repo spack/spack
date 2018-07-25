@@ -39,7 +39,7 @@ class HoomdBlue(CMakePackage):
     homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
     git      = "https://bitbucket.org/glotzer/hoomd-blue"
 
-    version('develop', git=git, submodules=True)
+    version('develop', submodules=True)
 
     # Bitbucket has tarballs for each release, but they cannot be built.
     # The tarball doesn't come with the git submodules, nor does it come

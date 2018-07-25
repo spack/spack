@@ -34,7 +34,7 @@ class Libev(AutotoolsPackage):
     git      = "https://github.com/enki/libev.git"
     list_url = "http://dist.schmorp.de/libev/Attic/"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('4.24', '94459a5a22db041dec6f98424d6efe54')
 
     depends_on('autoconf', type='build', when='@develop')

@@ -32,7 +32,7 @@ class PySymengine(PythonPackage):
     url      = "https://github.com/symengine/symengine.py/archive/v0.2.0.tar.gz"
     git      = "https://github.com/symengine/symengine.py.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('0.2.0', 'e1d114fa12be4c8c7e9f24007e07718c')
 
     # Build dependencies

@@ -82,7 +82,7 @@ class OpenfoamOrg(Package):
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
     version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
