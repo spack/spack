@@ -24,7 +24,7 @@ from spack import *
 
 
 class MofemCephas(CMakePackage):
-    """mofem-cephas core library"""
+    """MoFEM is finite element core library"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem-cephas.git"
