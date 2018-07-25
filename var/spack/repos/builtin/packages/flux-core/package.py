@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Flux(AutotoolsPackage):
+class FluxCore(AutotoolsPackage):
     """ A next-generation resource manager (pre-alpha) """
 
     homepage = "https://github.com/flux-framework/flux-core"
