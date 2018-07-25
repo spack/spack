@@ -73,9 +73,8 @@ class IntelTbb(Package):
             multi=False,
             description='Use the specified C++ standard when building.')
 
-    variant('disable-tm', default=False,
-            description='Disable transactional memory, only needed ' +
-                        'for AMD or very old Intel systems.')
+    variant('tm', default=True,
+            description='Enable use of transactional memory on x86')
 
     # Build and install CMake config files if we're new enough.
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
@@ -89,7 +88,7 @@ class IntelTbb(Package):
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
 
     # Some very old systems don't support transactional memory.
-    patch("disable-tm.patch", when='+disable-tm')
+    patch("disable-tm.patch", when='~tm')
 
     def url_for_version(self, version):
         url = 'https://github.com/01org/tbb/archive/{0}.tar.gz'
