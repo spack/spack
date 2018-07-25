@@ -32,6 +32,7 @@ class Typhon(CMakePackage):
     """
 
     homepage = "https://github.com/UK-MAC/Typhon"
+    url      = "https://github.com/UK-MAC/Typhon/archive/v3.0.tar.gz"
     git      = "https://github.com/UK-MAC/Typhon.git"
 
     version('develop', branch='develop')

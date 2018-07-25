@@ -31,11 +31,6 @@ class Openglu(Package):
 
     homepage = "https://www.opengl.org/resources/libraries"
 
-    # A second argument (usually the has) must be supplied to the
-    # version directive, but 'n/a' is used here because this package
-    # is a placeholder for a system/vendor installation of OpenGL
-    version('1.3', 'n/a')
-
     provides('glu@:1.3', when='@1.3:')
     provides('glu@:1.2', when='@1.2:')
     provides('glu@:1.1', when='@1.1:')
