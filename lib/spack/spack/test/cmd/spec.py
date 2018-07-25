@@ -88,3 +88,9 @@ def test_spec_deptypes_edges():
     assert types['dt-diamond-left']   == ['bl  ']
     assert types['dt-diamond-right']  == ['bl  ']
     assert types['dt-diamond-bottom'] == ['b   ', 'blr ']
+
+
+def test_spec_returncode():
+    with pytest.raises(spack.main.SpackCommandError):
+        spec()
+    assert spec.returncode == 1
