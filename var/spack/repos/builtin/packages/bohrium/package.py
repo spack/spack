@@ -33,7 +33,7 @@ class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
     homepage = "http://bh107.org"
-    url      = "https://github.com/bh107/bohrium/archive/v0.8.9.tar.gz"
+    url      = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
     git      = "https://github.com/bh107/bohrium.git"
 
     maintainers = ['mfherbst']

@@ -30,7 +30,7 @@ class PerlIoCompress(PerlPackage):
     or lzop file/buffer."""
 
     homepage = "http://search.cpan.org/~pmqs/IO-Compress-2.070/lib/IO/Uncompress/AnyUncompress.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/IO-Compress-2.070.tar.gz"
+    url      = "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/IO-Compress-2.081.tar.gz"
 
     version('2.081', '379932c1b9428b873ed7ad3c1db15872')
 

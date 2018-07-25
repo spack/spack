@@ -29,7 +29,6 @@ class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
 
     homepage = "https://www.opengl.org/"
-    url      = "https://www.opengl.org/"
 
     # A second argument (usually the hash) must be supplied to the
     # version directive, but 'n/a' is used here because this package

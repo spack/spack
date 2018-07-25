@@ -30,7 +30,7 @@ class Latte(CMakePackage):
     """Open source density functional tight binding molecular dynamics."""
 
     homepage = "https://github.com/lanl/latte"
-    url      = "https://github.com/lanl/latte/tarball/v1.0"
+    url      = "https://github.com/lanl/latte/tarball/v1.2.1"
     git      = "https://github.com/lanl/latte.git"
 
     tags = ['ecp', 'ecp-apps']
