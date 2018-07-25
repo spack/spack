@@ -35,7 +35,7 @@ class Yasm(AutotoolsPackage):
     url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
     git      = "https://github.com/yasm/yasm.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('1.3.0', 'fc9e586751ff789b34b1f21d572d96af')
 
     depends_on('autoconf', when='@develop')

@@ -39,7 +39,7 @@ class Mpifileutils(AutotoolsPackage):
     url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
     git      = "https://github.com/hpc/mpifileutils.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 

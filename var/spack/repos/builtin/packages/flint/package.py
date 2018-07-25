@@ -32,7 +32,7 @@ class Flint(Package):
     url      = "http://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
     git      = "https://github.com/wbhart/flint2.git"
 
-    version('develop', git=git)
+    version('develop', branch='trunk')
     version('2.5.2', 'cda885309362150196aed66a5e0f0383')
     version('2.4.5', '6504b9deabeafb9313e57153a1730b33')
 

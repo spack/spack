@@ -34,7 +34,7 @@ class Raft(CMakePackage):
     url      = "https://bitbucket.org/gill_martinez/raft_aps/get/1.2.3.tar.gz"
     git      = "https://bitbucket.org/gill_martinez/raft_aps.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('1.2.3', '4d1b106d9b3493e63dde96f7dd44b834')
 
     depends_on('mpi')

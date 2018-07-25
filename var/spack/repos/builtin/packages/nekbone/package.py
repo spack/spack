@@ -37,7 +37,7 @@ class Nekbone(Package):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('17.0', sha256='ae361cc61368a924398a28a296f675b7f0c4a9516788a7f8fa3c09d787cdf69b')
 
     # Variants

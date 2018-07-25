@@ -38,7 +38,7 @@ class Pocl(CMakePackage):
     url      = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
     git      = "https://github.com/pocl/pocl.git"
 
-    version("master", git=git)
+    version("master", branch="master")
     version('0.14', '1d35f09299e76b9e3918c42826555194')
     version("0.13", "344480864d4269f2f63f1509395898bd")
     version("0.12", "e197ba3aa01a35f40581c48e053330dd")

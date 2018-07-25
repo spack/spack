@@ -34,7 +34,7 @@ class Piranha(CMakePackage):
     url      = "https://github.com/bluescarni/piranha/archive/v0.5.tar.gz"
     git      = "https://github.com/bluescarni/piranha.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('0.5', '99546bae2be115737b6316751eb0b84d')
 
     variant('python',   default=True,

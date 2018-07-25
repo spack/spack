@@ -38,7 +38,7 @@ class Tethex(CMakePackage):
 
     maintainers = ['davydden']
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('0.0.7', '6c9e4a18a6637deb4400c6d77ec03184')
 
     variant('build_type', default='Release',

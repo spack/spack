@@ -32,7 +32,7 @@ class Mpir(Package):
     url      = "https://github.com/wbhart/mpir/archive/mpir-2.7.0.tar.gz"
     git      = "https://github.com/wbhart/mpir.git"
 
-    version('develop', git=git)
+    version('develop', branch='master')
     version('2.7.0', '985b5d57bd0e74c74125ee885b9c8f71')
     version('2.6.0', 'ec17d6a7e026114ceb734b2466aa0a91')
 
