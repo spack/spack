@@ -30,7 +30,7 @@ class Pgmath(CMakePackage):
     """Flang's math library"""
 
     homepage = "https://github.com/flang-compiler/flang"
-    git      = "https://github.com/flang-compiler/flang"
+    git      = "https://github.com/flang-compiler/flang.git"
 
     version('develop', branch='master')
 

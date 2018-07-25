@@ -32,7 +32,7 @@ class Branson(CMakePackage):
 
     homepage = "https://github.com/lanl/branson"
     url      = "https://github.com/lanl/branson/archive/1.01.zip"
-    git      = "https://github.com/lanl/branson"
+    git      = "https://github.com/lanl/branson.git"
 
     tags = ['proxy-app']
 

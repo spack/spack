@@ -31,7 +31,7 @@ class RubyNarray(Package):
        similar to numpy.ndaray."""
 
     homepage = "https://rubygems.org/gems/narray"
-    git      = "https://github.com/ruby-numo/narray"
+    git      = "https://github.com/ruby-numo/narray.git"
 
     version('0.9.0.9', commit='9cadbbccf1e01b6d1bc143c19d598cad1c420869')
 

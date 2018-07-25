@@ -191,12 +191,12 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
 
     resource(name='dtk',
-             git='https://github.com/ornl-cees/DataTransferKit',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
              tag='master',
              placement='DataTransferKit',
              when='+dtk')
     resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos',
+             git='https://github.com/trilinos/ForTrilinos.git',
              tag='develop',
              placement='packages/ForTrilinos',
              when='+fortrilinos')
