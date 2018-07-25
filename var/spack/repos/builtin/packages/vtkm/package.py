@@ -37,12 +37,10 @@ class Vtkm(Package):
 
     homepage = "https://m.vtk.org/"
     url      = "https://gitlab.kitware.com/api/v4/projects/vtk%2Fvtk-m/repository/archive.tar.gz?sha=v1.1.0"
+    git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
+    version('master', branch='master')
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
-
-    version('master',
-            git='https://gitlab.kitware.com/vtk/vtk-m.git',
-            branch='master')
 
     variant("cuda", default=False, description="build cuda support")
     variant("tbb", default=True, description="build TBB support")

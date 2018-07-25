@@ -32,11 +32,11 @@ class Relion(CMakePackage, CudaPackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    url      = "https://github.com/3dem/relion"
+    git      = "https://github.com/3dem/relion.git"
 
-    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
-    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
-    version('develop', git='https://github.com/3dem/relion.git')
+    version('develop')
+    version('2.1', tag='2.1')
+    version('2.0.3', tag='2.0.3')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
