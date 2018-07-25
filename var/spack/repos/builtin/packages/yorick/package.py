@@ -40,12 +40,11 @@ class Yorick(Package):
 
     homepage = "http://dhmunro.github.io/yorick-doc/"
     url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
+    git      = "https://github.com/dhmunro/yorick.git"
 
+    version('master', branch='master')
     version('2.2.04', '1b5b0da6ad81b2d9dba64d991ec17939')
-    version('master', branch='master',
-            git='https://github.com/dhmunro/yorick.git')
-    version('f90-plugin', branch='f90-plugin',
-            git='https://github.com/trmwzm/yorick.git')
+    version('f90-plugin', branch='f90-plugin')
 
     variant('X', default=False, description='Enable X11 support')
 
