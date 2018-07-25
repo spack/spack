@@ -37,6 +37,10 @@ class Flux(AutotoolsPackage):
     version('0.8.0', 'b0fec05acedc530bcdf75b2477ac22f39d2adddc7af8ff76496208a5e1e8185b1b4a18677871d95c3cfbf34b05f391953651200917fe029931f4e2beb79d70df')
     version('0.9.0', '70eaec1005aa49e8d8cf397570789cebedfb5d917efe963390d456ee4c473eefb15b0c81ea83f60a1fd057fe7be356bbafdebcae64b499844d194c48f6aefa05')
 
+    # Avoid the infinite symlink issue
+    # This workaround is documented in PR #3543
+    build_directory = 'spack-build'
+
     variant('doc', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
@@ -64,18 +68,18 @@ class Flux(AutotoolsPackage):
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
 
-    def setup():
+    def setup(self):
         pass
 
     @when('@master')
     def setup(self):
         # Allow git-describe to get last tag so flux-version works:
         git = which('git')
-        git('pull', '--depth=50', '--tags')
+        git('fetch', '--unshallow')
 
     def autoreconf(self, spec, prefix):
         self.setup()
-        if os.path.exists('autogen.sh'):
+        if not os.path.exists('configure'):
             # Bootstrap with autotools
             bash = which('bash')
             bash('./autogen.sh')
@@ -85,4 +89,12 @@ class Flux(AutotoolsPackage):
         spack_env.append_path('LUA_PATH', './?.lua', separator=';')
 
     def configure_args(self):
-        return ['--disable-docs'] if '+docs' not in self.spec else []
+        args = ['--enable-pylint=no']
+        if '+docs' not in self.spec:
+            args.append('--disable-docs')
+        return args
+
+    # Default AutotoolsPackage check method fails to run `make check` successfully
+    def check(self):
+        with working_dir(self.build_directory):
+            make('check')
