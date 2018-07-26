@@ -34,20 +34,15 @@ class Halc(MakefilePackage):
 
     version('1.1', '4b289b366f6a5400ca481993aa68dd9c')
 
-    depends_on('blasr')
-    depends_on('lordec')
+    depends_on('blasr', type='run')
+    depends_on('lordec', type='run')
     depends_on('dos2unix', type='build')
     depends_on('python', type='run')
 
-    def build(self, spec, prefix):
-        make('all', parallel=False)
+    parallel = False
 
     def install(self, spec, prefix):
-        install_tree('.', prefix.bin)
+        install_tree('bin', prefix.bin)
+        install('runHALC.py', prefix.bin)
         dos2unix = which('dos2unix')
         dos2unix(join_path(self.prefix.bin, 'runHALC.py'))
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec['blasr'].prefix.bin)
-        run_env.prepend_path('PATH', self.spec['lordec'].prefix.bin)
-        run_env.prepend_path('PATH', self.prefix.bin.bin)
