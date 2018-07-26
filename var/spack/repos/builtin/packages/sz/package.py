@@ -58,4 +58,3 @@ class Sz(AutotoolsPackage):
         else:
             args += ['--disable-fortran']
         return args
-
