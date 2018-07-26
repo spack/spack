@@ -25,7 +25,7 @@
 from spack import *
 
 class Sz(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Error-bounded Lossy Compressor for HPC Data."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
