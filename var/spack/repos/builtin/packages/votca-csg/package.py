@@ -35,8 +35,9 @@ class VotcaCsg(CMakePackage):
     """
     homepage = "http://www.votca.org"
     url      = "https://github.com/votca/csg/tarball/v1.4"
+    git      = "https://github.com/votca/csg.git"
 
-    version('develop', git='https://github.com/votca/csg', branch='master')
+    version('develop', branch='master')
     version('1.4', 'd009e761e5e3afd51eed89c420610a67')
     version('1.4.1', 'e4195d69db2036e9d76f22115ae31f81')
 

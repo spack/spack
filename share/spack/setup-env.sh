@@ -121,20 +121,28 @@ function spack {
             # If spack module command comes back with an error, do nothing.
             case $_sp_subcommand in
                 "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit "${_sp_spec[@]}"); then
+                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         use $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit "${_sp_spec[@]}"); then
+                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         unuse $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl "${_sp_spec[@]}"); then
+                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         module load $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl "${_sp_spec[@]}"); then
+                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         module unload $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
             esac
             ;;

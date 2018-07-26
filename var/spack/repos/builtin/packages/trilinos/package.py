@@ -45,17 +45,15 @@ class Trilinos(CMakePackage):
     """
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+    git      = "https://github.com/trilinos/Trilinos.git"
 
     maintainers = ['aprokop']
 
     # ###################### Versions ##########################
 
-    version('xsdk-0.2.0',
-            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
-    version('develop',
-            git='https://github.com/trilinos/Trilinos.git', branch='develop')
-    version('master',
-            git='https://github.com/trilinos/Trilinos.git', branch='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
@@ -193,12 +191,12 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
 
     resource(name='dtk',
-             git='https://github.com/ornl-cees/DataTransferKit',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
              tag='master',
              placement='DataTransferKit',
              when='+dtk')
     resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos',
+             git='https://github.com/trilinos/ForTrilinos.git',
              tag='develop',
              placement='packages/ForTrilinos',
              when='+fortrilinos')

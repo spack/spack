@@ -31,9 +31,9 @@ class RAffyexpress(RPackage):
     expressed genes in the Affymetrix gene expression data."""
 
     homepage = "https://www.bioconductor.org/packages/AffyExpress/"
-    url      = "https://git.bioconductor.org/packages/AffyExpress"
+    git      = "https://git.bioconductor.org/packages/AffyExpress.git"
 
-    version('1.42.0', git='https://git.bioconductor.org/packages/AffyExpress', commit='f5c5cf6173f4419e25f4aeff5e6b705a40abc371')
+    version('1.42.0', commit='f5c5cf6173f4419e25f4aeff5e6b705a40abc371')
 
     depends_on('r@3.4.0:3.4.9', when='@1.42.0')
     depends_on('r-affy', type=('build', 'run'))

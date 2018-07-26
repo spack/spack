@@ -276,11 +276,11 @@ have some drawbacks:
 2. The ``spack spec`` and ``spack install`` commands use a
    sophisticated concretization algorithm that chooses the "best"
    among several options, taking into account ``packages.yaml`` file.
-   The ``spack load`` and ``spack module loads`` commands, on the
+   The ``spack load`` and ``spack module tcl loads`` commands, on the
    other hand, are not very smart: if the user-supplied spec matches
-   more than one installed package, then ``spack module loads`` will
+   more than one installed package, then ``spack module tcl loads`` will
    fail. This may change in the future.  For now, the workaround is to
-   be more specific on any ``spack module loads`` lines that fail.
+   be more specific on any ``spack module tcl loads`` lines that fail.
 
 
 """"""""""""""""""""""
@@ -290,7 +290,7 @@ Generated Load Scripts
 Another problem with using `spack load` is, it is slow; a typical user
 environment could take several seconds to load, and would not be
 appropriate to put into ``.bashrc`` directly.  It is preferable to use
-a series of ``spack module loads`` commands to pre-compute which
+a series of ``spack module tcl loads`` commands to pre-compute which
 modules to load.  These can be put in a script that is run whenever
 installed Spack packages change.  For example:
 
@@ -301,7 +301,7 @@ installed Spack packages change.  For example:
    # Generate module load commands in ~/env/spackenv
 
    cat <<EOF | /bin/sh >$HOME/env/spackenv
-   FIND='spack module loads --prefix linux-SuSE11-x86_64/'
+   FIND='spack module tcl loads --prefix linux-SuSE11-x86_64/'
 
    \$FIND modele-utils
    \$FIND emacs
@@ -346,14 +346,14 @@ Users may now put ``source ~/env/spackenv`` into ``.bashrc``.
    Some module systems put a prefix on the names of modules created
    by Spack.  For example, that prefix is ``linux-SuSE11-x86_64/`` in
    the above case.  If a prefix is not needed, you may omit the
-   ``--prefix`` flag from ``spack module loads``.
+   ``--prefix`` flag from ``spack module tcl loads``.
 
 
 """""""""""""""""""""""
 Transitive Dependencies
 """""""""""""""""""""""
 
-In the script above, each ``spack module loads`` command generates a
+In the script above, each ``spack module tcl loads`` command generates a
 *single* ``module load`` line.  Transitive dependencies do not usually
 need to be loaded, only modules the user needs in ``$PATH``.  This is
 because Spack builds binaries with RPATH.  Spack's RPATH policy has
@@ -394,13 +394,13 @@ Unfortunately, Spack's RPATH support does not work in all case.  For example:
 In cases where RPATH support doesn't make things "just work," it can
 be necessary to load a module's dependencies as well as the module
 itself.  This is done by adding the ``--dependencies`` flag to the
-``spack module loads`` command.  For example, the following line,
+``spack module tcl loads`` command.  For example, the following line,
 added to the script above, would be used to load SciPy, along with
 Numpy, core Python, BLAS/LAPACK and anything else needed:
 
 .. code-block:: sh
 
-   spack module loads --dependencies py-scipy
+   spack module tcl loads --dependencies py-scipy
 
 ^^^^^^^^^^^^^^
 Dummy Packages
@@ -630,7 +630,7 @@ environments:
   and extension packages.
 
 * Views and activated extensions maintain state that is semantically
-  equivalent to the information in a ``spack module loads`` script.
+  equivalent to the information in a ``spack module tcl loads`` script.
   Administrators might find things easier to maintain without the
   added "heavyweight" state of a view.
 

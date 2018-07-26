@@ -31,11 +31,12 @@ class Parsplice(CMakePackage):
 
     homepage = "https://gitlab.com/exaalt/parsplice"
     url      = "https://gitlab.com/api/v4/projects/exaalt%2Fparsplice/repository/archive.tar.gz?sha=v1.1"
+    git      = "https://gitlab.com/exaalt/parsplice.git"
 
     tags = ['ecp', 'ecp-apps']
 
+    version('develop', branch='master')
     version('1.1', '3a72340d49d731a076e8942f2ae2f4e9')
-    version('develop', git='https://gitlab.com/exaalt/parsplice', branch='master')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("berkeley-db")

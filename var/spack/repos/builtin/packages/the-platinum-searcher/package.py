@@ -29,12 +29,11 @@ import shutil
 
 class ThePlatinumSearcher(Package):
     """Fast parallel recursive grep alternative"""
+
     homepage = "https://github.com/monochromegane/the_platinum_searcher"
-    url = "https://github.com/monochromegane/the_platinum_searcher"
+    go       = "github.com/monochromegane/the_platinum_searcher/..."
 
-    package = 'github.com/monochromegane/the_platinum_searcher/...'
-
-    version('head', go=package)
+    version('head')
 
     extends("go", deptypes='build')
 

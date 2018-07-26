@@ -34,11 +34,11 @@ class Albany(CMakePackage):
        ice-sheet flow, quantum device modeling, and many other applications."""
 
     homepage = "http://gahansen.github.io/Albany"
-    url      = "https://github.com/gahansen/Albany/tarball/master"
+    git      = "https://github.com/gahansen/Albany.git"
 
     maintainers = ['gahansen']
 
-    version('develop', git='https://github.com/gahansen/Albany.git', branch='master')
+    version('develop', branch='master')
 
     variant('lcm',          default=True,
             description='Enable LCM')

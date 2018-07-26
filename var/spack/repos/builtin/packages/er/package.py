@@ -29,12 +29,13 @@ class Er(CMakePackage):
     """Encoding and redundancy on a file set"""
 
     homepage = "https://github.com/ECP-VeloC/er"
-    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.1.zip"
-    tags     = ['ecp']
+    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.2.zip"
+    git      = "https://github.com/ecp-veloc/er.git"
 
+    tags = ['ecp']
+
+    version('master', branch='master')
     version('0.0.2', '24ad8f87bce2b6d900f1fb67452c3672')
-    version('master', git='https://github.com/ecp-veloc/er.git',
-            branch='master')
 
     depends_on('mpi')
     depends_on('kvtree')

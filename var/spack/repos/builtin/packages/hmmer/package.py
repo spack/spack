@@ -31,8 +31,9 @@ class Hmmer(Package):
     probabilistic models called profile hidden Markov models (profile HMMs).
     """
     homepage = 'http://www.hmmer.org'
-    url      = 'http://eddylab.org/software/hmmer3/3.1b2/hmmer-3.1b2.tar.gz'
+    url      = 'http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz'
 
+    version('3.2.1', '4e0ad5ed45462d4e36807d21e6d82b69')
     version('3.1b2', 'c8c141018bc0ccd7fc37b33f2b945d5f')
     version('3.0',   '4cf685f3bc524ba5b5cdaaa070a83588')
     version('2.4i',  'dab234c87e026ac1de942450750acd20')
@@ -44,14 +45,6 @@ class Hmmer(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
-
-    def url_for_version(self, version):
-        base_url = 'http://eddylab.org/software'
-
-        if version >= Version('3.0'):
-            return '{0}/hmmer3/{1}/hmmer-{1}.tar.gz'.format(base_url, version)
-        else:
-            return '{0}/hmmer/{1}/hmmer-{1}.tar.gz'.format(base_url, version)
 
     def install(self, spec, prefix):
         configure_args = [

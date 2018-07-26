@@ -34,10 +34,10 @@ class Hpctoolkit(Package):
     and attributes them to the full calling context in which they occur."""
 
     homepage = "http://hpctoolkit.org"
-    url = "https://github.com/HPCToolkit/hpctoolkit"
+    git      = "https://github.com/HPCToolkit/hpctoolkit.git"
 
-    version('2017.06', git=url, tag='release-2017.06')
-    version('master', git=url)
+    version('master')
+    version('2017.06', tag='release-2017.06')
 
     variant('mpi', default=True, description='Enable MPI supoort')
     variant('papi', default=True, description='Enable PAPI counter support')

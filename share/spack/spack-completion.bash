@@ -647,44 +647,158 @@ function _spack_module {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "find loads refresh rm" -- "$cur"
+        compgen -W "lmod tcl dotkit" -- "$cur"
     fi
 }
 
-function _spack_module_find {
+function _spack_module_tcl {
     if $list_options
     then
-        compgen -W "-h --help --full-path -m --module-type" -- "$cur"
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "refresh find rm loads" -- "$cur"
+    fi
+}
+
+
+function _spack_module_tcl_find {
+    if $list_options
+    then
+        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
 }
 
-function _spack_module_loads {
+function _spack_module_tcl_loads {
     if $list_options
     then
         compgen -W "-h --help --input-only -p --prefix -x --exclude
-                    -m --module-type -r --dependencies" -- "$cur"
+                    -r --dependencies" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
 
 }
 
-function _spack_module_refresh {
+function _spack_module_tcl_refresh {
     if $list_options
     then
-        compgen -W "-h --help --delete-tree -m --module-type
-                    -y --yes-to-all" -- "$cur"
+        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
 }
 
-function _spack_module_rm {
+function _spack_module_tcl_rm {
     if $list_options
     then
-        compgen -W "-h --help -m --module-type -y --yes-to-all" -- "$cur"
+        compgen -W "-h --help -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_dotkit {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "refresh find rm loads" -- "$cur"
+    fi
+}
+
+
+function _spack_module_dotkit_find {
+    if $list_options
+    then
+        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_dotkit_loads {
+    if $list_options
+    then
+        compgen -W "-h --help --input-only -p --prefix -x --exclude
+                    -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+
+}
+
+function _spack_module_dotkit_refresh {
+    if $list_options
+    then
+        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_dotkit_rm {
+    if $list_options
+    then
+        compgen -W "-h --help -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_lmod {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "refresh find rm loads setdefault" -- "$cur"
+    fi
+}
+
+
+function _spack_module_lmod_find {
+    if $list_options
+    then
+        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_lmod_loads {
+    if $list_options
+    then
+        compgen -W "-h --help --input-only -p --prefix -x --exclude
+                    -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+
+}
+
+function _spack_module_lmod_refresh {
+    if $list_options
+    then
+        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_lmod_rm {
+    if $list_options
+    then
+        compgen -W "-h --help -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_lmod_setdefault {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi

@@ -29,12 +29,13 @@ class Redset(CMakePackage):
     """Create MPI communicators for disparate redundancy sets"""
 
     homepage = "https://github.com/ECP-VeloC/redset"
-    url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.1.zip"
-    tags     = ['ecp']
+    url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.2.zip"
+    git      = "https://github.com/ecp-veloc/redset.git"
 
+    tags = ['ecp']
+
+    version('master', branch='master')
     version('0.0.2', '370d4dd477ebcfdd28dcc6375c22f731')
-    version('master', git='https://github.com/ecp-veloc/redset.git',
-            branch='master')
 
     depends_on('mpi')
     depends_on('rankstr')

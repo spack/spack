@@ -29,10 +29,6 @@ class Essl(Package):
     """IBM's Engineering and Scientific Subroutine Library (ESSL)."""
 
     homepage = "https://www.ibm.com/systems/power/software/essl/"
-    url      = "ibm-essl"
-
-    version('6.1')
-    version('5.5')
 
     variant('ilp64', default=False, description='64 bit integers')
     variant(

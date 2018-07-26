@@ -87,12 +87,6 @@ _arguments['constraint'] = Args(
     'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
     help='constraint to select a subset of installed packages')
 
-_arguments['module_type'] = Args(
-    '-m', '--module-type',
-    choices=spack.modules.module_types.keys(),
-    action='append',
-    help='type of module file. More than one choice is allowed [default: tcl]')
-
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
     help='assume "yes" is the answer to every confirmation request')

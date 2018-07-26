@@ -29,9 +29,9 @@ class Tcoffee(MakefilePackage):
     """T-Coffee is a multiple sequence alignment program."""
 
     homepage = "http://www.tcoffee.org/"
-    url      = "https://github.com/cbcrg/tcoffee"
+    git      = "https://github.com/cbcrg/tcoffee.git"
 
-    version('2017-08-17', git='https://github.com/cbcrg/tcoffee.git', commit='f389b558e91d0f82e7db934d9a79ce285f853a71')
+    version('2017-08-17', commit='f389b558e91d0f82e7db934d9a79ce285f853a71')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('blast-plus')

@@ -35,12 +35,11 @@ class Pocl(CMakePackage):
     GPUs/accelerators."""
 
     homepage = "http://portablecl.org"
-    url = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
+    url      = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
+    git      = "https://github.com/pocl/pocl.git"
 
-    version("master", git="https://github.com/pocl/pocl.git")
+    version("master", branch="master")
     version('0.14', '1d35f09299e76b9e3918c42826555194')
-    # version("0.14-rc",
-    #         git="https://github.com/pocl/pocl.git", branch="release_0_14")
     version("0.13", "344480864d4269f2f63f1509395898bd")
     version("0.12", "e197ba3aa01a35f40581c48e053330dd")
     version("0.11", "9be0640cde2983062c47393d9e8e8fe7")
