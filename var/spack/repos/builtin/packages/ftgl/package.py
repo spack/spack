@@ -40,7 +40,6 @@ class Ftgl(AutotoolsPackage):
     # There is an unnecessary qualifier around, which makes modern GCC sad
     patch('remove-extra-qualifier.diff')
 
-
     # Ftgl does not come with a configure script
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
