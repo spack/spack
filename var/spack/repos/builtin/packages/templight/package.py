@@ -163,4 +163,4 @@ class Templight(CMakePackage):
     @run_after('install')
     def post_install(self):
         with working_dir(self.build_directory):
-            install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
+            install_tree('bin', self.prefix.libexec.llvm)
