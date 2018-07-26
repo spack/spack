@@ -34,6 +34,7 @@ class Sz(AutotoolsPackage):
 
     git      = "https://github.com/disheng222/SZ.git"
 
+    version('develop', branch='master')
     version('2.0.2.0',  sha256='59d1b51d4461049a67e6390a259549eba37f53e20c2d97e3189f22a46d8e6fd4')
     version('1.4.13.5', sha256='b5e37bf3c377833eed0a7ca0471333c96cd2a82863abfc73893561aaba5f18b9')
     version('1.4.13.4', sha256='c99b95793c48469cac60e6cf82f921babf732ca8c50545a719e794886289432b')
