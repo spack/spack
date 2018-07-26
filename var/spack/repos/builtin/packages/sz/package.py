@@ -28,7 +28,7 @@ class Sz(AutotoolsPackage):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
     url      = "https://github.com/disheng222/SZ/archive/v2.0.2.0.tar.gz"
 
     git      = "https://github.com/disheng222/SZ.git"
