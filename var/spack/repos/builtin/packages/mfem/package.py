@@ -203,7 +203,7 @@ class Mfem(Package):
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
-          when='@3.3.0:3.4.0,develop +petsc ^petsc@3.9.0:')
+          when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
 
     phases = ['configure', 'build', 'install']
 
