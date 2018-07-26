@@ -33,8 +33,6 @@ class Templight(CMakePackage):
        instantiation process."""
 
     homepage = "https://github.com/mikael-s-persson/templight"
-    # NOTE: Removing this relies on a currently-unmerged PR
-    # url      = "https://github.com/mikael-s-persson/templight"
     git      = "https://github.com/mikael-s-persson/templight.git"
     llvm_svn = "http://llvm.org/svn/llvm-project/{0}/trunk"
 
