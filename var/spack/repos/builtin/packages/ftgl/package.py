@@ -56,7 +56,7 @@ class Ftgl(AutotoolsPackage):
     # FIXME: Can someone with autotools experience fix the build system
     #        so that it doesn't fail when that happens?
     #
-    depends_on('doxygen')
+    depends_on('doxygen', type='build')
 
     @property
     @when('@2.1.2')
