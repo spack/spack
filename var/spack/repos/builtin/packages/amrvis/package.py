@@ -32,10 +32,9 @@ class Amrvis(MakefilePackage):
     """
 
     homepage = "https://github.com/AMReX-Codes/Amrvis"
-    url      = "https://github.com/AMReX-Codes/Amrvis.git"
+    git      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('master',
-            git='https://github.com/AMReX-Codes/Amrvis.git', tag='master')
+    version('master', tag='master')
 
     variant(
         'dims',

@@ -558,6 +558,12 @@ class Singleton(object):
     def __getitem__(self, name):
         return self.instance[name]
 
+    def __contains__(self, element):
+        return element in self.instance
+
+    def __iter__(self):
+        return iter(self.instance)
+
     def __str__(self):
         return str(self.instance)
 

@@ -27,6 +27,8 @@ import collections
 import getpass
 import tempfile
 
+from llnl.util.filesystem import touch, mkdirp
+
 import pytest
 import yaml
 
@@ -614,3 +616,51 @@ def test_bad_config_section(config):
 
     with pytest.raises(spack.config.ConfigSectionError):
         spack.config.get('foobar')
+
+
+def test_bad_command_line_scopes(tmpdir, config):
+    cfg = spack.config.Configuration()
+
+    with tmpdir.as_cwd():
+        with pytest.raises(spack.config.ConfigError):
+            spack.config._add_command_line_scopes(cfg, ['bad_path'])
+
+        touch('unreadable_file')
+        with pytest.raises(spack.config.ConfigError):
+            spack.config._add_command_line_scopes(cfg, ['unreadable_file'])
+
+        mkdirp('unreadable_dir')
+        with pytest.raises(spack.config.ConfigError):
+            try:
+                os.chmod('unreadable_dir', 0)
+                spack.config._add_command_line_scopes(cfg, ['unreadable_dir'])
+            finally:
+                os.chmod('unreadable_dir', 0o700)  # so tmpdir can be removed
+
+
+def test_add_command_line_scopes(tmpdir, mutable_config):
+    config_yaml = str(tmpdir.join('config.yaml'))
+    with open(config_yaml, 'w') as f:
+            f.write("""\
+config:
+    verify_ssh: False
+    dirty: False
+"""'')
+
+    spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
+
+
+def test_immuntable_scope(tmpdir):
+    config_yaml = str(tmpdir.join('config.yaml'))
+    with open(config_yaml, 'w') as f:
+        f.write("""\
+config:
+    install_tree: dummy_tree_value
+"""'')
+    scope = spack.config.ImmutableConfigScope('test', str(tmpdir))
+
+    data = scope.get_section('config')
+    assert data['config']['install_tree'] == 'dummy_tree_value'
+
+    with pytest.raises(spack.config.ConfigError):
+        scope.write_section('config')

@@ -31,10 +31,11 @@ class Camellia(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/nateroberts/Camellia"
-    url      = "https://bitbucket.org/nateroberts/camellia.git"
+    git      = "https://bitbucket.org/nateroberts/camellia.git"
 
     maintainers = ['CamelliaDPG']
-    version('master', git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
+
+    version('master', branch='master')
 
     variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
 

@@ -22,17 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
 class RBiocgenerics(RPackage):
     """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://git.bioconductor.org/packages/BiocGenerics"
-    list_url = homepage
 
-    version('0.24.0', git='https://git.bioconductor.org/packages/BiocGenerics', commit='3db111e8c1f876267da89f4f0c5406a9d5c31cd1')
-    version('0.22.1', git='https://git.bioconductor.org/packages/BiocGenerics', commit='9c90bb8926885289d596a81ff318ee3745cbb6ad')
+    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
+    git      = "https://git.bioconductor.org/packages/BiocGenerics.git"
+
+    version('0.24.0', commit='3db111e8c1f876267da89f4f0c5406a9d5c31cd1')
+    version('0.22.1', commit='9c90bb8926885289d596a81ff318ee3745cbb6ad')
 
     depends_on('r@3.4.0:3.4.9', when='@0.22.1:')

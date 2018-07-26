@@ -30,7 +30,9 @@ class Saws(AutotoolsPackage):
        scientific or engineering application code into a webserver,
        allowing one to examine (and even modify) the state of the
        simulation with any browser from anywhere."""
-    homepage = "https://bitbucket.org/saws/saws/wiki/Home"
 
-    version('develop', git='https://bitbucket.org/saws/saws.git', tag='master')
-    version('0.1.0', git='https://bitbucket.org/saws/saws.git', tag='v0.1.0')
+    homepage = "https://bitbucket.org/saws/saws/wiki/Home"
+    git      = "https://bitbucket.org/saws/saws.git"
+
+    version('develop', tag='master')
+    version('0.1.0', tag='v0.1.0')

@@ -41,9 +41,9 @@ class Dataspaces(AutotoolsPackage):
 
     homepage = "http://www.dataspaces.org"
     url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
+    git      = "https://github.com/melrom/dataspaces.git"
 
-    version('develop', git='https://github.com/melrom/dataspaces.git',
-            branch='master')
+    version('develop', branch='master')
     version('1.6.2', '73caa4920b6f2c0c6d6cb87640ff04be')
 
     variant('dimes',

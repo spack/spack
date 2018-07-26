@@ -34,8 +34,9 @@ class Lbann(CMakePackage):
 
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
+    git      = "https://github.com/LLNL/lbann.git"
 
-    version('develop', git='https://github.com/LLNL/lbann.git', branch="develop")
+    version('develop', branch='develop')
     version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
     version('0.92', 'c0eb1595a7c74640e96f280beb497564')
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')

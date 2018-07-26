@@ -30,9 +30,9 @@ class RXde(RPackage):
        expression."""
 
     homepage = "https://www.bioconductor.org/packages/XDE/"
-    url      = "https://git.bioconductor.org/packages/XDE"
+    git      = "https://git.bioconductor.org/packages/XDE.git"
 
-    version('2.22.0', git='https://git.bioconductor.org/packages/XDE', commit='25bcec965ae42a410dd285a9db9be46d112d8e81')
+    version('2.22.0', commit='25bcec965ae42a410dd285a9db9be46d112d8e81')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
