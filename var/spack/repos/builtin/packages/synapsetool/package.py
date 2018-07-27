@@ -33,6 +33,7 @@ class Synapsetool(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', git=url, submodules=True)
+    version('0.2.1', git=url, commit='f4ddf38', submodules=True, preferred=True)
     version('0.2', git=url, commit='a384860cd3d338201', submodules=True)
 
     variant('mpi', default=False, description="Enable MPI backend")
