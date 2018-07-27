@@ -25,20 +25,13 @@
 from spack import *
 
 
-class PyNumba(PythonPackage):
-    """NumPy aware dynamic Python compiler using LLVM"""
+class TemplightTools(CMakePackage):
+    """Supporting tools for the Templight Profiler"""
 
-    homepage = "https://numba.pydata.org/"
-    url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
+    homepage = "https://github.com/mikael-s-persson/templight-tools"
+    git      = "https://github.com/mikael-s-persson/templight-tools.git"
 
-    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
+    version('develop', branch='master')
 
-    depends_on('py-numpy@1.10:',    type=('build', 'run'))
-    depends_on('py-llvmlite@0.20:', type=('build', 'run'))
-    depends_on('py-argparse',       type=('build', 'run'))
-    depends_on('py-funcsigs',       type=('build', 'run'), when='^python@:3.3.99')
-    depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
-
-    # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
-    # See https://reviews.llvm.org/D44140
-    conflicts('^llvm@6.0.0')
+    depends_on('cmake @2.8.7:', type='build')
+    depends_on('boost @1.48.1: +filesystem +graph +program_options +test')

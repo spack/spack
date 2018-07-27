@@ -25,20 +25,12 @@
 from spack import *
 
 
-class PyNumba(PythonPackage):
-    """NumPy aware dynamic Python compiler using LLVM"""
+class Dmtcp(AutotoolsPackage):
+    """DMTCP (Distributed MultiThreaded Checkpointing) transparently
+    checkpoints a single-host or distributed computation in user-space --
+    with no modifications to user code or to the O/S."""
 
-    homepage = "https://numba.pydata.org/"
-    url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
+    homepage = "http://dmtcp.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/dmtcp/files/2.5.2/dmtcp-2.5.2.tar.gz/download"
 
-    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
-
-    depends_on('py-numpy@1.10:',    type=('build', 'run'))
-    depends_on('py-llvmlite@0.20:', type=('build', 'run'))
-    depends_on('py-argparse',       type=('build', 'run'))
-    depends_on('py-funcsigs',       type=('build', 'run'), when='^python@:3.3.99')
-    depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
-
-    # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
-    # See https://reviews.llvm.org/D44140
-    conflicts('^llvm@6.0.0')
+    version('2.5.2', sha256='0e3e5e15bd401b7b6937f2b678cd7d6a252eab0a143d5740b89cc3bebb4282be')

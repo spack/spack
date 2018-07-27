@@ -25,20 +25,24 @@
 from spack import *
 
 
-class PyNumba(PythonPackage):
-    """NumPy aware dynamic Python compiler using LLVM"""
+class Halc(MakefilePackage):
+    """HALC is software that makes error correction for long reads with
+     high throughput."""
 
-    homepage = "https://numba.pydata.org/"
-    url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
+    homepage = "https://github.com/lanl001/halc"
+    url      = "https://github.com/lanl001/halc/archive/v1.1.tar.gz"
 
-    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
+    version('1.1', '4b289b366f6a5400ca481993aa68dd9c')
 
-    depends_on('py-numpy@1.10:',    type=('build', 'run'))
-    depends_on('py-llvmlite@0.20:', type=('build', 'run'))
-    depends_on('py-argparse',       type=('build', 'run'))
-    depends_on('py-funcsigs',       type=('build', 'run'), when='^python@:3.3.99')
-    depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('blasr', type='run')
+    depends_on('lordec', type='run')
+    depends_on('dos2unix', type='build')
+    depends_on('python', type='run')
 
-    # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
-    # See https://reviews.llvm.org/D44140
-    conflicts('^llvm@6.0.0')
+    parallel = False
+
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install('runHALC.py', prefix.bin)
+        dos2unix = which('dos2unix')
+        dos2unix(join_path(self.prefix.bin, 'runHALC.py'))
