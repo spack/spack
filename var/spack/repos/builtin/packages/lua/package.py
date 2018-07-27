@@ -91,8 +91,7 @@ class Lua(Package):
             # liblua-5.1.so
             # liblua-51.so
             version_formats = [str(self.version.up_to(2)),
-                               Version(str(self.version.up_to(2))).joined,
-            ]
+                               Version(str(self.version.up_to(2))).joined]
             for version_str in version_formats:
                 for joiner in ['', '-']:
                     dest_path = 'liblua{}{}.{}'.format(joiner,

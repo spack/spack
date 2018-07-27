@@ -138,7 +138,7 @@ class FluxCore(AutotoolsPackage):
             args.append('--disable-docs')
         return args
 
-    # Default AutotoolsPackage check method fails to run `make check` successfully
+    # Default AutotoolsPackage check method fails to find 'check' target
     def check(self):
         with working_dir(self.build_directory):
             make('check')
