@@ -48,7 +48,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("czmq@2.2:")
     depends_on("hwloc@1.11.1:1.99")
     depends_on("hwloc +cuda", when='+cuda')
-    depends_on("lua@5.1:5.1.99")
+    depends_on("lua@5.1:5.1.99", type=('build', 'run', 'link'))
     depends_on("lua-luaposix")
     depends_on("munge")
     depends_on("libuuid")
@@ -84,9 +84,52 @@ class FluxCore(AutotoolsPackage):
             bash = which('bash')
             bash('./autogen.sh')
 
+    @property
+    def lua_version(self):
+        return self.spec['lua'].version.up_to(2)
+
+    @property
+    def lua_share_dir(self):
+        return os.path.join('share', 'lua', str(self.lua_version))
+
+    @property
+    def lua_lib_dir(self):
+        return os.path.join('lib', 'lua', str(self.lua_version))
+
     def setup_environment(self, spack_env, run_env):
         #  Ensure ./fluxometer.lua can be found during flux's make check
         spack_env.append_path('LUA_PATH', './?.lua', separator=';')
+
+        run_env.prepend_path(
+            'LUA_PATH',
+            os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'),
+            separator=';')
+        run_env.prepend_path(
+            'LUA_CPATH',
+            os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
+            separator=';')
+        run_env.prepend_path(
+            'PYTHONPATH',
+            os.path.join(
+                self.spec.prefix.lib,
+                "python{}".format(self.spec['python'].version.up_to(2)),
+                "site-packages"),
+        )
+        run_env.prepend_path(
+            'FLUX_MODULE_PATH',
+            os.path.join(self.spec.prefix.lib, 'flux', 'modules'))
+        run_env.prepend_path(
+            'FLUX_MODULE_PATH',
+            os.path.join(self.spec.prefix.lib, 'flux', 'modules', 'sched'))
+        run_env.prepend_path(
+            'FLUX_EXEC_PATH',
+            os.path.join(self.spec.prefix.libexec, 'flux', 'cmd'))
+        run_env.prepend_path(
+            'FLUX_RC_PATH',
+            os.path.join(self.spec.prefix, 'etc', 'flux'))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        self.setup_environment(spack_env, run_env)
 
     def configure_args(self):
         args = ['--enable-pylint=no']
