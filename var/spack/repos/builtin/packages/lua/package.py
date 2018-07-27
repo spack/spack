@@ -78,6 +78,28 @@ class Lua(Package):
                                  arguments=['-lm'], version=self.version,
                                  compat_version=self.version.up_to(2))
 
+        # compatibility with ax_lua.m4 from autoconf-archive
+        # https://www.gnu.org/software/autoconf-archive/ax_lua.html
+        with working_dir(prefix.lib):
+            # e.g., liblua.so.5.1.5
+            src_path = 'liblua.{}.{}'.format(dso_suffix,
+                                             str(self.version.up_to(3)))
+
+            # For lua version 5.1.X, the symlinks should be:
+            # liblua5.1.so
+            # liblua51.so
+            # liblua-5.1.so
+            # liblua-51.so
+            version_formats = [str(self.version.up_to(2)),
+                               Version(str(self.version.up_to(2))).joined,
+            ]
+            for version_str in version_formats:
+                for joiner in ['', '-']:
+                    dest_path = 'liblua{}{}.{}'.format(joiner,
+                                                       version_str,
+                                                       dso_suffix)
+                    os.symlink(src_path, dest_path)
+
         with working_dir(os.path.join('luarocks', 'luarocks')):
             configure('--prefix=' + prefix, '--with-lua=' + prefix)
             make('build')
