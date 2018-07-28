@@ -275,6 +275,7 @@ def copy(src, dest, permissions=False):
     Parameters:
         src (str): the file to copy
         dest (str): the destination file or directory
+        permissions (bool): for internal use only
     """
     if permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -301,6 +302,7 @@ def install(src, dest, permissions=True):
     Parameters:
         src (str): the file to install
         dest (str): the destination file or directory
+        permissions (bool): for internal use only
     """
     copy(src, dest, permissions)
 
@@ -320,6 +322,7 @@ def copy_tree(src, dest, symlinks=True, permissions=False):
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
+        permissions (bool): for internal use only
     """
     if permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -354,6 +357,7 @@ def install_tree(src, dest, symlinks=True, permissions=True):
         src (str): the directory to install
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
+        permissions (bool): for internal use only
     """
     copy_tree(src, dest, symlinks, permissions)
 
