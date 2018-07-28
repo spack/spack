@@ -1150,30 +1150,25 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.msg('No Makefile found in the build directory')
             return
 
-        # Check if 'target' is a valid target
+        # Check if 'target' is a valid target.
         #
-        # -q, --question
-        #       ``Question mode''. Do not run any commands, or print anything;
-        #       just return an exit status that is zero if the specified
-        #       targets are already up to date, nonzero otherwise.
+        # `make -n target` performs a "dry run". It prints the commands that
+        # would be run but doesn't actually run them. If the target does not
+        # exist, you will see one of the following error messages:
         #
-        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        # GNU Make:
+        #     make: *** No rule to make target `test'.  Stop.
         #
-        # The exit status of make is always one of three values:
-        #
-        # 0     The exit status is zero if make is successful.
-        #
-        # 2     The exit status is two if make encounters any errors.
-        #       It will print messages describing the particular errors.
-        #
-        # 1     The exit status is one if you use the '-q' flag and make
-        #       determines that some target is not already up to date.
-        #
-        # https://www.gnu.org/software/make/manual/html_node/Running.html
-        #
-        # NOTE: This only works for GNU Make, not NetBSD Make.
-        make('-q', target, fail_on_error=False)
-        if make.returncode == 2:
+        # BSD Make:
+        #     bmake: don't know how to make test. Stop
+        kwargs = {
+            'fail_on_error': False,
+            'output': os.devnull,
+            'error': str,
+        }
+        error_msg = make('-n', target, **kwargs)
+        if ('No rule to make target' in error_msg or
+                "don't know how to make" in error_msg):
             tty.msg("Target '" + target + "' not found in " + makefile)
             return
 
