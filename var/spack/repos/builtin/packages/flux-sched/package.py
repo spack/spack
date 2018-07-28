@@ -33,14 +33,13 @@ class FluxSched(AutotoolsPackage):
     url      = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-sched.git"
 
-    version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
-    version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
     version('master', branch='master')
+    version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
+    version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("boost+graph", when='@0.5.0:')
-    depends_on("boost+graph", when='@master')
+    depends_on("boost+graph", when='@0.5.0:,master')
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda')
@@ -97,19 +96,8 @@ class FluxSched(AutotoolsPackage):
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
             separator=';')
 
-        run_env.prepend_path(
-            'FLUX_MODULE_PATH',
-            os.path.join(self.spec.prefix.lib, 'flux', 'modules'))
-        run_env.prepend_path(
-            'FLUX_MODULE_PATH',
-            os.path.join(self.spec.prefix.lib, 'flux', 'modules', 'sched'))
-        run_env.prepend_path(
-            'FLUX_EXEC_PATH',
-            os.path.join(self.spec.prefix.libexec, 'flux', 'cmd'))
-        run_env.append_path(
-            'FLUX_RC_EXTRA',
-            os.path.join(self.spec.prefix, 'etc', 'flux'))
-
-    def check(self):
-        with working_dir(self.build_directory):
-            make('check')
+        run_env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
+        run_env.prepend_path('FLUX_MODULE_PATH',
+                             self.prefix.lib.flux.modules.sched)
+        run_env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
+        run_env.prepend_path('FLUX_RC_EXTRA', self.prefix.etc.flux)

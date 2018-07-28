@@ -34,9 +34,9 @@ class FluxCore(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-core.git"
 
     version('master',  branch='master')
-    version('0.8.0',  'b0fec05acedc530bcdf75b2477ac22f39d2adddc7af8ff76496208a5e1e8185b1b4a18677871d95c3cfbf34b05f391953651200917fe029931f4e2beb79d70df')
-    version('0.9.0',  '70eaec1005aa49e8d8cf397570789cebedfb5d917efe963390d456ee4c473eefb15b0c81ea83f60a1fd057fe7be356bbafdebcae64b499844d194c48f6aefa05')
     version('0.10.0', 'a84a1ed53a69c805c253bc940540cbf667a059b2008fd2a6a9bb890a985ead08e88dcbba68c01567f887357306fbfded41b93cc33edfa7809955ba5ba5870284')
+    version('0.9.0',  '70eaec1005aa49e8d8cf397570789cebedfb5d917efe963390d456ee4c473eefb15b0c81ea83f60a1fd057fe7be356bbafdebcae64b499844d194c48f6aefa05')
+    version('0.8.0',  'b0fec05acedc530bcdf75b2477ac22f39d2adddc7af8ff76496208a5e1e8185b1b4a18677871d95c3cfbf34b05f391953651200917fe029931f4e2beb79d70df')
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
@@ -53,14 +53,14 @@ class FluxCore(AutotoolsPackage):
     depends_on("lua-luaposix")
     depends_on("munge")
     depends_on("libuuid")
-    depends_on("python")
+    depends_on("python", type=('build', 'run'))
     depends_on("py-cffi", type=('build', 'run'))
     depends_on("jansson")
     depends_on("yaml-cpp")
 
     # versions up to 0.8.0 uses pylint to check Flux's python binding
     # later versions provide a configure flag and disable the check by default
-    depends_on("py-pylint", when='@:0.8.0')
+    depends_on("py-pylint", when='@:0.8.0', type='build')
 
     depends_on("asciidoc", type='build', when="+docs")
 
@@ -113,32 +113,15 @@ class FluxCore(AutotoolsPackage):
             'PYTHONPATH',
             os.path.join(
                 self.spec.prefix.lib,
-                "python{}".format(self.spec['python'].version.up_to(2)),
+                "python{0}".format(self.spec['python'].version.up_to(2)),
                 "site-packages"),
         )
-        run_env.prepend_path(
-            'FLUX_MODULE_PATH',
-            os.path.join(self.spec.prefix.lib, 'flux', 'modules'))
-        run_env.prepend_path(
-            'FLUX_MODULE_PATH',
-            os.path.join(self.spec.prefix.lib, 'flux', 'modules', 'sched'))
-        run_env.prepend_path(
-            'FLUX_EXEC_PATH',
-            os.path.join(self.spec.prefix.libexec, 'flux', 'cmd'))
-        run_env.prepend_path(
-            'FLUX_RC_PATH',
-            os.path.join(self.spec.prefix, 'etc', 'flux'))
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        self.setup_environment(spack_env, run_env)
+        run_env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
+        run_env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
+        run_env.prepend_path('FLUX_RC_PATH', self.prefix.etc.flux)
 
     def configure_args(self):
         args = ['--enable-pylint=no']
         if '+docs' not in self.spec:
             args.append('--disable-docs')
         return args
-
-    # Default AutotoolsPackage check method fails to find 'check' target
-    def check(self):
-        with working_dir(self.build_directory):
-            make('check')
