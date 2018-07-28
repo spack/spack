@@ -1,0 +1,66 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+        buildable: False
+        version: [2.69]
+    automake:
+        paths:
+            automake@1.13.4: /usr
+        buildable: False
+        version: [1.13.4]
+    bison:
+        paths:
+            bison@2.7: /usr
+        buildable: False
+        version: [2.7]
+    cmake:
+        paths:
+            cmake@3.5.2: /cineca/prod/opt/tools/cmake/3.5.2/none
+        buildable: False
+        version: [3.5.2]
+    flex:
+        paths:
+            flex@2.5.37: /usr
+        buildable: False
+        version: [2.5.37]
+    hdf5:
+        paths:
+            hdf5@1.8.17: /cineca/prod/opt/libraries/hdf5/1.8.17/intelmpi--2017--binary
+        variants: ~fortran ~cxx
+        buildable: False
+        version: [1.8.17]
+    intel-mpi-external:
+        paths:
+            intel-mpi-external@2017: /cineca/prod/opt/compilers/intel/pe-xe-2017/binary/impi/2017.3.196
+        buildable: False
+        version: [2017]
+    libtool:
+        paths:
+            libtool@2.4.2: /usr
+        buildable: False
+        version: [2.4.2]
+    ncurses:
+        paths:
+            ncurses@5.9: /usr
+        buildable: False
+        version: [5.9]
+    pkg-config:
+        paths:
+            pkg-config@0.27.1: /usr
+        buildable: False
+        version: [0.27.1]
+    python:
+        paths:
+            python@2.7.12: /cineca/prod/opt/compilers/python/2.7.12/none
+        buildable: False
+        version: [2.7.12]
+    zlib:
+        paths:
+            zlib@1.2.8: /cineca/prod/opt/libraries/zlib/1.2.8/gnu--6.1.0
+        buildable: False
+        version: [1.2.8]
+    all:
+        compiler: [intel]
+        providers:
+            mpi: [intel-mpi-external]
