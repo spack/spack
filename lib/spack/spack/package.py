@@ -1160,7 +1160,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         #     make: *** No rule to make target `test'.  Stop.
         #
         # BSD Make:
-        #     bmake: don't know how to make test. Stop
+        #     make: don't know how to make test. Stop
         kwargs = {
             'fail_on_error': False,
             'output': os.devnull,
