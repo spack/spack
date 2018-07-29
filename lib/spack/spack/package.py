@@ -1161,16 +1161,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         #
         # BSD Make:
         #     make: don't know how to make test. Stop
+        missing_target_msgs = [
+            "No rule to make target `{0}'",
+            "don't know how to make {0}",
+        ]
+
         kwargs = {
             'fail_on_error': False,
             'output': os.devnull,
             'error': str,
         }
-        error_msg = make('-n', target, **kwargs)
-        if ('No rule to make target' in error_msg or
-                "don't know how to make" in error_msg):
-            tty.msg("Target '" + target + "' not found in " + makefile)
-            return
+
+        stderr = make('-n', target, **kwargs)
+
+        for missing_target_msg in missing_target_msgs:
+            if missing_target_msg.format(target) in stderr:
+                tty.msg("Target '" + target + "' not found in " + makefile)
+                return
 
         # Execute target
         make(target)
