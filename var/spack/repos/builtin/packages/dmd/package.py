@@ -49,4 +49,4 @@ class Dmd(MakefilePackage):
 
     def install(self, spec, prefix):
         make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
-        copy_tree('src', prefix)
+        copy_tree('src', prefix.src)
