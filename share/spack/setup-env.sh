@@ -80,14 +80,22 @@ function spack {
         return
     fi
 
-    _sp_subcommand=$1; shift
+    _sp_subcommand=""
+    if [ -n "$1" ]; then
+        _sp_subcommand="$1"
+        shift
+    fi
     _sp_spec=("$@")
 
     # Filter out use and unuse.  For any other commands, just run the
     # command.
     case $_sp_subcommand in
         "cd")
-            _sp_arg="$1"; shift
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
             if [ "$_sp_arg" = "-h" ]; then
                 command spack cd -h
             else

@@ -39,8 +39,7 @@ class Emboss(AutotoolsPackage):
     depends_on('libgd')
     depends_on('postgresql')
 
-    def install(self, spec, prefix):
+    @run_after('configure')
+    def skip_update_checks(self):
         # Delete $(bindir)/embossupdate to skip update checks
-        mkefile = FileFilter('Makefile')
-        makefile.filter('$(bindir)/embossupdate', '', string=True)
-        make('install')
+        filter_file('$(bindir)/embossupdate', '', 'Makefile', string=True)
