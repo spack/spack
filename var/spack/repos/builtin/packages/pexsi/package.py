@@ -54,7 +54,7 @@ class Pexsi(MakefilePackage):
     depends_on('parmetis')
     depends_on('superlu-dist@3.3:3.999', when='@:0.9.0')
     depends_on('superlu-dist@4.3:4.999', when='@0.9.2')
-    depends_on('superlu-dist@5.1.2:', when='@0.10.2:')
+    depends_on('superlu-dist@5.1.2:5.3.999', when='@0.10.2:')
 
     variant(
         'fortran', default=False, description='Builds the Fortran interface'
@@ -95,7 +95,7 @@ class Pexsi(MakefilePackage):
             'make.inc'
         )
         shutil.copy(template, makefile)
-        for key, value in substitutions.items():
+        for key, value in sorted(substitutions.items(), reverse=True):
             filter_file(key, value, makefile)
 
     def build(self, spec, prefix):
