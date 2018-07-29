@@ -24,8 +24,6 @@
 ##############################################################################
 """Tests for ``llnl/util/filesystem.py``"""
 
-from spack.stage import Stage
-
 import llnl.util.filesystem as fs
 import os
 import pytest

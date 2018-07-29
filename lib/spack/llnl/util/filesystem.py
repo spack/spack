@@ -266,7 +266,7 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def copy(src, dest, permissions=False):
+def copy(src, dest, _permissions=False):
     """Copies the file *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
@@ -275,9 +275,9 @@ def copy(src, dest, permissions=False):
     Parameters:
         src (str): the file to copy
         dest (str): the destination file or directory
-        permissions (bool): for internal use only
+        _permissions (bool): for internal use only
     """
-    if permissions:
+    if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
@@ -288,12 +288,12 @@ def copy(src, dest, permissions=False):
 
     shutil.copy(src, dest)
 
-    if permissions:
+    if _permissions:
         set_install_permissions(dest)
         copy_mode(src, dest)
 
 
-def install(src, dest, permissions=True):
+def install(src, dest):
     """Installs the file *src* to the file or directory *dest*.
 
     Same as :py:func:`copy` with the addition of setting proper
@@ -302,12 +302,11 @@ def install(src, dest, permissions=True):
     Parameters:
         src (str): the file to install
         dest (str): the destination file or directory
-        permissions (bool): for internal use only
     """
-    copy(src, dest, permissions)
+    copy(src, dest, _permissions=True)
 
 
-def copy_tree(src, dest, symlinks=True, permissions=False):
+def copy_tree(src, dest, symlinks=True, _permissions=False):
     """Recursively copy an entire directory tree rooted at *src*.
 
     If the destination directory *dest* does not already exist, it will
@@ -322,9 +321,9 @@ def copy_tree(src, dest, symlinks=True, permissions=False):
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-        permissions (bool): for internal use only
+        _permissions (bool): for internal use only
     """
-    if permissions:
+    if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
@@ -342,12 +341,12 @@ def copy_tree(src, dest, symlinks=True, permissions=False):
         else:
             shutil.copyfile(s, d)
 
-        if permissions:
+        if _permissions:
             set_install_permissions(d)
             copy_mode(s, d)
 
 
-def install_tree(src, dest, symlinks=True, permissions=True):
+def install_tree(src, dest, symlinks=True):
     """Recursively install an entire directory tree rooted at *src*.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
@@ -357,9 +356,8 @@ def install_tree(src, dest, symlinks=True, permissions=True):
         src (str): the directory to install
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-        permissions (bool): for internal use only
     """
-    copy_tree(src, dest, symlinks, permissions)
+    copy_tree(src, dest, symlinks, _permissions=True)
 
 
 def is_exe(path):
