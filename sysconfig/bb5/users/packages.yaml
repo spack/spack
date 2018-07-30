@@ -56,12 +56,29 @@ packages:
     hdf5:
         paths:
             hdf5@1.8.12~mpi~hl: /usr
-            hdf5@1.8.12+mpi~hl: /gpfs/bbp.cscs.ch/apps/hpc/spack-deployments/18-06-2018/install/linux-rhel7-x86_64/gcc-6.4.0/hdf5-1.10.2-b7wcsa
-        version: [1.8.12]
+            hdf5@1.10.2+hl+mpi+shared+szip: /gpfs/bbp.cscs.ch/apps/hpc/spack-deployments/18-06-2018/install/linux-rhel7-x86_64/gcc-6.4.0/hdf5-1.10.2-dueuws
+        version: [1.10.2,1.8.12]
+    hpe-mpi:
+        modules:
+            hpe-mpi: hpe-mpi/2.16
+        version: [2.16]
     hwloc:
         paths:
             hwloc@1.11.2: /usr
         version: [1.11.2]
+    intel-mkl:
+        paths:
+            intel-mkl@2018.1.163: /gpfs/bbp.cscs.ch/apps/tools/install/linux-rhel7-x86_64/gcc-4.8.5/intel-mkl-2018.1.163-l32qhs
+        version: [2018.1.163]
+    intel-mpi:
+        paths:
+            intel-mpi@2018.1.163: /gpfs/bbp.cscs.ch/apps/tools/install/linux-rhel7-x86_64/gcc-4.8.5/intel-mpi-2018.1.163-p7q2uq
+        version: [2018.1.163]
+    intel-parallel-studio:
+        modules:
+            intel-parallel-studio@cluster.2018.1: intel-parallel-studio/cluster.2018.1
+        buildable: False
+        version: [cluster.2018.1]
     libedit:
         paths:
             libedit@3.0-12: /usr
@@ -90,6 +107,10 @@ packages:
         paths:
             m4@1.4.16: /usr
         version: [1.4.16]
+    mvapich2:
+        modules:
+            mvapich2@ime: mvapich2/ime
+        version: [ime]
     ncurses:
         paths:
             ncurses@5.9: /usr
@@ -98,6 +119,10 @@ packages:
         paths:
             openssl@1.0.2k: /usr
         version: [1.0.2k]
+    openmpi:
+        modules:
+            openmpi@ime: openmpi/ime
+        version: [ime]
     pango:
         paths:
             pango@1.40.4: /usr
@@ -155,29 +180,8 @@ packages:
         paths:
             zlib@1.2.7+shared~static: /usr
         version: [1.2.7]
-    intel-parallel-studio:
-        modules:
-            intel-parallel-studio@cluster.2018.1: intel-parallel-studio/cluster.2018.1
-        buildable: False
-        version: [cluster.2018.1]
-    intel-mpi:
-        paths:
-            intel-mpi@cluster.2018.1: /gpfs/bbp.cscs.ch/apps/tools/install/linux-rhel7-x86_64/gcc-4.8.5/intel-mpi-2018.1.163-p7q2uq
-        buildable: False
-        version: [2018.1.163]
-    hpe-mpi:
-        modules:
-            hpe-mpi: hpe-mpi/2.16
-        version: [2.16]
-    mvapich2:
-        modules:
-            mvapich2@ime: mvapich2/ime
-        version: [ime]
-    openmpi:
-        modules:
-            openmpi@ime: openmpi/ime
-        version: [ime]
     all:
         compiler: [intel, gcc@6.4.0]
         providers:
             mpi: [hpe-mpi, intel-mpi]
+            scalapack: [intel-mkl, netlib-scalapack]
