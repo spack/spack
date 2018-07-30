@@ -34,7 +34,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.15.0.zip"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -48,6 +48,9 @@ class PyNumpy(PythonPackage):
     # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
     # FIXME: Is this expected?
 
+    version('1.15.0', '20e13185089011116a98e11c9bf8aa07')
+    version('1.14.5', '02d940a6931703de2c41fa5590ac7e98')
+    version('1.14.4', 'a8a23723342a561e579757553e9db73a')
     version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
     version('1.14.2', '080f01a19707cf467393e426382c7619')
     version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
@@ -72,7 +75,8 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    depends_on('py-nose@1.0.0:', type='test')
+    depends_on('py-nose@1.0.0:', type='test', when="@:1.14.5")
+    depends_on('py-pytest', type='test', when="@:1.15.0:")
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
@@ -142,19 +146,6 @@ class PyNumpy(PythonPackage):
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % dirs)
 
-    def build_args(self, spec, prefix):
-        args = []
-
-        # From NumPy 1.10.0 on it's possible to do a parallel build.
-        if self.version >= Version('1.10.0'):
-            # But Parallel build in Python 3.5+ is broken.  See:
-            # https://github.com/spack/spack/issues/7927
-            # https://github.com/scipy/scipy/issues/7112
-            if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
-
-        return args
-
     def setup_environment(self, spack_env, run_env):
         python_version = self.spec['python'].version.up_to(2)
 
@@ -165,6 +156,17 @@ class PyNumpy(PythonPackage):
             'numpy/core/include')
 
         run_env.prepend_path('CPATH', include_path)
+
+    if '%intel' in self.spec:
+        # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
+        # build and install in one step
+        phases = ['install']
+
+        def install(self, spec, prefix):
+            install_args = self.install_args(spec, prefix)
+            self.setup_py('config', '--compiler=intelem', 'build_clib',
+                          '--compiler=intelem', 'build_ext',
+                          '--compiler=intelem', 'install', *install_args)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following

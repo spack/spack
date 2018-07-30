@@ -69,19 +69,21 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
-    phases=['install']
-    def install(self, spec, prefix):
-        install_args = self.install_args(spec, prefix)
-        # Build in parallel
-        # Known problems with Python 3.5+
-        # https://github.com/spack/spack/issues/7927
-        # https://github.com/scipy/scipy/issues/7112
-        #if not spec.satisfies('^python@3.5:'):
-        #    instal_args.extend(['-j', str(make_jobs)])
-        self.setup_py('config','--compiler=intelem','--fcompiler=intelem','build_clib',
-                      '--compiler=intelem','--fcompiler=intelem','build_ext',
-                      '--compiler=intelem','--fcompiler=intelem','install',*install_args)
-        
+    if '%intel' in self.spec:
+        # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
+        # build and install in one step
+        phases = ['install']
+
+        def install(self, spec, prefix):
+            install_args = self.install_args(spec, prefix)
+            self.setup_py('config',
+                          '--compiler=intelem', '--fcompiler=intelem',
+                          'build_clib',
+                          '--compiler=intelem', '--fcompiler=intelem',
+                          'build_ext',
+                          '--compiler=intelem', '--fcompiler=intelem',
+                          'install', *install_args)
+
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
