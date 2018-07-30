@@ -157,15 +157,19 @@ class PyNumpy(PythonPackage):
 
         run_env.prepend_path('CPATH', include_path)
 
-    if self.spec.satisfies('%intel'):
-    #if '%intel' in self.spec:
-        # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
-        # build and install in one step
-        phases = ['install']
+
+    # Do the usual with gcc
+    phases = ['configure', 'build', 'install']
+   
+    # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
+    # build and install in one step
+    @when('%intel'):
+    phases = ['install']
     
-        def install(self, spec, prefix):
-            install_args = self.install_args(spec, prefix)
-            self.setup_py('config', '--compiler=intelem', 'build_clib',
+    @when('%intel'):
+    def install(self, spec, prefix):
+        install_args = self.install_args(spec, prefix)
+        self.setup_py('config', '--compiler=intelem', 'build_clib',
                           '--compiler=intelem', 'build_ext',
                           '--compiler=intelem', 'install', *install_args)
 
