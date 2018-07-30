@@ -163,10 +163,10 @@ class PyNumpy(PythonPackage):
    
     # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
     # build and install in one step
-    @when('%intel'):
+    @when('%intel')
     phases = ['install']
     
-    @when('%intel'):
+    @when('%intel')
     def install(self, spec, prefix):
         install_args = self.install_args(spec, prefix)
         self.setup_py('config', '--compiler=intelem', 'build_clib',
