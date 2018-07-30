@@ -57,11 +57,14 @@ class Libmonitor(AutotoolsPackage):
 
     # Set default cflags (-g -O2) and move to the configure line.
     def flag_handler(self, name, flags):
-        if name != 'cflags': return (flags, None, None)
+        if name != 'cflags':
+            return (flags, None, None)
 
-        if '-g' not in flags: flags.append('-g')
+        if '-g' not in flags:
+            flags.append('-g')
         for flag in flags:
-            if flag[0:2] == '-O': break
+            if flag[0:2] == '-O':
+                break
         else:
             flags.append('-O2')
 
