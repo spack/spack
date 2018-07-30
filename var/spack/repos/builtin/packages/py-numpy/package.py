@@ -159,17 +159,18 @@ class PyNumpy(PythonPackage):
 
 
     # Do the usual with gcc
-    phases = ['configure', 'build', 'install']
-
-    def install(self, spec, prefix):
-        install_args = self.install_args(self,prefix)
-        self.setup_py('*install_args')
-
+    def get_phases(self):
+        phases = ['configure', 'build', 'install']
 
     # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
     # build and install in one step
     @when('%intel')
-    phases = ['install']
+    def get_phases(self):
+        phases = ['install']
+
+    def install(self, spec, prefix):
+        install_args = self.install_args(self,prefix)
+        self.setup_py('*install_args')
 
     @when('%intel')
     def install(self, spec, prefix):
