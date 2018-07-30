@@ -13,7 +13,7 @@ packages:
         version: [3.0.4]
     boost:
         paths:
-            boost@1.67.0: /gpfs/bbp.cscs.ch/apps/hpc/spack-deployments/18-06-2018/install/linux-rhel7-x86_64/gcc-4.8.5/boost-1.67.0-xqlo3y
+            boost@1.67.0: /gpfs/bbp.cscs.ch/apps/hpc/spack-deployments/18-06-2018/install/linux-rhel7-x86_64/gcc-6.4.0/boost-1.67.0-6skhmz
         version: [1.67.0]
     bzip2:
         paths:
@@ -55,7 +55,8 @@ packages:
         version: [2.24.31]
     hdf5:
         paths:
-            hdf5@1.8.12: /usr
+            hdf5@1.8.12~mpi~hl: /usr
+            hdf5@1.8.12+mpi~hl: /gpfs/bbp.cscs.ch/apps/hpc/spack-deployments/18-06-2018/install/linux-rhel7-x86_64/gcc-6.4.0/hdf5-1.10.2-b7wcsa
         version: [1.8.12]
     hwloc:
         paths:
@@ -93,6 +94,10 @@ packages:
         paths:
             ncurses@5.9: /usr
         version: [5.9]
+    openssl:
+        paths:
+            openssl@1.0.2k: /usr
+        version: [1.0.2k]
     pango:
         paths:
             pango@1.40.4: /usr
@@ -148,7 +153,7 @@ packages:
         version: [5.2]
     zlib:
         paths:
-            zlib@1.2.7+shared: /usr
+            zlib@1.2.7+shared~static: /usr
         version: [1.2.7]
     intel-parallel-studio:
         modules:
