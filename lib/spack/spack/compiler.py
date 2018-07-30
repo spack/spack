@@ -252,9 +252,7 @@ class Compiler(object):
         suffixes = [''] + cls.suffixes
 
         def check_cmp_key(check):
-            name = os.path.basename(check[0])
-            idx = compiler_names.index(name)
-            return idx
+            return compiler_names.index(check[2])
 
         checks = []
         for directory in path:
@@ -269,7 +267,7 @@ class Compiler(object):
 
                 prod = itertools.product(prefixes, compiler_names, suffixes)
                 for pre, name, suf in prod:
-                    regex = r'^(%s)%s(%s)$' % (pre, re.escape(name), suf)
+                    regex = r'^(%s)(%s)(%s)$' % (pre, re.escape(name), suf)
 
                     match = re.match(regex, exe)
                     if match:
@@ -280,23 +278,6 @@ class Compiler(object):
             # this allows us to prioritize compiler names in subclass
             dir_checks = sorted(dir_checks, key=check_cmp_key)
             checks.extend(dir_checks)
-
-        def check(key):
-            try:
-                full_path, prefix, name, suffix = key
-                version = detect_version(full_path)
-                return (version, prefix, suffix, full_path)
-            except ProcessError as e:
-                tty.debug(
-                    "Couldn't get version for compiler %s" % full_path, e)
-                return None
-            except Exception as e:
-                # Catching "Exception" here is fine because it just
-                # means something went wrong running a candidate executable.
-                tty.debug("Error while executing candidate compiler %s"
-                          % full_path,
-                          "%s: %s" % (e.__class__.__name__, e))
-                return None
 
         successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
                       if k is not None]
@@ -324,7 +305,7 @@ class Compiler(object):
 
 
 def _get_versioned_tuple(compiler_check_tuple):
-    full_path, prefix, suffix, detect_version = compiler_check_tuple
+    full_path, prefix, name, suffix, detect_version = compiler_check_tuple
     try:
         version = detect_version(full_path)
         if (not version) or (not str(version).strip()):
