@@ -38,9 +38,9 @@ class Xsd(MakefilePackage):
     version('4.0.0', 'ad3de699eb140e747a0a214462d95fc81a21b494')
 
     depends_on('xerces-c')
-
+    depends_on('libtool', type='build')
+    
     def install(self, spec, prefix):
-        make()
         make('install', 'install_prefix=' + prefix)
 
     def setup_environment(self, spack_env, run_env):
