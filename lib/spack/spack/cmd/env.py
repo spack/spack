@@ -3,9 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-import spack
-import llnl.util.filesystem as fs
+import os
+import sys
+import shutil
+import argparse
+from contextlib import contextmanager
+from six.moves import zip_longest
+
 import spack.modules
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -20,16 +24,9 @@ from spack.config import ConfigScope
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repo import Repo
 from spack.version import VersionList
-from contextlib import contextmanager
 
-import argparse
-try:
-    from itertools import izip_longest as zip_longest
-except ImportError:
-    from itertools import zip_longest
-import os
-import sys
-import shutil
+import llnl.util.tty as tty
+import llnl.util.filesystem as fs
 
 description = "group a subset of packages"
 section = "environment"
