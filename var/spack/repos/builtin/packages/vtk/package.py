@@ -154,31 +154,31 @@ class Vtk(CMakePackage):
 
         if '+osmesa' in spec:
             prefix = spec['mesa'].prefix
-            osmesaIncludeDir = prefix.include
-            osmesaLibrary = os.path.join(prefix.lib, 'libOSMesa.so')
+            osmesa_include_dir = prefix.include
+            osmesa_library = os.path.join(prefix.lib, 'libOSMesa.so')
 
-            useParam = 'VTK_USE_X'
+            use_param = 'VTK_USE_X'
             if 'darwin' in spec.architecture:
-                useParam = 'VTK_USE_COCOA'
+                use_param = 'VTK_USE_COCOA'
 
             cmake_args.extend([
-                '-D{0}:BOOL=OFF'.format(useParam),
+                '-D{0}:BOOL=OFF'.format(use_param),
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON',
-                '-DOSMESA_INCLUDE_DIR:PATH={0}'.format(osmesaIncludeDir),
-                '-DOSMESA_LIBRARY:FILEPATH={0}'.format(osmesaLibrary),
+                '-DOSMESA_INCLUDE_DIR:PATH={0}'.format(osmesa_include_dir),
+                '-DOSMESA_LIBRARY:FILEPATH={0}'.format(osmesa_library),
             ])
         else:
             prefix = spec['opengl'].prefix
 
-            openglIncludeDir = prefix.include
-            openglLibrary = os.path.join(prefix.lib, 'libGL.so')
+            opengl_include_dir = prefix.include
+            opengl_library = os.path.join(prefix.lib, 'libGL.so')
             if 'darwin' in spec.architecture:
-                openglIncludeDir = prefix
-                openglLibrary = prefix
+                opengl_include_dir = prefix
+                opengl_library = prefix
 
             cmake_args.extend([
-                '-DOPENGL_INCLUDE_DIR:PATH={0}'.format(openglIncludeDir),
-                '-DOPENGL_gl_LIBRARY:FILEPATH={0}'.format(openglLibrary)
+                '-DOPENGL_INCLUDE_DIR:PATH={0}'.format(opengl_include_dir),
+                '-DOPENGL_gl_LIBRARY:FILEPATH={0}'.format(opengl_library)
             ])
 
         if spec.satisfies('@:6.1.0'):

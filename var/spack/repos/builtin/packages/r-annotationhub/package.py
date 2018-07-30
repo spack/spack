@@ -36,10 +36,9 @@ class RAnnotationhub(RPackage):
        quick and reproducible access."""
 
     homepage = "https://bioconductor.org/packages/AnnotationHub/"
-    url      = "https://git.bioconductor.org/packages/AnnotationHub"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/AnnotationHub.git"
 
-    version('2.8.3', git='https://git.bioconductor.org/packages/AnnotationHub', commit='8aa9c64262a8d708d2bf1c82f82dfc3d7d4ccc0c')
+    version('2.8.3', commit='8aa9c64262a8d708d2bf1c82f82dfc3d7d4ccc0c')
 
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-biocinstaller', type=('build', 'run'))

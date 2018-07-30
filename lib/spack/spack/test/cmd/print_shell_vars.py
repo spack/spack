@@ -32,7 +32,7 @@ def test_print_shell_vars_sh(capsys):
     assert "_sp_sys_type=" in out
     assert "_sp_tcl_root=" in out
     assert "_sp_lmod_root=" in out
-    assert "module_prefix" not in out
+    assert "_sp_module_prefix" not in out
 
 
 def test_print_shell_vars_csh(capsys):
@@ -42,7 +42,7 @@ def test_print_shell_vars_csh(capsys):
     assert "set _sp_sys_type = " in out
     assert "set _sp_tcl_root = " in out
     assert "set _sp_lmod_root = " in out
-    assert "set module_prefix = " not in out
+    assert "set _sp_module_prefix = " not in out
 
 
 def test_print_shell_vars_sh_modules(capsys):
@@ -52,7 +52,7 @@ def test_print_shell_vars_sh_modules(capsys):
     assert "_sp_sys_type=" in out
     assert "_sp_tcl_root=" in out
     assert "_sp_lmod_root=" in out
-    assert "module_prefix=" in out
+    assert "_sp_module_prefix=" in out
 
 
 def test_print_shell_vars_csh_modules(capsys):
@@ -62,4 +62,4 @@ def test_print_shell_vars_csh_modules(capsys):
     assert "set _sp_sys_type = " in out
     assert "set _sp_tcl_root = " in out
     assert "set _sp_lmod_root = " in out
-    assert "set module_prefix = " in out
+    assert "set _sp_module_prefix = " in out

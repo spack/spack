@@ -49,3 +49,7 @@ def comma_or(sequence):
 
 def comma_and(sequence):
     return comma_list(sequence, 'and')
+
+
+def quote(sequence, q="'"):
+    return ['%s%s%s' % (q, e, q) for e in sequence]

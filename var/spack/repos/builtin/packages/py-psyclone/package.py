@@ -32,11 +32,10 @@ class PyPsyclone(PythonPackage):
 
     homepage = "https://github.com/stfc/PSyclone"
     url      = "https://github.com/stfc/PSyclone/archive/1.5.1.tar.gz"
-    giturl   = "https://github.com/stfc/PSyclone.git"
+    git      = "https://github.com/stfc/PSyclone.git"
 
-    version('1.5.1', git=giturl,
-            commit='eba7a097175b02f75dec70616cf267b7b3170d78')
-    version('develop', git=giturl, branch='master')
+    version('develop', branch='master')
+    version('1.5.1', commit='eba7a097175b02f75dec70616cf267b7b3170d78')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pyparsing', type=('build', 'run'))

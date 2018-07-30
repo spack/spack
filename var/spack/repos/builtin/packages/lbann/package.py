@@ -34,8 +34,9 @@ class Lbann(CMakePackage):
 
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
+    git      = "https://github.com/LLNL/lbann.git"
 
-    version('develop', git='https://github.com/LLNL/lbann.git', branch="develop")
+    version('develop', branch='develop')
     version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
     version('0.92', 'c0eb1595a7c74640e96f280beb497564')
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
@@ -58,9 +59,9 @@ class Lbann(CMakePackage):
                when=('build_type=Debug' '@0.95:'))
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug' '@:0.90'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
                when=('+gpu' '@0.95:'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda', 
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
                when=('+gpu' '@:0.90'))
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
                when=('build_type=Debug' '@0.95:' '+gpu'))
@@ -94,12 +95,12 @@ class Lbann(CMakePackage):
     def common_config_args(self):
         spec = self.spec
         # Environment variables
-        CPPFLAGS = []
-        CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
+        cppflags = []
+        cppflags.append('-DLBANN_SET_EL_RNG -ldl')
 
         return [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
-            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
+            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
             '-DLBANN_VERSION=spack',
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]

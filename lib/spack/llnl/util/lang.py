@@ -282,8 +282,8 @@ class HashableMap(collections.MutableMapping):
     def copy(self):
         """Type-agnostic clone method.  Preserves subclass type."""
         # Construct a new dict of my type
-        T = type(self)
-        clone = T()
+        self_type = type(self)
+        clone = self_type()
 
         # Copy everything from this dict into it.
         for key in self:
@@ -557,6 +557,12 @@ class Singleton(object):
 
     def __getitem__(self, name):
         return self.instance[name]
+
+    def __contains__(self, element):
+        return element in self.instance
+
+    def __iter__(self):
+        return iter(self.instance)
 
     def __str__(self):
         return str(self.instance)

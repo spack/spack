@@ -30,9 +30,9 @@ class RGenie3(RPackage):
     regulatory networks from expression data."""
 
     homepage = "https://bioconductor.org/packages/GENIE3/"
+    git      = "https://git.bioconductor.org/packages/GENIE3.git"
 
-    version('1.2.0', git='https://git.bioconductor.org/packages/GENIE3',
-            commit='cafe6a1a85095cda6cc3c812eb6f53501fcbaf93')
+    version('1.2.0', commit='cafe6a1a85095cda6cc3c812eb6f53501fcbaf93')
 
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@1.2.0')

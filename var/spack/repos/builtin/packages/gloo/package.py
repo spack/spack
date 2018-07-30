@@ -29,6 +29,6 @@ class Gloo(CMakePackage):
     """Gloo is a collective communications library."""
 
     homepage = "https://github.com/facebookincubator/gloo"
-    url      = "https://github.com/facebookincubator/gloo.git"
+    git      = "https://github.com/facebookincubator/gloo.git"
 
-    version('master', git='https://github.com/facebookincubator/gloo.git')
+    version('master')

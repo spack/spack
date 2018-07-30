@@ -27,13 +27,13 @@ from spack import *
 
 
 class Slepc(Package):
-    """
-    Scalable Library for Eigenvalue Problem Computations.
-    """
+    """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "http://www.grycap.upv.es/slepc"
-    url = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
+    url      = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
+    git      = "https://bitbucket.org/slepc/slepc.git"
 
+    version('develop', branch='master')
     version('3.9.1', 'e174ea7c127d9161eef976b0288f0c56d443a58d6ab2dc8af1e8bd66f156ce17')
     version('3.9.0', '1f3930db56b4065aaf214ea758ddff1a70bf19d45544cbdfd19d2787db4bfe0b')
     version('3.8.2', '1e7d20d20eb26da307d36017461fe4a55f40e947e232739179dbe6412e22ed13')
@@ -43,7 +43,6 @@ class Slepc(Package):
     version('3.7.1', '670216f263e3074b21e0623c01bc0f562fdc0bffcd7bd42dd5d8edbe73a532c2')
     version('3.6.3', '384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876')
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
-    version('develop', git='https://bitbucket.org/slepc/slepc.git')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
 

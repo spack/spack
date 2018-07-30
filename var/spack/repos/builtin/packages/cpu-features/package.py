@@ -29,10 +29,9 @@ class CpuFeatures(CMakePackage):
     """A cross platform C99 library to get cpu features at runtime."""
 
     homepage = "https://github.com/google/cpu_features"
-    url      = "https://github.com/google/cpu_features/archive/v0.1.0.tar.gz"
+    git      = "https://github.com/google/cpu_features.git"
 
-    version('develop', branch='master',
-            git='https://github.com/google/cpu_features.git')
+    version('develop', branch='master')
 
     depends_on('cmake@3.0.0:', type='build')
 

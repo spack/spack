@@ -37,9 +37,9 @@ class Flecsi(CMakePackage):
        interfaces,and dependency closures.
     """
     homepage = "http://flecsi.lanl.gov/"
-    url      = "https://github.com/laristra/flecsi/tarball/v1.0"
+    git      = "https://github.com/laristra/flecsi.git"
 
-    version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=True)
+    version('develop', branch='master', submodules=True)
 
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')

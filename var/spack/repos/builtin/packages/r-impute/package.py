@@ -29,8 +29,8 @@ class RImpute(RPackage):
     """Imputation for microarray data (currently KNN only)."""
 
     homepage = "https://www.bioconductor.org/packages/impute/"
-    url      = "https://git.bioconductor.org/packages/impute"
+    git      = "https://git.bioconductor.org/packages/impute.git"
 
-    version('1.50.1', git='https://git.bioconductor.org/packages/impute', commit='31d1cc141797afdc83743e1d95aab8a90ee19b71')
+    version('1.50.1', commit='31d1cc141797afdc83743e1d95aab8a90ee19b71')
 
     depends_on('r@3.4.0:3.4.9', when='@1.50.1')

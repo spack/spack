@@ -34,9 +34,9 @@ class RAffycompatible(RPackage):
     (AGCC)-compatible sample annotation files."""
 
     homepage = "https://www.bioconductor.org/packages/AffyCompatible/"
-    url      = "https://git.bioconductor.org/packages/AffyCompatible"
+    git      = "https://git.bioconductor.org/packages/AffyCompatible.git"
 
-    version('1.36.0', 'https://git.bioconductor.org/packages/AffyCompatible', commit='dbbfd43a54ae1de6173336683a9461084ebf38c3')
+    version('1.36.0', commit='dbbfd43a54ae1de6173336683a9461084ebf38c3')
 
     depends_on('r@3.4.0:3.4.9', when=('@1.36.0'))
     depends_on('r-xml', type=('build', 'run'))

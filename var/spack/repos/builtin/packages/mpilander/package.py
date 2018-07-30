@@ -29,11 +29,11 @@ class Mpilander(CMakePackage):
     """There can only be one (MPI process)!"""
 
     homepage = "https://github.com/MPILander/MPILander"
-    url      = "https://github.com/MPILander/MPILander/archive/0.1.0.tar.gz"
+    git      = "https://github.com/MPILander/MPILander.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='master',
-            git='https://github.com/MPILander/MPILander.git')
+    version('develop', branch='master')
 
     # variant('cuda', default=False, description='Enable CUDA support')
     # variant(

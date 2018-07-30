@@ -29,12 +29,13 @@ class Shuffile(CMakePackage):
     """Shuffle files between MPI ranks"""
 
     homepage = "https://github.com/ECP-VeloC/shuffile"
-    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.1.zip"
-    tags     = ['ecp']
+    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.2.zip"
+    git      = "https://github.com/ecp-veloc/shuffile.git"
 
+    tags = ['ecp']
+
+    version('master', branch='master')
     version('0.0.2', 'eca45150d83e21ac51049133a2308d34')
-    version('master', git='https://github.com/ecp-veloc/shuffile.git',
-            branch='master')
 
     depends_on('mpi')
     depends_on('kvtree')

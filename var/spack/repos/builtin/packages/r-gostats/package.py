@@ -31,9 +31,9 @@ class RGostats(RPackage):
     testing and other simple calculations."""
 
     homepage = "https://www.bioconductor.org/packages/GOstats/"
-    url      = "https://git.bioconductor.org/packages/GOstats"
+    git      = "https://git.bioconductor.org/packages/GOstats.git"
 
-    version('2.42.0', git='https://git.bioconductor.org/packages/GOstats', commit='8b29709064a3b66cf1d963b2be0c996fb48c873e')
+    version('2.42.0', commit='8b29709064a3b66cf1d963b2be0c996fb48c873e')
 
     depends_on('r@3.4.1:3.4.9', when='@2.42.0')
     depends_on('r-biobase', type=('build', 'run'))

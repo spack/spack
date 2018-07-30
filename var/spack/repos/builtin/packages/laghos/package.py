@@ -34,11 +34,11 @@ class Laghos(MakefilePackage):
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "https://codesign.llnl.gov/laghos.php"
-    git      = "https://github.com/CEED/Laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
+    git      = "https://github.com/CEED/Laghos.git"
 
+    version('develop', branch='master')
     version('1.0', '4c091e115883c79bed81c557ef16baff')
-    version('develop', git=git, branch='master')
 
     variant('metis', default=True, description='Enable/disable METIS support')
 
