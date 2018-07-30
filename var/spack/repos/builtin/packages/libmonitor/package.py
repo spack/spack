@@ -26,16 +26,54 @@ from spack import *
 
 
 class Libmonitor(AutotoolsPackage):
-    """Libmonitor is a library for process and thread control."""
+    """Libmonitor is a library providing callback functions for the
+    begin and end of processes and threads.  It provides a layer on
+    which to build process monitoring tools and profilers."""
 
     homepage = "https://github.com/HPCToolkit/libmonitor"
     git      = "https://github.com/HPCToolkit/libmonitor.git"
 
-    version('20130218', commit='4f2311e')
+    version('master', branch='master')
+    version('2018.07.18', commit='d28cc1d3c08c02013a68a022a57a6ac73db88166',
+            preferred=True)
+    version('2013.02.18', commit='4f2311e413fd90583263d6f20453bbe552ccfef3')
 
+    # Configure for Rice HPCToolkit.
+    variant('hpctoolkit', default=False,
+            description='Configure for HPCToolkit')
+
+    variant('bgq', default=False,
+            description='Configure for Blue Gene/Q')
+
+    # Configure for Krell and OpenSpeedshop.
     variant('krellpatch', default=False,
-            description="build with openspeedshop based patch.")
+            description="Build with openspeedshop based patch.")
 
-    patch('libmonitorkrell-0000.patch', when='@20130218+krellpatch')
-    patch('libmonitorkrell-0001.patch', when='@20130218+krellpatch')
-    patch('libmonitorkrell-0002.patch', when='@20130218+krellpatch')
+    patch('libmonitorkrell-0000.patch', when='@2013.02.18+krellpatch')
+    patch('libmonitorkrell-0001.patch', when='@2013.02.18+krellpatch')
+    patch('libmonitorkrell-0002.patch', when='@2013.02.18+krellpatch')
+
+    signals = 'SIGBUS, SIGSEGV, SIGPROF, 36, 37, 38'
+
+    # Set default cflags (-g -O2) and move to the configure line.
+    def flag_handler(self, name, flags):
+        if name != 'cflags': return (flags, None, None)
+
+        if '-g' not in flags: flags.append('-g')
+        for flag in flags:
+            if flag[0:2] == '-O': break
+        else:
+            flags.append('-O2')
+
+        return (None, None, flags)
+
+    def configure_args(self):
+        args = []
+
+        if '+hpctoolkit' in self.spec:
+            args.append('--enable-client-signals=%s' % self.signals)
+
+        if '+bgq' in self.spec:
+            args.append('CC=powerpc64-bgq-linux-gcc')
+
+        return args
