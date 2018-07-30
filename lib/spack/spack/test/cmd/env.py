@@ -6,11 +6,9 @@
 import unittest
 import tempfile
 import shutil
+from six import StringIO
+
 import pytest
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 import spack.cmd.env
 import spack.modules
