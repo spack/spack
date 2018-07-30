@@ -39,4 +39,4 @@ class Gperftools(AutotoolsPackage):
     version('2.3', 'f54dd119f0e46ac1f13264f8d97adf90',
             url="https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz")
 
-    depends_on("libunwind")
+    depends_on("unwind")
