@@ -31,6 +31,7 @@ from six.moves import zip_longest
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.error
 import spack.repo
 import spack.schema.env
 import spack.util.spack_json as sjson
@@ -389,8 +390,14 @@ def repair(environment_name):
 
 
 def read(environment_name):
+    """Read environment state from disk."""
     # Check that env is in a consistent state on disk
     env_root = root(environment_name)
+
+    if not os.path.isdir(env_root):
+        raise EnvError("no such environment '%s'" % environment_name)
+    if not os.access(env_root, os.R_OK):
+        raise EnvError("can't read environment '%s'" % environment_name)
 
     # Read env.yaml file
     env_yaml = spack.config._read_config_file(
@@ -458,3 +465,11 @@ def prepare_config_scope(environment):
         tty.msg('Using Spack config %s scope at %s' %
                 (config_name, config_dir))
         spack.config.config.push_scope(ConfigScope(config_name, config_dir))
+
+
+class EnvError(spack.error.SpackError):
+    """Superclass for all errors to do with Spack environments.
+
+    Note that this is called ``EnvError`` to distinguish it from the
+    builtin ``EnvironmentError``.
+    """
