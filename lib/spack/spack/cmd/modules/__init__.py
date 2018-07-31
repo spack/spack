@@ -55,9 +55,7 @@ def setup_parser(subparser):
         help='prompt the list of modules associated with a constraint'
     )
     add_loads_arguments(loads_parser)
-    arguments.add_common_arguments(
-        loads_parser, ['constraint']
-    )
+    arguments.add_common_arguments(loads_parser, ['constraint'])
 
     return sp
 
