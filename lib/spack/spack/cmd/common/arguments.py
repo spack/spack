@@ -57,11 +57,13 @@ class ConstraintAction(argparse.Action):
             return spack.store.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
-        specs = set()
+        specs = {}
         for spec in qspecs:
             for s in spack.store.db.query(spec, **kwargs):
-                specs.add(s)
-        return sorted(specs)
+                # This is fast for already-concrete specs
+                specs[s.dag_hash()] = s
+
+        return sorted(specs.values())
 
 
 _arguments['constraint'] = Args(
