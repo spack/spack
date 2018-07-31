@@ -90,3 +90,16 @@ compilers:
       fc: /gpfs/bbp.cscs.ch/apps/compilers/install/pgi-17.10/linux86-64/17.10/bin/pgf90
     spec: pgi@17.10
     target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: rhel7
+    paths:
+      cc: /gpfs/bbp.cscs.ch/apps/compilers/install/pgi-18.4/linux86-64/18.4/bin/pgcc
+      cxx: /gpfs/bbp.cscs.ch/apps/compilers/install/pgi-18.4/linux86-64/18.4/bin/pgc++
+      f77: /gpfs/bbp.cscs.ch/apps/compilers/install/pgi-18.4/linux86-64/18.4/bin/pgf77
+      fc: /gpfs/bbp.cscs.ch/apps/compilers/install/pgi-18.4/linux86-64/18.4/bin/pgf90
+    spec: pgi@18.4
+    target: x86_64
