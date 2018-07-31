@@ -677,7 +677,9 @@ class Database(object):
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
-        if spec.package._installed_upstream:
+        key = spec.dag_hash()
+        upstream, record = self.query_by_spec_hash(key)
+        if upstream:
             return
 
         # Retrieve optional arguments
@@ -692,7 +694,6 @@ class Database(object):
                 }
                 self._add(dep, directory_layout, **extra_args)
 
-        key = spec.dag_hash()
         if key not in self._data:
             installed = bool(spec.external)
             path = None
