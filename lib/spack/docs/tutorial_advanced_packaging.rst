@@ -278,7 +278,7 @@ that spack does is not sufficient for python to import modules.
 
 To provide environment setup for a dependent, a package can implement the
 :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
-function. This function takes as a parameter a :py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>`
+function. This function takes as a parameter a :py:class:`EnvironmentModifications <spack.util.environment.EnvironmentModifications>`
 object which includes convenience methods to update the environment. For
 example, an MPI implementation can set ``MPICC`` for packages that depend on it:
 
