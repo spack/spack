@@ -1,16 +1,13 @@
-If you want to report a build error for some package, or a bug in core please use the following template as a guideline:
+---
+name: Bug report 
+about: Report a bug in the core of Spack (command not working as expected, etc.) 
 
------
+---
 
-Summary
 
-### Expected Result
-
-What you expected
-
-### Actual Result
-
-What happened instead
+*Summarize in a couple of lines the bug you encountered. Ideally it 
+should be enough to give core developers an idea what might be happening 
+in the code. Try your best to be clear and concise.* :wink:
 
 ### Steps to reproduce the issue
 
@@ -19,6 +16,16 @@ $ spack <command1> <spec>
 $ spack <command2> <spec>
 ...
 ```
+
+### Expected Result
+
+What you expected before running the command or performing the steps 
+described above.
+
+### Actual Result
+
+What happened instead
+
 
 ### Information on your system
 
