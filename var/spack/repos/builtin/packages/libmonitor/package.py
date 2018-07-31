@@ -63,7 +63,7 @@ class Libmonitor(AutotoolsPackage):
         if '-g' not in flags:
             flags.append('-g')
         for flag in flags:
-            if flag[0:2] == '-O':
+            if flag.startswith('-O'):
                 break
         else:
             flags.append('-O2')
