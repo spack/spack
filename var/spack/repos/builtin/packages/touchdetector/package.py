@@ -31,14 +31,9 @@ class Touchdetector(CMakePackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/TouchDetector"
     url      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
 
-    version('develop',
-            git=url,
-            submodules=True)
-    version('4.3.2',
-            commit='8b52245181b216876d59ae197a87064ef7478e3e',
-            git=url,
-            preferred=True,
-            submodules=True)
+    version('develop', git=url, submodules=True)
+    version('4.3.3', commit='e3a313e2c4', git=url, preferred=True, submodules=True)
+    version('4.3.2', commit='8b52245181', git=url, submodules=True)
 
     variant('openmp', default=False, description='Enables OpenMP support')
 
