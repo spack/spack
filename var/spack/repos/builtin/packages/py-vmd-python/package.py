@@ -35,6 +35,7 @@ class PyVmdPython(PythonPackage):
 
     depends_on('python@2.7:2.8')
     depends_on('py-numpy')
+    depends_on('py-setuptools', type='run')
     depends_on('tcl')
     depends_on('netcdf')
     depends_on('expat')
