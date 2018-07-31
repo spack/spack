@@ -160,9 +160,9 @@ class TestLmod(object):
         content = modulefile_content('module-path-separator')
 
         for line in content:
-            if re.match(r'[a-z]+_path\("COLON"', line) is not None:
-                assert line.endswith('"foo")')
-            elif re.match(r'[a-z]+_path\("SEMICOLON"', line) is not None:
+            if re.match(r'[a-z]+_path\("COLON"', line):
+                assert line.endswith('"foo", ":")')
+            elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
                 assert line.endswith('"bar", ";")')
 
     def test_blacklist(self, modulefile_content, module_configuration):

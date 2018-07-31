@@ -72,8 +72,6 @@ end
 
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
-{% if cmd.separator != ':' %}
-{# A non-standard separator is required #}
 {% if command_name == 'PrependPath' %}
 prepend_path("{{ cmd.name }}", "{{ cmd.value }}", "{{ cmd.separator }}")
 {% elif command_name == 'AppendPath' %}
@@ -84,21 +82,6 @@ remove_path("{{ cmd.name }}", "{{ cmd.value }}", "{{ cmd.separator }}")
 setenv("{{ cmd.name }}", "{{ cmd.value }}")
 {% elif command_name == 'UnsetEnv' %}
 unsetenv("{{ cmd.name }}")
-{% endif %}
-{% else %}
-{# We are using the usual separator #}
-{% if command_name == 'PrependPath' %}
-prepend_path("{{ cmd.name }}", "{{ cmd.value }}")
-{% elif command_name == 'AppendPath' %}
-append_path("{{ cmd.name }}", "{{ cmd.value }}")
-{% elif command_name == 'RemovePath' %}
-remove_path("{{ cmd.name }}", "{{ cmd.value }}")
-{% elif command_name == 'SetEnv' %}
-setenv("{{ cmd.name }}", "{{ cmd.value }}")
-{% elif command_name == 'UnsetEnv' %}
-unsetenv("{{ cmd.name }}")
-{% endif %}
-{#  #}
 {% endif %}
 {% endfor %}
 {% endblock %}
