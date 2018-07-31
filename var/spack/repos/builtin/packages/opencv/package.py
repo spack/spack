@@ -40,9 +40,10 @@ class Opencv(CMakePackage):
     """
 
     homepage = 'http://opencv.org/'
-    url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
+    url      = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
+    git      = 'https://github.com/opencv/opencv.git'
 
-    version('master', git="https://github.com/opencv/opencv.git", branch="master")
+    version('master', branch='master')
     version('3.4.1',    'a0b7a47899e67b3490ea31edc4f6e8e6')
     version('3.4.0',    '170732dc760e5f7ddeccbe53ba5d16a6')
     version('3.3.1',    'b1ed9aea030bb5bd9df28524d97de84c')
@@ -104,6 +105,11 @@ class Opencv(CMakePackage):
     variant('tiff', default=True, description='Include TIFF support')
     variant('vtk', default=True, description='Activates support for VTK')
     variant('zlib', default=True, description='Build zlib from source')
+
+    # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
+    # and 3.4.1) header file that have the same name.Problem is fixed in
+    # the current development branch of OpenCV. See #8461 for more information.
+    patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
     depends_on('eigen~mpfr', when='+eigen', type='build')
 

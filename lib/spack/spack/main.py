@@ -41,12 +41,15 @@ import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
 
 import spack
+import spack.architecture
 import spack.config
 import spack.cmd
 import spack.hooks
 import spack.paths
 import spack.repo
+import spack.store
 import spack.util.debug
+import spack.util.path
 from spack.error import SpackError
 
 
@@ -289,7 +292,9 @@ class SpackArgumentParser(argparse.ArgumentParser):
         subparser = self.subparsers.add_parser(
             cmd_name, help=module.description, description=module.description)
         module.setup_parser(subparser)
-        return module
+
+        # return the callable function for the command
+        return spack.cmd.get_command(cmd_name)
 
     def format_help(self, level='short'):
         if self.prog == 'spack':
@@ -314,12 +319,20 @@ def make_argument_parser(**kwargs):
     stat_lines = list(zip(*(iter(stat_names),) * 7))
 
     parser.add_argument(
-        '-h', '--help', action='store_true',
+        '-h', '--help',
+        dest='help', action='store_const', const='short', default=None,
         help="show this help message and exit")
+    parser.add_argument(
+        '-H', '--all-help',
+        dest='help', action='store_const', const='long', default=None,
+        help="show help for all commands (same as spack help --all)")
     parser.add_argument(
         '--color', action='store', default='auto',
         choices=('always', 'never', 'auto'),
         help="when to colorize output (default: auto)")
+    parser.add_argument(
+        '-C', '--config-scope', dest='config_scopes', action='append',
+        metavar='DIRECTORY', help="use an additional configuration scope")
     parser.add_argument(
         '-d', '--debug', action='store_true',
         help="write out debug logs during compile")
@@ -357,6 +370,10 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '-V', '--version', action='store_true',
         help='show version number and exit')
+    parser.add_argument(
+        '--print-shell-vars', action='store',
+        help="print info needed by setup-env.[c]sh")
+
     return parser
 
 
@@ -367,14 +384,17 @@ def setup_main_options(args):
     tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
 
+    # debug must be set first so that it can even affect behvaior of
+    # errors raised by spack.config.
+    if args.debug:
+        spack.error.debug = True
+        spack.util.debug.register_interrupt_handler()
+        spack.config.set('config:debug', True, scope='command_line')
+
     # override lock configuration if passed on command line
     if args.locks is not None:
         spack.util.lock.check_lock_safety(spack.paths.prefix)
         spack.config.set('config:locks', False, scope='command_line')
-
-    if args.debug:
-        spack.util.debug.register_interrupt_handler()
-        spack.config.set('config:debug', True, scope='command_line')
 
     if args.mock:
         rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
@@ -402,7 +422,7 @@ def allows_unknown_args(command):
     return (argcount == 3 and varnames[2] == 'unknown_args')
 
 
-def _invoke_spack_command(command, parser, args, unknown_args):
+def _invoke_command(command, parser, args, unknown_args):
     """Run a spack command *without* setting spack global options."""
     if allows_unknown_args(command):
         return_val = command(parser, args, unknown_args)
@@ -426,16 +446,15 @@ class SpackCommand(object):
     Use this to invoke Spack commands directly from Python and check
     their output.
     """
-    def __init__(self, command):
-        """Create a new SpackCommand that invokes ``command`` when called.
+    def __init__(self, command_name):
+        """Create a new SpackCommand that invokes ``command_name`` when called.
 
         Args:
-            command (str): name of the command to invoke
+            command_name (str): name of the command to invoke
         """
         self.parser = make_argument_parser()
-        self.parser.add_command(command)
-        self.command_name = command
-        self.command = spack.cmd.get_command(command)
+        self.command = self.parser.add_command(command_name)
+        self.command_name = command_name
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
@@ -465,7 +484,7 @@ class SpackCommand(object):
         out = StringIO()
         try:
             with log_output(out):
-                self.returncode = _invoke_spack_command(
+                self.returncode = _invoke_command(
                     self.command, self.parser, args, unknown)
 
         except SystemExit as e:
@@ -483,30 +502,6 @@ class SpackCommand(object):
                     ', '.join("'%s'" % a for a in argv)))
 
         return out.getvalue()
-
-
-def _main(command, parser, args, unknown_args):
-    """Run a spack command *and* set spack globaloptions."""
-    # many operations will fail without a working directory.
-    set_working_dir()
-
-    # only setup main options in here, after the real parse (we'll get it
-    # wrong if we do it after the initial, partial parse)
-    setup_main_options(args)
-    spack.hooks.pre_run()
-
-    # Now actually execute the command
-    try:
-        return _invoke_spack_command(command, parser, args, unknown_args)
-    except SpackError as e:
-        e.die()  # gracefully die on any SpackErrors
-    except Exception as e:
-        if spack.config.get('config:debug'):
-            raise
-        tty.die(str(e))
-    except KeyboardInterrupt:
-        sys.stderr.write('\n')
-        tty.die("Keyboard interrupt.")
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
@@ -531,7 +526,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
         # make a profiler and run the code.
         pr = cProfile.Profile()
         pr.enable()
-        return _main(command, parser, args, unknown_args)
+        return _invoke_command(command, parser, args, unknown_args)
 
     finally:
         pr.disable()
@@ -540,6 +535,46 @@ def _profile_wrapper(command, parser, args, unknown_args):
         stats = pstats.Stats(pr)
         stats.sort_stats(*sortby)
         stats.print_stats(nlines)
+
+
+def print_setup_info(*info):
+    """Print basic information needed by setup-env.[c]sh.
+
+    Args:
+        info (list of str): list of things to print: comma-separated list
+            of 'csh', 'sh', or 'modules'
+
+    This is in ``main.py`` to make it fast; the setup scripts need to
+    invoke spack in login scripts, and it needs to be quick.
+
+    """
+    shell = 'csh' if 'csh' in info else 'sh'
+
+    def shell_set(var, value):
+        if shell == 'sh':
+            print("%s='%s'" % (var, value))
+        elif shell == 'csh':
+            print("set %s = '%s'" % (var, value))
+        else:
+            tty.die('shell must be sh or csh')
+
+    # print sys type
+    shell_set('_sp_sys_type', spack.architecture.sys_type())
+
+    # print roots for all module systems
+    module_roots = spack.config.get('config:module_roots')
+    for name, path in module_roots.items():
+        path = spack.util.path.canonicalize_path(path)
+        shell_set('_sp_%s_root' % name, path)
+
+    # print environment module system if available. This can be expensive
+    # on clusters, so skip it if not needed.
+    if 'modules' in info:
+        specs = spack.store.db.query('environment-modules')
+        if specs:
+            shell_set('_sp_module_prefix', specs[-1].prefix)
+        else:
+            shell_set('_sp_module_prefix', 'not_installed')
 
 
 def main(argv=None):
@@ -557,55 +592,77 @@ def main(argv=None):
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
+    # make spack.config aware of any command line configuration scopes
+    if args.config_scopes:
+        spack.config.command_line_scopes = args.config_scopes
+
+    if args.print_shell_vars:
+        print_setup_info(*args.print_shell_vars.split(','))
+        return 0
+
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
     if no_args:
         parser.print_help()
         return 1
 
-    # -h and -V are special as they do not require a command, but all the
-    # other options do nothing without a command.
-    if not args.command:
-        if args.version:
-            print(spack.spack_version)
-            return 0
-        else:
-            parser.print_help()
-            return 0 if args.help else 1
-
-    # Try to load the particular command the caller asked for.  If there
-    # is no module for it, just die.
-    cmd_name = args.command[0]
-    try:
-        parser.add_command(cmd_name)
-    except ImportError:
-        if spack.config.get('config:debug'):
-            raise
-        tty.die("Unknown command: %s" % args.command[0])
-
-    # Re-parse with the proper sub-parser added.
-    args, unknown = parser.parse_known_args()
-
-    # we now know whether options go with spack or the command
+    # -h, -H, and -V are special as they do not require a command, but
+    # all the other options do nothing without a command.
     if args.version:
         print(spack.spack_version)
         return 0
     elif args.help:
-        parser.print_help()
+        sys.stdout.write(parser.format_help(level=args.help))
         return 0
+    elif not args.command:
+        parser.print_help()
+        return 1
 
-    # now we can actually execute the command.
-    command = spack.cmd.get_command(cmd_name)
     try:
+        # ensure options on spack command come before everything
+        setup_main_options(args)
+
+        # Try to load the particular command the caller asked for.  If there
+        # is no module for it, just die.
+        cmd_name = args.command[0]
+        try:
+            command = parser.add_command(cmd_name)
+        except ImportError:
+            if spack.config.get('config:debug'):
+                raise
+            tty.die("Unknown command: %s" % args.command[0])
+
+        # Re-parse with the proper sub-parser added.
+        args, unknown = parser.parse_known_args()
+
+        # many operations will fail without a working directory.
+        set_working_dir()
+
+        # pre-run hooks happen after we know we have a valid working dir
+        spack.hooks.pre_run()
+
+        # now we can actually execute the command.
         if args.spack_profile or args.sorted_profile:
             _profile_wrapper(command, parser, args, unknown)
         elif args.pdb:
             import pdb
-            pdb.runctx('_main(command, parser, args, unknown)',
+            pdb.runctx('_invoke_command(command, parser, args, unknown)',
                        globals(), locals())
             return 0
         else:
-            return _main(command, parser, args, unknown)
+            return _invoke_command(command, parser, args, unknown)
+
+    except SpackError as e:
+        e.die()  # gracefully die on any SpackErrors
+
+    except Exception as e:
+        if spack.config.get('config:debug'):
+            raise
+        tty.die(str(e))
+
+    except KeyboardInterrupt:
+        sys.stderr.write('\n')
+        tty.die("Keyboard interrupt.")
 
     except SystemExit as e:
         return e.code

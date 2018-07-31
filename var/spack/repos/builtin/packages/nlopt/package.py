@@ -33,8 +33,9 @@ class Nlopt(CMakePackage):
 
     homepage = "https://nlopt.readthedocs.io"
     url      = "https://github.com/stevengj/nlopt/releases/download/nlopt-2.4.2/nlopt-2.4.2.tar.gz"
+    git      = "https://github.com/stevengj/nlopt.git"
 
-    version('develop', git='https://github.com/stevengj/nlopt.git', branch='master')
+    version('develop', branch='master')
     version('2.4.2', 'd0b8f139a4acf29b76dbae69ade8ac54')
 
     variant('shared', default=True, description='Enables the build of shared libraries')

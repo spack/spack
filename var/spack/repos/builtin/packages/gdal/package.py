@@ -41,6 +41,11 @@ class Gdal(AutotoolsPackage):
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
 
+    import_modules = [
+        'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
+        'osgeo.gdal_array', 'osgeo.gdalconst'
+    ]
+
     version('2.3.0',  '2fe9d64fcd9dc37645940df020d3e200')
     version('2.1.2',  'ae85b78888514c75e813d658cac9478e')
     version('2.0.2',  '940208e737c87d31a90eaae43d0efd65')
@@ -128,14 +133,13 @@ class Gdal(AutotoolsPackage):
     depends_on('proj', when='+proj @2.3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
     depends_on('python', type=('build', 'run'), when='+python')
+    # swig/python/setup.py
+    depends_on('py-setuptools', type='build', when='+python')
+    depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
     depends_on('java', type=('build', 'run'), when='+java')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
-
-    # https://trac.osgeo.org/gdal/wiki/SWIG
-    depends_on('swig', type='build', when='+python')
-    depends_on('swig', type='build', when='+perl')
 
     # https://trac.osgeo.org/gdal/wiki/SupportedCompilers
     msg = 'GDAL requires C++11 support'
@@ -144,6 +148,13 @@ class Gdal(AutotoolsPackage):
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
+
+    def setup_environment(self, spack_env, run_env):
+        # Needed to install Python bindings to GDAL installation
+        # prefix instead of Python installation prefix.
+        # See swig/python/GNUmakefile for more details.
+        spack_env.set('PREFIX', self.prefix)
+        spack_env.set('DESTDIR', '/')
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
@@ -424,6 +435,14 @@ class Gdal(AutotoolsPackage):
             ])
 
         return args
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        if '+python' in self.spec:
+            with working_dir('..'):
+                for module in self.import_modules:
+                    python('-c', 'import {0}'.format(module))
 
     @run_after('install')
     def darwin_fix(self):

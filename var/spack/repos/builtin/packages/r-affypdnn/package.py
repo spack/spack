@@ -30,9 +30,9 @@ class RAffypdnn(RPackage):
     described by Li Zhang et al."""
 
     homepage = "https://www.bioconductor.org/packages/affypdnn/"
-    url      = "https://git.bioconductor.org/packages/affypdnn"
+    git      = "https://git.bioconductor.org/packages/affypdnn.git"
 
-    version('1.50.0', git='https://git.bioconductor.org/packages/affypdnn', commit='97ff68e9f51f31333c0330435ea23b212b3ed18a')
+    version('1.50.0', commit='97ff68e9f51f31333c0330435ea23b212b3ed18a')
 
     depends_on('r@3.4.0:3.4.9', when='@1.50.0')
     depends_on('r-affy', type=('build', 'run'))

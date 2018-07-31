@@ -30,19 +30,14 @@ class Pism(CMakePackage):
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
     url      = "https://github.com/pism/pism/archive/v0.7.3.tar.gz"
+    git      = "https://github.com/pism/pism.git"
 
     maintainers = ['citibeth']
 
+    version('develop', branch='dev')
     version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
-
-    version('0.7.x', git='https://github.com/pism/pism.git',
-        branch='stable0.7')
-
-    version('icebin', git='https://github.com/pism/pism.git',
-        branch='efischer/dev')
-
-    version('develop', git='https://github.com/pism/pism.git',
-        branch='dev')
+    version('0.7.x', branch='stable0.7')
+    version('icebin', branch='efischer/dev')
 
     variant('extra', default=False,
             description='Build extra executables (testing/verification)')

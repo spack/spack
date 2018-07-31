@@ -32,10 +32,9 @@ class Express(CMakePackage):
        target sequences from sampled subsequences."""
 
     homepage = "http://bio.math.berkeley.edu/eXpress/"
-    url      = "https://github.com/adarob/eXpress"
+    git      = "https://github.com/adarob/eXpress.git"
 
-    version('2015-11-29', commit='f845cab2c7f2d9247b35143e4aa05869cfb10e79',
-            git='https://github.com/adarob/eXpress.git')
+    version('2015-11-29', commit='f845cab2c7f2d9247b35143e4aa05869cfb10e79')
 
     depends_on('boost')
     depends_on('bamtools')
@@ -52,11 +51,8 @@ class Express(CMakePackage):
                     edit.filter('#include <api', '#include <%s' % self.spec[
                                 'bamtools'].prefix.include.bamtools.api)
             edit = FileFilter('CMakeLists.txt')
-            # really ugly way to escape the $ in CMakeLists.txt
-            edit.filter('{CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
-                        'libbamtools.a', '$')
-            edit.filter('\\$\\$', '%s' % join_path(self.spec[
-                        'bamtools'].prefix.lib.bamtools, 'libbamtools.a'))
+            edit.filter('\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
+                        'libbamtools.a', '%s' % self.spec['bamtools'].libs)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('CPATH', self.spec[

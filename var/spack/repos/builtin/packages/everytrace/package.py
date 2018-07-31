@@ -29,13 +29,13 @@ class Everytrace(CMakePackage):
     """Get stack trace EVERY time a program exits."""
 
     homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/archive/0.2.2.tar.gz"
+    url      = "https://github.com/citibeth/everytrace/archive/0.2.2.tar.gz"
+    git      = "https://github.com/citibeth/everytrace.git"
 
     maintainers = ['citibeth']
 
+    version('develop', branch='develop')
     version('0.2.2', 'dd60b8bf68cbf3dc2be305a040f2fe3e')
-    version('develop',
-            git='https://github.com/citibeth/everytrace.git', branch='develop')
 
     variant('mpi', default=True, description='Enables MPI parallelism')
     variant('fortran', default=True,

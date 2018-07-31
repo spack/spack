@@ -44,14 +44,18 @@ class Trinity(MakefilePackage):
 
     version('2.6.6', 'b7472e98ab36655a6d9296d965471a56')
 
-    depends_on("java@8:")
+    depends_on("java@8:", type=("build", "run"))
     depends_on("bowtie2")
     depends_on("jellyfish")
     depends_on("salmon")
-    depends_on("perl+threads")
+    depends_on("perl+threads", type=("build", "run"))
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
 
     def build(self, spec, prefix):
-        make
+        make()
+        make("trinity_essentials")
         make("plugins")
 
     def install(self, spec, prefix):
@@ -73,3 +77,4 @@ class Trinity(MakefilePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('TRINITY_HOME', self.prefix.bin)
+        spack_env.append_flags('CXXFLAGS', self.compiler.openmp_flag)

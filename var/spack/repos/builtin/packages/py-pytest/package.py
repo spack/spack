@@ -45,6 +45,7 @@ class PyPytest(PythonPackage):
     # Most Python packages only require setuptools as a build dependency.
     # However, pytest requires setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-py@1.5.0:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', type=('build', 'run'))

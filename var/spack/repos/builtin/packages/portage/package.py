@@ -32,12 +32,12 @@ class Portage(CMakePackage):
        remapping library for transfer of field data between meshes.
     """
     homepage = "http://portage.lanl.gov/"
-    url      = "https://github.com/laristra/portage/tarball/v1.0"
+    git      = "https://github.com/laristra/portage.git"
 
     # tarballs don't have submodules, so use git tags
-    version('1.1.1', git='https://github.com/laristra/portage', tag='v1.1.1', submodules=True)
-    version('1.1.0', git='https://github.com/laristra/portage', tag='v1.1.0', submodules=True)
-    version('develop', git='https://github.com/laristra/portage', branch='master', submodules=True)
+    version('develop', branch='master', submodules=True)
+    version('1.1.1', tag='v1.1.1', submodules=True)
+    version('1.1.0', tag='v1.1.0', submodules=True)
 
     variant('mpi', default=True, description='Support MPI')
 

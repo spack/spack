@@ -43,10 +43,10 @@ class ContextMeta(type):
     #: by the class that is being defined
     _new_context_properties = []
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes
         # into a list without duplicates.
-        context_properties = list(mcs._new_context_properties)
+        context_properties = list(cls._new_context_properties)
         for x in bases:
             try:
                 context_properties.extend(x.context_properties)
@@ -55,20 +55,20 @@ class ContextMeta(type):
         context_properties = list(llnl.util.lang.dedupe(context_properties))
 
         # Flush the list
-        mcs._new_context_properties = []
+        cls._new_context_properties = []
 
         # Attach the list to the class being created
         attr_dict['context_properties'] = context_properties
 
-        return super(ContextMeta, mcs).__new__(mcs, name, bases, attr_dict)
+        return super(ContextMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @classmethod
-    def context_property(mcs, func):
+    def context_property(cls, func):
         """Decorator that adds a function name to the list of new context
         properties, and then returns a property.
         """
         name = func.__name__
-        mcs._new_context_properties.append(name)
+        cls._new_context_properties.append(name)
         return property(func)
 
 

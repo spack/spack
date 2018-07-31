@@ -38,9 +38,9 @@ class RMergemaid(RPackage):
        cross-validate associations of gene expression data with survival."""
 
     homepage = "https://www.bioconductor.org/packages/MergeMaid/"
-    url      = "https://git.bioconductor.org/packages/MergeMaid"
+    git      = "https://git.bioconductor.org/packages/MergeMaid.git"
 
-    version('2.48.0', git='https://git.bioconductor.org/packages/MergeMaid', commit='aee89c523fcafff4c166ff3db4fff90df16a1ed4')
+    version('2.48.0', commit='aee89c523fcafff4c166ff3db4fff90df16a1ed4')
 
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

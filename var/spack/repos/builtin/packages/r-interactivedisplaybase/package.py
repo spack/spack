@@ -31,10 +31,9 @@ class RInteractivedisplaybase(RPackage):
        Bioconductor objects."""
 
     homepage = "https://bioconductor.org/packages/interactiveDisplayBase/"
-    url      = "https://git.bioconductor.org/packages/interactiveDisplayBase"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/interactiveDisplayBase.git"
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/interactiveDisplayBase', commit='e2ccc7eefdd904e3b1032dc6b3f4a28d08c1cd40')
+    version('1.14.0', commit='e2ccc7eefdd904e3b1032dc6b3f4a28d08c1cd40')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))

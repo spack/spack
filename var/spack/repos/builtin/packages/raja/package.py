@@ -27,16 +27,18 @@ from spack import *
 
 class Raja(CMakePackage):
     """RAJA Parallel Framework."""
-    homepage = "http://software.llnl.gov/RAJA/"
 
-    version('master', git='https://github.com/LLNL/RAJA.git', branch='master', submodules='True')
-    version('develop', git='https://github.com/LLNL/RAJA.git', branch='develop', submodules='True')
-    version('0.5.3', git='https://github.com/LLNL/RAJA.git', tag='v0.5.3', submodules="True")
-    version('0.5.2', git='https://github.com/LLNL/RAJA.git', tag='v0.5.2', submodules="True")
-    version('0.5.1', git='https://github.com/LLNL/RAJA.git', tag='v0.5.1', submodules="True")
-    version('0.5.0', git='https://github.com/LLNL/RAJA.git', tag='v0.5.0', submodules="True")
-    version('0.4.1', git='https://github.com/LLNL/RAJA.git', tag='v0.4.1', submodules="True")
-    version('0.4.0', git='https://github.com/LLNL/RAJA.git', tag='v0.4.0', submodules="True")
+    homepage = "http://software.llnl.gov/RAJA/"
+    git      = "https://github.com/LLNL/RAJA.git"
+
+    version('develop', branch='develop', submodules='True')
+    version('master',  branch='master',  submodules='True')
+    version('0.5.3', tag='v0.5.3', submodules="True")
+    version('0.5.2', tag='v0.5.2', submodules="True")
+    version('0.5.1', tag='v0.5.1', submodules="True")
+    version('0.5.0', tag='v0.5.0', submodules="True")
+    version('0.4.1', tag='v0.4.1', submodules="True")
+    version('0.4.0', tag='v0.4.0', submodules="True")
 
     variant('cuda', default=False, description='Build with CUDA backend')
     variant('openmp', default=True, description='Build OpenMP backend')

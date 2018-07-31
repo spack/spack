@@ -67,6 +67,12 @@ Spack has a Slack channel where you can chat about all things Spack:
 [Sign up here](https://spackpm.herokuapp.com) to get an invitation mailed
 to you.
 
+### Twitter
+
+You can follow [@spackpm](https://twitter.com/spackpm) on Twitter for
+updates. Also, feel free to `@mention` us in in questions or comments
+about your own experience with Spack.
+
 ### Contributions
 
 Contributing to Spack is relatively easy.  Just send us a
