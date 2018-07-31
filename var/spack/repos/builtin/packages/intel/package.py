@@ -25,7 +25,7 @@
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 
 
 class Intel(IntelPackage):

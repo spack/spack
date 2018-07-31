@@ -70,8 +70,8 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.store
-from spack.environment import EnvironmentModifications, validate
-from spack.environment import preserve_environment
+from spack.util.environment import EnvironmentModifications, validate
+from spack.util.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module

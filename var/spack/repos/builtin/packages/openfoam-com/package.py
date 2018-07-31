@@ -64,7 +64,7 @@ import shutil
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 import llnl.util.tty as tty
 
 

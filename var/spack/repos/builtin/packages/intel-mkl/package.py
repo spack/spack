@@ -26,7 +26,7 @@ import os
 import sys
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 
 
 class IntelMkl(IntelPackage):
