@@ -122,6 +122,10 @@ class RemovePath(NameValueModifier):
                        if x != os.path.normpath(self.value)]
         os.environ[self.name] = self.separator.join(directories)
 
+class PushEnv(NameValueModifier):
+
+    def execute(self):
+        pass
 
 class EnvironmentModifications(object):
     """Keeps track of requests to modify the current environment.
@@ -251,6 +255,17 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
+        self.env_modifications.append(item)
+
+    def push(self, name, value, **kwargs):
+        """Leverages Lmod's PushEnv() routine to create a env var stack.
+
+        Args:
+            name: name of the environment variable to push to
+            value: value to be set
+        """
+        kwargs.update(self._get_outside_caller_atributes())
+        item = PushEnv(name,value,**kwargs)
         self.env_modifications.append(item)
 
     def group_by_name(self):
