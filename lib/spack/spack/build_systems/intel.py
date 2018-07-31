@@ -20,10 +20,10 @@ from llnl.util.filesystem import \
 
 from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
+from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.build_environment import dso_suffix
-from spack.environment import EnvironmentModifications
 
 
 # A couple of utility functions that might be useful in general. If so, they
