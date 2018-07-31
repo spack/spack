@@ -39,7 +39,7 @@ class Xsd(MakefilePackage):
 
     depends_on('xerces-c')
     depends_on('libtool', type='build')
-    
+
     def install(self, spec, prefix):
         make('install', 'install_prefix=' + prefix)
 
