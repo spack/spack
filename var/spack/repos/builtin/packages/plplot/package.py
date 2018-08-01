@@ -119,5 +119,6 @@ class Plplot(CMakePackage):
                 args += ['-DOLD_WXWIDGETS=ON']
         else:
             args += ['-DENABLE_wxwidgets=OFF']
+            args += ['-DPLD_wxwidgets=OFF']
 
         return args
