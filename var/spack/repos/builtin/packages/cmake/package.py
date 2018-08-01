@@ -89,6 +89,9 @@ class Cmake(Package):
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
+    # https://gitlab.kitware.com/cmake/cmake/issues/18166
+    conflicts('%intel', when='@3.11.0:3.11.4')
+
     phases = ['bootstrap', 'build', 'install']
 
     def url_for_version(self, version):
