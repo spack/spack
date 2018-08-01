@@ -6,7 +6,7 @@ This is a list of known bugs in Spack. It provides ways of getting around these
 problems if you encounter them.
 
 -----------------------------------------------------------------
-Default variants are not taken into account during concretization
+Default variants are not taken into account during concretization.
 -----------------------------------------------------------------
 
 **Status:** Expected to be fixed in the next release
