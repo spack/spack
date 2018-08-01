@@ -42,4 +42,4 @@ class Node(AutotoolsPackage):
     version('5.12.0', sha256='250c12a561d7319e71e142ee92ab682494c7823d81ce24703c80eb52bdf9ba42')
     version('4.9.1',  sha256='d2bc20dbe2c20e6f606671b1b9631f0d20396547ac7cbc144a3dad2c78106c78')
 
-    depends_on('python@2.6:', type='build')
+    depends_on('python@2.6:2.7', type='build')
