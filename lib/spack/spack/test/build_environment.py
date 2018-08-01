@@ -96,8 +96,8 @@ def test_static_to_shared_library(build_environment):
                 shared_lib = '{0}.{1}'.format(
                     os.path.splitext(static_lib)[0], dso_suffix)
 
-            assert output == expected[arch].format(
-                static_lib, shared_lib, os.path.basename(shared_lib))
+            assert set(output.split()) == set(expected[arch].format(
+                static_lib, shared_lib, os.path.basename(shared_lib)).split())
 
 
 @pytest.mark.regression('8345')
