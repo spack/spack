@@ -31,11 +31,10 @@ class DmlcCore(CMakePackage):
     distributed machine learning libraries."""
 
     homepage = "https://github.com/dmlc/dmlc-core"
-    url      = "https://github.com/dmlc/dmlc-core.git"
+    git      = "https://github.com/dmlc/dmlc-core.git"
 
-    version('master', git='https://github.com/dmlc/dmlc-core.git')
-    version('20170508', git='https://github.com/dmlc/dmlc-core.git',
-    commit='a6c5701219e635fea808d264aefc5b03c3aec314')
+    version('master')
+    version('20170508', commit='a6c5701219e635fea808d264aefc5b03c3aec314')
 
     variant('openmp', default=False, description='Enable OpenMP support')
 

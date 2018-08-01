@@ -34,9 +34,9 @@ class RDose(RPackage):
     biological data."""
 
     homepage = "https://www.bioconductor.org/packages/DOSE/"
-    url      = "https://git.bioconductor.org/packages/DOSE"
+    git      = "https://git.bioconductor.org/packages/DOSE.git"
 
-    version('3.2.0', git='https://git.bioconductor.org/packages/DOSE', commit='71f563fc39d02dfdf65184c94e0890a63b96b86b')
+    version('3.2.0', commit='71f563fc39d02dfdf65184c94e0890a63b96b86b')
 
     depends_on('r@3.4.0:3.4.9', when='@3.2.0')
     depends_on('r-scales', type=('build', 'run'))

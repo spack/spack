@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-from spack.cmd.common import print_module_placeholder_help
+from spack.cmd.common import print_module_placeholder_help, arguments
 
 description = "add package to environment using dotkit"
 section = "environment"
@@ -36,6 +36,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help='spec of package to use with dotkit')
+    arguments.add_common_arguments(subparser, ['recurse_dependencies'])
 
 
 def use(parser, args):

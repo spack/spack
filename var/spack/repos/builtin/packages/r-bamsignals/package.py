@@ -32,9 +32,9 @@ class RBamsignals(RPackage):
     profiles. It also handles paired-end data."""
 
     homepage = "https://www.bioconductor.org/packages/bamsignals/"
-    url      = "https://git.bioconductor.org/packages/bamsignals"
+    git      = "https://git.bioconductor.org/packages/bamsignals.git"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/bamsignals', commit='b123b83e8e026c9ec91209d4498aff3e95a5de23')
+    version('1.8.0', commit='b123b83e8e026c9ec91209d4498aff3e95a5de23')
 
     depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-biocgenerics', type=('build', 'run'))

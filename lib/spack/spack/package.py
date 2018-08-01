@@ -45,6 +45,7 @@ import time
 from six import StringIO
 from six import string_types
 from six import with_metaclass
+from ordereddict_backport import OrderedDict
 
 import llnl.util.tty as tty
 
@@ -487,24 +488,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         except ValueError as e:
             raise ValueError("In package %s: %s" % (self.name, e.message))
 
-        # stage used to build this package.
-        self._stage = None
-
-        # Init fetch strategy and url to None
-        self._fetcher = None
-        self.url = getattr(self.__class__, 'url', None)
-
-        # Fix up self.url if this package fetches with a URLFetchStrategy.
-        # This makes self.url behave sanely.
-        if self.spec.versions.concrete:
-            # TODO: this is a really roundabout way of determining the type
-            # TODO: of fetch to do. figure out a more sane fetch
-            # TODO: strategy/package init order (right now it's conflated with
-            # TODO: stage, package, and the tests make assumptions)
-            f = fs.for_package_version(self, self.version)
-            if isinstance(f, fs.URLFetchStrategy):
-                self.url = self.url_for_version(self.spec.version)
-
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = None
@@ -512,14 +495,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 0
 
-        # Set up some internal variables for timing.
+        # init internal variables
+        self._stage = None
+        self._fetcher = None
+
+        # Set up timing variables
         self._fetch_time = 0.0
         self._total_time = 0.0
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
-
-        self.extra_args = {}
 
         super(PackageBase, self).__init__()
 
@@ -588,17 +573,46 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @memoized
     def version_urls(self):
-        """Return a list of URLs for different versions of this
-           package, sorted by version.  A version's URL only appears
-           in this list if it has an explicitly defined URL."""
-        version_urls = {}
-        for v in sorted(self.versions):
-            args = self.versions[v]
+        """OrderedDict of explicitly defined URLs for versions of this package.
+
+        Return:
+           An OrderedDict (version -> URL) different versions of this
+           package, sorted by version.
+
+        A version's URL only appears in the result if it has an an
+        explicitly defined ``url`` argument. So, this list may be empty
+        if a package only defines ``url`` at the top level.
+        """
+        version_urls = OrderedDict()
+        for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
         return version_urls
 
-    # TODO: move this out of here and into some URL extrapolation module?
+    def nearest_url(self, version):
+        """Finds the URL with the "closest" version to ``version``.
+
+        This uses the following precedence order:
+
+          1. Find the next lowest or equal version with a URL.
+          2. If no lower URL, return the next *higher* URL.
+          3. If no higher URL, return None.
+
+        """
+        version_urls = self.version_urls()
+
+        if version in version_urls:
+            return version_urls[version]
+
+        last_url = None
+        for v, u in self.version_urls().items():
+            if v > version:
+                if last_url:
+                    return last_url
+            last_url = u
+
+        return last_url
+
     def url_for_version(self, version):
         """Returns a URL from which the specified version of this package
         may be downloaded.
@@ -611,17 +625,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not isinstance(version, Version):
             version = Version(version)
 
-        cls = self.__class__
-        if not (hasattr(cls, 'url') or self.version_urls()):
-            raise NoURLError(cls)
-
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
         if version in version_urls:
             return version_urls[version]
 
-        # If we have no idea, substitute the version into the default URL.
-        default_url = getattr(self.__class__, 'url', None)
+        # If no specific URL, use the default, class-level URL
+        default_url = getattr(self, 'url', None)
+
+        # if no exact match AND no class-level default, use the nearest URL
+        if not default_url:
+            default_url = self.nearest_url(version)
+
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
         return spack.url.substitute_version(
             default_url, self.url_version(version))
 
@@ -2261,7 +2280,6 @@ class ExternalPackageError(InstallError):
 
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
-
     def __init__(self, spec, dependents):
         super(PackageStillNeededError, self).__init__("Cannot uninstall %s" %
                                                       spec)
@@ -2271,14 +2289,12 @@ class PackageStillNeededError(InstallError):
 
 class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
-
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
 
 
 class PackageVersionError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
-
     def __init__(self, version):
         super(PackageVersionError, self).__init__(
             "Cannot determine a URL automatically for version %s" % version,
@@ -2294,19 +2310,17 @@ class NoURLError(PackageError):
 
 
 class ExtensionError(PackageError):
-
-    pass
+    """Superclass for all errors having to do with extension packages."""
 
 
 class ActivationError(ExtensionError):
-
+    """Raised when there are problems activating an extension."""
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 
 
 class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
-
     def __init__(self, conflict):
         super(DependencyConflictError, self).__init__(
             "%s conflicts with another file in the flattened directory." % (

@@ -30,9 +30,9 @@ class DealiiParameterGui(CMakePackage):
     files."""
 
     homepage = "https://github.com/dealii/parameter_gui"
-    url      = "https://github.com/dealii/parameter_gui"
+    git      = "https://github.com/dealii/parameter_gui.git"
 
-    version('develop', git='https://github.com/dealii/parameter_gui.git', branch='master')
+    version('develop', branch='master')
 
     depends_on('qt')
 

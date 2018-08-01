@@ -31,8 +31,9 @@ class Readfq(Package):
     interface."""
 
     homepage = "https://github.com/lh3/readfq"
+    git      = "https://github.com/lh3/readfq.git"
 
-    version('2013.04.10', git='https://github.com/lh3/readfq.git', commit='4fb766095d8f459e0f8025be70f9173673905d12')
+    version('2013.04.10', commit='4fb766095d8f459e0f8025be70f9173673905d12')
 
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)

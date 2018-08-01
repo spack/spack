@@ -30,9 +30,9 @@ class RPhyloseq(RPackage):
     storage, analysis, and graphical display of microbiome census data."""
 
     homepage = "https://www.bioconductor.org/packages/phyloseq/"
-    url      = "https://git.bioconductor.org/packages/phyloseq"
+    git      = "https://git.bioconductor.org/packages/phyloseq.git"
 
-    version('1.20.0', git='https://git.bioconductor.org/packages/phyloseq', commit='107d1d5e3437a6e33982c06a548d3cc91df2a7e0')
+    version('1.20.0', commit='107d1d5e3437a6e33982c06a548d3cc91df2a7e0')
 
     depends_on('r@3.4.0:3.4.9', when='@1.20.0')
     depends_on('r-biocgenerics', type=('build', 'run'))

@@ -37,10 +37,9 @@ class Breakdancer(CMakePackage):
     100bp) using normally mapped read pairs.."""
 
     homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
-    url      = "https://github.com/genome/breakdancer.git"
+    git      = "https://github.com/genome/breakdancer.git"
 
-    version('master', git='https://github.com/genome/breakdancer.git',
-            submodules='true')
+    version('master', submodules='true')
 
     depends_on('zlib')
 

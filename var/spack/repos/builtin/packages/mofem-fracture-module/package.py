@@ -27,16 +27,12 @@ class MofemFractureModule(CMakePackage):
     """mofem fracture module"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem_um_fracture_mechanics"
+    git = "https://bitbucket.org/likask/mofem_um_fracture_mechanics.git"
 
     maintainers = ['likask']
 
-    version('0.9.42',
-        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
-        tag='v0.9.42')
-    version('develop',
-        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
-        branch='develop')
+    version('develop', branch='develop')
+    version('0.9.42', tag='v0.9.42')
 
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')

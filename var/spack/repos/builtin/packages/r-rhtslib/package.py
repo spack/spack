@@ -33,9 +33,9 @@ class RRhtslib(RPackage):
     are in the vignette, vignette(package="Rhtslib", "Rhtslib")."""
 
     homepage = "https://www.bioconductor.org/packages/Rhtslib/"
-    url      = "https://git.bioconductor.org/packages/Rhtslib"
+    git      = "https://git.bioconductor.org/packages/Rhtslib.git"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/Rhtslib', commit='3b5493473bed42958614091c58c739932ffcfa79')
+    version('1.8.0', commit='3b5493473bed42958614091c58c739932ffcfa79')
 
     depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-zlibbioc', type=('build', 'run'))

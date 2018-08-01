@@ -41,11 +41,9 @@ class Verrou(AutotoolsPackage):
 
     homepage = "https://github.com/edf-hpc/verrou"
     url      = "https://github.com/edf-hpc/verrou/archive/v2.0.0.tar.gz"
+    git      = "https://github.com/edf-hpc/verrou.git"
 
-    version('develop',
-            git='https://github.com/edf-hpc/verrou.git',
-            branch='master')
-
+    version('develop', branch='master')
     version('2.0.0', '388d493df3f253c9b049ce0ceae55fd6')
     version('1.1.0', '9752d776fb534890e5e29f9721ee6125')
 

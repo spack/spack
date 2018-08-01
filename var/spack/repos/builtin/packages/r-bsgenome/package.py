@@ -30,11 +30,10 @@ class RBsgenome(RPackage):
        packages."""
 
     homepage = "https://www.bioconductor.org/packages/BSgenome/"
-    url      = "https://git.bioconductor.org/packages/BSgenome"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/BSgenome.git"
 
-    version('1.46.0', git='https://git.bioconductor.org/packages/BSgenome', commit='bdfbd6d09820993585b8231ddea5e11c99008dc5')
-    version('1.44.2', git='https://git.bioconductor.org/packages/BSgenome', commit='105b00588a758d5ec7c347a7dff2756aea4516a0')
+    version('1.46.0', commit='bdfbd6d09820993585b8231ddea5e11c99008dc5')
+    version('1.44.2', commit='105b00588a758d5ec7c347a7dff2756aea4516a0')
 
     depends_on('r-biocgenerics@0.13.8:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.36:', type=('build', 'run'))

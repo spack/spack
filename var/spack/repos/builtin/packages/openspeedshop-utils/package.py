@@ -69,17 +69,11 @@ class OpenspeedshopUtils(CMakePackage):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url = "https://github.com/OpenSpeedShop/openspeedshop.git"
+    git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    # Use when the git repository is available
-    version('2.3.1.4', branch='2.3.1.4',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
-
-    version('2.3.1.3', branch='2.3.1.3',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
+    version('develop', branch='master')
+    version('2.3.1.4', branch='2.3.1.4')
+    version('2.3.1.3', branch='2.3.1.3')
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")

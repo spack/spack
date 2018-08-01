@@ -30,9 +30,9 @@ class Fp16(Package):
     conversion to/from half-precision floating point formats"""
 
     homepage = "https://github.com/Maratyszcza/FP16/"
-    url      = "https://github.com/Maratyszcza/FP16.git"
+    git      = "https://github.com/Maratyszcza/FP16.git"
 
-    version('master', git='https://github.com/Maratyszcza/FP16.git')
+    version('master')
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)

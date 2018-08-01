@@ -29,10 +29,9 @@ class RBumphunter(RPackage):
     """Tools for finding bumps in genomic data"""
 
     homepage = "http://bioconductor.org/packages/bumphunter/"
-    url      = "https://git.bioconductor.org/packages/bumphunter"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/bumphunter.git"
 
-    version('1.16.0', git='https://git.bioconductor.org/packages/bumphunter', commit='1c3ab4d1fd2d75b1586ccef12665960b3602080a')
+    version('1.16.0', commit='1c3ab4d1fd2d75b1586ccef12665960b3602080a')
 
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))

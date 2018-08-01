@@ -33,10 +33,10 @@ class OfPrecice(Package):
     """preCICE adapter for OpenFOAM"""
 
     homepage = 'https://www.precice.org'
-    gitrepo  = 'https://github.com/precice/openfoam-adapter.git'
+    git      = 'https://github.com/precice/openfoam-adapter.git'
 
     # Currently develop only
-    version('develop', branch='master', git=gitrepo)
+    version('develop', branch='master')
 
     depends_on('openfoam+source')
     depends_on('precice')
