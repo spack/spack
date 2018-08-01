@@ -105,8 +105,6 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        print self.cc(*args, output=str).strip()
-        print expected
         self.assertEqual(' '.join(self.cc(*args, output=str).strip().split()),
                          expected)
 
