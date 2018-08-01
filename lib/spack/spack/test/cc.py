@@ -184,17 +184,17 @@ class CompilerWrapperTest(unittest.TestCase):
                       '-rpath /third/rpath -rpath /fourth/rpath ' +
                       '-rpath /spack-test-prefix/lib ' +
                       '-rpath /spack-test-prefix/lib64')
-        
+
         # Test cppflags added properly in cpp mode
         self.check_cpp('dump-args', test_command,
                        "cpp " +
                        '-g -O1 ' +
-                      '-I/test/include -I/other/include arg1 ' +
-                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
-                      '-Wl,--end-group ' +
-                      '-llib3 -llib4 arg5 arg6 ' +
-                      '-L/test/lib -L/other/lib')
-        
+                       '-I/test/include -I/other/include arg1 ' +
+                       '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                       '-Wl,--end-group ' +
+                       '-llib3 -llib4 arg5 arg6 ' +
+                       '-L/test/lib -L/other/lib')
+
         # Test ldflags, cppflags, and language specific flags are added in
         # proper order
         self.check_cc('dump-args', test_command,
@@ -213,14 +213,14 @@ class CompilerWrapperTest(unittest.TestCase):
 
         self.check_cxx('dump-args', test_command,
                        self.realcc + ' ' +
-                      '-g -O1 -Werror -L foo ' +
-                      '-I/test/include -I/other/include arg1 ' +
-                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
-                      '-Wl,--end-group ' +
-                      '-llib3 -llib4 arg5 arg6 ' +
-                      '-L/test/lib -L/other/lib ' +
-                      '-lfoo ' +
-                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                       '-g -O1 -Werror -L foo ' +
+                       '-I/test/include -I/other/include arg1 ' +
+                       '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                       '-Wl,--end-group ' +
+                       '-llib3 -llib4 arg5 arg6 ' +
+                       '-L/test/lib -L/other/lib ' +
+                       '-lfoo ' +
+                       '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
                        '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
                        '-Wl,-rpath,/spack-test-prefix/lib ' +
                        '-Wl,-rpath,/spack-test-prefix/lib64')
@@ -277,7 +277,6 @@ class CompilerWrapperTest(unittest.TestCase):
                       '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
                       '-Wl,-rpath,/spack-test-prefix/lib ' +
                       '-Wl,-rpath,/spack-test-prefix/lib64')
-
 
     def test_dep_lib(self):
         """Ensure a single dependency RPATH is added."""
@@ -412,7 +411,6 @@ class CompilerWrapperTest(unittest.TestCase):
                       '-rpath /spack-test-prefix/lib ' +
                       '-rpath /spack-test-prefix/lib64')
 
-        
     def test_ld_deps_no_link(self):
         """Ensure SPACK_LINK_DEPS controls -L for ld."""
         os.environ['SPACK_DEPENDENCIES'] = ':'.join([
@@ -458,7 +456,7 @@ class CompilerWrapperTest(unittest.TestCase):
                       '-rpath /spack-test-prefix/lib ' +
                       '-rpath /spack-test-prefix/lib64 ' +
                       '-rpath ' + self.dep1 + '/lib')
-        
+
         # rpaths from the underlying command will still appear
         # Spack will not add its own rpaths.
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
