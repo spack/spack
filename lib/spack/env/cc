@@ -305,7 +305,6 @@ while [ -n "$1" ]; do
 		shift 3;
 		rpaths+=("$1")
             else
-		
                 other_args+=("$1")
             fi
             ;;
@@ -458,8 +457,4 @@ if [[ $SPACK_DEBUG == TRUE ]]; then
     echo "[$mode] ${full_command[@]}" >> "$output_log"
 fi
 
-#echo "&&&&&&&&&&&&&&&&&&&&&&&&" >> ~/TTTTTTTTTTTTTest
-#echo "[$mode] ${full_command[@]}" >> ~/TTTTTTTTTTTTTest
-#echo "${full_command[@]}" >> ~/TTTTTTTTTTTTTest
-#echo "^^^^^^^^^^^^^^^^^^^^^^^^" >> ~/TTTTTTTTTTTTTest
 exec "${full_command[@]}" 
