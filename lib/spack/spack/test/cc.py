@@ -105,28 +105,23 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(' '.join(self.cc(*args, output=str).strip().split()),
-                         expected)
+        self.assertEqual(self.cc(*args, output=str).strip(), expected)
 
     def check_cxx(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(' '.join(self.cxx(*args, output=str).strip().split()),
-                         expected)
+        self.assertEqual(self.cxx(*args, output=str).strip(), expected)
 
     def check_fc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(' '.join(self.fc(*args, output=str).strip().split()),
-                         expected)
+        self.assertEqual(self.fc(*args, output=str).strip(), expected)
 
     def check_ld(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(' '.join(self.ld(*args, output=str).strip().split()),
-                         expected)
+        self.assertEqual(self.ld(*args, output=str).strip(), expected)
 
     def check_cpp(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(' '.join(self.cpp(*args, output=str).strip().split()),
-                         expected)
+        self.assertEqual(self.cpp(*args, output=str).strip(), expected)
 
     def test_vcheck_mode(self):
         self.check_cc('dump-mode', ['-I/include', '--version'], "vcheck")

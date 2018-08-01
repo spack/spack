@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -52,6 +52,7 @@ parameters=(
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
     SPACK_SHORT_SPEC
+    SPACK_SYSTEM_DIRS
 )
 
 # The compiler input variables are checked for sanity later:
@@ -231,7 +232,7 @@ input_command="$@"
 args=()
 
 #
-# Now do real parsing of the command line args, trying hard to keep
+# Parse the command line args, trying hard to keep
 # non-rpath linker arguments in the proper order w.r.t. other command
 # line arguments.  This is important for things like groups.
 #
@@ -243,7 +244,7 @@ args=()
 # args variable later.
 #
 includes=()
-libraries=()
+libdirs=()
 libs=()
 rpaths=()
 other_args=()
@@ -258,7 +259,7 @@ while [ -n "$1" ]; do
         -L*)
             arg="${1#-L}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            libraries+=("$arg")
+            libdirs+=("$arg")
             ;;
         -l*)
             arg="${1#-l}"
@@ -371,7 +372,7 @@ for dep in "${deps[@]}"; do
             $add_rpaths && rpaths=("${rpaths[@]}" "$dep/lib")
         fi
         if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-            libraries=("${libraries[@]}" "$dep/lib")
+            libdirs=("${libdirs[@]}" "$dep/lib")
         fi
     fi
 
@@ -381,7 +382,7 @@ for dep in "${deps[@]}"; do
             $add_rpaths && rpaths+=("$dep/lib64")
         fi
         if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-            libraries+=("$dep/lib64")
+            libdirs+=("$dep/lib64")
         fi
     fi
 done
@@ -390,7 +391,7 @@ done
 IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
 for extra_rpath in "${extra_rpaths[@]}"; do 
     $add_rpaths && rpaths+=("$extra_rpath")
-    libraries+=("$extra_rpath")
+    libdirs+=("$extra_rpath")
 done
 
 # Add SPACK_LDLIBS to args
@@ -401,30 +402,29 @@ case "$mode" in
 	done
 esac
 
-# Filter system locations to the end of the command
-inc_system_dirs="/usr/include /usr/local/include"
-lib_system_dirs="/lib /lib64 /usr/lib /usr/lib64 /usr/local/lib /usr/local/lib64"
-for sd in $inc_system_dirs; do
+# Filter system locations to the end of each sublist of args
+# (includes, library dirs, rpaths)
+for sd in ${SPACK_SYSTEM_DIRS[@]}; do
     stripped_includes=`echo $includes | sed "s#\b$sd/\? \b##g"`
+    stripped_libdirs=`echo $libdirs | sed "s#\b$sd/\? \b##g"`
+    stripped_rpaths=`echo $rpaths | sed "s#\b$sd/\? \b##g"`
     if [[ "$includes" != "$stripped_includes" ]]; then
 	$includes="$stripped_includes $sd"
     fi
-done
-for sd in $lib_system_dirs; do
-    stripped_libraries=`echo $libraries | sed "s#\b$sd/\? \b##g"`
-    stripped_rpaths=`echo $rpaths | sed "s#\b$sd/\? \b##g"`
-    if [[ "$libraries" != "$stripped_libraries" ]]; then
-	$libraries="$stripped_libraries $sd"
+    if [[ "$libdirs" != "$stripped_libdirs" ]]; then
+	$libdirs="$stripped_libdirs $sd"
     fi
     if [[ "$rpaths" != "$stripped_rpaths" ]]; then
 	$rpaths="$stripped_rpaths $sd"
     fi
 done
 
-# Put the arguments together
+# Put the arguments together into one list
+# Includes come first, then other args, library dirs, and rpaths
+# rpaths get appropriate flag for ld vs ccld mode
 for dir in "${includes[@]}";  do args+=("-I$dir"); done
 args+=("${other_args[@]}")
-for dir in "${libraries[@]}"; do args+=("-L$dir"); done
+for dir in "${libdirs[@]}"; do args+=("-L$dir"); done
 for lib in "${libs[@]}"; do args+=("-l$lib"); done
 if [ "$mode" = ccld ]; then
     for dir in "${rpaths[@]}"; do

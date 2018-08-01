@@ -132,7 +132,6 @@ class Concretizer(object):
            find one that is most ABI compatible.
         """
         candidates = self._valid_virtuals_and_externals(spec)
-
         if not candidates:
             return candidates
 
