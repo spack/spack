@@ -1,4 +1,4 @@
-================
+ ================
 Feature Overview
 ================
 
@@ -11,8 +11,8 @@ systems <http://en.wikipedia.org/wiki/Ports_collection>`_.
 Simple package installation
 ---------------------------
 
-Installing the default version of a package is simple. This will install
-the latest version of the ``mpileaks`` package and all of its dependencies:
+Installing the default version of a package is simple. The following will install
+the latest version of the ``mpileaks`` package and all dependencies:
 
 .. code-block:: console
 
@@ -48,7 +48,7 @@ platform, all on the command line.
 
 Users can specify as many or few options as they care about. Spack
 will fill in the unspecified values with sensible defaults. The two listed
-syntaxes for variants are identical when the value is boolean.
+syntaxes for variants are identical when the value is Boolean.
 
 ----------------------
 Customize dependencies
@@ -65,7 +65,7 @@ configurations for the dependencies:
    $ spack install mpileaks@1.1.2 %gcc@4.7.3 +debug ^libelf@0.8.12 ^libdwarf@20130729+debug
 
 ------------------------
-Non-destructive installs
+Nondestructive installs
 ------------------------
 
 Spack installs every unique package/dependency configuration into its
@@ -84,7 +84,7 @@ manipulate ``LD_LIBRARY_PATH`` at runtime.
 Creating packages is easy
 -------------------------
 
-To create a new packages, all Spack needs is a URL for the source
+To create a new package, all Spack needs is a URL for the source
 archive.  The ``spack create`` command will create a boilerplate
 package file, and the package authors can fill in specific build steps
 in pure Python.

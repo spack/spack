@@ -5,9 +5,9 @@
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
 
-Spack is a multi-platform package manager that builds and installs
+Spack is a multiplatform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
-macOS, and many supercomputers. Spack is non-destructive: installing a
+macOS, and many supercomputers. Spack is nondestructive: installing a
 new version of a package does not break existing installations, so many
 configurations of the same package can coexist.
 
@@ -47,14 +47,14 @@ See also:
 Get Involved!
 ------------------------
 
-Spack is an open source project.  Questions, discussion, and
+Spack is an open-source project.  Questions, discussion, and
 contributions are welcome. Contributions can be anything from new
 packages to bugfixes, or even new core features.
 
 ### Mailing list
 
-If you are interested in contributing to spack, join the mailing list.
-We're using Google Groups for this:
+To contribute to spack, join the mailing list.
+We're using Google Groups:
 
   * [Spack Google Group](https://groups.google.com/d/forum/spack)
 
@@ -69,15 +69,15 @@ to you.
 
 ### Contributions
 
-Contributing to Spack is relatively easy.  Just send us a
+Contributing to Spack is easy.  Just send us a
 [pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
 [Spack repository](https://github.com/spack/spack).
 
-Your PR must pass Spack's unit tests and documentation tests, and must be
+Your PR must pass Spack's unit tests and documentation tests and be
 [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
 these guidelines with [Travis CI](https://travis-ci.org/spack/spack).  To
-run these tests locally, and for helpful tips on git, see our
+run these tests locally and for helpful tips on git, see our
 [Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
 
 Spack uses a rough approximation of the
@@ -88,7 +88,7 @@ stable release.
 
 Authors
 ----------------
-Many thanks go to Spack's [contributors](https://github.com/spack/spack/graphs/contributors).
+Many thanks to Spack's [contributors](https://github.com/spack/spack/graphs/contributors).
 
 Spack was created by Todd Gamblin, tgamblin@llnl.gov.
 
