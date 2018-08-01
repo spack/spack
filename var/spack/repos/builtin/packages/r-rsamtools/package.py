@@ -32,10 +32,9 @@ class RRsamtools(RPackage):
        indexed tab-delimited (tabix) files."""
 
     homepage = "https://bioconductor.org/packages/Rsamtools/"
-    url      = "https://git.bioconductor.org/packages/Rsamtools"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/Rsamtools.git"
 
-    version('1.28.0', git='https://git.bioconductor.org/packages/Rsamtools', commit='dfa5b6abef68175586f21add7927174786412472')
+    version('1.28.0', commit='dfa5b6abef68175586f21add7927174786412472')
 
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))

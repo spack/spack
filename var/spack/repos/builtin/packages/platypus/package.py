@@ -38,6 +38,6 @@ class Platypus(Package):
     depends_on('htslib')
 
     def install(self, spec, prefix):
-        buildPlatypus = Executable('./buildPlatypus.sh')
-        buildPlatypus()
+        build_platypus = Executable('./buildPlatypus.sh')
+        build_platypus()
         install_tree('.', prefix.bin)

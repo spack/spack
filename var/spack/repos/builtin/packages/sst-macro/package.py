@@ -40,19 +40,16 @@ class SstMacro(AutotoolsPackage):
 
     homepage = "http://sst.sandia.gov/about_sstmacro.html"
     url      = "https://github.com/sstsimulator/sst-macro/releases/download/v6.1.0_Final/sstmacro-6.1.0.tar.gz"
+    git      = "https://github.com/sstsimulator/sst-macro.git"
+
+    version('master', branch='master')
+    version('6.1.0', '98b737be6326b8bd711de832ccd94d14')
 
     depends_on('boost@1.59:')
     depends_on('autoconf@1.68:', type='build', when='@master')
     depends_on('automake@1.11.1:', type='build', when='@master')
     depends_on('libtool@1.2.4:', type='build', when='@master')
     depends_on('m4', type='build', when='@master')
-
-    version('master',
-          git='https://github.com/sstsimulator/sst-macro.git',
-          branch='master')
-
-    version('6.1.0', '98b737be6326b8bd711de832ccd94d14',
-          url='https://github.com/sstsimulator/sst-macro/releases/download/v6.1.0_Final/sstmacro-6.1.0.tar.gz')
 
     @run_before('autoreconf')
     def bootstrap(self):

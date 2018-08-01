@@ -239,6 +239,22 @@ class Llvm(CMakePackage):
             }
         },
         {
+            'version': '6.0.1',
+            'md5': 'c88c98709300ce2c285391f387fecce0',
+            'resources': {
+                'compiler-rt': '99bf8bcb68ba96dda74f6aee6c55f639',
+                'openmp': '4826402ae3633c36c51ba4d0e5527d30',
+                'polly': '4e5937753d1f77e2c0feca485fc7f9da',
+                'libcxx': '2c13cd0136ab6f8060a4cde85b5f86e2',
+                'libcxxabi': '41764959176d5fcc7baee8cd22ed1705',
+                'cfe': '4e419bd4e3b55aa06d872320f754bd85',
+                'clang-tools-extra': '431cba2b652e9c227a59a6d681388160',
+                'lldb': '482eba39e78c75a83216cf2d5b7a54b4',
+                'lld': '31cc580b32be124972c40c19c0839fed',
+                'libunwind': '569eed6f508af4c4c053b1112e6f3d0b'
+            }
+        },
+        {
             'version': '6.0.0',
             'md5': '788a11a35fa62eb008019b37187d09d2',
             'resources': {

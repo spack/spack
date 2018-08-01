@@ -131,6 +131,14 @@ def patch_configuration(monkeypatch, request):
 
 
 @pytest.fixture()
+def update_template_dirs(config, monkeypatch):
+    """Mocks the template directories for tests"""
+    dirs = spack.config.get_config('config')['template_dirs']
+    dirs = [spack.util.path.canonicalize_path(x) for x in dirs]
+    monkeypatch.setattr(spack, 'template_dirs', dirs)
+
+
+@pytest.fixture()
 def factory(request):
     """Function that, given a spec string, returns an instance of the writer
     and the corresponding spec.

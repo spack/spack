@@ -33,8 +33,9 @@ class Elemental(CMakePackage):
 
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.7.tar.gz"
+    git      = "https://github.com/elemental/Elemental.git"
 
-    version('develop', git='https://github.com/elemental/Elemental.git', branch='master')
+    version('develop', branch='master')
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 

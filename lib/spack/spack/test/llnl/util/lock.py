@@ -1047,3 +1047,23 @@ def test_lock_with_no_parent_directory(tmpdir):
         lock = lk.Lock('foo/bar/baz/lockfile')
         with lk.WriteTransaction(lock):
             pass
+
+
+def test_lock_in_current_directory(tmpdir):
+    """Make sure locks work even when their parent directory does not exist."""
+    with tmpdir.as_cwd():
+        # test we can create a lock in the current directory
+        lock = lk.Lock('lockfile')
+        for i in range(10):
+            with lk.ReadTransaction(lock):
+                pass
+            with lk.WriteTransaction(lock):
+                pass
+
+        # and that we can do the same thing after it's already there
+        lock = lk.Lock('lockfile')
+        for i in range(10):
+            with lk.ReadTransaction(lock):
+                pass
+            with lk.WriteTransaction(lock):
+                pass

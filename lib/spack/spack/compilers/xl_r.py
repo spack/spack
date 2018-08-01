@@ -74,7 +74,7 @@ class XlR(Compiler):
         return "-qzerosize"
 
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The '-qversion' is the standard option fo XL compilers.
            Output looks like this::
 

@@ -33,9 +33,9 @@ class RMakecdfenv(RPackage):
     that environment."""
 
     homepage = "https://www.bioconductor.org/packages/makecdfenv/"
-    url      = "https://git.bioconductor.org/packages/makecdfenv"
+    git      = "https://git.bioconductor.org/packages/makecdfenv.git"
 
-    version('1.52.0', git='https://git.bioconductor.org/packages/makecdfenv', commit='b88a3e93e3b7feeeca69eda7c1fc5a0826c81120')
+    version('1.52.0', commit='b88a3e93e3b7feeeca69eda7c1fc5a0826c81120')
 
     depends_on('r@3.4.0:3.4.9', when='@1.52.0')
     depends_on('r-affyio', type=('build', 'run'))

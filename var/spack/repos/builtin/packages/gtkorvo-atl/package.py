@@ -31,10 +31,10 @@ class GtkorvoAtl(CMakePackage):
     """
 
     homepage = "https://github.com/GTkorvo/atl"
-    url = "https://github.com/GTkorvo/atl/archive/v2.1.tar.gz"
+    url      = "https://github.com/GTkorvo/atl/archive/v2.1.tar.gz"
+    git      = "https://github.com/GTkorvo/atl.git"
 
-    version('develop', git='https://github.com/GTkorvo/atl.git',
-            branch='master')
+    version('develop', branch='master')
     version('2.2', 'f0e3581e4b4c6943bf4b203685630564')
     version('2.1', 'b2324ff041bccba127330a0e1b241978')
 

@@ -33,8 +33,9 @@ class Hydrogen(CMakePackage):
 
     homepage = "http://libelemental.org"
     url      = "https://github.com/LLNL/Elemental/archive/0.99.tar.gz"
+    git      = "https://github.com/LLNL/Elemental.git"
 
-    version('develop', git='https://github.com/LLNL/Elemental.git', branch='hydrogen')
+    version('develop', branch='hydrogen')
     version('0.99', 'b678433ab1d498da47acf3dc5e056c23')
 
     variant('shared', default=True,

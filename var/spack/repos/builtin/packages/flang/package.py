@@ -29,10 +29,13 @@ import os
 
 class Flang(CMakePackage):
     """Flang is a Fortran compiler targeting LLVM."""
-    homepage = "https://github.com/flang-compiler/flang"
-    url      = "https://github.com/flang-compiler/flang/archive/flang_20180612.tar.gz"
 
-    version('develop', git='https://github.com/flang-compiler/flang', branch='master')
+    homepage = "https://github.com/flang-compiler/flang"
+
+    url      = "https://github.com/flang-compiler/flang/archive/flang_20180612.tar.gz"
+    git      = "https://github.com/flang-compiler/flang.git"
+
+    version('develop', branch='master')
     version('20180612', '62284e26214eaaff261a922c67f6878c')
 
     depends_on('llvm@flang-develop', when='@develop')

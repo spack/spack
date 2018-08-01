@@ -34,9 +34,9 @@ class RAffyrnadegradation(RPackage):
     by RNA degradation."""
 
     homepage = "https://www.bioconductor.org/packages/AffyRNADegradation/"
-    url      = "https://git.bioconductor.org/packages/AffyRNADegradation"
+    git      = "https://git.bioconductor.org/packages/AffyRNADegradation.git"
 
-    version('1.22.0', git='https://git.bioconductor.org/packages/AffyRNADegradation', commit='0fa78f8286494711a239ded0ba587b0de47c15d3')
+    version('1.22.0', commit='0fa78f8286494711a239ded0ba587b0de47c15d3')
 
     depends_on('r@3.4.0:3.4.9', when='@1.22.0')
     depends_on('r-affy', type=('build', 'run'))

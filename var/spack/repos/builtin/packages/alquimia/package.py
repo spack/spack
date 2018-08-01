@@ -30,10 +30,11 @@ class Alquimia(CMakePackage):
     of mature geochemistry codes such as CrunchFlow and PFLOTRAN"""
 
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
+    git      = "https://github.com/LBL-EESA/alquimia-dev.git"
 
-    version('xsdk-0.3.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.3.0')
-    version('xsdk-0.2.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.2.0')
-    version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')
+    version('develop')
+    version('xsdk-0.3.0', tag='xsdk-0.3.0')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

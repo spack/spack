@@ -24,13 +24,16 @@
 ##############################################################################
 import collections
 import copy
+import inspect
 import os
+import os.path
 import shutil
 import re
 
 import ordereddict_backport
 import py
 import pytest
+import yaml
 
 from llnl.util.filesystem import remove_linked_tree
 
@@ -44,7 +47,7 @@ import spack.platforms.test
 import spack.repo
 import spack.stage
 import spack.util.executable
-import spack.util.pattern
+from spack.util.pattern import Bunch
 from spack.dependency import Dependency
 from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
@@ -165,10 +168,10 @@ def mock_fetch_cache(monkeypatch):
     and raises on fetch.
     """
     class MockCache(object):
-        def store(self, copyCmd, relativeDst):
+        def store(self, copy_cmd, relative_dest):
             pass
 
-        def fetcher(self, targetPath, digest, **kwargs):
+        def fetcher(self, target_path, digest, **kwargs):
             return MockCacheFetcher()
 
     class MockCacheFetcher(object):
@@ -324,7 +327,7 @@ def _populate(mock_db):
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
         pkg = spack.repo.get(s)
-        pkg.do_install(fake=True)
+        pkg.do_install(fake=True, explicit=True)
 
     # Transaction used to avoid repeated writes.
     with mock_db.write_transaction():
@@ -403,6 +406,45 @@ def mock_fetch(mock_archive):
     yield
     PackageBase.fetcher = orig_fn
 
+
+@pytest.fixture()
+def module_configuration(monkeypatch, request):
+    """Reads the module configuration file from the mock ones prepared
+    for tests and monkeypatches the right classes to hook it in.
+    """
+    # Class of the module file writer
+    writer_cls = getattr(request.module, 'writer_cls')
+    # Module where the module file writer is defined
+    writer_mod = inspect.getmodule(writer_cls)
+    # Key for specific settings relative to this module type
+    writer_key = str(writer_mod.__name__).split('.')[-1]
+    # Root folder for configuration
+    root_for_conf = os.path.join(
+        spack.paths.test_path, 'data', 'modules', writer_key
+    )
+
+    def _impl(filename):
+
+        file = os.path.join(root_for_conf, filename + '.yaml')
+        with open(file) as f:
+            configuration = yaml.load(f)
+
+        monkeypatch.setattr(
+            spack.modules.common,
+            'configuration',
+            configuration
+        )
+        monkeypatch.setattr(
+            writer_mod,
+            'configuration',
+            configuration[writer_key]
+        )
+        monkeypatch.setattr(
+            writer_mod,
+            'configuration_registry',
+            {}
+        )
+    return _impl
 
 ##########
 # Fake archives and repositories
@@ -508,7 +550,6 @@ def mock_git_repository(tmpdir_factory):
         r1 = rev_hash(branch)
         r1_file = branch_file
 
-    Bunch = spack.util.pattern.Bunch
     checks = {
         'master': Bunch(
             revision='master', file=r0_file, args={'git': str(repodir)}
@@ -561,7 +602,6 @@ def mock_hg_repository(tmpdir_factory):
         hg('commit', '-m' 'revision 1', '-u', 'test')
         r1 = get_rev()
 
-    Bunch = spack.util.pattern.Bunch
     checks = {
         'default': Bunch(
             revision=r1, file=r1_file, args={'hg': str(repodir)}
@@ -618,7 +658,6 @@ def mock_svn_repository(tmpdir_factory):
         r0 = '1'
         r1 = '2'
 
-    Bunch = spack.util.pattern.Bunch
     checks = {
         'default': Bunch(
             revision=r1, file=r1_file, args={'svn': url}),

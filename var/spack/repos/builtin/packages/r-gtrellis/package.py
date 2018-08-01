@@ -34,10 +34,9 @@ class RGtrellis(RPackage):
        graphics in the plot."""
 
     homepage = "https://bioconductor.org/packages/gtrellis/"
-    url      = "https://git.bioconductor.org/packages/gtrellis"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/gtrellis.git"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/gtrellis', commit='f813b420a008c459f63a2a13e5e64c5507c4c472')
+    version('1.8.0', commit='f813b420a008c459f63a2a13e5e64c5507c4c472')
 
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))

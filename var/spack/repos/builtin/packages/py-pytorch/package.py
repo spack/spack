@@ -30,12 +30,10 @@ class PyPytorch(PythonPackage):
     with strong GPU acceleration."""
 
     homepage = "http://pytorch.org/"
-    url      = "https://github.com/pytorch/pytorch/archive/v0.3.1.tar.gz"
+    git      = "https://github.com/pytorch/pytorch.git"
 
-    version('0.4.0', git='https://github.com/pytorch/pytorch.git',
-            tag='v0.4.0', submodules=True)
-    version('0.3.1', git='https://github.com/pytorch/pytorch.git',
-            tag='v0.3.1', submodules=True)
+    version('0.4.0', tag='v0.4.0', submodules=True)
+    version('0.3.1', tag='v0.3.1', submodules=True)
 
     variant('cuda', default='False', description='Add GPU support')
     variant('cudnn', default='False', description='Add cuDNN support')

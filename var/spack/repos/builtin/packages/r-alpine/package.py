@@ -30,9 +30,9 @@ class RAlpine(RPackage):
     transcript abundance estimation."""
 
     homepage = "http://bioconductor.org/packages/alpine/"
-    url      = "https://git.bioconductor.org/packages/alpine"
+    git      = "https://git.bioconductor.org/packages/alpine.git"
 
-    version('1.2.0', git='https://git.bioconductor.org/packages/alpine', commit='896872e6071769e1ac2cf786974edb8b875c45eb')
+    version('1.2.0', commit='896872e6071769e1ac2cf786974edb8b875c45eb')
 
     depends_on('r@3.4.0:3.4.9', when='@1.2.0')
     depends_on('r-biostrings', type=('build', 'run'))

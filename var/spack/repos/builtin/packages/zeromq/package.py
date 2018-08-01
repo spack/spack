@@ -26,12 +26,13 @@ from spack import *
 
 
 class Zeromq(AutotoolsPackage):
-    """ The ZMQ networking/concurrency library and core API """
+    """The ZMQ networking/concurrency library and core API"""
+
     homepage = "http://zguide.zeromq.org/"
     url      = "http://download.zeromq.org/zeromq-4.1.2.tar.gz"
+    git      = "https://github.com/zeromq/libzmq.git"
 
-    version('develop', branch='master',
-            git='https://github.com/zeromq/libzmq.git')
+    version('develop', branch='master')
     version('4.2.5', 'a1c95b34384257e986842f4d006957b8',
             url='https://github.com/zeromq/libzmq/releases/download/v4.2.5/zeromq-4.2.5.tar.gz')
     version('4.2.2', '52499909b29604c1e47a86f1cb6a9115')

@@ -207,6 +207,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -341,6 +342,13 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
         ]
 
+        # Add extra_rpaths dirs from compilers.yaml into link wrapper
+        rpaths = [self.compiler.cc_rpath_arg + path
+                  for path in self.compiler.extra_rpaths]
+        config_args.extend([
+            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
+        ])
+
         # According to this comment on github:
         #
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
@@ -434,6 +442,10 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
+        if '+cxx_exceptions' in spec:
+            config_args.append('--enable-cxx-exceptions')
+        else:
+            config_args.append('--disable-cxx-exceptions')
         return config_args
 
     @run_after('install')

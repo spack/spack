@@ -137,8 +137,8 @@ def python_and_extension_dirs(tmpdir):
     create_dir_structure(ext_prefix, ext_dirs)
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(str(ext_prefix.join(easy_install_location)), 'w') as F:
-        F.write("""path/to/ext1.egg
+    with open(str(ext_prefix.join(easy_install_location)), 'w') as f:
+        f.write("""path/to/ext1.egg
 path/to/setuptools.egg""")
 
     return str(python_prefix), str(ext_prefix)
@@ -204,8 +204,8 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
     assert os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(os.path.join(python_prefix, easy_install_location), 'r') as F:
-        easy_install_contents = F.read()
+    with open(os.path.join(python_prefix, easy_install_location), 'r') as f:
+        easy_install_contents = f.read()
 
     assert 'ext1.egg' in easy_install_contents
     assert 'setuptools.egg' not in easy_install_contents

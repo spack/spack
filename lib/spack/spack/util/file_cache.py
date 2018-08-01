@@ -130,7 +130,7 @@ class FileCache(object):
         """
         class WriteContextManager(object):
 
-            def __enter__(cm):
+            def __enter__(cm):  # noqa
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None
                 if os.path.exists(cm.orig_filename):
@@ -141,7 +141,7 @@ class FileCache(object):
 
                 return cm.orig_file, cm.tmp_file
 
-            def __exit__(cm, type, value, traceback):
+            def __exit__(cm, type, value, traceback):  # noqa
                 if cm.orig_file:
                     cm.orig_file.close()
                 cm.tmp_file.close()

@@ -38,11 +38,10 @@ class RGenomicranges(RPackage):
        infrastructure."""
 
     homepage = "https://bioconductor.org/packages/GenomicRanges/"
-    url      = "https://git.bioconductor.org/packages/GenomicRanges"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/GenomicRanges.git"
 
-    version('1.30.3', git='https://git.bioconductor.org/packages/GenomicRanges', commit='e99979054bc50ed8c0109bc54563036c1b368997')
-    version('1.28.6', git='https://git.bioconductor.org/packages/GenomicRanges', commit='197472d618f3ed04c795dc6ed435500c29619563')
+    version('1.30.3', commit='e99979054bc50ed8c0109bc54563036c1b368997')
+    version('1.28.6', commit='197472d618f3ed04c795dc6ed435500c29619563')
 
     depends_on('r-biocgenerics@0.21.2:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.47:', type=('build', 'run'))
