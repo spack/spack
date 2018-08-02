@@ -34,19 +34,9 @@ class NetcdfFortran(AutotoolsPackage):
     version('4.4.4', 'e855c789cd72e1b8bc1354366bf6ac72')
     version('4.4.3', 'bfd4ae23a34635b273d3eb0d91cbde9e')
 
-    depends_on('autoconf', type='build', when='%nag')
-    depends_on('automake', type='build', when='%nag')
-    depends_on('libtool', type='build', when='%nag')
-    depends_on('m4', type='build', when='%nag')
-
     depends_on('netcdf')
 
-    @property
-    def force_autoreconf(self):
-        # The default libtool.m4 is too old to handle NAG compiler properly,
-        # so we use the most recent version of it available in Spack.
-        # https://github.com/Unidata/netcdf-fortran/issues/94
-        return self.spec.satisfies('%nag')
+    patch('nag.patch', when='@:4.4.4%nag')
 
     def configure_args(self):
         return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
