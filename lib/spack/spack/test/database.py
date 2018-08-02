@@ -36,11 +36,55 @@ from llnl.util.tty.colify import colify
 
 import spack.repo
 import spack.store
-from spack.test.conftest import MockPackageMultiRepo
+import spack.database
+import spack.spec
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
+
+
+class MockLayout(object):
+    def path_for_spec(self, spec):
+        return '/' + '/'.join(['test_upstream_root', spec.name])
+
+    def check_installed(self, spec):
+        return True
+
+
+@pytest.mark.usefixtures('config')
+def test_mark_installed_upstream(tmpdir_factory):
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    default = ('build', 'link')
+    x = MockPackage('x', [], [])
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    w = MockPackage('w', [x, y], [default, default])
+    mock_repo = MockPackageMultiRepo([w, x, y, z])
+
+    mock_layout = MockLayout()
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('w')
+        spec.concretize()
+
+        for dep in spec.traverse(root=False):
+            prepared_db.add(dep, mock_layout)
+
+        try:
+            original_db = spack.store.db
+            downstream_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+            spack.store.db = spack.database.Database(
+                downstream_db_root, upstream_dbs=[prepared_db])
+            new_spec = spack.spec.Spec('w')
+            new_spec.concretize()
+            for dep in new_spec.traverse(root=False):
+                assert dep.package._installed_upstream
+        finally:
+            spack.store.db = original_db
 
 
 @pytest.fixture()
