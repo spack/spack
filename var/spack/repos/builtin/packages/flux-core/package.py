@@ -76,9 +76,11 @@ class FluxCore(AutotoolsPackage):
 
     @when('@master')
     def setup(self):
-        # Allow git-describe to get last tag so flux-version works:
-        git = which('git')
-        git('fetch', '--unshallow')
+        # Check in case we are running `spack diy` from an "unshallow" clone
+        if os.path.exists('.git/shallow'):
+            # Allow git-describe to get last tag so flux-version works:
+            git = which('git')
+            git('fetch', '--unshallow')
 
     def autoreconf(self, spec, prefix):
         self.setup()
