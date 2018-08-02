@@ -36,7 +36,8 @@ class Kvtree(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('1.0.1', 'f007b4b930d12fc0eb784b4dc3af823e')
+    version('1.0.2',
+            sha256='6b54f4658e5ebab747c0c2472b1505ac1905eefc8a0b2a97d8776f800ee737a3')
 
     variant('mpi', default=True, description="Build with MPI message packing")
     depends_on('mpi', when='+mpi')
@@ -45,7 +46,7 @@ class Kvtree(CMakePackage):
         args = []
         if self.spec.satisfies('+mpi'):
             args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+#            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         else:
             args.append("-DMPI=OFF")
         if self.spec.satisfies('platform=cray'):
