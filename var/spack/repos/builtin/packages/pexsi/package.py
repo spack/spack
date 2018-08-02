@@ -64,24 +64,24 @@ class Pexsi(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        substitutions = {
-            '@MPICC': self.spec['mpi'].mpicc,
-            '@MPICXX': self.spec['mpi'].mpicxx,
-            '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPICXX_LIB': self.spec['mpi:cxx'].libs.joined(),
-            '@RANLIB': 'ranlib',
-            '@PEXSI_STAGE': self.stage.source_path,
-            '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,
-            '@METIS_PREFIX': self.spec['metis'].prefix,
-            '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
-            '@LAPACK_PREFIX': self.spec['lapack'].prefix,
-            '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].libs.joined(),
-            '@BLAS_LIBS': self.spec['blas'].libs.joined(),
+        substitutions = [
+            ('@MPICC', self.spec['mpi'].mpicc),
+            ('@MPICXX_LIB', self.spec['mpi:cxx'].libs.joined()),
+            ('@MPICXX', self.spec['mpi'].mpicxx),
+            ('@MPIFC', self.spec['mpi'].mpifc),
+            ('@RANLIB', 'ranlib'),
+            ('@PEXSI_STAGE', self.stage.source_path),
+            ('@SUPERLU_PREFIX', self.spec['superlu-dist'].prefix),
+            ('@METIS_PREFIX', self.spec['metis'].prefix),
+            ('@PARMETIS_PREFIX', self.spec['parmetis'].prefix),
+            ('@LAPACK_PREFIX', self.spec['lapack'].prefix),
+            ('@BLAS_PREFIX', self.spec['blas'].prefix),
+            ('@LAPACK_LIBS', self.spec['lapack'].libs.joined()),
+            ('@BLAS_LIBS', self.spec['blas'].libs.joined()),
             # FIXME : what to do with compiler provided libraries ?
-            '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs),
-            '@FLDFLAGS': ''
-        }
+            ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs)),
+            ('@FLDFLAGS', '')
+        ]
 
         if '@0.9.2' in self.spec:
             substitutions['@FLDFLAGS'] = '-Wl,--allow-multiple-definition'
@@ -95,7 +95,7 @@ class Pexsi(MakefilePackage):
             'make.inc'
         )
         shutil.copy(template, makefile)
-        for key, value in sorted(substitutions.items(), reverse=True):
+        for key, value in substitutions:
             filter_file(key, value, makefile)
 
     def build(self, spec, prefix):
