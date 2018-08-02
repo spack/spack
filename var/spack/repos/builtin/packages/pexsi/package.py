@@ -84,7 +84,7 @@ class Pexsi(MakefilePackage):
         ]
 
         if '@0.9.2' in self.spec:
-            substitutions['@FLDFLAGS'] = '-Wl,--allow-multiple-definition'
+            substitutions.append(('@FLDFLAGS', '-Wl,--allow-multiple-definition'))
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
