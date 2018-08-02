@@ -35,7 +35,6 @@ class KimApi(CMakePackage):
        codes that have adopted the KIM API standard.
     """
     homepage = "https://openkim.org/"
-    url      = "https://github.com/openkim/kim-api/archive/v1.9.7.tar.gz"
     git      = "https://github.com/openkim/kim-api"
 
     version('develop', branch='master')
