@@ -76,6 +76,9 @@ class Libmonitor(AutotoolsPackage):
         if '+hpctoolkit' in self.spec:
             args.append('--enable-client-signals=%s' % self.signals)
 
+        # TODO: Spack has trouble with cross-compilers and builds
+        # (hpctoolkit) that use both front-end and back-end compilers.
+        # See issues #8860 and #8859.
         if '+bgq' in self.spec:
             args.append('CC=powerpc64-bgq-linux-gcc')
 
