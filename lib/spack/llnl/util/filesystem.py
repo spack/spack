@@ -60,7 +60,6 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
-    'hide_files',
     'install',
     'install_tree',
     'is_exe',
@@ -390,18 +389,6 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         # Otherwise delete the temporary directory
         shutil.rmtree(tmp_dir)
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
-
-
-@contextmanager
-def hide_files(*file_list):
-    try:
-        baks = ['%s.bak' % f for f in file_list]
-        for f, bak in zip(file_list, baks):
-            shutil.move(f, bak)
-        yield
-    finally:
-        for f, bak in zip(file_list, baks):
-            shutil.move(bak, f)
 
 
 def hash_directory(directory):
