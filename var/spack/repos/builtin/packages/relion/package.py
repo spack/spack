@@ -75,6 +75,7 @@ class Relion(CMakePackage, CudaPackage):
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
+                '-DCudaTexture=ON',
             ]
             if carch is not None:
                 args += [
