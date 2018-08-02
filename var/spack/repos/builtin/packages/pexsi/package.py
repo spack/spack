@@ -79,12 +79,17 @@ class Pexsi(MakefilePackage):
             ('@LAPACK_LIBS', self.spec['lapack'].libs.joined()),
             ('@BLAS_LIBS', self.spec['blas'].libs.joined()),
             # FIXME : what to do with compiler provided libraries ?
-            ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs)),
-            ('@FLDFLAGS', '')
+            ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs))
         ]
 
         if '@0.9.2' in self.spec:
-            substitutions.append(('@FLDFLAGS', '-Wl,--allow-multiple-definition'))
+            substitutions.append(
+                ('@FLDFLAGS', '-Wl,--allow-multiple-definition')
+            )
+        else:
+            substitutions.append(
+                ('@FLDFLAGS', '')
+            )
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
