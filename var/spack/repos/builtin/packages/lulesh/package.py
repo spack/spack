@@ -31,10 +31,11 @@ class Lulesh(MakefilePackage):
     code to only solve a Sedov blast problem with analytic answer
     """
     tags = ['proxy-app']
-    homepage = "https://codesign.llnl.gov/lulesh.php"
-    url      = "https://codesign.llnl.gov/lulesh/lulesh2.0.3.tgz"
 
-    version('2.0.3', '336644a8750f71c7c6b9d2960976e7aa')
+    homepage = "https://github.com/LLNL/LULESH"
+    url      = "https://github.com/LLNL/LULESH/archive/2.0.3.tar.gz"
+
+    version('2.0.3', sha256='2fc9ef2c4bce00eba2c67b8891deb60ced742bc418e3fc6e4071e78f6ce80d58')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=True, description='Build with OpenMP support')
