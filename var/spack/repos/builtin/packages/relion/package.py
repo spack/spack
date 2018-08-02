@@ -32,11 +32,12 @@ class Relion(CMakePackage, CudaPackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    git      = "https://github.com/3dem/relion.git"
+    url      = "https://github.com/3dem/relion"
 
-    version('develop')
-    version('2.1', tag='2.1')
-    version('2.0.3', tag='2.0.3')
+    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
+    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
+    version('develop', git='https://github.com/3dem/relion.git')
+    version('beta-3', git='https://bitbucket.org/scheres/relion-3.0_beta.git')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
@@ -52,7 +53,8 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('fltk', when='+gui')
     # cuda 9 not yet supported
     #  https://github.com/3dem/relion/issues/296
-    depends_on('cuda@8.0:8.99', when='+cuda')
+    # depends_on('cuda@8.0:8.99', when='+cuda')
+    depends_on('cuda@9:', when='version==beta-3')
     # use gcc < 5 when compiled with cuda 8
     conflicts('%gcc@5:', when='+cuda')
 
@@ -60,6 +62,9 @@ class Relion(CMakePackage, CudaPackage):
         args = [
             '-DCMAKE_C_FLAGS=-g',
             '-DCMAKE_CXX_FLAGS=-g',
+            '-DALTCPU=ON',
+            '-DFORCE_OWN_TBB=ON',
+            '-DMKLFFT=ON',
             '-DGUI=%s' % ('+gui' in self.spec),
             '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
