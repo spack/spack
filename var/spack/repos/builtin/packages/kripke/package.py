@@ -29,17 +29,22 @@ class Kripke(CMakePackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
        transport proxy/mini app.
     """
-    homepage = "https://codesign.llnl.gov/kripke.php"
-    url      = "https://codesign.llnl.gov/downloads/kripke-openmp-1.1.tar.gz"
+    homepage = "https://github.com/LLNL/Kripke"
+    url      = "https://github.com/LLNL/Kripke/archive/v1.2.2-CORAL2.tar.gz"
 
     tags = ['proxy-app']
-    version('1.1', '7fe6f2b26ed983a6ce5495ab701f85bf')
+
+    version('1.2.2', sha256='f904326318beeb41d5e751a8a0fda1591a45ba6754dfb0100d4b214e86329e55')
 
     variant('mpi',    default=True, description='Build with MPI.')
     variant('openmp', default=True, description='Build with OpenMP enabled.')
 
     depends_on('mpi', when='+mpi')
     depends_on('cmake@3.0:', type='build')
+
+    def url_for_version(self, version):
+        url = "https://github.com/LLNL/Kripke/archive/v{0}-CORAL2.tar.gz"
+        return url.format(version)
 
     def cmake_args(self):
         def enabled(variant):
