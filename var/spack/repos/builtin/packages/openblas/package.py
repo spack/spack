@@ -37,6 +37,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.2', sha256='e8ba64f6b103c511ae13736100347deb7121ba9b41ba82052b1a018a65c0cb15')
     version('0.3.0',  '42cde2c1059a8a12227f1e6551c8dbd2')
     version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
