@@ -514,7 +514,7 @@ dependencies, but not ``appsy`` itself:
 
 .. code-block:: console
 
-   $ spack view symlink --dependencies yes --exclude appsy appsy
+   $ spack view --dependencies yes --exclude appsy symlink /path/to/MYVIEW/ appsy
 
 Alternately, you wish to create a view whose purpose is to provide
 binary executables to end users.  You only need to include
@@ -523,7 +523,7 @@ dependencies.  In this case, you might use:
 
 .. code-block:: console
 
-   $ spack view symlink --dependencies no cmake
+   $ spack view --dependencies no symlink /path/to/MYVIEW/ cmake
 
 
 """""""""""""""""""""""

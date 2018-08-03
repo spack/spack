@@ -166,50 +166,71 @@ class CompilerWrapperTest(unittest.TestCase):
 
         # Test ldflags added properly in ld mode
         self.check_ld('dump-args', test_command,
-                      "ld " +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
+                      'ld -L foo ' +
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-lfoo ' +
+                      '-rpath /first/rpath -rpath /second/rpath ' +
+                      '-rpath /third/rpath -rpath /fourth/rpath ' +
+                      '-rpath /spack-test-prefix/lib ' +
+                      '-rpath /spack-test-prefix/lib64')
 
         # Test cppflags added properly in cpp mode
         self.check_cpp('dump-args', test_command,
                        "cpp " +
                        '-g -O1 ' +
-                       ' '.join(test_command))
+                       '-I/test/include -I/other/include arg1 ' +
+                       '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                       '-Wl,--end-group ' +
+                       '-llib3 -llib4 arg5 arg6 ' +
+                       '-L/test/lib -L/other/lib')
 
         # Test ldflags, cppflags, and language specific flags are added in
         # proper order
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      '-g -O1 ' +
-                      '-Wall ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
+                      '-g -O1 -Wall -L foo ' +
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-lfoo ' +
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64')
 
         self.check_cxx('dump-args', test_command,
                        self.realcc + ' ' +
-                       '-Wl,-rpath,' + self.prefix + '/lib ' +
-                       '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                       '-g -O1 ' +
-                       '-Werror ' +
-                       '-L foo ' +
-                       ' '.join(test_command) + ' ' +
-                       '-lfoo')
+                       '-g -O1 -Werror -L foo ' +
+                       '-I/test/include -I/other/include arg1 ' +
+                       '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                       '-Wl,--end-group ' +
+                       '-llib3 -llib4 arg5 arg6 ' +
+                       '-L/test/lib -L/other/lib ' +
+                       '-lfoo ' +
+                       '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                       '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                       '-Wl,-rpath,/spack-test-prefix/lib ' +
+                       '-Wl,-rpath,/spack-test-prefix/lib64')
 
         self.check_fc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      '-w ' +
-                      '-g -O1 ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
+                      '-w -g -O1 -L foo ' +
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-lfoo ' +
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64')
 
         del os.environ['SPACK_CFLAGS']
         del os.environ['SPACK_CXXFLAGS']
@@ -222,9 +243,15 @@ class CompilerWrapperTest(unittest.TestCase):
         """Ensure RPATHs for root package are added."""
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      ' '.join(test_command))
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64')
 
     def test_dep_include(self):
         """Ensure a single dependency include directory is added."""
@@ -233,10 +260,16 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      '-I' + self.dep4 + '/include ' +
-                      ' '.join(test_command))
+                      '-I/test/include -I/other/include ' +
+                      '-I' + self.dep4 + '/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64')
 
     def test_dep_lib(self):
         """Ensure a single dependency RPATH is added."""
@@ -245,11 +278,17 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
                       '-L' + self.dep2 + '/lib64 ' +
-                      '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
-                      ' '.join(test_command))
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64 ' +
+                      '-Wl,-rpath,' + self.dep2 + '/lib64')
 
     def test_dep_lib_no_rpath(self):
         """Ensure a single dependency link flag is added with no dep RPATH."""
@@ -257,10 +296,16 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
                       '-L' + self.dep2 + '/lib64 ' +
-                      ' '.join(test_command))
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64')
 
     def test_dep_lib_no_lib(self):
         """Ensure a single dependency RPATH is added with no -L."""
@@ -268,10 +313,16 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
-                      ' '.join(test_command))
+                      '-I/test/include -I/other/include arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64 ' +
+                      '-Wl,-rpath,' + self.dep2 + '/lib64')
 
     def test_all_deps(self):
         """Ensure includes and RPATHs for all deps are added. """
@@ -285,23 +336,25 @@ class CompilerWrapperTest(unittest.TestCase):
         # to.  We could loosen that if it becomes necessary
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-
-                      '-I' + self.dep4 + '/include ' +
-
-                      '-L' + self.dep3 + '/lib64 ' +
-                      '-Wl,-rpath,' + self.dep3 + '/lib64 ' +
-                      '-I' + self.dep3 + '/include ' +
-
-                      '-L' + self.dep2 + '/lib64 ' +
-                      '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
-
-                      '-L' + self.dep1 + '/lib ' +
-                      '-Wl,-rpath,' + self.dep1 + '/lib ' +
+                      '-I/test/include -I/other/include ' +
                       '-I' + self.dep1 + '/include ' +
-
-                      ' '.join(test_command))
+                      '-I' + self.dep3 + '/include ' +
+                      '-I' + self.dep4 + '/include ' +
+                      'arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-L' + self.dep1 + '/lib ' +
+                      '-L' + self.dep2 + '/lib64 ' +
+                      '-L' + self.dep3 + '/lib64 ' +
+                      '-Wl,-rpath,/first/rpath -Wl,-rpath,/second/rpath ' +
+                      '-Wl,-rpath,/third/rpath -Wl,-rpath,/fourth/rpath ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib ' +
+                      '-Wl,-rpath,/spack-test-prefix/lib64 ' +
+                      '-Wl,-rpath,' + self.dep1 + '/lib ' +
+                      '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
+                      '-Wl,-rpath,' + self.dep3 + '/lib64')
 
     def test_ld_deps(self):
         """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
@@ -312,19 +365,22 @@ class CompilerWrapperTest(unittest.TestCase):
 
         self.check_ld('dump-args', test_command,
                       'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-
-                      '-L' + self.dep3 + '/lib64 ' +
-                      '-rpath ' + self.dep3 + '/lib64 ' +
-
-                      '-L' + self.dep2 + '/lib64 ' +
-                      '-rpath ' + self.dep2 + '/lib64 ' +
-
+                      '-I/test/include -I/other/include ' +
+                      'arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
                       '-L' + self.dep1 + '/lib ' +
+                      '-L' + self.dep2 + '/lib64 ' +
+                      '-L' + self.dep3 + '/lib64 ' +
+                      '-rpath /first/rpath -rpath /second/rpath ' +
+                      '-rpath /third/rpath -rpath /fourth/rpath ' +
+                      '-rpath /spack-test-prefix/lib ' +
+                      '-rpath /spack-test-prefix/lib64 ' +
                       '-rpath ' + self.dep1 + '/lib ' +
-
-                      ' '.join(test_command))
+                      '-rpath ' + self.dep2 + '/lib64 ' +
+                      '-rpath ' + self.dep3 + '/lib64')
 
     def test_ld_deps_no_rpath(self):
         """Ensure SPACK_RPATH_DEPS controls RPATHs for ld."""
@@ -334,14 +390,19 @@ class CompilerWrapperTest(unittest.TestCase):
 
         self.check_ld('dump-args', test_command,
                       'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-
-                      '-L' + self.dep3 + '/lib64 ' +
-                      '-L' + self.dep2 + '/lib64 ' +
+                      '-I/test/include -I/other/include ' +
+                      'arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
                       '-L' + self.dep1 + '/lib ' +
-
-                      ' '.join(test_command))
+                      '-L' + self.dep2 + '/lib64 ' +
+                      '-L' + self.dep3 + '/lib64 ' +
+                      '-rpath /first/rpath -rpath /second/rpath ' +
+                      '-rpath /third/rpath -rpath /fourth/rpath ' +
+                      '-rpath /spack-test-prefix/lib ' +
+                      '-rpath /spack-test-prefix/lib64')
 
     def test_ld_deps_no_link(self):
         """Ensure SPACK_LINK_DEPS controls -L for ld."""
@@ -351,14 +412,19 @@ class CompilerWrapperTest(unittest.TestCase):
 
         self.check_ld('dump-args', test_command,
                       'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-
-                      '-rpath ' + self.dep3 + '/lib64 ' +
-                      '-rpath ' + self.dep2 + '/lib64 ' +
+                      '-I/test/include -I/other/include ' +
+                      'arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
+                      '-rpath /first/rpath -rpath /second/rpath ' +
+                      '-rpath /third/rpath -rpath /fourth/rpath ' +
+                      '-rpath /spack-test-prefix/lib ' +
+                      '-rpath /spack-test-prefix/lib64 ' +
                       '-rpath ' + self.dep1 + '/lib ' +
-
-                      ' '.join(test_command))
+                      '-rpath ' + self.dep2 + '/lib64 ' +
+                      '-rpath ' + self.dep3 + '/lib64')
 
     def test_ld_deps_reentrant(self):
         """Make sure ld -r is handled correctly on OS's where it doesn't
@@ -371,18 +437,30 @@ class CompilerWrapperTest(unittest.TestCase):
         reentrant_test_command = ['-r'] + test_command
         self.check_ld('dump-args', reentrant_test_command,
                       'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-
+                      '-I/test/include -I/other/include ' +
+                      '-r arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
                       '-L' + self.dep1 + '/lib ' +
-                      '-rpath ' + self.dep1 + '/lib ' +
+                      '-rpath /first/rpath -rpath /second/rpath ' +
+                      '-rpath /third/rpath -rpath /fourth/rpath ' +
+                      '-rpath /spack-test-prefix/lib ' +
+                      '-rpath /spack-test-prefix/lib64 ' +
+                      '-rpath ' + self.dep1 + '/lib')
 
-                      '-r ' +
-                      ' '.join(test_command))
-
+        # rpaths from the underlying command will still appear
+        # Spack will not add its own rpaths.
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
         self.check_ld('dump-args', reentrant_test_command,
                       'ld ' +
+                      '-I/test/include -I/other/include ' +
+                      '-r arg1 ' +
+                      '-Wl,--start-group arg2 arg3 -llib1 -llib2 arg4 ' +
+                      '-Wl,--end-group ' +
+                      '-llib3 -llib4 arg5 arg6 ' +
+                      '-L/test/lib -L/other/lib ' +
                       '-L' + self.dep1 + '/lib ' +
-                      '-r ' +
-                      ' '.join(test_command))
+                      '-rpath /first/rpath -rpath /second/rpath ' +
+                      '-rpath /third/rpath -rpath /fourth/rpath')

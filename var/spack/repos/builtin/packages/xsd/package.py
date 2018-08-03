@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,20 +26,27 @@
 from spack import *
 
 
-class Gsl(AutotoolsPackage):
-    """The GNU Scientific Library (GSL) is a numerical library for C and C++
-    programmers. It is free software under the GNU General Public License. The
-    library provides a wide range of mathematical routines such as random
-    number generators, special functions and least-squares fitting. There are
-    over 1000 functions in total with an extensive test suite."""
+class Xsd(MakefilePackage):
+    """CodeSynthesis XSD is an open-source, cross-platform W3C XML Schema
+    to C++ data binding compiler. It support in-memory and event-driven XML
+    processing models and is available for a wide range of C++ compilers
+    and platforms."""
 
-    homepage = "http://www.gnu.org/software/gsl"
-    url      = "http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-2.3.tar.gz"
+    homepage = "https://www.codesynthesis.com"
+    url      = "https://www.codesynthesis.com/download/xsd/4.0/xsd-4.0.0+dep.tar.bz2"
 
-    version('2.5', sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
-    version('2.4',   'dba736f15404807834dc1c7b93e83b92')
-    version('2.3',   '905fcbbb97bc552d1037e34d200931a0')
-    version('2.2.1', '3d90650b7cfe0a6f4b29c2d7b0f86458')
-    version('2.1',   'd8f70abafd3e9f0bae03c52d1f4e8de5')
-    version('2.0',   'ae44cdfed78ece40e73411b63a78c375')
-    version('1.16',  'e49a664db13d81c968415cd53f62bc8b')
+    version('4.0.0', 'ad3de699eb140e747a0a214462d95fc81a21b494')
+
+    depends_on('xerces-c')
+    depends_on('libtool', type='build')
+
+    def install(self, spec, prefix):
+        make('install', 'install_prefix=' + prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        xercesc_lib_flags = self.spec['xerces-c'].libs.search_flags
+        spack_env.append_flags('LDFLAGS', xercesc_lib_flags)
+
+    def url_for_version(self, version):
+        url = "https://www.codesynthesis.com/download/xsd/{0}/xsd-{1}+dep.tar.bz2"
+        return url.format(version.up_to(2), version)

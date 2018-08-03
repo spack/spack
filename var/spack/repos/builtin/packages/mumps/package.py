@@ -69,10 +69,7 @@ class Mumps(Package):
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
-    patch('mumps-5.0.2-spectrum-mpi-xl.patch', when='@5.0.2%xl^spectrum-mpi')
-    patch('mumps-5.0.2-spectrum-mpi-xl.patch', when='@5.0.2%xl_r^spectrum-mpi')
-    patch('mumps-5.1.1-spectrum-mpi-xl.patch', when='@5.1.1%xl^spectrum-mpi')
-    patch('mumps-5.1.1-spectrum-mpi-xl.patch', when='@5.1.1%xl_r^spectrum-mpi')
+    patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
 
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
@@ -133,6 +130,18 @@ class Mumps(Package):
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
+        # Determine which compiler suite we are using
+        using_gcc = self.compiler.name == "gcc"
+        using_pgi = self.compiler.name == "pgi"
+        using_intel = self.compiler.name == "intel"
+        using_xl = self.compiler.name in ['xl', 'xl_r']
+
+        # The llvm compiler suite does not contain a Fortran compiler by
+        # default.  Its possible that a Spack user may have configured
+        # ~/.spack/<platform>/compilers.yaml for using xlf.
+        using_xlf = using_xl or \
+            (spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'))
+
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
@@ -140,32 +149,37 @@ class Mumps(Package):
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
-        using_xl = self.compiler.name in ['xl', 'xl_r']
+        opt_level = '3' if using_xl else ''
+
         if '+int64' in self.spec:
-            if self.compiler.name == "xl" or self.compiler.name == "xl_r":
-                makefile_conf.extend(
-                    ['OPTF    = -O3',
-                     'OPTL    = %s -O3' % fpic,
-                     'OPTC    = %s -O3-DINTSIZE64' % fpic])
+            if using_xlf:
+                makefile_conf.append('OPTF = -O%s' % opt_level)
             else:
-                makefile_conf.extend(
-                    # the fortran compilation flags most probably are
-                    # working only for intel and gnu compilers this is
-                    # perhaps something the compiler should provide
-                    ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # noqa
-                     'OPTL    = %s -O ' % fpic,
-                     'OPTC    = %s -O -DINTSIZE64' % fpic])
+                # the fortran compilation flags most probably are
+                # working only for intel and gnu compilers this is
+                # perhaps something the compiler should provide
+                makefile_conf.extend([
+                    'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
+                        fpic,
+                        '-fdefault-integer-8' if using_gcc
+                                              else '-i8'),  # noqa
+                ])
+
+            makefile_conf.extend([
+                'OPTL = %s -O%s' % (fpic, opt_level),
+                'OPTC = %s -O%s -DINTSIZE64' % (fpic, opt_level)
+            ])
         else:
-            if using_xl:
-                makefile_conf.extend(
-                    ['OPTF    = -O3 -qfixed',
-                     'OPTL    = %s -O3' % fpic,
-                     'OPTC    = %s -O3' % fpic])
+            if using_xlf:
+                makefile_conf.append('OPTF = -O%s -qfixed' % opt_level)
             else:
-                makefile_conf.extend(
-                    ['OPTF    = %s -O  -DALLOW_NON_INIT' % fpic,
-                     'OPTL    = %s -O ' % fpic,
-                     'OPTC    = %s -O ' % fpic])
+                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (
+                    fpic, opt_level))
+
+            makefile_conf.extend([
+                'OPTL = %s -O%s' % (fpic, opt_level),
+                'OPTC = %s -O%s' % (fpic, opt_level)
+            ])
 
         if '+mpi' in self.spec:
             scalapack = self.spec['scalapack'].libs if not shared \
@@ -173,16 +187,9 @@ class Mumps(Package):
             makefile_conf.extend(
                 ['CC = {0}'.format(self.spec['mpi'].mpicc),
                  'FC = {0}'.format(self.spec['mpi'].mpifc),
+                 'FL = {0}'.format(self.spec['mpi'].mpifc),
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
-            # The FL makefile variable is used for linking the examples and
-            # linking the shared mumps libraries (in some cases).
-            if using_xl and self.spec.satisfies('^spectrum-mpi'):
-                makefile_conf.extend(
-                    ['FL = {0}'.format(self.spec['mpi'].mpicc)])
-            else:
-                makefile_conf.extend(
-                    ['FL = {0}'.format(self.spec['mpi'].mpifc)])
         else:
             makefile_conf.extend(
                 ["CC = cc",
@@ -192,14 +199,14 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if self.compiler.name == 'intel' or self.compiler.name == 'pgi':
+        if using_intel or using_pgi:
             # Intel & PGI Fortran compiler provides the main() function so
             # C examples linked with the Fortran compiler require a
             # hack defined by _DMAIN_COMP (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
         else:
-            if not using_xl:
-                makefile_conf.append("CDEFS   = -DAdd_")
+            if not using_xlf:
+                makefile_conf.append("CDEFS = -DAdd_")
 
         if '+shared' in self.spec:
             # All Mumps libraries will be linked with 'inject_libs'.
@@ -230,11 +237,16 @@ class Mumps(Package):
                     'RANLIB=echo'
                 ])
             else:
+                if using_xlf:
+                    build_shared_flag = "qmkshrobj"
+                else:
+                    build_shared_flag = "shared"
+
                 makefile_conf.extend([
                     'LIBEXT=.so',
-                    'AR=link_cmd() { $(FL) -shared -Wl,-soname '
+                    'AR=link_cmd() { $(FL) -%s -Wl,-soname '
                     '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
-                    (prefix.lib, inject_libs),
+                    (build_shared_flag, prefix.lib, inject_libs),
                     'RANLIB=ls'
                 ])
                 # When building libpord, read AR from Makefile.inc instead of
@@ -245,13 +257,6 @@ class Mumps(Package):
                             '\\1\ninclude ../../Makefile.inc',
                             join_path('PORD', 'lib', 'Makefile'))
 
-                if using_xl:
-                    # The patches for xl + spectrum-mpi use SAR for linking
-                    # libpord.
-                    makefile_conf.extend([
-                        'SAR=%s -shared -Wl,-soname -Wl,%s/$(notdir $@) %s -o'
-                        % (env['CC'], prefix.lib, inject_libs)
-                    ])
         else:
             makefile_conf.extend([
                 'LIBEXT  = .a',

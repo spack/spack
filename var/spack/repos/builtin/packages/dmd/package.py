@@ -48,3 +48,4 @@ class Dmd(MakefilePackage):
 
     def install(self, spec, prefix):
         make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
+        install_tree('src', prefix.src)
