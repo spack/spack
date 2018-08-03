@@ -87,12 +87,14 @@ class Likwid(Package):
                     prefix,
                     'config.mk')
 
-# FIXME: once  https://github.com/spack/spack/issues/4432 is resolved, install as root by default and uncomment this
+# FIXME: once  https://github.com/spack/spack/issues/4432 is resolved, install
+# as root by default and uncomment this
 #        filter_file('^INSTALL_CHOWN.*',
 #                    'INSTALL_CHOWN = -o $(USER)',
 #                    'config.mk')
 
-# FIXME: once https://github.com/spack/spack/issues/4432 is resolved, install as root by default and remove this
+# FIXME: once https://github.com/spack/spack/issues/4432 is resolved, install
+# as root by default and remove this
         filter_file('^ACCESSMODE .*',
                     'ACCESSMODE = ' +
                     'perf_event',
