@@ -132,7 +132,8 @@ function _spack_activate {
 }
 
 function _spack_arch {
-    compgen -W "-h --help -p --platform" -- "$cur"
+    compgen -W "-h --help -p --platform -o --operating-system
+                -t --target" -- "$cur"
 }
 
 function _spack_blame {
