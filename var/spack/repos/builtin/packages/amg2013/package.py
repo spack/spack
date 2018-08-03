@@ -34,12 +34,10 @@ class Amg2013(MakefilePackage):
     """
     tags = ['proxy-app']
     homepage = "https://computation.llnl.gov/projects/co-design/amg2013"
-    url      = "https://computation.llnl.gov/projects/co-design/download/" \
-               "amg2013.tgz"
+    url      = "https://computation.llnl.gov/projects/co-design/download/amg2013.tgz"
 
     version('master', '9d918d2a69528b83e6e0aba6ba601fef',
-            url='https://computation.llnl.gov/projects/co-design/download/' \
-                'amg2013.tgz')
+            url='https://computation.llnl.gov/projects/co-design/download/amg2013.tgz')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('assumedpartition', default=False, description='Use assumed partition (for thousands of processors)')

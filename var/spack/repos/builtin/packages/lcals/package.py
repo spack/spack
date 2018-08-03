@@ -36,8 +36,7 @@ class Lcals(MakefilePackage):
         generate timing statistics and reports."""
 
     homepage = "https://computation.llnl.gov/projects/co-design/lcals"
-    url      = "https://computation.llnl.gov/projects/co-design/download/" \
-               "lcals-v1.0.2.tgz"
+    url      = "https://computation.llnl.gov/projects/co-design/download/lcals-v1.0.2.tgz"
 
     tags = ['proxy-app']
 
