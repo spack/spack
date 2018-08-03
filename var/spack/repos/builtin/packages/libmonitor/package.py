@@ -82,6 +82,14 @@ class Libmonitor(AutotoolsPackage):
         # If the user manually defines an entry in compilers.yaml, the bgq
         # variant should not be required if the user specifies the bgq
         # architecture for the libmonitor package. See #8860
+        # TODO: users want to build this for the backend and dependents for the
+        # frontend. Spack ought to make that easy by finding the appropriate
+        # compiler for each if the root and libmonitor are designated to build
+        # on the frontend and backend, respectively. As of now though, there
+        # is an issue with compiler concretization such that spack will attempt
+        # to assign the compiler chosen for libmonitor to the root (unless the
+        # user specifies the compiler for each in addition to the arch).
+        # See #8859
         if '+bgq' in self.spec:
             args.append('CC=powerpc64-bgq-linux-gcc')
 
