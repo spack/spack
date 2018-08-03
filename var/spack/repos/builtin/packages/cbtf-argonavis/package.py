@@ -94,7 +94,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # For libmonitor
-    depends_on("libmonitor+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch")
 
     # For PAPI
     depends_on("papi", when='@develop')
