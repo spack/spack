@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Dmd(MakefilePackage):
@@ -49,4 +48,4 @@ class Dmd(MakefilePackage):
 
     def install(self, spec, prefix):
         make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
-        copy_tree('src', prefix.src)
+        install_tree('src', prefix.src)
