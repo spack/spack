@@ -128,9 +128,7 @@ def flag_value(flag, spec):
     else:
         compiler_entry = copy(default_compiler_entry)
         compiler_entry['spec'] = spec
-        # Disable faulty id()-based cache (issue #7647).
-        compilers._compiler_cache = {}
-        compiler = compilers.compiler_from_config_entry(compiler_entry)
+        compiler = compilers.compiler_from_dict(compiler_entry)
 
     return getattr(compiler, flag)
 
