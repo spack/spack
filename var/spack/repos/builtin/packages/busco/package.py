@@ -30,10 +30,16 @@ class Busco(PythonPackage):
        Universal Single-Copy Orthologs"""
 
     homepage = "http://busco.ezlab.org/"
-    url      = "https://gitlab.com/ezlab/busco"
+    url      = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
+    git      = "https://gitlab.com/ezlab/busco.git"
 
-    version('3.0.1', git='https://gitlab.com/ezlab/busco.git', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
-    version('2.0.1', git='https://gitlab.com/ezlab/busco.git', commit='89aa1ab2527f03a87a214ca90a504ad236582a11')
+    # TODO: check the installation procedure for version 3.0.2
+    # and uncomment the following line
+    # version('3.0.2', '31d80042bb7e96422843fa43d0acbd21')
+
+    # There is no tag for version 3.0.1
+    version('3.0.1', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
+    version('2.0.1', '4dbcc8a0c18fa8f8312c103eb2fbb4e2')
 
     depends_on('python', type=('build', 'run'))
     depends_on('blast-plus')

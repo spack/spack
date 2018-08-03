@@ -63,7 +63,7 @@ done
     return str(tmpdir)
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestCompilerCommand(object):
 
     def test_compiler_remove(self):

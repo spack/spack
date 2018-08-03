@@ -31,9 +31,9 @@ class Mefit(Package):
     merge statistics, and filter reads for quality."""
 
     homepage = "https://github.com/nisheth/MeFiT"
-    url      = "https://github.com/nisheth/MeFiT.git"
+    git      = "https://github.com/nisheth/MeFiT.git"
 
-    version('1.0', git='https://github.com/nisheth/MeFiT.git', commit='0733326d8917570bbf70ff5c0f710bf66c13db09')
+    version('1.0', commit='0733326d8917570bbf70ff5c0f710bf66c13db09')
 
     depends_on('py-numpy')
     depends_on('py-htseq')

@@ -34,6 +34,8 @@ class Bazel(Package):
     homepage = "https://www.bazel.io"
     url = "https://github.com/bazelbuild/bazel/releases/download/0.11.1/bazel-0.11.1-dist.zip"
 
+    version('0.13.0', '64a5124025c1618b550faec64a9b6fa3')
+    version('0.12.0', 'b5d67564ceecfe2005a885fe2ffe0da3')
     version('0.11.1', '80daac6b100b7f8e2b17d133150eba44')
     version('0.11.0', 'e6caf93a805b45c33367028e575b91dd')
     version('0.10.1', 'a7e5b9576993b752e31bd2d3259a14c5')
@@ -51,7 +53,8 @@ class Bazel(Package):
     depends_on('zip')
 
     patch('fix_env_handling.patch', when='@:0.4.5')
-    patch('fix_env_handling-0.9.0.patch', when='@0.9.0:')
+    patch('fix_env_handling-0.9.0.patch', when='@0.9.0:0.12.0')
+    patch('fix_env_handling-0.13.0.patch', when='@0.13.0:')
     patch('link.patch')
     patch('cc_configure.patch', when='@:0.4.5')
     patch('unix_cc_configure.patch', when='@0.9.0')
@@ -88,8 +91,8 @@ class Bazel(Package):
 
             def __call__(self, *args, **kwargs):
                 disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-                parallel = ((not disable) and
-                            kwargs.get('parallel', self.jobs > 1))
+                parallel = ((not disable) and kwargs.get('parallel',
+                                                         self.jobs > 1))
 
                 jobs = "--jobs=1"
                 if parallel:

@@ -26,14 +26,14 @@ import filecmp
 import os
 import pytest
 
-from llnl.util.filesystem import join_path
-
-import spack
+import spack.repo
 import spack.mirror
 import spack.util.executable
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
+
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
@@ -66,10 +66,10 @@ def set_up_package(name, repository, url_attr):
 
 def check_mirror():
     with Stage('spack-mirror-test') as stage:
-        mirror_root = join_path(stage.path, 'test-mirror')
+        mirror_root = os.path.join(stage.path, 'test-mirror')
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
-        spack.config.update_config('mirrors', mirrors)
+        spack.config.set('mirrors', mirrors)
         spack.mirror.create(mirror_root, repos, no_checksum=True)
 
         # Stage directory exists
@@ -77,7 +77,7 @@ def check_mirror():
 
         # check that there are subdirs for each package
         for name in repos:
-            subdir = join_path(mirror_root, name)
+            subdir = os.path.join(mirror_root, name)
             assert os.path.isdir(subdir)
 
             files = os.listdir(subdir)
@@ -88,72 +88,72 @@ def check_mirror():
                 spec = Spec(name).concretized()
                 pkg = spec.package
 
-                saved_checksum_setting = spack.do_checksum
-                with pkg.stage:
-                    # Stage the archive from the mirror and cd to it.
-                    spack.do_checksum = False
-                    pkg.do_stage(mirror_only=True)
+                with spack.config.override('config:checksum', False):
+                    with pkg.stage:
+                        pkg.do_stage(mirror_only=True)
 
-                    # Compare the original repo with the expanded archive
-                    original_path = mock_repo.path
-                    if 'svn' in name:
-                        # have to check out the svn repo to compare.
-                        original_path = join_path(
-                            mock_repo.path, 'checked_out')
+                        # Compare the original repo with the expanded archive
+                        original_path = mock_repo.path
+                        if 'svn' in name:
+                            # have to check out the svn repo to compare.
+                            original_path = os.path.join(
+                                mock_repo.path, 'checked_out')
 
-                        svn = which('svn', required=True)
-                        svn('checkout', mock_repo.url, original_path)
+                            svn = which('svn', required=True)
+                            svn('checkout', mock_repo.url, original_path)
 
-                    dcmp = filecmp.dircmp(original_path, pkg.stage.source_path)
-                    # make sure there are no new files in the expanded
-                    # tarball
-                    assert not dcmp.right_only
-                    # and that all original files are present.
-                    assert all(l in exclude for l in dcmp.left_only)
-                    spack.do_checksum = saved_checksum_setting
+                        dcmp = filecmp.dircmp(
+                            original_path, pkg.stage.source_path)
+
+                        # make sure there are no new files in the expanded
+                        # tarball
+                        assert not dcmp.right_only
+                        # and that all original files are present.
+                        assert all(l in exclude for l in dcmp.left_only)
 
 
-@pytest.mark.usefixtures('config', 'refresh_builtin_mock')
-class TestMirror(object):
-    def test_url_mirror(self, mock_archive):
-        set_up_package('trivial-install-test-package', mock_archive, 'url')
-        check_mirror()
-        repos.clear()
+def test_url_mirror(mock_archive):
+    set_up_package('trivial-install-test-package', mock_archive, 'url')
+    check_mirror()
+    repos.clear()
 
-    @pytest.mark.skipif(
-        not which('git'), reason='requires git to be installed')
-    def test_git_mirror(self, mock_git_repository):
-        set_up_package('git-test', mock_git_repository, 'git')
-        check_mirror()
-        repos.clear()
 
-    @pytest.mark.skipif(
-        not which('svn'), reason='requires subversion to be installed')
-    def test_svn_mirror(self, mock_svn_repository):
-        set_up_package('svn-test', mock_svn_repository, 'svn')
-        check_mirror()
-        repos.clear()
+@pytest.mark.skipif(
+    not which('git'), reason='requires git to be installed')
+def test_git_mirror(mock_git_repository):
+    set_up_package('git-test', mock_git_repository, 'git')
+    check_mirror()
+    repos.clear()
 
-    @pytest.mark.skipif(
-        not which('hg'), reason='requires mercurial to be installed')
-    def test_hg_mirror(self, mock_hg_repository):
-        set_up_package('hg-test', mock_hg_repository, 'hg')
-        check_mirror()
-        repos.clear()
 
-    @pytest.mark.skipif(
-        not all([which('svn'), which('hg'), which('git')]),
-        reason='requires subversion, git, and mercurial to be installed')
-    def test_all_mirror(
-            self,
-            mock_git_repository,
-            mock_svn_repository,
-            mock_hg_repository,
-            mock_archive):
+@pytest.mark.skipif(
+    not which('svn'), reason='requires subversion to be installed')
+def test_svn_mirror(mock_svn_repository):
+    set_up_package('svn-test', mock_svn_repository, 'svn')
+    check_mirror()
+    repos.clear()
 
-        set_up_package('git-test', mock_git_repository, 'git')
-        set_up_package('svn-test', mock_svn_repository, 'svn')
-        set_up_package('hg-test', mock_hg_repository, 'hg')
-        set_up_package('trivial-install-test-package', mock_archive, 'url')
-        check_mirror()
-        repos.clear()
+
+@pytest.mark.skipif(
+    not which('hg'), reason='requires mercurial to be installed')
+def test_hg_mirror(mock_hg_repository):
+    set_up_package('hg-test', mock_hg_repository, 'hg')
+    check_mirror()
+    repos.clear()
+
+
+@pytest.mark.skipif(
+    not all([which('svn'), which('hg'), which('git')]),
+    reason='requires subversion, git, and mercurial to be installed')
+def test_all_mirror(
+        mock_git_repository,
+        mock_svn_repository,
+        mock_hg_repository,
+        mock_archive):
+
+    set_up_package('git-test', mock_git_repository, 'git')
+    set_up_package('svn-test', mock_svn_repository, 'svn')
+    set_up_package('hg-test', mock_hg_repository, 'hg')
+    set_up_package('trivial-install-test-package', mock_archive, 'url')
+    check_mirror()
+    repos.clear()

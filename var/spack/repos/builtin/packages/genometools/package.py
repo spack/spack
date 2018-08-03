@@ -43,3 +43,6 @@ class Genometools(MakefilePackage):
 
     def install(self, spec, prefix):
         make('install', 'prefix=%s' % prefix)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('CPATH', self.prefix.include.genometools)

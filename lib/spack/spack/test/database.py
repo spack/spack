@@ -27,19 +27,37 @@ These tests check the database is functioning properly,
 both in memory and in its file
 """
 import datetime
+import functools
 import multiprocessing
 import os
 import pytest
 
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.repo
 import spack.store
 from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
+
+
+@pytest.fixture()
+def usr_folder_exists(monkeypatch):
+    """The ``/usr`` folder is assumed to be existing in some tests. This
+    fixture makes it such that its existence is mocked, so we have no
+    requirements on the system running tests.
+    """
+    isdir = os.path.isdir
+
+    @functools.wraps(os.path.isdir)
+    def mock_isdir(path):
+        if path == '/usr':
+            return True
+        return isdir(path)
+
+    monkeypatch.setattr(os.path, 'isdir', mock_isdir)
 
 
 def _print_ref_counts():
@@ -91,10 +109,10 @@ def _check_merkleiness():
                 assert seen[hash_key] == id(dep)
 
 
-def _check_db_sanity(install_db):
+def _check_db_sanity(database):
     """Utiilty function to check db against install layout."""
     pkg_in_layout = sorted(spack.store.layout.all_specs())
-    actual = sorted(install_db.query())
+    actual = sorted(database.query())
 
     externals = sorted([x for x in actual if x.external])
     nexpected = len(pkg_in_layout) + len(externals)
@@ -109,19 +127,19 @@ def _check_db_sanity(install_db):
     _check_merkleiness()
 
 
-def _check_remove_and_add_package(install_db, spec):
+def _check_remove_and_add_package(database, spec):
     """Remove a spec from the DB, then add it and make sure everything's
     still ok once it is added.  This checks that it was
     removed, that it's back when added again, and that ref
     counts are consistent.
     """
-    original = install_db.query()
-    install_db._check_ref_counts()
+    original = database.query()
+    database._check_ref_counts()
 
     # Remove spec
-    concrete_spec = install_db.remove(spec)
-    install_db._check_ref_counts()
-    remaining = install_db.query()
+    concrete_spec = database.remove(spec)
+    database._check_ref_counts()
+    remaining = database.query()
 
     # ensure spec we removed is gone
     assert len(original) - 1 == len(remaining)
@@ -129,14 +147,14 @@ def _check_remove_and_add_package(install_db, spec):
     assert concrete_spec not in remaining
 
     # add it back and make sure everything is ok.
-    install_db.add(concrete_spec, spack.store.layout)
-    installed = install_db.query()
+    database.add(concrete_spec, spack.store.layout)
+    installed = database.query()
     assert concrete_spec in installed
     assert installed == original
 
     # sanity check against direcory layout and check ref counts.
-    _check_db_sanity(install_db)
-    install_db._check_ref_counts()
+    _check_db_sanity(database)
+    database._check_ref_counts()
 
 
 def _mock_install(spec):
@@ -156,8 +174,7 @@ def _mock_remove(spec):
 def test_default_queries(database):
     # Testing a package whose name *doesn't* start with 'lib'
     # to ensure the library has 'lib' prepended to the name
-    install_db = database.mock.db
-    rec = install_db.get_record('zmpi')
+    rec = database.get_record('zmpi')
 
     spec = rec.spec
 
@@ -176,8 +193,7 @@ def test_default_queries(database):
 
     # Testing a package whose name *does* start with 'lib'
     # to ensure the library doesn't have a double 'lib' prefix
-    install_db = database.mock.db
-    rec = install_db.get_record('libelf')
+    rec = database.get_record('libelf')
 
     spec = rec.spec
 
@@ -197,9 +213,8 @@ def test_default_queries(database):
 
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
-    install_path = database.mock.path
-    index_file = install_path.join('.spack-db', 'index.json')
-    lock_file = install_path.join('.spack-db', 'lock')
+    index_file = os.path.join(database.root, '.spack-db', 'index.json')
+    lock_file = os.path.join(database.root, '.spack-db', 'lock')
     assert os.path.exists(str(index_file))
     assert os.path.exists(str(lock_file))
 
@@ -255,23 +270,20 @@ def test_015_write_and_read(database):
 
 def test_020_db_sanity(database):
     """Make sure query() returns what's actually in the db."""
-    install_db = database.mock.db
-    _check_db_sanity(install_db)
+    _check_db_sanity(database)
 
 
 def test_025_reindex(database):
     """Make sure reindex works and ref counts are valid."""
-    install_db = database.mock.db
-    spack.store.db.reindex(spack.store.layout)
-    _check_db_sanity(install_db)
+    spack.store.store.reindex()
+    _check_db_sanity(database)
 
 
-def test_030_db_sanity_from_another_process(database, refresh_db_on_exit):
-    install_db = database.mock.db
-
+def test_030_db_sanity_from_another_process(mutable_database):
     def read_and_modify():
-        _check_db_sanity(install_db)  # check that other process can read DB
-        with install_db.write_transaction():
+        # check that other process can read DB
+        _check_db_sanity(mutable_database)
+        with mutable_database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
     p = multiprocessing.Process(target=read_and_modify, args=())
@@ -279,186 +291,181 @@ def test_030_db_sanity_from_another_process(database, refresh_db_on_exit):
     p.join()
 
     # ensure child process change is visible in parent process
-    with install_db.read_transaction():
-        assert len(install_db.query('mpileaks ^zmpi')) == 0
+    with mutable_database.read_transaction():
+        assert len(mutable_database.query('mpileaks ^zmpi')) == 0
 
 
 def test_040_ref_counts(database):
     """Ensure that we got ref counts right when we read the DB."""
-    install_db = database.mock.db
-    install_db._check_ref_counts()
+    database._check_ref_counts()
 
 
 def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
-    install_db = database.mock.db
     # query everything
     assert len(spack.store.db.query()) == 16
 
     # query specs with multiple configurations
-    mpileaks_specs = install_db.query('mpileaks')
-    callpath_specs = install_db.query('callpath')
-    mpi_specs = install_db.query('mpi')
+    mpileaks_specs = database.query('mpileaks')
+    callpath_specs = database.query('callpath')
+    mpi_specs = database.query('mpi')
 
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 3
     assert len(mpi_specs) == 3
 
     # query specs with single configurations
-    dyninst_specs = install_db.query('dyninst')
-    libdwarf_specs = install_db.query('libdwarf')
-    libelf_specs = install_db.query('libelf')
+    dyninst_specs = database.query('dyninst')
+    libdwarf_specs = database.query('libdwarf')
+    libelf_specs = database.query('libelf')
 
     assert len(dyninst_specs) == 1
     assert len(libdwarf_specs) == 1
     assert len(libelf_specs) == 1
 
     # Query by dependency
-    assert len(install_db.query('mpileaks ^mpich')) == 1
-    assert len(install_db.query('mpileaks ^mpich2')) == 1
-    assert len(install_db.query('mpileaks ^zmpi')) == 1
+    assert len(database.query('mpileaks ^mpich')) == 1
+    assert len(database.query('mpileaks ^mpich2')) == 1
+    assert len(database.query('mpileaks ^zmpi')) == 1
 
     # Query by date
-    assert len(install_db.query(start_date=datetime.datetime.min)) == 16
-    assert len(install_db.query(start_date=datetime.datetime.max)) == 0
-    assert len(install_db.query(end_date=datetime.datetime.min)) == 0
-    assert len(install_db.query(end_date=datetime.datetime.max)) == 16
+    assert len(database.query(start_date=datetime.datetime.min)) == 16
+    assert len(database.query(start_date=datetime.datetime.max)) == 0
+    assert len(database.query(end_date=datetime.datetime.min)) == 0
+    assert len(database.query(end_date=datetime.datetime.max)) == 16
 
 
 def test_060_remove_and_add_root_package(database):
-    install_db = database.mock.db
-    _check_remove_and_add_package(install_db, 'mpileaks ^mpich')
+    _check_remove_and_add_package(database, 'mpileaks ^mpich')
 
 
 def test_070_remove_and_add_dependency_package(database):
-    install_db = database.mock.db
-    _check_remove_and_add_package(install_db, 'dyninst')
+    _check_remove_and_add_package(database, 'dyninst')
 
 
 def test_080_root_ref_counts(database):
-    install_db = database.mock.db
-    rec = install_db.get_record('mpileaks ^mpich')
+    rec = database.get_record('mpileaks ^mpich')
 
     # Remove a top-level spec from the DB
-    install_db.remove('mpileaks ^mpich')
+    database.remove('mpileaks ^mpich')
 
     # record no longer in DB
-    assert install_db.query('mpileaks ^mpich', installed=any) == []
+    assert database.query('mpileaks ^mpich', installed=any) == []
 
     # record's deps have updated ref_counts
-    assert install_db.get_record('callpath ^mpich').ref_count == 0
-    assert install_db.get_record('mpich').ref_count == 1
+    assert database.get_record('callpath ^mpich').ref_count == 0
+    assert database.get_record('mpich').ref_count == 1
 
     # Put the spec back
-    install_db.add(rec.spec, spack.store.layout)
+    database.add(rec.spec, spack.store.layout)
 
     # record is present again
-    assert len(install_db.query('mpileaks ^mpich', installed=any)) == 1
+    assert len(database.query('mpileaks ^mpich', installed=any)) == 1
 
     # dependencies have ref counts updated
-    assert install_db.get_record('callpath ^mpich').ref_count == 1
-    assert install_db.get_record('mpich').ref_count == 2
+    assert database.get_record('callpath ^mpich').ref_count == 1
+    assert database.get_record('mpich').ref_count == 2
 
 
 def test_090_non_root_ref_counts(database):
-    install_db = database.mock.db
-
-    install_db.get_record('mpileaks ^mpich')
-    install_db.get_record('callpath ^mpich')
+    database.get_record('mpileaks ^mpich')
+    database.get_record('callpath ^mpich')
 
     # "force remove" a non-root spec from the DB
-    install_db.remove('callpath ^mpich')
+    database.remove('callpath ^mpich')
 
     # record still in DB but marked uninstalled
-    assert install_db.query('callpath ^mpich', installed=True) == []
-    assert len(install_db.query('callpath ^mpich', installed=any)) == 1
+    assert database.query('callpath ^mpich', installed=True) == []
+    assert len(database.query('callpath ^mpich', installed=any)) == 1
 
     # record and its deps have same ref_counts
-    assert install_db.get_record(
+    assert database.get_record(
         'callpath ^mpich', installed=any
     ).ref_count == 1
-    assert install_db.get_record('mpich').ref_count == 2
+    assert database.get_record('mpich').ref_count == 2
 
     # remove only dependent of uninstalled callpath record
-    install_db.remove('mpileaks ^mpich')
+    database.remove('mpileaks ^mpich')
 
     # record and parent are completely gone.
-    assert install_db.query('mpileaks ^mpich', installed=any) == []
-    assert install_db.query('callpath ^mpich', installed=any) == []
+    assert database.query('mpileaks ^mpich', installed=any) == []
+    assert database.query('callpath ^mpich', installed=any) == []
 
     # mpich ref count updated properly.
-    mpich_rec = install_db.get_record('mpich')
+    mpich_rec = database.get_record('mpich')
     assert mpich_rec.ref_count == 0
 
 
 def test_100_no_write_with_exception_on_remove(database):
-    install_db = database.mock.db
-
     def fail_while_writing():
-        with install_db.write_transaction():
+        with database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
             raise Exception()
 
-    with install_db.read_transaction():
-        assert len(install_db.query('mpileaks ^zmpi', installed=any)) == 1
+    with database.read_transaction():
+        assert len(database.query('mpileaks ^zmpi', installed=any)) == 1
 
     with pytest.raises(Exception):
         fail_while_writing()
 
     # reload DB and make sure zmpi is still there.
-    with install_db.read_transaction():
-        assert len(install_db.query('mpileaks ^zmpi', installed=any)) == 1
+    with database.read_transaction():
+        assert len(database.query('mpileaks ^zmpi', installed=any)) == 1
 
 
 def test_110_no_write_with_exception_on_install(database):
-    install_db = database.mock.db
-
     def fail_while_writing():
-        with install_db.write_transaction():
+        with database.write_transaction():
             _mock_install('cmake')
             raise Exception()
 
-    with install_db.read_transaction():
-        assert install_db.query('cmake', installed=any) == []
+    with database.read_transaction():
+        assert database.query('cmake', installed=any) == []
 
     with pytest.raises(Exception):
         fail_while_writing()
 
     # reload DB and make sure cmake was not written.
-    with install_db.read_transaction():
-        assert install_db.query('cmake', installed=any) == []
+    with database.read_transaction():
+        assert database.query('cmake', installed=any) == []
 
 
-def test_115_reindex_with_packages_not_in_repo(database, refresh_db_on_exit):
-    install_db = database.mock.db
-
-    saved_repo = spack.repo
+def test_115_reindex_with_packages_not_in_repo(mutable_database):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    mock_repo = MockPackageMultiRepo([])
-    try:
-        spack.repo = mock_repo
-        spack.store.db.reindex(spack.store.layout)
-        _check_db_sanity(install_db)
-    finally:
-        spack.repo = saved_repo
+    with spack.repo.swap(MockPackageMultiRepo([])):
+        spack.store.store.reindex()
+        _check_db_sanity(mutable_database)
 
 
 def test_external_entries_in_db(database):
-    install_db = database.mock.db
-
-    rec = install_db.get_record('mpileaks ^zmpi')
+    rec = database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
     assert rec.spec.external_module is None
 
-    rec = install_db.get_record('externaltool')
+    rec = database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
-    rec = install_db.get_record('externaltool')
+    rec = database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True
+
+
+@pytest.mark.regression('8036')
+def test_regression_issue_8036(mutable_database, usr_folder_exists):
+    # The test ensures that the external package prefix is treated as
+    # existing. Even when the package prefix exists, the package should
+    # not be considered installed until it is added to the database with
+    # do_install.
+    s = spack.spec.Spec('externaltool@0.9')
+    s.concretize()
+    assert not s.package.installed
+
+    # Now install the external package and check again the `installed` property
+    s.package.do_install(fake=True)
+    assert s.package.installed

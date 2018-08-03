@@ -33,7 +33,7 @@ class Mfem(Package):
     tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
 
     homepage = 'http://www.mfem.org'
-    url      = 'https://github.com/mfem/mfem'
+    git      = 'https://github.com/mfem/mfem.git'
 
     maintainers = ['goxberry', 'tzanio', 'markcmiller86', 'acfisher',
                    'v-dobrev']
@@ -62,16 +62,18 @@ class Mfem(Package):
 
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
-    version('develop',
-            git='https://github.com/mfem/mfem', branch='master')
+    version('develop', branch='master')
 
-    version('3.3.2',
-            '01a762a5d0a2bc59ce4e2f59009045a4',
-            url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
+    version('3.4.0',
+            '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
+            url='https://bit.ly/mfem-3-4', extension='.tar.gz',
             preferred=True)
 
-    version('laghos-v1.0', git='https://github.com/mfem/mfem',
-            tag='laghos-v1.0')
+    version('3.3.2',
+            'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
+            url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
+
+    version('laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
@@ -117,6 +119,8 @@ class Mfem(Package):
         description='Enable PETSc solvers, preconditioners, etc.')
     variant('sundials', default=False,
         description='Enable Sundials time integrators')
+    variant('pumi', default=False,
+        description='Enable functionality based on PUMI')
     variant('mpfr', default=False,
         description='Enable precise, 1D quadrature rules')
     variant('lapack', default=False,
@@ -152,6 +156,7 @@ class Mfem(Package):
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
     conflicts('+sundials', when='@:3.2')
+    conflicts('+pumi', when='@:3.3.2')
     conflicts('timer=mac', when='@:3.3.0')
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
@@ -160,10 +165,15 @@ class Mfem(Package):
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+petsc', when='~mpi')
+    conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
+    conflicts('+pumi', when='+shared')
+
     depends_on('mpi', when='+mpi')
-    depends_on('hypre', when='+mpi')
+    depends_on('hypre@2.10.0:2.13.999', when='@:3.3.999+mpi')
+    depends_on('hypre', when='@3.4:+mpi')
+
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
     depends_on('lapack', when='+lapack')
@@ -172,6 +182,7 @@ class Mfem(Package):
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
+    depends_on('pumi', when='+pumi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
     # The PETSc tests in MFEM will fail if PETSc is not configured with
@@ -190,6 +201,9 @@ class Mfem(Package):
     depends_on('conduit+mpi', when='+conduit+mpi')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
+    patch('mfem-3.4.patch', when='@3.4.0')
+    patch('mfem-3.3-3.4-petsc-3.9.patch',
+          when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
 
     phases = ['configure', 'build', 'install']
 
@@ -213,7 +227,7 @@ class Mfem(Package):
         # from within MFEM.
 
         # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
-        def ld_flags_from_LibraryList(libs_list):
+        def ld_flags_from_library_list(libs_list):
             flags = ['-Wl,-rpath,%s' % dir for dir in libs_list.directories]
             flags += [libs_list.ld_flags]
             return ' '.join(flags)
@@ -223,6 +237,15 @@ class Mfem(Package):
             flags += ['-L%s' % dir for dir in pkg_dirs_list]
             flags += ['-l%s' % lib for lib in pkg_libs_list]
             return ' '.join(flags)
+
+        def find_optional_library(name, prefix):
+            for shared in [True, False]:
+                for path in ['lib64', 'lib']:
+                    lib = find_libraries(name, join_path(prefix, path),
+                                         shared=shared, recursive=False)
+                    if lib:
+                        return lib
+            return LibraryList([])
 
         metis5_str = 'NO'
         if ('+metis' in spec) and spec['metis'].satisfies('@5:'):
@@ -246,6 +269,7 @@ class Mfem(Package):
             'MFEM_USE_SUITESPARSE=%s' % yes_no('+suite-sparse'),
             'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
             'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
+            'MFEM_USE_PUMI=%s' % yes_no('+pumi'),
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
@@ -272,7 +296,7 @@ class Mfem(Package):
                 hypre['blas'].libs
             options += [
                 'HYPRE_OPT=-I%s' % hypre.prefix.include,
-                'HYPRE_LIB=%s' % ld_flags_from_LibraryList(all_hypre_libs)]
+                'HYPRE_LIB=%s' % ld_flags_from_library_list(all_hypre_libs)]
 
         if '+metis' in spec:
             options += [
@@ -284,37 +308,42 @@ class Mfem(Package):
             lapack_blas = spec['lapack'].libs + spec['blas'].libs
             options += [
                 # LAPACK_OPT is not used
-                'LAPACK_LIB=%s' % ld_flags_from_LibraryList(lapack_blas)]
+                'LAPACK_LIB=%s' % ld_flags_from_library_list(lapack_blas)]
 
         if '+superlu-dist' in spec:
+            lapack_blas = spec['lapack'].libs + spec['blas'].libs
             options += [
                 'SUPERLU_OPT=-I%s -I%s' %
                 (spec['superlu-dist'].prefix.include,
                  spec['parmetis'].prefix.include),
-                'SUPERLU_LIB=-L%s -L%s -lsuperlu_dist -lparmetis' %
+                'SUPERLU_LIB=-L%s -L%s -lsuperlu_dist -lparmetis %s' %
                 (spec['superlu-dist'].prefix.lib,
-                 spec['parmetis'].prefix.lib)]
+                 spec['parmetis'].prefix.lib,
+                 ld_flags_from_library_list(lapack_blas))]
 
         if '+suite-sparse' in spec:
             ss_spec = 'suite-sparse:' + self.suitesparse_components
             options += [
                 'SUITESPARSE_OPT=-I%s' % spec[ss_spec].prefix.include,
                 'SUITESPARSE_LIB=%s' %
-                ld_flags_from_LibraryList(spec[ss_spec].libs)]
+                ld_flags_from_library_list(spec[ss_spec].libs)]
 
         if '+sundials' in spec:
             sun_spec = 'sundials:' + self.sundials_components
             options += [
                 'SUNDIALS_OPT=%s' % spec[sun_spec].headers.cpp_flags,
                 'SUNDIALS_LIB=%s' %
-                ld_flags_from_LibraryList(spec[sun_spec].libs)]
+                ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
             # options += ['PETSC_DIR=%s' % spec['petsc'].prefix]
             options += [
                 'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
                 'PETSC_LIB=%s' %
-                ld_flags_from_LibraryList(spec['petsc'].libs)]
+                ld_flags_from_library_list(spec['petsc'].libs)]
+
+        if '+pumi' in spec:
+            options += ['PUMI_DIR=%s' % spec['pumi'].prefix]
 
         if '+netcdf' in spec:
             options += [
@@ -329,7 +358,7 @@ class Mfem(Package):
                 options += [
                     'ZLIB_OPT=-I%s' % spec['zlib'].prefix.include,
                     'ZLIB_LIB=%s' %
-                    ld_flags_from_LibraryList(spec['zlib'].libs)]
+                    ld_flags_from_library_list(spec['zlib'].libs)]
 
         if '+mpfr' in spec:
             options += [
@@ -347,16 +376,12 @@ class Mfem(Package):
             libunwind = spec['libunwind']
             headers = find_headers('libunwind', libunwind.prefix.include)
             headers.add_macro('-g')
-            libs = find_libraries('libunwind', libunwind.prefix.lib,
-                                  shared=True, recursive=True)
-            if not libs:
-                libs = find_libraries('libunwind', libunwind.prefix.lib,
-                                      shared=False, recursive=True)
+            libs = find_optional_library('libunwind', libunwind.prefix)
             # When mfem uses libunwind, it also needs 'libdl'.
             libs += LibraryList(find_system_libraries('libdl'))
             options += [
                 'LIBUNWIND_OPT=%s' % headers.cpp_flags,
-                'LIBUNWIND_LIB=%s' % ld_flags_from_LibraryList(libs)]
+                'LIBUNWIND_LIB=%s' % ld_flags_from_library_list(libs)]
 
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
@@ -381,7 +406,7 @@ class Mfem(Package):
                 libs += hdf5.libs
             options += [
                 'CONDUIT_OPT=%s' % headers.cpp_flags,
-                'CONDUIT_LIB=%s' % ld_flags_from_LibraryList(libs)]
+                'CONDUIT_LIB=%s' % ld_flags_from_library_list(libs)]
 
         make('config', *options, parallel=False)
         make('info', parallel=False)

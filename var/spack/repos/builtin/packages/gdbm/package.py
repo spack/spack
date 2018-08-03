@@ -45,12 +45,13 @@ class Gdbm(AutotoolsPackage):
 
     depends_on("readline")
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('CC', spack_cc)
-
     def configure_args(self):
-        config_args = [
-            '--enable-libgdbm-compat',
-        ]
 
-        return config_args
+        # GDBM uses some non-standard GNU extensions,
+        # enabled with -D_GNU_SOURCE.  See:
+        #   https://patchwork.ozlabs.org/patch/771300/
+        #   https://stackoverflow.com/questions/5582211
+        #   https://www.gnu.org/software/automake/manual/html_node/Flag-Variables-Ordering.html
+        return [
+            '--enable-libgdbm-compat',
+            'CPPFLAGS=-D_GNU_SOURCE']

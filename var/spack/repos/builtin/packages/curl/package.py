@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Curl(AutotoolsPackage):
@@ -31,8 +32,10 @@ class Curl(AutotoolsPackage):
 
     homepage = "http://curl.haxx.se"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://curl.haxx.se/download/curl-7.54.0.tar.bz2"
+    url      = "http://curl.haxx.se/download/curl-7.60.0.tar.bz2"
 
+    version('7.60.0', 'bd2aabf78ded6a9aec8a54532fd6b5d7')
+    version('7.59.0', 'a2192804f7c2636a09320416afcf888e')
     version('7.56.0', 'e0caf257103e0c77cee5be7e9ac66ca4')
     version('7.54.0', '89bb7ba87384dfbf4f1a3f953da42458')
     version('7.53.1', 'fb1f03a142236840c1a77c035fa4c542')
@@ -48,21 +51,37 @@ class Curl(AutotoolsPackage):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
-    variant('nghttp2', default=False, description='build nghttp2 library (requires C++11)')
-    variant('libssh2', default=True, description='enable libssh2 support')
+    variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
+    variant('libssh2',    default=False, description='enable libssh2 support')
+    variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
+    variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
 
-    depends_on('openssl')
+    conflicts('+libssh', when='@:7.57.99')
+    # on OSX and --with-ssh the configure steps fails with
+    # one or more libs available at link-time are not available run-time
+    # unless the libssh are installed externally (e.g. via homebrew), even
+    # though spack isn't supposed to know about such a libssh installation.
+    # C.f. https://github.com/spack/spack/issues/7777
+    conflicts('platform=darwin', when='+libssh2')
+    conflicts('platform=darwin', when='+libssh')
+    conflicts('platform=linux', when='+darwinssl')
+
+    depends_on('openssl', when='~darwinssl')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
+    depends_on('libssh', when='+libssh')
 
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            '--with-zlib={0}'.format(spec['zlib'].prefix),
-            '--with-ssl={0}'.format(spec['openssl'].prefix)
-        ]
+        args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
+        if spec.satisfies('+darwinssl'):
+            args.append('--with-darwinssl')
+        else:
+            args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
+
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')
+        args += self.with_or_without('libssh')
         return args

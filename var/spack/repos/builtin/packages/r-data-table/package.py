@@ -35,6 +35,7 @@ class RDataTable(RPackage):
     url      = "https://cran.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
 
+    version('1.10.4-3', '081da241d06f30ae4a2bc60efb409893')
     version('1.10.4-2', '4a2d3541f241088d0979522b4083a765')
     version('1.10.0', 'f0e08dd5ba1b3f46c59dd1574fe497c1')
     version('1.9.6',  'b1c0c7cce490bdf42ab288541cc55372')

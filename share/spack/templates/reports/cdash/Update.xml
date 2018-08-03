@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Update>
+  <Site>{{ hostname }}</Site>
+  <BuildName>{{ install_command }}</BuildName>
+  <BuildStamp>{{ buildstamp }}</BuildStamp>
+  <StartTime>{{ starttime }}</StartTime>
+  <EndTime>{{ endtime }}</EndTime>
+{% if msg %}
+  <UpdateReturnStatus>{{ msg }}</UpdateReturnStatus>
+{% endif %}
+</Update>

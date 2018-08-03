@@ -27,10 +27,11 @@ from spack import *
 
 class Bbcp(Package):
     """Securely and quickly copy data from source to target"""
-    homepage = "http://www.slac.stanford.edu/~abh/bbcp/"
 
-    version('git', git='http://www.slac.stanford.edu/~abh/bbcp/bbcp.git',
-            branch="master")
+    homepage = "http://www.slac.stanford.edu/~abh/bbcp/"
+    git      = "http://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
+
+    version('git', branch='master')
 
     depends_on('zlib')
     depends_on('openssl')

@@ -61,7 +61,7 @@ class CrayFrontend(LinuxDistro):
             # 'intel', 'cce', 'gcc', etc.) will also be unloaded since they are
             # specified as prerequisites in the PrgEnv-* modulefiles.
             modulecmd = get_module_cmd()
-            exec (compile(
+            exec(compile(
                 modulecmd('unload', prg_env, output=str, error=os.devnull),
                 '<string>', 'exec'))
 

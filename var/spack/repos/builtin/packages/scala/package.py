@@ -36,9 +36,10 @@ class Scala(Package):
     homepage = "https://www.scala-lang.org/"
     url = "https://downloads.lightbend.com/scala/2.12.1/scala-2.12.1.tgz"
 
+    version('2.12.5', '25cf4989d061c585bd0a3fa357ccf0a6')
     version('2.12.1', '3eaecbce019b0fa3067503846e292b32')
     version('2.11.11', '3f5b76001f60cbc31111ddb81de5ea07')
-    version('2.20.6', 'd79dc9fdc627b73289306bdaec81ca98')
+    version('2.10.6', 'd79dc9fdc627b73289306bdaec81ca98')
 
     depends_on('java')
 

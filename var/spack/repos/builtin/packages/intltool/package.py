@@ -39,6 +39,12 @@ class Intltool(AutotoolsPackage):
     depends_on('perl-xml-parser', type=('build', 'run'))
     depends_on('perl@5.8.1:',     type=('build', 'run'))
 
+    # patch for "Unescaped left brace in regex is illegal here in regex"
+    # warnings witn perl 5.22 and errors with perl 5.26 and newer
+    patch('https://launchpadlibrarian.net/216052398/intltool-perl-5.22.patch',
+          sha256='ca9d6562f29f06c64150f50369a24402b7aa01a3a0dc73dce55106f3224330a1',
+          level=0)
+
     def check(self):
         # `make check` passes but causes `make install` to fail
         pass

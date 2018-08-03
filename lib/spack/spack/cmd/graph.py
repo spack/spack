@@ -27,8 +27,8 @@ from __future__ import print_function
 import argparse
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.config
 import spack.store
 from spack.dependency import all_deptypes, canonical_deptype
 from spack.graph import graph_dot, graph_ascii
@@ -98,7 +98,8 @@ def graph(parser, args):
         graph_dot(specs, static=args.static, deptype=deptype)
 
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
-        graph_ascii(specs[0], debug=spack.debug, deptype=deptype)
+        debug = spack.config.get('config:debug')
+        graph_ascii(specs[0], debug=debug, deptype=deptype)
         for spec in specs[1:]:
             print()  # extra line bt/w independent graphs
-            graph_ascii(spec, debug=spack.debug)
+            graph_ascii(spec, debug=debug)

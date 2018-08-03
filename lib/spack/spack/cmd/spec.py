@@ -25,7 +25,7 @@
 from __future__ import print_function
 
 import argparse
-import spack
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
@@ -69,7 +69,7 @@ def spec(parser, args):
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
         if args.yaml:
-            if spec.name in spack.repo or spec.virtual:
+            if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
             print(spec.to_yaml())
             continue

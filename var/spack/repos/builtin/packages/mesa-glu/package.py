@@ -37,3 +37,5 @@ class MesaGlu(AutotoolsPackage):
     variant('mesa', default=True,
        description='Usually depends on mesa, disable for accelerated OpenGL')
     depends_on('mesa', when='+mesa')
+
+    provides('glu@1.3')

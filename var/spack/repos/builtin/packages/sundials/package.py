@@ -39,6 +39,8 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
 
+    version('4.0.0-dev', '1d4b538721b84ebc91ce7ad92d94beae')
+    version('3.1.1', 'e63f4de0be5be97f750b30b0fa11ef34', preferred=True)
     version('3.1.0', '1a84ca41c7f71067e03d519ddbcd9dae')
     version('3.0.0', '5163a44cedd7398bddda442ba00313b8')
     version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3')
@@ -164,6 +166,7 @@ class Sundials(CMakePackage):
 
     # Build dependencies
     depends_on('cmake@2.8.1:', type='build')
+    depends_on('cmake@3.0.2:', type='build', when='@4.0.0:')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')

@@ -32,17 +32,18 @@ class RTopgo(RPackage):
     between GO terms can be implemented and applied."""
 
     homepage = "https://www.bioconductor.org/packages/topGO/"
-    url      = "https://git.bioconductor.org/packages/topGO"
+    git      = "https://git.bioconductor.org/packages/topGO.git"
 
-    version('2.28.0', git='https://git.bioconductor.org/packages/topGO', commit='066a975d460046cce33fb27e74e6a0ebc33fd716')
+    version('2.30.1', commit='b1469ce1d198ccb73ef79ca22cab81659e16dbaa')
+    version('2.28.0', commit='066a975d460046cce33fb27e74e6a0ebc33fd716')
 
     depends_on('r@3.4.0:3.4.9')
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-matrixstats', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-sparsem', type=('build', 'run'))
-    depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-go-db', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-graph', type=('build', 'run'))
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-sparsem@0.73:', type=('build', 'run'))
+    depends_on('r-annotationdbi@1.7.19:', type=('build', 'run'))
+    depends_on('r-go-db@2.3.0:', type=('build', 'run'))
+    depends_on('r-biobase@2.0.0:', type=('build', 'run'))
+    depends_on('r-graph@1.14.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.13.6:', type=('build', 'run'))

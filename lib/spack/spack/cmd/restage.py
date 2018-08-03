@@ -26,8 +26,8 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack
 import spack.cmd
+import spack.repo
 
 description = "revert checked out package source code"
 section = "build"

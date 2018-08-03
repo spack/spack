@@ -445,7 +445,7 @@ Spack repo namespaces are actually Python namespaces tacked on under
 ``spack.pkg``.  The search semantics of ``repos.yaml`` are actually
 implemented using Python's built-in `sys.path
 <https://docs.python.org/2/library/sys.html#sys.path>`_ search.  The
-:py:mod:`spack.repository` module implements a custom `Python importer
+:py:mod:`spack.repo` module implements a custom `Python importer
 <https://docs.python.org/2/library/imp.html>`_.
 
 .. warning::

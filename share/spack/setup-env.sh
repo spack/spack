@@ -80,14 +80,22 @@ function spack {
         return
     fi
 
-    _sp_subcommand=$1; shift
-    _sp_spec="$@"
+    _sp_subcommand=""
+    if [ -n "$1" ]; then
+        _sp_subcommand="$1"
+        shift
+    fi
+    _sp_spec=("$@")
 
     # Filter out use and unuse.  For any other commands, just run the
     # command.
     case $_sp_subcommand in
         "cd")
-            _sp_arg="$1"; shift
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
             if [ "$_sp_arg" = "-h" ]; then
                 command spack cd -h
             else
@@ -113,7 +121,7 @@ function spack {
                 shift
             done
 
-            _sp_spec="$@"
+            _sp_spec=("$@")
 
             # Here the user has run use or unuse with a spec.  Find a matching
             # spec using 'spack module find', then use the appropriate module
@@ -121,20 +129,28 @@ function spack {
             # If spack module command comes back with an error, do nothing.
             case $_sp_subcommand in
                 "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         use $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         unuse $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         module load $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
                         module unload $_sp_module_args $_sp_full_spec
+                    else
+                        $(exit 1)
                     fi ;;
             esac
             ;;
@@ -218,34 +234,27 @@ if ! _spack_fn_exists use && ! _spack_fn_exists module; then
 	need_module="yes"
 fi;
 
+
 #
-# build and make available environment-modules
+# make available environment-modules
 #
 if [ "${need_module}" = "yes" ]; then
-    #check if environment-modules is installed
-    module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
-    module_prefix=$(echo "${module_prefix}" | tail -n 1)
-    if [ "${module_prefix}" != "not_installed" ]; then
+    eval `spack --print-shell-vars sh,modules`
+
+    # _sp_module_prefix is set by spack --print-sh-vars
+    if [ "${_sp_module_prefix}" != "not_installed" ]; then
         #activate it!
-        export MODULE_PREFIX=${module_prefix}
+        export MODULE_PREFIX=${_sp_module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
         module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
     fi;
+else
+    eval `spack --print-shell-vars sh`
 fi;
 
 #
-# Set up modules and dotkit search paths in the user environment
+# set module system roots
 #
-
-_python_command=$(printf  "%s\\\n%s\\\n%s" \
-"print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))" \
-"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))" \
-"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))"
-)
-
-_assignment_command=$(spack-python -c "exec('${_python_command}')")
-eval ${_assignment_command}
-
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 

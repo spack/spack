@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This file has been modeled after the basic
+    specifications at this url:
+
+    http://help.catchsoftware.com/display/ET/JUnit+Format
+-->
+<testsuites>
+{% for spec in specs %}
+    <testsuite name="{{ spec.name }}"
+               errors="{{ spec.nerrors }}"
+               tests="{{ spec.npackages }}"
+               failures="{{ spec.nfailures }}"
+               time="{{ spec.time }}"
+               timestamp="{{ spec.timestamp }}" >
+        <properties>
+{% for property in spec.properties %}
+            <property name="{{ property.name }}" value="{{ property.value }}" />
+{% endfor %}
+        </properties>
+{% for package in spec.packages %}
+        <testcase classname="{{ package.name }}"
+                  name="{{ package.id }}"
+                  time="{{ package.elapsed_time }}">
+{% if package.result == 'failure' %}
+            <failure message="{{ package.message }}">
+{{ package.exception }}
+            </failure>
+{% elif package.result == 'error' %}
+            <error message="{{ package.message }}">
+{{ package.exception }}
+            </error>
+{% elif package.result == 'skipped' %}
+            <skipped />
+{% endif %}
+{% if package.stdout %}
+            <system-out>
+{{ package.stdout }}
+            </system-out>
+{% endif %}
+{% if package.stderr %}
+            <system-err>
+{{ package.stderr }}
+            </system-err>
+{% endif %}
+        </testcase>
+{% endfor %}
+{# Add an error tag? #}
+    </testsuite>
+{% endfor %}
+</testsuites>

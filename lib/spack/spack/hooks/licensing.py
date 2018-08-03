@@ -24,9 +24,10 @@
 ##############################################################################
 import os
 
-import spack
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import mkdirp
+
+from spack.util.editor import editor
 
 
 def pre_install(spec):
@@ -55,7 +56,7 @@ def set_up_license(pkg):
             # Create a new license file
             write_license_file(pkg, license_path)
             # Open up file in user's favorite $EDITOR for editing
-            spack.editor(license_path)
+            editor(license_path)
             tty.msg("Added global license file %s" % license_path)
         else:
             # Use already existing license file
@@ -156,7 +157,7 @@ def symlink_license(pkg):
     """Create local symlinks that point to the global license file."""
     target = pkg.global_license_file
     for filename in pkg.license_files:
-        link_name = join_path(pkg.prefix, filename)
+        link_name = os.path.join(pkg.prefix, filename)
         link_name = os.path.abspath(link_name)
         license_dir = os.path.dirname(link_name)
         if not os.path.exists(license_dir):

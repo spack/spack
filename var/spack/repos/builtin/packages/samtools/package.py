@@ -33,6 +33,8 @@ class Samtools(Package):
     homepage = "www.htslib.org"
     url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
+    version('1.8', 'c6e981c92ca00a44656a708c4b52aba3')
+    version('1.7', '2240175242b5183bfa6baf1483f68023')
     version('1.6', 'b756f05fd5d1a7042074417edb8c9aea')
     version('1.4', '8cbd7d2a0ec16d834babcd6c6d85d691')
     version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
@@ -40,9 +42,13 @@ class Samtools(Package):
 
     depends_on('ncurses')
     # htslib became standalone @1.3.1, must use corresponding version
+    depends_on('htslib@1.8',   when='@1.8')
+    depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
+    depends_on('zlib', when='@1.7:')
+    depends_on('bzip2', when='@1.7:')
 
     def install(self, spec, prefix):
         if self.spec.version >= Version('1.3.1'):

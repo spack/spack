@@ -31,9 +31,9 @@ class RAffyqcreport(RPackage):
     quality of a set of arrays in an AffyBatch object."""
 
     homepage = "https://www.bioconductor.org/packages/affyQCReport/"
-    url      = "https://git.bioconductor.org/packages/affyQCReport"
+    git      = "https://git.bioconductor.org/packages/affyQCReport.git"
 
-    version('1.54.0', git='https://git.bioconductor.org/packages/affyQCReport', commit='5572e9981dc874b78b4adebf58080cac3fbb69e1')
+    version('1.54.0', commit='5572e9981dc874b78b4adebf58080cac3fbb69e1')
 
     depends_on('r@3.4.0:3.4.9', when='@1.54.0')
     depends_on('r-biobase', type=('build', 'run'))

@@ -30,18 +30,21 @@ class RBsgenome(RPackage):
        packages."""
 
     homepage = "https://www.bioconductor.org/packages/BSgenome/"
-    url      = "https://git.bioconductor.org/packages/BSgenome"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/BSgenome.git"
 
-    version('1.44.2', git='https://git.bioconductor.org/packages/BSgenome', commit='105b00588a758d5ec7c347a7dff2756aea4516a0')
+    version('1.46.0', commit='bdfbd6d09820993585b8231ddea5e11c99008dc5')
+    version('1.44.2', commit='105b00588a758d5ec7c347a7dff2756aea4516a0')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-genomeinfodb', type=('build', 'run'))
-    depends_on('r-genomicranges', type=('build', 'run'))
-    depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-rtracklayer', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.13.8:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.9.36:', type=('build', 'run'))
+    depends_on('r-iranges@2.1.33:', type=('build', 'run'), when='@1.44.2')
+    depends_on('r-iranges@2.11.16:', type=('build', 'run'), when='@1.46.0')
+    depends_on('r-genomeinfodb@1.11.4:', type=('build', 'run'), when='@1.44.2')
+    depends_on('r-genomeinfodb@1.13.1:', type=('build', 'run'), when='@1.46.0')
+    depends_on('r-genomicranges@1.27.6:', type=('build', 'run'), when='@1.44.2')
+    depends_on('r-genomicranges@1.29.14:', type=('build', 'run'), when='@1.46.0')
+    depends_on('r-biostrings@2.35.3:', type=('build', 'run'))
+    depends_on('r-rtracklayer@1.25.8:', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.44.2')
+    depends_on('r@3.4.0:3.4.9', when='@1.44.2:')

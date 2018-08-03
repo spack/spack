@@ -32,16 +32,18 @@ class RSummarizedexperiment(RPackage):
        represent samples."""
 
     homepage = "https://bioconductor.org/packages/SummarizedExperiment/"
-    url      = "https://git.bioconductor.org/packages/SummarizedExperiment"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/SummarizedExperiment.git"
 
-    version('1.6.5', git='https://git.bioconductor.org/packages/SummarizedExperiment', commit='ec69cd5cfbccaef148a9f6abdfb3e22e888695d0')
+    version('1.8.1', commit='9d8a29aa9c78bbc7dcc6472537e13fc0d11dc1f7')
+    version('1.6.5', commit='ec69cd5cfbccaef148a9f6abdfb3e22e888695d0')
 
-    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-genomicranges@1.27.22:', type=('build', 'run'), when='@1.6.5')
+    depends_on('r-genomicranges@1.29.14:', type=('build', 'run'), when='@1.8.1')
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-delayedarray', type=('build', 'run'))
+    depends_on('r-delayedarray@0.1.9:', type=('build', 'run'), when='@1.6.5')
+    depends_on('r-delayedarray@0.3.20', type=('build', 'run'), when='@1.8.1')
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.5')
+    depends_on('r@3.4.0:3.4.9', when='@1.6.5:')

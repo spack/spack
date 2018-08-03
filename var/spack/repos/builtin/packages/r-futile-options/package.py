@@ -30,5 +30,6 @@ class RFutileOptions(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/futile.options/index.html"
     url      = "https://cran.rstudio.com/src/contrib/futile.options_1.0.0.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/futile.options"
 
     version('1.0.0', '8fd845774bbce56f41f7c43c3b4c13ba')

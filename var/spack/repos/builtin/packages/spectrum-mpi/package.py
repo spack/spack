@@ -26,13 +26,9 @@ from spack import *
 
 
 class SpectrumMpi(Package):
-    """
-    IBM MPI implementation from Spectrum MPI.
-
-    """
+    """IBM MPI implementation from Spectrum MPI."""
 
     homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
-    url = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
     provides('mpi')
 
@@ -46,6 +42,11 @@ class SpectrumMpi(Package):
             self.spec.mpicxx = join_path(self.prefix.bin, 'mpixlC')
             self.spec.mpif77 = join_path(self.prefix.bin, 'mpixlf')
             self.spec.mpifc = join_path(self.prefix.bin, 'mpixlf')
+        elif '%pgi' in dependent_spec:
+            self.spec.mpicc = join_path(self.prefix.bin, 'mpipgicc')
+            self.spec.mpicxx = join_path(self.prefix.bin, 'mpipgic++')
+            self.spec.mpif77 = join_path(self.prefix.bin, 'mpipgifort')
+            self.spec.mpifc = join_path(self.prefix.bin, 'mpipgifort')
         else:
             self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
             self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
@@ -58,6 +59,11 @@ class SpectrumMpi(Package):
             spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpixlC'))
             spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpixlf'))
             spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpixlf'))
+        elif '%pgi' in dependent_spec:
+            spack_env.set('MPICC', join_path(self.prefix.bin, 'mpipgicc'))
+            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpipgic++'))
+            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpipgifort'))
+            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpipgifort'))
         else:
             spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
             spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))

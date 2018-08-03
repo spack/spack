@@ -29,15 +29,16 @@ class Krims(CMakePackage):
     """The bucket of Krimskrams every C or C++ project needs"""
 
     homepage = "http://lazyten.org/krims"
-    url = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
+    url      = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
+    git      = "https://github.com/lazyten/krims.git"
+
     maintainers = ['mfherbst']
 
     #
     # Versions
     #
+    version("develop", branch="master")
     version("0.2.1", "bf219656fd81c342a4782bad7d7beed0")
-    version("develop", git="https://github.com/lazyten/krims.git",
-            branch="master")
 
     #
     # Variants

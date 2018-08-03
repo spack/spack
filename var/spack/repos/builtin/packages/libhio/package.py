@@ -40,6 +40,7 @@ class Libhio(AutotoolsPackage):
     # We don't include older versions since they are missing features
     # needed by current and future consumers of libhio
     #
+    version('1.4.1.2', '38c7d33210155e5796b16d536d1b5cfe')
     version('1.4.1.0', '6ef566fd8cf31fdcd05fab01dd3fae44')
 
     #

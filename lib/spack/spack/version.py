@@ -51,6 +51,7 @@ from six import string_types
 
 from spack.util.spack_yaml import syaml_dict
 
+
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
 # Valid version characters
@@ -252,6 +253,9 @@ class Version(object):
 
     def __iter__(self):
         return iter(self.version)
+
+    def __len__(self):
+        return len(self.version)
 
     def __getitem__(self, idx):
         cls = type(self)

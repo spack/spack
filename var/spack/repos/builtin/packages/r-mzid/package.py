@@ -33,9 +33,9 @@ class RMzid(RPackage):
        supply an mzIdentML file so the problems can be fixed quickly."""
 
     homepage = "https://www.bioconductor.org/packages/mzID/"
-    url      = "https://git.bioconductor.org/packages/mzID"
+    git      = "https://git.bioconductor.org/packages/mzID.git"
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/mzID', commit='1c53aa6523ae61d3ebb13381381fc119d6cc6115')
+    version('1.14.0', commit='1c53aa6523ae61d3ebb13381381fc119d6cc6115')
 
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))

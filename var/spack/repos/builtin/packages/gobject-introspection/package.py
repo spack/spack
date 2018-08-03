@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack import spack_root
+from spack.paths import spack_root
 
 
 class GobjectIntrospection(Package):

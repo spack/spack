@@ -22,10 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.gpg import Gpg
-import argparse
-import spack
 import os
+import argparse
+
+import spack.paths
+from spack.util.gpg import Gpg
 
 description = "handle GPG actions for spack"
 section = "packaging"
@@ -148,7 +149,7 @@ def gpg_trust(args):
 def gpg_init(args):
     import_dir = args.import_dir
     if import_dir is None:
-        import_dir = spack.gpg_keys_path
+        import_dir = spack.paths.gpg_keys_path
 
     for root, _, filenames in os.walk(import_dir):
         for filename in filenames:

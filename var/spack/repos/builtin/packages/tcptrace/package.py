@@ -48,8 +48,8 @@ class Tcptrace(AutotoolsPackage):
     @run_after('configure')
     def patch_makefile(self):
         # see https://github.com/blitz/tcptrace/blob/master/README.linux
-        Makefile = FileFilter('Makefile')
-        Makefile.filter(
+        makefile = FileFilter('Makefile')
+        makefile.filter(
             "PCAP_LDLIBS = -lpcap",
             "DEFINES += -D_BSD_SOURCE\nPCAP_LDLIBS = -lpcap")
 

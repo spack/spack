@@ -24,27 +24,25 @@
 ##############################################################################
 import pytest
 
-import spack
-import spack.util.spack_yaml as syaml
-from spack.spec import Spec
 import spack.package_prefs
+import spack.repo
+import spack.util.spack_yaml as syaml
+from spack.config import ConfigScope
+from spack.spec import Spec
 
 
 @pytest.fixture()
 def concretize_scope(config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir('concretize')
-    spack.config.ConfigScope(
-        'concretize', str(tmpdir.join('concretize'))
-    )
-    yield
-    # This is kind of weird, but that's how config scopes are
-    # set in ConfigScope.__init__
-    spack.config.config_scopes.pop('concretize')
-    spack.package_prefs.PackagePrefs.clear_caches()
+    config.push_scope(
+        ConfigScope('concretize', str(tmpdir.join('concretize'))))
 
-    # reset provider index each time, too
-    spack.repo._provider_index = None
+    yield
+
+    config.pop_scope()
+    spack.package_prefs.PackagePrefs.clear_caches()
+    spack.repo.path._provider_index = None
 
 
 def concretize(abstract_spec):
@@ -54,7 +52,7 @@ def concretize(abstract_spec):
 def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
-    spack.config.update_config('packages', conf, 'concretize')
+    spack.config.set('packages', conf, scope='concretize')
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
@@ -64,7 +62,7 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
-@pytest.mark.usefixtures('concretize_scope', 'builtin_mock')
+@pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
     def test_preferred_variants(self):
         """Test preferred variants are applied correctly
@@ -80,7 +78,7 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
-    def test_preferred_compilers(self, refresh_builtin_mock):
+    def test_preferred_compilers(self, mutable_mock_packages):
         """Test preferred compilers are applied correctly
         """
         update_packages('mpileaks', 'compiler', ['clang@3.3'])
@@ -136,7 +134,7 @@ mpi:
     paths:
       mpi-with-lapack@2.1: /path/to/lapack
 """)
-        spack.config.update_config('packages', conf, 'concretize')
+        spack.config.set('packages', conf, scope='concretize')
 
         # now when we get the packages.yaml config, there should be an error
         with pytest.raises(spack.package_prefs.VirtualInPackagesYAMLError):
@@ -148,7 +146,7 @@ mpi:
 all:
         variants: [+mpi]
 """)
-        spack.config.update_config('packages', conf, 'concretize')
+        spack.config.set('packages', conf, scope='concretize')
 
         # should be no error for 'all':
         spack.package_prefs.PackagePrefs.clear_caches()
@@ -170,7 +168,7 @@ mpich:
     paths:
         mpich@3.0.4: /dummy/path
 """)
-        spack.config.update_config('packages', conf, 'concretize')
+        spack.config.set('packages', conf, scope='concretize')
 
         # ensure that once config is in place, external is used
         spec = Spec('mpi')

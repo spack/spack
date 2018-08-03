@@ -31,12 +31,12 @@ class Flux(AutotoolsPackage):
 
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
+    git      = "https://github.com/flux-framework/flux-core.git"
 
+    version('master', branch='master')
     version('0.8.0', md5='9ee12974a8b2ab9a30533f69826f3bec')
-    version('master', branch='master',
-            git='https://github.com/flux-framework/flux-core')
 
-    variant('doc', default=True, description='Build flux manpages')
+    variant('doc', default=False, description='Build flux manpages')
 
     depends_on("zeromq@4.0.4:")
     depends_on("czmq@2.2:")

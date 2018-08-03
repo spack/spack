@@ -41,9 +41,9 @@ class RTfbstools(RPackage):
        of de novo motif discovery software."""
 
     homepage = "http://bioconductor.org/packages/TFBSTools/"
-    url      = "https://git.bioconductor.org/packages/TFBSTools"
+    git      = "https://git.bioconductor.org/packages/TFBSTools.git"
 
-    version('1.16.0', git='https://git.bioconductor.org/packages/TFBSTools', commit='565436a5a674d4dea7279e796a20c5bd2034f65a')
+    version('1.16.0', commit='565436a5a674d4dea7279e796a20c5bd2034f65a')
 
     depends_on('r-biobase@2.28:', type=('build', 'run'))
     depends_on('r-biostrings@2.36.4:', type=('build', 'run'))

@@ -34,6 +34,7 @@ class Protobuf(CMakePackage):
     url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
     root_cmakelists_dir = "cmake"
 
+    version('3.5.2', 'ff6742018c172c66ecc627029ad54280')
     version('3.5.1.1', '5005003ae6b94773c4bbca87a644b131')
     version('3.5.1',   '710f1a75983092c9b45ecef207236104')
     version('3.5.0.1', 'b3ed2401acf167207277b254fd7f9638')

@@ -22,9 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-
 import pytest
+
+import spack.repo
+import spack.paths
 
 
 # Unlike the repo_path fixture defined in conftest, this has a test-level
@@ -32,7 +33,7 @@ import pytest
 # given RepoPath
 @pytest.fixture()
 def repo_for_test():
-    return spack.repository.RepoPath(spack.mock_packages_path)
+    return spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture()
@@ -41,12 +42,12 @@ def extra_repo(tmpdir_factory):
     repo_dir = tmpdir_factory.mktemp(repo_namespace)
     repo_dir.ensure('packages', dir=True)
 
-    with open(str(repo_dir.join('repo.yaml')), 'w') as F:
-        F.write("""
+    with open(str(repo_dir.join('repo.yaml')), 'w') as f:
+        f.write("""
 repo:
   namespace: extra_test_repo
 """)
-    return spack.repository.Repo(str(repo_dir))
+    return spack.repo.Repo(str(repo_dir))
 
 
 def test_repo_getpkg(repo_for_test):
@@ -67,10 +68,10 @@ def test_repo_multi_getpkgclass(repo_for_test, extra_repo):
 
 
 def test_repo_pkg_with_unknown_namespace(repo_for_test):
-    with pytest.raises(spack.repository.UnknownNamespaceError):
+    with pytest.raises(spack.repo.UnknownNamespaceError):
         repo_for_test.get('unknown.a')
 
 
 def test_repo_unknown_pkg(repo_for_test):
-    with pytest.raises(spack.repository.UnknownPackageError):
+    with pytest.raises(spack.repo.UnknownPackageError):
         repo_for_test.get('builtin.mock.nonexistentpackage')

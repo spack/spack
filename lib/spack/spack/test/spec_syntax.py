@@ -25,7 +25,7 @@
 import pytest
 import shlex
 
-import spack
+import spack.store
 import spack.spec as sp
 from spack.parse import Token
 from spack.spec import Spec, parse, parse_anonymous_spec
@@ -94,7 +94,7 @@ class TestSpecSyntax(object):
     # Parse checks
     # ========================================================================
 
-    def check_parse(self, expected, spec=None, remove_arch=True):
+    def check_parse(self, expected, spec=None):
         """Assert that the provided spec is able to be parsed.
 
            If this is called with one argument, it assumes that the
@@ -152,14 +152,18 @@ class TestSpecSyntax(object):
         self.check_parse('@4.2: languages=go')
 
     def test_simple_dependence(self):
-        self.check_parse("openmpi^hwloc")
-        self.check_parse("openmpi^hwloc^libunwind")
+        self.check_parse("openmpi ^hwloc")
+        self.check_parse("openmpi ^hwloc", "openmpi^hwloc")
+
+        self.check_parse("openmpi ^hwloc ^libunwind")
+        self.check_parse("openmpi ^hwloc ^libunwind",
+                         "openmpi^hwloc^libunwind")
 
     def test_dependencies_with_versions(self):
-        self.check_parse("openmpi^hwloc@1.2e6")
-        self.check_parse("openmpi^hwloc@1.2e6:")
-        self.check_parse("openmpi^hwloc@:1.4b7-rc3")
-        self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
+        self.check_parse("openmpi ^hwloc@1.2e6")
+        self.check_parse("openmpi ^hwloc@1.2e6:")
+        self.check_parse("openmpi ^hwloc@:1.4b7-rc3")
+        self.check_parse("openmpi ^hwloc@1.2e6:1.4b7-rc3")
 
     def test_multiple_specs(self):
         self.check_parse("mvapich emacs")
@@ -172,31 +176,33 @@ class TestSpecSyntax(object):
     def test_multiple_specs_long_second(self):
         self.check_parse('mvapich emacs@1.1.1%intel cflags="-O3"',
                          'mvapich emacs @1.1.1 %intel cflags=-O3')
-        self.check_parse('mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
+        self.check_parse('mvapich cflags="-O3 -fPIC" emacs ^ncurses%intel')
+        self.check_parse('mvapich cflags="-O3 -fPIC" emacs ^ncurses%intel',
+                         'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
 
     def test_full_specs(self):
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4"
-            "^stackwalker@8.1_1e")
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4"
+            " ^stackwalker@8.1_1e")
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
-            "^stackwalker@8.1_1e")
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^stackwalker@8.1_1e")
         self.check_parse(
             'mvapich_foo'
-            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3" +debug~qt_4'
-            '^stackwalker@8.1_1e')
+            ' ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3" +debug~qt_4'
+            ' ^stackwalker@8.1_1e')
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
-            "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
-            "^stackwalker@8.1_1e",
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            " ^stackwalker@8.1_1e",
 
             "mvapich_foo "
             "^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 "
@@ -204,21 +210,21 @@ class TestSpecSyntax(object):
 
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
-            "^stackwalker@8.1_1e",
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            " ^stackwalker@8.1_1e",
 
             "mvapich_foo "
             "^stackwalker@8.1_1e "
             "^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
 
         self.check_parse(
-            "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
+            "x ^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
         self.check_parse(
             "x arch=test-redhat6-None "
-            "^y arch=test-None-x86_64 "
-            "^z arch=linux-None-None",
+            " ^y arch=test-None-x86_64 "
+            " ^z arch=linux-None-None",
 
             "x os=fe "
             "^y target=be "
@@ -226,12 +232,12 @@ class TestSpecSyntax(object):
 
         self.check_parse(
             "x arch=test-debian6-x86_64 "
-            "^y arch=test-debian6-x86_64",
+            " ^y arch=test-debian6-x86_64",
 
             "x os=default_os target=default_target "
             "^y os=default_os target=default_target")
 
-        self.check_parse("x^y", "x@: ^y@:")
+        self.check_parse("x ^y", "x@: ^y@:")
 
     def test_parse_errors(self):
         errors = ['x@@1.2', 'x ^y@@1.2', 'x@1.2::', 'x::']
@@ -255,7 +261,7 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_spec_by_hash(self, database):
-        specs = database.mock.db.query()
+        specs = database.query()
         assert len(specs)  # make sure something's in the DB
 
         for spec in specs:
@@ -263,9 +269,9 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_dep_spec_by_hash(self, database):
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        zmpi = database.mock.db.query_one('zmpi')
-        fake = database.mock.db.query_one('fake')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        zmpi = database.query_one('zmpi')
+        fake = database.query_one('fake')
 
         assert 'fake' in mpileaks_zmpi
         assert 'zmpi' in mpileaks_zmpi
@@ -291,8 +297,8 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_multiple_specs_with_hash(self, database):
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        callpath_mpich2 = database.mock.db.query_one('callpath ^mpich2')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        callpath_mpich2 = database.query_one('callpath ^mpich2')
 
         # name + hash + separate hash
         specs = sp.parse('mpileaks /' + mpileaks_zmpi.dag_hash() +
@@ -330,8 +336,8 @@ class TestSpecSyntax(object):
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
-        database.mock.db.add(x1, spack.store.layout)
-        database.mock.db.add(x2, spack.store.layout)
+        database.add(x1, spack.store.layout)
+        database.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
         self._check_raises(AmbiguousHashError, ['/x'])
@@ -341,11 +347,11 @@ class TestSpecSyntax(object):
 
     @pytest.mark.db
     def test_invalid_hash(self, database):
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        zmpi = database.mock.db.query_one('zmpi')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        zmpi = database.query_one('zmpi')
 
-        mpileaks_mpich = database.mock.db.query_one('mpileaks ^mpich')
-        mpich = database.mock.db.query_one('mpich')
+        mpileaks_mpich = database.query_one('mpileaks ^mpich')
+        mpich = database.query_one('mpich')
 
         # name + incompatible hash
         self._check_raises(InvalidHashError, [
@@ -360,7 +366,7 @@ class TestSpecSyntax(object):
     @pytest.mark.db
     def test_nonexistent_hash(self, database):
         """Ensure we get errors for nonexistant hashes."""
-        specs = database.mock.db.query()
+        specs = database.query()
 
         # This hash shouldn't be in the test DB.  What are the odds :)
         no_such_hash = 'aaaaaaaaaaaaaaa'
@@ -379,11 +385,11 @@ class TestSpecSyntax(object):
         specs only raise errors if constraints cause a contradiction?
 
         """
-        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
-        callpath_zmpi = database.mock.db.query_one('callpath ^zmpi')
-        dyninst = database.mock.db.query_one('dyninst')
+        mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
+        callpath_zmpi = database.query_one('callpath ^zmpi')
+        dyninst = database.query_one('dyninst')
 
-        mpileaks_mpich2 = database.mock.db.query_one('mpileaks ^mpich2')
+        mpileaks_mpich2 = database.query_one('mpileaks ^mpich2')
 
         redundant_specs = [
             # redudant compiler

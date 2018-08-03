@@ -32,5 +32,6 @@ class RLambdaR(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/lambda.r/index.html"
     url      = "https://cran.rstudio.com/src/contrib/lambda.r_1.2.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/lambda.r"
 
     version('1.2', 'bda49898b85ad5902880a31f43b432e2')

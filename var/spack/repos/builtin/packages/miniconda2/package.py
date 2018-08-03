@@ -33,6 +33,7 @@ class Miniconda2(Package):
     homepage = "https://conda.io/miniconda.html"
     url      = "https://repo.continuum.io/miniconda/Miniconda2-4.3.11-Linux-x86_64.sh"
 
+    version('4.5.4', '8a1c02f6941d8778f8afad7328265cf5', expand=False)
     version('4.3.30', 'bd1655b4b313f7b2a1f2e15b7b925d03', expand=False)
     version('4.3.14', '8cb075cf5462480980ef2373ad9fad38', expand=False)
     version('4.3.11', 'd573980fe3b5cdf80485add2466463f5', expand=False)

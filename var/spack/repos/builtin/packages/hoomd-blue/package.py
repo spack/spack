@@ -37,21 +37,17 @@ class HoomdBlue(CMakePackage):
     and perform in situ analysis."""
 
     homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
-    git      = "https://bitbucket.org/glotzer/hoomd-blue"
+    git      = "https://bitbucket.org/glotzer/hoomd-blue.git"
 
-    # TODO: There is a bug in Spack that requires a url to be defined
-    # even if it isn't used. This URL can hopefully be removed someday.
-    url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v2.1.6.tar.bz2"
-
-    version('develop', git=git, submodules=True)
+    version('develop', submodules=True)
 
     # Bitbucket has tarballs for each release, but they cannot be built.
     # The tarball doesn't come with the git submodules, nor does it come
     # with a .git directory, causing the build to fail. As a workaround,
     # clone a specific tag from Bitbucket instead of using the tarballs.
     # https://bitbucket.org/glotzer/hoomd-blue/issues/238
-    version('2.2.2', git=git, tag='v2.2.2', submodules=True)
-    version('2.1.6', git=git, tag='v2.1.6', submodules=True)
+    version('2.2.2', tag='v2.2.2', submodules=True)
+    version('2.1.6', tag='v2.1.6', submodules=True)
 
     variant('mpi',  default=True,  description='Compile with MPI enabled')
     variant('cuda', default=True,  description='Compile with CUDA Toolkit')

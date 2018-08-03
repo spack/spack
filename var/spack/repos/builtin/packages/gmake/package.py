@@ -36,10 +36,15 @@ class Gmake(AutotoolsPackage):
     version('4.0',   'b5e558f981326d9ca1bfdb841640721a')
 
     variant('guile', default=False, description='Support GNU Guile for embedded scripting')
+    variant('nls', default=True, description='Enable Native Language Support')
 
+    depends_on('gettext', when='+nls')
     depends_on('guile', when='+guile')
 
     build_directory = 'spack-build'
+
+    patch('https://src.fedoraproject.org/rpms/make/raw/519a7c5bcbead22e6ea2d2c2341d981ef9e25c0d/f/make-4.2.1-glob-fix-2.patch', level=1, sha256='fe5b60d091c33f169740df8cb718bf4259f84528b42435194ffe0dd5b79cd125', when='@4.2.1')
+    patch('https://src.fedoraproject.org/rpms/make/raw/519a7c5bcbead22e6ea2d2c2341d981ef9e25c0d/f/make-4.2.1-glob-fix-3.patch', level=1, sha256='ca60bd9c1a1b35bc0dc58b6a4a19d5c2651f7a94a4b22b2c5ea001a1ca7a8a7f', when='@:4.2.1')
 
     def configure_args(self):
         args = []
@@ -48,6 +53,11 @@ class Gmake(AutotoolsPackage):
             args.append('--with-guile')
         else:
             args.append('--without-guile')
+
+        if '+nls' in self.spec:
+            args.append('--enable-nls')
+        else:
+            args.append('--disable-nls')
 
         return args
 

@@ -30,9 +30,9 @@ class RRgraphviz(RPackage):
     R graph objects from the graph package."""
 
     homepage = "http://bioconductor.org/packages/Rgraphviz/"
-    url      = "https://git.bioconductor.org/packages/Rgraphviz"
+    git      = "https://git.bioconductor.org/packages/Rgraphviz.git"
 
-    version('2.20.0', git='https://git.bioconductor.org/packages/Rgraphviz', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
+    version('2.20.0', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
 
     depends_on('r@3.4.0:3.4.9', when='@2.20.0')
     depends_on('r-graph', type=('build', 'run'))

@@ -47,6 +47,7 @@ class Mono(AutotoolsPackage):
     depends_on('libiconv')
     depends_on('perl', type=('build'))
 
+    version('5.4.1.7', '28a82df5d0b7854b387d4f21d852ac70')
     version('5.4.0.167', '103c7a737632046a9e9a0b039d752ee1')
     version('5.0.1.1', '17692c7a797f95ee6f9a0987fda3d486')
     version('4.8.0.524', 'baeed5b8139a85ad7e291d402a4bcccb')

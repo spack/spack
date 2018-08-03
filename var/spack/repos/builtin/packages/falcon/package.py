@@ -36,11 +36,9 @@ class Falcon(PythonPackage):
     front-end written in Python for convenience."""
 
     homepage = "https://github.com/PacificBiosciences/FALCON"
-    url      = "https://github.com/PacificBiosciences/FALCON.git"
+    git      = "https://github.com/PacificBiosciences/FALCON.git"
 
-    version('2017-05-30',
-            git='https://github.com/PacificBiosciences/FALCON.git',
-            commit='86cec6157291679095ea6080b0cde6561eccc041')
+    version('2017-05-30', commit='86cec6157291679095ea6080b0cde6561eccc041')
 
     depends_on('py-setuptools', type='run')
     depends_on('py-pypeflow', type='run')

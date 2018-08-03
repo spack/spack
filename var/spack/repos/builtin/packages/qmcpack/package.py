@@ -32,18 +32,20 @@ class Qmcpack(CMakePackage):
 
     # Package information
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack.git"
+    git      = "https://github.com/QMCPACK/qmcpack.git"
+
+    tags = ['ecp', 'ecp-apps']
 
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
-    version('3.4.0', git=url, tag='v3.4.0')
-    version('3.3.0', git=url, tag='v3.3.0')
-    version('3.2.0', git=url, tag='v3.2.0')
-    version('3.1.1', git=url, tag='v3.1.1')
-    version('3.1.0', git=url, tag='v3.1.0')
-    version('develop', git=url)
+    version('develop')
+    version('3.4.0', tag='v3.4.0')
+    version('3.3.0', tag='v3.3.0')
+    version('3.2.0', tag='v3.2.0')
+    version('3.1.1', tag='v3.1.1')
+    version('3.1.0', tag='v3.1.0')
 
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
@@ -107,11 +109,11 @@ class Qmcpack(CMakePackage):
     # Quantum Espresso 5.3.0 (see QMCPACK manual)
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_espresso-5.3.0.diff'
     patch_checksum = '0d8d7ba805313ddd4c02ee32c96d2f12e7091e9e82e22671d3ad5a24247860c4'
-    depends_on('espresso@5.3.0~elpa',
+    depends_on('quantum-espresso@5.3.0~elpa',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                when='+qe+mpi')
 
-    depends_on('espresso@5.3.0~elpa~scalapack~mpi',
+    depends_on('quantum-espresso@5.3.0~elpa~scalapack~mpi',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                when='+qe~mpi')
 

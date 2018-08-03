@@ -34,9 +34,9 @@ class RShortread(RPackage):
     for early single-end, ungapped alignment formats."""
 
     homepage = "https://www.bioconductor.org/packages/ShortRead/"
-    url      = "https://git.bioconductor.org/packages/ShortRead"
+    git      = "https://git.bioconductor.org/packages/ShortRead.git"
 
-    version('1.34.2', git='https://git.bioconductor.org/packages/ShortRead', commit='25daac63b301df66a8ef6e98cc2977522c6786cd')
+    version('1.34.2', commit='25daac63b301df66a8ef6e98cc2977522c6786cd')
 
     depends_on('r@3.4.0:3.4.9', when='@1.34.2')
     depends_on('r-latticeextra', type=('build', 'run'))

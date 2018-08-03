@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
@@ -32,9 +30,9 @@ class RAnnotationdbi(RPackage):
     annotation data packages using SQLite data storage."""
 
     homepage = "https://www.bioconductor.org/packages/AnnotationDbi/"
-    url      = "https://git.bioconductor.org/packages/AnnotationDbi"
-    list_url = homepage
-    version('1.38.2', git='https://git.bioconductor.org/packages/AnnotationDbi', commit='67d46facba8c15fa5f0eb47c4e39b53dbdc67c36')
+    git      = "https://git.bioconductor.org/packages/AnnotationDbi.git"
+
+    version('1.38.2', commit='67d46facba8c15fa5f0eb47c4e39b53dbdc67c36')
 
     depends_on('r@3.4.0:3.4.9', when='@1.38.2')
     depends_on('r-biocgenerics', type=('build', 'run'))

@@ -25,15 +25,15 @@
 from __future__ import print_function
 
 import textwrap
-
 from six.moves import zip_longest
 
+import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import llnl.util.tty.color as color
-import spack
-import spack.fetch_strategy as fs
+import spack.repo
 import spack.spec
+import spack.fetch_strategy as fs
+
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -156,7 +156,7 @@ def print_text_info(pkg):
     color.cprint('')
     color.cprint(section_title('Description:'))
     if pkg.__doc__:
-        color.cprint(pkg.format_doc(indent=4))
+        color.cprint(color.cescape(pkg.format_doc(indent=4)))
     else:
         color.cprint("    None")
 
@@ -195,14 +195,14 @@ def print_text_info(pkg):
         preferred = sorted(pkg.versions, key=key_fn).pop()
 
         f = fs.for_package_version(pkg, preferred)
-        line = version('    {0}'.format(pad(preferred))) + str(f)
+        line = version('    {0}'.format(pad(preferred))) + color.cescape(f)
         color.cprint(line)
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + str(f)
+            line = version('    {0}'.format(pad(v))) + color.cescape(f)
             color.cprint(line)
 
     color.cprint('')

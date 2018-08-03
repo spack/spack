@@ -23,10 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
+
 import llnl.util.tty as tty
-import spack
+
 import spack.cmd
-from spack.directory_layout import YamlViewExtensionsLayout
+from spack.filesystem_view import YamlFilesystemView
 
 description = "activate a package extension"
 section = "extensions"
@@ -54,12 +55,17 @@ def activate(parser, args):
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 
-    layout = spack.store.extensions
-    if args.view is not None:
-        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+    if args.view:
+        target = args.view
+    else:
+        target = spec.package.extendee_spec.prefix
 
-    if spec.package.is_activated(extensions_layout=layout):
-        tty.die("Package %s is already activated." % specs[0].short_spec)
+    view = YamlFilesystemView(target, spack.store.layout)
 
-    spec.package.do_activate(extensions_layout=layout,
-                             with_dependencies=not args.force)
+    if spec.package.is_activated(view):
+        tty.msg("Package %s is already activated." % specs[0].short_spec)
+        return
+
+    # TODO: refactor FilesystemView.add_extension and use that here (so there
+    # aren't two ways of activating extensions)
+    spec.package.do_activate(view, with_dependencies=not args.force)

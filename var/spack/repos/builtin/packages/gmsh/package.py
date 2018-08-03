@@ -45,19 +45,16 @@ class Gmsh(CMakePackage):
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
-    variant('shared',      default=True,
-            description='Enables the build of shared libraries')
-    variant('mpi',         default=True,
-            description='Builds MPI support for parser and solver')
-    variant('fltk',        default=False,
-            description='Enables the build of the FLTK GUI')
+    variant('shared',      default=True,  description='Enables the build of shared libraries')
+    variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
+    variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
     variant('hdf5',        default=False, description='Enables HDF5 support')
-    variant('compression', default=True,
-            description='Enables IO compression through zlib')
+    variant('compression', default=True,  description='Enables IO compression through zlib')
+    variant('netgen',      default=False, description='Build with Netgen')
     variant('oce',         default=False, description='Build with OCE')
     variant('petsc',       default=False, description='Build with PETSc')
-    variant('slepc',       default=False,
-            description='Build with SLEPc (only when PETSc is enabled)')
+    variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
+    variant('tetgen',      default=False, description='Build with Tetgen')
 
     depends_on('blas')
     depends_on('lapack')
@@ -67,11 +64,15 @@ class Gmsh(CMakePackage):
     # Assumes OpenGL with GLU is already provided by the system:
     depends_on('fltk', when='+fltk')
     depends_on('hdf5', when='+hdf5')
+    depends_on('netgen', when='+netgen')
     depends_on('oce',  when='+oce')
     depends_on('petsc+mpi', when='+petsc+mpi')
     depends_on('petsc', when='+petsc~mpi')
     depends_on('slepc', when='+slepc+petsc')
+    depends_on('tetgen', when='+tetgen')
     depends_on('zlib',  when='+compression')
+
+    conflicts('+slepc', when='~petsc')
 
     def cmake_args(self):
         spec = self.spec
@@ -103,21 +104,33 @@ class Gmsh(CMakePackage):
 
         if '+oce' in spec:
             env['CASROOT'] = self.spec['oce'].prefix
-            options.extend(['-DENABLE_OCC=ON'])
+            options.append('-DENABLE_OCC=ON')
         else:
-            options.extend(['-DENABLE_OCC=OFF'])
+            options.append('-DENABLE_OCC=OFF')
 
         if '+petsc' in spec:
             env['PETSC_DIR'] = self.spec['petsc'].prefix
-            options.extend(['-DENABLE_PETSC=ON'])
+            options.append('-DENABLE_PETSC=ON')
         else:
-            options.extend(['-DENABLE_PETSC=OFF'])
+            options.append('-DENABLE_PETSC=OFF')
+
+        if '+tetgen' in spec:
+            env['TETGEN_DIR'] = self.spec['tetgen'].prefix
+            options.append('-DENABLE_TETGEN=ON')
+        else:
+            options.append('-DENABLE_TETGEN=OFF')
+
+        if '+netgen' in spec:
+            env['NETGEN_DIR'] = self.spec['netgen'].prefix
+            options.append('-DENABLE_NETGEN=ON')
+        else:
+            options.append('-DENABLE_NETGEN=OFF')
 
         if '+slepc' in spec:
             env['SLEPC_DIR'] = self.spec['slepc'].prefix
-            options.extend(['-DENABLE_SLEPC=ON'])
+            options.append('-DENABLE_SLEPC=ON')
         else:
-            options.extend(['-DENABLE_SLEPC=OFF'])
+            options.append('-DENABLE_SLEPC=OFF')
 
         if '+shared' in spec:
             # Builds dynamic executable and installs shared library

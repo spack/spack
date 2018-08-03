@@ -33,9 +33,10 @@ class Xsdktrilinos(CMakePackage):
     """
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/xSDKTrilinos/archive/trilinos-release-12-8-1.tar.gz"
+    git      = "https://github.com/trilinos/xSDKTrilinos.git"
 
-    version('develop', git='https://github.com/trilinos/xSDKTrilinos.git', tag='master')
-    version('xsdk-0.2.0', git='https://github.com/trilinos/xSDKTrilinos.git', tag='xsdk-0.2.0')
+    version('develop', tag='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('12.8.1', '9cc338ded17d1e10ea6c0dc18b22dcd4')
     version('12.6.4', '44c4c54ccbac73bb8939f68797b9454a')
 

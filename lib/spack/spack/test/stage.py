@@ -23,13 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Test that the Stage class works correctly."""
-import collections
 import os
-
-from llnl.util.filesystem import join_path, working_dir
+import collections
 
 import pytest
-import spack
+
+from llnl.util.filesystem import working_dir
+
+import spack.paths
 import spack.stage
 import spack.util.executable
 from spack.stage import Stage
@@ -42,9 +43,9 @@ def check_expand_archive(stage, stage_name, mock_archive):
     assert archive_name in os.listdir(stage_path)
     assert archive_dir in os.listdir(stage_path)
 
-    assert join_path(stage_path, archive_dir) == stage.source_path
+    assert os.path.join(stage_path, archive_dir) == stage.source_path
 
-    readme = join_path(stage_path, archive_dir, 'README.txt')
+    readme = os.path.join(stage_path, archive_dir, 'README.txt')
     assert os.path.isfile(readme)
     with open(readme) as file:
         'hello world!\n' == file.read()
@@ -54,7 +55,7 @@ def check_fetch(stage, stage_name):
     archive_name = 'test-files.tar.gz'
     stage_path = get_stage_path(stage, stage_name)
     assert archive_name in os.listdir(stage_path)
-    assert join_path(stage_path, archive_name) == stage.fetcher.archive_file
+    assert os.path.join(stage_path, archive_name) == stage.fetcher.archive_file
 
 
 def check_destroy(stage, stage_name):
@@ -101,31 +102,28 @@ def get_stage_path(stage, stage_name):
     """
     if stage_name is not None:
         # If it is a named stage, we know where the stage should be
-        return join_path(spack.stage_path, stage_name)
+        return os.path.join(spack.paths.stage_path, stage_name)
     else:
         # If it's unnamed, ensure that we ran mkdtemp in the right spot.
         assert stage.path is not None
-        assert stage.path.startswith(spack.stage_path)
+        assert stage.path.startswith(spack.paths.stage_path)
         return stage.path
 
 
 @pytest.fixture()
-def tmpdir_for_stage(mock_archive):
+def tmpdir_for_stage(mock_archive, mutable_config):
     """Uses a temporary directory for staging"""
-    current = spack.stage_path
-    spack.config.update_config(
+    current = spack.paths.stage_path
+    spack.config.set(
         'config',
         {'build_stage': [str(mock_archive.test_tmp_dir)]},
-        scope='user'
-    )
+        scope='user')
     yield
-    spack.config.update_config(
-        'config', {'build_stage': [current]}, scope='user'
-    )
+    spack.config.set('config', {'build_stage': [current]}, scope='user')
 
 
 @pytest.fixture()
-def mock_archive(tmpdir, monkeypatch):
+def mock_archive(tmpdir, monkeypatch, mutable_config):
     """Creates a mock archive with the structure expected by the tests"""
     # Mock up a stage area that looks like this:
     #
@@ -137,9 +135,8 @@ def mock_archive(tmpdir, monkeypatch):
     #
     test_tmp_path = tmpdir.join('tmp')
     # set _test_tmp_path as the default test directory to use for stages.
-    spack.config.update_config(
-        'config', {'build_stage': [str(test_tmp_path)]}, scope='user'
-    )
+    spack.config.set(
+        'config', {'build_stage': [str(test_tmp_path)]}, scope='user')
 
     archive_dir = tmpdir.join('test-files')
     archive_name = 'test-files.tar.gz'
@@ -202,7 +199,7 @@ def search_fn():
     return _Mock()
 
 
-@pytest.mark.usefixtures('builtin_mock')
+@pytest.mark.usefixtures('mock_packages')
 class TestStage(object):
 
     stage_name = 'spack-test-stage'

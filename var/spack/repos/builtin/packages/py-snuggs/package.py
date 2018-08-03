@@ -35,3 +35,4 @@ class PySnuggs(PythonPackage):
 
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-click', type=('build', 'run'))
+    depends_on('py-pyparsing', type=('build', 'run'))

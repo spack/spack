@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import spack
+from spack.filesystem_view import YamlFilesystemView
 
 
 def pre_uninstall(spec):
@@ -29,6 +31,9 @@ def pre_uninstall(spec):
     assert spec.concrete
 
     if pkg.is_extension:
-        if pkg.is_activated():
+        target = pkg.extendee_spec.prefix
+        view = YamlFilesystemView(target, spack.store.layout)
+
+        if pkg.is_activated(view):
             # deactivate globally
             pkg.do_deactivate(force=True)

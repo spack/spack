@@ -34,9 +34,10 @@ class RHmisc(RPackage):
     code, and recoding variables."""
 
     homepage = "http://biostat.mc.vanderbilt.edu/Hmisc"
-    url      = "https://cran.rstudio.com/src/contrib/Hmisc_4.0-3.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/Hmisc_4.1-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Hmisc"
 
+    version('4.1-1', 'd255611f2b108d3cc0212b8a98fef6e3')
     version('4.0-3', '7091924db1e473419d8116c3335f82da')
 
     depends_on('r-lattice', type=('build', 'run'))

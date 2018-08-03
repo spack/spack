@@ -58,6 +58,7 @@ class Zoltan(Package):
     depends_on('mpi', when='+mpi')
 
     depends_on('parmetis@4:', when='+parmetis')
+    depends_on('metis', when='+parmetis')
 
     conflicts('+parmetis', when='~mpi')
 
@@ -91,6 +92,10 @@ class Zoltan(Package):
                                .format(spec['parmetis'].prefix.lib))
             config_args.append('--with-parmetis-incdir={0}'
                                .format(spec['parmetis'].prefix.include))
+            config_args.append('--with-incdirs=-I{0}'
+                               .format(spec['metis'].prefix.include))
+            config_args.append('--with-ldflags=-L{0}'
+                               .format(spec['metis'].prefix.lib))
 
         if '+mpi' in spec:
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))

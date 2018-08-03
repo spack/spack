@@ -27,7 +27,7 @@ import spack.modules.common
 import llnl.util.tty as tty
 
 try:
-    enabled = spack.modules.common.configuration['enable']
+    enabled = spack.config.get('modules:enable')
 except KeyError:
     tty.debug('NO MODULE WRITTEN: list of enabled module files is empty')
     enabled = []

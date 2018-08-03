@@ -25,11 +25,19 @@
 from spack import *
 
 
-class Catch(Package):
+class Catch(CMakePackage):
     """Catch tests"""
 
     homepage = "https://github.com/catchorg/Catch2"
     url = "https://github.com/catchorg/Catch2/archive/v1.3.0.tar.gz"
+
+    variant('single_header', default=True,
+            description='Install a single header only.')
+
+    # - "make install" was added in 1.7.0
+    # - pkg-config package was added in 2.0.1
+    # - CMake config package was added in 2.1.2
+    conflicts('~single_header', when='@:1.6.1')
 
     version('2.2.1', '54e56803c84890636bd7fe6c3856b104')
     version('2.1.0', '70b44068976d46d48f3cd8796f675691d3bc726b')
@@ -60,6 +68,15 @@ class Catch(Package):
     version('1.3.5', '2cfd78bce21368355c7d3880df88716084df2186')
     version('1.3.0', '24cd4e6518273fea20becd47a2e1edbee7ec209a')
 
+    @when('+single_header')
+    def cmake(self, spec, prefix):
+        pass
+
+    @when('+single_header')
+    def build(self, spec, prefix):
+        pass
+
+    @when('+single_header')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install(join_path('single_include', 'catch.hpp'), prefix.include)

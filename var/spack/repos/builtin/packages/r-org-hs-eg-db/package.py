@@ -29,7 +29,7 @@ class ROrgHsEgDb(RPackage):
     """Genome wide annotation for Human, primarily based on mapping
     using Entrez Gene identifiers."""
 
-    homepage = "http://www.example.co://www.bioconductor.org/packages/org.Hs.eg.db/i"
+    homepage = "https://bioconductor.org/packages/org.Hs.eg.db/"
     url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/org.Hs.eg.db_3.4.1.tar.gz"
 
     version('3.4.1', '0a987ef7d6167df70e91e6f48145e41c')

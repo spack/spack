@@ -26,7 +26,7 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 
-import spack
+import spack.repo
 
 from llnl.util import tty
 from spack.url import parse_version_offset, parse_name_offset
@@ -144,7 +144,7 @@ def url_list(args):
     urls = set()
 
     # Gather set of URLs from all packages
-    for pkg in spack.repo.all_packages():
+    for pkg in spack.repo.path.all_packages():
         url = getattr(pkg.__class__, 'url', None)
         urls = url_list_parsing(args, urls, url, pkg)
 
@@ -178,7 +178,7 @@ def url_summary(args):
     tty.msg('Generating a summary of URL parsing in Spack...')
 
     # Loop through all packages
-    for pkg in spack.repo.all_packages():
+    for pkg in spack.repo.path.all_packages():
         urls = set()
 
         url = getattr(pkg.__class__, 'url', None)
@@ -227,7 +227,7 @@ def url_summary(args):
 
     print()
     print('    Index  Count  Regular Expression')
-    for ni in name_regex_dict:
+    for ni in sorted(name_regex_dict.keys()):
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             ni, name_count_dict[ni], name_regex_dict[ni]))
     print()
@@ -236,7 +236,7 @@ def url_summary(args):
 
     print()
     print('    Index  Count  Regular Expression')
-    for vi in version_regex_dict:
+    for vi in sorted(version_regex_dict.keys()):
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             vi, version_count_dict[vi], version_regex_dict[vi]))
     print()

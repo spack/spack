@@ -26,16 +26,19 @@ from spack import *
 
 
 class PyPy(PythonPackage):
-    """library with cross-python path, ini-parsing, io, code, log facilities"""
+    """Library with cross-python path, ini-parsing, io, code, log facilities"""
 
     homepage = "http://pylib.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/py/py-1.4.33.tar.gz"
+    url      = "https://pypi.io/packages/source/p/py/py-1.5.3.tar.gz"
 
     import_modules = [
         'py', 'py._code', 'py._io', 'py._log', 'py._path', 'py._process',
     ]
 
+    version('1.5.3',  '667d37a148ad9fb81266492903f2d880')
     version('1.4.33', '15d7107cbb8b86593bf9afa16e56da65')
     version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
+
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
