@@ -35,6 +35,8 @@ class Gdbm(AutotoolsPackage):
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
     url      = "http://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
 
+    variant("shared", default=True, description="Enable shared libraries")
+
     version('1.14.1', 'c2ddcb3897efa0f57484af2bd4f4f848')
     version('1.13',  '8929dcda2a8de3fd2367bdbf66769376')
     version('1.12',  '9ce96ff4c99e74295ea19040931c8fb9')
@@ -52,6 +54,7 @@ class Gdbm(AutotoolsPackage):
         #   https://patchwork.ozlabs.org/patch/771300/
         #   https://stackoverflow.com/questions/5582211
         #   https://www.gnu.org/software/automake/manual/html_node/Flag-Variables-Ordering.html
-        return [
-            '--enable-libgdbm-compat',
-            'CPPFLAGS=-D_GNU_SOURCE']
+        args = ['--enable-libgdbm-compat', 'CPPFLAGS=-D_GNU_SOURCE']
+        args += self.enable_or_disable("shared")
+        return args
+
