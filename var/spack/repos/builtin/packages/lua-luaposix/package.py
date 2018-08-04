@@ -34,7 +34,6 @@ class LuaLuaposix(Package):
     version('33.4.0', 'b36ff049095f28752caeb0b46144516c')
 
     extends("lua")
-    depends_on('unzip', type='build')
 
     def install(self, spec, prefix):
         rockspec = glob.glob('luaposix-*.rockspec')

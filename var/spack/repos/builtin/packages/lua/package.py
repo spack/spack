@@ -49,6 +49,8 @@ class Lua(Package):
 
     depends_on('ncurses')
     depends_on('readline')
+    # luarocks needs unzip for some packages (e.g. lua-luaposix)
+    depends_on('unzip', type='run')
 
     resource(
         name="luarocks",
