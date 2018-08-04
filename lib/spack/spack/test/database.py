@@ -76,13 +76,16 @@ def test_mark_installed_upstream(tmpdir_factory):
 
         try:
             original_db = spack.store.db
-            downstream_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+            downstream_db_root = str(
+                tmpdir_factory.mktemp('mock_downstream_db_root'))
             spack.store.db = spack.database.Database(
                 downstream_db_root, upstream_dbs=[prepared_db])
             new_spec = spack.spec.Spec('w')
             new_spec.concretize()
             for dep in new_spec.traverse(root=False):
                 assert dep.package._installed_upstream
+                assert dep.prefix == mock_layout.path_for_spec(dep)
+            assert new_spec.prefix != mock_layout.path_for_spec(new_spec)
         finally:
             spack.store.db = original_db
 
