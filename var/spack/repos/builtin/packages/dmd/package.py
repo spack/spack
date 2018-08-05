@@ -56,7 +56,7 @@ class Dmd(MakefilePackage):
         run_env.prepend_path('LIBRARY_PATH', self.prefix.linux.lib64)
         run_env.prepend_path('LD_LIBRARY_PATH', self.prefix.linux.lib64)
 
-    def build(self, spec, prefix):
+    def edit(self, spec, prefix):
         # Move contents to dmd/
         mkdir = which('mkdir')
         mkdir('dmd')
@@ -73,7 +73,8 @@ class Dmd(MakefilePackage):
         pb_makefile.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
         tools_makefile = FileFilter('tools/posix.mak')
         tools_makefile.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
-        # Build
+
+    def build(self, spec, prefix):
         with working_dir('dmd'):
             make('-f', 'posix.mak', 'AUTO_BOOTSTRAP=1')
         with working_dir('phobos'):
