@@ -175,8 +175,8 @@ class PyNumpy(PythonPackage):
     def install(self, spec, prefix):
         install_args = self.install_args(spec, prefix)
         self.setup_py('config', '--compiler=intelem', 'build_clib',
-                          '--compiler=intelem', 'build_ext',
-                          '--compiler=intelem', 'install', *install_args)
+                      '--compiler=intelem', 'build_ext',
+                      '--compiler=intelem', 'install', *install_args)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
