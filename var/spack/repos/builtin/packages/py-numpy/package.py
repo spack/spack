@@ -75,7 +75,7 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    depends_on('py-nose@1.0.0:', type='test', when="@:1.14.5")
+    depends_on('py-nose@1.0.0:', type='test', when="@:1.14")
     depends_on('py-pytest', type='test', when="@1.15.0:")
 
     def setup_dependent_package(self, module, dependent_spec):
