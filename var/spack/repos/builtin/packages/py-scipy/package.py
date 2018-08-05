@@ -69,20 +69,30 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
-    if '%intel' in self.spec:
-        # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
-        # build and install in one step
-        phases = ['install']
+    # Do the usual with gcc
+    def get_phases(self):
+        self.phases = ['configure', 'build', 'install']
 
-        def install(self, spec, prefix):
-            install_args = self.install_args(spec, prefix)
-            self.setup_py('config',
-                          '--compiler=intelem', '--fcompiler=intelem',
-                          'build_clib',
-                          '--compiler=intelem', '--fcompiler=intelem',
-                          'build_ext',
-                          '--compiler=intelem', '--fcompiler=intelem',
-                          'install', *install_args)
+    # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
+    # build and install in one step
+    @when('%intel')
+    def get_phases(self):
+        self.phases = ['install']
+
+    def install(self, spec, prefix):
+        install_args = self.install_args(self, prefix)
+        self.setup_py(*install_args)
+
+    @when('%intel')
+    def install(self, spec, prefix):
+        install_args = self.install_args(spec, prefix)
+        self.setup_py('config',
+                      '--compiler=intelem', '--fcompiler=intelem',
+                      'build_clib',
+                      '--compiler=intelem', '--fcompiler=intelem',
+                      'build_ext',
+                      '--compiler=intelem', '--fcompiler=intelem',
+                      'install', *install_args)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following

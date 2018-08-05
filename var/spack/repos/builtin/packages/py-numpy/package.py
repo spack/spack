@@ -76,7 +76,7 @@ class PyNumpy(PythonPackage):
     depends_on('lapack', when='+lapack')
 
     depends_on('py-nose@1.0.0:', type='test', when="@:1.14.5")
-    depends_on('py-pytest', type='test', when="@:1.15.0:")
+    depends_on('py-pytest', type='test', when="@1.15.0:")
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
@@ -157,7 +157,6 @@ class PyNumpy(PythonPackage):
 
         run_env.prepend_path('CPATH', include_path)
 
-
     # Do the usual with gcc
     def get_phases(self):
         self.phases = ['configure', 'build', 'install']
@@ -169,8 +168,8 @@ class PyNumpy(PythonPackage):
         self.phases = ['install']
 
     def install(self, spec, prefix):
-        install_args = self.install_args(self,prefix)
-        self.setup_py('*install_args')
+        install_args = self.install_args(self, prefix)
+        self.setup_py(*install_args)
 
     @when('%intel')
     def install(self, spec, prefix):
