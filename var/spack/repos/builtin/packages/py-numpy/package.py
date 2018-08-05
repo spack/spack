@@ -167,10 +167,6 @@ class PyNumpy(PythonPackage):
     def get_phases(self):
         self.phases = ['install']
 
-    def install(self, spec, prefix):
-        install_args = self.install_args(self, prefix)
-        self.setup_py(*install_args)
-
     @when('%intel')
     def install(self, spec, prefix):
         install_args = self.install_args(spec, prefix)
