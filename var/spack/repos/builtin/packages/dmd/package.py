@@ -61,18 +61,23 @@ class Dmd(MakefilePackage):
         mkdir = which('mkdir')
         mkdir('dmd')
         mv = which('mv')
-        dmd_files = [f for f in os.listdir('.') if not f.startswith(('dmd', 'druntime', 'phobos', 'tools', 'spack-build'))]
+        dmd_files = [f for f in os.listdir('.')
+                     if not f.startswith(('dmd',
+                                          'druntime',
+                                          'phobos',
+                                          'tools',
+                                          'spack-build'))]
         for f in dmd_files:
             mv(f, 'dmd')
         # Edit
-        dmd_makefile = FileFilter('dmd/posix.mak')
-        dmd_makefile.filter('$(PWD)/../install', prefix, string=True)
-        dr_makefile = FileFilter('druntime/posix.mak')
-        dr_makefile.filter('INSTALL_DIR=.*', 'INSTALL_DIR={0}'.format(prefix))
-        pb_makefile = FileFilter('phobos/posix.mak')
-        pb_makefile.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
-        tools_makefile = FileFilter('tools/posix.mak')
-        tools_makefile.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
+        dmd_mak = FileFilter('dmd/posix.mak')
+        dmd_mak.filter('$(PWD)/../install', prefix, string=True)
+        dr_mak = FileFilter('druntime/posix.mak')
+        dr_mak.filter('INSTALL_DIR=.*', 'INSTALL_DIR={0}'.format(prefix))
+        pb_mak = FileFilter('phobos/posix.mak')
+        pb_mak.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
+        tl_mak = FileFilter('tools/posix.mak')
+        tl_mak.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
 
     def build(self, spec, prefix):
         with working_dir('dmd'):
