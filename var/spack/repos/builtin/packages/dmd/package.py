@@ -23,8 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
-import glob
+import os
 
 
 class Dmd(MakefilePackage):
@@ -55,29 +54,20 @@ class Dmd(MakefilePackage):
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix.linux.bin64)
 
-    def do_stage(self, mirror_only=False):
-        # wrap (decorate) the standard expand_archive step with a
-        # helper, then call the real do_stage().
-        self.stage.expand_archive = self.unpack_dmd(self.stage.expand_archive)
-        super(Dmd, self).do_stage(mirror_only)
-
-    def unpack_dmd(self, f):
-        def wrap():
-            f() # call the original expand_archive()
-            with working_dir(self.stage.path):
-                dir_dmd = glob.glob(join_path('dmd*'))[0]
-                # mkdir = which('mkdir')
-                # mkdir('dmd')
-                # mv =  which('mv')
-                # mv(join_path(dir_dmd, '*'), 'dmd')
-                # shutil.move(join_path(dir_dmd, '*'), 'dmd')
-        return wrap
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('dmd/posix.mak')
-        makefile.filter('$(PWD)/../install', prefix, string=True)
-
     def build(self, spec, prefix):
+        # Move contents to dmd/
+        mkdir = which('mkdir')
+        mkdir('dmd')
+        mv = which('mv')
+        dmd_files = [f for f in os.listdir('.') if not f.startswith(('dmd', 'druntime', 'phobos', 'tools', 'spack-build'))]
+        for f in dmd_files:
+            mv(f, 'dmd')
+        # Edit
+        dmd_makefile = FileFilter('dmd/posix.mak')
+        dmd_makefile.filter('$(PWD)/../install', prefix, string=True)
+        dr_makefile = FileFilter('druntime/posix.mak')
+        dr_makefile.filter('INSTALL_DIR=.*', 'INSTALL_DIR={0}'.format(prefix))
+        # Build
         with working_dir('dmd'):
             make('-f', 'posix.mak', 'AUTO_BOOTSTRAP=1')
         with working_dir('phobos'):
@@ -86,3 +76,5 @@ class Dmd(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir('dmd'):
             make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
+        with working_dir('phobos'):
+            make('-f', 'posix.mak', 'install')
