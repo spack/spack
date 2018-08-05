@@ -53,6 +53,8 @@ class Dmd(MakefilePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix.linux.bin64)
+        run_env.prepend_path('LIBRARY_PATH', self.prefix.linux.lib64)
+        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix.linux.lib64)
 
     def build(self, spec, prefix):
         # Move contents to dmd/
@@ -67,6 +69,10 @@ class Dmd(MakefilePackage):
         dmd_makefile.filter('$(PWD)/../install', prefix, string=True)
         dr_makefile = FileFilter('druntime/posix.mak')
         dr_makefile.filter('INSTALL_DIR=.*', 'INSTALL_DIR={0}'.format(prefix))
+        pb_makefile = FileFilter('phobos/posix.mak')
+        pb_makefile.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
+        tools_makefile = FileFilter('tools/posix.mak')
+        tools_makefile.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
         # Build
         with working_dir('dmd'):
             make('-f', 'posix.mak', 'AUTO_BOOTSTRAP=1')
@@ -77,4 +83,8 @@ class Dmd(MakefilePackage):
         with working_dir('dmd'):
             make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
         with working_dir('phobos'):
+            make('-f', 'posix.mak', 'install')
+        with working_dir('tools'):
+            make('-f', 'posix.mak', 'install')
+        with working_dir('druntime'):
             make('-f', 'posix.mak', 'install')
