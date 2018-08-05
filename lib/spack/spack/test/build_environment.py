@@ -58,8 +58,6 @@ def build_environment():
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
 
-    os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
-
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']
 
@@ -69,8 +67,7 @@ def build_environment():
                  'SPACK_ENV_PATH', 'SPACK_DEBUG_LOG_DIR',
                  'SPACK_COMPILER_SPEC', 'SPACK_SHORT_SPEC',
                  'SPACK_CC_RPATH_ARG', 'SPACK_CXX_RPATH_ARG',
-                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG',
-                 'SPACK_SYSTEM_DIRS'):
+                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG'):
         del os.environ[name]
 
 
@@ -99,8 +96,8 @@ def test_static_to_shared_library(build_environment):
                 shared_lib = '{0}.{1}'.format(
                     os.path.splitext(static_lib)[0], dso_suffix)
 
-            assert set(output.split()) == set(expected[arch].format(
-                static_lib, shared_lib, os.path.basename(shared_lib)).split())
+            assert output == expected[arch].format(
+                static_lib, shared_lib, os.path.basename(shared_lib))
 
 
 @pytest.mark.regression('8345')

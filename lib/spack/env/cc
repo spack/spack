@@ -52,7 +52,6 @@ parameters=(
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
     SPACK_SHORT_SPEC
-    SPACK_SYSTEM_DIRS
 )
 
 # The compiler input variables are checked for sanity later:
@@ -229,92 +228,7 @@ fi
 
 # Save original command for debug logging
 input_command="$@"
-args=()
-
-#
-# Parse the command line args, trying hard to keep
-# non-rpath linker arguments in the proper order w.r.t. other command
-# line arguments.  This is important for things like groups.
-#
-# -l arguments are treated as 'other_args' to ensure that they stay in
-# any groups they are a part of. Dependency library -l statements are
-# categorized as 'libs'
-#
-# The various categories will be recombined with compiler flags into 
-# args variable later.
-#
-includes=()
-libdirs=()
-libs=()
-rpaths=()
-other_args=()
-
-while [ -n "$1" ]; do
-    case "$1" in
-        -I*)
-            arg="${1#-I}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            includes+=("$arg")
-            ;;
-        -L*)
-            arg="${1#-L}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            libdirs+=("$arg")
-            ;;
-        -l*)
-            arg="${1#-l}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            other_args+=("-l$arg")
-            ;;
-        -Wl,*)
-            arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
-	    elif [[ "$arg" = -rpath,* ]]; then
-		rpaths+=("${arg#-rpath,}")
-            elif [[ "$arg" = -rpath ]]; then
-                shift; arg="$1"
-                if [[ "$arg" != -Wl,* ]]; then
-                    die "-Wl,-rpath was not followed by -Wl,*"
-                fi
-                rpaths+=("${arg#-Wl,}")
-            else
-                other_args+=("-Wl,$arg")
-            fi
-            ;;
-        -Xlinker,*)
-            arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
-            elif [[ "$arg" = -rpath ]]; then
-                shift; arg="$1"
-                if [[ "$arg" != -Xlinker,* ]]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                fi
-                rpaths+=("${arg#-Xlinker,}")
-            else
-                other_args+=("-Xlinker,$arg")
-            fi
-            ;;
-        -Xlinker)
-            if [[ "$2" == "-rpath" ]]; then
-		if [[ "$3" != "-Xlinker" ]]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
-		fi
-		shift 3;
-		rpaths+=("$1")
-            else
-                other_args+=("$1")
-            fi
-            ;;
-        *)
-            other_args+=("$1")
-            ;;
-    esac
-    shift
-done
+args=("$@")
 
 # Prepend cppflags, cflags, cxxflags, fcflags, fflags, and ldflags
 
@@ -352,92 +266,91 @@ case "$mode" in cc|ccld)
         ;;
 esac
 
-# Include all -L's and prefix/whatever dirs in rpath
-$add_rpaths && rpaths+=("$SPACK_PREFIX/lib")
-$add_rpaths && rpaths+=("$SPACK_PREFIX/lib64")
-
 # Read spack dependencies from the path environment variable
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
-    # Append include directories
+    # Prepend include directories
     if [[ -d $dep/include ]]; then
         if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
-            includes=("${includes[@]}" "$dep/include")
+            args=("-I$dep/include" "${args[@]}")
         fi
     fi
 
-    # Append lib and RPATH directories
+    # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
-        if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-            $add_rpaths && rpaths=("${rpaths[@]}" "$dep/lib")
-        fi
-        if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-            libdirs=("${libdirs[@]}" "$dep/lib")
+        if [[ $mode == ccld ]]; then
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib" "${args[@]}")
+            fi
+        elif [[ $mode == ld ]]; then
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib" "${args[@]}")
+            fi
         fi
     fi
 
-    # Append lib64 and RPATH directories
+    # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
-        if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-            $add_rpaths && rpaths+=("$dep/lib64")
-        fi
-        if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-            libdirs+=("$dep/lib64")
+        if [[ $mode == ccld ]]; then
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib64" "${args[@]}")
+            fi
+        elif [[ $mode == ld ]]; then
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib64" "${args[@]}")
+            fi
         fi
     fi
 done
 
+# Include all -L's and prefix/whatever dirs in rpath
+if [[ $mode == ccld ]]; then
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib"   "${args[@]}")
+elif [[ $mode == ld ]]; then
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
+fi
+
 # Set extra RPATHs
 IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
-for extra_rpath in "${extra_rpaths[@]}"; do 
-    $add_rpaths && rpaths+=("$extra_rpath")
-    libdirs+=("$extra_rpath")
+for extra_rpath in "${extra_rpaths[@]}"; do
+    if [[ $mode == ccld ]]; then
+        $add_rpaths && args=("$rpath$extra_rpath" "${args[@]}")
+        args=("-L$extra_rpath" "${args[@]}")
+    elif [[ $mode == ld ]]; then
+        $add_rpaths && args=("-rpath" "$extra_rpath" "${args[@]}")
+        args=("-L$extra_rpath" "${args[@]}")
+    fi
 done
 
 # Add SPACK_LDLIBS to args
 case "$mode" in
     ld|ccld)
-	for lib in ${SPACK_LDLIBS[@]}; do
-	    libs+=("${lib#-l}")
-	done
+        args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
 esac
 
-# Filter system locations to the end of each sublist of args
-# (includes, library dirs, rpaths)
-for sd in ${SPACK_SYSTEM_DIRS[@]}; do
-    stripped_includes=`echo $includes | sed "s#\b$sd/\? \b##g"`
-    stripped_libdirs=`echo $libdirs | sed "s#\b$sd/\? \b##g"`
-    stripped_rpaths=`echo $rpaths | sed "s#\b$sd/\? \b##g"`
-    if [[ "$includes" != "$stripped_includes" ]]; then
-	$includes="$stripped_includes $sd"
-    fi
-    if [[ "$libdirs" != "$stripped_libdirs" ]]; then
-	$libdirs="$stripped_libdirs $sd"
-    fi
-    if [[ "$rpaths" != "$stripped_rpaths" ]]; then
-	$rpaths="$stripped_rpaths $sd"
-    fi
-done
-
-# Put the arguments together into one list
-# Includes come first, then other args, library dirs, and rpaths
-# rpaths get appropriate flag for ld vs ccld mode
-for dir in "${includes[@]}";  do args+=("-I$dir"); done
-args+=("${other_args[@]}")
-for dir in "${libdirs[@]}"; do args+=("-L$dir"); done
-for lib in "${libs[@]}"; do args+=("-l$lib"); done
-if [ "$mode" = ccld ]; then
-    for dir in "${rpaths[@]}"; do
-        args+=("$rpath$dir")
-    done
-elif [ "$mode" = ld ]; then
-    for dir in "${rpaths[@]}"; do
-        args+=("-rpath" "$dir")
-    done
+#ccache only supports C languages, so filtering out Fortran
+if [[ ( ${lang_flags} = "C" || ${lang_flags} = "CXX" ) && ${SPACK_CCACHE_BINARY} ]]; then
+    full_command=("${SPACK_CCACHE_BINARY}" "$command" "${args[@]}")
+    # #3761#issuecomment-294352232
+    # workaround for stage being a temp folder
+    export CCACHE_NOHASHDIR=yes
+else
+   full_command=("$command" "${args[@]}")
 fi
-
-full_command=("$command")
-full_command+=("${args[@]}")
 
 # In test command mode, write out full command for Spack tests.
 if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
@@ -457,4 +370,4 @@ if [[ $SPACK_DEBUG == TRUE ]]; then
     echo "[$mode] ${full_command[@]}" >> "$output_log"
 fi
 
-exec "${full_command[@]}" 
+exec "${full_command[@]}"
