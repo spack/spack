@@ -46,6 +46,7 @@ else:
 # Build MPI libraries
 MPIS = {"openmpi@3.1.0+pmi~vt~cuda fabrics={} ~java schedulers=slurm".format(OMPIFAB): "",
         "mvapich2@2.3rc2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
+        "mpich@3.2.1+pmi+hydra+romio+verbs": "",
         # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
         # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
        "intel-parallel-studio@cluster.2018.1+mpi": ""
