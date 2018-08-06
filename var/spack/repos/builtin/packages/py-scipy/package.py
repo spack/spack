@@ -72,7 +72,8 @@ class PyScipy(PythonPackage):
     def build_args(self, spec, prefix):
         args = []
         # From NumPy 1.10.0 on it's possible to do a parallel build.
-        if self.version >= Version('1.10.0'):
+        # 
+        if self.spec.satifies('^py-numpy@1.13.0:'):
             args = ['-j', str(make_jobs)]
         return args
 
@@ -81,7 +82,8 @@ class PyScipy(PythonPackage):
         self.phases = ['configure', 'build', 'install']
 
     # as per https://docs.scipy.org/doc/scipy/reference/building/linux.html
-    # build and install in one step
+    # But there was a bug that was fixed in 1.13.0.
+    # https://github.com/numpy/numpy/pull/9050
     @when('%intel')
     def get_phases(self):
         self.phases = ['install']
