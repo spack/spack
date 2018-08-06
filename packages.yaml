@@ -83,3 +83,9 @@ packages:
             gcc@5.4.0%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-b7ges7uf6wrair6elnjx4bnvzqrv5pda
             gcc@6.4.0%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-z3457r46gt7ctihyd6ejkz4asud4i47r
         buildable: False
+
+    slurm:
+        paths:
+            slurm@system: /usr
+        buildable: False
+
