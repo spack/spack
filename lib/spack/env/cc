@@ -74,11 +74,14 @@ function die {
     exit 1
 }
 
+# read system directories into an array (delimited by :)
+IFS=':' read -ra SPACK_SYSTEM_DIRS <<< "${SPACK_SYSTEM_DIRS}"
+
 # test whether a path is a system directory
 function system_dir {
     path="$1"
     for sd in ${SPACK_SYSTEM_DIRS[@]}; do
-        if [ "${path}" == "${sd}" -o "${path}" == "${sd}/" ]; then
+        if [ "${path}" == "${sd}" ] || [ "${path}" == "${sd}/" ]; then
             # success if path starts with a system prefix
             return 0
         fi
@@ -130,7 +133,7 @@ case "$command" in
         comp="FC"
         lang_flags=F
         ;;
-    f77|gfortran|flang|ifort|pgfortran|xlf|xlf_r|nagfor|ftn)
+    f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -198,8 +201,8 @@ fi
 IFS=':' read -ra env_set_varnames <<< "$SPACK_ENV_TO_SET"
 for varname in "${env_set_varnames[@]}"; do
     spack_varname="SPACK_ENV_SET_$varname"
-    export $varname=${!spack_varname}
-    unset $spack_varname
+    export "$varname"="${!spack_varname}"
+    unset "$spack_varname"
 done
 
 #
@@ -209,23 +212,22 @@ done
 IFS=':' read -ra env_path <<< "$PATH"
 IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
 spack_env_dirs+=("" ".")
-PATH=""
+export PATH=""
 for dir in "${env_path[@]}"; do
     addpath=true
     for env_dir in "${spack_env_dirs[@]}"; do
-        if [[ $dir == $env_dir ]]; then
+        if [[ "$dir" == "$env_dir" ]]; then
             addpath=false
             break
         fi
     done
     if $addpath; then
-        PATH="${PATH:+$PATH:}$dir"
+        export PATH="${PATH:+$PATH:}$dir"
     fi
 done
-export PATH
 
 if [[ $mode == vcheck ]]; then
-    exec ${command} "$@"
+    exec "${command}" "$@"
 fi
 
 # Darwin's linker has a -r argument that merges object files together.
@@ -245,7 +247,7 @@ then
 fi
 
 # Save original command for debug logging
-input_command="$@"
+input_command="$*"
 args=()
 
 #
@@ -497,7 +499,7 @@ if [[ $SPACK_DEBUG == TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
     echo "[$mode] $command $input_command" >> "$input_log"
-    echo "[$mode] ${full_command[@]}" >> "$output_log"
+    echo "[$mode] ${full_command[*]}" >> "$output_log"
 fi
 
 exec "${full_command[@]}"

@@ -204,7 +204,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
-    env.set('SPACK_SYSTEM_DIRS', ' '.join(system_dirs))
+    env.set('SPACK_SYSTEM_DIRS', ':'.join(system_dirs))
 
     compiler.setup_custom_environment(pkg, env)
 
