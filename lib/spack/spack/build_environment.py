@@ -617,13 +617,19 @@ def setup_package(pkg, dirty):
 
     # Make sure nothing's strange about the Spack environment.
     validate(spack_env, tty.warn)
+
+    # The list of variables we want to shield from external modifications by
+    # a module includes all the variables modified explicitly by packages
+    preserved_variables = ['CC', 'CXX', 'FC', 'F77']
+    preserved_variables += [x for x in spack_env.group_by_name()]
+
     spack_env.apply_modifications()
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
     # build of packages. To avoid a polluted environment, preserve the
     # value of a few, selected, environment variables
-    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
+    with preserve_environment(*preserved_variables):
         # All module loads that otherwise would belong in previous
         # functions have to occur after the spack_env object has its
         # modifications applied. Otherwise the environment modifications
