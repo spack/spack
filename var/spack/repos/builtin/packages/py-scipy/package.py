@@ -72,7 +72,8 @@ class PyScipy(PythonPackage):
     def build_args(self, spec, prefix):
         args = []
         # From NumPy 1.10.0 on it's possible to do a parallel build.
-        # 
+        # But there was a bug that was fixed in 1.13.0.
+        # https://github.com/numpy/numpy/pull/9050
         if self.spec.satifies('^py-numpy@1.13.0:'):
             args = ['-j', str(make_jobs)]
         return args
