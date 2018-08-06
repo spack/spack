@@ -30,7 +30,10 @@ import os
 class Likwid(Package):
     """Likwid is a simple to install and use toolsuite of command line
     applications for performance oriented programmers. It works for Intel and
-    AMD processors on the Linux operating system."""
+    AMD processors on the Linux operating system. This version uses the
+    perf_event backend which reduces the feature set but allows user installs.
+    See https://github.com/RRZE-HPC/likwid/wiki/TutorialLikwidPerf#feature-limitations
+    for information."""
 
     homepage = "https://github.com/RRZE-HPC/likwid"
     url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
@@ -40,9 +43,6 @@ class Likwid(Package):
     version('4.3.2', '2cf00e220dfe22c8d9b6e44f7534e11d')
     version('4.3.1', 'ff28250f622185688bf5e2e0975368ea')
     version('4.3.0', '7f8f6981d7d341fce2621554323f8c8b')
-    version('4.2.1', 'c408ddcf0317cdd894af4c580cd74294')
-    version('4.2.0', 'e41ff334b8f032a323d941ce32907a75')
-    version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
@@ -87,8 +87,16 @@ class Likwid(Package):
                     prefix,
                     'config.mk')
 
-        filter_file('^INSTALL_CHOWN.*',
-                    'INSTALL_CHOWN = -o $(USER)',
+        # FIXME: once https://github.com/spack/spack/issues/4432 is
+        # resolved, install as root by default and remove this
+        filter_file('^ACCESSMODE .*',
+                    'ACCESSMODE = perf_event',
+                    'config.mk')
+        filter_file('^BUILDFREQ .*',
+                    'BUILDFREQ = false',
+                    'config.mk')
+        filter_file('^BUILDDAEMON .*',
+                    'BUILDDAEMON = false',
                     'config.mk')
 
         if spec.satisfies('^lua'):
