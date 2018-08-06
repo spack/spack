@@ -93,7 +93,7 @@ class PyScipy(PythonPackage):
                       '--compiler=intelem', '--fcompiler=intelem',
                       'build_clib',
                       '--compiler=intelem', '--fcompiler=intelem',
-                      'build_ext', '-j', str(make_jobs), 
+                      'build_ext', '-j', str(make_jobs),
                       '--compiler=intelem', '--fcompiler=intelem',
                       'install', *install_args)
 
