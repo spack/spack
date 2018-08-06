@@ -36,4 +36,5 @@ class PyCrossmap(PythonPackage):
 
     depends_on('python@2.7:2.7.999', type=('build', 'run'))
     depends_on('py-cython@0.17:', type='build')
-    depends_on('py-pysam',        type='build')
+    depends_on('py-pysam', type='build')
+    depends_on('py-setuptools', type='build')
