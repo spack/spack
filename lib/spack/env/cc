@@ -481,8 +481,19 @@ for lib in "${libs[@]}"; do
     args+=("-l$lib");
 done
 
-full_command=("$command")
-full_command+=("${args[@]}")
+full_command=("$command" "${args[@]}")
+
+# prepend the ccache binary if we're using ccache
+if [ -n "$SPACK_CCACHE_BINARY" ]; then
+    case "$lang_flags" in
+        C|CXX)  # ccache only supports C languages
+            full_command=("${SPACK_CCACHE_BINARY}" "${full_command[@]}")
+            # workaround for stage being a temp folder
+            # see #3761#issuecomment-294352232
+            export CCACHE_NOHASHDIR=yes
+            ;;
+    esac
+fi
 
 # dump the full command if the caller supplies SPACK_TEST_COMMAND=dump-args
 if [[ $SPACK_TEST_COMMAND == dump-args ]]; then

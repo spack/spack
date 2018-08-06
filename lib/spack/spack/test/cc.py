@@ -560,3 +560,28 @@ def test_ld_deps_partial(dep1):
             test_rpaths +
             ['-r'] +
             test_args_without_paths)
+
+
+def test_ccache_prepend_for_cc():
+    with set_env(SPACK_CCACHE_BINARY='ccache'):
+        check_cc(
+            'dump-args', test_args,
+            ['ccache'] +  # ccache prepended in cc mode
+            [real_cc] +
+            test_include_paths +
+            test_library_paths +
+            test_wl_rpaths +
+            pkg_wl_rpaths +
+            test_args_without_paths)
+
+
+def test_no_ccache_prepend_for_fc():
+    check_fc(
+        'dump-args', test_args,
+        # no ccache for Fortran
+        [real_cc] +
+        test_include_paths +
+        test_library_paths +
+        test_wl_rpaths +
+        pkg_wl_rpaths +
+        test_args_without_paths)
