@@ -148,6 +148,7 @@ class PyNumpy(PythonPackage):
 
     def build_args(self, spec, prefix):
         args = []
+        # From NumPy 1.10.0 on it's possible to do a parallel build.
         if self.version >= Version('1.10.0'):
             args = ['-j', str(make_jobs)]
         return args

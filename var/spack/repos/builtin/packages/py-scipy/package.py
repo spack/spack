@@ -69,6 +69,13 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
+    def build_args(self, spec, prefix):
+        args = []
+        # From NumPy 1.10.0 on it's possible to do a parallel build.
+        if self.version >= Version('1.10.0'):
+            args = ['-j', str(make_jobs)]
+        return args
+
     # Do the usual with gcc
     def get_phases(self):
         self.phases = ['configure', 'build', 'install']
@@ -86,7 +93,7 @@ class PyScipy(PythonPackage):
                       '--compiler=intelem', '--fcompiler=intelem',
                       'build_clib',
                       '--compiler=intelem', '--fcompiler=intelem',
-                      'build_ext',
+                      'build_ext', '-j', str(make_jobs), 
                       '--compiler=intelem', '--fcompiler=intelem',
                       'install', *install_args)
 
