@@ -157,7 +157,8 @@ def set_compiler_environment_variables(pkg, env):
         env.set('F77', os.path.join(link_dir, compiler.link_paths['f77']))
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
-        env.set('FC', os.path.join(link_dir, compiler.link_paths['fc']))
+        env.set('F90', os.path.join(link_dir, compiler.link_paths['fc']))
+        env.set('FC',  os.path.join(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
