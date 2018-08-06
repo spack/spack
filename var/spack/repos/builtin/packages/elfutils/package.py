@@ -39,13 +39,34 @@ class Elfutils(AutotoolsPackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.173', '35decb1ebfb90d565e4c411bee4185cc')
     version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
     version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
     version('0.163', '77ce87f259987d2e54e4d87b86cbee41')
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
+    # Libraries for reading compressed DWARF sections.
+    variant('bzip2', default=True,
+            description='Support bzip2 compressed sections.')
+    variant('xz', default=True,
+            description='Support xz compressed sections.')
+    variant('zlib', default=True,
+            description='Support zlib compressed sections.')
+
+    # Native language support from libintl.
+    variant('nls', default=True,
+            description='Enable Native Language Support.')
+
+    # Maintainer mode allows rebuilding the generated files.
+    variant('maintainer-mode', default=False,
+            description='Enable automake maintainer mode.')
+
+    depends_on('bzip2',   type='link',  when='+bzip2')
+    depends_on('xz',      type='link',  when='+xz')
+    depends_on('zlib',    type='link',  when='+zlib')
+    depends_on('gettext', when='+nls')
+    depends_on('flex',    type='build', when='+maintainer-mode')
+    depends_on('bison',   type='build', when='+maintainer-mode')
+
     conflicts('%gcc@7.2.0:', when='@0.163')
 
     provides('elf@1')
@@ -57,8 +78,19 @@ class Elfutils(AutotoolsPackage):
     conflicts('%clang')
 
     def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+        args = []
+
+        if '+nls' in self.spec:
+            # configure doesn't use LIBS correctly
+            gettext_lib = self.spec['gettext'].prefix.lib,
+            args.append('LDFLAGS=-Wl,--no-as-needed -L%s -lintl' %
+                        gettext_lib)
+        else:
+            args.append('--disable-nls')
+
+        if '+maintainer-mode' in self.spec:
+            args.append('--enable-maintainer-mode')
+        else:
+            args.append('--disable-maintainer-mode')
+
+        return args
