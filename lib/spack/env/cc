@@ -74,6 +74,18 @@ function die {
     exit 1
 }
 
+# test whether a path is a system directory
+function system_dir {
+    path="$1"
+    for sd in ${SPACK_SYSTEM_DIRS[@]}; do
+        if [ "${path}" == "${sd}" -o "${path}" == "${sd}/" ]; then
+            # success if path starts with a system prefix
+            return 0
+        fi
+    done
+    return 1  # fail if path starts no system prefix
+}
+
 for param in ${parameters[@]}; do
     if [[ -z ${!param} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
@@ -255,21 +267,33 @@ args=()
 #
 includes=()
 libdirs=()
-libs=()
 rpaths=()
+system_includes=()
+system_libdirs=()
+system_rpaths=()
+libs=()
 other_args=()
 
 while [ -n "$1" ]; do
+    rp=""
     case "$1" in
         -I*)
             arg="${1#-I}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            includes+=("$arg")
+            if system_dir "$arg"; then
+                system_includes+=("$arg")
+            else
+                includes+=("$arg")
+            fi
             ;;
         -L*)
             arg="${1#-L}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            libdirs+=("$arg")
+            if system_dir "$arg"; then
+                system_libdirs+=("$arg")
+            else
+                libdirs+=("$arg")
+            fi
             ;;
         -l*)
             arg="${1#-l}"
@@ -280,15 +304,15 @@ while [ -n "$1" ]; do
             arg="${1#-Wl,}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
+                rp="${arg#-rpath=}"
             elif [[ "$arg" = -rpath,* ]]; then
-                rpaths+=("${arg#-rpath,}")
+                rp="${arg#-rpath,}"
             elif [[ "$arg" = -rpath ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Wl,* ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
-                rpaths+=("${arg#-Wl,}")
+                rp="${arg#-Wl,}"
             else
                 other_args+=("-Wl,$arg")
             fi
@@ -297,13 +321,13 @@ while [ -n "$1" ]; do
             arg="${1#-Xlinker,}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
+                rp="${arg#-rpath=}"
             elif [[ "$arg" = -rpath ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Xlinker,* ]]; then
                     die "-Xlinker,-rpath was not followed by -Xlinker,*"
                 fi
-                rpaths+=("${arg#-Xlinker,}")
+                rp="${arg#-Xlinker,}"
             else
                 other_args+=("-Xlinker,$arg")
             fi
@@ -314,7 +338,7 @@ while [ -n "$1" ]; do
                     die "-Xlinker,-rpath was not followed by -Xlinker,*"
                 fi
                 shift 3;
-                rpaths+=("$1")
+                rp="$1"
             else
                 other_args+=("$1")
             fi
@@ -323,6 +347,15 @@ while [ -n "$1" ]; do
             other_args+=("$1")
             ;;
     esac
+
+    # test rpaths against system directories in one place.
+    if [ -n "$rp" ]; then
+        if system_dir "$rp"; then
+            system_rpaths+=("$rp")
+        else
+            rpaths+=("$rp")
+        fi
+    fi
     shift
 done
 
@@ -417,44 +450,26 @@ case "$mode" in
         ;;
 esac
 
-# Filter system locations to the end of each sublist of args
-# (includes, library dirs, rpaths)
-for sd in ${SPACK_SYSTEM_DIRS[@]}; do
-    stripped_includes=`echo $includes | sed "s#\b$sd/\? \b##g"`
-    stripped_libdirs=`echo $libdirs | sed "s#\b$sd/\? \b##g"`
-    stripped_rpaths=`echo $rpaths | sed "s#\b$sd/\? \b##g"`
-    if [[ "$includes" != "$stripped_includes" ]]; then
-        $includes="$stripped_includes $sd"
-    fi
-    if [[ "$libdirs" != "$stripped_libdirs" ]]; then
-        $libdirs="$stripped_libdirs $sd"
-    fi
-    if [[ "$rpaths" != "$stripped_rpaths" ]]; then
-        $rpaths="$stripped_rpaths $sd"
-    fi
-done
-
 # Put the arguments back together in one list
-# Includes first
-for dir in "${includes[@]}";  do
-    args+=("-I$dir");
-done
+# Includes and system includes first
+for dir in "${includes[@]}";         do args+=("-I$dir"); done
+for dir in "${system_includes[@]}";  do args+=("-I$dir"); done
 
 # Library search paths
-for dir in "${libdirs[@]}"; do
-    args+=("-L$dir");
-done
+for dir in "${libdirs[@]}";          do args+=("-L$dir"); done
+for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 
 # RPATHs arguments
-if [ "$mode" = ccld ]; then
-    for dir in "${rpaths[@]}"; do
-        args+=("$rpath$dir")
-    done
-elif [ "$mode" = ld ]; then
-    for dir in "${rpaths[@]}"; do
-        args+=("-rpath" "$dir")
-    done
-fi
+case "$mode" in
+    ccld)
+        for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
+        for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
+        ;;
+    ld)
+        for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
+        for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
+        ;;
+esac
 
 # Other arguments from the input command
 args+=("${other_args[@]}")

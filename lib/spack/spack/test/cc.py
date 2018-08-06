@@ -432,6 +432,42 @@ def test_cc_deps(dep1, dep2, dep3, dep4):
             test_args_without_paths)
 
 
+def test_ccld_with_system_dirs(dep1, dep2, dep3, dep4):
+    """Ensure all flags are added in ccld mode."""
+    deps = ':'.join((dep1, dep2, dep3, dep4))
+    with set_env(SPACK_DEPENDENCIES=deps,
+                 SPACK_RPATH_DEPS=deps,
+                 SPACK_LINK_DEPS=deps):
+
+        sys_path_args = ['-I/usr/include',
+                         '-L/usr/local/lib',
+                         '-Wl,-rpath,/usr/lib64',
+                         '-I/usr/local/include',
+                         '-L/lib64/']
+        check_cc(
+            'dump-args', sys_path_args + test_args,
+            [real_cc] +
+            test_include_paths +
+            ['-I' + dep1 + '/include',
+             '-I' + dep3 + '/include',
+             '-I' + dep4 + '/include'] +
+            ['-I/usr/include',
+             '-I/usr/local/include'] +
+            test_library_paths +
+            ['-L' + dep1 + '/lib',
+             '-L' + dep2 + '/lib64',
+             '-L' + dep3 + '/lib64'] +
+            ['-L/usr/local/lib',
+             '-L/lib64/'] +
+            test_wl_rpaths +
+            pkg_wl_rpaths +
+            ['-Wl,-rpath,' + dep1 + '/lib',
+             '-Wl,-rpath,' + dep2 + '/lib64',
+             '-Wl,-rpath,' + dep3 + '/lib64'] +
+            ['-Wl,-rpath,/usr/lib64'] +
+            test_args_without_paths)
+
+
 def test_ld_deps(dep1, dep2, dep3, dep4):
     """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
     deps = ':'.join((dep1, dep2, dep3, dep4))
