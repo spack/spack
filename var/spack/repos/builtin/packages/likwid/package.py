@@ -87,19 +87,16 @@ class Likwid(Package):
                     prefix,
                     'config.mk')
 
-# FIXME: once https://github.com/spack/spack/issues/4432 is resolved, install
-# as root by default and remove this
+        # FIXME: once https://github.com/spack/spack/issues/4432 is
+        # resolved, install as root by default and remove this
         filter_file('^ACCESSMODE .*',
-                    'ACCESSMODE = ' +
-                    'perf_event',
+                    'ACCESSMODE = perf_event',
                     'config.mk')
         filter_file('^BUILDFREQ .*',
-                    'BUILDFREQ = ' +
-                    'false',
+                    'BUILDFREQ = false',
                     'config.mk')
         filter_file('^BUILDDAEMON .*',
-                    'BUILDDAEMON = ' +
-                    'false',
+                    'BUILDDAEMON = false',
                     'config.mk')
 
         if spec.satisfies('^lua'):
