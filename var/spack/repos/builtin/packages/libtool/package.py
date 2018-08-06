@@ -31,12 +31,23 @@ class Libtool(AutotoolsPackage):
     homepage = 'https://www.gnu.org/software/libtool/'
     url = 'http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
 
+    version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
+            branch='master')
     version('2.4.6', 'addf44b646ddb4e3919805aa88fa7c5e')
     version('2.4.2', 'd2f3b7d4627e69e13514a40e72a24d50')
 
     depends_on('m4@1.4.6:', type='build')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('help2man', type='build', when='@develop')
+    depends_on('xz', type='build', when='@develop')
+    depends_on('texinfo', type='build', when='@develop')
 
     build_directory = 'spack-build'
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        Executable('./bootstrap')()
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
