@@ -59,9 +59,9 @@ spec expression syntax:
       @B{variant=value1,value2,value3}  set multi-value <variant> values
 
     architecture variants:
-      @m{target=target}                 specific <target> processor
-      @m{os=operating_system}           specific <operating_system>
       @m{platform=platform}             linux, darwin, cray, bgq, etc.
+      @m{os=operating_system}           specific <operating_system>
+      @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above
 
     cross-compiling:

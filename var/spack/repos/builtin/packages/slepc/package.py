@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 from spack import *
 
 
@@ -45,6 +46,7 @@ class Slepc(Package):
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
+    variant('blopex', default=False, description='Enables BLOPEX wrappers')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on('python@2.6:2.8', type='build')
@@ -61,6 +63,13 @@ class Slepc(Package):
 
     # Arpack can not be used with 64bit integers.
     conflicts('+arpack', when='^petsc+int64')
+
+    resource(name='blopex',
+             url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
+             sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
+             destination=join_path('installed-arch-' + sys.platform + '-c-opt',
+                                   'externalpackages'),
+             when='+blopex')
 
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
@@ -82,6 +91,11 @@ class Slepc(Package):
                 options.extend([
                     '--with-arpack-flags=-lparpack,-larpack'
                 ])
+
+        # It isn't possible to install BLOPEX separately and link to it;
+        # BLOPEX has to be downloaded with SLEPc at configure time
+        if '+blopex' in spec:
+            options.append('--download-blopex')
 
         configure('--prefix=%s' % prefix, *options)
 

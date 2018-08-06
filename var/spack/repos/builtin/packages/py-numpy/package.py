@@ -146,6 +146,12 @@ class PyNumpy(PythonPackage):
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % dirs)
 
+    def build_args(self, spec, prefix):
+        args = []
+        if self.version >= Version('1.10.0'):
+            args = ['-j', str(make_jobs)]
+        return args
+
     def setup_environment(self, spack_env, run_env):
         python_version = self.spec['python'].version.up_to(2)
 
@@ -172,6 +178,7 @@ class PyNumpy(PythonPackage):
         install_args = self.install_args(spec, prefix)
         self.setup_py('config', '--compiler=intelem', 'build_clib',
                       '--compiler=intelem', 'build_ext',
+                      '-j', str(make_jobs),
                       '--compiler=intelem', 'install', *install_args)
 
     def test(self):
