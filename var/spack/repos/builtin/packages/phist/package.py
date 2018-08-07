@@ -43,6 +43,7 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.6.1', sha256='4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d')
     version('1.6.0', '751f855230d6227b972b5ab7bce2c65f')
     version('1.4.3', 'af3300378d4282366d148e38c3a3199a')
 
