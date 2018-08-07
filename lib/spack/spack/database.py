@@ -639,7 +639,8 @@ class Database(object):
             self._read_from_file(self._index_path, format='json')
 
         elif os.path.isfile(self._old_yaml_index_path):
-            if os.access(self._db_dir, os.R_OK | os.W_OK):
+            if (not self.is_upstream) and os.access(
+                    self._db_dir, os.R_OK | os.W_OK):
                 # if we can write, then read AND write a JSON file.
                 self._read_from_file(self._old_yaml_index_path, format='yaml')
                 with WriteTransaction(self.lock, timeout=_db_lock_timeout):
@@ -649,6 +650,10 @@ class Database(object):
                 self._read_from_file(self._old_yaml_index_path, format='yaml')
 
         else:
+            if self.is_upstream:
+                raise SpackError(
+                    "No database index file is present, and upstream"
+                    " databases cannot generate an index file")
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
             with WriteTransaction(self.lock, timeout=_db_lock_timeout):
