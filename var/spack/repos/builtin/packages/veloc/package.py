@@ -63,7 +63,8 @@ class Veloc(CMakePackage):
         args = [
             "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
             "-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix,
-            "-DBOOST_ROOT=%s" % self.spec['boost'].prefix
+            "-DBOOST_ROOT=%s" % self.spec['boost'].prefix,
+            "-DMPI_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx
         ]
 
         return args
