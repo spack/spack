@@ -154,6 +154,16 @@ class InstallRecord(object):
         return InstallRecord(spec, **d)
 
 
+class ForbiddenLockError(SpackError):
+    """Raised when an upstream DB attempts to acquire a lock"""
+
+
+class ForbiddenLock(object):
+    def __getattribute__(self, name):
+        raise ForbiddenLockError(
+            "Cannot access attribute '{0}' of lock".format(name))
+
+
 class Database(object):
 
     """Per-process lock objects for each install prefix."""
@@ -204,7 +214,10 @@ class Database(object):
             mkdirp(self._db_dir)
 
         # initialize rest of state.
-        self.lock = Lock(self._lock_path)
+        if is_upstream:
+            self.lock = ForbiddenLock()
+        else:
+            self.lock = Lock(self._lock_path)
         self._data = {}
 
         self.upstream_dbs = upstream_dbs or []
