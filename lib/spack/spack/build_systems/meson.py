@@ -140,10 +140,10 @@ class MesonPackage(PackageBase):
         """Produces a list containing all the arguments that must be passed to
         meson, except:
 
-            * --prefix
-            * --backend
-            * --buildtype
-            * --strip
+        * ``--prefix``
+        * ``--backend``
+        * ``--buildtype``
+        * ``--strip``
 
         which will be set automatically.
 
