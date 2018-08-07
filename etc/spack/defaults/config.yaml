@@ -18,15 +18,9 @@ config:
   # You can use $spack here to refer to the root of the spack instance.
   install_tree: $spack/opt/spack
 
-
   # Locations where templates should be found
   template_dirs:
-    - $spack/share/spack/templates
-
-
-  # default directory layout
-  directory_layout: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
-
+    - $spack/templates
 
   # Locations where different types of modules should be installed.
   module_roots:
@@ -45,7 +39,7 @@ config:
   # builds directly inside its install directory without staging them in
   # temporary space.
   #
-  # The build stage can be purged with `spack clean --stage`.
+  # The build stage can be purged with `spack purge --stage`.
   build_stage:
     - $tempdir
     - /nfs/tmp2/$user
@@ -53,12 +47,12 @@ config:
 
 
   # Cache directory already downloaded source tarballs and archived
-  # repositories. This can be purged with `spack clean --downloads`.
+  # repositories. This can be purged with `spack purge --downloads`.
   source_cache: $spack/var/spack/cache
 
 
   # Cache directory for miscellaneous files, like the package index.
-  # This can be purged with `spack clean --misc-cache`
+  # This can be purged with `spack purge --misc-cache`
   misc_cache: ~/.spack/cache
 
 
@@ -77,16 +71,8 @@ config:
   dirty: false
 
 
-  # When set to true, concurrent instances of Spack will use locks to
-  # avoid modifying the install tree, database file, etc. If false, Spack
-  # will disable all locking, but you must NOT run concurrent instances
-  # of Spack.  For filesystems that don't support locking, you should set
-  # this to false and run one Spack at a time, but otherwise we recommend
-  # enabling locks.
-  locks: true
-
-
   # The default number of jobs to use when running `make` in parallel.
   # If set to 4, for example, `spack install` will run `make -j4`.
   # If not set, all available cores are used by default.
-  # build_jobs: 4
+  # for uberenv, limit build_jobs to 8
+  build_jobs: 8
