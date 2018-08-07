@@ -36,7 +36,6 @@ subcommands = [
     'concretize',
     'list',
     'loads',
-    'location',
     'relocate',
     'stage',
     'install',
@@ -261,15 +260,6 @@ def environment_stage(args):
     for spec in environment.specs_by_hash.values():
         for dep in spec.traverse():
             dep.package.do_stage()
-
-
-def setup_location_parser(subparser):
-    """print the root directory of the environment"""
-
-
-def environment_location(args):
-    environment = ev.read(args.environment)
-    print(environment.path)
 
 
 @contextmanager
