@@ -50,6 +50,8 @@ class Veloc(CMakePackage):
     depends_on('axl')
     depends_on('cmake@3.9:', type='build')
 
+    conflicts('%gcc@:4.9.3')
+
     # requires C++11
     def flag_handler(self, name, flags):
         flags = list(flags)
