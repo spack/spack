@@ -46,10 +46,10 @@ class Relion(CMakePackage, CudaPackage):
     variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision gpu")
     # added below cluster and desktop variants given some shared libraries in
-    # /usr/lib, like gpfs,
-    # are loaded by ld.so after compile which makes relion not work on desktops
-    # which may not be a member of gpfs cluster thus lack these given libraries
-    # https://github.com/spack/spack/issues/8384
+    # /usr/lib, like gpfs, loaded by ld.so after compile which makes relion
+    # not work on desktops which may not be a member of gpfs cluster
+    # thus lack these given libraries
+    # see https://github.com/spack/spack/issues/8384
     variant('purpose', default='cluster', values=('cluster', 'desktop'),
             description="build relion for use in cluster or desktop")
     variant('build_type', default='RelWithDebInfo',
