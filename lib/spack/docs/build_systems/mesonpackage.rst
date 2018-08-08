@@ -36,7 +36,7 @@ By default, these phases run:
 
 Any of these phases can be overridden in your package as necessary.
 There is also a ``check`` method that looks for a ``check`` target
-in the Makefile. If a ``check`` target exists and the user runs:
+in the build file. If a ``check`` target exists and the user runs:
 
 .. code-block:: console
 

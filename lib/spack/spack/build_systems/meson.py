@@ -84,7 +84,7 @@ class MesonPackage(PackageBase):
 
     @property
     def root_mesonlists_dir(self):
-        """The relative path to the directory containing meson-build
+        """The relative path to the directory containing meson.build
 
         This path is relative to the root of the extracted tarball,
         not to the ``build_directory``. Defaults to the current directory.
@@ -141,7 +141,6 @@ class MesonPackage(PackageBase):
         meson, except:
 
         * ``--prefix``
-        * ``--backend``
         * ``--buildtype``
         * ``--strip``
 
