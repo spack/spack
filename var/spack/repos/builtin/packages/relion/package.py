@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Relion(CMakePackage, CudaPackage):
@@ -32,36 +33,57 @@ class Relion(CMakePackage, CudaPackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    url      = "https://github.com/3dem/relion.git"
+    git      = "https://github.com/3dem/relion.git"
 
+    version('3.0_beta', git='https://bitbucket.org/scheres/relion-3.0_beta.git')
     version('2.1', git='https://github.com/3dem/relion.git', preferred='true', tag='2.1')
     version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
     version('develop', git='https://github.com/3dem/relion.git')
-    version('3.0_beta', git='https://bitbucket.org/scheres/relion-3.0_beta.git')
+
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
     variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
+    # added below cluster and desktop variants given some shared libraries in /usr/lib, like gpfs,
+    # are loaded by ld.so after compile which makes relion not work on desktops which may
+    # not be a member of gpfs cluster thus lack these given libraries
+    # https://github.com/spack/spack/issues/8384
+    variant('cluster', default=True, description="build relion for use in cluster")
+    variant('desktop', default=False, description="build relion for use in desktop")
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
+    # relion will not build with newer versions of cmake
+    # per https://github.com/3dem/relion/issues/380
+    depends_on('cmake@3:3.9.4', type='build')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
+    depends_on('libtiff')
 
     # relion 3 supports cuda 9
-    if ('@:3.0_beta'):
-        depends_on('cuda@9:', when='+cuda')
-    else:
-        depends_on('cuda@8.0:8.99', when='+cuda')
+    # relion < 3 does not
+    depends_on('cuda', when='+cuda')
+    depends_on('cuda@9:', when='@3: +cuda')
+    depends_on('cuda@8.0:8.99', when='@:2 +cuda')
 
-    # use gcc < 5 when compiled with cuda 8
-    conflicts('%gcc@5:', when='+cuda')
+    # use gcc 4 when using cuda8 
+    # use up to gcc 6 when using cuda9
+    conflicts('%gcc@7:', when='@3: +cuda')
+    conflicts('%gcc@5:', when='@:2 +cuda')
 
     def cmake_args(self):
+        
+        # this creates string such as ('60',)
+	# which will never evaluate properly
+        c = str(self.spec.variants['cuda_arch'].value)
+
+        # find value between single quotes
+	carch = c[c.find("'")+1:c.rfind("'")]
+
         args = [
             '-DCMAKE_C_FLAGS=-g',
             '-DCMAKE_CXX_FLAGS=-g',
@@ -70,22 +92,20 @@ class Relion(CMakePackage, CudaPackage):
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
         ]
 
-        carch = self.spec.variants['cuda_arch'].value
-
         if '+cuda' in self.spec:
-            args += [
-                '-DCUDA=on',
-                '-DCudaTexture=ON',
-            ]
-            if carch is not None:
-                args += [
-                    '-DCUDA_ARCH=%s' % (carch),
-                ]
+            # relion+cuda requires selecting cuda_arch
+	    if not carch: 
+		sys.stdout.write('relion+cuda requires selecting cuda_arch')
+		sys.stdout.flush()
+	        sys.exit()
+	    else:
+                args += ['-DCUDA=ON','-DCudaTexture=ON', '-DCUDA_ARCH=%s' % (carch)]
+		sys.stdout.write('cuda arch ' + carch + ' selected')
+		sys.stdout.flush()
 
-	if ('@:3.0_beta'):
-	    args += [
-                '-DALTCPU=ON',
-		'-DMKLFFT=ON',
-		'-DFORCE_OWN_TBB=ON',
-	        ]
+        # these new values were added in relion 3
+	# do not seem to cause problems with < 3
+	else:
+	    args += ['-DMKLFFT=ON','-DFORCE_OWN_TBB=ON','-DALTCPU=ON']
+
         return args
