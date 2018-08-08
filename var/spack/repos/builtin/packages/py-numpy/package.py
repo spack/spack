@@ -157,7 +157,6 @@ class PyNumpy(PythonPackage):
 
     def setup_environment(self, spack_env, run_env):
         python_version = self.spec['python'].version.up_to(2)
-        
         include_path = join_path(
             self.prefix.lib,
             'python{0}'.format(python_version),
@@ -169,7 +168,7 @@ class PyNumpy(PythonPackage):
         # numpy looks for environment variables before site.cfg
         # and MKL_ROOT is typically set by the module files for
         # intel compilers.
-        spack_env.unset('MKL_ROOT') 
+        spack_env.unset('MKL_ROOT')
 
     # Do the usual with gcc
     def get_phases(self):
