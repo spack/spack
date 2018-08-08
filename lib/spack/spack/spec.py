@@ -1935,7 +1935,10 @@ class Spec(object):
         for x in self.traverse():
             upstream, record = spack.store.db.query_by_spec_hash(x.dag_hash())
             if record and upstream and record.installed:
-                x.prefix = record.path
+                if record.path:
+                    x.prefix = record.path
+                elif x.external_path:
+                    x.prefix = x.external_path
                 x.package._installed_upstream = True
 
     def _mark_concrete(self, value=True):
