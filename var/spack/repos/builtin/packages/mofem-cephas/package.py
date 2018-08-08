@@ -31,6 +31,8 @@ class MofemCephas(CMakePackage):
 
     maintainers = ['likask']
 
+    version('0.8.10', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.10', submodules=True)
     version('0.8.9', git='https://bitbucket.org/likask/mofem-cephas.git',
         tag='v0.8.9', submodules=True)
     version('0.8.8', git='https://bitbucket.org/likask/mofem-cephas.git',
