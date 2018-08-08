@@ -464,8 +464,8 @@ class Database(object):
 
         """
         if self.is_upstream:
-            # TODO: other write operations should likely be guarded
-            raise ValueError("Cannot reindex an upstream database")
+            raise UpstreamDatabaseLockingError(
+                "Cannot reindex an upstream database")
 
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
@@ -651,7 +651,7 @@ class Database(object):
 
         else:
             if self.is_upstream:
-                raise SpackError(
+                raise UpstreamDatabaseLockingError(
                     "No database index file is present, and upstream"
                     " databases cannot generate an index file")
             # The file doesn't exist, try to traverse the directory.
@@ -1015,6 +1015,10 @@ class Database(object):
         with self.read_transaction():
             key = spec.dag_hash()
             return key in self._data and not self._data[key].installed
+
+
+class UpstreamDatabaseLockingError(SpackError):
+    """Raised when an operation would need to lock an upstream database"""
 
 
 class CorruptDatabaseError(SpackError):
