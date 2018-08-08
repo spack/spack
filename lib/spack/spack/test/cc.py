@@ -124,7 +124,7 @@ def wrapper_environment():
             SPACK_DEBUG_LOG_ID='foo-hashabc',
             SPACK_COMPILER_SPEC='gcc@4.4.7',
             SPACK_SHORT_SPEC='foo@1.2 arch=linux-rhel6-x86_64 /hashabc',
-            SPACK_SYSTEM_DIRS=' '.join(system_dirs),
+            SPACK_SYSTEM_DIRS=':'.join(system_dirs),
             SPACK_CC_RPATH_ARG='-Wl,-rpath,',
             SPACK_CXX_RPATH_ARG='-Wl,-rpath,',
             SPACK_F77_RPATH_ARG='-Wl,-rpath,',
@@ -180,27 +180,27 @@ pytestmark = pytest.mark.usefixtures('wrapper_environment')
 
 def check_cc(command, args, expected):
     with set_env(SPACK_TEST_COMMAND=command):
-        assert cc(*args, output=str).strip().split() == expected
+        assert expected == cc(*args, output=str).strip().split()
 
 
 def check_cxx(command, args, expected):
     with set_env(SPACK_TEST_COMMAND=command):
-        assert cxx(*args, output=str).strip().split() == expected
+        assert expected == cxx(*args, output=str).strip().split()
 
 
 def check_fc(command, args, expected):
     with set_env(SPACK_TEST_COMMAND=command):
-        assert fc(*args, output=str).strip().split() == expected
+        assert expected == fc(*args, output=str).strip().split()
 
 
 def check_ld(command, args, expected):
     with set_env(SPACK_TEST_COMMAND=command):
-        assert ld(*args, output=str).strip().split() == expected
+        assert expected == ld(*args, output=str).strip().split()
 
 
 def check_cpp(command, args, expected):
     with set_env(SPACK_TEST_COMMAND=command):
-        assert cpp(*args, output=str).strip().split() == expected
+        assert expected == cpp(*args, output=str).strip().split()
 
 
 def test_vcheck_mode():
@@ -303,8 +303,8 @@ def test_fc_flags(wrapper_flags):
     check_fc(
         'dump-args', test_args,
         [real_cc] +
-        spack_cppflags +
         spack_fflags +
+        spack_cppflags +
         spack_ldflags +
         test_include_paths +
         test_library_paths +
