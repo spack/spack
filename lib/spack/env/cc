@@ -80,7 +80,7 @@ IFS=':' read -ra SPACK_SYSTEM_DIRS <<< "${SPACK_SYSTEM_DIRS}"
 # test whether a path is a system directory
 function system_dir {
     path="$1"
-    for sd in ${SPACK_SYSTEM_DIRS[@]}; do
+    for sd in "${SPACK_SYSTEM_DIRS[@]}"; do
         if [ "${path}" == "${sd}" ] || [ "${path}" == "${sd}/" ]; then
             # success if path starts with a system prefix
             return 0
@@ -89,7 +89,7 @@ function system_dir {
     return 1  # fail if path starts no system prefix
 }
 
-for param in ${parameters[@]}; do
+for param in "${parameters[@]}"; do
     if [[ -z ${!param} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
@@ -248,7 +248,6 @@ fi
 
 # Save original command for debug logging
 input_command="$*"
-args=()
 
 #
 # Parse the command line arguments.
@@ -277,7 +276,9 @@ libs=()
 other_args=()
 
 while [ -n "$1" ]; do
+    # an RPATH to be added after the case statement.
     rp=""
+
     case "$1" in
         -I*)
             arg="${1#-I}"
@@ -362,37 +363,53 @@ while [ -n "$1" ]; do
 done
 
 #
-# Prepend flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags,
-# and ldflags.
+# Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and
+# ldflags. We stick to the order that gmake puts the flags in by default.
 #
+# See the gmake manual on implicit rules for details:
+# https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html
+#
+flags=()
 
-# Add ldflags
-case "$mode" in
-    ld|ccld)
-        args=(${SPACK_LDFLAGS[@]} "${args[@]}") ;;
-esac
-
-# Add C, C++, and Fortran flags
+# Fortran flags come before CPPFLAGS
 case "$mode" in
     cc|ccld)
         case $lang_flags in
-            C)
-                args=(${SPACK_CFLAGS[@]} "${args[@]}") ;;
-            CXX)
-                args=(${SPACK_CXXFLAGS[@]} "${args[@]}") ;;
             F)
-                args=(${SPACK_FFLAGS[@]} "${args[@]}") ;;
+                flags=("${flags[@]}" "${SPACK_FFLAGS[@]}") ;;
         esac
         ;;
 esac
 
-# Add cppflags
+# C preprocessor flags come before any C/CXX flags
 case "$mode" in
     cpp|as|cc|ccld)
-        args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
+        flags=("${flags[@]}" "${SPACK_CPPFLAGS[@]}") ;;
 esac
 
-# Include all -L's and prefix/whatever dirs in rpath
+
+# Add C and C++ flags
+case "$mode" in
+    cc|ccld)
+        case $lang_flags in
+            C)
+                flags=("${flags[@]}" "${SPACK_CFLAGS[@]}") ;;
+            CXX)
+                flags=("${flags[@]}" "${SPACK_CXXFLAGS[@]}") ;;
+        esac
+        ;;
+esac
+
+# Linker flags
+case "$mode" in
+    ld|ccld)
+        flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
+esac
+
+
+# Include the package's prefix/lib[64] dirs in rpath. We don't know until
+# *after* installation which one's correct, so we include both lib and
+# lib64, assuming that only one will be present.
 case "$mode" in
     ld|ccld)
         $add_rpaths && rpaths+=("$SPACK_PREFIX/lib")
@@ -400,10 +417,10 @@ case "$mode" in
         ;;
 esac
 
-# Read spack dependencies from the path environment variable
+# Read spack dependencies from the environment. This is a list of prefixes.
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
-    # Append include directories
+    # Append include directories in any compilation mode
     case "$mode" in
         cpp|cc|as|ccld)
             if [[ -d $dep/include ]]; then
@@ -412,7 +429,7 @@ for dep in "${deps[@]}"; do
             ;;
     esac
 
-    # Append lib/lib64 and RPATH directories
+    # Append lib/lib64 and RPATH directories, but only if we're linking
     case "$mode" in
         ld|ccld)
             if [[ -d $dep/lib ]]; then
@@ -436,6 +453,7 @@ for dep in "${deps[@]}"; do
     esac
 done
 
+# add RPATHs if we're in in any linking mode
 case "$mode" in
     ld|ccld)
         # Set extra RPATHs
@@ -446,14 +464,23 @@ case "$mode" in
         done
 
         # Add SPACK_LDLIBS to args
-        for lib in ${SPACK_LDLIBS[@]}; do
+        for lib in "${SPACK_LDLIBS[@]}"; do
             libs+=("${lib#-l}")
         done
         ;;
 esac
 
-# Put the arguments back together in one list
+#
+# Finally, reassemble the command line.
+#
+
 # Includes and system includes first
+args=()
+
+# flags assembled earlier
+args+=("${flags[@]}")
+
+# include directory search paths
 for dir in "${includes[@]}";         do args+=("-I$dir"); done
 for dir in "${system_includes[@]}";  do args+=("-I$dir"); done
 
