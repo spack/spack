@@ -36,8 +36,8 @@ class Relion(CMakePackage, CudaPackage):
     git      = "https://github.com/3dem/relion.git"
 
     version('3.0_beta', git='https://bitbucket.org/scheres/relion-3.0_beta.git')
-    version('2.1', git='https://github.com/3dem/relion.git', preferred='true', tag='2.1')
-    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
+    version('2.1', git='https://github.com/3dem/relion.git', preferred='true')
+    version('2.0.3', git='https://github.com/3dem/relion.git')
     version('develop', git='https://github.com/3dem/relion.git')
 
 
@@ -74,6 +74,9 @@ class Relion(CMakePackage, CudaPackage):
     # use up to gcc 6 when using cuda9
     conflicts('%gcc@7:', when='@3: +cuda')
     conflicts('%gcc@5:', when='@:2 +cuda')
+    
+    # one cannot use +desktop and +cluster at same time
+    conflicts('+desktop', when='+cluster')
 
     def cmake_args(self):
         
@@ -94,9 +97,11 @@ class Relion(CMakePackage, CudaPackage):
 
         if '+cuda' in self.spec:
             # relion+cuda requires selecting cuda_arch
-	    if not carch: 
-		sys.stdout.write('relion+cuda requires selecting cuda_arch')
-		sys.stdout.flush()
+	    if not carch:
+                # below does not work
+		conflicts(self)
+		#sys.stdout.write('relion+cuda requires selecting cuda_arch')
+		#sys.stdout.flush()
 	        sys.exit()
 	    else:
                 args += ['-DCUDA=ON','-DCudaTexture=ON', '-DCUDA_ARCH=%s' % (carch)]
