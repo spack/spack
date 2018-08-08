@@ -264,6 +264,9 @@ def get_package_permissions(spec):
         readable = allpkgs['all']['readable']
     else:
         readable = 'world'
+    if readable not in ('user', 'group', 'world'):
+        raise ConfigError("Invalid 'readable' permissions %s.\n" % spec.name +
+                          "      Valid values are 'user', 'group', 'world'")
 
     # Get writable permissions level
     if spec.name in allpkgs and 'writable' in allpkgs[spec.name]:
@@ -272,25 +275,28 @@ def get_package_permissions(spec):
         writable = allpkgs['all']['writable']
     else:
         writable = 'user'
+    if readable not in ('user', 'group', 'world'):
+        raise ConfigError("Invalid 'readable' permissions %s.\n" % spec.name +
+                          "      Valid values are 'user', 'group', 'world'")
 
     # rwx permissions set by build_system
     # Only ugo granularity configurable
     perms = stat.S_IRWXU
-    if readable != 'user':  # readable is 'group' or 'world' > 'group'
+    if readable in ('world', 'group'):  # world includes group
         perms |= stat.S_IRGRP | stat.S_IXGRP
     if readable == 'world':
         perms |= stat.S_IROTH | stat.S_IXOTH
-    if writable != 'user':
+    if writable in ('world', 'group'):
         if readable == 'user':
             raise ConfigError('Writable permissions may not be more' +
-                             ' permissive than readable permissions.' +
-                             'Violating package is %s' % spec.name)
+                             ' permissive than readable permissions.\n' +
+                             '      Violating package is %s' % spec.name)
         perms |= stat.S_IWGRP
     if writable == 'world':
         if readable != 'world':
             raise ConfigError('Writable permissions may not be more' +
-                             ' permissive than readable permissions.' +
-                             'Violating package is %s' % spec.name)
+                             ' permissive than readable permissions.\n' +
+                             '      Violating package is %s' % spec.name)
         perms |= stat.S_IWOTH
 
     return perms
