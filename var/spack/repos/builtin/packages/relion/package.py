@@ -95,7 +95,6 @@ class Relion(CMakePackage, CudaPackage):
 		print("you must select cuda_arch")
 	        sys.exit()
 	    else:
-		print(carch)
                 args += ['-DCUDA=ON','-DCudaTexture=ON', '-DCUDA_ARCH=%s' % (carch)]
 
         # these new values were added in relion 3
