@@ -25,6 +25,7 @@
 """
 This test checks the binary packaging infrastructure
 """
+import itertools as it
 import os
 import stat
 import sys
@@ -32,6 +33,7 @@ import shutil
 import pytest
 import argparse
 
+import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack.repo
@@ -124,69 +126,56 @@ echo $PATH"""
     buildcache.setup_parser(parser)
 
     # Create a private key to sign package with if gpg2 available
+    variants = {}
+    variants["jobs"] = map(str, [1, 2])
+    variants["relative"] = [False, True]
+    variants["signed"] = [False]
     if has_gnupg2():
-        spack.util.gpg.Gpg.create(name='test key 1', expires='0',
-                                  email='spack@googlegroups.com',
-                                  comment='Spack test key')
+        variants["signed"].append(True)
+        key_created = False
+
+    for jobs, relative, signed in it.product(
+            *(variants[v] for v in "jobs relative signed".split())):
+        shutil.rmtree(mirror_path)
+        stage.destroy()
+        spack.mirror.create(
+            mirror_path, specs=[], no_checksum=True
+        )
+        stage.create()
+
         # Create build cache with signing
-        args = parser.parse_args(['create', '-d', mirror_path, str(spec)])
-        buildcache.buildcache(parser, args)
+        args = ['create', '-d', mirror_path, "-j", jobs, str(spec)]
+        if not signed:
+            args.insert(-1, "-u")
+        elif not key_created:
+            spack.util.gpg.Gpg.create(name='test key 1', expires='0',
+                                      email='spack@googlegroups.com',
+                                      comment='Spack test key')
+            key_created = True
+        if relative:
+            args.insert(-1, "-r")
+        tty.info(args)
+        buildcache.buildcache(parser, parser.parse_args(args))
+
+        # forceful creation
+        args.insert(-1, "-f")
+        tty.info(args)
+        buildcache.buildcache(parser, parser.parse_args(args))
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
+
+        # reinstall package
+        args = ['install', "-j", jobs, str(pkghash)]
+        if not signed:
+            args.insert(-1, "-u")
+        tty.info(args)
+        buildcache.buildcache(parser, parser.parse_args(args))
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
-        # create build cache with relative path and signing
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', str(spec)])
-        buildcache.buildcache(parser, args)
-
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # install build cache with verification
-        args = parser.parse_args(['install', str(spec)])
-        buildcache.install_tarball(spec, args)
-
-        # test overwrite install
-        args = parser.parse_args(['install', '-f', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
-    else:
-        # create build cache without signing
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-u', str(spec)])
-        buildcache.buildcache(parser, args)
-
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # install build cache without verification
-        args = parser.parse_args(['install', '-u', str(spec)])
-        buildcache.install_tarball(spec, args)
-
-        # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
-        # create build cache with relative path
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # install build cache
-        args = parser.parse_args(['install', '-u', str(spec)])
-        buildcache.install_tarball(spec, args)
-
-        # test overwrite install
-        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
+        args.insert(-1, "-f")
+        tty.info(args)
+        buildcache.buildcache(parser, parser.parse_args(args))
 
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)

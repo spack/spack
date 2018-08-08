@@ -28,8 +28,9 @@ than multiprocessing.Pool.apply() can.  For example, apply() will fail
 to pickle functions if they're passed indirectly as parameters.
 """
 from multiprocessing import Process, Pipe, Semaphore, Value
+from multiprocessing.pool import Pool
 
-__all__ = ['spawn', 'parmap', 'Barrier']
+__all__ = ['spawn', 'parmap', 'Barrier', 'NoDaemonPool']
 
 
 def spawn(f):
@@ -94,3 +95,24 @@ class Barrier:
 
 class BarrierTimeoutError(Exception):
     pass
+
+
+class NoDaemonProcess(Process):
+    """Daemon processes are not allowed to create child processes.
+    Yet Sometimes that feature is needed."""
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+
+    def _set_daemon(self, value):
+        pass
+
+    daemon = property(_get_daemon, _set_daemon)
+
+
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class NoDaemonPool(Pool):
+    """Daemon processes are not allowed to create child processes.
+    Yet Sometimes that feature is needed."""
+    Process = NoDaemonProcess
