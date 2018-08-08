@@ -82,7 +82,7 @@ class Glvis(MakefilePackage):
             description='Use antialiased fonts via freetype & fontconfig')
 
     depends_on('mfem@develop', when='@develop')
-    depends_on('mfem@3.4', when='@3.4')
+    depends_on('mfem@3.4.0', when='@3.4')
     depends_on('mfem@3.3', when='@3.3')
     depends_on('mfem@3.2', when='@3.2')
     depends_on('mfem@3.1', when='@3.1')
