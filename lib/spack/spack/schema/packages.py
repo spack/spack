@@ -59,9 +59,13 @@ schema = {
                             'type':  'boolean',
                             'default': True,
                         },
-                        'permissions': {
+                        'readable': {
                             'type':  'string',
-                            'default': 'ugo',
+                            'default': 'world',
+                        },
+                        'writable': {
+                            'type':  'string',
+                            'default': 'user',
                         },
                         'group': {
                             'type':  'string',

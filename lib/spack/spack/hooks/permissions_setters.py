@@ -24,7 +24,10 @@
 ##############################################################################
 import os
 import grp
-from spack.package_prefs import get_package_permissions_mask, get_package_group
+
+from llnl.util.filesystem import chmod_X
+
+from spack.package_prefs import get_package_permissions, get_package_group
 
 
 def forall_files(path, fn, args):
@@ -36,18 +39,18 @@ def forall_files(path, fn, args):
     fn(path, *args)
 
 
-def chmod_mask(entry, mask):
-    mode = os.stat(entry).st_mode
-    mode &= mask
-    os.chmod(entry, mode)
+def chmod_real_entries(path, perms):
+    # Don't follow links so we don't change things outside the prefix
+    if not os.path.islink(path):
+        chmod_X(path, perms)
 
 
 def post_install(spec):
     if not spec.external:
-        perms_mask = get_package_permissions_mask(spec)
+        perms = get_package_permissions(spec)
         group = get_package_group(spec)
 
-        forall_files(spec.prefix, chmod_mask, [perms_mask])
+        forall_files(spec.prefix, chmod_real_entries, [perms])
 
         if group:
             gid = grp.getgrnam(group).gr_gid

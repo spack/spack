@@ -265,9 +265,9 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         # Create install directory with properly configured permissions
         # Cannot import at top of file
-        from spack.package_prefs import get_package_permissions_mask
-        mask = get_package_permissions_mask(spec)
-        mkdirp(self.metadata_path(spec), mode=mask)
+        from spack.package_prefs import get_package_permissions
+        perms = get_package_permissions(spec)
+        mkdirp(self.metadata_path(spec), mode=perms)
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):

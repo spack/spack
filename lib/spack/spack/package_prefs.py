@@ -32,7 +32,7 @@ import spack.repo
 import spack.error
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
-
+from spack.config import ConfigError
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
                       'version': VersionList}
@@ -253,27 +253,47 @@ def is_spec_buildable(spec):
     return allpkgs[spec.name]['buildable']
 
 
-def get_package_permissions_mask(spec):
+def get_package_permissions(spec):
     """Return the permissions configured for the spec"""
     allpkgs = get_packages_config()
-    if spec.name in allpkgs:
-        perms = allpkgs[spec.name]['permissions']
-    elif 'all' in allpkgs:
-        perms = allpkgs['all']['permissions']
+
+    # Get readable permissions level
+    if spec.name in allpkgs and 'readable' in allpkgs[spec.name]:
+        readable = allpkgs[spec.name]['readable']
+    elif 'all' in allpkgs and 'readable' in allpkgs['all']:
+        readable = allpkgs['all']['readable']
     else:
-        perms = 'ugo'
+        readable = 'world'
+
+    # Get writable permissions level
+    if spec.name in allpkgs and 'writable' in allpkgs[spec.name]:
+        writable = allpkgs[spec.name]['writable']
+    elif 'all' in allpkgs and 'writable' in allpkgs['all']:
+        writable = allpkgs['all']['writable']
+    else:
+        writable = 'user'
 
     # rwx permissions set by build_system
     # Only ugo granularity configurable
-    perm_mask = 0
-    if 'u' in perms:
-        perm_mask |= stat.S_IRWXU
-    if 'g' in perms:
-        perm_mask |= stat.S_IRWXG
-    if 'o' in perms:
-        perm_mask |= stat.S_IRWXO
+    perms = stat.S_IRWXU
+    if readable != 'user':  # readable is 'group' or 'world' > 'group'
+        perms |= stat.S_IRGRP | stat.S_IXGRP
+    if readable == 'world':
+        perms |= stat.S_IROTH | stat.S_IXOTH
+    if writable != 'user':
+        if readable == 'user':
+            raise ConfigError('Writable permissions may not be more' +
+                             ' permissive than readable permissions.' +
+                             'Violating package is %s' % spec.name)
+        perms |= stat.S_IWGRP
+    if writable == 'world':
+        if readable != 'world':
+            raise ConfigError('Writable permissions may not be more' +
+                             ' permissive than readable permissions.' +
+                             'Violating package is %s' % spec.name)
+        perms |= stat.S_IWOTH
 
-    return perm_mask
+    return perms
 
 
 def get_package_group(spec):

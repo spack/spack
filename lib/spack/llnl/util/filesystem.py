@@ -242,6 +242,18 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
+def chmod_X(entry, perms):
+    """Implements the uppercase X version of the executable permissions as
+    default for chmod.
+    """
+    mode = os.stat(entry).st_mode
+    if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+        perms &= ~stat.S_IXUSR
+        perms &= ~stat.S_IXGRP
+        perms &= ~stat.S_IXOTH
+    os.chmod(entry, perms)
+
+
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link.
     """
