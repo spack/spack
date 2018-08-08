@@ -35,8 +35,7 @@ class Er(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('0.0.3',
-            sha256='9aa08f9fe70e42f0da27a5d90d4643b520d61f24742303bf016322823b3c4d26')
+    version('0.0.3', sha256='9aa08f9fe70e42f0da27a5d90d4643b520d61f24742303bf016322823b3c4d26')
 
     depends_on('mpi')
     depends_on('kvtree')

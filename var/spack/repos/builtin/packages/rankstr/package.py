@@ -35,8 +35,7 @@ class Rankstr(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('0.0.2',
-            sha256='c16d53aa9bb79934cbe2dcd8612e2db7d59de80be500c104e39e8623d4eacd8e')
+    version('0.0.2', sha256='c16d53aa9bb79934cbe2dcd8612e2db7d59de80be500c104e39e8623d4eacd8e')
 
     depends_on('mpi')
 

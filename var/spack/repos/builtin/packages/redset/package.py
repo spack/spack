@@ -35,8 +35,7 @@ class Redset(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('0.0.3',
-            sha256='f110c9b42209d65f84a8478b919b27ebe2d566839cb0cd0c86ccbdb1f51598f4')
+    version('0.0.3', sha256='f110c9b42209d65f84a8478b919b27ebe2d566839cb0cd0c86ccbdb1f51598f4')
 
     depends_on('mpi')
     depends_on('rankstr')
