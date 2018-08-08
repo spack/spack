@@ -78,6 +78,10 @@ class PyScipy(PythonPackage):
             args = ['-j', str(make_jobs)]
         return args
 
+    def setup_environment(self, spack_env):
+        # https://github.com/scipy/scipy/issues/9080#issuecomment-408548876
+        spack_env.unset('F90')
+
     # Do the usual with gcc
     def get_phases(self):
         self.phases = ['configure', 'build', 'install']
