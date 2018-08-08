@@ -134,7 +134,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('gtkplus', when='+gtkplus')
 
     # Build dependencies
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     # The following are needed when building from git
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')

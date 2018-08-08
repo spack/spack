@@ -34,7 +34,7 @@ class Mc(AutotoolsPackage):
     version('4.8.20', 'dcfc7aa613c62291a0f71f6b698d8267')
 
     depends_on('ncurses')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('glib@2.14:')
     depends_on('libssh2@1.2.5:')
 

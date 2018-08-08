@@ -120,7 +120,7 @@ class CbtfKrell(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # for services and collectors
-    depends_on("libmonitor+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch")
 
     depends_on("libunwind", when='@develop')
     depends_on("libunwind@1.1", when='@1.9.1.0:9999')
