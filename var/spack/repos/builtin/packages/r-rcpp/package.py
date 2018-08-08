@@ -37,7 +37,7 @@ class RRcpp(RPackage):
     last two."""
 
     homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
-    url      = "https://cran.rstudio.com/src/contrib/Rcpp_0.12.13.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/Archive/Rcpp/Rcpp_0.12.13.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/Rcpp"
 
     version('0.12.16', 'ab5107766c63d66065ed1a92a4cab1b7')
