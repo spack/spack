@@ -90,6 +90,42 @@ def test_mark_installed_upstream(tmpdir_factory):
             spack.store.db = original_db
 
 
+@pytest.mark.usefixtures('config')
+def test_installed_upstream_external(tmpdir_factory):
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    default = ('build', 'link')
+    y = MockPackage('y', [], [])
+    x = MockPackage('x', [y], [default])
+    mock_repo = MockPackageMultiRepo([x, y])
+
+    mock_layout = MockLayout()
+
+    with spack.repo.swap(mock_repo):
+        x_spec = spack.spec.Spec('x')
+        x_spec.concretize()
+
+        y_spec = x_spec['y']
+        test_external_prefix = "/path/to/external/y/"
+        y_spec.external_path = test_external_prefix
+        prepared_db.add(y_spec, mock_layout)
+
+        try:
+            original_db = spack.store.db
+            downstream_db_root = str(
+                tmpdir_factory.mktemp('mock_downstream_db_root'))
+            spack.store.db = spack.database.Database(
+                downstream_db_root, upstream_dbs=[prepared_db])
+            new_x = spack.spec.Spec('x')
+            new_x.concretize()
+            new_y = new_x['y']
+            assert new_y.package._installed_upstream
+            assert new_y.prefix == test_external_prefix
+        finally:
+            spack.store.db = original_db
+
+
 @pytest.fixture()
 def usr_folder_exists(monkeypatch):
     """The ``/usr`` folder is assumed to be existing in some tests. This
