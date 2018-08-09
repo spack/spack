@@ -26,14 +26,15 @@ from spack import *
 
 
 class Blis(Package):
-    """BLIS is a portable software framework for instantiating high-performance BLAS-like
-    dense linear algebra libraries. The framework was designed to isolate essential 
-    kernels of computation that, when optimized, immediately enable optimized implementations
-    of most of its commonly used and computationally intensive operations. BLIS is written 
-    in ISO C99 and available under a new/modified/3-clause BSD license. While BLIS exports
-    a new BLAS-like API, it also includes a BLAS compatibility layer which gives application
-    developers access to BLIS implementations via traditional BLAS routine calls. 
-    An object-based API unique to BLIS is also available."""
+    """BLIS is a portable software framework for instantiating high-performance
+    BLAS-like dense linear algebra libraries. The framework was designed to
+    isolate essential kernels of computation that, when optimized, immediately
+    enable optimized implementations of most of its commonly used and
+    computationally intensive operations. BLIS is written in ISO C99 and
+    available under a new/modified/3-clause BSD license. While BLIS exports a
+    new BLAS-like API, it also includes a BLAS compatibility layer which gives
+    application developers access to BLIS implementations via traditional BLAS
+    routine calls. An object-based API unique to BLIS is also available."""
 
     homepage = "https://github.com/flame/blis"
     url      = "https://github.com/flame/blis/archive/0.4.0.tar.gz"
@@ -43,7 +44,6 @@ class Blis(Package):
     version('0.3.1', sha256='957f28d47c5cf71ffc62ce8cc1277e17e44d305b1c2fa8506b0b55617a9f28e4')
     version('0.3.0', sha256='d34d17df7bdc2be8771fe0b7f867109fd10437ac91e2a29000a4a23164c7f0da')
     version('0.2.2', sha256='4a7ecb56034fb20e9d1d8b16e2ef587abbc3d30cb728e70629ca7e795a7998e8')
-
 
     depends_on('python@2.7:2.8,3.4:')
 
