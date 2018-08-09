@@ -837,7 +837,7 @@ class IntelPackage(PackageBase):
                 'MPIF90': os.path.join(bindir, 'mpif90'),
                 'MPIFC':  os.path.join(bindir, 'mpif90'),
             }
-        #debug_print("wrapper_vars =", wrapper_vars)
+        # debug_print("wrapper_vars =", wrapper_vars)
         return wrapper_vars
 
     def mpi_setup_dependent_environment(
@@ -1010,7 +1010,7 @@ class IntelPackage(PackageBase):
 
             spack_env.set('MKLROOT', env_mods['MKLROOT'])
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
+                                  env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
 
             debug_print("adding/modifying spack_env:", env_mods)
 

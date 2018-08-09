@@ -95,7 +95,7 @@ class IntelParallelStudio(IntelPackage):
     #
     version('composer.2017.7',     '4c02a4a29a8f2424f31baa23116a1001', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12860/parallel_studio_xe_2017_update7_composer_edition.tgz')
     version('composer.2017.6',     'd96cce0c3feef20091efde458f581a9f', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12538/parallel_studio_xe_2017_update6_composer_edition.tgz')
-    #version('composer.2017.5',     -- TBD --
+    # version('composer.2017.5',     -- TBD --
     version('composer.2017.4',     'd03d351809e182c481dc65e07376d9a2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('composer.2017.3',     '52344df122c17ddff3687f84ceb21623', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('composer.2017.2',     '2891ab1ece43eb61b6ab892f07c47f01', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
