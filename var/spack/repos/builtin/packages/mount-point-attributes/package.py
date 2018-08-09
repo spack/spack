@@ -25,29 +25,15 @@
 from spack import *
 
 
-class Kvtree(CMakePackage):
-    """KVTree provides a fully extensible C datastructure modeled after perl
-    hashes."""
+class MountPointAttributes(AutotoolsPackage):
+    """Library to turn expensive, non-scalable file system calls into simple
+       string comparison operations."""
 
-    homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
-    git      = "https://github.com/ecp-veloc/kvtree.git"
+    homepage = "https://github.com/LLNL/MountPointAttributes"
+    url = 'https://github.com/LLNL/MountPointAttributes/files/2270601/mountpointattr-1.1.tar.gz'
 
-    tags = ['ecp']
+    version('1.1', 'c9f0e7f5a3e16b9a022e5948712ecb2a')
 
-    version('master', branch='master')
-    version('1.0.2', sha256='6b54f4658e5ebab747c0c2472b1505ac1905eefc8a0b2a97d8776f800ee737a3')
-
-    variant('mpi', default=True, description="Build with MPI message packing")
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+mpi'):
-            args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        else:
-            args.append("-DMPI=OFF")
-        if self.spec.satisfies('platform=cray'):
-            args.append("-DKVTREE_LINK_STATIC=ON")
-        return args
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')

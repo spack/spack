@@ -80,9 +80,6 @@ class Opengl(Package):
         of OpenGL your Mac uses."""
         raise InstallError(msg)
 
-    def install(self, spec, prefix):
-        pass
-
     @property
     def libs(self):
         for dir in ['lib64', 'lib']:
@@ -90,4 +87,3 @@ class Opengl(Package):
                                   shared=True, recursive=False)
             if libs:
                 return libs
-        return None
