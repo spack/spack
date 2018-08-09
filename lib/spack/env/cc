@@ -74,8 +74,17 @@ function die {
     exit 1
 }
 
-# read system directories into an array (delimited by :)
+# read input parameters into proper bash arrays.
+# SYSTEM_DIRS is delimited by :
 IFS=':' read -ra SPACK_SYSTEM_DIRS <<< "${SPACK_SYSTEM_DIRS}"
+
+# SPACK_<LANG>FLAGS and SPACK_LDLIBS are split by ' '
+IFS=' ' read -ra SPACK_FFLAGS   <<< "$SPACK_FFLAGS"
+IFS=' ' read -ra SPACK_CPPFLAGS <<< "$SPACK_CPPFLAGS"
+IFS=' ' read -ra SPACK_CFLAGS   <<< "$SPACK_CFLAGS"
+IFS=' ' read -ra SPACK_CXXFLAGS <<< "$SPACK_CXXFLAGS"
+IFS=' ' read -ra SPACK_LDFLAGS  <<< "$SPACK_LDFLAGS"
+IFS=' ' read -ra SPACK_LDLIBS   <<< "$SPACK_LDLIBS"
 
 # test whether a path is a system directory
 function system_dir {
@@ -524,7 +533,8 @@ fi
 
 # dump the full command if the caller supplies SPACK_TEST_COMMAND=dump-args
 if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
-    echo "${full_command[@]}"
+    IFS="
+" && echo "${full_command[*]}"
     exit
 elif [[ -n $SPACK_TEST_COMMAND ]]; then
     die "ERROR: Unknown test command"
