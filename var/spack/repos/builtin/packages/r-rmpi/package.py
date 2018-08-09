@@ -51,13 +51,13 @@ class RRmpi(RPackage):
         # The type of MPI. Supported values are:
         # OPENMPI, LAM, MPICH, MPICH2, or CRAY
         if mpi_name == 'openmpi':
-            Rmpi_type = 'OPENMPI'
+            rmpi_type = 'OPENMPI'
         elif mpi_name == 'mpich':
-            Rmpi_type = 'MPICH2'
+            rmpi_type = 'MPICH2'
         else:
             raise InstallError('Unsupported MPI type')
 
         return [
-            '--with-Rmpi-type={0}'.format(Rmpi_type),
+            '--with-Rmpi-type={0}'.format(rmpi_type),
             '--with-mpi={0}'.format(spec['mpi'].prefix),
         ]

@@ -6,7 +6,7 @@ Advanced Topics in Packaging
 
 Spack tries to automatically configure packages with information from
 dependencies such that all you need to do is to list the dependencies
-(i.e. with the ``depends_on`` directive) and the build system (for example
+(i.e., with the ``depends_on`` directive) and the build system (for example
 by deriving from :code:`CmakePackage`).
 
 However, there are many special cases. Often you need to retrieve details
@@ -248,7 +248,7 @@ What we need to implement is:
           'liblapack', root=self.prefix, shared=shared, recurse=True
       )
 
-i.e. a property that returns the correct list of libraries for the LAPACK interface.
+i.e., a property that returns the correct list of libraries for the LAPACK interface.
 
 We use the name ``lapack_libs`` rather than ``libs`` because
 ``netlib-lapack`` can also provide ``blas``, and when it does it is provided
@@ -281,7 +281,7 @@ Modifying a package's build environment
 
 Spack sets up several environment variables like PATH by default to aid in
 building a package, but many packages make use of environment variables which
-convey specific information about their dependencies, for example MPICC. This
+convey specific information about their dependencies (e.g., MPICC). This
 section covers how update your Spack packages so that package-specific
 environment variables are defined at build-time.
 
@@ -299,14 +299,14 @@ To provide environment setup for a dependent, a package can implement the
 :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
 function. This function takes as a parameter a :py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>`
 object which includes convenience methods to update the environment. For
-example an MPI implementation can set ``MPICC`` for packages that depend on it:
+example, an MPI implementation can set ``MPICC`` for packages that depend on it:
 
 .. code-block:: python
 
   def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
       spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
 
-In this case packages which depend on ``mpi`` will have ``MPICC`` defined in
+In this case packages that depend on ``mpi`` will have ``MPICC`` defined in
 their environment when they build. This section is focused on modifying the
 build-time environment represented by ``spack_env``, but it's worth noting that
 modifications to ``run_env`` are included in Spack's automatically-generated
@@ -319,7 +319,7 @@ environment variable in the build-time environment of dependent packages.
 
   root@advanced-packaging-tutorial:/# spack edit mpich
 
-Once you're finished the method should look like this:
+Once you're finished, the method should look like this:
 
 .. code-block:: python
 
@@ -411,7 +411,7 @@ Attach attributes to other packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Build tools usually also provide a set of executables that can be used
-when another package is being installed. Spack gives the opportunity
+when another package is being installed. Spack gives you the opportunity
 to monkey-patch dependent modules and attach attributes to them. This
 helps make the packager experience as similar as possible to what would
 have been the manual installation of the same package.
@@ -441,7 +441,7 @@ Extra query parameters
 
 An advanced feature of the Spec's build-interface protocol is the support
 for extra parameters after the subscript key. In fact, any of the keys used in the query
-can be followed by a comma separated list of extra parameters which can be
+can be followed by a comma-separated list of extra parameters which can be
 inspected by the package receiving the request to fine-tune a response.
 
 Let's look at an example and try to install ``netcdf``:
@@ -489,7 +489,7 @@ If you followed the instructions correctly, the code added to the
       libraries, root=self.prefix, shared=shared, recurse=True
   )
 
-where we highlighted the line retrieving  the extra parameters. Now we can successfully
+where we highlighted the line retrieving the extra parameters. Now we can successfully
 complete the installation of ``netcdf``:
 
 .. code-block:: console

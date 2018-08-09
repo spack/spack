@@ -37,9 +37,9 @@ class Sabre(MakefilePackage):
     """
 
     homepage = "https://github.com/najoshi/sabre"
-    url = "https://github.com/najoshi/sabre"
+    git      = "https://github.com/najoshi/sabre.git"
 
-    version('2013-09-27', git='https://github.com/najoshi/sabre.git', commit='039a55e500ba07b7e6432ea6ec2ddcfb3471d949')
+    version('2013-09-27', commit='039a55e500ba07b7e6432ea6ec2ddcfb3471d949')
 
     depends_on('zlib')
 

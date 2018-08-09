@@ -31,11 +31,8 @@ class Mindthegap(CMakePackage):
        respect to a reference genome."""
 
     homepage = "https://gatb.inria.fr/software/mind-the-gap/"
-    url      = "https://github.com/GATB/MindTheGap.git"
+    git      = "https://github.com/GATB/MindTheGap.git"
 
-    version('2.0.2',
-            tags='v2.0.2',
-            git='https://github.com/GATB/MindTheGap.git',
-            submodules=True)
+    version('2.0.2', tags='v2.0.2', submodules=True)
 
     depends_on('zlib')

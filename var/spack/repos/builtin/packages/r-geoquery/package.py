@@ -32,10 +32,9 @@ class RGeoquery(RPackage):
        GEOquery is the bridge between GEO and BioConductor."""
 
     homepage = "https://bioconductor.org/packages/GEOquery/"
-    url      = "https://git.bioconductor.org/packages/GEOquery"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/GEOquery.git"
 
-    version('2.42.0', git='https://git.bioconductor.org/packages/GEOquery', commit='c26adef8d3ddbd6932a3170f2f84f6e4327641fb')
+    version('2.42.0', commit='c26adef8d3ddbd6932a3170f2f84f6e4327641fb')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))

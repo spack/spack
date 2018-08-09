@@ -35,10 +35,9 @@ class Ghost(CMakePackage, CudaPackage):
     """
 
     homepage = "https://www.bitbucket.org/essex/ghost/"
-    url      = "https://bitbucket.org/essex/ghost/"
+    git      = "https://bitbucket.org/essex/ghost/ghost.git"
 
-    version('develop',
-            git='https://bitbucket.org/essex/ghost/ghost.git', branch='devel')
+    version('develop', branch='devel')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

@@ -30,11 +30,12 @@ class Adios2(CMakePackage):
 
     homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS2/archive/v2.0.0.tar.gz"
+    git      = "https://github.com/ornladios/ADIOS2.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='master',
-            git='https://github.com/ornladios/ADIOS2.git')
-
+    version('develop', branch='master')
+    version('2.2.0', sha256='77058ea2ff7224dc02ea519733de42d89112cf21ffe7474fb2fa3c5696152948')
     version('2.1.0', '431fa5b015349f1838b96b8f5a1cc8f8')
     version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
 
@@ -42,11 +43,14 @@ class Adios2(CMakePackage):
             description='Also build shared libraries')
     variant('mpi', default=True,
             description='Enable MPI')
-    # transforms (not yet implemented)
-    # variant('bzip2', default=True,
-    #         description='Enable BZip2 compression')
-    # variant('zfp', default=True,
-    #         description='Enable ZFP compression')
+    # transforms
+    variant('bzip2', default=True,
+            description='Enable BZip2 compression')
+    variant('zfp', default=True,
+            description='Enable ZFP compression')
+    # sz is broken in 2.2.0: https://github.com/ornladios/ADIOS2/issues/705
+    # variant('sz', default=True,
+    #         description='Enable SZ compression')
     # transport engines
     variant('dataman', default=True,
             description='Enable the DataMan engine for WAN transports')
@@ -72,6 +76,11 @@ class Adios2(CMakePackage):
     conflicts('+dataman', when='~shared')
 
     depends_on('cmake@3.5.0:', type='build')
+    depends_on('pkgconfig', type='build', when='@2.2.0:')
+    # The included ffs requires bison and flex but using them makes
+    # the build fail due to an undefined reference.
+    # depends_on('bison', type='build', when='@2.2.0:')
+    # depends_on('flex', when='@2.2.0:')
 
     # contained in thirdparty/
     # depends_on('googletest')
@@ -90,6 +99,7 @@ class Adios2(CMakePackage):
 
     depends_on('bzip2', when='+bzip2')
     depends_on('zfp', when='+zfp')
+    # depends_on('sz@:1.4.12', when='+sz')
 
     extends('python', when='+python')
     depends_on('python@2.7:', type=('build', 'run'), when='+python')
@@ -109,6 +119,8 @@ class Adios2(CMakePackage):
                 'ON' if '+bzip2' in spec else 'OFF'),
             '-DADIOS2_USE_ZFP={0}'.format(
                 'ON' if '+zfp' in spec else 'OFF'),
+            '-DADIOS2_USE_SZ={0}'.format(
+                'ON' if '+sz' in spec else 'OFF'),
             '-DADIOS2_USE_DataMan={0}'.format(
                 'ON' if '+dataman' in spec else 'OFF'),
             '-DADIOS2_USE_ZeroMQ={0}'.format(

@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 from llnl.util import tty
 
 import glob
@@ -41,6 +41,7 @@ class Gcc(AutotoolsPackage):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
     version('7.3.0', 'be2da21680f27624f3a87055c4ba5af2')
     version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
@@ -157,7 +158,7 @@ class Gcc(AutotoolsPackage):
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
-        if macOS_version() >= Version('10.13'):
+        if macos_version() >= Version('10.13'):
             patch('darwin/apfs.patch', when='@5.5.0,6.1:6.4,7.1:7.3')
             # from homebrew via macports
             # https://trac.macports.org/ticket/56502#no1

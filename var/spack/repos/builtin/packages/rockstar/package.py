@@ -32,7 +32,6 @@ class Rockstar(MakefilePackage):
     """The Rockstar Halo Finder"""
 
     homepage = "https://bitbucket.org/gfcstanford/rockstar"
-    url      = "https://bitbucket.org/gfcstanford/rockstar"
 
     version('develop', git='https://bitbucket.org/gfcstanford/rockstar.git')
     version('yt', hg='https://bitbucket.org/MatthewTurk/rockstar')

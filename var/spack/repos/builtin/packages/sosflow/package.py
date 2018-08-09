@@ -31,9 +31,9 @@ class Sosflow(CMakePackage):
     observation, introspection, feedback, and control of HPC applications."""
 
     homepage = "https://github.com/cdwdirect/sos_flow/wiki"
-    url      = "https://github.com/cdwdirect/sos_flow.git"
+    git      = "https://github.com/cdwdirect/sos_flow.git"
 
-    version('spack', git='https://github.com/cdwdirect/sos_flow.git', tag='spack-build-v0.9901')
+    version('spack', tag='spack-build-v0.9901')
 
     depends_on('libevpath')
     depends_on('sqlite@3:')

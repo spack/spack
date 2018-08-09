@@ -29,13 +29,14 @@ class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
     homepage = "http://pytest.org/"
-    url      = "https://pypi.io/packages/source/p/pytest/pytest-3.5.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytest/pytest-3.7.1.tar.gz"
 
     import_modules = [
         '_pytest', '_pytest.assertion', '_pytest._code',
         '_pytest.mark', 'pytest'
     ]
 
+    version('3.7.1', '2704e16bb2c11af494167f80a7cd37c4')
     version('3.5.1', 'ffd870ee3ca561695d2f916f0f0f3c0b')
     version('3.0.7', '89c60546507dc7eb6e9e40a6e9f720bd')
     version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5')
@@ -45,6 +46,7 @@ class PyPytest(PythonPackage):
     # Most Python packages only require setuptools as a build dependency.
     # However, pytest requires setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-py@1.5.0:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', type=('build', 'run'))

@@ -33,6 +33,7 @@ class Cmake(Package):
     list_url = 'https://cmake.org/files/'
     list_depth = 1
 
+    version('3.12.0',   'ab4aa7df9301c94cdd6f8ee4fe66458b')
     version('3.11.4',   '72e168b3bad2f9c34dcebbad7af56ff0')
     version('3.11.3',   '3f923154ed47128f13b08eacd207d9ee')
     version('3.11.2',   'd2d554c05fc07cfae7846d2aa205f12a')
@@ -86,7 +87,13 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
+    # https://gitlab.kitware.com/cmake/cmake/issues/18232
+    patch('nag-response-files.patch', when='@3.7:3.12')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
+
+    # https://gitlab.kitware.com/cmake/cmake/issues/18166
+    conflicts('%intel', when='@3.11.0:3.11.4')
 
     phases = ['bootstrap', 'build', 'install']
 

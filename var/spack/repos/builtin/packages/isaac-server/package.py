@@ -30,12 +30,12 @@ class IsaacServer(CMakePackage):
 
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
+    git      = "https://github.com/ComputationalRadiationPhysics/isaac.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='dev',
-            git='https://github.com/ComputationalRadiationPhysics/isaac.git')
-    version('master', branch='master',
-            git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('develop', branch='dev')
+    version('master', branch='master')
     version('1.4.0', '3ad05c8fad4673366077204c5d39285f')
     version('1.3.3', '7aeebaf0c5a77e2cb9bea066750e369b')
     version('1.3.2', 'c557daa74de52fd79e734c9758fca38b')

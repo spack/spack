@@ -53,5 +53,5 @@ class Bgq(Platform):
         self.add_operating_system(str(back_distro), back_distro)
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return os.path.exists('/bgsys')

@@ -11,7 +11,7 @@ SPACK_ROOT="$QA_DIR/../../.."
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
 # Set up some variables for running coverage tests.
-if [[ "$COVERAGE" == true ]]; then
+if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
     coverage=coverage
     coverage_run="coverage run"
 else

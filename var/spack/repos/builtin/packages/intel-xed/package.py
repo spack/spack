@@ -33,14 +33,12 @@ class IntelXed(Package):
     a lightweight library for decoding the length of an instruction."""
 
     homepage = "https://intelxed.github.io/"
-    url = "https://github.com/intelxed/xed"
+    git      = "https://github.com/intelxed/xed.git"
 
-    version('2018.02.14',
-            git='https://github.com/intelxed/xed',
-            commit='44d06033b69aef2c20ab01bfb518c52cd71bb537')
+    version('2018.02.14', commit='44d06033b69aef2c20ab01bfb518c52cd71bb537')
 
     resource(name='mbuild',
-             git='https://github.com/intelxed/mbuild',
+             git='https://github.com/intelxed/mbuild.git',
              commit='bb9123152a330c7fa1ff1a502950dc199c83e177',
              destination='')
 

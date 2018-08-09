@@ -1440,8 +1440,13 @@ class Spec(object):
                 self.to_node_dict(hash_function=lambda s: s.full_hash()),
                 default_flow_style=True, width=maxint)
             package_hash = self.package.content_hash()
-            sha = hashlib.sha256(yaml_text.encode('utf-8') + package_hash)
-            self._full_hash = base64.b32encode(sha.digest()).lower()
+            sha = hashlib.sha1(yaml_text.encode('utf-8') + package_hash)
+
+            b32_hash = base64.b32encode(sha.digest()).lower()
+            if sys.version_info[0] >= 3:
+                b32_hash = b32_hash.decode('utf-8')
+
+            self._full_hash = b32_hash
 
         return self._full_hash[:length]
 
@@ -3198,7 +3203,7 @@ class Spec(object):
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
-        deptypes = kwargs.pop('deptypes', ('build', 'link'))
+        deptypes = kwargs.pop('deptypes', 'all')
         check_kwargs(kwargs, self.tree)
 
         out = ""
@@ -3226,12 +3231,21 @@ class Spec(object):
                 out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
 
             if show_types:
+                types = set()
+                if cover == 'nodes':
+                    # when only covering nodes, we merge dependency types
+                    # from all dependents before showing them.
+                    for name, ds in node.dependents_dict().items():
+                        if ds.deptypes:
+                            types.update(set(ds.deptypes))
+                elif dep_spec.deptypes:
+                    # when covering edges or paths, we show dependency
+                    # types only for the edge through which we visited
+                    types = set(dep_spec.deptypes)
+
                 out += '['
-                if dep_spec.deptypes:
-                    for t in all_deptypes:
-                        out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
-                else:
-                    out += ' ' * len(all_deptypes)
+                for t in all_deptypes:
+                    out += ''.join(t[0] if t in types else ' ')
                 out += ']  '
 
             out += ("    " * d)

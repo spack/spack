@@ -28,10 +28,12 @@ import os
 
 class Hub(Package):
     """The github git wrapper"""
-    homepage = "https://github.com/github/hub"
-    url = "https://github.com/github/hub/archive/v2.2.3.tar.gz"
 
-    version('head', git='https://github.com/github/hub')
+    homepage = "https://github.com/github/hub"
+    url      = "https://github.com/github/hub/archive/v2.2.3.tar.gz"
+    git      = "https://github.com/github/hub.git"
+
+    version('head', branch='master')
     version('2.2.3', '6675992ddd16d186eac7ba4484d57f5b')
     version('2.2.2', '7edc8f5b5d3c7c392ee191dd999596fc')
     version('2.2.1', '889a31ee9d10ae9cb333480d8dbe881f')

@@ -32,10 +32,10 @@ class Clamr(CMakePackage):
     """
 
     homepage = "https://github.com/lanl/CLAMR"
-    url      = "https://github.com/lanl/CLAMR.git"
+    git      = "https://github.com/lanl/CLAMR.git"
     tags     = ['proxy-app']
 
-    version('master', git='https://github.com/lanl/CLAMR.git')
+    version('master')
 
     variant(
         'graphics', default='opengl',

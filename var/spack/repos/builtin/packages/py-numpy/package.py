@@ -76,14 +76,11 @@ class PyNumpy(PythonPackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
-        arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
         self.spec.include = join_path(
             self.prefix.lib,
             'python{0}'.format(python_version),
             'site-packages',
-            'numpy-{0}-py{1}-{2}.egg'.format(
-                self.spec.version, python_version, arch),
             'numpy/core/include')
 
     def patch(self):
@@ -157,6 +154,17 @@ class PyNumpy(PythonPackage):
                 args = ['-j', str(make_jobs)]
 
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        python_version = self.spec['python'].version.up_to(2)
+
+        include_path = join_path(
+            self.prefix.lib,
+            'python{0}'.format(python_version),
+            'site-packages',
+            'numpy/core/include')
+
+        run_env.prepend_path('CPATH', include_path)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following

@@ -30,9 +30,9 @@ class RGseabase(RPackage):
     Set Enrichment Analysis (GSEA)."""
 
     homepage = "https://www.bioconductor.org/packages/GSEABase/"
-    url      = "https://git.bioconductor.org/packages/GSEABase"
+    git      = "https://git.bioconductor.org/packages/GSEABase.git"
 
-    version('1.38.2', git='https://git.bioconductor.org/packages/GSEABase', commit='84c9f10c316163118ca990900a7a67555b96e75b')
+    version('1.38.2', commit='84c9f10c316163118ca990900a7a67555b96e75b')
 
     depends_on('r@3.4.0:3.4.9', when='@1.38.2')
     depends_on('r-biocgenerics', type=('build', 'run'))

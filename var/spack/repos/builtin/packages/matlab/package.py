@@ -80,15 +80,15 @@ class Matlab(Package):
         }
 
         # Store values requested by the installer in a file
-        with open('spack_installer_input.txt', 'w') as inputFile:
+        with open('spack_installer_input.txt', 'w') as input_file:
             for key in config:
-                inputFile.write('{0}={1}\n'.format(key, config[key]))
+                input_file.write('{0}={1}\n'.format(key, config[key]))
 
     def install(self, spec, prefix):
         self.configure(spec, prefix)
 
         # Run silent installation script
         # Full path required
-        inputFile = join_path(self.stage.source_path,
-                              'spack_installer_input.txt')
-        subprocess.call(['./install', '-inputFile', inputFile])
+        input_file = join_path(
+            self.stage.source_path, 'spack_installer_input.txt')
+        subprocess.call(['./install', '-inputFile', input_file])

@@ -38,4 +38,4 @@ class PyPkgconfig(PythonPackage):
 
     depends_on('pkgconfig', type=('build', 'run'))
 
-    depends_on('py-nose@1.0:', type='test')
+    depends_on('py-nose@1.0:', type=('build', 'test'))
