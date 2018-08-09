@@ -33,4 +33,4 @@ class PerlPerl6Slurp(PerlPackage):
 
     version('0.051005', '6095c8df495c7983f36996ed78c5ead7')
 
-    conflicts('perl@:5.8.0')
+    depends_on('perl@5.8:5.999', type=('build', 'run'))
