@@ -71,6 +71,7 @@ class SuperluDist(Package):
             'BLASLIB      = %s' % lapack_blas.ld_flags,
             'METISLIB     = %s' % spec['metis'].libs.ld_flags,
             'PARMETISLIB  = %s' % spec['parmetis'].libs.ld_flags,
+            'HAVE_PARMETIS= TRUE',
             'FLIBS        =',
             'LIBS         = $(DSUPERLULIB) $(BLASLIB) $(PARMETISLIB) $(METISLIB)',  # noqa
             'ARCH         = ar',
