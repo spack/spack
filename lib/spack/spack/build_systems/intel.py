@@ -974,8 +974,8 @@ class IntelPackage(PackageBase):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_dependent_environment
         #
-        #   spack_env   –> Applied when dependent is built within Spack.
-        #   run_env     –> Applied to the modulefile of dependent.
+        #   spack_env   -> Applied when dependent is built within Spack.
+        #   run_env     -> Applied to the modulefile of dependent.
         #                  Not used here.
         #
         # NB: This function is overwritten by 'mpi' provider packages:
@@ -997,13 +997,22 @@ class IntelPackage(PackageBase):
         if '+mkl' in self.spec or self.provides('mkl'):
             # Spack's env philosophy demands that we replicate some of the
             # settings normally handled by file_to_source ...
-            env_vars = {
+            #
+            # TODO: Why is setup_environment() [which uses file_to_source()]
+            # not called as a matter of course upon entering the current
+            # function? (guarding against multiple calls notwithstanding)
+            #
+            # Use a local dict to facilitate debug_print():
+            env_mods = {
                 'MKLROOT': self.normalize_path('mkl'),
                 'SPACK_COMPILER_EXTRA_RPATHS': self.component_lib_dir('mkl'),
             }
-            spack_env.set(env_vars['MKLROOT'])
-            spack_env.append_path(env_vars['SPACK_COMPILER_EXTRA_RPATHS'])
-            debug_print("adding/modifying spack_env:", env_vars)
+
+            spack_env.set('MKLROOT', env_mods['MKLROOT'])
+            spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
+
+            debug_print("adding/modifying spack_env:", env_mods)
 
         if '+mpi' in self.spec or self.provides('mpi'):
             if compilers_of_client:
