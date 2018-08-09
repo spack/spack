@@ -35,7 +35,7 @@ class Shuffile(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('0.0.2', 'eca45150d83e21ac51049133a2308d34')
+    version('0.0.3', sha256='6debdd9d6e6f1c4ec31015d7956e8b556acd61ce31f757e4d1fa5002029c75e2')
 
     depends_on('mpi')
     depends_on('kvtree')
