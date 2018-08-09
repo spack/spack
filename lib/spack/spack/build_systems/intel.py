@@ -941,10 +941,10 @@ class IntelPackage(PackageBase):
            [and likewise for MKL, MPI, and other components]
         """
         # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_environment
-        # 
-        #   spack_env   –> Applied when dependent is built within Spack.
+        #
+        #   spack_env   -> Applied when dependent is built within Spack.
         #                  Not used here.
-        #   run_env     –> Applied to the modulefile of dependent.
+        #   run_env     -> Applied to the modulefile of dependent.
         #
         # NOTE: Spack runs setup_environment twice, once pre-build to set up
         # the build environment, and once post-installation to determine
@@ -980,8 +980,8 @@ class IntelPackage(PackageBase):
         #
         # NB: This function is overwritten by 'mpi' provider packages:
         #
-        # ../../../../var/spack/repos/builtin/packages/intel-mpi/package.py
-        # ../../../../var/spack/repos/builtin/packages/intel-parallel-studio/package.py
+        # var/spack/repos/builtin/packages/intel-mpi/package.py
+        # var/spack/repos/builtin/packages/intel-parallel-studio/package.py
         #
         # They call _setup_dependent_env_callback() as well, but with the
         # dictionary kwarg compilers_of_client{} present and populated.
@@ -1028,8 +1028,8 @@ class IntelPackage(PackageBase):
             self.spec.mpicxx = compiler_wrapper_commands['MPICXX']
             self.spec.mpif77 = compiler_wrapper_commands['MPIF77']
             self.spec.mpifc  = compiler_wrapper_commands['MPIFC']
-            debug_print("spec '%s' received .mpi* properties:" % self.spec,
-                compiler_wrapper_commands)
+            debug_print(("spec '%s' received .mpi* properties:" % self.spec),
+                        compiler_wrapper_commands)
 
     # ---------------------------------------------------------------------
     # Specifics for installation phase
