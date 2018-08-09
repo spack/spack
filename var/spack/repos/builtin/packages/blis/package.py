@@ -56,14 +56,14 @@ class Blis(Package):
 
     vairant(
             'blas', default='false',
-            description='BLAS compatibility'
+            description='BLAS compatibility',
             values=('true','false')
             multi=False
     )
 
     vairant(
             'cblas', default='false',
-            description='CBLAS compatibility'
+            description='CBLAS compatibility',
             values=('true','false')
             multi=False
     )
