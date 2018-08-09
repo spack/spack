@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 class Relion(CMakePackage, CudaPackage):
     """RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on) is a
@@ -34,22 +33,23 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    version('3.0_beta', git='https://bitbucket.org/scheres/relion-3.0_beta.git')
+    version('3.0_beta',
+            git='https://bitbucket.org/scheres/relion-3.0_beta.git')
     version('2.1', git='https://github.com/3dem/relion.git', preferred='true')
     version('2.0.3', git='https://github.com/3dem/relion.git')
     version('develop', git='https://github.com/3dem/relion.git')
 
-
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
     variant('double', default=True, description="double precision (cpu) code")
-    variant('double-gpu', default=False, description="double precision (gpu) code")
-    # added below cluster and desktop variants given some shared libraries in /usr/lib, like gpfs,
-    # are loaded by ld.so after compile which makes relion not work on desktops which may
-    # not be a member of gpfs cluster thus lack these given libraries
-    # https://github.com/spack/spack/issues/8384
-    variant('purpose', default='cluster', values=('cluster', 'desktop'), 
-	    description="build relion for use in cluster or desktop")
+    variant('double-gpu', default=False, description="double precision gpu")
+    # added below cluster and desktop variants given some shared libraries in
+    # /usr/lib, like gpfs, loaded by ld.so after compile which makes relion
+    # not work on desktops which may not be a member of gpfs cluster
+    # thus lack these given libraries
+    # see https://github.com/spack/spack/issues/8384
+    variant('purpose', default='cluster', values=('cluster', 'desktop'),
+            description="build relion for use in cluster or desktop")
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
@@ -70,7 +70,7 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('cuda@8.0:8.99', when='@:2 +cuda')
 
     def cmake_args(self):
-        
+
         carch = self.spec.variants['cuda_arch'].value[0]
 
         args = [
@@ -83,19 +83,18 @@ class Relion(CMakePackage, CudaPackage):
 
         if '+cuda' in self.spec:
             # relion+cuda requires selecting cuda_arch
-	    if not carch:
-                # below does not work
+            if not carch:
+		# below does not work so raising an exception
 		conflicts('%gcc@4.0:6.99', msg='you must select cuda_arch')
 		#conflicts('%gcc@4.0:6.99', when='@:2:3:', msg='you must select cuda_arch')
-                #  raise ValueError
+                raise ValueError
 	  	#print("you must select cuda_arch")
-	        sys.exit()
 	    else:
                 args += ['-DCUDA=ON','-DCudaTexture=ON', '-DCUDA_ARCH=%s' % (carch)]
 
         # these new values were added in relion 3
-	# do not seem to cause problems with < 3
-	else:
-	    args += ['-DMKLFFT=ON','-DFORCE_OWN_TBB=ON','-DALTCPU=ON']
+        # do not seem to cause problems with < 3
+        else:
+            args += ['-DMKLFFT=ON', '-DFORCE_OWN_TBB=ON', '-DALTCPU=ON']
 
         return args
