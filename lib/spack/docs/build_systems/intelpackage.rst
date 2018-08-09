@@ -3,18 +3,15 @@
 .. contents::
 
 
---------------------------
-Intel packages in Spack
---------------------------
+------------
+IntelPackage
+------------
 
-Spack can work with several software development products offered by Intel.
+Spack can install and use several software development products offered by Intel.
 Some of these are available under no-cost terms, others require a paid license.
 All share the same basic steps for configuration, installation, and, where
-applicable, license management. The relevant Spack Python class is:
-
-.. code-block:: python
-
-  IntelPackage
+applicable, license management. The Spack Python class `IntelPackage` implements
+these steps.
 
 Spack handles several interaction routes with Intel tools, like it does for any
 other package:
@@ -52,19 +49,19 @@ available for use under a `simplified license
 <https://software.intel.com/en-us/license/intel-simplified-software-license>`_
 since 2017 [fn1]_. They are packaged in Spack as:
 
-* ``intel-mkl`` – Math Kernel Library (linear algebra and FFT),
-* ``intel-mpi`` – The Intel-MPI implementation (derived from MPICH),
-* ``intel-ipp`` – Primitives for image-, signal-, and data-processing,
-* ``intel-daal`` – Machine learning and data analytics.
+* ``intel-mkl`` -- Math Kernel Library (linear algebra and FFT),
+* ``intel-mpi`` -- The Intel-MPI implementation (derived from MPICH),
+* ``intel-ipp`` -- Primitives for image-, signal-, and data-processing,
+* ``intel-daal`` -- Machine learning and data analytics.
 
-Some earlier versions of these library products were released under a paid
-license, which for these versions must be available, like for compilers
-discussed next, at installation time of the products and during compilation of
-client packages.
+Some earlier versions of these libraries were released under a paid license.
+For these older versions, the license must be available at installation time of
+the products and during compilation of client packages.
 
-The library packages can be used both with and without Intel compilers.
-The latter offer options to simplify linking (sometimes considerably),
-but Spack always uses fairly explicit linkage instead.
+The library packages can be used both with and without Intel compilers.  The
+various Intel compiler invocation commands offer options to simplify linking
+(sometimes considerably), but Spack always uses fairly explicit linkage
+anyway.
 
 
 ^^^^^^^^^^^^^^^^^^
@@ -74,23 +71,27 @@ Licensed packages
 Intel's core software development products that provide compilers, analyzers,
 and optimizers do require a paid license.  In Spack, they are packaged as:
 
-* ``intel-parallel-studio`` – the entire suite of compilers and libraries,
-* ``intel`` – a subset containing just the compilers and the Intel-MPI runtime [fn2]_.
+* ``intel-parallel-studio`` -- the entire suite of compilers and libraries,
+* ``intel`` -- a subset containing just the compilers and the Intel-MPI runtime [fn2]_.
 
-------
-
-**TODO:** Confirm scope of MPI components (runtime vs. devel) in current (and
-previous?) *cluster/professional/composer* editions, i.e., presence in downloads,
-possibly subject to license coverage(!); see `disussion in PR #4300
-<https://github.com/spack/spack/pull/4300#issuecomment-305582898>`_.
-[NB: An "mpi" subdirectory is not indicative of the full MPI SDK being present
-(i.e., ``mpicc``, …, and header files).  The directory may just as well contain
-only the MPI runtime (``mpirun`` and shared libraries) .]
-
-------
+..
+    TODO: Confirm and possible change(!) the scope of MPI components (runtime
+    vs. devel) in current (and previous?) *cluster/professional/composer*
+    editions, i.e., presence in downloads, possibly subject to license
+    coverage(!); see `disussion in PR #4300
+    <https://github.com/spack/spack/pull/4300#issuecomment-305582898>`_.  [NB:
+    An "mpi" subdirectory is not indicative of the full MPI SDK being present
+    (i.e., ``mpicc``, ..., and header files).  The directory may just as well
+    contain only the MPI runtime (``mpirun`` and shared libraries) .]
+    See also issue #8632.
 
 The license is needed at installation time and to compile client packages, but
-never to merely run any resulting binaries.
+never to merely run any resulting binaries. The license status for a given
+Spack package is normally specified in the *package code* through directives like
+`license_required` (see :ref:`Licensed software <license>`).
+For the Intel packages, however, the *class code* provides these directives (in
+exchange of forfeiting a measure of OOP purity) and takes care of idiosyncasies
+like historic version dependence.
 
 The libraries that are provided in the standalone packages are also included in the
 all-encompassing ``intel-parallel-studio``. To complicate matters a bit, that
@@ -104,32 +105,32 @@ The edition forms the leading part of the version number for Spack's
 version numbers seen with most other Spack packages. For example, we have:
 
 
-.. code-block:: sh
+.. code-block:: console
 
   $ spack info intel-parallel-studio
-  …
+  ...
   Preferred version:
-      professional.2018.2    http:…
+      professional.2018.2    http:...
 
   Safe versions:
-      professional.2018.2    http:…
-      …
-      composer.2018.2        http:…
-      …
-      cluster.2018.2         http:…
-      …
-  …
+      professional.2018.2    http:...
+      ...
+      composer.2018.2        http:...
+      ...
+      cluster.2018.2         http:...
+      ...
+  ...
 
 To install the full studio suite, capable of compiling MPI applications, run:
 
-.. code-block:: sh
+.. code-block:: console
 
   $ spack install intel-parallel-studio@cluster.2018.2        # ca. 12 GB
 
 If you need to save some disk space or installation time, you could install
 separately as needed:
 
-.. code-block:: sh
+.. code-block:: console
 
   $ spack install intel         # 0.6 GB
   $ spack install intel-mpi     # 0.5 GB
@@ -143,11 +144,11 @@ Unrelated packages
 The following packages do not use the Intel installer and are not in class ``IntelPackage``
 that is discussed here:
 
-* ``intel-gpu-tools`` – Test suite and low-level tools for the Linux `Direct
+* ``intel-gpu-tools`` -- Test suite and low-level tools for the Linux `Direct
   Rendering Manager <https://en.wikipedia.org/wiki/Direct_Rendering_Manager>`_
-* ``intel-mkl-dnn`` – Math Kernel Library for Deep Neural Networks (``CMakePackage``)
-* ``intel-xed`` – X86 machine instructions encoder/decoder
-* ``intel-tbb`` – Standalone version of Intel Threading Building Blocks. – Note that
+* ``intel-mkl-dnn`` -- Math Kernel Library for Deep Neural Networks (``CMakePackage``)
+* ``intel-xed`` -- X86 machine instructions encoder/decoder
+* ``intel-tbb`` -- Standalone version of Intel Threading Building Blocks. Note that
   a TBB runtime version is included with ``intel-mkl``, and development
   versions are provided by the packages ``intel-parallel-studio`` (all
   editions) and its ``intel`` subset.
@@ -214,9 +215,9 @@ directory tree `as shown below <Spack-managed file_>`_).
 Installing a standalone license file
 """"""""""""""""""""""""""""""""""""
 
-If you purchased a user-specific license, `follow Intel's instructions to
+If you purchased a user-specific license, follow `Intel's instructions
 <https://software.intel.com/en-us/faq/licensing#license-management>`_
-"activate" it for your serial number, then download the resulting license file.
+to "activate" it for your serial number, then download the resulting license file.
 If needed, `request to have the file re-sent
 <https://software.intel.com/en-us/articles/resend-license-file>`_ to you.
 
@@ -244,15 +245,15 @@ the following means, in order of decreasing preference:
   one of the directories mentioned in this environment variable.  Adjust file
   permissions to match licensed users.
 
+  .. tip::
 
-  **Recommendation:**
-  If your system has not yet set and used the environment variable
-  ``INTEL_LICENSE_FILE``, you could start using it with the ``spack install``
-  stage of licensed tools and subsequent client packages. You would, however,
-  be in a bind to always set that variable in the same manner, across
-  updates and re-installations, and perhaps accommodate additions to it. As
-  this may be difficult in the long run, we recommend that you do *not* attempt
-  to start using the variable solely for Spack.  Instead, try the next option.
+      If your system has not yet set and used the environment variable
+      ``INTEL_LICENSE_FILE``, you could start using it with the ``spack
+      install`` stage of licensed tools and subsequent client packages. You
+      would, however, be in a bind to always set that variable in the same
+      manner, across updates and re-installations, and perhaps accommodate
+      additions to it. As this may be difficult in the long run, we recommend
+      that you do *not* attempt to start using the variable solely for Spack.
 
 .. _`Spack-managed file`:
 
@@ -637,7 +638,7 @@ Install steps
    insufficient space as::
 
        ==> './install.sh' '--silent' 'silent.cfg'
-       …
+       ...
        Missing critical prerequisite
        -- Not enough disk space
 
@@ -745,7 +746,7 @@ Debug notes
 
 * You can trigger a wall of additional diagnostics by Spack options, e.g.:
 
-  .. code-block:: sh
+  .. code-block:: console
 
     $ spack --debug -v install -v intel-mpi
 
@@ -758,16 +759,16 @@ Debug notes
   besides Spack's usual archival items, a copy of the ``silent.cfg`` file that
   was passed to the Intel installer:
 
-  .. code-block:: sh
+  .. code-block:: console
 
-    $ grep COMPONENTS …intel-mpi…<hash>/.spack/silent.cfg
+    $ grep COMPONENTS ...intel-mpi...<hash>/.spack/silent.cfg
     COMPONENTS=ALL
 
 * If an installation error occurs, Spack will normally clean up and remove a
   partially installed target directory. You can direct Spack to keep it using
   ``--keep-prefix``, e.g.:
 
-  .. code-block:: sh
+  .. code-block:: console
 
     $ spack install --keep-prefix  intel-mpi
 
