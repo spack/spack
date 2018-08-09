@@ -23,9 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import grp
 
-from llnl.util.filesystem import chmod_X, chgrp
+from llnl.util.filesystem import chmod_x, chgrp
 
 from spack.package_prefs import get_package_permissions, get_package_group
 from spack.package_prefs import get_package_dir_permissions
@@ -48,7 +47,7 @@ def forall_files(path, fn, args, dir_args=None):
 def chmod_real_entries(path, perms):
     # Don't follow links so we don't change things outside the prefix
     if not os.path.islink(path):
-        chmod_X(path, perms)
+        chmod_x(path, perms)
 
 
 def post_install(spec):

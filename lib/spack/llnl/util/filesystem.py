@@ -248,7 +248,7 @@ def chgrp(path, group):
     os.chown(path, -1, gid)
 
 
-def chmod_X(entry, perms):
+def chmod_x(entry, perms):
     """Implements the uppercase X version of the executable permissions as
     default for chmod.
     """

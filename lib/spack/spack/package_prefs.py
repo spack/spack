@@ -300,14 +300,14 @@ def get_package_permissions(spec):
     if writable in ('world', 'group'):
         if readable == 'user':
             raise ConfigError('Writable permissions may not be more' +
-                             ' permissive than readable permissions.\n' +
-                             '      Violating package is %s' % spec.name)
+                              ' permissive than readable permissions.\n' +
+                              '      Violating package is %s' % spec.name)
         perms |= stat.S_IWGRP
     if writable == 'world':
         if readable != 'world':
             raise ConfigError('Writable permissions may not be more' +
-                             ' permissive than readable permissions.\n' +
-                             '      Violating package is %s' % spec.name)
+                              ' permissive than readable permissions.\n' +
+                              '      Violating package is %s' % spec.name)
         perms |= stat.S_IWOTH
 
     return perms
