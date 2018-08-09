@@ -25,18 +25,24 @@
 import os
 import grp
 
-from llnl.util.filesystem import chmod_X
+from llnl.util.filesystem import chmod_X, chgrp
 
 from spack.package_prefs import get_package_permissions, get_package_group
+from spack.package_prefs import get_package_dir_permissions
 
 
-def forall_files(path, fn, args):
+def forall_files(path, fn, args, dir_args=None):
+    """Apply function to all files in directory, with file as first arg.
+
+    Does not apply to the root dir."""
     for root, dirs, files in os.walk(path):
         for d in dirs:
-            fn(os.path.join(root, d), *args)
+            if dir_args:
+                fn(os.path.join(root, d), *dir_args)
+            else:
+                fn(os.path.join(root, d), *args)
         for f in files:
             fn(os.path.join(root, f), *args)
-    fn(path, *args)
 
 
 def chmod_real_entries(path, perms):
@@ -48,10 +54,10 @@ def chmod_real_entries(path, perms):
 def post_install(spec):
     if not spec.external:
         perms = get_package_permissions(spec)
+        dir_perms = get_package_dir_permissions(spec)
         group = get_package_group(spec)
 
-        forall_files(spec.prefix, chmod_real_entries, [perms])
+        forall_files(spec.prefix, chmod_real_entries, [perms], [dir_perms])
 
         if group:
-            gid = grp.getgrnam(group).gr_gid
-            forall_files(spec.prefix, os.chown, [-1, gid])
+            forall_files(spec.prefix, chgrp, [group])

@@ -66,7 +66,7 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, touch
+from llnl.util.filesystem import mkdirp, touch, chgrp
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
@@ -78,7 +78,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
-from spack.package_prefs import get_package_permissions
+from spack.package_prefs import get_package_dir_permissions
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1529,9 +1529,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
             else:
-                # Check for proper permissions
+                # Set the proper group for the prefix
+                group = get_package_group(self.spec)
+                if group:
+                    chgrp(self.prefix, group)
+                # Set the proper permissions.
+                # This has to be done after group because changing groups blows
+                # away the sticky group bit on the directory
                 mode = os.stat(self.prefix).st_mode
-                perms = get_package_permissions(self.spec)
+                perms = get_package_dir_permissions(self.spec)
                 if mode != perms:
                     os.chmod(self.prefix, perms)
 

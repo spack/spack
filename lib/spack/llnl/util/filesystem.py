@@ -242,6 +242,12 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
+def chgrp(path, group):
+    """Implement the bash chgrp function on a single path"""
+    gid = grp.getgrnam(group).gr_gid
+    os.chown(path, -1, gid)
+
+
 def chmod_X(entry, perms):
     """Implements the uppercase X version of the executable permissions as
     default for chmod.
