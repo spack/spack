@@ -33,7 +33,7 @@ class Bzip2(Package):
     and six times faster at decompression."""
 
     homepage = "http://www.bzip.org"
-    url      = "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
+    url      = "https://fossies.org/linux/misc/bzip2-1.0.6.tar.gz"
     list_url = "http://www.bzip.org/downloads.html"
 
     version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
