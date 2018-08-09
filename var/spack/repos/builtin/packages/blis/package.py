@@ -24,7 +24,10 @@
 ##############################################################################
 from spack import *
 
-
+# Although this looks like an Autotools package, it's not one. Refer to:
+# https://github.com/flame/blis/issues/17
+# https://github.com/flame/blis/issues/195
+# https://github.com/flame/blis/issues/197
 class Blis(Package):
     """BLIS is a portable software framework for instantiating high-performance
     BLAS-like dense linear algebra libraries. The framework was designed to
@@ -55,17 +58,17 @@ class Blis(Package):
     )
 
     vairant(
-            'blas', default='false',
-            description='BLAS compatibility',
-            values=('true', 'false'),
-            multi=False
+        'blas', default='false',
+        description='BLAS compatibility',
+        values=('true', 'false'),
+        multi=False
     )
 
     vairant(
-            'cblas', default='false',
-            description='CBLAS compatibility',
-            values=('true', 'false'),
-            multi=False
+        'cblas', default='false',
+        description='CBLAS compatibility',
+        values=('true', 'false'),
+        multi=False
     )
 
     # TODO: add cpu variants. Currently using auto.
@@ -74,10 +77,11 @@ class Blis(Package):
     provides('lapack')
 
     def install(self, spec, prefix):
-        configure("--prefix=" + self.spec.prefix,
-                  "--enable-threading=" + self.spec.variants['threads'].value,
+        configure("--prefix=" + spec.prefix,
+                  "--enable-threading=" + spec.variants['threads'].value,
                   "CC=" + env['CC'],
                   "auto")
         make()
+        if self.run_tests:
+            make('check')
         make('install')
-        make('check')
