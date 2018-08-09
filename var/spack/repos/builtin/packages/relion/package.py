@@ -25,7 +25,6 @@
 from spack import *
 import sys
 
-
 class Relion(CMakePackage, CudaPackage):
     """RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on) is a
     stand-alone computer program that employs an empirical Bayesian approach to
@@ -70,11 +69,6 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('cuda@9:', when='@3: +cuda')
     depends_on('cuda@8.0:8.99', when='@:2 +cuda')
 
-    # use gcc 4 when using cuda8 
-    # use up to gcc 6 when using cuda9
-    conflicts('%gcc@7:', when='@3: +cuda')
-    conflicts('%gcc@5:', when='@:2 +cuda')
-
     def cmake_args(self):
         
         carch = self.spec.variants['cuda_arch'].value[0]
@@ -91,8 +85,10 @@ class Relion(CMakePackage, CudaPackage):
             # relion+cuda requires selecting cuda_arch
 	    if not carch:
                 # below does not work
-		# conflicts(self)
-		print("you must select cuda_arch")
+		conflicts('%gcc@4.0:6.99', msg='you must select cuda_arch')
+		#conflicts('%gcc@4.0:6.99', when='@:2:3:', msg='you must select cuda_arch')
+                #  raise ValueError
+	  	#print("you must select cuda_arch")
 	        sys.exit()
 	    else:
                 args += ['-DCUDA=ON','-DCudaTexture=ON', '-DCUDA_ARCH=%s' % (carch)]
