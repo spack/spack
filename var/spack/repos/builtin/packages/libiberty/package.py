@@ -23,14 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os.path
-import shutil
+
 
 # Libiberty has two homes: binutils and gcc.  This package uses the
 # binutils tarfile but only builds the libiberty subdirectory.  This
 # is useful for other packages that want the demangling functions
 # without the rest of binutils.
-
 
 class Libiberty(AutotoolsPackage):
     """The libiberty.a library from GNU binutils.  Libiberty provides
@@ -44,12 +42,11 @@ class Libiberty(AutotoolsPackage):
     version('2.29.1', 'acc9cd826edb9954ac7cecb81c727793')
     version('2.28.1', 'a3bf359889e4b299fce1f4cb919dc7b6')
 
-    variant('fpic', default=False, description='Compile with -fPIC.')
+    variant('pic', default=False,
+            description='Compile with position independent code.')
 
     # Configure and build just libiberty.
-    @property
-    def configure_directory(self):
-        return join_path(self.stage.source_path, 'libiberty')
+    configure_directory = 'libiberty'
 
     # Set default cflags (-g -O2), add -fPIC if requested, and move to
     # the configure line.
@@ -66,7 +63,7 @@ class Libiberty(AutotoolsPackage):
         else:
             flags.append('-O2')
 
-        if '+fpic' in self.spec:
+        if '+pic' in self.spec:
             flags.append(self.compiler.pic_flag)
 
         return (None, None, flags)
@@ -74,14 +71,3 @@ class Libiberty(AutotoolsPackage):
     def configure_args(self):
         args = ['--enable-install-libiberty']
         return args
-
-    # Libiberty always installs libiberty.a into lib64, even with
-    # --libdir or --disable-multilib, so just give up and copy.
-    @run_after('install')
-    def copy_library(self):
-        lib_file = join_path(self.prefix.lib, 'libiberty.a')
-        lib64_file = join_path(self.prefix.lib64, 'libiberty.a')
-
-        if not os.path.isfile(lib_file):
-            mkdirp(self.prefix.lib)
-            shutil.copy(lib64_file, lib_file)
