@@ -60,9 +60,9 @@ class Blis(Package):
     provides('lapack')
 
     def install(self, spec, prefix):
-        configure("--prefix="+self.spec.prefix,
-                  "--enable-threading="+self.spec.variants['threads'].value,
-                  "CC="+env['CC'],
+        configure("--prefix=" +self.spec.prefix,
+                  "--enable-threading=" +self.spec.variants['threads'].value,
+                  "CC=" +env['CC'],
                   "auto")
         make()
         make('install')
