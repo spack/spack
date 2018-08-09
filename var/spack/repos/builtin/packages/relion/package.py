@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Relion(CMakePackage, CudaPackage):
     """RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on) is a
     stand-alone computer program that employs an empirical Bayesian approach to
@@ -84,13 +85,12 @@ class Relion(CMakePackage, CudaPackage):
         if '+cuda' in self.spec:
             # relion+cuda requires selecting cuda_arch
             if not carch:
-		# below does not work so raising an exception
-		conflicts('%gcc@4.0:6.99', msg='you must select cuda_arch')
-		#conflicts('%gcc@4.0:6.99', when='@:2:3:', msg='you must select cuda_arch')
+                # below does not work so raising an exception
+                conflicts('%gcc@4.0:6.99', msg='you must select cuda_arch')
                 raise ValueError
-	  	#print("you must select cuda_arch")
-	    else:
-                args += ['-DCUDA=ON','-DCudaTexture=ON', '-DCUDA_ARCH=%s' % (carch)]
+            else:
+                args += ['-DCUDA=ON', '-DCudaTexture=ON',
+                         '-DCUDA_ARCH=%s' % (carch)]
 
         # these new values were added in relion 3
         # do not seem to cause problems with < 3
