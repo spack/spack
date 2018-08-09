@@ -45,5 +45,5 @@ class Darwin(Platform):
         self.add_operating_system(str(mac_os), mac_os)
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return 'darwin' in platform.system().lower()

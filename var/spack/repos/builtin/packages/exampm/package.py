@@ -29,9 +29,8 @@ class Exampm(CMakePackage):
     """Exascale Material Point Method (MPM) Mini-App"""
 
     homepage = "https://github.com/ECP-copa/ExaMPM"
-    url      = "https://github.com/ECP-copa/ExaMPM"
+    git      = "https://github.com/ECP-copa/ExaMPM.git"
 
-    version('develop', git='https://github.com/ECP-copa/ExaMPM',
-            branch='master')
+    version('develop', branch='master')
 
     tags = ['proxy-app']

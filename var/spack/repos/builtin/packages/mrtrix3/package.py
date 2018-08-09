@@ -33,10 +33,9 @@ class Mrtrix3(Package):
        density."""
 
     homepage = "http://www.mrtrix.org/"
-    url      = "https://github.com/MRtrix3/mrtrix3"
+    git      = "https://github.com/MRtrix3/mrtrix3.git"
 
-    version('2017-09-25', commit='72aca89e3d38c9d9e0c47104d0fb5bd2cbdb536d',
-            git='https://github.com/MRtrix3/mrtrix3.git')
+    version('2017-09-25', commit='72aca89e3d38c9d9e0c47104d0fb5bd2cbdb536d')
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))

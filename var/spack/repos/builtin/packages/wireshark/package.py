@@ -55,7 +55,7 @@ class Wireshark(CMakePackage):
     depends_on('libpcap')
     depends_on('lua@5.0.0:5.2.99')
     depends_on('krb5')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libsmi',    when='+smi')
     depends_on('libssh',    when='+libssh')
     depends_on('nghttp2',   when='+nghttp2')

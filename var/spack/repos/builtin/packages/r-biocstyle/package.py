@@ -30,9 +30,9 @@ class RBiocstyle(RPackage):
     documents. Package vignettes illustrate use and functionality."""
 
     homepage = "https://www.bioconductor.org/packages/BiocStyle/"
-    url      = "https://git.bioconductor.org/packages/BiocStyle"
+    git      = "https://git.bioconductor.org/packages/BiocStyle.git"
 
-    version('2.4.1', git='https://git.bioconductor.org/packages/BiocStyle', commit='ef10764b68ac23a3a7a8ec3b6a6436187309c138')
+    version('2.4.1', commit='ef10764b68ac23a3a7a8ec3b6a6436187309c138')
 
     depends_on('r-bookdown', type=('build', 'run'))
     depends_on('r-knitr@1.12:', type=('build', 'run'))

@@ -32,10 +32,9 @@ class Express(CMakePackage):
        target sequences from sampled subsequences."""
 
     homepage = "http://bio.math.berkeley.edu/eXpress/"
-    url      = "https://github.com/adarob/eXpress"
+    git      = "https://github.com/adarob/eXpress.git"
 
-    version('2015-11-29', commit='f845cab2c7f2d9247b35143e4aa05869cfb10e79',
-            git='https://github.com/adarob/eXpress.git')
+    version('2015-11-29', commit='f845cab2c7f2d9247b35143e4aa05869cfb10e79')
 
     depends_on('boost')
     depends_on('bamtools')

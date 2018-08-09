@@ -26,14 +26,13 @@ from spack import *
 
 
 class GtkorvoCercsEnv(CMakePackage):
-    """A utility library used by some GTkorvo packages.
-    """
+    """A utility library used by some GTkorvo packages."""
 
     homepage = "https://github.com/GTkorvo/cercs_env"
-    url = "https://github.com/GTkorvo/cercs_env/archive/v1.0.tar.gz"
+    url      = "https://github.com/GTkorvo/cercs_env/archive/v1.0.tar.gz"
+    git      = "https://github.com/GTkorvo/cercs_env.git"
 
-    version('develop', git='https://github.com/GTkorvo/cercs_env.git',
-            branch='master')
+    version('develop', branch='master')
     version('1.0', '08f0532d0c2f7bc9b53dfa7a1c40ea4d')
 
     def cmake_args(self):

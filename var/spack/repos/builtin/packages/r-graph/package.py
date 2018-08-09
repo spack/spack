@@ -29,9 +29,9 @@ class RGraph(RPackage):
     """A package that implements some simple graph handling capabilities."""
 
     homepage = "https://www.bioconductor.org/packages/graph/"
-    url      = "https://git.bioconductor.org/packages/graph"
+    git      = "https://git.bioconductor.org/packages/graph.git"
 
-    version('1.54.0', git='https://git.bioconductor.org/packages/graph', commit='2a8b08520096241620421078fc1098f4569c7301')
+    version('1.54.0', commit='2a8b08520096241620421078fc1098f4569c7301')
 
     depends_on('r@3.4.0:3.4.9', when='@1.54.0')
     depends_on('r-biocgenerics', type=('build', 'run'))

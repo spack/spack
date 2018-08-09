@@ -31,10 +31,9 @@ class RAffy(RPackage):
        functions. 'affy' is fully functional without it."""
 
     homepage = "https://bioconductor.org/packages/affy/"
-    url      = "https://git.bioconductor.org/packages/affy"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/affy.git"
 
-    version('1.54.0', git='https://git.bioconductor.org/packages/affy', commit='a815f02906fcf491b28ed0a356d6fce95a6bd20e')
+    version('1.54.0', commit='a815f02906fcf491b28ed0a356d6fce95a6bd20e')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

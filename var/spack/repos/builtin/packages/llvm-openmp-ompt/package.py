@@ -32,19 +32,14 @@ class LlvmOpenmpOmpt(CMakePackage):
        changes for OMPT, the OpenMP Tools interface"""
 
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
+    git      = "https://github.com/OpenMPToolsInterface/LLVM-openmp.git"
 
     # tr6_forwards branch
-    version('tr6_forwards', branch='tr6_forwards',
-            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git')
-
-    version('3.9.2b2',
-            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
-            commit='5cdca5dd3c0c336d42a335ca7cff622e270c9d47')
+    version('tr6_forwards', branch='tr6_forwards')
+    version('3.9.2b2', commit='5cdca5dd3c0c336d42a335ca7cff622e270c9d47')
 
     # align-to-tr-rebased branch
-    version('3.9.2b',
-            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
-            commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
+    version('3.9.2b', commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
 
     # variant for building llvm-openmp-ompt as a stand alone library
     variant('standalone', default=False,

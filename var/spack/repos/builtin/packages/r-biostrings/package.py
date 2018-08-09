@@ -31,10 +31,9 @@ class RBiostrings(RPackage):
        or sets of sequences."""
 
     homepage = "https://bioconductor.org/packages/Biostrings/"
-    url      = "https://git.bioconductor.org/packages/Biostrings"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/Biostrings.git"
 
-    version('2.44.2', git='https://git.bioconductor.org/packages/Biostrings', commit='e4a2b320fb21c5cab3ece7b3c6fecaedfb1e5200')
+    version('2.44.2', commit='e4a2b320fb21c5cab3ece7b3c6fecaedfb1e5200')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))

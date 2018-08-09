@@ -35,11 +35,11 @@ class CudaMemtest(CMakePackage):
     """
 
     homepage = "https://github.com/ComputationalRadiationPhysics/cuda_memtest"
-    url      = "https://github.com/ComputationalRadiationPhysics/cuda_memtest.git"
+    git      = "https://github.com/ComputationalRadiationPhysics/cuda_memtest.git"
+
     maintainers = ['ax3l']
 
-    version('master', branch='dev',
-            git='https://github.com/ComputationalRadiationPhysics/cuda_memtest.git')
+    version('master', branch='dev')
 
     depends_on('cmake@2.8.5:', type='build')
     # depends_on('nvml', when='+nvml')

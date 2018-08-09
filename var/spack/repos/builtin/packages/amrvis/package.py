@@ -32,10 +32,9 @@ class Amrvis(MakefilePackage):
     """
 
     homepage = "https://github.com/AMReX-Codes/Amrvis"
-    url      = "https://github.com/AMReX-Codes/Amrvis.git"
+    git      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('master',
-            git='https://github.com/AMReX-Codes/Amrvis.git', tag='master')
+    version('master', tag='master')
 
     variant(
         'dims',
@@ -175,10 +174,10 @@ class Amrvis(MakefilePackage):
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
             spack_env.set('MPI_HOME', self.spec['mpi'].prefix)
-            spack_env.set('CC', spec['mpi'].mpicc)
-            spack_env.set('CXX', spec['mpi'].mpicxx)
-            spack_env.set('F77', spec['mpi'].mpif77)
-            spack_env.set('FC', spec['mpi'].mpifc)
+            spack_env.set('CC', self.spec['mpi'].mpicc)
+            spack_env.set('CXX', self.spec['mpi'].mpicxx)
+            spack_env.set('F77', self.spec['mpi'].mpif77)
+            spack_env.set('FC', self.spec['mpi'].mpifc)
 
     def install(self, spec, prefix):
         # Install exe manually

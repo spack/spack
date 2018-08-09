@@ -41,14 +41,11 @@ class Amp(CMakePackage):
     to allow application domain scientists, computer scientists and
     mathematicians to simulate, collaborate, and conduct research on
     various aspects of massively parallel simulation algorithms."""
+
     homepage = "https://bitbucket.org/AdvancedMultiPhysics/amp"
+    hg       = homepage
 
-    # ###################### Versions ##########################
-    version("develop", hg="https://bitbucket.org/AdvancedMultiPhysics/amp")
-
-    # ###################### Variants ##########################
-
-    # ###################### Dependencies ##########################
+    version('develop')
 
     # Everything should be compiled position independent (-fpic)
     depends_on('blas')
