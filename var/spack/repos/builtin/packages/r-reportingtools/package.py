@@ -40,9 +40,9 @@ class RReportingtools(RPackage):
     site: http:// research-pub.gene.com/ReportingTools."""
 
     homepage = "https://bioconductor.org/packages/ReportingTools/"
-    url      = "https://git.bioconductor.org/packages/ReportingTools"
+    git      = "https://git.bioconductor.org/packages/ReportingTools.git"
 
-    version('2.16.0', git='https://git.bioconductor.org/packages/ReportingTools', commit='b1aa0ea302da7f2993ce8087b1d09c11ddf03663')
+    version('2.16.0', commit='b1aa0ea302da7f2993ce8087b1d09c11ddf03663')
 
     depends_on('r@3.4.0:3.4.9', when='@2.16.0')
     depends_on('r-knitr', type=('build', 'run'))

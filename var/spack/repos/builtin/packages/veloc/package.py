@@ -31,12 +31,13 @@ class Veloc(CMakePackage):
 
     homepage = "https://github.com/ECP-VeloC/VELOC"
     url      = "https://github.com/ECP-VeloC/VELOC/archive/veloc-1.0rc1.zip"
-    tags     = ['ecp']
+    git      = "https://github.com/ecp-veloc/veloc.git"
 
-    version('1.0',    '98fe2d9abd2a1b53d7a52267dab91fae')
+    tags = ['ecp']
+
+    version('master', branch='master')
+    version('1.0',    '98fe2d9abd2a1b53d7a52267dab91fae', preferred=True)
     version('1.0rc1', 'c6db0de56b5b865183b1fa719ac74c1d')
-    version('master', git='https://github.com/ecp-veloc/veloc.git',
-            branch='master')
 
     depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception'
                '~filesystem~graph~icu~iostreams~locale~log~math~mpi'
@@ -49,6 +50,8 @@ class Veloc(CMakePackage):
     depends_on('axl')
     depends_on('cmake@3.9:', type='build')
 
+    conflicts('%gcc@:4.9.3')
+
     # requires C++11
     def flag_handler(self, name, flags):
         flags = list(flags)
@@ -60,7 +63,8 @@ class Veloc(CMakePackage):
         args = [
             "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
             "-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix,
-            "-DBOOST_ROOT=%s" % self.spec['boost'].prefix
+            "-DBOOST_ROOT=%s" % self.spec['boost'].prefix,
+            "-DMPI_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx
         ]
 
         return args

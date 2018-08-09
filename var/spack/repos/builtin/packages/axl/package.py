@@ -40,11 +40,12 @@ class Axl(CMakePackage):
 
     homepage = "https://github.com/ECP-VeloC/AXL"
     url      = "https://github.com/ECP-VeloC/AXL/archive/v0.1.0.zip"
-    tags     = ['ecp']
+    git      = "https://github.com/ecp-veloc/axl.git"
 
-    version('0.1.0', '1ff16c046c3a080c252e0bf4251b83bc')
-    version('master', git='https://github.com/ecp-veloc/axl.git',
-            branch='master')
+    tags = ['ecp']
+
+    version('master', branch='master')
+    version('0.1.1', sha256='7ec0417447c5a3cc0b6e46ff3f646984410c77e6c2081cf0c748781384be739b')
 
     variant('async_api', default='daemon',
             description="Set of async transfer APIs to enable",
@@ -63,7 +64,7 @@ class Axl(CMakePackage):
             args.append("-DAXL_LINK_STATIC=ON")
         args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
 
-        apis = self.spec.variants['async_api'].value.split(',')
+        apis = list(self.spec.variants['async_api'].value)
         if 'daemon' in apis:
             args.append('-DAXL_ASYNC_DAEMON=ON')
             apis.remove('daemon')

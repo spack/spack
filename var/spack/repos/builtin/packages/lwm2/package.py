@@ -31,8 +31,9 @@ class Lwm2(AutotoolsPackage):
        measurements from a program.
     """
     homepage = "https://jay.grs.rwth-aachen.de/redmine/projects/lwm2"
+    hg       = "https://jay.grs.rwth-aachen.de/hg/lwm2"
 
-    version('torus', hg='https://jay.grs.rwth-aachen.de/hg/lwm2', revision='torus')
+    version('torus', revision='torus')
 
     depends_on("papi")
     depends_on("mpi")

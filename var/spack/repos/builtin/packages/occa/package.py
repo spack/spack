@@ -38,13 +38,12 @@ class Occa(Package):
     """
 
     homepage = "http://libocca.org"
-    url      = 'https://github.com/libocca/occa'
-    git_url  = 'https://github.com/libocca/occa.git'
+    git      = 'https://github.com/libocca/occa.git'
 
-    version('develop', git='https://github.com/libocca/occa.git')
-    version('v1.0.0-alpha.5', git=git_url, tag='v1.0.0-alpha.5')
-    version('v0.2.0', git=git_url, tag='v0.2.0')
-    version('v0.1.0', git=git_url, tag='v0.1.0')
+    version('develop')
+    version('v1.0.0-alpha.5', tag='v1.0.0-alpha.5')
+    version('v0.2.0', tag='v0.2.0')
+    version('v0.1.0', tag='v0.1.0')
 
     variant('cuda',
             default=True,

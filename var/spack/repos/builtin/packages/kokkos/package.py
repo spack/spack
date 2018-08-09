@@ -31,7 +31,9 @@ class Kokkos(Package):
 
     homepage = "https://github.com/kokkos/kokkos"
     url      = "https://github.com/kokkos/kokkos/archive/2.03.00.tar.gz"
+    git      = "https://github.com/kokkos/kokkos.git"
 
+    version('develop', branch='develop')
     version('2.7.00',  'b357f9374c1008754babb4495f95e392')
     version('2.5.00',  '2db83c56587cb83b772d0c81a3228a21')
     version('2.04.11', 'd4849cee6eb9001d61c30f1d9fe74336')
@@ -42,8 +44,6 @@ class Kokkos(Package):
     version('2.03.00', 'f205d659d4304747759fabfba32d43c3')
     version('2.02.15', 'de41e38f452a50bb03363c519fe20769')
     version('2.02.07', 'd5baeea70109249f7dca763074ffb202')
-    version('develop', git='https://github.com/kokkos/kokkos',
-            branch='develop')
 
     variant('qthreads', default=False, description="enable Qthreads backend")
     variant('cuda', default=False, description="enable Cuda backend")

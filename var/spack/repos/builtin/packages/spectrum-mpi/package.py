@@ -26,13 +26,9 @@ from spack import *
 
 
 class SpectrumMpi(Package):
-    """
-    IBM MPI implementation from Spectrum MPI.
-
-    """
+    """IBM MPI implementation from Spectrum MPI."""
 
     homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
-    url = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
     provides('mpi')
 

@@ -29,9 +29,9 @@ class RSva(RPackage):
     """Surrogate Variable Analysis."""
 
     homepage = "https://www.bioconductor.org/packages/sva/"
-    url      = "https://git.bioconductor.org/packages/sva"
+    git      = "https://git.bioconductor.org/packages/sva.git"
 
-    version('3.24.4', git='https://git.bioconductor.org/packages/sva', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
+    version('3.24.4', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
 
     depends_on('r@3.4.0:3.4.9', when='@3.24.4')
     depends_on('r-mgcv', type=('build', 'run'))

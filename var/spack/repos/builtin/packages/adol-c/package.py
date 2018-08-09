@@ -29,11 +29,12 @@ class AdolC(AutotoolsPackage):
     """A package for the automatic differentiation of first and higher
     derivatives of vector functions in C and C++ programs by operator
     overloading."""
+
     homepage = "https://projects.coin-or.org/ADOL-C"
     url      = "http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz"
+    git      = "https://gitlab.com/adol-c/adol-c.git"
 
-    version('develop',  git='https://gitlab.com/adol-c/adol-c.git',
-            branch='master')
+    version('develop',  branch='master')
     version('2.6.3', 'f78f67f70d5874830a1ad1c0f54e54f7')
     version('2.6.2', '0f9547584c99c0673e4f81cf64e8d865')
     version('2.6.1', '1032b28427d6e399af4610e78c0f087b')

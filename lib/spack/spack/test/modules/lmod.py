@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+import re
 import pytest
 
 import spack.modules.lmod
@@ -150,6 +151,19 @@ class TestLmod(object):
         ) == 0
         assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 0
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 0
+
+    def test_prepend_path_separator(self, modulefile_content,
+                                    module_configuration):
+        """Tests modifications to run-time environment."""
+
+        module_configuration('module_path_separator')
+        content = modulefile_content('module-path-separator')
+
+        for line in content:
+            if re.match(r'[a-z]+_path\("COLON"', line):
+                assert line.endswith('"foo", ":")')
+            elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
+                assert line.endswith('"bar", ";")')
 
     def test_blacklist(self, modulefile_content, module_configuration):
         """Tests blacklisting the generation of selected modules."""

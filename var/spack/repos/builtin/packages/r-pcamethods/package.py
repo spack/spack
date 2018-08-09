@@ -37,9 +37,9 @@ class RPcamethods(RPackage):
        Physiology, Golm, Germany."""
 
     homepage = "http://bioconductor.org/packages/pcaMethods/"
-    url      = "https://git.bioconductor.org/packages/pcaMethods"
-    list_url = homepage
-    version('1.68.0', git='https://git.bioconductor.org/packages/pcaMethods', commit='c8d7c93dcaf7ef728f3d089ae5d55771b320bdab')
+    git      = "https://git.bioconductor.org/packages/pcaMethods.git"
+
+    version('1.68.0', commit='c8d7c93dcaf7ef728f3d089ae5d55771b320bdab')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))

@@ -22,13 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import re
+import pytest
+
 import spack.spec
 from spack.main import SpackCommand
+
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
 
 spec = SpackCommand('spec')
 
 
-def test_spec(mock_packages, config):
+def test_spec():
     output = spec('mpileaks')
 
     assert 'mpileaks@2.3' in output
@@ -39,7 +44,7 @@ def test_spec(mock_packages, config):
     assert 'mpich@3.0.4' in output
 
 
-def test_spec_yaml(mock_packages, config):
+def test_spec_yaml():
     output = spec('--yaml', 'mpileaks')
 
     mpileaks = spack.spec.Spec.from_yaml(output)
@@ -49,3 +54,43 @@ def test_spec_yaml(mock_packages, config):
     assert 'libdwarf' in mpileaks
     assert 'libelf' in mpileaks
     assert 'mpich' in mpileaks
+
+
+def _parse_types(string):
+    """Parse deptypes for specs from `spack spec -t` output."""
+    lines = string.strip().split('\n')
+
+    result = {}
+    for line in lines:
+        match = re.match(r'\[([^]]*)\]\s*\^?([^@]*)@', line)
+        if match:
+            types, name = match.groups()
+            result.setdefault(name, []).append(types)
+            result[name] = sorted(result[name])
+    return result
+
+
+def test_spec_deptypes_nodes():
+    output = spec('--types', '--cover', 'nodes', 'dt-diamond')
+    types = _parse_types(output)
+
+    assert types['dt-diamond']        == ['    ']
+    assert types['dt-diamond-left']   == ['bl  ']
+    assert types['dt-diamond-right']  == ['bl  ']
+    assert types['dt-diamond-bottom'] == ['blr ']
+
+
+def test_spec_deptypes_edges():
+    output = spec('--types', '--cover', 'edges', 'dt-diamond')
+    types = _parse_types(output)
+
+    assert types['dt-diamond']        == ['    ']
+    assert types['dt-diamond-left']   == ['bl  ']
+    assert types['dt-diamond-right']  == ['bl  ']
+    assert types['dt-diamond-bottom'] == ['b   ', 'blr ']
+
+
+def test_spec_returncode():
+    with pytest.raises(spack.main.SpackCommandError):
+        spec()
+    assert spec.returncode == 1

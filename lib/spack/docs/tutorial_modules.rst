@@ -165,7 +165,7 @@ The fastest way to set-up your environment is to :ref:`use a Docker image <workf
 
 .. code-block:: console
 
-  $ docker pull alalazo/spack:module_tutorial
+  $ docker pull spack/module-tutorial:latest
   $ docker run --rm -h module-file-tutorial -it spack/module-tutorial:latest
   root@module-file-tutorial:/#
 

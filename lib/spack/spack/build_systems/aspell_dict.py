@@ -39,7 +39,7 @@ from spack.util.executable import which
 # They aren't really an Autotools package, but it's close enough
 # that this works if we override configure().
 class AspellDictPackage(AutotoolsPackage):
-    """Specialized class for builing aspell dictionairies."""
+    """Specialized class for building aspell dictionairies."""
 
     extends('aspell')
 

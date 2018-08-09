@@ -30,9 +30,9 @@ class RAffycoretools(RPackage):
     the more common analyses that a core Biostatistician might see."""
 
     homepage = "https://www.bioconductor.org/packages/affycoretools/"
-    url      = "https://git.bioconductor.org/packages/affycoretools"
+    git      = "https://git.bioconductor.org/packages/affycoretools.git"
 
-    version('1.48.0', git='https://git.bioconductor.org/packages/affycoretools', commit='e0d52e34eead1ac45d3e60c59efd940e4889eb99')
+    version('1.48.0', commit='e0d52e34eead1ac45d3e60c59efd940e4889eb99')
 
     depends_on('r@3.4.0:3.4.9', when='@1.48.0')
     depends_on('r-biobase', type=('build', 'run'))
