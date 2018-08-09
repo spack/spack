@@ -54,6 +54,23 @@ class Blis(Package):
         multi=False
     )
 
+    vairant(
+            'blas', default='false',
+            description='BLAS compatibility'
+            values=('true','false')
+            multi=False
+    )
+
+    vairant(
+            'cblas', default='false',
+            description='CBLAS compatibility'
+            values=('true','false')
+            multi=False
+    )
+
+
+
+
     # TODO: add cpu variants. Currently using auto.
 
     provides('blas')
