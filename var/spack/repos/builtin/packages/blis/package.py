@@ -93,7 +93,7 @@ class Blis(Package):
     def configure(self, spec, prefix):
         config_args = []
 
-        config_args.append("--enable-threading=" +\
+        config_args.append("--enable-threading=" +
                            spec.variants['threads'].value)
 
         if spec.variants['cblas']:
@@ -118,9 +118,11 @@ class Blis(Package):
 
         config_args.append("CC=" + env['CC'])
 
+        # FIXME: add cpu isa variants.
+        config_args.append("auto")
+
         configure("--prefix=" + prefix,
-                  *config_args,
-                  "auto")
+                  *config_args)
 
     def build(self, spec, prefix):
         make()
