@@ -81,7 +81,7 @@ class Phist(CMakePackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('python@3:', when='@1.7:')
+    depends_on('python@3:', when='@1.7:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
     depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
