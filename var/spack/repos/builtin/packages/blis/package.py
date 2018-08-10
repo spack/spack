@@ -115,7 +115,7 @@ class Blis(Package):
         else:
             config_args.append("--disable-static")
 
-        configure("--prefix=" + spec.prefix,
+        configure("--prefix=" + prefix,
                   *config_args,
                   "CC=" + env['CC'],
                   "auto")
@@ -125,7 +125,7 @@ class Blis(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def check(self):
         make('check')
 
     def install(self, spec, prefix):
