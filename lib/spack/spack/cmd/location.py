@@ -46,7 +46,9 @@ def setup_parser(subparser):
     directories.add_argument(
         '-r', '--spack-root', action='store_true',
         help="spack installation root")
-
+    directories.add_argument(
+        '--spack-instance', action='store_true',
+        help='Find the Spack instance that installed a given spec')
     directories.add_argument(
         '-i', '--install-dir', action='store_true',
         help="install prefix for spec (spec need not be installed)")
@@ -92,7 +94,14 @@ def location(parser, args):
         if len(specs) != 1:
             tty.die("Too many specs.  Supply only one.")
 
-        if args.install_dir:
+        if args.spack_instance:
+            spec = spack.cmd.disambiguate_spec(specs[0])
+            db = spack.store.db.db_for_spec_hash(spec.dag_hash())
+            if db.is_upstream:
+                print(db.upstream_spack)
+            else:
+                print(spack.paths.spack_script)
+        elif args.install_dir:
             # install_dir command matches against installed specs.
             spec = spack.cmd.disambiguate_spec(specs[0])
             print(spec.prefix)

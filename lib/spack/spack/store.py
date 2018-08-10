@@ -108,9 +108,10 @@ layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 def retrieve_upstream_dbs():
     other_spack_instances = spack.config.get(
-        'config:upstream_spack_installations') or []
-    upstream_dbs = [spack.database.Database(path, is_upstream=True)
-                    for path in other_spack_instances]
+        'config:upstream_spack_installations') or {}
+    upstream_dbs = [
+        spack.database.Database(install_root, upstream_spack=spack_exe)
+        for spack_exe, install_root in other_spack_instances.items()]
     # TODO: if the upstream dbs are using each other as upstream, then these
     # need to be constructed one at a time, starting with the most-upstream
     # DB, and each downstream DB needs to be constructed with all DBs that are

@@ -170,7 +170,7 @@ class Database(object):
     _prefix_locks = {}
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
-                 is_upstream=False):
+                 upstream_spack=None):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -213,15 +213,17 @@ class Database(object):
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
 
-        # initialize rest of state.
-        if is_upstream:
+        self.is_upstream = bool(upstream_spack)
+        self.upstream_spack = upstream_spack
+
+        if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
             self.lock = Lock(self._lock_path)
+
         self._data = {}
 
-        self.upstream_dbs = upstream_dbs or []
-        self.is_upstream = is_upstream
+        self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
         # whether there was an error at the start of a read transaction
         self._error = None
@@ -318,7 +320,16 @@ class Database(object):
         spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
-    def query_by_spec_hash(self, hash_key, data=None, lock=True):
+    def db_for_spec_hash(self, hash_key):
+        with self.read_transaction():
+            if hash_key in self._data:
+                return self
+
+        for db in self.upstream_dbs:
+            if hash_key in db._data:
+                return db
+
+    def query_by_spec_hash(self, hash_key, data=None):
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:

@@ -563,9 +563,23 @@ def print_setup_info(*info):
 
     # print roots for all module systems
     module_roots = spack.config.get('config:module_roots')
+    module_to_roots = {
+        'tcl': list(),
+        'dotkit': list(),
+        'lmod': list()
+    }
     for name, path in module_roots.items():
         path = spack.util.path.canonicalize_path(path)
-        shell_set('_sp_%s_root' % name, path)
+        module_to_roots[name].append(path)
+
+    upstream_module_roots = (
+        spack.config.get('config:upstream_module_roots') or {})
+    for name, paths in upstream_module_roots.items():
+        paths = [spack.util.path.canonicalize_path(x) for x in paths]
+        module_to_roots[name].extend(paths)
+
+    for name, paths in module_to_roots.items():
+        shell_set('_sp_%s_roots' % name, ':'.join(paths))
 
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
