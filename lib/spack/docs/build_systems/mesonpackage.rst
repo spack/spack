@@ -5,7 +5,7 @@ MesonPackage
 ------------
 
 Much like Autotools and CMake, Meson is a build system.  But it is
-meant to be both fast and user friendly as possible.  GNOME's goal
+meant to be both fast and as user friendly as possible.  GNOME's goal
 is to port modules to use the Meson build system.
 
 ^^^^^^
@@ -53,7 +53,7 @@ like build instructions and dependencies.
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-At the bare minimum, packages that use the Meson build system needs
+At the bare minimum, packages that use the Meson build system need
 ``meson`` and ```ninja``` dependencies. Since this is always the case,
 the ``MesonPackage`` base class already contains:
 
