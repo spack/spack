@@ -87,7 +87,7 @@ class Blis(Package):
     provides('blas', when="+blas")
     provides('blas', when="+cblas")
 
-    phases = ['configure', 'install']
+    phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
         threading = "--enable-threading=" + spec.variants['threads'].value
@@ -121,8 +121,10 @@ class Blis(Package):
                   "CC=" + env['CC'],
                   "auto")
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make()
         if self.run_tests:
             make('check')
+ 
+    def install(self, spec, prefix):   
         make('install')
