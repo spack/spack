@@ -33,7 +33,7 @@ class RGlimma(RPackage):
        additional information."""
 
     homepage = "https://bioconductor.org/packages/release/bioc/html/Glimma.html"
-    url      = "https://git.bioconductor.org/packages/Glimma.git"
+    git      = "https://git.bioconductor.org/packages/Glimma.git"
 
     version('1.8.2', commit='f4aa1f05c2890d04b01ad4c0ab27f2f729f2c969')
 
