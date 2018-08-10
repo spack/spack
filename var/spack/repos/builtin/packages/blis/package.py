@@ -29,6 +29,7 @@ from spack import *
 # https://github.com/flame/blis/issues/195
 # https://github.com/flame/blis/issues/197
 class Blis(Package):
+    
     """BLIS is a portable software framework for instantiating high-performance
     BLAS-like dense linear algebra libraries. The framework was designed to
     isolate essential kernels of computation that, when optimized, immediately
@@ -48,7 +49,7 @@ class Blis(Package):
     version('0.3.0', sha256='d34d17df7bdc2be8771fe0b7f867109fd10437ac91e2a29000a4a23164c7f0da')
     version('0.2.2', sha256='4a7ecb56034fb20e9d1d8b16e2ef587abbc3d30cb728e70629ca7e795a7998e8')
 
-    depends_on('python@2.7:2.8,3.4:',type=('build','run'))
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     variant(
         'threads', default='none',
@@ -77,7 +78,6 @@ class Blis(Package):
         description='Build static library',
     )
 
-
     # TODO: add cpu variants. Currently using auto.
     # If one knl, should the default be memkind ?
 
@@ -87,14 +87,14 @@ class Blis(Package):
     provides('blas', when="+blas")
     provides('blas', when="+cblas")
 
-    phases = ['configure','install']
+    phases = ['configure', 'install']
 
-    def configure(self,spec,prefix):
+    def configure(self, spec, prefix):
         threading = "--enable-threading=" + spec.variants['threads'].value
-        
+   
         if spec.variants['cblas']:
             cblas = "--enable-cblas"
-        else: 
+        else:
             cblas = "--disable-cblas"
 
         if spec.variants['blas']:
@@ -120,7 +120,6 @@ class Blis(Package):
                   static,
                   "CC=" + env['CC'],
                   "auto")
-
         
     def install(self, spec, prefix):
         make()
