@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGenelendatabase(Package):
+class RGenelendatabase(RPackage):
     """Length of mRNA transcripts for a number of genomes and gene ID
        formats, largely based on UCSC table browser"""
 
@@ -35,3 +35,5 @@ class RGenelendatabase(Package):
     version('1.16.0', commit='c2a8b2359c6c59388853d6f6d15d71dffb17a198')
 
     depends_on('r@3.5.0:3.5.9', when='@1.16.0:')
+    depends_on('r-rtracklayer', type='run')
+    depends_on('r-genomicfeatures@1.3.15:', type='run')
