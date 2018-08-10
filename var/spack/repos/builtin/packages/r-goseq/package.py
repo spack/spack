@@ -36,5 +36,8 @@ class RGoseq(Package):
 
     depends_on('r@3.5.0:3.5.9', when='@1.32.0:')
     depends_on('r-biasedurn', type=('build', 'run'))
-    depends_on('r-genelendatabase@1.9.2:', type=('build', 'run'))t log
-
+    depends_on('r-genelendatabase@1.9.2:', type=('build', 'run'))
+    depends_on('r-mgcv', type='run')
+    depends_on('r-annotationdbi', type='run')
+    depends_on('r-go-db', type='run')
+    depends_on('r-biocgenerics', type='run')
