@@ -43,6 +43,7 @@ class Boost(Package):
     list_depth = 1
 
     version('develop', branch='develop', submodules=True)
+    version('1.68.0', '18863a7cae4d58ae85eb63d400f774f60a383411')
     version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae')
     version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459')
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d')
