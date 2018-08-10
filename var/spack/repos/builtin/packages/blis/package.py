@@ -48,7 +48,7 @@ class Blis(Package):
     version('0.3.0', sha256='d34d17df7bdc2be8771fe0b7f867109fd10437ac91e2a29000a4a23164c7f0da')
     version('0.2.2', sha256='4a7ecb56034fb20e9d1d8b16e2ef587abbc3d30cb728e70629ca7e795a7998e8')
 
-    depends_on('python@2.7:2.8,3.4:')
+    depends_on('python@2.7:2.8,3.4:',type=('build','run'))
 
     variant(
         'threads', default='none',
@@ -57,30 +57,72 @@ class Blis(Package):
         multi=False
     )
 
-    vairant(
-        'blas', default='false',
+    variant(
+        'blas', default=False,
         description='BLAS compatibility',
-        values=('true', 'false'),
-        multi=False
     )
 
-    vairant(
-        'cblas', default='false',
+    variant(
+        'cblas', default=False,
         description='CBLAS compatibility',
-        values=('true', 'false'),
-        multi=False
     )
+
+    variant(
+        'shared', default=True,
+        description='Build shared library',
+    )
+
+    variant(
+        'static', default=False,
+        description='Build static library',
+    )
+
 
     # TODO: add cpu variants. Currently using auto.
+    # If one knl, should the default be memkind ?
 
-    provides('blas')
-    provides('lapack')
+    # BLIS has it's own API but can be made compatible with BLAS
+    # enabling CBLAS automatically enables BLAS.
 
-    def install(self, spec, prefix):
+    provides('blas', when="+blas")
+    provides('blas', when="+cblas")
+
+    phases = ['configure','install']
+
+    def configure(self,spec,prefix):
+        threading = "--enable-threading=" + spec.variants['threads'].value
+        
+        if spec.variants['cblas']:
+            cblas = "--enable-cblas"
+        else: 
+            cblas = "--disable-cblas"
+
+        if spec.variants['blas']:
+            blas = "--enable-blas"
+        else:
+            blas = "--disable-blas"
+
+        if self.variants['shared']:
+            shared = "--enable-shared"
+        else:
+            shared = "--disable-shared"
+
+        if self.variants['static']:
+            static = "--enable-static"
+        else:
+            static - "--disable-static"
+
         configure("--prefix=" + spec.prefix,
-                  "--enable-threading=" + spec.variants['threads'].value,
+                  threading,
+                  cblas,
+                  blas,
+                  shared,
+                  static,
                   "CC=" + env['CC'],
                   "auto")
+
+        
+    def install(self, spec, prefix):
         make()
         if self.run_tests:
             make('check')
