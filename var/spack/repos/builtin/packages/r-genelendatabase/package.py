@@ -30,7 +30,7 @@ class RGenelendatabase(Package):
        formats, largely based on UCSC table browser"""
 
     homepage = "https://bioconductor.org/packages/release/data/experiment/html/geneLenDataBase.html"
-    url      = "https://git.bioconductor.org/packages/geneLenDataBase.git"
+    git      = "https://git.bioconductor.org/packages/geneLenDataBase.git"
 
     version('1.16.0', commit='c2a8b2359c6c59388853d6f6d15d71dffb17a198')
 
