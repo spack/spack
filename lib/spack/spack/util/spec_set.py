@@ -30,9 +30,10 @@ from llnl.util.tty.colify import colify
 import spack
 import spack.compilers
 import spack.architecture as sarch
-import spack.schema as schema
+# import spack.schema as schema
 import spack.util.spack_yaml as syaml
 
+from spack.error import SpackError
 from spack.spec import Spec, ArchSpec
 
 
@@ -78,6 +79,20 @@ class CombinatorialSpecSet:
         self._spec_lists = None
         self._include = []
         self._exclude = []
+
+    @staticmethod
+    def from_file(path):
+        try:
+            with open(path, 'r') as fin:
+                specs_yaml = syaml.load(fin.read())
+
+                # For now, turn off ignoring invalid specs, as it prevents
+                # iteration if the specified compilers can't be found.
+                return CombinatorialSpecSet(specs_yaml, ignore_invalid=False)
+        except Exception as e:
+            msg = ('Unable to create CombinatorialSpecSet from file ({0})'
+                   'due to {1}'.format(path, e.message))
+            raise SpackError(msg)
 
     def all_package_versions(self):
         """Get package/version combinations for all spack packages."""

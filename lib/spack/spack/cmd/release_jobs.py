@@ -23,12 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import sys
-import yaml
 
-import llnl.util.tty as tty
 from spack.error import SpackError
 from spack.util.spec_set import CombinatorialSpecSet
+import spack.util.spack_yaml as syaml
 
 description = "generate release build set as .gitlab-ci.yml"
 section = "build"
@@ -56,8 +54,8 @@ def release_jobs(parser, args):
     os_container_mapping = {
         'linux-ubuntu16.04-x86_64': {
             'image': 'ubuntu:16.04',
-            'setup_script': os.path.join(common_scripts_dir,
-                'install-tools-ubuntu-16.04-%s.sh')
+            'setup_script': os.path.join(
+                common_scripts_dir, 'install-tools-ubuntu-16.04-%s.sh')
         }
     }
 
@@ -65,23 +63,10 @@ def release_jobs(parser, args):
     if not release_specs_path:
         raise SpackError('Must provide path to release spec-set')
 
-    release_spec_set = None
-
-    with open(release_specs_path, 'r') as fin:
-        release_specs_contents = fin.read()
-        release_specs_yaml = yaml.load(release_specs_contents)
-
-        # For now, turn off ignoring invalid specs, as it blocks iterating
-        # the specs if the specified compilers can't be found.
-        release_spec_set = CombinatorialSpecSet(release_specs_yaml,
-                                                ignore_invalid=False)
-
-    if not release_spec_set:
-        tty.msg('No configured release specs, exiting.')
-        return
+    release_spec_set = CombinatorialSpecSet.from_file(release_specs_path)
 
     mirror_url = args.mirror_url
-    single_stage = 'stage01'
+    # single_stage = 'stage01'
 
     if not mirror_url:
         raise SpackError('Must provide url of target binary mirror')
@@ -99,8 +84,6 @@ def release_jobs(parser, args):
     stages = [stage_name]
 
     for release_spec in release_spec_set:
-        pkg_name = release_spec.name
-        pkg_version = release_spec.version
         pkg_short_spec = release_spec.short_spec
         pkg_compiler = release_spec.compiler
         pkg_spec_name = release_spec.format()
@@ -135,4 +118,4 @@ def release_jobs(parser, args):
     output_object['stages'] = stages
 
     with open(args.output_file, 'w') as outf:
-        outf.write(yaml.dump(output_object))
+        outf.write(syaml.dump(output_object))

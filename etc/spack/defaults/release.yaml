@@ -37,6 +37,8 @@ spec-set:
             zlib:
                 versions: [1.2.11]
         - compilers:
-            gcc:
-                versions: [5.4.0]
+            # gcc:
+            #     versions: [5.4.0]
+            clang:
+                versions: ['9.1.0-apple']
     cdash: ["https://spack.io/cdash/submit.php?project=spack"]

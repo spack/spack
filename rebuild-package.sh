@@ -11,11 +11,9 @@ BUILD_CACHE_DIR=`pwd`
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
 export PATH="${SPACK_BIN_DIR}:${PATH}"
 
-checkResult=`spack check-binaries single --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}"`
+checkResult=spack check-binaries --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}"
 
-upToDateRegex="up to date$"
-
-if ! [[ "$checkResult" =~ $upToDateRegex ]]; then
+if [[ $checkResult -ne 0 ]]; then
     # First build/install the package
     # buildResult=`spack install "${SPEC_NAME}"`
     spack install "${SPEC_NAME}"
