@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGoseq(Package):
+class RGoseq(RPackage):
     """Detects Gene Ontology and/or other user defined categories which are
        over/under represented in RNA-seq data"""
 
