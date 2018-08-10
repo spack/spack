@@ -34,8 +34,10 @@ class RBindrcpp(RPackage):
     list_url = "https://cran.r-project.org/src/contrib/Archive/bindrcpp"
 
     version('0.2', '2ed7f19fd9a12587f882d90060e7a343')
+    version('0.2.2', '48130709eba9d133679a0e959e49a7b14acbce4f47c1e15c4ab46bd9e48ae467') 
 
-    depends_on('r@3.4.0:3.4.9')
+    depends_on('r@3.4.0:3.4.9', when='@0.2')
+
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-bindr', type=('build', 'run'))
     depends_on('r-plogr', type=('build', 'run'))
