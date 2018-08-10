@@ -91,34 +91,32 @@ class Blis(Package):
     phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
-        threading = "--enable-threading=" + spec.variants['threads'].value
+        congfig_args = []
+
+        config_args.append("--enable-threading=" + spec.variants['threads'].value)
 
         if spec.variants['cblas']:
-            cblas = "--enable-cblas"
+            config_args.append("--enable-cblas")
         else:
-            cblas = "--disable-cblas"
+            config_args.append("--disable-cblas")
 
         if spec.variants['blas']:
-            blas = "--enable-blas"
+            config_args.append("--enable-blas")
         else:
-            blas = "--disable-blas"
+            config_args.append("--disable-blas")
 
         if self.variants['shared']:
-            shared = "--enable-shared"
+            config_args.append("--enable-shared")
         else:
-            shared = "--disable-shared"
+            config_args.append("--disable-shared")
 
         if self.variants['static']:
-            static = "--enable-static"
+            config_args.append("--enable-static")
         else:
-            static - "--disable-static"
+            config_args.append("--disable-static")
 
         configure("--prefix=" + spec.prefix,
-                  threading,
-                  cblas,
-                  blas,
-                  shared,
-                  static,
+                  *config_args,
                   "CC=" + env['CC'],
                   "auto")
 
