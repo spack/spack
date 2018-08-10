@@ -30,7 +30,7 @@ class RCtc(RPackage):
        to other programs"""
 
     homepage = "https://www.bioconductor.org/packages/release/bioc/html/ctc.html"
-    url      = "https://git.bioconductor.org/packages/ctc.git"
+    git      = "https://git.bioconductor.org/packages/ctc.git"
 
     version('1.54.0', commit='0c3df81dfc8fabe12e11884bed44b64e11fd6d4e')
 
