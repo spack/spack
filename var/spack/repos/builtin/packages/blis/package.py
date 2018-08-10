@@ -30,7 +30,6 @@ from spack import *
 # https://github.com/flame/blis/issues/197
 
 class Blis(Package):
-
     """BLIS is a portable software framework for instantiating high-performance
     BLAS-like dense linear algebra libraries. The framework was designed to
     isolate essential kernels of computation that, when optimized, immediately
@@ -121,7 +120,7 @@ class Blis(Package):
                   static,
                   "CC=" + env['CC'],
                   "auto")
-   
+
     def install(self, spec, prefix):
         make()
         if self.run_tests:
