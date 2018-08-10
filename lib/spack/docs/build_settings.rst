@@ -166,3 +166,32 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
+
+.. _package_permissions:
+
+-------------------
+Package Permissions
+-------------------
+
+Spack can be configured to assign file permissions to the files
+installed by a package.
+
+In the ``packages.yaml`` file, the attributes ``readable``,
+``writable``, and ``group`` control the package permissions. These
+attributes can be set under a package name or under ``all``.
+
+The ``readable`` and ``writable`` attributes take the strings
+``user``, ``group``, and ``world``. Those strings describe the
+broadest level of access available for reading or writing the files
+installed by that package, respectively. The execute permissions of
+the file are set to the same level as read permissions for those files
+that are executable. The default setting for ``readable`` is
+``world``, and for ``writable`` is ``user``.
+
+The ``group`` attribute assigns a unix-style group to a package. All
+files installed by the package will be owned by the assigned group,
+and the sticky group bit will be set on the install prefix and all
+directories inside the install prefix. This will ensure that even
+manually placed files within the install prefix are owned by the
+assigned group. If no group is assigned, Spack will allow the OS
+default behavior to go as expected.
