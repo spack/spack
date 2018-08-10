@@ -33,15 +33,17 @@ from spack.package_prefs import get_package_dir_permissions
 def forall_files(path, fn, args, dir_args=None):
     """Apply function to all files in directory, with file as first arg.
 
-    Does not apply to the root dir."""
+    Does not apply to the root dir. Does not apply to links"""
     for root, dirs, files in os.walk(path):
         for d in dirs:
-            if dir_args:
-                fn(os.path.join(root, d), *dir_args)
-            else:
-                fn(os.path.join(root, d), *args)
+            if not os.path.islink(os.path.join(root, d)):
+                if dir_args:
+                    fn(os.path.join(root, d), *dir_args)
+                else:
+                    fn(os.path.join(root, d), *args)
         for f in files:
-            fn(os.path.join(root, f), *args)
+            if not os.path.islink(os.path.join(root, d)):
+                fn(os.path.join(root, f), *args)
 
 
 def chmod_real_entries(path, perms):
