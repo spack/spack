@@ -75,7 +75,7 @@ class Glib(AutotoolsPackage):
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
     # Patch to prevent compiler errors in kernels older than 2.6.35
-    patch('old-kernels.patch', spec='+oldkernel')
+    patch('old-kernels.patch', when='+oldkernel')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
