@@ -29,7 +29,8 @@ compilers:
     environment: {}
     extra_rpaths: []
     flags: {}
-    modules: []
+    modules:
+    - gcc/6.4.0
     operating_system: rhel7
     paths:
       cc: /gpfs/bbp.cscs.ch/apps/compilers/install/intel-parallel-studio-cluster.2018.1/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc
