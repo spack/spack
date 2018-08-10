@@ -4,16 +4,9 @@
 MesonPackage
 ------------
 
-Much like Autotools and CMake, Meson is a build-script generator.
-In its simplest form, Spack's
-``MesonPackage`` runs the following steps:
-
-.. code-block:: console
-
-   $ meson
-   $ ninja
-   $ ninja check  # optional
-   $ ninja install
+Much like Autotools and CMake, Meson is a build system.  But it is
+meant to be both fast and user friendly as possible.  GNOME's goal
+is to port modules to use the Meson build system.
 
 ^^^^^^
 Phases
@@ -29,21 +22,24 @@ By default, these phases run:
 
 .. code-block:: console
 
-   $ meson
+   $ mkdir spack-build
+   $ cd spack-build
+   $ meson .. --prefix=/path/to/installation/prefix
    $ ninja
+   $ ninja test  # optional
    $ ninja install
 
 
 Any of these phases can be overridden in your package as necessary.
-There is also a ``check`` method that looks for a ``check`` target
-in the build file. If a ``check`` target exists and the user runs:
+There is also a ``check`` method that looks for a ``test`` target
+in the build file. If a ``test`` target exists and the user runs:
 
 .. code-block:: console
 
    $ spack install --test=root <meson-package>
 
 
-Spack will run ``ninja check`` after the build phase.
+Spack will run ``ninja test`` after the build phase.
 
 ^^^^^^^^^^^^^^^
 Important files
@@ -76,7 +72,7 @@ override the ``meson_args`` method like so:
 .. code-block:: python
 
    def meson_args(self):
-       return ['-recursive']
+       return ['--default-library=both']
 
 
 This method can be used to pass flags as well as variables.
@@ -86,4 +82,4 @@ External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
 For more information on the Meson build system, see:
-http://mesonbuild.com/index.html
+https://mesonbuild.com/index.html
