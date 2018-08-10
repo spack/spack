@@ -72,8 +72,11 @@ class Coreneuron(CMakePackage):
         flags = "-g -O2"
         if 'bgq' in self.spec.architecture and '%xl' in self.spec:
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
-        if '+knl' in self.spec and '%intel' in self.spec:
-            flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
+        if '%intel' in self.spec:
+            if '+knl' in self.spec:
+                flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
+            else:
+                flags = '-g -xHost -O2 -qopt-report=5'
         if '+debug' in self.spec:
             flags = '-g -O0'
         if '+profile' in self.spec:
