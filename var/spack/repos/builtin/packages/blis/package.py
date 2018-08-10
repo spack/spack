@@ -122,8 +122,11 @@ class Blis(Package):
 
     def build(self, spec, prefix):
         make()
-        if self.run_tests:
-            make('check')
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        make('check')
 
     def install(self, spec, prefix):
         make('install')
