@@ -93,7 +93,7 @@ class MofemFractureModule(CMakePackage):
                 '-DFM_VERSION_BUILD=%s' % self.spec.version[2]])
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+        options.append('-MOFEM_UM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         return options

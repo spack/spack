@@ -78,7 +78,7 @@ class MofemMinimalSurfaceEquation(CMakePackage):
             ('YES' if '+copy_user_modules' in spec else 'NO')])
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+        options.append('-MOFEM_UM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         return options

@@ -83,7 +83,7 @@ class MofemCephas(CMakePackage):
             '-DBOOST_DIR=%s' % spec['boost'].prefix])
 
         # build tests
-        options.append('-DMOFEM_BUILD_TETS={0}'.format(
+        options.append('-DMOFEM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         # variant packages
