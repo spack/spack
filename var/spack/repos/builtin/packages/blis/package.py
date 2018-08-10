@@ -93,7 +93,8 @@ class Blis(Package):
     def configure(self, spec, prefix):
         config_args = []
 
-        config_args.append("--enable-threading=" + spec.variants['threads'].value)
+        config_args.append("--enable-threading=" +\
+                           spec.variants['threads'].value)
 
         if spec.variants['cblas']:
             config_args.append("--enable-cblas")
