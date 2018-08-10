@@ -43,6 +43,7 @@ if ($?SPACK_ROOT) then
     _spack_pathadd PATH "$SPACK_ROOT/bin"
     eval `spack --print-shell-vars csh`
 
+    # TODO: this needs to be updated the same way as setup-env.sh
     # Set up modules and dotkit search paths in the user environment
     _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
     _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
