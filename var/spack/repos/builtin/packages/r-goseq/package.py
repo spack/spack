@@ -30,10 +30,11 @@ class RGoseq(Package):
        over/under represented in RNA-seq data"""
 
     homepage = "https://bioconductor.org/packages/release/bioc/html/goseq.html"
-    url      = "https://git.bioconductor.org/packages/goseq.git"
+    git      = "https://git.bioconductor.org/packages/goseq.git"
 
     version('1.32.0', commit='32fcbe647eea17d7d0d7a262610811502c421d36')
 
     depends_on('r@3.5.0:3.5.9', when='@1.32.0:')
     depends_on('r-biasedurn', type=('build', 'run'))
-    depends_on('r-genelendatabase@1.9.2:', type=('build', 'run'))
+    depends_on('r-genelendatabase@1.9.2:', type=('build', 'run'))t log
+
