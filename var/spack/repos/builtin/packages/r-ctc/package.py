@@ -34,5 +34,5 @@ class RCtc(RPackage):
 
     version('1.54.0', commit='0c3df81dfc8fabe12e11884bed44b64e11fd6d4e')
 
-    depends_on('r-amap')
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0:')
+    depends_on('r-amap', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@1.54.0:', type=('build', 'run'))
