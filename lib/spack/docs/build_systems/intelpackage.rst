@@ -312,70 +312,28 @@ stating a compiler component (in the form ``foo %intel``) when installing
 client packages or altering Spack's compiler default in ``packages.yaml``.
 See section `<Selecting Intel Compilers_>`_ for details.
 
-Configure Spack to find external Intel compilers, like all compilers it is to use,
-in ``compilers.yaml`` files located in
-``$SPACK_ROOT/etc/spack/`` or your own ``~/.spack/`` directory.
-In the Spack documentation, see
-:ref:`Configuration Files in Spack <configuration>`
-in general and
-:ref:`Vendor-Specific Compiler Configuration <vendor-specific-compiler-configuration>`,
-section Intel Compilers.
+To integrate a new set of externally installed Intel compilers into Spack
+follow section
+:ref:`Compiler configuration <compiler-config>`.
+Briefly, set up your environment like you would if you were to use these
+compilers normally, i.e., typically by a `module load ...` or a shell `source`
+command, then use `spack compiler find` to create a new section in the
+appropriately scoped ``compilers.yaml`` file.
 
-Briefly, the ``compilers.yaml`` files combine C and Fortran compilers of a
-specific vendor release and define such a set as a Spack
-:ref:`spec <sec-specs>`
-that in this case has the form ``intel@compilerversion`` [fn8]_.
-The entry determines how the spec is to be resolved, via ``paths`` and/or
-``modules`` tokens, to each language compiler in the set.
+Be aware that the Intel compilers need and use GCC to provide certain
+functionality, notably to support C++. The  system's default ``gcc`` command is
+normally queried for such needs.  To alter the GCC integration, modify the
+``compilers.yaml`` entry by one of the following means:
 
-The following example illustrates how to integrate the 2018 Intel compiler
-suite, which outside of Spack was activated by users of the example system as
-``module load intel/18``. Since Spack must be rather more picky about versions,
-we must specify full paths and complete modulefile names in a relevant
-``compilers.yaml`` entry. Edit as follows:
-
-.. code-block:: sh
-
-  spack config --scope=site edit compilers
-
-This command will edit ``$SPACK_ROOT/etc/spack/compilers.yaml`` located inside
-Spack's installation.  This scope is likely suitable for an installation that
-might be shared between several users.  Choose another scope if desired.
-
-Make sure the file begins with:
-
-.. code-block:: yaml
-
-    compilers:
-
-Append the following, adjusting the paths appropriately:
-
-.. code-block:: yaml
-
-    - compiler:
-        spec:       intel@18.0.2
-        operating_system:   centos6
-        target:     x86_64
-        modules:    [intel/18/18.0.2]
-        paths:
-          cc:       /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/icc
-          cxx:      /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/icpc
-          f77:      /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/ifort
-          fc:       /opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64/ifort
-
-The Intel compilers need and use GCC to provide certain functionality, notably
-to support C++. In the preceding minimal example, the  system's default ``gcc``
-command would be queried for such needs.  To alter the GCC integration:
-
-* add a gcc module to the list at the ``modules:`` tag, separated by comma, e.g. ``[gcc-4.9.3, intel/18/18.0.2]``, or
-* add ``cflags:``, ``cxxflags:``, and ``fflags:`` tags under the ``paths:`` tag,
+* add a gcc module to the list at the ``modules:`` tag, or
+* add ``cflags:``, ``cxxflags:``, and ``fflags:`` tags under the ``flags:`` tag,
 
 as detailed with examples under
 :ref:`Vendor-Specific Compiler Configuration <vendor-specific-compiler-configuration>`
 in the Spack documentation. There is also an advanced third option:
 
-* the modulefile that provides the Intel compilers (``intel/18/18.0.2`` in the
-  example) could, for the benefit of users outside of Spack, explicitly
+* the modulefile that provides the Intel compilers for you
+  could, for the benefit of users outside of Spack, explicitly
   integrate a specific ``gcc`` version via compiler flag environment variables
   or (hopefully not) via a sneaky extra ``PATH`` addition.
 
