@@ -23,11 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
+import stat
 
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigScope
+from spack.config import ConfigScope, ConfigError
 from spack.spec import Spec
 
 
@@ -174,3 +175,69 @@ mpich:
         spec = Spec('mpi')
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
+
+    def test_config_permissions(self):
+        # Although these aren't strictly about concretization, they are
+        # configured in the same file and therefore convenient to test here.
+        # Make sure we can configure readable and writable
+        conf = syaml.load("""\
+all:
+    readable: group
+    writable: group
+    group: all
+mpich:
+    readable: user
+    writable: user
+mpileaks:
+    writable: user
+    group: mpileaks
+callpath:
+    writable: world
+zlib:
+    readable: test
+""")
+        spack.config.set('packages', conf, scope='concretize')
+
+        # Test inheriting from 'all'
+        spec = Spec('zmpi')
+        perms = spack.package_prefs.get_package_permissions(spec)
+        assert perms == stat.S_IRWXU | stat.S_IRWXG
+
+        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        assert dir_perms == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
+
+        group = spack.package_prefs.get_package_group(spec)
+        assert group == 'all'
+
+        # Test overriding 'all'
+        spec = Spec('mpich')
+        perms = spack.package_prefs.get_package_permissions(spec)
+        assert perms == stat.S_IRWXU
+
+        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        assert dir_perms == stat.S_IRWXU
+
+        group = spack.package_prefs.get_package_group(spec)
+        assert group == 'all'
+
+        # Test overriding group from 'all' and different readable/writable
+        spec = Spec('mpileaks')
+        perms = spack.package_prefs.get_package_permissions(spec)
+        assert perms == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
+
+        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        expected = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_ISGID
+        assert dir_perms == expected
+
+        group = spack.package_prefs.get_package_group(spec)
+        assert group == 'mpileaks'
+
+        # Test failure for writable more permissive than readable
+        spec = Spec('callpath')
+        with pytest.raises(ConfigError):
+            spack.package_prefs.get_package_permissions(spec)
+
+        # Test failure for readable/writable not in (user, group, world)
+        spec = Spec('zlib')
+        with pytest.raises(ConfigError):
+            spack.package_prefs.get_package_permissions(spec)

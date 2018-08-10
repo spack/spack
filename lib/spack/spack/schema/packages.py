@@ -61,15 +61,12 @@ schema = {
                         },
                         'readable': {
                             'type':  'string',
-                            'default': 'world',
                         },
                         'writable': {
                             'type':  'string',
-                            'default': 'user',
                         },
                         'group': {
                             'type':  'string',
-                            'default': '',
                         },
                         'modules': {
                             'type': 'object',
