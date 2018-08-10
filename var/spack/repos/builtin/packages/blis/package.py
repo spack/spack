@@ -91,7 +91,7 @@ class Blis(Package):
     phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
-        congfig_args = []
+        config_args = []
 
         config_args.append("--enable-threading=" + spec.variants['threads'].value)
 
