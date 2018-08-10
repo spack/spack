@@ -27,7 +27,7 @@ modules:
           '^coreneuron+knl': 'knl'
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
-    naming_scheme: '${PACKAGE}/${VERSION}/${COMPILERNAME}'
+    naming_scheme: '${PACKAGE}/${VERSION}'
     hash_length: 0
     whitelist:
       - 'functionalizer'
