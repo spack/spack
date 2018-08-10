@@ -316,9 +316,9 @@ def get_package_permissions(spec):
 def get_package_group(spec):
     """Return the unix group associated with the spec"""
     allpkgs = get_packages_config()
-    if spec.name in allpkgs:
+    if spec.name in allpkgs and 'group' in allpkgs[spec.name]:
         return allpkgs[spec.name]['group']
-    elif 'all' in allpkgs:
+    elif 'all' in allpkgs and 'group' in allpkgs['all']:
         return allpkgs['all']['group']
     else:
         return ''
