@@ -25,29 +25,12 @@
 from spack import *
 
 
-class Kvtree(CMakePackage):
-    """KVTree provides a fully extensible C datastructure modeled after perl
-    hashes."""
+class PerlPerl6Slurp(PerlPackage):
+    """Perl6::Slurp - Implements the Perl 6 'slurp' built-in"""
 
-    homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
-    git      = "https://github.com/ecp-veloc/kvtree.git"
+    homepage = "http://search.cpan.org/~dconway/Perl6-Slurp-0.051005/lib/Perl6/Slurp.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/D/DC/DCONWAY/Perl6-Slurp-0.051005.tar.gz"
 
-    tags = ['ecp']
+    version('0.051005', '6095c8df495c7983f36996ed78c5ead7')
 
-    version('master', branch='master')
-    version('1.0.2', sha256='6b54f4658e5ebab747c0c2472b1505ac1905eefc8a0b2a97d8776f800ee737a3')
-
-    variant('mpi', default=True, description="Build with MPI message packing")
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+mpi'):
-            args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        else:
-            args.append("-DMPI=OFF")
-        if self.spec.satisfies('platform=cray'):
-            args.append("-DKVTREE_LINK_STATIC=ON")
-        return args
+    depends_on('perl@5.8:5.999', type=('build', 'run'))

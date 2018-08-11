@@ -25,29 +25,22 @@
 from spack import *
 
 
-class Kvtree(CMakePackage):
-    """KVTree provides a fully extensible C datastructure modeled after perl
-    hashes."""
+class RFastcluster(RPackage):
+    """This is a two-in-one package which provides interfaces to both R
+       and 'Python'. It implements fast hierarchical, agglomerative
+       clustering routines. Part of the functionality is designed as drop-in
+       replacement for existing routines: linkage() in the 'SciPy' package
+       'scipy.cluster.hierarchy', hclust() in R's 'stats' package, and the
+       'flashClust' package. It provides the same functionality with the
+       benefit of a much faster implementation. Moreover, there are
+       memory-saving routines for clustering of vector data, which go beyond
+       what the existing packages provide. For information on how to install
+       the 'Python' files, see the file INSTALL in the source distribution."""
 
-    homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
-    git      = "https://github.com/ecp-veloc/kvtree.git"
+    homepage = "http://danifold.net/fastcluster.html"
+    url      = "https://cran.r-project.org/src/contrib/fastcluster_1.1.25.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fastcluster/"
 
-    tags = ['ecp']
+    version('1.1.25', sha256='f3661def975802f3dd3cec5b2a1379f3707eacff945cf448e33aec0da1ed4205')
 
-    version('master', branch='master')
-    version('1.0.2', sha256='6b54f4658e5ebab747c0c2472b1505ac1905eefc8a0b2a97d8776f800ee737a3')
-
-    variant('mpi', default=True, description="Build with MPI message packing")
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+mpi'):
-            args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        else:
-            args.append("-DMPI=OFF")
-        if self.spec.satisfies('platform=cray'):
-            args.append("-DKVTREE_LINK_STATIC=ON")
-        return args
+    depends_on('r@3.0.0:', type=('build', 'run'))

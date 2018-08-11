@@ -25,29 +25,14 @@
 from spack import *
 
 
-class Kvtree(CMakePackage):
-    """KVTree provides a fully extensible C datastructure modeled after perl
-    hashes."""
+class RAmap(RPackage):
+    """Tools for Clustering and Principal Component Analysis
+       (With robust methods, and parallelized functions)."""
 
-    homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
-    git      = "https://github.com/ecp-veloc/kvtree.git"
+    homepage = "http://mulcyber.toulouse.inra.fr/projects/amap/"
+    url      = "https://cran.rstudio.com/src/contrib/amap_0.8-16.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/amap/"
 
-    tags = ['ecp']
+    version('0.8-16', sha256='d3775ad7f660581f7d2f070e426be95ae0d6743622943e6f5491988e5217d4e2')
 
-    version('master', branch='master')
-    version('1.0.2', sha256='6b54f4658e5ebab747c0c2472b1505ac1905eefc8a0b2a97d8776f800ee737a3')
-
-    variant('mpi', default=True, description="Build with MPI message packing")
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+mpi'):
-            args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        else:
-            args.append("-DMPI=OFF")
-        if self.spec.satisfies('platform=cray'):
-            args.append("-DKVTREE_LINK_STATIC=ON")
-        return args
+    depends_on('r@2.10.0:', type=('build', 'run'))

@@ -25,29 +25,23 @@
 from spack import *
 
 
-class Kvtree(CMakePackage):
-    """KVTree provides a fully extensible C datastructure modeled after perl
-    hashes."""
+class FastGlobalFileStatus(AutotoolsPackage):
+    """provides a scalable mechanism to retrieve such information of a file,
+       including its degree of distribution or replication and consistency."""
 
-    homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
-    git      = "https://github.com/ecp-veloc/kvtree.git"
+    homepage = "https://github.com/LLNL/FastGlobalFileStatus"
+    url = 'https://github.com/LLNL/FastGlobalFileStatus/files/2271592/fastglobalfilestatus-1.1.tar.gz'
 
-    tags = ['ecp']
+    version('1.1', 'c3d764c47a60310823947c489cd0f2df')
 
-    version('master', branch='master')
-    version('1.0.2', sha256='6b54f4658e5ebab747c0c2472b1505ac1905eefc8a0b2a97d8776f800ee737a3')
+    depends_on('mrnet')
+    depends_on('mount-point-attributes')
+    depends_on('mpi')
 
-    variant('mpi', default=True, description="Build with MPI message packing")
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+mpi'):
-            args.append("-DMPI=ON")
-            args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        else:
-            args.append("-DMPI=OFF")
-        if self.spec.satisfies('platform=cray'):
-            args.append("-DKVTREE_LINK_STATIC=ON")
+    def configure_args(self):
+        spec = self.spec
+        args = [
+            "--with-mpa=%s"   % spec['mount-point-attributes'].prefix,
+            "--with-mrnet=%s"       % spec['mrnet'].prefix
+        ]
         return args
