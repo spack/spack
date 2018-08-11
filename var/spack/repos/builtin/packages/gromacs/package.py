@@ -49,6 +49,7 @@ class Gromacs(CMakePackage):
     version('2016.5', 'f41807e5b2911ccb547a3fd11f105d47')
     version('2016.4', '19c8b5c85f3ec62df79d2249a3c272f8')
     version('2016.3', 'e9e3a41bd123b52fbcc6b32d09f8202b')
+    version('5.1.5',  '831fe741bcd9f1612155dffc919885f2')
     version('5.1.4',  'ba2e34d59b3982603b4935d650c08040')
     version('5.1.2',  '614d0be372f1a6f1f36382b7a6fcab98')
 
