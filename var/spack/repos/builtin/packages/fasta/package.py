@@ -65,7 +65,7 @@ Linux x86_64
 
     def edit(self, spec, prefix):
         makefile = FileFilter(self.makefile_path)
-        makefile.filter('XDIR = .*', 'XDIR = {}'.format(prefix.bin))
+        makefile.filter('XDIR = .*', 'XDIR = {0}'.format(prefix.bin))
 
     def build(self, spec, prefix):
         with working_dir('src'):
