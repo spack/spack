@@ -537,8 +537,8 @@ class IntelPackage(PackageBase):
         # flake8 is far too opinionated about lists - ugh.
         normalize_kwargs = {
             'version_globs': [
-                #'_%s' % self.version,
-                #'_%s.*' % v.up_to(2),   # should be: YYYY.Nupdate
+                '_%s' % self.version,
+                '_%s.*' % v.up_to(2),   # should be: YYYY.Nupdate
                 '_*.*.*',               # last resort
             ]
         }
