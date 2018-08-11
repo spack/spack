@@ -287,11 +287,30 @@ class IntelPackage(PackageBase):
         '''Return the version in a unified style, suitable for Version class
         conditionals.
         '''
-        # Versioning styles:
-        # - 'intel-parallel-studio' :   <edition>.YYYY.Nupdate
-        # - 'intel':                    YY.0.Nupdate (some assigned ad-hoc)
-        # - Recent lib packages:        YYYY.Nupdate.Buildseq
-        # - Early lib packages:         Major.Minor.Patch.Buildseq
+        # Input data for this routine:  self.version
+        # Returns:                      YYYY.Nupdate[.Buildseq]
+        #
+        # Specifics by package:
+        #
+        #   Package                     Format of self.version
+        #   ------------------------------------------------------------
+        #   'intel-parallel-studio'     <edition>.YYYY.Nupdate
+        #   'intel'                     YY.0.Nupdate (some assigned ad-hoc)
+        #   Recent lib packages         YYYY.Nupdate.Buildseq
+        #   Early lib packages          Major.Minor.Patch.Buildseq
+        #   ------------------------------------------------------------
+        #
+        #   Package                     Output
+        #   ------------------------------------------------------------
+        #   'intel-parallel-studio'     YYYY.Nupdate
+        #   'intel'                     YYYY.Nupdate
+        #   Recent lib packages         YYYY.Nupdate.Buildseq
+        #   Known early lib packages    YYYY.Minor.Patch.Buildseq (*)
+        #   Unknown early lib packages  (2000 + Major).Minor.Patch.Buildseq
+        #   ----------------------------------------------------------------
+        #
+        #   (*) YYYY is taken from @property "version_years" (a dict of specs)
+        #
         try:
             if self.name == 'intel':
                 # Has a "Minor" version element, but it is always set as 0. To
@@ -329,7 +348,7 @@ class IntelPackage(PackageBase):
     # Not using class IntelPackage:
     #  intel-gpu-tools/        intel-mkl-dnn/          intel-tbb/
     #
-    def normalize_suite_dir(self, suite_dir_name, version_glob='*.*.*'):
+    def normalize_suite_dir(self, suite_dir_name, version_globs=['*.*.*']):
         '''Returns the version-specific and absolute path to the directory of
         an Intel product or a suite of product components.
 
@@ -353,9 +372,10 @@ class IntelPackage(PackageBase):
                 toplevel psxevars.sh or equivalent file to source (and thus by
                 the modulefiles that Spack produces).
 
-            version_glob (str): A suffix glob pattern expected to qualify
-                suite_dir_name to its fully version-specific install directory
-                (as opposed to a compatibility directory or symlink).
+            version_globs (list of str): Suffix glob patterns (most specific
+                first) expected to qualify suite_dir_name to its fully
+                version-specific install directory (as opposed to a
+                compatibility directory or symlink).
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
@@ -429,12 +449,23 @@ class IntelPackage(PackageBase):
             unversioned_dirname = os.path.join(d, suite_dir_name)
 
         if unversioned_dirname:
-            matching_dirs = glob.glob(unversioned_dirname + version_glob)
-            if matching_dirs:
-                # Take the highest and thus presumably newest match, which
-                # better be the sole one anyway.
-                d = matching_dirs[-1]
-            else:
+            for g in version_globs:
+                try_glob = unversioned_dirname + g
+                debug_print('trying %s' % try_glob)
+
+                matching_dirs = sorted(glob.glob(try_glob))
+                # NB: Python glob() returns results in arbitrary order - ugh!
+                # NB2: sorted() is a shortcut that is NOT number-aware.
+
+                if matching_dirs:
+                    debug_print('found %d:' % len(matching_dirs),
+                                matching_dirs)
+                    # Take the highest and thus presumably newest match, which
+                    # better be the sole one anyway.
+                    d = matching_dirs[-1]
+                    break
+
+            if not matching_dirs:
                 # No match -- this *will* happen during pre-build call to
                 # setup_environment() when the destination dir is still empty.
                 # Return a sensible value anyway.
@@ -497,32 +528,40 @@ class IntelPackage(PackageBase):
 
         v = self.version_yearlike
 
-        # Glob to complete component_suite_dir. The alternatives could be
-        # merged, but using separate ones is clearer and likely more reliable.
-        suffix_glob = '_*.*.*'
+        # Glob variants to complete component_suite_dir.
+        # Helper var for older MPI versions - those are reparented, with each
+        # version in their own version-named dir.
         standalone_glob = '[1-9]*.*.*'
-        normalize_kwargs = {'version_glob': suffix_glob}
 
+        # Most other components; try most specific glob first.
+        # flake8 is far too opinionated about lists - ugh.
+        normalize_kwargs = {
+            'version_globs': [
+                #'_%s' % self.version,
+                #'_%s.*' % v.up_to(2),   # should be: YYYY.Nupdate
+                '_*.*.*',               # last resort
+            ]
+        }
         for rename_rule in [
-            # cs given as arg, in years, dir actually used, [version_glob]
+            # cs given as arg, in years, dir actually used, [version_globs]
             [None,              ':2015', 'composer_xe'],
             [None,              '2016:', 'compilers_and_libraries'],
             ['advisor',         ':2016', 'advisor_xe'],
             ['inspector',       ':2016', 'inspector_xe'],
             ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
             ['vtune',           ':2017', 'vtune_amplifier_xe'],  # alt.
-            ['itac',            ':',     'itac',   os.sep + standalone_glob],
+            ['itac',            ':',     'itac',  [os.sep + standalone_glob]],
         ]:
             if cs == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
                 cs = rename_rule[2]
                 if len(rename_rule) > 3:
-                    normalize_kwargs = {'version_glob': rename_rule[3]}
+                    normalize_kwargs = {'version_globs': rename_rule[3]}
                 break
 
         d = self.normalize_suite_dir(cs, **normalize_kwargs)
 
         # Help find components not located directly under d.
-        # NB: ancestor() not well suited if version_glob may contain os.sep .
+        # NB: ancestor() not well suited if version_globs may contain os.sep .
         parent_dir = re.sub(os.sep + re.escape(cs) + '.*', '', d)
 
         reparent_as = {}
