@@ -25,17 +25,13 @@
 from spack import *
 
 
-class RBindrcpp(RPackage):
-    """Provides an easy way to fill an environment with active bindings that
-       call a C++ function."""
+class RFindpython(RPackage):
+    """Package designed to find an acceptable python binary."""
 
-    homepage = "https://github.com/krlmlr/bindrcpp"
-    url      = "https://cran.r-project.org/src/contrib/bindrcpp_0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/bindrcpp"
+    homepage = "https://github.com/trevorld/findpython"
+    url      = "https://cran.r-project.org/src/contrib/findpython_1.0.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/findpython"
 
-    version('0.2.2', '48130709eba9d133679a0e959e49a7b14acbce4f47c1e15c4ab46bd9e48ae467')
-    version('0.2', '2ed7f19fd9a12587f882d90060e7a343')
+    version('1.0.3', sha256='5486535ae2f0a123b630d8eabf93a61b730765f55dfcc8ef4f6e56e7c49408f8')
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-bindr', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
+    depends_on('python', type='run')
