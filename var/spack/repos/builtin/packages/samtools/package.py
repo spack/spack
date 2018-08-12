@@ -64,4 +64,5 @@ class Samtools(Package):
         mkdir(prefix.include)
         mkdir(prefix.lib)
         install('sam.h', prefix.include)
+        install('bam.h', prefix.include)
         install('libbam.a', prefix.lib)
