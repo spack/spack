@@ -26,7 +26,8 @@ from spack import *
 
 
 class Cnvnator(MakefilePackage):
-    """A tool for CNV discovery and genotyping from depth-of-coverage by mapped reads."""
+    """A tool for CNV discovery and genotyping
+    from depth-of-coverage by mapped reads."""
 
     homepage = "https://github.com/abyzovlab/CNVnator"
     url      = "https://github.com/abyzovlab/CNVnator/archive/v0.3.3.tar.gz"
@@ -44,12 +45,15 @@ class Cnvnator(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         # Replace CXX with CXXFLAGS
-        makefile.filter('CXX.*=.*', 'CXXFLAGS = -O3 -std=c++11 -DCNVNATOR_VERSION=\\"$(VERSION)\\" $(OMPFLAGS)')
+        makefile.filter('CXX.*=.*',
+                        'CXXFLAGS = -O3 -std=c++11 \
+                        -DCNVNATOR_VERSION=\\"$(VERSION)\\" $(OMPFLAGS)')
         makefile.filter('$(CXX)', '$(CXX) $(CXXFLAGS)', string=True)
         # Replace -I$(SAMDIR) with -I$(SAMINC)
         makefile.filter('-I$(SAMDIR)', '-I$(SAMINC)', string=True)
         # Link more libs
-        makefile.filter('^override LIBS.*', 'override LIBS += -lz -lbz2 -lcurl -llzma')
+        makefile.filter('^override LIBS.*',
+                        'override LIBS += -lz -lbz2 -lcurl -llzma')
 
     def build(self, spec, prefix):
         make('ROOTSYS={0}'.format(spec['root'].prefix),
