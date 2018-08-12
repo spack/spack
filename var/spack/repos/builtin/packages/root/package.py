@@ -72,7 +72,7 @@ class Root(CMakePackage):
     depends_on('jpeg')
     depends_on('gsl')
     depends_on('python@2.7:')
-    # depends_on('opengl')
+    depends_on('opengl')
     depends_on('graphviz', when='+graphviz')
     # depends_on('kerberos')
     depends_on('libxml2+python')
