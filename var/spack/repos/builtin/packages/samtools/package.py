@@ -60,7 +60,6 @@ class Samtools(Package):
             make("prefix=%s" % prefix)
             make("prefix=%s" % prefix, "install")
         # Install dev headers and libs for legacy apps depending on them
-        mkdir = which('mkdir')
         mkdir(prefix.include)
         mkdir(prefix.lib)
         install('sam.h', prefix.include)
