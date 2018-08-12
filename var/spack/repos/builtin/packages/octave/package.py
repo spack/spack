@@ -95,7 +95,7 @@ class Octave(AutotoolsPackage):
     depends_on('hdf5',         when='+hdf5')
     depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
-    # depends_on('opengl',      when='+opengl')    # TODO: add package
+    depends_on('opengl',      when='+opengl')
     depends_on('qhull',        when='+qhull')
     depends_on('qrupdate',     when='+qrupdate')
     # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
