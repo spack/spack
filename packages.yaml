@@ -89,3 +89,8 @@ packages:
             slurm@system: /usr
         buildable: False
 
+    opengl:
+        paths:
+            opengl@4.5.0: /usr
+        buildable: False
+
