@@ -25,17 +25,15 @@
 from spack import *
 
 
-class RBindrcpp(RPackage):
-    """Provides an easy way to fill an environment with active bindings that
-       call a C++ function."""
+class RSm(RPackage):
+    """This is software linked to the book 'Applied Smoothing Techniques for
+       Data Analysis - The Kernel Approach with S-Plus Illustrations'
+       Oxford University Press."""
 
-    homepage = "https://github.com/krlmlr/bindrcpp"
-    url      = "https://cran.r-project.org/src/contrib/bindrcpp_0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/bindrcpp"
+    homepage = "http://www.stats.gla.ac.uk/~adrian/sm"
+    url      = "https://cran.r-project.org/src/contrib/sm_2.2-5.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/sm"
 
-    version('0.2.2', '48130709eba9d133679a0e959e49a7b14acbce4f47c1e15c4ab46bd9e48ae467')
-    version('0.2', '2ed7f19fd9a12587f882d90060e7a343')
+    version('2.2-5.5', sha256='43e212a14c364b98b10018b56fe0a619ccffe4bde1294e6c45b3eafe7caf82e7')
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-bindr', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'))
