@@ -33,9 +33,9 @@ class Braker(Package):
     url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER1_v1.11.tar.gz"
     list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
-    version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
     version('2.1.0', '5f974abcceb9f96a11668fa20a6f6a56',
             url='http://exon.gatech.edu/Braker/BRAKER2.tar.gz')
+    version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('augustus@3.2.3')
