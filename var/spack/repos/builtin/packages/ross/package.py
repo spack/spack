@@ -29,7 +29,7 @@ class Ross(CMakePackage):
     """Rensselaer's Optimistic Simulation System"""
 
     homepage = "http://carothersc.github.io/ROSS/"
-    url = "http://carothersc.github.io/ROSS/"
+    url = "https://github.com/carothersc/ROSS.git"
 
     version('master', git='https://github.com/carothersc/ROSS.git')
 
