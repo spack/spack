@@ -29,9 +29,9 @@ class Ross(CMakePackage):
     """Rensselaer's Optimistic Simulation System"""
 
     homepage = "http://carothersc.github.io/ROSS/"
-    url = "https://github.com/carothersc/ROSS.git"
+    git = "https://github.com/carothersc/ROSS.git"
 
-    version('master', git='https://github.com/carothersc/ROSS.git')
+    version('master')
 
     depends_on('mpi')
 
