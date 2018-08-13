@@ -66,6 +66,7 @@ from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
 import spack.build_systems.cmake
+import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
@@ -384,11 +385,13 @@ def set_module_variables_for_package(pkg, module):
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable('./configure')
 
+    m.meson = Executable('meson')
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
+    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -555,6 +558,22 @@ def get_std_cmake_args(pkg):
         list of str: arguments for cmake
     """
     return spack.build_systems.cmake.CMakePackage._std_args(pkg)
+
+
+def get_std_meson_args(pkg):
+    """List of standard arguments used if a package is a MesonPackage.
+
+    Returns:
+        list of str: standard arguments that would be used if this
+        package were a MesonPackage instance.
+
+    Args:
+        pkg (PackageBase): package under consideration
+
+    Returns:
+        list of str: arguments for meson
+    """
+    return spack.build_systems.meson.MesonPackage._std_args(pkg)
 
 
 def parent_class_modules(cls):
