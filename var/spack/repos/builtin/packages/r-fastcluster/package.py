@@ -25,17 +25,22 @@
 from spack import *
 
 
-class RBindrcpp(RPackage):
-    """Provides an easy way to fill an environment with active bindings that
-       call a C++ function."""
+class RFastcluster(RPackage):
+    """This is a two-in-one package which provides interfaces to both R
+       and 'Python'. It implements fast hierarchical, agglomerative
+       clustering routines. Part of the functionality is designed as drop-in
+       replacement for existing routines: linkage() in the 'SciPy' package
+       'scipy.cluster.hierarchy', hclust() in R's 'stats' package, and the
+       'flashClust' package. It provides the same functionality with the
+       benefit of a much faster implementation. Moreover, there are
+       memory-saving routines for clustering of vector data, which go beyond
+       what the existing packages provide. For information on how to install
+       the 'Python' files, see the file INSTALL in the source distribution."""
 
-    homepage = "https://github.com/krlmlr/bindrcpp"
-    url      = "https://cran.r-project.org/src/contrib/bindrcpp_0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/bindrcpp"
+    homepage = "http://danifold.net/fastcluster.html"
+    url      = "https://cran.r-project.org/src/contrib/fastcluster_1.1.25.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fastcluster/"
 
-    version('0.2.2', '48130709eba9d133679a0e959e49a7b14acbce4f47c1e15c4ab46bd9e48ae467')
-    version('0.2', '2ed7f19fd9a12587f882d90060e7a343')
+    version('1.1.25', sha256='f3661def975802f3dd3cec5b2a1379f3707eacff945cf448e33aec0da1ed4205')
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-bindr', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
