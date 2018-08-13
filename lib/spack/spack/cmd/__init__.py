@@ -308,7 +308,10 @@ def display_specs(specs, args=None, **kwargs):
 
             for abbrv, spec in zip(abbreviated, specs):
                 prefix = gray_hash(spec, hlen) if hashes else ''
-                print(prefix + (format % (abbrv, spec.prefix)))
+                if spec.external_path:
+                    print(format % (abbrv, spec.external_path))
+                else:
+                    print(prefix + (format % (abbrv, spec.prefix)))
 
         elif mode == 'deps':
             for spec in specs:
