@@ -1,19 +1,19 @@
 #!/bin/bash
 
-set -ex
+set -x
 
 ### This script may first contact the remote mirror (MIRROR_URL) to
 ### find out whether the build is actually necessary.
 
-echo "Building package ${SPEC_NAME}, ${SHORT_HASH}, ${MIRROR_URL}"
+echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 
 BUILD_CACHE_DIR=`pwd`
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
 export PATH="${SPACK_BIN_DIR}:${PATH}"
 
-checkResult=spack check-binaries --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}"
+spack check-binaries --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
 
-if [[ $checkResult -ne 0 ]]; then
+if [[ $? -ne 0 ]]; then
     # First build/install the package
     # buildResult=`spack install "${SPEC_NAME}"`
     spack install "${SPEC_NAME}"

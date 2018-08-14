@@ -4,7 +4,7 @@ bzip2@1.0.6%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: 45fgyebr5b5m73bjha4ifkw4wdqphmzc,
+  variables: {HASH: 45fgyebr5b5m73bjha4ifkw4wdqphmzc, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: bzip2@1.0.6%gcc@5.4.0/45fgyeb, SPEC_NAME: bzip2@1.0.6%gcc@5.4.0}
 jsoncpp@1.7.3%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -12,7 +12,7 @@ jsoncpp@1.7.3%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: xjyay6vyouujoqqky5fnpi2djfdbbasi,
+  variables: {HASH: xjyay6vyouujoqqky5fnpi2djfdbbasi, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: jsoncpp@1.7.3%gcc@5.4.0/xjyay6v, SPEC_NAME: jsoncpp@1.7.3%gcc@5.4.0}
 libbsd@0.8.6%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -20,7 +20,7 @@ libbsd@0.8.6%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: vrcn5gytgisnfayps2t3k4ejpeefdax7,
+  variables: {HASH: vrcn5gytgisnfayps2t3k4ejpeefdax7, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libbsd@0.8.6%gcc@5.4.0/vrcn5gy, SPEC_NAME: libbsd@0.8.6%gcc@5.4.0}
 libpng@1.6.34%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -28,7 +28,7 @@ libpng@1.6.34%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: rsu7mhx2nqiycbjocgvr76sehsrk7ldk,
+  variables: {HASH: rsu7mhx2nqiycbjocgvr76sehsrk7ldk, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libpng@1.6.34%gcc@5.4.0/rsu7mhx, SPEC_NAME: libpng@1.6.34%gcc@5.4.0}
 libtiff@4.0.9%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -36,7 +36,7 @@ libtiff@4.0.9%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: xfk2q2yjzompjh5helvo4aukzgbqk4lz,
+  variables: {HASH: xfk2q2yjzompjh5helvo4aukzgbqk4lz, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libtiff@4.0.9%gcc@5.4.0/xfk2q2y, SPEC_NAME: libtiff@4.0.9%gcc@5.4.0}
 lz4@1.8.1.2%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -44,7 +44,7 @@ lz4@1.8.1.2%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: jsudood3hr2olknnk6o7rilnlszhov2l,
+  variables: {HASH: jsudood3hr2olknnk6o7rilnlszhov2l, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: lz4@1.8.1.2%gcc@5.4.0/jsudood, SPEC_NAME: lz4@1.8.1.2%gcc@5.4.0}
 ncurses@6.1%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -52,7 +52,7 @@ ncurses@6.1%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: uhist3o2hl723skwpjyettowrho4zru3,
+  variables: {HASH: uhist3o2hl723skwpjyettowrho4zru3, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: ncurses@6.1%gcc@5.4.0/uhist3o, SPEC_NAME: ncurses@6.1%gcc@5.4.0}
 openmpi@3.1.0%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -60,7 +60,7 @@ openmpi@3.1.0%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: ppass6zzav7cnzu34ojviosfvh6t544a,
+  variables: {HASH: ppass6zzav7cnzu34ojviosfvh6t544a, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: openmpi@3.1.0%gcc@5.4.0/ppass6z, SPEC_NAME: openmpi@3.1.0%gcc@5.4.0}
 python@2.7.14%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -68,7 +68,7 @@ python@2.7.14%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: dikojhixju5fml2qjh2ngujzpftochvn,
+  variables: {HASH: dikojhixju5fml2qjh2ngujzpftochvn, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: python@2.7.14%gcc@5.4.0/dikojhi, SPEC_NAME: python@2.7.14%gcc@5.4.0}
 readline@7.0%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -76,7 +76,7 @@ readline@7.0%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: l4dso5b7azjy25okglms54c4fk5w7qtu,
+  variables: {HASH: l4dso5b7azjy25okglms54c4fk5w7qtu, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: readline@7.0%gcc@5.4.0/l4dso5b, SPEC_NAME: readline@7.0%gcc@5.4.0}
 sqlite@3.23.1%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -84,7 +84,7 @@ sqlite@3.23.1%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: qqngw7evwa2gcorjrphpw4d4ur3jyxj3,
+  variables: {HASH: qqngw7evwa2gcorjrphpw4d4ur3jyxj3, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: sqlite@3.23.1%gcc@5.4.0/qqngw7e, SPEC_NAME: sqlite@3.23.1%gcc@5.4.0}
 stages: [stage-01]
 tk@8.6.5%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
@@ -93,7 +93,7 @@ tk@8.6.5%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: 32t77fptmxl5hkoibbxigwyijsdke43z,
+  variables: {HASH: 32t77fptmxl5hkoibbxigwyijsdke43z, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: tk@8.6.5%gcc@5.4.0/32t77fp, SPEC_NAME: tk@8.6.5%gcc@5.4.0}
 transset@1.0.1%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -101,7 +101,7 @@ transset@1.0.1%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: snpivgxkd6xzq2ekvq5o6pp6gsoiegtr,
+  variables: {HASH: snpivgxkd6xzq2ekvq5o6pp6gsoiegtr, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: transset@1.0.1%gcc@5.4.0/snpivgx, SPEC_NAME: transset@1.0.1%gcc@5.4.0}
 xz@5.2.4%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -109,7 +109,7 @@ xz@5.2.4%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: r3qsejr3upbuv4xnnioyxu642ycazpxz,
+  variables: {HASH: r3qsejr3upbuv4xnnioyxu642ycazpxz, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: xz@5.2.4%gcc@5.4.0/r3qsejr, SPEC_NAME: xz@5.2.4%gcc@5.4.0}
 zlib@1.2.11%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
   image: ubuntu:16.04
@@ -117,5 +117,5 @@ zlib@1.2.11%gcc@5.4.0 / linux-ubuntu16.04-x86_64:
     ./rebuild-package.sh]
   stage: stage-01
   tags: [my-tag]
-  variables: {MIRROR_URL: 'http://172.17.0.1:8081/', SHORT_HASH: ikxnzwhfgd7wsanf4em5tphg7ngbdood,
+  variables: {HASH: ikxnzwhfgd7wsanf4em5tphg7ngbdood, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: zlib@1.2.11%gcc@5.4.0/ikxnzwh, SPEC_NAME: zlib@1.2.11%gcc@5.4.0}

@@ -24,7 +24,10 @@
 ##############################################################################
 import os
 
+from jsonschema import validate
+
 from spack.error import SpackError
+from spack.schema.os_container_mapping import schema
 from spack.util.spec_set import CombinatorialSpecSet
 import spack.util.spack_yaml as syaml
 
@@ -48,16 +51,13 @@ def setup_parser(subparser):
 
 
 def release_jobs(parser, args):
-    share_path = os.path.join('.', 'share', 'spack')
-    common_scripts_dir = os.path.join(share_path, 'docker', 'build', 'common')
+    share_path = os.path.join('.', 'share', 'spack', 'docker')
+    os_container_mapping_path = os.path.join(share_path, 'os-container-mapping.yaml')
 
-    os_container_mapping = {
-        'linux-ubuntu16.04-x86_64': {
-            'image': 'ubuntu:16.04',
-            'setup_script': os.path.join(
-                common_scripts_dir, 'install-tools-ubuntu-16.04-%s.sh')
-        }
-    }
+    with open(os_container_mapping_path, 'r') as fin:
+        os_container_mapping = syaml.load(fin)
+
+    validate(os_container_mapping, schema)
 
     release_specs_path = args.spec_set
     if not release_specs_path:
@@ -87,11 +87,12 @@ def release_jobs(parser, args):
         pkg_short_spec = release_spec.short_spec
         pkg_compiler = release_spec.compiler
         pkg_spec_name = release_spec.format()
-        pkg_short_hash = release_spec.dag_hash()
+        pkg_hash = release_spec.dag_hash()
 
-        for osname in os_container_mapping:
+        containers = os_container_mapping['containers']
+        for osname in containers:
             job_name = '%s / %s' % (release_spec, osname)
-            container_info = os_container_mapping[osname]
+            container_info = containers[osname]
             build_image = container_info['image']
             setup_script = container_info['setup_script'] % pkg_compiler
 
@@ -104,7 +105,7 @@ def release_jobs(parser, args):
                 'variables': {
                     'SHORT_SPEC': pkg_short_spec,
                     'MIRROR_URL': mirror_url,
-                    'SHORT_HASH': pkg_short_hash,
+                    'HASH': pkg_hash,
                     'SPEC_NAME': pkg_spec_name
                 },
                 'script': [
