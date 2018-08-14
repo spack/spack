@@ -115,7 +115,7 @@ class Blis(Package):
             config_args.append("--enable-static")
         else:
             config_args.append("--disable-static")
- 
+
         # Trying to fix build with icc.
         # config_args.append("CC=intel")
 
