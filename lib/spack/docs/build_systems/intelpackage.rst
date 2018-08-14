@@ -906,7 +906,6 @@ Footnotes
    components because it follows defaults defined in the download package, even
    when ``intel-parallel-studio ~mpi`` has been requested.
 
-   .. ``lib/spack/spack/build_systems/intel.py:pset_components()``
    For ``intel-parallel-studio +mpi``, the class function
    :py:func:``.IntelPackage.pset_components``
    will include ``"intel-mpi intel-imb"`` in a list of component patterns passed
