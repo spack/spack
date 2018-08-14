@@ -303,9 +303,9 @@ Spack is just being introduced. It will be useful to make such previously
 installed tools available for use by Spack as they are. How to do this varies
 depending on the type of the tools:
 
-""""""""""""""""""""""
-Integrating compilers
-""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""
+Integrating external compilers
+""""""""""""""""""""""""""""""""""
 
 For Spack to use external Intel compilers, you must tell it both *where* to
 find them and *when* to use them.  The present section documents the "where"
@@ -357,9 +357,9 @@ affected by an advanced third method:
 Next, visit section `Selecting Intel Compilers`_ to learn how to tell
 Spack to use the newly configured compilers.
 
-""""""""""""""""""""""
-Integrating libraries
-""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""
+Integrating external libraries
+""""""""""""""""""""""""""""""""""
 
 Configure external library-type packages (as opposed to compilers)
 in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
@@ -486,32 +486,38 @@ Installing Intel tools *within* Spack
 This section discusses `route 2`_ from the introduction.
 
 When a system does not yet have Intel tools installed already, or the installed
-versions are undesirable, Spack can install Intel tools like any regular Spack
-package for you and, after appropriate post-install configuration, use its
+versions are undesirable, Spack can install these tools like any regular Spack
+package for you and, with appropriate pre- and post-install configuration, use its
 compilers and/or libraries to install client packages.
 
-""""""""""""""""""
-Install steps
-""""""""""""""""""
+.. _intel-install-studio:
 
-1. For licensed Intel packages, i.e., compilers and some early
-   library-type packages, review the section `Configuring Spack to use Intel licenses`_
-   at least once.
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Install steps for packages with compilers and libraries
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+The packages ``intel-parallel-studio`` and ``intel`` (which is a subset of the
+former) are many-in-one products that contain both compilers and a set of
+library packages whose scope depends on the edition.
+Because they are general products geared towards shell environments,
+it can be somewhat involved to integrate these packages at their full extent
+into Spack.
+
+Note: To install library-only packages like ``intel-mkl``, ``intel-mpi``, and ``intel-daal``
+follow `the next section <intel-install-libs_>`_ instead.
+
+1. Review the section `Configuring spack to use intel licenses`_.
 
 .. _intel-compiler-anticipation:
 
-2. If you wish to install the package ``intel-parallel-studio`` to leverage
-   both its ``%intel`` compilers and its virtual packages (like ``mkl`` and,
-   for the "cluster edition", ``mpi``), apply the following special preparatory
-   steps the first time you install each new version of the package.
+2. To install a version of ``intel-parallel-studio`` that provides Intel
+   compilers at a version that you have *not yet declared in Spack*,
+   the following preparatory steps are recommended:
 
-   .. _`determine-compiler-anticipated`:
-
-   A. From the package version, determine the compiler spec that the package is
-      expected to provide.
-
-      Combine the last two digits of the version year, a literal "0", and the
-      component immediately following the version year:
+   A. Determine the compiler spec that the new ``intel-parallel-studio`` package
+      will provide, as follows: From the package version, combine the last two
+      digits of the version year, a literal "0" (zero), and the version component
+      that immediately follows the year.
 
       ==========================================  ======================
       Package version                             Compiler spec provided
@@ -519,23 +525,19 @@ Install steps
        ``intel-parallel-studio@edition.YYyy.u``   ``intel@yy.0.u``
       ==========================================  ======================
 
-      Example:
-
-      The package ``intel-parallel-studio@cluster.2018.3`` provides the
-      compiler spec ``intel@18.0.3``.
+      Example: The package ``intel-parallel-studio@cluster.2018.3`` will provide
+      the compiler with spec ``intel@18.0.3``.
 
    .. _`config-compiler-anticipated`:
 
-   B. Declare the compiler spec that you anticipate as a stub entry at the end
-      of ``compilers.yaml`` from a suitable scope.
-
-      For example, run:
+   B. Add a new compiler section with the newly anticipated version at the
+      end of a ``compilers.yaml`` file in a suitable scope.  For example, run:
 
       .. code-block:: console
 
-         $ spack config --scope=site edit compilers
+         $ spack config --scope=user/linux edit compilers
 
-      and append:
+      and append a stub entry:
 
       .. code-block:: yaml
 
@@ -551,85 +553,101 @@ Install steps
                fc:       stub
 
       Replace ``18.0.3`` with the version that you determined in the preceeding
-      step. The contents of the language compiler tags (``cc:`` etc.) do not
-      matter at this point.
-
-      **Note:** If you already have a certain ``%intel@x.y.z`` compiler spec in
-      place and you wish to re-install the ``intel-parallel-studio`` (or
-      ``intel``) package providing the *same* compiler version, you do not need
-      to revert its ``compilers.yaml`` declaration to stub form as shown here.
-      When done, however, you may still need to adjust the entries under the
-      ``paths:`` tag (`see below <Post-install steps for compilers_>`_) if the
-      package's installation directory changed, such as in the hash portion.
-
-   .. _`verify-compiler-anticipated`:
-
-   C. Verify that the new compiler version will be used as expected:
-
-      You should see it if you placed the stub last in ``compilers.yaml`` and
-      ask for the compiler just by name, e.g.:
-
-      .. code-block:: console
-
-         $ spack spec zlib %intel
-
-      Otherwise, or simply to be explicit, state the anticipated compiler
-      version as well, e.g.:
-
-      .. code-block:: console
-
-         $ spack spec zlib %intel@18.0.3
+      step. The contents under ``paths:`` do not matter yet.
 
    You are right to ask: "Why on earth is that necessary?" [fn8]_.
    The answer lies in Spack striving for strict compiler consistency.
-   Consider what happens without a pre-declared compiler stub:
-   You ask Spack to install a particular version
+   Consider what happens without such a pre-declared compiler stub:
+   Say, you ask Spack to install a particular version
    ``intel-parallel-studio@edition.V``.  Spack will apply an unrelated compiler
-   spec to concretize your request, giving ``intel-parallel-studio@edition.V
-   %X``. Naturally, ``%X`` is not going to be the version that this new package
-   provides, but typically ``%gcc@...`` in a default Spack installation or possibly
-   indeed ``%intel@...``, though at a version preceeding ``V``.
+   spec to concretize and install your request, resulting in
+   ``intel-parallel-studio@edition.V %X``. That compiler ``%X`` is not going to
+   be the version that this new package itself provides. Rather, it would
+   typically be ``%gcc@...`` in a default Spack installation or possibly indeed
+   ``%intel@...``, but at a version that precedes ``V``.
 
-   The problem comes to the fore as soon as you try to use any virtual
-   ``mkl`` or ``mpi`` packages that you would expect to now be provided by
-   ``intel-parallel-studio@edition.V``.  Spack will indeed see those virtual packages,
-   but only as being tied to the compiler concretized *at installation*.
-   If you were to install a client package with the new compilers now
-   available to you, you would run ``spack install foo +mkl %intel@V``, but
-   Spack would complain about ``mkl%intel@V`` being missing, because it only
-   knows about ``mkl%X``.
+   The problem comes to the fore as soon as you try to use any virtual ``mkl``
+   or ``mpi`` packages that you would expect to now be provided by
+   ``intel-parallel-studio@edition.V``.  Spack will indeed see those virtual
+   packages, but only as being tied to the compiler that the package
+   ``intel-parallel-studio@edition.V`` was concretized with *at installation*.
+   If you were to install a client package with the new compilers now available
+   to you, you would naturally run ``spack install foo +mkl %intel@V``, yet
+   Spack will either complain about ``mkl%intel@V`` being missing (because it
+   only knows about ``mkl%X``) or it will go and attempt to install *another
+   instance* of ``intel-parallel-studio@edition.V %intel@V`` so as to match the
+   compiler spec ``%intel@V`` that you gave for your client package ``foo``.
+   This will be unexpected and will quickly get annoying because each
+   reinstallation takes up time and extra disk space.
 
    To escape this trap, put the compiler stub declaration shown here in place,
    then use that pre-declared compiler spec to install the actual package, as
-   shown in the next step.  This approach works because only the package's
-   builtin binary installer will be used, not any of the compilers.
+   shown next.  This approach works because during installation only the
+   package's own self-sufficient installer will be used, not any compiler.
 
-3. Install the Intel packages using Spack's regular ``install`` command, e.g.:
+   .. _`verify-compiler-anticipated`:
+
+3. Verify that the compiler version provided by the new ``studio`` version
+   would be used as expected if you were to compile a client package:
 
    .. code-block:: console
 
-      $ spack install intel-parallel-studio@cluster.2018.3  %intel
+      $ spack spec zlib %intel
 
-   If you wish or need to force the matching compiler (`see above
-   <verify-compiler-anticipated_>`_), give it as an additional concretization
+   If the version does not match, explicitly state the anticipated compiler version, e.g.:
+
+   .. code-block:: console
+
+      $ spack spec zlib %intel@18.0.3
+
+   if there are problems, review and correct the compiler's ``compilers.yaml``
+   entry, be it still in stub form or already complete (as it would be for a
+   re-installation).
+
+4. Install the new ``studio`` package using Spack's regular ``install``
+   command.
+   It may be wise to provide the anticipated compiler (`see above
+   <verify-compiler-anticipated_>`_) as an explicit concretization
    element:
 
    .. code-block:: console
 
       $ spack install intel-parallel-studio@cluster.2018.3  %intel@18.0.3
 
-   The command for a smaller standalone package is the same:
+5. Follow the same steps as under `Integrating external compilers`_ to tell
+   Spack the minutiae for actually using those compilers with client packages.
+   If you placed a stub entry in a ``compilers.yaml`` file, now is the time to
+   edit it and fill in the particulars.
 
-   .. code-block:: console
+   * Under ``paths:``, give the full paths to the actual compiler binaries (``icc``,
+     ``ifort``, etc.) located within the Spack installation tree, in all their
+     unsightly length [fn9]_.
 
-      $ spack install intel-mpi@2018.3.199  %intel
+     To determine the full path to the C compiler, adapt and run:
+
+     .. code-block:: console
+
+        $ find `spack location -i intel-parallel-studio@cluster.2018.3` \
+               -name icc -type f -ls
+
+     If you get hits for both ``intel64`` and ``ia32``, you almost certainly will
+     want to use the ``intel64`` variant.  The ``icpc`` and ``ifort`` compilers
+     will be located in the same directory as ``icc``.
+
+   * Use the ``modules:`` and/or ``cflags:`` tokens to specify a suitable accompanying
+     ``gcc`` version to help pacify picky client packages that ask for C++
+     standards more recent than supported by your system-provided ``gcc`` and its
+     ``libstdc++.so``.
+
+   * To set the Intel compilers for default use in Spack, instead of the usual ``%gcc``,
+     follow section `Selecting Intel compilers`_.
 
 .. tip::
 
-   As mentioned, Intel packages can be above 10 GB in size, which can tax the
-   disk space available for temporary files (usually ``/tmp``) on small, busy,
-   or restricted systems (like VMs). The Intel installer will stop and report
-   insufficient space as::
+   Compiler packages like ``intel-parallel-studio`` can easily be above 10 GB
+   in size, which can tax the disk space available for temporary files on
+   small, busy, or restricted systems (like virtual machines). The Intel
+   installer will stop and report insufficient space as::
 
        ==> './install.sh' '--silent' 'silent.cfg'
        ...
@@ -682,49 +700,45 @@ Install steps
    3. Retry installing the large package.
 
 
-""""""""""""""""""""""""""""""""
-Post-install steps for compilers
-""""""""""""""""""""""""""""""""
+.. _intel-install-libs:
 
-Follow the steps under `Integrating compilers`_ to tell Spack the minutiae for
-actually using those compilers with client packages.
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Install steps for library-only packages
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-* Under ``paths:``, give the full paths to the actual compiler binaries (``icc``,
-  ``ifort``, etc.) located within the Spack installation tree, in all their
-  unsightly length [fn9]_.
+To install library-only packages like ``intel-mkl``, ``intel-mpi``, and ``intel-daal``
+follow the steps given here.
+For packages that contain a compiler, follow `the previous section
+<intel-install-studio_>`_ instead.
 
-  To determine the full path to the C compiler, adapt and run:
+1. For pre-2017 product releases, review the section `Configuring Spack to use Intel licenses`_.
 
-  .. code-block:: console
+2. Inspect the package spec. Specify an explicit compiler if necessary, e.g.:
 
-     $ find `spack location -i intel-parallel-studio@cluster.2018.3` \
-            -name icc -type f -ls
+   .. code-block:: console
 
-  If you get hits for both ``intel64`` and ``ia32``, you almost certainly will
-  want to use the ``intel64`` variant.  The ``icpc`` and ``ifort`` compilers
-  will be located in the same directory as ``icc``.
+      $ spack spec intel-mpi@2018.3.199
+      $ spack spec intel-mpi@2018.3.199  %intel
 
-* Use the ``modules:`` or ``cflags:`` tokens to specify a suitable accompanying
-  ``gcc`` version to help pacify picky client packages that ask for C++
-  standards more recent than supported by your system-provided ``gcc`` and its
-  ``libstdc++.so``.
+   Check that the package will use the compiler flavor and version that you expect.
 
-* To set the Intel compilers for default use, instead of the usual ``%gcc``,
-  follow section `<Selecting Intel Compilers_>`_.
+3. Install the package normally within Spack. Use the same spec as in the
+   previous command, i.e., as general or as specific as needed:
 
+   .. code-block:: console
 
-""""""""""""""""""""""""""""""""""""""""
-Post-install steps for library packages
-""""""""""""""""""""""""""""""""""""""""
+      $ spack install intel-mpi@2018.3.199 
+      $ spack install intel-mpi@2018.3.199  %intel@18
 
-Follow `Selecting libraries to satisfy virtual packages`_.
+4. To prepare the new packages for use with client packages,
+   follow `Selecting libraries to satisfy virtual packages`_.
 
 
 """"""""""""""""
 Debug notes
 """"""""""""""""
 
-* You can trigger a wall of additional diagnostics by Spack options, e.g.:
+* You can trigger a wall of additional diagnostics using Spack options, e.g.:
 
   .. code-block:: console
 
