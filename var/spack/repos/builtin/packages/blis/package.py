@@ -96,26 +96,27 @@ class Blis(Package):
         config_args.append("--enable-threading=" +
                            spec.variants['threads'].value)
 
-        if spec.variants['cblas']:
+        if '+cblas' in spec:
             config_args.append("--enable-cblas")
         else:
             config_args.append("--disable-cblas")
 
-        if spec.variants['blas']:
+        if '+blas' in spec:
             config_args.append("--enable-blas")
         else:
             config_args.append("--disable-blas")
 
-        if self.variants['shared']:
+        if '+shared' in spec:
             config_args.append("--enable-shared")
         else:
             config_args.append("--disable-shared")
 
-        if self.variants['static']:
-            config_args.append("--enable-static")
+        if '+static' in spec:
+        config_args.append("--enable-static")
         else:
             config_args.append("--disable-static")
-
+        
+        # Trying to fix build with icc.
         #config_args.append("CC=intel")
 
         # FIXME: add cpu isa variants.
