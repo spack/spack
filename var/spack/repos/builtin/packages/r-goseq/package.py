@@ -34,7 +34,7 @@ class RGoseq(RPackage):
 
     version('1.32.0', commit='32fcbe647eea17d7d0d7a262610811502c421d36')
 
-    depends_on('r@3.5.0:3.5.9', when='@1.32.0:')
+    depends_on('r@3.5.0:3.5.9', when='@1.32.0:', type=('build', 'run'))
     depends_on('r-biasedurn', type=('build', 'run'))
     depends_on('r-genelendatabase@1.9.2:', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
