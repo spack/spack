@@ -25,15 +25,15 @@
 from spack import *
 
 
-class PatchADependency(Package):
-    """Package that requries a patched version of a dependency."""
+class RGenelendatabase(RPackage):
+    """Length of mRNA transcripts for a number of genomes and gene ID
+       formats, largely based on UCSC table browser"""
 
-    homepage = "http://www.example.com"
-    url = "http://www.example.com/patch-a-dependency-1.0.tar.gz"
+    homepage = "https://bioconductor.org/packages/release/data/experiment/html/geneLenDataBase.html"
+    git      = "https://git.bioconductor.org/packages/geneLenDataBase.git"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('1.16.0', commit='c2a8b2359c6c59388853d6f6d15d71dffb17a198')
 
-    depends_on('libelf', patches=patch('libelf.patch'))
-
-    def install(self, spec, prefix):
-        pass
+    depends_on('r@3.5.0:3.5.9', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r-rtracklayer', type=('build', 'run'))
+    depends_on('r-genomicfeatures@1.3.15:', type=('build', 'run'))
