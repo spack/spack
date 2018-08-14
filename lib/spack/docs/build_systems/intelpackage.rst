@@ -113,14 +113,14 @@ version numbers seen with most other Spack packages. For example, we have:
    $ spack info intel-parallel-studio
    ...
    Preferred version:
-       professional.2018.2    http:...
+       professional.2018.3    http:...
   
    Safe versions:
-       professional.2018.2    http:...
+       professional.2018.3    http:...
        ...
-       composer.2018.2        http:...
+       composer.2018.3        http:...
        ...
-       cluster.2018.2         http:...
+       cluster.2018.3         http:...
        ...
    ...
 
@@ -128,7 +128,7 @@ To install the full studio suite, capable of compiling MPI applications, run:
 
 .. code-block:: console
 
-   $ spack install intel-parallel-studio@cluster.2018.2        # ca. 12 GB
+   $ spack install intel-parallel-studio@cluster.2018.3        # ca. 12 GB
 
 If you need to save some disk space or installation time, you could install
 separately as needed:
@@ -343,10 +343,11 @@ and
 :ref:`Vendor-Specific Compiler Configuration <vendor-specific-compiler-configuration>`
 in the Spack documentation.
 When done, validate your compiler definition by running
-``spack compiler info intel@compilerversion``.
+``spack compiler info intel@compilerversion`` (replacing ``compilerversion`` by
+the version that you defined).
 
-Be aware that both the ``gcc`` integration and persistent compiler flags can also be
-affected by an advanced third option:
+Be aware that both the GCC integration and persistent compiler flags can also be
+affected by an advanced third method:
 
 3. A modulefile that provides the Intel compilers for you
    could, for the benefit of users outside of Spack, implicitly
@@ -375,22 +376,33 @@ spec to a modulefile generated and managed outside of Spack's purview,
 which Spack will load internally and transiently when the corresponding spec is
 called upon to compile client packages.
 
-If your system administrator did not provide modules for pre-installed Intel
-tools, you could do well to ask for them, because installing multiple copies
-of the Intel tools, as is wont to happen once Spack is in the picture, is
-bound to stretch disk space and patience thin. If you *are* the system
-administrator and are still new to modules, then perhaps it's best to follow
-the `next section <Installing Intel tools within Spack_>`_ and install the tools
-solely within Spack.
+Unlike for compilers, where ``spack find compilers [spec]`` generates an entry
+in an existing or new ``compilers.yaml`` file, Spack does not offer a command
+to generate an entirely new ``packages.yaml`` entry.  You must create
+new entries yourself in a text editor, though the command ``spack config
+[--scope=...] edit packages`` can help with selecting the proper file.
+See section
+:ref:`Configuration Scopes <configuration-scopes>`
+for an explanation about the different files
+and section
+:ref:`Build customization <build-settings>`
+for specifics and examples for ``packages.yaml`` files.
 
-The following example integrates two packages embodied by hypothetical
-external modulefiles ``intel-mkl/18/18.0.1`` and ``intel-mkl/18/18.0.2``, as
-Spack packages ``intel-mkl@2018.1.163`` and ``intel-mkl@2018.2.199``,
-respectively.
+.. If your system administrator did not provide modules for pre-installed Intel
+   tools, you could do well to ask for them, because installing multiple copies
+   of the Intel tools, as is wont to happen once Spack is in the picture, is
+   bound to stretch disk space and patience thin. If you *are* the system
+   administrator and are still new to modules, then perhaps it's best to follow
+   the `next section <Installing Intel tools within Spack_>`_ and install the tools
+   solely within Spack.
+
+The following example integrates packages embodied by hypothetical
+external modulefiles ``intel-mkl/18/...`` into
+Spack as packages ``intel-mkl@...``:
 
 .. code-block:: console
 
-   $ spack config --scope=site edit packages
+   $ spack config edit packages
 
 Make sure the file begins with:
 
@@ -398,7 +410,7 @@ Make sure the file begins with:
 
    packages:
 
-Append, indented as shown:
+Adapt the following example. Be sure to maintain the indentation:
 
 .. code-block:: yaml
 
@@ -406,17 +418,21 @@ Append, indented as shown:
 
      intel-mkl:
        modules:
-         intel-mkl@2018.1.163  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.1
          intel-mkl@2018.2.199  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.2
+         intel-mkl@2018.3.222  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.3
 
-Note that the version numbers in the ``intel-mkl`` spec correspond to the ones
-used for the Intel products and adopted within Spack. You can inspect them by:
+The version numbers for the ``intel-mkl`` specs defined here correspond to file
+and directory names that Intel uses for its products because they were adopted
+and declared as such within Spack's package repository. You can inspect the
+versions known to your current Spack installation by:
 
 .. code-block:: console
 
    $ spack info intel-mkl
 
-Using the same version numbers is useful for clarity, but not strictly necessary.
+Using the same version numbers for external packages as for packages known
+internally is useful for clarity, but not strictly necessary.  Moreover, with a
+``packages.yaml`` entry, you can go beyond internally known versions.
 
 .. _compiler-neutral-package:
 
@@ -435,8 +451,8 @@ mechanism.
    packages:
      intel-parallel-studio:
        modules:
-         intel-parallel-studio@cluster.2018.1.163 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.1
          intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.2
+         intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.3
        buildable: False
 
 One additional example illustrates the use of ``paths:`` instead of
@@ -448,10 +464,18 @@ suitable:
    packages:
      intel-parallel-studio:
        paths:
-         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal: /opt/intel/parallel_studio_xe_2018.2.046
+         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal: /opt/intel
+         intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal: /opt/intel
        buildable: False
 
-For background and details, see
+Note that for the Intel packages discussed here, the directory values in the
+``paths:`` entries must be the high-level and typically version-less
+"installation directory" that has been used by Intel's product installer.
+Such a directory will typically accumulate various product versions.  Amongst
+them, Spack will select the correct version-specific product directory based on
+the ``@version`` spec component that each path is being defined for.
+
+For further background and details, see
 :ref:`External Packages <sec-external-packages>`.
 
 
@@ -463,7 +487,7 @@ This section discusses `route 2`_ from the introduction.
 
 When a system does not yet have Intel tools installed already, or the installed
 versions are undesirable, Spack can install Intel tools like any regular Spack
-package for you and, after appropriate post-install configuration, use the
+package for you and, after appropriate post-install configuration, use its
 compilers and/or libraries to install client packages.
 
 """"""""""""""""""
@@ -497,8 +521,8 @@ Install steps
 
       Example:
 
-      The package ``intel-parallel-studio@cluster.2018.2`` provides the
-      compiler spec ``intel@18.0.2``.
+      The package ``intel-parallel-studio@cluster.2018.3`` provides the
+      compiler spec ``intel@18.0.3``.
 
    .. _`config-compiler-anticipated`:
 
@@ -519,14 +543,14 @@ Install steps
              target:     x86_64
              operating_system:   centos6
              modules:    []
-             spec:       intel@18.0.2
+             spec:       intel@18.0.3
              paths:
                cc:       stub
                cxx:      stub
                f77:      stub
                fc:       stub
 
-      Replace ``18.0.2`` with the version that you determined in the preceeding
+      Replace ``18.0.3`` with the version that you determined in the preceeding
       step. The contents of the language compiler tags (``cc:`` etc.) do not
       matter at this point.
 
@@ -554,7 +578,7 @@ Install steps
 
       .. code-block:: console
 
-         $ spack spec zlib %intel@18.0.2
+         $ spack spec zlib %intel@18.0.3
 
    You are right to ask: "Why on earth is that necessary?" [fn8]_.
    The answer lies in Spack striving for strict compiler consistency.
@@ -584,21 +608,21 @@ Install steps
 
    .. code-block:: console
 
-      $ spack install intel-parallel-studio@cluster.2018.2  %intel
+      $ spack install intel-parallel-studio@cluster.2018.3  %intel
 
    If you wish or need to force the matching compiler (`see above
-   <verify-compiler-anticipated_>`_), give it as additional concretization
+   <verify-compiler-anticipated_>`_), give it as an additional concretization
    element:
 
    .. code-block:: console
 
-      $ spack install intel-parallel-studio@cluster.2018.2  %intel@18.0.2
+      $ spack install intel-parallel-studio@cluster.2018.3  %intel@18.0.3
 
    The command for a smaller standalone package is the same:
 
    .. code-block:: console
 
-      $ spack install intel-mpi@2018.2.199  %intel
+      $ spack install intel-mpi@2018.3.199  %intel
 
 .. tip::
 
@@ -657,20 +681,6 @@ Install steps
 
    3. Retry installing the large package.
 
-   4. Optionally, clean the staging area:
-
-      .. code-block:: console
-
-         $ spack clean --stage
-
-   5. Also optionally, roll back your ``build_stage`` customization:
-
-      .. code-block:: console
-
-         $ spack config edit config
-
-     and delete or comment out the ``build_stage`` entry.
-
 
 """"""""""""""""""""""""""""""""
 Post-install steps for compilers
@@ -687,7 +697,7 @@ actually using those compilers with client packages.
 
   .. code-block:: console
 
-     $ find `spack location -i intel-parallel-studio@cluster.2018.2` \
+     $ find `spack location -i intel-parallel-studio@cluster.2018.3` \
             -name icc -type f -ls
 
   If you get hits for both ``intel64`` and ``ia32``, you almost certainly will
@@ -718,9 +728,9 @@ Debug notes
 
   .. code-block:: console
 
-     $ spack --debug -v install -v intel-mpi
+     $ spack --debug -v install intel-mpi
 
-  The the ``--debug`` option can also be useful while installing client
+  The ``--debug`` option can also be useful while installing client
   packages `(see below) <Using Intel tools in Spack to install client
   packages_>`_ to confirm the integration of the Intel tools in Spack, notably
   MKL and MPI.
@@ -753,7 +763,7 @@ Using Intel tools in Spack to install client packages
 
 Finally, this section pertains to `route 3`_ from the introduction.
 
-Once Intel tools are installed within Spack as external or internal package
+Once Intel tools are installed within Spack as external or internal packages
 they can be used as intended for installing client packages.
 
 
@@ -763,10 +773,10 @@ they can be used as intended for installing client packages.
 Selecting Intel compilers
 """"""""""""""""""""""""""
 
-Select Intel compilers to compile client packages by one of the following
-means:
+Select Intel compilers to compile client packages, like any compiler in Spack,
+by one of the following means:
 
-* Request the Intel compilers expliclity in the client spec, e.g.:
+* Request the Intel compilers explicitly in the client spec, e.g.:
 
   .. code-block:: console
 
@@ -833,17 +843,17 @@ and the section
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear
 algebra virtual packages in Spack, and ``intel-mpi`` as the preferred MPI
-implementation, while enabling to choose others on a per-spec basis.
+implementation. Other providers can still be chosen on a per-package basis.
 
 .. code-block:: yaml
 
   packages:
     all:
       providers:
-        mpi:       [intel-mpi, openmpi, mpich, ]
-        blas:      [intel-mkl, ]
-        lapack:    [intel-mkl, ]
-        scalapack: [intel-mkl, ]
+        mpi:       [intel-mpi]
+        blas:      [intel-mkl]
+        lapack:    [intel-mkl]
+        scalapack: [intel-mkl]
 
 If you have access to the ``intel-parallel-studio@cluster`` edition, you can
 use instead:
@@ -852,11 +862,11 @@ use instead:
 
     all:
       providers:
-        mpi:       [intel-parallel-studio+mpi, openmpi, mpich, ]
+        mpi:       [intel-parallel-studio+mpi]
         # Note: +mpi vs. +mkl
-        blas:      [intel-parallel-studio+mkl, ]
-        lapack:    [intel-parallel-studio+mkl, ]
-        scalapack: [intel-parallel-studio+mkl, ]
+        blas:      [intel-parallel-studio+mkl]
+        lapack:    [intel-parallel-studio+mkl]
+        scalapack: [intel-parallel-studio+mkl]
 
 If you installed ``intel-parallel-studio`` within Spack ("`route 2`_"), make
 sure you followed the `special installation step
@@ -878,17 +888,19 @@ Footnotes
 .. [fn1] Strictly speaking, versions from ``2017.2`` onward.
 
 .. [fn2] The package ``intel`` intentionally does not have a ``+mpi`` variant since
-   it is meant to be small. The native installer always adds the MPI *runtime*
+   it is meant to be small. The native installer will always add MPI *runtime*
    components because it follows defaults defined in the download package, even
-   for ``intel-parallel-studio ~mpi``.
+   when ``intel-parallel-studio ~mpi`` has been requested.
 
-   For ``intel-parallel-studio +mpi``, Spack internally supplies [in code at
-   ``lib/spack/spack/build_systems/intel.py:pset_components()``] the component
-   pattern ``"intel-mpi intel-imb"`` to the Intel installer, which will expand
-   each name with an implied glob-like ``*`` to the package names that are
-   *actually present in the product BOM*.  As a side effect, the pattern
-   approach accommodates occasional package name changes, e.g., capturing both
-   ``intel-mpirt`` and ``intel-mpi-rt`` .
+   .. ``lib/spack/spack/build_systems/intel.py:pset_components()``
+   For ``intel-parallel-studio +mpi``, the class function
+   :py:func:``.IntelPackage.pset_components``
+   will include ``"intel-mpi intel-imb"`` in a list of component patterns passed
+   to the Intel installer. The installer will extend each pattern word with an
+   implied glob-like ``*`` to resolve it to package names that are
+   *actually present in the product BOM*.
+   As a side effect, this pattern approach accommodates occasional package name
+   changes, e.g., capturing both ``intel-mpirt`` and ``intel-mpi-rt`` .
 
 .. [fn3] How could the external installation have succeeded otherwise?
 
@@ -908,24 +920,31 @@ Footnotes
    to know how to use it.
 
 .. [fn7] Comment lines in FLEXlm files, indicated by ``#`` as the first
-   non-white character on the line, are generally allowed anywhere in the file.
+   non-whitespace character on the line, are generally allowed anywhere in the file.
    There `have been reports <https://github.com/spack/spack/issues/6534>`_,
    however, that as of 2018, ``SERVER`` and ``USE_SERVER`` lines must precede
    any comment lines.
 
 ..
-    .. [fn8] The name component ``intel`` of the compiler spec is separate from (in
+    .. [fnX] The name component ``intel`` of the compiler spec is separate from (in
        a different namespace than) the names of the Spack packages
        ``intel-parallel-studio`` and ``intel``. Both of the latter provide the former.
 
 .. [fn8] Spack's close coupling of installed packages to compilers, which both
-   necessitates the detour for installing ``intel-parallel-studio``, and,
+   necessitates the detour for installing ``intel-parallel-studio``, and
    largely limits any of its provided virtual packages to a single compiler, heavily
-   favors a `recommendation to install Intel Parallel Studio outside of Spack
+   favors `recommending to install Intel Parallel Studio outside of Spack
    <integrate-external-intel_>`_ and declare it for Spack in ``packages.yaml``
    by a `compiler-less spec <compiler-neutral-package_>`_.
 
-.. [fn9] With some effort, you can convince Spack to use shorter paths:
+.. [fn9] With some effort, you can convince Spack to use shorter paths.
+
+   .. warning:: Altering the naming scheme means that Spack will lose track of
+      all packages it has installed for you so far.
+      That said, the time is right for this kind of customization
+      when you are defining a new set of compilers.
+
+   The relevant tunables are:
 
    1. Set the ``install_tree`` location in ``config.yaml``
       (:ref:`see doc <config-yaml>`).
@@ -934,31 +953,4 @@ Footnotes
    3. You will want to set the *same* hash length for
       :ref:`tcl module files <modules-naming-scheme>`
       if you have Spack produce them for you, under ``naming_scheme`` in
-      ``modules.yaml``.
-
-   .. warning:: Altering the naming scheme means that Spack will lose track of
-      all packages it has installed for you so far. In a pinch, you can dive
-      into old installation directories by hand until you delete them.
-
-      That said, *the time is right* for this kind of customization
-      when you are lining up a new set of compilers.
-
-   **Practical hint:** Hashes can be a pain to quickly scan over, especially in
-   ragged-right directory listings.  To lessen the eyesore for humans and give
-   shell glob patterns a handle to latch on to, prefix hashes with a consistent
-   string, such as the letter ``H``.
-
-   Set in ``config.yaml``:
-
-   .. code-block:: yaml
-
-     config:
-       install_path_scheme: '${ARCHITECTURE}/${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}/H${HASH:6}'
-
-   and in ``modules.yaml``:
-
-   .. code-block:: yaml
-
-     modules:
-       tcl:
-         naming_scheme: '${PACKAGE}/${VERSION}/${COMPILERNAME}-${COMPILERVER}/H${HASH:6}'
+      ``modules.yaml``.  Other module dialects cannot be altered in this manner.
