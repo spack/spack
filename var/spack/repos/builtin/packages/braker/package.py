@@ -30,11 +30,18 @@ class Braker(Package):
        that combines the advantages of GeneMark-ET and AUGUSTUS"""
 
     homepage = "http://exon.gatech.edu/braker1.html"
-    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER2.tar.gz"
+    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER_v2.1.0.tar.gz"
     list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
     version('2.1.0', '5f974abcceb9f96a11668fa20a6f6a56')
     version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
+
+    def url_for_version(self, version):
+        url = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER{0}_v{1}.tar.gz"
+        if version >= Version('2'):
+            return url.format('', version)
+        else:
+            return url.format(version.up_to(1), version)
 
     depends_on('perl', type=('build', 'run'))
     depends_on('augustus@3.2.3')
