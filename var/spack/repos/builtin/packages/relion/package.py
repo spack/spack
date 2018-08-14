@@ -36,7 +36,7 @@ class Relion(CMakePackage, CudaPackage):
 
     version('3.0_beta',
             git='https://bitbucket.org/scheres/relion-3.0_beta.git')
-    version('2.1', preferred='true')
+    version('2.1', preferred='true', tag='2.1')
     version('2.0.3', tag='2.0.3')
 
     variant('gui', default=True, description="build the gui")
