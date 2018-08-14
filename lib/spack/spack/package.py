@@ -1162,8 +1162,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # BSD Make:
         #     make: don't know how to make test. Stop
         missing_target_msgs = [
-            "No rule to make target `{0}'",
-            "don't know how to make {0}",
+            "No rule to make target `{0}'.  Stop.",
+            "don't know how to make {0}. Stop",
         ]
 
         kwargs = {
