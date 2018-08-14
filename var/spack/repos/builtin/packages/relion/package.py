@@ -62,6 +62,7 @@ class Relion(CMakePackage, CudaPackage):
 
     # relion 3 supports cuda 9
     # relion < 3 does not
+    depends_on('cuda', when='+cuda')
     depends_on('cuda@9:', when='@3: +cuda')
     depends_on('cuda@8.0:8.99', when='@:2 +cuda')
 
