@@ -25,22 +25,19 @@
 from spack import *
 
 
-class REdger(RPackage):
-    """Differential expression analysis of RNA-seq expression profiles with
-       biological replication. Implements a range of statistical methodology
-       based on the negative binomial distributions, including empirical Bayes
-       estimation, exact tests, generalized linear models and quasi-likelihood
-       tests. As well as RNA-seq, it be applied to differential signal analysis
-       of other types of genomic data that produce counts, including ChIP-seq,
-       SAGE and CAGE."""
+class RGlimma(RPackage):
+    """This package generates interactive visualisations for analysis of
+       RNA-sequencing data using output from limma, edgeR or DESeq2 packages
+       in an HTML page. The interactions are built on top of the popular
+       static representations of analysis results in order to provide
+       additional information."""
 
-    homepage = "https://bioconductor.org/packages/edgeR/"
-    git      = "https://git.bioconductor.org/packages/edgeR.git"
+    homepage = "https://bioconductor.org/packages/release/bioc/html/Glimma.html"
+    git      = "https://git.bioconductor.org/packages/Glimma.git"
 
-    version('3.22.3', commit='e82e54afc9398ac54dc4caba0f7ae5c43e572203')
-    version('3.18.1', commit='101106f3fdd9e2c45d4a670c88f64c12e97a0495')
+    version('1.8.2', commit='f4aa1f05c2890d04b01ad4c0ab27f2f729f2c969')
 
-    depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-locfit', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.22.3')
-    depends_on('r@3.4.0:3.4.9', when='@3.18.1')
+    depends_on('r@3.5.0:3.5.9', when='@1.8.2:', type=('build', 'run'))
+    depends_on('r-edger', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))

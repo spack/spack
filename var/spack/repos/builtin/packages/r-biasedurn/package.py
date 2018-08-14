@@ -25,22 +25,16 @@
 from spack import *
 
 
-class REdger(RPackage):
-    """Differential expression analysis of RNA-seq expression profiles with
-       biological replication. Implements a range of statistical methodology
-       based on the negative binomial distributions, including empirical Bayes
-       estimation, exact tests, generalized linear models and quasi-likelihood
-       tests. As well as RNA-seq, it be applied to differential signal analysis
-       of other types of genomic data that produce counts, including ChIP-seq,
-       SAGE and CAGE."""
+class RBiasedurn(RPackage):
+    """Statistical models of biased sampling in the form of univariate and
+       multivariate noncentral hypergeometric distributions, including
+       Wallenius' noncentral hypergeometric distribution and Fisher's
+       noncentral hypergeometric distribution (also called extended
+       hypergeometric distribution). See vignette("UrnTheory") for
+       explanation of these distributions."""
 
-    homepage = "https://bioconductor.org/packages/edgeR/"
-    git      = "https://git.bioconductor.org/packages/edgeR.git"
+    homepage = "http://www.agner.org/random/"
+    url      = "https://cran.rstudio.com/src/contrib/BiasedUrn_1.07.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/BiasedUrn/"
 
-    version('3.22.3', commit='e82e54afc9398ac54dc4caba0f7ae5c43e572203')
-    version('3.18.1', commit='101106f3fdd9e2c45d4a670c88f64c12e97a0495')
-
-    depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-locfit', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.22.3')
-    depends_on('r@3.4.0:3.4.9', when='@3.18.1')
+    version('1.07', sha256='2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e')
