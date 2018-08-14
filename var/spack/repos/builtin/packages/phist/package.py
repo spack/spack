@@ -75,13 +75,15 @@ class Phist(CMakePackage):
                         'iterative solvers. For the Trilinos backends '
                         '(kernel_lib=epetra|tpetra) we can use preconditioner '
                         'packages such as Ifpack, Ifpack2 and ML.')
-
+    variant('fortran', default=True,
+            description='generate Fortran 2003 bindings (requires Python3 and '
+                        'a Fortran compiler)')
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('python@3:', when='@1.7:', type='build')
+    depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
     depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
@@ -118,6 +120,8 @@ class Phist(CMakePackage):
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
                 % ('ON' if '+trilinos' in spec else 'OFF'),
+                '-DXSDK_BUILD_Fortran:BOOL=%s'
+                % ('ON' if '+fortran' in spec else 'OFF'),
                 ]
 
         return args
