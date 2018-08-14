@@ -115,9 +115,9 @@ class Blis(Package):
             config_args.append("--enable-static")
         else:
             config_args.append("--disable-static")
-        
+ 
         # Trying to fix build with icc.
-        #config_args.append("CC=intel")
+        # config_args.append("CC=intel")
 
         # FIXME: add cpu isa variants.
         config_args.append("auto")
