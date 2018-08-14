@@ -47,6 +47,12 @@ modules:
           MPICC_CC: 'icc'
           MPICXX_CXX: 'icpc'
           MPIF90_F90: 'ifort'
+    intel:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
     pgi:
       environment:
         set:
@@ -70,6 +76,7 @@ modules:
       - 'pgi'
       - 'intel-parallel-studio'
       - 'llvm'
+      - 'intel'
     blacklist:
       - '%gcc'
     gcc:
@@ -79,6 +86,12 @@ modules:
           MPICXX_CXX: 'g++'
           MPIF90_F90: 'gfortran'
     intel-parallel-studio:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    intel:
       environment:
         set:
           MPICC_CC: 'icc'
