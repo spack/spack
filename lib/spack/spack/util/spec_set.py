@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import itertools
+from jsonschema import validate
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -30,7 +31,7 @@ from llnl.util.tty.colify import colify
 import spack
 import spack.compilers
 import spack.architecture as sarch
-# import spack.schema as schema
+import spack.schema as schema
 import spack.util.spack_yaml as syaml
 
 from spack.error import SpackError
@@ -62,7 +63,7 @@ class CombinatorialSpecSet:
             self.data = syaml.load(yaml_like)
 
         # validate against the spec set schema
-        # schema.validate(self.data, schema.spec_set.schema)
+        validate(self.data, schema.spec_set.schema)
 
         # chop off the initial spec-set label after valiation.
         self.data = self.data['spec-set']
