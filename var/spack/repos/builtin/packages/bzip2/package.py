@@ -32,7 +32,7 @@ class Bzip2(Package):
     compressors), whilst being around twice as fast at compression
     and six times faster at decompression."""
 
-    # FIXME: The bzip2.org domain has expired:
+    # FIXME: The bzip.org domain has expired:
     # https://lwn.net/Articles/762264/
     # This package will need to be updated when a new home is found.
     homepage = "https://sourceware.org/bzip2/"
