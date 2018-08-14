@@ -388,6 +388,7 @@ def install_mockery(tmpdir, config, mock_packages):
     with spack.config.override('config:checksum', False):
         yield
 
+    tmpdir.join('opt').remove()
     spack.store.store = real_store
 
 

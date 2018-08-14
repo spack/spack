@@ -25,15 +25,15 @@
 from spack import *
 
 
-class PatchADependency(Package):
-    """Package that requries a patched version of a dependency."""
+class RRots(Package):
+    """Calculates the Reproducibility-Optimized Test Statistic (ROTS)
+       for differential testing in omics data."""
 
-    homepage = "http://www.example.com"
-    url = "http://www.example.com/patch-a-dependency-1.0.tar.gz"
+    homepage = "https://bioconductor.org/packages/release/bioc/html/ROTS.html"
+    git      = "https://git.bioconductor.org/packages/ROTS.git"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('1.8.0', commit='02e3c6455bb1afe7c4cc59ad6d4d8bae7b01428b')
 
-    depends_on('libelf', patches=patch('libelf.patch'))
-
-    def install(self, spec, prefix):
-        pass
+    depends_on('r@3.5.0:3.5.9', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
