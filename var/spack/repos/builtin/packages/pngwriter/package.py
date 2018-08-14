@@ -53,7 +53,7 @@ class Pngwriter(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
+        args = ['-DSOME_FAKE_OPTION:BOOL=ON']
 
         if spec.satisfies('@0.7.0:'):
             args += ['-DPNGwriter_USE_FREETYPE:BOOL=ON']

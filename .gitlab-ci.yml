@@ -1,0 +1,357 @@
+stages:
+  - stage01
+  - stage02
+  - stage03
+  - stage04
+  - stage05
+
+tedftvioz6yrcl4bkyunti2xe3tbr6u4:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "numactl@2.0.11%gcc@5.4.0 patches=592f30f7f5f757dfc239ad0ffd39a9a048487ad803c26b419e0f96b8cda08c1a arch=linux-ubuntu16.04-x86_64 /snycp3w"
+    SHORT_HASH: "tedftvioz6yrcl4bkyunti2xe3tbr6u4"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+zh4v7ucj6k46j6pckcmyyt4bjhlkxi6t:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "binutils@2.26%gcc@5.4.0+gold~libiberty patches=0a0ca84889b6727dc0cc88650f55fd79452dddba762674a83a153374792fdaac,10e7a67069a16def0375a80062f68e2208c015656d7e888cf760165624eed5f4 ~plugins arch=linux-ubuntu16.04-x86_64 /ltqopk3"
+    SHORT_HASH: "zh4v7ucj6k46j6pckcmyyt4bjhlkxi6t"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+wbud2nfke2d7wphacc6x6f4tkj6ja3oz:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "glew@2.0.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /x7swhxi"
+    SHORT_HASH: "wbud2nfke2d7wphacc6x6f4tkj6ja3oz"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+zpl4lusdddn32eyxxifwq5ux5ubsqyqv:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "libjpeg@9c%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /l6ahs5w"
+    SHORT_HASH: "zpl4lusdddn32eyxxifwq5ux5ubsqyqv"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+jsudood3hr2olknnk6o7rilnlszhov2l:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "lz4@1.8.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /p2vjd7t"
+    SHORT_HASH: "jsudood3hr2olknnk6o7rilnlszhov2l"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+skxmhfotxzolhjm3ybn65wvy7eokgigk:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "tk@8.6.3%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /qbnv5t4"
+    SHORT_HASH: "skxmhfotxzolhjm3ybn65wvy7eokgigk"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+32t77fptmxl5hkoibbxigwyijsdke43z:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "tk@8.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /zmh7hmv"
+    SHORT_HASH: "32t77fptmxl5hkoibbxigwyijsdke43z"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+ehxoyidztznh4xis4tyyweunysmomr3l:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "binutils@2.27%gcc@5.4.0+gold~libiberty patches=0a0ca84889b6727dc0cc88650f55fd79452dddba762674a83a153374792fdaac ~plugins arch=linux-ubuntu16.04-x86_64 /gxjktw6"
+    SHORT_HASH: "ehxoyidztznh4xis4tyyweunysmomr3l"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+zfzjmom2igz7zeh7fst6366ote7v2a6q:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "zlib@1.2.8%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 /bkyl5bh"
+    SHORT_HASH: "zfzjmom2igz7zeh7fst6366ote7v2a6q"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+khufjwbyqqh2n625am7ffiyby55zjrds:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /q4fpyuo"
+    SHORT_HASH: "khufjwbyqqh2n625am7ffiyby55zjrds"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+ialjlni5ye7kzwurwjbqaei5vtxdpzft:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "vtk@8.0.1%gcc@5.4.0 build_type=RelWithDebInfo +opengl2~osmesa~python~qt arch=linux-ubuntu16.04-x86_64 /nhmavc6"
+    SHORT_HASH: "ialjlni5ye7kzwurwjbqaei5vtxdpzft"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+hxgktiwtbxz4lglbkbhauyefc5chtvvz:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "hdf5@1.10.2%gcc@5.4.0~cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64 /3xtphki"
+    SHORT_HASH: "hxgktiwtbxz4lglbkbhauyefc5chtvvz"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+doadzxzhaf55oy47ciooqlrrbdgz2k3n:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "python@3.6.5%gcc@5.4.0+dbm~optimizations patches=123082ab3483ded78e86d7c809e98a804b3465b4683c96bd79a2fd799f572244 +pic+pythoncmd+shared~tk~ucs4 arch=linux-ubuntu16.04-x86_64 /re6swu4"
+    SHORT_HASH: "doadzxzhaf55oy47ciooqlrrbdgz2k3n"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+trzgtkztyji5fuxjmbargzexzinj2gwa:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "freetype@2.7.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /dmpx2kz"
+    SHORT_HASH: "trzgtkztyji5fuxjmbargzexzinj2gwa"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+rsu7mhx2nqiycbjocgvr76sehsrk7ldk:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht"
+    SHORT_HASH: "rsu7mhx2nqiycbjocgvr76sehsrk7ldk"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+r3qsejr3upbuv4xnnioyxu642ycazpxz:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "xz@5.2.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /teneqii"
+    SHORT_HASH: "r3qsejr3upbuv4xnnioyxu642ycazpxz"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+vrcn5gytgisnfayps2t3k4ejpeefdax7:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "libbsd@0.8.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /f4qkkwm"
+    SHORT_HASH: "vrcn5gytgisnfayps2t3k4ejpeefdax7"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+z6kmeo4hrf7mcnti2exx4wckox7iwmn4:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "libxml2@2.9.8%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64 /wpexsph"
+    SHORT_HASH: "z6kmeo4hrf7mcnti2exx4wckox7iwmn4"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+ppass6zzav7cnzu34ojviosfvh6t544a:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "openmpi@3.1.0%gcc@5.4.0~cuda fabrics= ~java~memchecker~pmi schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64 /gaatan6"
+    SHORT_HASH: "ppass6zzav7cnzu34ojviosfvh6t544a"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+45fgyebr5b5m73bjha4ifkw4wdqphmzc:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64 /ufczdvs"
+    SHORT_HASH: "45fgyebr5b5m73bjha4ifkw4wdqphmzc"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+qqngw7evwa2gcorjrphpw4d4ur3jyxj3:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "sqlite@3.23.1%gcc@5.4.0~functions arch=linux-ubuntu16.04-x86_64 /4gfm3rc"
+    SHORT_HASH: "qqngw7evwa2gcorjrphpw4d4ur3jyxj3"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+t4xzbx27hrd6r7wghgfa43e5sjal2qsq:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "netcdf@4.6.1%gcc@5.4.0~dap~hdf4 maxdims=1024 maxvars=8192 +mpi~parallel-netcdf+shared arch=linux-ubuntu16.04-x86_64 /3gsywjq"
+    SHORT_HASH: "t4xzbx27hrd6r7wghgfa43e5sjal2qsq"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+lyrklmsg42fqiw2payhzfd7ycphgmmnu:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /5urc6tc"
+    SHORT_HASH: "lyrklmsg42fqiw2payhzfd7ycphgmmnu"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+yueaxu5cwn7gsz7acyc2kd3pqkgn3czf:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "hwloc@2.0.1%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64 /bwkyz2x"
+    SHORT_HASH: "yueaxu5cwn7gsz7acyc2kd3pqkgn3czf"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+kcm6hvuxjcqei47tnetsl2xlzjtzbyoa:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "openssl@1.1.0g%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64 /43xbcv3"
+    SHORT_HASH: "kcm6hvuxjcqei47tnetsl2xlzjtzbyoa"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+uhist3o2hl723skwpjyettowrho4zru3:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 /3o765ou"
+    SHORT_HASH: "uhist3o2hl723skwpjyettowrho4zru3"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+jonj3kf5ctyzw32bupmlm2akgjtxb2n3:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "libharu@2.3.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /c2d4mqd"
+    SHORT_HASH: "jonj3kf5ctyzw32bupmlm2akgjtxb2n3"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+snpivgxkd6xzq2ekvq5o6pp6gsoiegtr:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "transset@1.0.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /id4paqq"
+    SHORT_HASH: "snpivgxkd6xzq2ekvq5o6pp6gsoiegtr"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+ikxnzwhfgd7wsanf4em5tphg7ngbdood:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 /5nus6kn"
+    SHORT_HASH: "ikxnzwhfgd7wsanf4em5tphg7ngbdood"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+2ufp5c2ek6obcwuzjibx3hckpxmebakp:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "expat@2.2.5%gcc@5.4.0+libbsd arch=linux-ubuntu16.04-x86_64 /emyv67q"
+    SHORT_HASH: "2ufp5c2ek6obcwuzjibx3hckpxmebakp"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+lue34whxwtmqtwhkscnihxvyusotvqut:
+  stage: stage01
+  variables:
+    SHORT_SPEC: "binutils@2.24%gcc@5.4.0+gold~libiberty patches=0a0ca84889b6727dc0cc88650f55fd79452dddba762674a83a153374792fdaac ~plugins arch=linux-ubuntu16.04-x86_64 /lweji5y"
+    SHORT_HASH: "lue34whxwtmqtwhkscnihxvyusotvqut"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+xjyay6vyouujoqqky5fnpi2djfdbbasi:
+  stage: stage02
+  variables:
+    SHORT_SPEC: "jsoncpp@1.7.3%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64 /wuqz5n7"
+    SHORT_HASH: "xjyay6vyouujoqqky5fnpi2djfdbbasi"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+l4dso5b7azjy25okglms54c4fk5w7qtu:
+  stage: stage03
+  variables:
+    SHORT_SPEC: "readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7"
+    SHORT_HASH: "l4dso5b7azjy25okglms54c4fk5w7qtu"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+xfk2q2yjzompjh5helvo4aukzgbqk4lz:
+  stage: stage04
+  variables:
+    SHORT_SPEC: "libtiff@4.0.9%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /vrexte2"
+    SHORT_HASH: "xfk2q2yjzompjh5helvo4aukzgbqk4lz"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
+dikojhixju5fml2qjh2ngujzpftochvn:
+  stage: stage05
+  variables:
+    SHORT_SPEC: "python@2.7.14%gcc@5.4.0+dbm~optimizations patches=123082ab3483ded78e86d7c809e98a804b3465b4683c96bd79a2fd799f572244 +pic+pythoncmd+shared~tk~ucs4 arch=linux-ubuntu16.04-x86_64 /3lgyf7i"
+    SHORT_HASH: "dikojhixju5fml2qjh2ngujzpftochvn"
+    MIRROR_URL: "http://gitlab.spack.io/mirror/build_cache"
+  script:
+    - rebuild_package.sh
+  image: spack/ubuntu-16.04-builder
+
