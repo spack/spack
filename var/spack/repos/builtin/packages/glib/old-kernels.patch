@@ -5,7 +5,7 @@
    /* Try a 1MiB buffer for improved throughput. If that fails, use the default
     * pipe size. See: https://bugzilla.gnome.org/791457 */
 -  buffer_size = fcntl (buffer[1], F_SETPIPE_SZ, 1024 * 1024);
-+  buffer_size = 65536;
++  buffer_size = -1;
    if (buffer_size <= 0)
      {
        int errsv;

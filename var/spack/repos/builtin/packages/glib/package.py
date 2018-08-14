@@ -58,7 +58,6 @@ class Glib(AutotoolsPackage):
         multi=True,
         description='Enable tracing support'
     )
-    variant('oldkernel', default=False, description='Fix for kernels older than 2.6.35 and glib 2.56+')
 
     depends_on('pkgconfig', type='build')
     depends_on('libffi')
@@ -75,7 +74,9 @@ class Glib(AutotoolsPackage):
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
     # Patch to prevent compiler errors in kernels older than 2.6.35
-    patch('old-kernels.patch', when='+oldkernel')
+    patch('old-kernels.patch', when='@2.56: os=rhel6')
+    patch('old-kernels.patch', when='@2.56: os=centos6')
+    patch('old-kernels.patch', when='@2.56: os=sl6')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
