@@ -60,7 +60,7 @@ class Blis(Package):
     )
 
     variant(
-        'blas', default=False,
+        'blas', default=True,
         description='BLAS compatibility',
     )
 
@@ -75,7 +75,7 @@ class Blis(Package):
     )
 
     variant(
-        'static', default=False,
+        'static', default=True,
         description='Build static library',
     )
 
@@ -116,10 +116,7 @@ class Blis(Package):
         else:
             config_args.append("--disable-static")
 
-        # Trying to fix build with icc.
-        # config_args.append("CC=intel")
-
-        # FIXME: add cpu isa variants.
+       # FIXME: add cpu isa variants.
         config_args.append("auto")
 
         configure("--prefix=" + prefix,
