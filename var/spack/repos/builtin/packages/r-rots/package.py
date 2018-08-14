@@ -34,6 +34,6 @@ class RRots(Package):
 
     version('1.8.0', commit='02e3c6455bb1afe7c4cc59ad6d4d8bae7b01428b')
 
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0:')
-    depends_on('r-rcpp', type='run')
-    depends_on('r-biobase', type='run')
+    depends_on('r@3.5.0:3.5.9', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
