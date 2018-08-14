@@ -32,10 +32,9 @@ class MpixLaunchSwift(Package):
     """
 
     homepage = "https://bitbucket.org/kshitijvmehta/mpix_launch_swift"
-    url = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
+    git      = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
 
-    version('develop', git='https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git',
-            branch='envs')
+    version('develop', branch='envs')
 
     depends_on('stc')
     depends_on('tcl')

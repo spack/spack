@@ -29,11 +29,12 @@ import sys
 
 class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
+
     homepage = 'http://www.graphviz.org'
+    git      = 'https://gitlab.com/graphviz/graphviz.git'
 
     # This commit hash is tag='stable_release_2.40.1'
-    version('2.40.1', git='https://gitlab.com/graphviz/graphviz.git',
-            commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
+    version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
@@ -133,7 +134,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('gtkplus', when='+gtkplus')
 
     # Build dependencies
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     # The following are needed when building from git
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')

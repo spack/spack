@@ -30,9 +30,10 @@ class Psm(MakefilePackage):
 
     homepage = "https://github.com/intel/psm"
     url      = "https://github.com/intel/psm/archive/v3.3.tar.gz"
+    git      = "https://github.com/intel/psm.git"
 
     version('3.3', '031eb27688c932867d55054e76d00875', preferred=True)
-    version('2017-04-28', git='https://github.com/intel/psm.git', commit='604758e')
+    version('2017-04-28', commit='604758e')
 
     conflicts('%gcc@6:', when='@3.3')
 

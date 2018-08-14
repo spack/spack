@@ -34,9 +34,9 @@ class PyProjectq(PythonPackage):
     classical computer of an actual quantum chip.
     """
 
-    # URL and HOMEPAGE
+    # Homepage and git repository
     homepage = "https://projectq.ch"
-    url      = "https://github.com/ProjectQ-Framework/ProjectQ/archive/v0.3.6.tar.gz"
+    git      = "https://github.com/projectq-framework/projectq.git"
 
     # Provided python modules
     import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
@@ -44,10 +44,8 @@ class PyProjectq(PythonPackage):
                       'projectq.setups', 'projectq.types']
 
     # Versions
-    version('develop', branch='develop',
-            git='https://github.com/projectq-framework/projectq.git')
-    version('0.3.6', commit='fa484fe037a3a1772127bbd00fe4628ddba34611',
-            git='https://github.com/projectq-framework/projectq.git')
+    version('develop', branch='develop')
+    version('0.3.6', commit='fa484fe037a3a1772127bbd00fe4628ddba34611')
 
     # Dependencies
     depends_on('py-setuptools', type=('build'))

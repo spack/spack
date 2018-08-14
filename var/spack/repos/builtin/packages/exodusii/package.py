@@ -35,13 +35,12 @@ class Exodusii(CMakePackage):
        data transfer between codes.  An Exodus II data file is a random
        access, machine independent, binary file that is written and read
        via C, C++, or Fortran API routines.
-
     """
 
     homepage = "https://github.com/gsjaardema/seacas"
-    url      = "https://github.com/gsjaardema/seacas/archive/master.zip"
+    git      = "https://github.com/gsjaardema/seacas.git"
 
-    version('2016-08-09', git='https://github.com/gsjaardema/seacas.git', commit='2ffeb1b')
+    version('2016-08-09', commit='2ffeb1b')
 
     variant('mpi', default=True, description='Enables MPI parallelism.')
 

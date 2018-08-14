@@ -31,10 +31,9 @@ class RBiocparallel(RPackage):
        objects."""
 
     homepage = "https://bioconductor.org/packages/BiocParallel/"
-    url      = "https://git.bioconductor.org/packages/BiocParallel"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/BiocParallel.git"
 
-    version('1.10.1', git='https://git.bioconductor.org/packages/BiocParallel', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
+    version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
 
     depends_on('r-futile-logger', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))

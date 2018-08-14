@@ -31,10 +31,10 @@ class Hapcut2(MakefilePackage):
        and accuracy."""
 
     homepage = "https://github.com/vibansal/HapCUT2"
-    url      = "https://github.com/vibansal/HapCUT2"
+    git      = "https://github.com/vibansal/HapCUT2.git"
 
-    version('2017-07-10', git='https://github.com/vibansal/HapCUT2.git',
-            commit='2966b94c2c2f97813b757d4999b7a6471df1160e', submodules=True)
+    version('2017-07-10', commit='2966b94c2c2f97813b757d4999b7a6471df1160e',
+            submodules=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

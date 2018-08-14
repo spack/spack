@@ -30,10 +30,9 @@ class Cppzmq(CMakePackage):
 
     homepage = "http://www.zeromq.org"
     url      = "https://github.com/zeromq/cppzmq/archive/v4.2.2.tar.gz"
+    git      = "https://github.com/zeromq/cppzmq.git"
 
-    version('develop', branch='master',
-            git='https://github.com/zeromq/cppzmq.git')
-
+    version('develop', branch='master')
     version('4.2.2', 'bd809b47296e77fe9f192bd9dafd5cc3')
 
     depends_on('cmake@3.0.0:', type='build')

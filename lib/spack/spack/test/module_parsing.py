@@ -42,13 +42,13 @@ MODULE_ENV = "BASH_FUNC_module()" if os.environ.get("BASH_FUNC_module()", None) 
 
 @pytest.fixture()
 def save_env():
-    old_PATH = os.environ.get('PATH', None)
-    old_bash_func = os.environ.get(MODULE_ENV, None)
+    old_path = os.environ.get('PATH', None)
+    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
 
     yield
 
-    if old_PATH:
-        os.environ['PATH'] = old_PATH
+    if old_path:
+        os.environ['PATH'] = old_path
     if old_bash_func:
         os.environ[MODULE_ENV] = old_bash_func
 

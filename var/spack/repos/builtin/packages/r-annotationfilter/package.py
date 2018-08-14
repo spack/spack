@@ -32,10 +32,9 @@ class RAnnotationfilter(RPackage):
        packages."""
 
     homepage = "https://bioconductor.org/packages/AnnotationFilter/"
-    url      = "https://git.bioconductor.org/packages/AnnotationFilter"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/AnnotationFilter.git"
 
-    version('1.0.0', git='https://git.bioconductor.org/packages/AnnotationFilter', commit='a9f79b26defe3021eea60abe16ce1fa379813ec9')
+    version('1.0.0', commit='a9f79b26defe3021eea60abe16ce1fa379813ec9')
 
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))

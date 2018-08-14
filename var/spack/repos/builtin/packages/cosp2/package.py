@@ -37,10 +37,9 @@ class Cosp2(MakefilePackage):
     tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/cosp2.html"
-    url = "https://github.com/exmatex/CoSP2/archive/master.tar.gz"
+    git      = "https://github.com/exmatex/CoSP2.git"
 
-    version('master', git='https://github.com/exmatex/CoSP2.git',
-            description='master')
+    version('master', branch='master')
 
     variant('double', default=True,
             description='Build with double precision.')

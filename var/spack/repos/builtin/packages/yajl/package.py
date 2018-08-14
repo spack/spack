@@ -30,6 +30,7 @@ class Yajl(CMakePackage):
 
     homepage = "http://lloyd.github.io/yajl/"
     url      = "https://github.com/lloyd/yajl/archive/2.1.0.zip"
+    git      = "https://github.com/lloyd/yajl.git"
 
-    version('develop', git='https://github.com/lloyd/yajl.git', branch='master')
+    version('develop', branch='master')
     version('2.1.0', '5eb9c16539bf354b937fcb20e263d1eb')

@@ -195,6 +195,18 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class MesonPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for meson-based packages"""
+
+    base_class_name = 'MesonPackage'
+
+    body = """\
+    def meson_args(self):
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
 class QMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for QMake-based packages"""
 
@@ -389,6 +401,7 @@ templates = {
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
+    'meson':      MesonPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -459,6 +472,7 @@ class BuildSystemGuesser:
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
+            (r'/meson\.build$',       'meson'),
         ]
 
         # Peek inside the compressed file.
@@ -676,8 +690,8 @@ def create(parser, args):
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
-    PackageClass = templates[build_system]
-    package = PackageClass(name, url, versions)
+    package_class = templates[build_system]
+    package = package_class(name, url, versions)
     tty.msg("Created template for {0} package".format(package.name))
 
     # Create a directory for the new package

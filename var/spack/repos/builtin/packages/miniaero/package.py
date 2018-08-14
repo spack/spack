@@ -32,12 +32,11 @@ class Miniaero(MakefilePackage):
     """
 
     homepage = "http://mantevo.org"
-    url      = "https://github.com/Mantevo/miniAero.git"
+    git      = "https://github.com/Mantevo/miniAero.git"
 
     tags = ['proxy-app']
 
-    version('2016-11-11', git='https://github.com/Mantevo/miniAero.git',
-            commit='f46d135479a5be19ec5d146ccaf0e581aeff4596')
+    version('2016-11-11', commit='f46d135479a5be19ec5d146ccaf0e581aeff4596')
 
     depends_on('kokkos')
 
