@@ -157,6 +157,9 @@ class Python(AutotoolsPackage):
             tty.warn(('Python v{0} may not install properly if Python '
                       'user configurations are present.').format(self.version))
 
+        if "platform=cray" in spec:
+            spack_env.set("CRAYPE_LINK_TYPE", "dynamic")
+
         # Need this to allow python build to find the Python installation.
         spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
