@@ -2,50 +2,18 @@
 Known Issues
 ============
 
-This is a list of known bugs in Spack. It provides ways of getting around these
-problems if you encounter them.
-
------------------------------------------------------------------
-Default variants are not taken into account during concretization.
------------------------------------------------------------------
-
-**Status:** Expected to be fixed in the next release
-
-Current concretization algorithm does not take into account default values
-of variants when adding extra constraints to the spec via CLI. For example
-you may encounter the following error when trying to specify which MPI provider
-to use:
-
-.. code-block:: console
-
-   $ spack install hdf5 ^openmpi
-   ==> Error: hdf5 does not depend on openmpi
-
-although the hdf5 package contains:
-
-.. code-block:: python
-
-   variant('mpi', default=True, description='Enable MPI support')
-   depends_on('mpi', when='+mpi')
-
-A workaround is to explicitly activate the variant related to the dependency:
-
-.. code-block:: console
-
-   $ spack install hdf5+mpi ^openmpi
-
-See https://github.com/spack/spack/issues/397 for further details.
+This is a list of known bugs in Spack and ways of getting around them.
 
 
 ---------------------------------------------------
-Variants are not properly forwarded to dependencies
+Variants are Not Properly Forwarded to Dependencies
 ---------------------------------------------------
 
-**Status:** Expected to be fixed in the next release
+**Status:** To be fixed in the next release
 
-Sometimes, a variant of a package can also affect how its dependencies are
-built. For example, in order to build MPI support for a package, it may
-require that its dependencies are also built with MPI support. In the
+Sometimes, a variant of a package can affect how its dependencies are
+built. For example, to build MPI support for a package may
+require that its dependencies also be built with MPI support. In the
 ``package.py``, this looks like:
 
 .. code-block:: python
@@ -53,10 +21,10 @@ require that its dependencies are also built with MPI support. In the
    depends_on('hdf5~mpi', when='~mpi')
    depends_on('hdf5+mpi', when='+mpi')
 
-Spack handles this situation properly for *immediate* dependencies, and
+Spack handles this situation properly for *immediate* dependencies and
 builds ``hdf5`` with the same variant you used for the package that
-depends on it. However, for *indirect* dependencies (dependencies of
-dependencies), Spack does not backtrack up the DAG far enough to handle
+depends on it. For *indirect* dependencies (dependencies of
+dependencies), however, Spack does not backtrack up the DAG far enough to handle
 this. Users commonly run into this situation when trying to build R with
 X11 support:
 
