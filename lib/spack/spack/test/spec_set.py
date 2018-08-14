@@ -25,7 +25,7 @@
 import pytest
 
 from spack.spec import Spec
-from spack.schema import FileFormatError
+from jsonschema import ValidationError
 from spack.util.spec_set import CombinatorialSpecSet
 
 
@@ -197,7 +197,7 @@ def test_spec_set_compilers_bad_property():
             ]
         }
     }
-    with pytest.raises(FileFormatError):
+    with pytest.raises(ValidationError):
         CombinatorialSpecSet(yaml_file)
 
 
@@ -218,7 +218,7 @@ def test_spec_set_packages_no_matrix():
             },
         }
     }
-    with pytest.raises(FileFormatError):
+    with pytest.raises(ValidationError):
         CombinatorialSpecSet(yaml_file)
 
 
