@@ -112,7 +112,7 @@ class Blis(Package):
             config_args.append("--disable-shared")
 
         if '+static' in spec:
-        config_args.append("--enable-static")
+            config_args.append("--enable-static")
         else:
             config_args.append("--disable-static")
         
