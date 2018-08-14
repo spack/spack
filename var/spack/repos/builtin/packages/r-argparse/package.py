@@ -36,7 +36,7 @@ class RArgparse(RPackage):
 
     version('1.1.1', sha256='441449f0816411a868fd1b15cf4b2bc45931bbd4b67d6592dbe48875905cf93b')
 
-    depends_on('r-proto', type='run')
-    depends_on('r-findpython', type='run')
-    depends_on('r-getopt', type='run')
-    depends_on('r-jsonlite', type='run')
+    depends_on('r-proto@1:', type=('build', 'run'))
+    depends_on('r-findpython', type=('build', 'run'))
+    depends_on('r-getopt@1.19', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
