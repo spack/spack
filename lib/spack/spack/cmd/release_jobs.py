@@ -52,7 +52,8 @@ def setup_parser(subparser):
 
 def release_jobs(parser, args):
     share_path = os.path.join('.', 'share', 'spack', 'docker')
-    os_container_mapping_path = os.path.join(share_path, 'os-container-mapping.yaml')
+    os_container_mapping_path = os.path.join(
+        share_path, 'os-container-mapping.yaml')
 
     with open(os_container_mapping_path, 'r') as fin:
         os_container_mapping = syaml.load(fin)

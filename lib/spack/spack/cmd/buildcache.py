@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
+import os
 import sys
 
 import llnl.util.tty as tty
@@ -31,7 +32,10 @@ import spack.cmd
 import spack.config
 import spack.repo
 import spack.store
+from spack.paths import etc_path
 from spack.spec import Spec
+from spack.util.spec_set import CombinatorialSpecSet
+
 import spack.binary_distribution as bindist
 
 description = "create, download and install binary packages"

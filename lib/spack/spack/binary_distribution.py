@@ -47,9 +47,7 @@ import spack.util.gpg as gpg_util
 import spack.relocate as relocate
 import spack.util.spack_yaml as syaml
 from spack.schema.buildcache_index import schema
-from spack.paths import etc_path
 from spack.spec import Spec
-from spack.util.spec_set import CombinatorialSpecSet
 from spack.stage import Stage
 from spack.util.gpg import Gpg
 from spack.util.web import spider
@@ -665,7 +663,7 @@ def get_specs(force=False):
                 # read the spec from the build cache file. All specs
                 # in build caches are concrete (as they are built) so
                 # we need to mark this spec concrete on read-in.
-                spec = spack.spec.Spec.from_yaml(f)
+                spec = Spec.from_yaml(f)
                 spec._mark_concrete()
                 _cached_specs.add(spec)
 
@@ -715,6 +713,7 @@ def get_keys(install=False, trust=False, force=False):
                 else:
                     tty.msg('Will not add this key to trusted keys.'
                             'Use -t to install all downloaded keys')
+
 
 def read_from_url(file_uri):
     file_contents = None
