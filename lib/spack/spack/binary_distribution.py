@@ -35,6 +35,9 @@ import ruamel.yaml as yaml
 from jsonschema import validate
 import json
 
+from six.moves.urllib.request import urlopen
+from six.moves.urllib.error import URLError
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install_tree, get_filetype
 
@@ -42,7 +45,11 @@ import spack.cmd
 import spack.fetch_strategy as fs
 import spack.util.gpg as gpg_util
 import spack.relocate as relocate
+import spack.util.spack_yaml as syaml
 from spack.schema.buildcache_index import schema
+from spack.paths import etc_path
+from spack.spec import Spec
+from spack.util.spec_set import CombinatorialSpecSet
 from spack.stage import Stage
 from spack.util.gpg import Gpg
 from spack.util.web import spider
@@ -140,7 +147,7 @@ def read_buildinfo_file(prefix):
     filename = buildinfo_file_name(prefix)
     with open(filename, 'r') as inputfile:
         content = inputfile.read()
-        buildinfo = yaml.load(content)
+        buildinfo = syaml.load(content)
     return buildinfo
 
 
@@ -182,7 +189,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
-        outfile.write(yaml.dump(buildinfo, default_flow_style=True))
+        outfile.write(syaml.dump(buildinfo, default_flow_style=True))
 
 
 def tarball_directory_name(spec):
@@ -289,7 +296,7 @@ def generate_json_index(path_list, output_path):
 
         with open(path, 'r') as yaml_in:
             yaml_str = yaml_in.read()
-            yaml_obj = yaml.load(yaml_str)
+            yaml_obj = syaml.load(yaml_str)
 
             entry = {
                 'name': pkg_name,
@@ -398,7 +405,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spec_dict = {}
     with open(spec_file, 'r') as inputfile:
         content = inputfile.read()
-        spec_dict = yaml.load(content)
+        spec_dict = syaml.load(content)
     bchecksum = {}
     bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum
@@ -411,7 +418,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spec_dict['buildinfo'] = buildinfo
     spec_dict['full_hash'] = spec.full_hash()
     with open(specfile_path, 'w') as outfile:
-        outfile.write(yaml.dump(spec_dict))
+        outfile.write(syaml.dump(spec_dict))
     # sign the tarball and spec file with gpg
     if not unsigned:
         sign_tarball(key, force, specfile_path)
@@ -557,7 +564,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     spec_dict = {}
     with open(specfile_path, 'r') as inputfile:
         content = inputfile.read()
-        spec_dict = yaml.load(content)
+        spec_dict = syaml.load(content)
     bchecksum = spec_dict['binary_cache_checksum']
 
     # if the checksums don't match don't install
@@ -708,3 +715,113 @@ def get_keys(install=False, trust=False, force=False):
                 else:
                     tty.msg('Will not add this key to trusted keys.'
                             'Use -t to install all downloaded keys')
+
+def read_from_url(file_uri):
+    file_contents = None
+
+    try:
+        url = urlopen(file_uri)
+    except URLError as url_err:
+        msg = 'Unable to open url {0} due to {1}'.format(
+            file_uri, url_err.message)
+        raise spack.error.SpackError(msg)
+    except Exception as expn:
+        msg = 'Error getting file contents at {0} due to {1}'.format(
+            file_uri, expn.message)
+        raise spack.error.SpackError(msg)
+
+    file_contents = url.read()
+
+    if not file_contents:
+        msg = 'Unable to read file contents at {0}'.format(file_uri)
+        raise spack.error.SpackError(msg)
+
+    return file_contents
+
+
+def needs_rebuild(spec, mirror_url, buildcache_index):
+    pkg_name = spec.name
+    pkg_version = spec.version
+
+    tty.msg('Checking {0}-{1}'.format(pkg_name, pkg_version))
+
+    spec.concretize()
+    pkg_hash = spec.dag_hash()
+    pkg_full_hash = spec.full_hash()
+
+    rebuild_spec = {
+        'short_spec': spec.short_spec,
+        'hash': pkg_hash
+    }
+
+    if buildcache_index:
+        # just look in the index we already fetched
+        if pkg_hash in buildcache_index:
+            # At least remote binary mirror knows about it, so if the
+            # full_hash doesn't match (or remote end doesn't know about
+            # the full_hash), then we trigger a rebuild.
+            remote_pkg_info = buildcache_index[pkg_hash]
+            if ('full_hash' not in remote_pkg_info or
+                remote_pkg_info['full_hash'] != pkg_full_hash):
+                    return rebuild_spec
+        else:
+            # remote binary mirror doesn't know about this package, we
+            # should probably just rebuild it
+            return rebuild_spec
+    else:
+        # retrieve the .spec.yaml and look there instead
+        build_cache_dir = build_cache_directory(mirror_url)
+        spec_yaml_file_name = tarball_name(spec, '.spec.yaml')
+        file_path = os.path.join(build_cache_dir, spec_yaml_file_name)
+        try:
+            yaml_contents = read_from_url(file_path)
+        except spack.error.SpackError:
+            # let any kind of failure reading the .spec.yaml indicate rebuild
+            return rebuild_spec
+        spec_yaml = syaml.load(yaml_contents)
+
+        if ('full_hash' not in spec_yaml or
+            spec_yaml['full_hash'] != pkg_full_hash):
+                return rebuild_spec
+
+    return None
+
+
+def get_remote_index(mirror_url):
+    build_cache_dir = build_cache_directory(mirror_url)
+
+    # First fetch the index.json
+    index_path = os.path.join(build_cache_dir, 'index.json')
+    index_contents = read_from_url(index_path)
+
+    return json.loads(index_contents)
+
+
+def check(mirrors, specs, no_index=False, output_file=None):
+    rebuilds = {}
+    for mirror in mirrors.keys():
+        mirror_url = mirrors[mirror]
+        tty.msg('Checking for built specs at %s' % mirror_url)
+
+        rebuild_list = []
+        remote_pkg_index = None
+        if not no_index:
+            remote_pkg_index = get_remote_index(mirror_url)
+
+        for spec in specs:
+            rebuild_spec = needs_rebuild(spec, mirror_url, remote_pkg_index)
+            if rebuild_spec:
+                rebuild_list.append(rebuild_spec)
+
+        if rebuild_list:
+            rebuilds[mirror_url] = {
+                'mirrorName': mirror,
+                'mirrorUrl': mirror_url,
+                'rebuildSpecs': rebuild_list
+            }
+
+    if output_file:
+        with open(output_file, 'w') as outf:
+            outf.write(json.dumps(rebuilds))
+
+    return 1 if rebuilds else 0

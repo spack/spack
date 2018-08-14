@@ -23,13 +23,15 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
+import sys
 
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.config
 import spack.repo
 import spack.store
-import spack.spec
+from spack.spec import Spec
 import spack.binary_distribution as bindist
 
 description = "create, download and install binary packages"
@@ -101,6 +103,33 @@ def setup_parser(subparser):
     dlkeys.add_argument('-f', '--force', action='store_true',
                         help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
+
+    check = subparsers.add_parser('check', help=check_binaries.__doc__)
+    check.add_argument(
+        '-m', '--mirror-url', default=None,
+        help='Override any configured mirrors with this mirror url')
+
+    check.add_argument(
+        '-o', '--output-file', default=None,
+        help='File where rebuild info should be written')
+
+    # used to construct scope arguments below
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
+    check.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.cmd.default_modify_scope(),
+        help="configuration scope containing mirrors to check")
+
+    check.add_argument(
+        '-s', '--spec', default=None,
+        help='Check single spec instead of building from release specs file')
+
+    check.add_argument(
+        '-n', '--no-index', action='store_true', default=False,
+        help='Do not use buildcache index, instead retrieve .spec.yaml files')
+    check.set_defaults(func=check_binaries)
 
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
@@ -243,7 +272,7 @@ def installtarball(args):
 
 
 def install_tarball(spec, args):
-    s = spack.spec.Spec(spec)
+    s = Spec(spec)
     if s.external or s.virtual:
         tty.warn("Skipping external or virtual package %s" % spec.format())
         return
@@ -291,6 +320,39 @@ def listspecs(args):
 def getkeys(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
+
+
+def check_binaries(args):
+    """
+    Check specs (either a single spec from --spec, or else the full set of
+    release specs) against remote binary mirror(s) to see if any need to be
+    rebuilt.
+    """
+    if args.spec:
+        specs = [Spec(args.spec)]
+    else:
+        release_specs_path = \
+            os.path.join(etc_path, 'spack', 'defaults', 'release.yaml')
+        specs = CombinatorialSpecSet.from_file(release_specs_path)
+
+    if not specs:
+        tty.msg('No specs provided, exiting.')
+        sys.exit(0)
+
+    # Next see if there are any configured binary mirrors
+    configured_mirrors = spack.config.get('mirrors', scope=args.scope)
+
+    if args.mirror_url:
+        configured_mirrors = {'additionalMirrorUrl': args.mirror_url}
+
+    if not configured_mirrors:
+        tty.msg('No mirrors provided, exiting.')
+        sys.exit(0)
+
+    no_index = args.no_index
+    output_file = args.output_file
+
+    sys.exit(bindist.check(configured_mirrors, specs, no_index, output_file))
 
 
 def buildcache(parser, args):
