@@ -5,23 +5,23 @@ Advanced Topics in Packaging
 ============================
 
 Spack tries to automatically configure packages with information from
-dependencies such that all you need to do is to list the dependencies
-(i.e. with the ``depends_on`` directive) and the build system (for example
+dependencies, such that all you need to do is to list the dependencies
+(i.e., with the ``depends_on`` directive) and the build system (for example,
 by deriving from :code:`CmakePackage`).
 
 However, there are many special cases. Often you need to retrieve details
-about dependencies to set package-specific configuration options, or to
+about dependencies to set package-specific configuration options, or
 define package-specific environment variables used by the package's build
 system. This tutorial covers how to retrieve build information from
-dependencies, and how you can automatically provide important information to
+dependencies and automatically provide information to
 dependents in your package.
 
 ----------------------
-Setup for the tutorial
+Setup for the Tutorial
 ----------------------
 
-The simplest way to follow along with this tutorial is to use our Docker image,
-which comes with Spack and various packages pre-installed:
+The simplest way to follow this tutorial is to use our Docker image,
+which comes preinstalled with Spack and various packages:
 
 .. code-block:: console
 
@@ -57,8 +57,8 @@ and build the necessary bits yourself:
   Branch tutorials/advanced_packaging set up to track remote branch tutorials/advanced_packaging from origin.
   Switched to a new branch 'tutorials/advanced_packaging'
 
-At this point you can install the software that will be used
-during the rest of the tutorial (the output of the commands is omitted
+At this point, install the software that is used
+for the rest of the tutorial (the output of the commands is omitted
 for the sake of brevity):
 
 .. code-block:: console
@@ -71,32 +71,30 @@ for the sake of brevity):
   $ spack install --only=dependencies netcdf
   $ spack install --only=dependencies elpa
 
-Now, you are ready to set your preferred ``EDITOR`` and continue with
-the rest of the tutorial.
+You are now ready to set your preferred ``EDITOR`` and continue.
 
 
 .. _adv_pkg_tutorial_start:
 
 ------------------------------
-Retrieving library information
+Retrieving Library Information
 ------------------------------
 
 Although Spack attempts to help packages locate their dependency libraries
-automatically (e.g. by setting PKG_CONFIG_PATH and CMAKE_PREFIX_PATH), a
+automatically (e.g., by setting PKG_CONFIG_PATH and CMAKE_PREFIX_PATH), a
 package may have unique configuration options that are required to locate
 libraries. When a package needs information about dependency libraries, the
 general approach in Spack is to query the dependencies for the locations of
 their libraries and set configuration options accordingly. By default most
 Spack packages know how to automatically locate their libraries. This section
-covers how to retrieve library information from dependencies and how to locate
+covers how to retrieve library information from dependencies and locate
 libraries when the default logic doesn't work.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Accessing dependency libraries
+Accessing Dependency Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you need to access the libraries of a dependency, you can do so
-via the ``libs`` property of the spec, for example in the ``arpack-ng``
+If you need to access the libraries of a dependency, use the ``libs`` property of the spec, for example, in the ``arpack-ng``
 package:
 
 .. code-block:: python
@@ -111,7 +109,7 @@ package:
         ], '.')
 
 Note that ``arpack-ng`` is querying virtual dependencies, which Spack
-automatically resolves to the installed implementation (e.g. ``openblas``
+automatically resolves to the installed implementation (e.g., ``openblas``
 for ``blas``).
 
 We've started work on a package for ``armadillo``. You should open it,
@@ -122,7 +120,7 @@ the ``cmake_args`` section:
 
   root@advanced-packaging-tutorial:/# spack edit armadillo
 
-If you followed the instructions in the package, when you are finished your
+If you followed the instructions in the package, your
 ``cmake_args`` method should look like:
 
 .. code-block:: python
@@ -145,7 +143,7 @@ If you followed the instructions in the package, when you are finished your
         ]
 
 As you can see, getting the list of libraries that your dependencies provide
-is as easy as accessing the their ``libs`` attribute. Furthermore, the interface
+is as easy as accessing their ``libs`` attribute. Furthermore, the interface
 remains the same whether you are querying regular or virtual dependencies.
 
 At this point you can complete the installation of ``armadillo`` using ``openblas``
@@ -175,16 +173,16 @@ of semicolon separated libraries (you are encouraged to open ``armadillo``'s
 build logs to double check).
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Providing libraries to dependents
+Providing Libraries to Dependents
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack provides a default implementation for ``libs`` which often works
+Spack provides a default implementation for ``libs``, which often works
 out of the box. A user can write a package definition without having to
 implement a ``libs`` property and dependents can retrieve its libraries
 as shown in the above section. However, the default implementation assumes that
-libraries follow the naming scheme ``lib<package name>.so`` (or e.g.
-``lib<package name>.a`` for static libraries). Packages which don't
-follow this naming scheme must implement this function themselves, e.g.
+libraries follow the naming scheme ``lib<package name>.so`` (or, e.g.,
+``lib<package name>.a`` for static libraries). Packages that don't
+follow this naming scheme must implement this function themselves, e.g.,
 ``opencv``:
 
 .. code-block:: python
@@ -196,9 +194,9 @@ follow this naming scheme must implement this function themselves, e.g.
             "libopencv_*", root=self.prefix, shared=shared, recurse=True
         )
 
-This issue is common for packages which implement an interface (i.e.
+This issue is common for packages that implement an interface (i.e.,
 virtual package providers in Spack). If we try to build another version of
-``armadillo`` tied to ``netlib-lapack`` we'll notice that this time the
+``armadillo`` tied to ``netlib-lapack`` we see that this time the
 installation won't complete:
 
 .. code-block:: console
@@ -228,7 +226,7 @@ installation won't complete:
   See build log for details:
     /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build.out
 
-Unlike ``openblas`` which provides a library named ``libopenblas.so``,
+Unlike ``openblas``, which provides a library named ``libopenblas.so``,
 ``netlib-lapack`` provides ``liblapack.so``, so it needs to implement
 customized library search logic. Let's edit it:
 
@@ -270,30 +268,29 @@ install ``armadillo ^netlib-lapack``:
     Fetch: 0.01s.  Build: 3.75s.  Total: 3.76s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/armadillo-8.100.1-sxmpu5an4dshnhickh6ykchyfda7jpyn
 
-Since each implementation of a virtual package is responsible for locating the
-libraries associated with the interfaces it provides, dependents do not need
-to include special-case logic for different implementations and for example
+Because each implementation of a virtual package is responsible for locating the
+libraries associated with the interfaces it provides, dependents need not include special-case logic for different implementations. For example, they
 need only ask for :code:`spec['blas'].libs`.
 
 ---------------------------------------
-Modifying a package's build environment
+Modifying a Package's Build Environment
 ---------------------------------------
 
 Spack sets up several environment variables like PATH by default to aid in
-building a package, but many packages make use of environment variables which
+building a package, but many packages make use of environment variables that
 convey specific information about their dependencies, for example MPICC. This
-section covers how update your Spack packages so that package-specific
-environment variables are defined at build-time.
+section covers how to update your Spack packages so that package-specific
+environment variables are defined at build time.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set environment variables in dependent packages at build-time
+Set Environment Variables in Dependent Packages at Build Time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Dependencies can set environment variables that are required when their
-dependents build. For example, when a package depends on a python extension
+dependents build. For example, when a package depends on a Python extension
 like py-numpy, Spack's ``python`` package will add it to ``PYTHONPATH``
-so it is available at build time; this is required because the default setup
-that spack does is not sufficient for python to import modules.
+so it is available at build time. This is required because Spack's default setup
+is insufficient for Python to import modules.
 
 To provide environment setup for a dependent, a package can implement the
 :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
@@ -306,7 +303,7 @@ example an MPI implementation can set ``MPICC`` for packages that depend on it:
   def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
       spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
 
-In this case packages which depend on ``mpi`` will have ``MPICC`` defined in
+In this case, packages that depend on ``mpi`` will have ``MPICC`` defined in
 their environment when they build. This section is focused on modifying the
 build-time environment represented by ``spack_env``, but it's worth noting that
 modifications to ``run_env`` are included in Spack's automatically-generated
@@ -356,7 +353,7 @@ and double check the environment logs to verify that every variable was
 set to the correct value.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set environment variables in your own package
+Set Environment Variables in Your Own Package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Packages can modify their own build-time environment by implementing the
@@ -400,14 +397,14 @@ In the end your method should look like:
       spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
       spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
 
-At this point it's possible to proceed with the installation of ``elpa``.
+We can now proceed with the installation of ``elpa``.
 
 ----------------------
 Other Packaging Topics
 ----------------------
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Attach attributes to other packages
+Attach Attributes to Other Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Build tools usually also provide a set of executables that can be used
@@ -436,13 +433,13 @@ and ``automake`` with the usual function call syntax of :py:class:`Executable <s
   aclocal('--force')
 
 ^^^^^^^^^^^^^^^^^^^^^^^
-Extra query parameters
+Extra Query Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-An advanced feature of the Spec's build-interface protocol is the support
+An advanced feature of Spec's build-interface protocol is support
 for extra parameters after the subscript key. In fact, any of the keys used in the query
-can be followed by a comma separated list of extra parameters which can be
-inspected by the package receiving the request to fine-tune a response.
+can be followed by a comma separated list of extra parameters, which can be
+inspected by the package receiving the request to fine tune a response.
 
 Let's look at an example and try to install ``netcdf``:
 
@@ -469,7 +466,7 @@ Let's look at an example and try to install ``netcdf``:
 
 We can see from the error that ``netcdf`` needs to know how to link the *high-level interface*
 of ``hdf5``, and thus passes the extra parameter ``hl`` after the request to retrieve it.
-Clearly the implementation in the ``hdf5`` package is not complete, and we need to fix it:
+Clearly the implementation in the ``hdf5`` package is incomplete, and we need to fix it:
 
 .. code-block:: console
 

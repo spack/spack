@@ -4,11 +4,11 @@
 Tutorial: Spack 101
 =============================
 
-This is a full day introduction to Spack with lectures and live demos.  It
+This is a full-day introduction to Spack with lectures and live demos.  It
 was presented as a tutorial at `Supercomputing 2017
 <http://sc17.supercomputing.org>`_.  You can use these materials to teach
-a course on Spack at your own site, or you can just skip ahead and read
-the live demo scripts to see how Spack is used in practice.
+a course on Spack at your own site or you just read
+the live-demo scripts to see how Spack is used in practice.
 
 .. _sc16-slides:
 
@@ -32,7 +32,7 @@ Tutorial presented at Supercomputing 2017. November 13, 2017, Denver, CO, USA.
 
 .. rubric:: Live Demos
 
-These scripts will take you step-by-step through basic Spack tasks.  They
+These scripts will take you step by step through basic Spack tasks.  They
 correspond to sections in the slides above.
 
   1. :ref:`basics-tutorial`

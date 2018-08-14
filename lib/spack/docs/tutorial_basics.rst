@@ -4,16 +4,18 @@
 Basic Installation Tutorial
 =========================================
 
-This tutorial will guide you through the process of installing
-software using Spack. We will first cover the `spack install` command,
+This tutorial shows you how to install
+software using Spack. We first cover the `spack install` command,
 focusing on the power of the spec syntax and the flexibility it gives
-to users. We will also cover the `spack find` command for viewing
-installed packages and the `spack uninstall` command. Finally, we will
-touch on how Spack manages compilers, especially as it relates to
-using Spack-built compilers within Spack. We will include full output
-from all of the commands demonstrated, although we will frequently
+to users. 
+
+We then cover the `spack find` command for viewing
+installed packages and the `spack uninstall` command. 
+
+Finally, we touch on how Spack manages compilers, especially Spack-built compilers within Spack. We will include full output
+from all the commands demonstrated, although we frequently
 call attention to only small portions of that output (or merely to the
-fact that it succeeded). The provided output is all from an AWS
+fact that it succeeded). All the provided output is from an AWS
 instance running Ubuntu 16.04
 
 .. _basics-tutorial-install:
@@ -22,8 +24,8 @@ instance running Ubuntu 16.04
 Installing Spack
 ----------------
 
-Spack works out of the box. Simply clone spack and get going. We will
-clone Spack and immediately checkout the most recent release, v0.11.2.
+Spack works out of the box --- simply clone and get going. We will
+clone Spack and immediately check out the most recent release, v0.11.2.
 
 .. code-block:: console
 
@@ -40,9 +42,9 @@ clone Spack and immediately checkout the most recent release, v0.11.2.
   Branch releases/v0.11.2 set up to track remote branch releases/v0.11.2 from origin.
   Switched to a new branch 'releases/v0.11.2'
 
-Next add Spack to your path. Spack has some nice command line
+Next add Spack to your path. Spack has some nice command-line
 integration tools, so instead of simply appending to your ``PATH``
-variable, source the spack setup script.  Then add Spack to your path.
+variable, source the Spack setup script.  Then add Spack to your path.
 
 .. code-block:: console
 
@@ -82,7 +84,7 @@ we can view all available python packages.
 Installing Packages
 -------------------
 
-Installing a package with Spack is very simple. To install a piece of
+To install a piece of
 software, simply type ``spack install <package_name>``.
 
 .. code-block:: console
@@ -103,11 +105,11 @@ software, simply type ``spack install <package_name>``.
     Fetch: 0.58s.  Build: 1.15s.  Total: 1.73s.
     [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb
 
-Spack can install software either from source or from a binary
+Spack can install software from either source or a binary
 cache. Packages in the binary cache are signed with GPG for
-security. For the tutorial we have prepared a binary cache so you
-don't have to wait on slow compilation from source. To be able to
-install from the binary cache, we will need to trust the GPG key that
+security. For this tutorial, we prepared a binary cache so you
+don't have to wait for slow compilation from source. To
+install from the binary cache, we need to trust the GPG key that
 the binary cache was prepared with.
 
 .. code-block:: console
@@ -122,10 +124,10 @@ the binary cache was prepared with.
 The AWS instances and Docker images we use for the tutorial already
 have configuration files in place so that Spack knows where to look
 for binary packages (and that's the only change we've made). You'll
-learn more about configuring Spack later in the tutorial, but for now
-you will be able to install the rest of the packages in the tutorial
+learn more about configuring Spack later in the tutorial. For now,
+install the rest of the packages in the tutorial
 from a binary cache by specifying ``spack install --use-cache
-<package_name>``. This will install the binary cached version if it
+<package_name>``. This installs the binary cached version if it
 exists and fall back on installing from source.
 
 Spack's spec syntax is the interface by which we can request specific
@@ -153,12 +155,12 @@ compilers.
   ==> Successfully installed zlib from binary cache
   [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/clang-3.8.0-2ubuntu4/zlib-1.2.11-4pt75q7qq6lygf3hgnona4lyc2uwedul
 
-Note that this installation is located separately from the previous
-one. We will discuss this in more detail later, but this is part of what
-allows Spack to support arbitrarily versioned software.
+Note that this installation is located separate from the previous
+one. This is part of what
+allows Spack to support arbitrarily versioned software, as will be discussed later.
 
 You can check for particular versions before requesting them. We will
-use the ``spack versions`` command to see the available versions, and then
+use the ``spack versions`` command to see available versions and then
 install a different version of ``zlib``.
 
 .. code-block:: console
@@ -170,7 +172,7 @@ install a different version of ``zlib``.
     1.2.10   1.2.7    1.2.5.1  1.2.4.2  1.2.3.7
     ...
 
-The ``@`` sigil is used to specify versions, both of packages and of
+The ``@`` sigil is used to specify versions of packages and
 compilers.
 
 .. code-block:: console
@@ -242,7 +244,7 @@ into the compile line automatically by the Spack compiler wrappers.
 
 The ``spack find`` command is used to query installed packages. Note that
 some packages appear identical with the default output. The ``-l`` flag
-shows the hash of each package, and the ``-f`` flag shows any non-empty
+shows the hash of each package and the ``-f`` flag shows any non-empty
 compiler flags of those packages.
 
 .. code-block:: console
@@ -346,14 +348,14 @@ top-level package, we can also specify about a dependency using ``^``.
   [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/clang-3.8.0-2ubuntu4/openssl-1.0.2k-ufruk7kj2fz3oupuat2jbgc2y7hg37vy
 
 Packages can also be referred to from the command line by their package
-hash. Using the ``spack find -lf`` command earlier we saw that the hash
+hash. Using the ``spack find -lf`` command, we saw that the hash
 of our optimized installation of zlib (``cppflags="-O3"``) began with
 ``64mns5m``. We can now explicitly build with that package without typing
 the entire spec, by using the ``/`` sigil to refer to it by hash. As with
-other tools like git, you do not need to specify an *entire* hash on the
+other tools like Git, you do not need to specify an *entire* hash on the
 command line.  You can specify just enough digits to identify a hash
 uniquely.  If a hash prefix is ambiguous (i.e., two or more installed
-packages share the prefix) then spack will report an error.
+packages share the prefix) then Spack will report an error.
 
 .. code-block:: console
 
@@ -415,8 +417,8 @@ even if it also appears as a dependency.
 
 
 Let's move on to slightly more complicated packages. ``HDF5`` is a
-good example of a more complicated package, with an MPI dependency. If
-we install it "out of the box," it will build with ``openmpi``.
+good example of a more complicated package with an MPI dependency. If
+we install it out of the box, it will build with ``openmpi``.
 
 .. code-block:: console
 
@@ -583,8 +585,8 @@ we install it "out of the box," it will build with ``openmpi``.
 Spack packages can also have variants. Boolean variants can be specified
 using the ``+`` and ``~`` or ``-`` sigils. There are two sigils for
 ``False`` to avoid conflicts with shell parsing in different
-situations. Variants (boolean or otherwise) can also be specified using
-the same syntax as compiler flags.  Here we can install HDF5 without MPI
+situations. Variants (Boolean or otherwise) can also be specified using
+the same syntax as compiler flags.  Here we install HDF5 without MPI
 support.
 
 .. code-block:: console
@@ -614,8 +616,8 @@ support.
 
 We might also want to install HDF5 with a different MPI
 implementation. While MPI is not a package itself, packages can depend on
-abstract interfaces like MPI. Spack handles these through "virtual
-dependencies." A package, such as HDF5, can depend on the MPI
+abstract interfaces like MPI. Spack handles these through virtual
+dependencies. A package such as HDF5 can depend on the MPI
 interface. Other packages (``openmpi``, ``mpich``, ``mvapich``, etc.)
 provide the MPI interface.  Any of these providers can be requested for
 an MPI dependency. For example, we can build HDF5 with MPI support
@@ -661,7 +663,7 @@ by any of several providers.
   ==> Successfully installed hdf5 from binary cache
   [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/hdf5-1.10.1-e4gz6f2l5ik3ijuk3alwsqplex4tbvin
 
-We'll do a quick check in on what we have installed so far.
+We'll do a quick check on what we have installed so far.
 
 .. code-block:: console
 
@@ -759,20 +761,20 @@ DAG as a graph.
 
 You may also have noticed that there are some packages shown in the
 ``spack find -d`` output that we didn't install explicitly. These are
-dependencies that were installed implicitly. A few packages installed
+dependencies and were installed implicitly. A few packages installed
 implicitly are not shown as dependencies in the ``spack find -d``
 output. These are build dependencies. For example, ``libpciaccess`` is a
 dependency of openmpi and requires ``m4`` to build. Spack will build ``m4`` as
 part of the installation of ``openmpi``, but it does not become a part of
-the DAG because it is not linked in at run time. Spack handles build
-dependencies differently because of their different (less strict)
+the DAG, because it is not linked in at run time. Spack handles build
+dependencies differently owing to their different (less strict)
 consistency requirements. It is entirely possible to have two packages
-using different versions of a dependency to build, which obviously cannot
+use different versions of a dependency to build, which obviously cannot
 be done with linked dependencies.
 
 ``HDF5`` is more complicated than our basic example of zlib and
 openssl, but it's still within the realm of software that an experienced
-HPC user could reasonably expect to install given a bit of time. Now
+HPC user might reasonably expect to install given a bit of time. Now
 let's look at an even more complicated package.
 
 .. code-block:: console
@@ -1035,16 +1037,16 @@ let's look at an even more complicated package.
   [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/trilinos-12.12.1-istwe3b43b7etgtrhcuzjem3p5gonc6h
 
 Now we're starting to see the power of Spack. Trilinos has 11 top
-level dependecies, many of which have dependencies of their
-own. Installing more complex packages can take days or weeks even for
+level dependencies, many of which have dependencies of their
+own. Installing more complex packages can take days or weeks, even for
 an experienced user. Although we've done a binary installation for the
-tutorial, a source installation of trilinos using Spack takes about 3
+tutorial, a source installation of Trilinos using Spack takes about three
 hours (depending on the system), but only 20 seconds of programmer
 time.
 
 Spack manages constistency of the entire DAG. Every MPI dependency will
-be satisfied by the same configuration of MPI, etc. If we install
-``trilinos`` again specifying a dependency on our previous HDF5 built
+be satisfied by the same configuration of MPI, etc. We can install
+``trilinos`` again, specifying a dependency on our previous HDF5 built
 with ``mpich``:
 
 .. code-block:: console
@@ -1187,7 +1189,7 @@ with ``mpich``:
   [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/trilinos-12.12.1-xupifcp5d4f53cobm6g3xzao577uzezs
 
 
-We see that every package in the trilinos DAG that depends on MPI now
+We see that every package in the Trilinos DAG that depends on MPI now
 uses ``mpich``.
 
 .. code-block:: console
@@ -1235,9 +1237,9 @@ uses ``mpich``.
           ^suite-sparse@4.5.5
           ^superlu-dist@5.2.2
 
-As we discussed before, the ``spack find -d`` command shows the
+As discussed above, the ``spack find -d`` command shows
 dependency information as a tree. While that is often sufficient, many
-complicated packages, including trilinos, have dependencies that
+complicated packages, including Trilinos, have dependencies that
 cannot be fully represented as a tree. Again, the ``spack graph``
 command shows the full DAG of the dependency information.
 
@@ -1365,8 +1367,8 @@ Uninstalling Packages
 ---------------------
 
 Earlier we installed many configurations each of zlib and
-openssl. Now we will go through and uninstall some of those packages
-that we didn't really need.
+openssl. Now we will go through and uninstall some of the packages
+we didn't really need.
 
 .. code-block:: console
 
@@ -1451,8 +1453,8 @@ remove packages that are required by another installed package.
   ==> Successfully uninstalled openssl@1.0.2k%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64 /ufruk7k
   ==> Successfully uninstalled zlib@1.2.8%clang@3.8.0-2ubuntu4+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 /i426yu3
 
-Spack will not uninstall packages that are not sufficiently
-specified. The ``-a`` (all) flag can be used to uninstall multiple
+Spack will not uninstall packages that are insufficiently
+specified. The ``-a`` (all) flag can be used to uninstall many
 packages at once.
 
 .. code-block:: console
@@ -1488,11 +1490,11 @@ We will go over some additional uses for the ``spack find`` command not
 already covered in the :ref:`basics-tutorial-install` and
 :ref:`basics-tutorial-uninstall` sections.
 
-The ``spack find`` command can accept what we call "anonymous specs."
+The ``spack find`` command accepts what we call "anonymous specs."
 These are expressions in spec syntax that do not contain a package
 name. For example, ``spack find ^mpich`` will return every installed
 package that depends on mpich, and ``spack find cppflags="-O3"`` will
-return every package which was built with ``cppflags="-O3"``.
+return every package built with ``cppflags="-O3"``.
 
 .. code-block:: console
 
@@ -1537,7 +1539,7 @@ Customizing Compilers
 
 
 Spack manages a list of available compilers on the system, detected
-automatically from from the user's ``PATH`` variable. The ``spack
+automatically from the user's ``PATH`` variable. The ``spack
 compilers`` command is an alias for the command ``spack compiler list``.
 
 .. code-block:: console
@@ -1550,7 +1552,7 @@ compilers`` command is an alias for the command ``spack compiler list``.
   -- gcc ubuntu16.04-x86_64 ---------------------------------------
   gcc@5.4.0  gcc@4.7
 
-The compilers are maintained in a YAML file. Later in the tutorial you
+The compilers are maintained in a YAML file. Later in the tutorial, you
 will learn how to configure compilers by hand for special cases. Spack
 also has tools to add compilers, and compilers built with Spack can be
 added to the configuration.
@@ -1727,7 +1729,7 @@ added to the configuration.
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
       gcc@7.2.0  /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-k3vy57euyeuyvpotwf4wezfmpo3mrtrj
 
-We can add gcc to Spack as an available compiler using the ``spack
+We can add GCC to Spack as an available compiler using the ``spack
 compiler add`` command. This will allow future packages to build with
 gcc@7.2.0.
 

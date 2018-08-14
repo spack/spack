@@ -4,16 +4,15 @@
 Spack Package Build Systems
 ==============================
 
-You may begin to notice after writing a couple of package template files a
+As you write a couple of package template files, you may see a
 pattern emerge for some packages. For example, you may find yourself writing
-an :code:`install()` method that invokes: :code:`configure`, :code:`cmake`,
-:code:`make`, :code:`make install`. You may also find yourself writing
+an :code:`install()` method that invokes :code:`configure`, :code:`cmake`,
+:code:`make`, :code:`make install`. Or you may find yourself writing
 :code:`"prefix=" + prefix` as an argument to :code:`configure` or :code:`cmake`.
-Rather than having you repeat these lines for all packages, Spack has
-classes that can take care of these patterns. In addition,
-these package files allow for finer grained control of these build systems.
-In this section, we will describe each build system and give examples on
-how these can be manipulated to install a package.
+To avoid repeating these lines for all packages, Spack has
+classes that take care of these patterns. The package files also allow finer-grained control of these build systems.
+In this section, we describe each build system, with examples on
+how they can be manipulated to install a package.
 
 -----------------------
 Package Class Hierarchy
@@ -37,25 +36,24 @@ Package Class Hierarchy
         PackageBase -> PythonPackage [dir=back]
     }
 
-The above diagram gives a high level view of the class hierarchy and how each
+The diagram above gives a high-level view of the class hierarchy and how each
 package relates. Each subclass inherits from the :code:`PackageBaseClass`
-super class. The bulk of the work is done in this super class which includes
-fetching, extracting to a staging directory and installing. Each subclass
-then adds additional build-system-specific functionality. In the following
-sections, we will go over examples of how to utilize each subclass and to see
+super class. The bulk of the work is done in this super class, which includes
+fetching, extracting to a staging directory, and installing. Each subclass then
+adds additional build-system-specific functionality. In the following
+sections, we review examples of each subclass in use. You'll see
 how powerful these abstractions are when packaging.
 
 -----------------
 Package
 -----------------
 
-We've already seen examples of a :code:`Package` class in our walkthrough for writing
-package files, so we won't be spending much time with them here. Briefly,
-the Package class allows for abitrary control over the build process, whereas
+We've already seen examples of a :code:`Package` class in our walkthrough of package-file writing. Briefly,
+the Package class allows abitrary control over the build process, whereas
 subclasses rely on certain patterns (e.g. :code:`configure` :code:`make`
 :code:`make install`) to be useful. :code:`Package` classes are particularly useful
-for packages that have a non-conventional way of being built since the packager
-can utilize some of Spack's helper functions to customize the building and
+for packages that have a nonconventional way build, since the packager
+can use Spack helper functions to customize the building and
 installing of a package.
 
 -------------------
@@ -64,8 +62,8 @@ Autotools
 
 As we have seen earlier, packages using :code:`Autotools` use :code:`configure`,
 :code:`make` and :code:`make install` commands to execute the build and
-install process. In our :code:`Package` class, your typical build incantation will
-consist of the following:
+install process. In our :code:`Package` class, a typical build incantation
+consists of the following:
 
 .. code-block:: python
 
@@ -74,7 +72,7 @@ consist of the following:
         make()
         make("install")
 
-You'll see that this looks similar to what we wrote in our packaging tutorial.
+This looks similar to what we wrote in our packaging tutorial.
 
 The :code:`Autotools` subclass aims to simplify writing package files and provides
 convenience methods to manipulate each of the different phases for a :code:`Autotools`
@@ -88,19 +86,17 @@ build system.
 4. :code:`install()`
 
 
-Each of these phases have sensible defaults. Let's take a quick look at some
-the internals of the :code:`Autotools` class:
+Each of these phases has sensible defaults. Let's take a quick look at some internals of the :code:`Autotools` class:
 
 .. code-block:: console
 
     $ spack edit --build-system autotools
 
 
-This will open the :code:`AutotoolsPackage` file in your text editor.
+This opens the :code:`AutotoolsPackage` file in your text editor.
 
 .. note::
-    The examples showing code for these classes is abridged to avoid having
-    long examples. We only show what is relevant to the packager.
+    The examples showing code for these classes is abridged ---  we show only what is relevant to the packager.
 
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
@@ -111,15 +107,14 @@ This will open the :code:`AutotoolsPackage` file in your text editor.
 
 
 Important to note are the highlighted lines. These properties allow the
-packager to set what build targets and install targets they want for their
-package. If, for example, we wanted to add as our build target :code:`foo`
-then we can append to our :code:`build_targets` property:
+packager to set what build and install targets are wanted for the
+package. If, for example, we want to add as our build target :code:`foo`, we can append to our :code:`build_targets` property:
 
 .. code-block:: python
 
     build_targets = ["foo"]
 
-Which is similiar to invoking make in our Package
+This is similiar to invoking make in our Package:
 
 .. code-block:: python
 
@@ -128,16 +123,14 @@ Which is similiar to invoking make in our Package
 This is useful if we have packages that ignore environment variables and need
 a command-line argument.
 
-Another thing to take note of is in the :code:`configure()` method.
-Here we see that the :code:`prefix` argument is already included since it is a
-common pattern amongst packages using :code:`Autotools`. We then only have to
-override :code:`configure_args()`, which will then return it's output to
-to :code:`configure()`. Then, :code:`configure()` will append the common
-arguments
+Another thing to note is the :code:`configure()` method.
+Here we see that the :code:`prefix` argument is already included, since it is a
+common pattern among packages using :code:`Autotools`. We then have only to
+override :code:`configure_args()`, which returns its output to
+to :code:`configure()`. :code:`configure()` will then append the common
+arguments.
 
-Packagers also have the option to run :code:`autoreconf` in case a package
-needs to update the build system and generate a new :code:`configure`. Though,
-for the most part this will be unnecessary.
+Packagers also have the option to run :code:`autoreconf` in case a packFor the most part, this will be unnecessary.
 
 Let's look at the :code:`mpileaks` package.py file that we worked on earlier:
 
@@ -145,8 +138,8 @@ Let's look at the :code:`mpileaks` package.py file that we worked on earlier:
 
     $ spack edit mpileaks
 
-Notice that mpileaks is a :code:`Package` class but uses the :code:`Autotools`
-build system. Although this package is acceptable let's make this into an
+Notice that mpileaks is a :code:`Package` class, but uses the :code:`Autotools`
+build system. Although this package is acceptable, let's make it into an
 :code:`AutotoolsPackage` class and simplify it further.
 
 .. literalinclude:: tutorial/examples/Autotools/0.package.py
@@ -166,22 +159,22 @@ to be overridden is :code:`configure_args()`.
    :emphasize-lines: 42,43
    :linenos:
 
-Since Spack takes care of setting the prefix for us we can exclude that as
+Since Spack takes sets the prefix for us, we can exclude that as
 an argument to :code:`configure`. Our packages look simpler, and the packager
-does not need to worry about whether they have properly included :code:`configure`
-and :code:`make`.
+does not need to worry about whether :code:`configure`
+and :code:`make` have been properly included.
 
 This version of the :code:`mpileaks` package installs the same as the previous,
-but the :code:`AutotoolsPackage` class lets us do it with a cleaner looking
+but the :code:`AutotoolsPackage` class lets us do it with a cleaner-looking
 package file.
 
 -----------------
 Makefile
 -----------------
 
-Packages that utilize :code:`Make` or a :code:`Makefile` usually require you
-to edit a :code:`Makefile` to set up platform and compiler specific variables.
-These packages are handled by the :code:`Makefile` subclass which provides
+Packages that use :code:`Make` or a :code:`Makefile` usually require you
+to edit a :code:`Makefile` to set up platform- and compiler-specific variables.
+These packages are handled by the :code:`Makefile` subclass, which provides
 convenience methods to help write these types of packages.
 
 A :code:`MakefilePackage` class has three phases that can be overridden. These include:
@@ -190,10 +183,10 @@ A :code:`MakefilePackage` class has three phases that can be overridden. These i
     2. :code:`build()`
     3. :code:`install()`
 
-Packagers then have the ability to control how a :code:`Makefile` is edited, and
+Packagers can then control how a :code:`Makefile` is edited and
 what targets to include for the build phase or install phase.
 
-Let's also take a look inside the :code:`MakefilePackage` class:
+Let's look inside the :code:`MakefilePackage` class:
 
 .. code-block:: console
 
@@ -235,15 +228,15 @@ Let's try to recreate the Bowtie_ package:
     ==> Created template for bowtie package
     ==> Created package file: /Users/mamelara/spack/var/spack/repos/builtin/packages/bowtie/package.py
 
-Once the fetching is completed, Spack will open up your text editor in the
-usual fashion and create a template of a :code:`MakefilePackage` package.py.
+Once fetching is complete, Spack will open your text editor as
+usual and create a template of a :code:`MakefilePackage` package.py.
 
 .. literalinclude:: tutorial/examples/Makefile/0.package.py
    :language: python
    :linenos:
 
-Spack was successfully able to detect that :code:`Bowtie` uses :code:`Make`.
-Let's add in the rest of our details for our package:
+Spack successfully detected that :code:`Bowtie` uses :code:`Make`.
+Let's add in the rest of the details for our package:
 
 .. literalinclude:: tutorial/examples/Makefile/1.package.py
    :language: python
@@ -251,14 +244,14 @@ Let's add in the rest of our details for our package:
    :linenos:
 
 As we mentioned earlier, most packages using a :code:`Makefile` have hard-coded
-variables that must be edited. These variables are fine if you happen to not
-care about setup or types of compilers used but Spack is designed to work with
+variables that must be edited. These variables are fine if you don't
+care about setup or types of compilers used, but Spack is designed to work with
 any compiler. The :code:`MakefilePackage` subclass makes it easy to edit
-these :code:`Makefiles` by having an :code:`edit()` method that
+these :code:`Makefiles` through an :code:`edit()` method that
 can be overridden.
 
-Let's take a look at the default :code:`Makefile` that :code:`Bowtie` provides.
-If we look inside, we see that :code:`CC` and :code:`CXX` point to our GNU
+Let's look at the default :code:`Makefile` that :code:`Bowtie` provides.
+Inside, we see that :code:`CC` and :code:`CXX` point to our GNU
 compiler:
 
 .. code-block:: console
@@ -266,7 +259,7 @@ compiler:
     $ spack stage bowtie
 
 .. note::
-    As usual make sure you have shell support activated with spack:
+    As usual make sure you have shell support activated with Spack:
         :code:`source /path/to/spack_root/spack/share/spack/setup-env.sh`
 
 .. code-block:: console
@@ -284,7 +277,7 @@ compiler:
     LIBS = $(LDFLAGS) -lz
     HEADERS = $(wildcard *.h)
 
-To fix this, we need to use the :code:`edit()` method to write our custom
+To fix this, use the :code:`edit()` method to write our custom
 :code:`Makefile`.
 
 .. literalinclude:: tutorial/examples/Makefile/2.package.py
@@ -305,16 +298,14 @@ Let's change the build and install phases of our package:
    :emphasize-lines: 46, 52
    :linenos:
 
-Here demonstrate another strategy that we can use to manipulate our package
-We can provide command-line arguments to :code:`make()`. Since :code:`Bowtie`
-can use :code:`tbb` we can either add :code:`NO_TBB=1` as a argument to prevent
+Here we demonstrate another strategy to manipulate our package: command-line arguments to :code:`make()`. Since :code:`Bowtie`
+can use :code:`tbb`, we can either add :code:`NO_TBB=1` as a argument to prevent
 :code:`tbb` support or we can just invoke :code:`make` with no arguments.
 
 :code:`Bowtie` requires our :code:`install_target` to provide a path to
-the install directory. We can do this by providing :code:`prefix=` as a command
-line argument to :code:`make()`.
+the install directory. We can do this by providing :code:`prefix=` as a command-line argument to :code:`make()`.
 
-Let's look at a couple of other examples and go through them:
+Let's look at some other examples:
 
 .. code-block:: console
 
@@ -322,7 +313,7 @@ Let's look at a couple of other examples and go through them:
 
 Some packages allow environment variables to be set and will honor them.
 Packages that use :code:`?=` for assignment in their :code:`Makefile`
-can be set using environment variables. In our :code:`cbench` example we
+can be set using environment variables. In our :code:`cbench` example, we
 set two environment variables in our :code:`edit()` method:
 
 .. code-block:: python
@@ -336,17 +327,17 @@ set two environment variables in our :code:`edit()` method:
 
         # ... more code
 
-As you may have noticed, we didn't really write anything to the :code:`Makefile`
-but rather we set environment variables that will override variables set in
+As you may have noticed, we didn't really write anything to the :code:`Makefile`.
+Rather, we set environment variables that will override variables set in
 the :code:`Makefile`.
 
 Some packages include a configuration file that sets certain compiler variables,
-platform specific variables, and the location of dependencies or libraries.
-If the file is simple and only requires a couple of changes, we can overwrite
+platform-specific variables, and the location of dependencies or libraries.
+If the file is simple and requires only a couple of changes, we can overwrite
 those entries with our :code:`FileFilter` object. If the configuration involves
 complex changes, we can write a new configuration file from scratch.
 
-Let's look at an example of this in the :code:`elk` package:
+An example is in the :code:`elk` package:
 
 .. code-block:: console
 
@@ -442,8 +433,8 @@ end of the :code:`edit()` method we write the contents of our dictionary to
 CMake
 ---------------
 
-CMake_ is another common build system that has been gaining popularity. It works
-in a similar manner to :code:`Autotools` but with differences in variable names,
+CMake_ is another common build system that has gained popularity. It works
+in a similar manner to :code:`Autotools`, but with differences in variable names,
 the number of configuration options available, and the handling of shared libraries.
 Typical build incantations look like this:
 
@@ -456,12 +447,12 @@ Typical build incantations look like this:
         make()
         make("install")
 
-As you can see from the example above, it's very similar to invoking
+As you see from the example above, it's very similar to invoking
 :code:`configure` and :code:`make` in an :code:`Autotools` build system. However,
 the variable names and options differ. Most options in CMake are prefixed
 with a :code:`'-D'` flag to indicate a configuration setting.
 
-In the :code:`CMakePackage` class we can override the following phases:
+In the :code:`CMakePackage` class, we can override the following phases:
 
 1. :code:`cmake()`
 2. :code:`build()`
@@ -492,10 +483,9 @@ Unix-Makefile_ generators as well as Ninja_ generators.
 .. _Unix-Makefile: https://cmake.org/cmake/help/v3.4/generator/Unix%20Makefiles.html
 .. _Ninja: https://cmake.org/cmake/help/v3.4/generator/Ninja.html
 
-Default generator is :code:`Unix Makefile`.
+The default generator is :code:`Unix Makefile`.
 
-Next we setup the build type. In :code:`CMake` you can specify the build type
-that you want. Options include:
+Next we setup the build type. In :code:`CMake`, you can specify the build type you want. Options include:
 
 1. empty
 2. Debug
@@ -503,8 +493,8 @@ that you want. Options include:
 4. RelWithDebInfo
 5. MinSizeRel
 
-With these options you can specify whether you want your executable to have
-the debug version only, release version or the release with debug information.
+With these options, specify whether you want your executable to have
+the debug version only, release version, or release with debug information.
 Release executables tend to be more optimized than Debug. In Spack, we set
 the default as RelWithDebInfo unless otherwise specified through a variant.
 
@@ -518,14 +508,14 @@ Next we add the :code:`rpaths` to :code:`-DCMAKE_INSTALL_RPATH:STRING`.
 Finally we add to :code:`-DCMAKE_PREFIX_PATH:STRING` the locations of all our
 dependencies so that :code:`CMake` can find them.
 
-In the end our :code:`cmake` line will look like this (example is :code:`xrootd`):
+In the end, our :code:`cmake` line will look like this (example is :code:`xrootd`):
 
 .. code-block:: console
 
     $ cmake $HOME/spack/var/spack/stage/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/xrootd-4.6.0 -G Unix Makefiles -DCMAKE_INSTALL_PREFIX:PATH=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DCMAKE_FIND_FRAMEWORK:STRING=LAST -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE -DCMAKE_INSTALL_RPATH:STRING=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/lib:$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/lib64 -DCMAKE_PREFIX_PATH:STRING=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/cmake-3.9.4-hally3vnbzydiwl3skxcxcbzsscaasx5
 
 
-Saves a lot of typing doesn't it?
+Saves a lot of typing!
 
 
 Let's try to recreate callpath_:
@@ -553,7 +543,7 @@ Let's try to recreate callpath_:
     ==> Created package file: /Users/mamelara/spack/var/spack/repos/builtin/packages/callpath/package.py
 
 
-which then produces the following template:
+This produces the following template:
 
 .. literalinclude:: tutorial/examples/Cmake/0.package.py
    :language: python
@@ -566,11 +556,11 @@ Again we fill in the details:
    :linenos:
    :emphasize-lines: 28,32,33,37,38,39,40,41,42
 
-As mentioned earlier, Spack will use sensible defaults to prevent repeated code
-and to make writing :code:`CMake` package files simpler.
+As mentioned earlier, Spack will use sensible defaults to prevent repititious code
+and make writing :code:`CMake` package files simpler.
 
-In callpath, we want to add options to :code:`CALLPATH_WALKER` as well as add
-compiler flags. We add the following options like so:
+In callpath, we want to add options to :code:`CALLPATH_WALKER` as well as
+compiler flags. We add the following options:
 
 .. literalinclude:: tutorial/examples/Cmake/2.package.py
    :language: python
@@ -578,14 +568,14 @@ compiler flags. We add the following options like so:
    :emphasize-lines: 45,49,50
 
 Now we can control our build options using :code:`cmake_args()`. If defaults are
-sufficient enough for the package, we can leave this method out.
+sufficient for the package, we can leave this method out.
 
-:code:`CMakePackage` classes allow for control of other features in the
+:code:`CMakePackage` classes allow the control of other features in the
 build system. For example, you can specify the path to the "out of source"
 build directory and also point to the root of the :code:`CMakeLists.txt` file if it
-is placed in a non-standard location.
+is placed in a nonstandard location.
 
-A good example of a package that has its :code:`CMakeLists.txt` file located at a
+A good example of a package that has its :code:`CMakeLists.txt` file at a
 different location is found in :code:`spades`.
 
 .. code-block:: console
@@ -601,7 +591,7 @@ of :code:`CMakeLists.txt`. In this example, it is located a directory level belo
 the :code:`src` directory.
 
 Some :code:`CMake` packages also require the :code:`install` phase to be
-overridden. For example, let's take a look at :code:`sniffles`.
+overridden. For example, let's look at :code:`sniffles`.
 
 .. code-block:: console
 
@@ -627,7 +617,7 @@ PythonPackage
 
 Python extensions and modules are built differently from source than most
 applications. Python uses a :code:`setup.py` script to install Python modules.
-The script consists of a call to :code:`setup()` which provides the information
+The script consists of a call to :code:`setup()` that provides the information
 required to build a module to Distutils. If you're familiar with pip or
 easy_install, setup.py does the same thing.
 
@@ -637,8 +627,8 @@ These modules are usually installed using the following line:
 
     $ python setup.py install
 
-There are also a list of commands and phases that you can call. To see the full
-list you can run:
+There is also a list of commands and phases that you can call. To see the full
+list, run:
 
 .. code-block:: console
 
@@ -665,7 +655,7 @@ list you can run:
         check             perform some checks on the package
 
 
-To see the defaults that Spack has for each a methods, we will take a look
+To see the Spack defaults for each method, we will take a look
 at the :code:`PythonPackage` class:
 
 .. code-block:: console
@@ -680,7 +670,7 @@ We see the following:
    :lines: 35, 161-364
    :linenos:
 
-Each of these methods have sensible defaults or they can be overridden.
+Each of these methods has sensible defaults that can be overridden.
 
 We can write package files for Python packages using the :code:`Package` class,
 but the class brings with it a lot of methods that are useless for Python packages.
@@ -712,20 +702,20 @@ We will write a package file for Pandas_:
     ==> Created template for py-pandas package
     ==> Created package file: /Users/mamelara/spack/var/spack/repos/builtin/packages/py-pandas/package.py
 
-And we are left with the following template:
+We are left with the following template:
 
 .. literalinclude:: tutorial/examples/PyPackage/0.package.py
    :language: python
    :linenos:
 
-As you can see this is not any different than any package template that we have
+As you can see, this is no different from any package template we have
 written. We have the choice of providing build options or using the sensible
-defaults
+defaults.
 
-Luckily for us, there is no need to provide build args.
+Lucky for us, there is no need to provide build args.
 
-Next we need to find the dependencies of a package. Dependencies are usually
-listed in :code:`setup.py`. You can find the dependencies by searching for
+Next we need to find package dependencies. Dependencies are usually
+listed in :code:`setup.py`. You can find the dependencies by searching for the
 :code:`install_requires` keyword in that file. Here it is for :code:`Pandas`:
 
 .. code-block:: python
@@ -763,8 +753,7 @@ Here is the completed :code:`Pandas` script:
 
 It is quite important to declare all the dependencies of a Python package.
 Spack can "activate" Python packages to prevent the user from having to
-load each dependency module explictly. If a dependency is missed, Spack will
-be unable to properly activate the package and it will cause an issue. To
+load each dependency module explictly. If a dependency is missed, Spack won't be able to properly activate the package and this will cause an issue. To
 learn more about extensions go to :ref:`cmd-spack-extensions`.
 
 From this example, you can see that building Python modules is made easy
@@ -774,8 +763,8 @@ through the :code:`PythonPackage` class.
 Other Build Systems
 -------------------
 
-Although we won't get in depth with any of the other build systems that Spack
-supports, it is worth mentioning that Spack does provide subclasses
+We won't go in depth on other build systems that Spack
+supports, but it is worth mentioning that Spack provides subclasses
 for the following build systems:
 
 1. :code:`IntelPackage`
@@ -786,10 +775,10 @@ for the following build systems:
 6. :code:`QMake`
 
 
-Each of these classes have their own abstractions to help assist in writing
-package files. For whatever doesn't fit nicely into the other build-systems,
+Each of these classes has its own abstractions to assist in writing
+package files. For whatever doesn't fit nicely into the other build systems,
 you can use the :code:`Package` class.
 
-Hopefully by now you can see how we aim to make packaging simple and
-robust through these classes. If you want to learn more about these build
-systems, check out :ref:`installation_procedure` in the Packaging Guide.
+Hopefully it is evident how packaging can be simpler and
+robust through these classes. To learn more about these build
+systems, check out :ref:`installation_procedure` in the packaging guide.
