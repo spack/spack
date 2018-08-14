@@ -37,7 +37,7 @@ class RGlimma(RPackage):
 
     version('1.8.2', commit='f4aa1f05c2890d04b01ad4c0ab27f2f729f2c969')
 
-    depends_on('r@3.5.0:3.5.9', when='@1.8.2:')
-    depends_on('r-edger', type='run')
-    depends_on('r-jsonlite', type='run')
-    depends_on('r-s4vectors', type='run')
+    depends_on('r@3.5.0:3.5.9', when='@1.8.2:', type=('build', 'run'))
+    depends_on('r-edger', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
