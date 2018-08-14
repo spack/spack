@@ -25,22 +25,18 @@
 from spack import *
 
 
-class REdger(RPackage):
-    """Differential expression analysis of RNA-seq expression profiles with
-       biological replication. Implements a range of statistical methodology
-       based on the negative binomial distributions, including empirical Bayes
-       estimation, exact tests, generalized linear models and quasi-likelihood
-       tests. As well as RNA-seq, it be applied to differential signal analysis
-       of other types of genomic data that produce counts, including ChIP-seq,
-       SAGE and CAGE."""
+class RArgparse(RPackage):
+    """A command line parser to be used with Rscript to write "#!"
+       shebang scripts that gracefully accept positional and optional
+       arguments and automatically generate usage."""
 
-    homepage = "https://bioconductor.org/packages/edgeR/"
-    git      = "https://git.bioconductor.org/packages/edgeR.git"
+    homepage = "https://github.com/trevorld/argparse"
+    url      = "https://cran.r-project.org/src/contrib/argparse_1.1.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/argparse"
 
-    version('3.22.3', commit='e82e54afc9398ac54dc4caba0f7ae5c43e572203')
-    version('3.18.1', commit='101106f3fdd9e2c45d4a670c88f64c12e97a0495')
+    version('1.1.1', sha256='441449f0816411a868fd1b15cf4b2bc45931bbd4b67d6592dbe48875905cf93b')
 
-    depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-locfit', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.22.3')
-    depends_on('r@3.4.0:3.4.9', when='@3.18.1')
+    depends_on('r-proto@1:', type=('build', 'run'))
+    depends_on('r-findpython', type=('build', 'run'))
+    depends_on('r-getopt@1.19', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))

@@ -65,6 +65,7 @@ class Amrex(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('python@2.7:', type='build')
     depends_on('cmake@3.5:',  type='build')
+    conflicts('%clang')
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'

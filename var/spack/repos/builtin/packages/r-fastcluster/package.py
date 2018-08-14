@@ -25,22 +25,22 @@
 from spack import *
 
 
-class REdger(RPackage):
-    """Differential expression analysis of RNA-seq expression profiles with
-       biological replication. Implements a range of statistical methodology
-       based on the negative binomial distributions, including empirical Bayes
-       estimation, exact tests, generalized linear models and quasi-likelihood
-       tests. As well as RNA-seq, it be applied to differential signal analysis
-       of other types of genomic data that produce counts, including ChIP-seq,
-       SAGE and CAGE."""
+class RFastcluster(RPackage):
+    """This is a two-in-one package which provides interfaces to both R
+       and 'Python'. It implements fast hierarchical, agglomerative
+       clustering routines. Part of the functionality is designed as drop-in
+       replacement for existing routines: linkage() in the 'SciPy' package
+       'scipy.cluster.hierarchy', hclust() in R's 'stats' package, and the
+       'flashClust' package. It provides the same functionality with the
+       benefit of a much faster implementation. Moreover, there are
+       memory-saving routines for clustering of vector data, which go beyond
+       what the existing packages provide. For information on how to install
+       the 'Python' files, see the file INSTALL in the source distribution."""
 
-    homepage = "https://bioconductor.org/packages/edgeR/"
-    git      = "https://git.bioconductor.org/packages/edgeR.git"
+    homepage = "http://danifold.net/fastcluster.html"
+    url      = "https://cran.r-project.org/src/contrib/fastcluster_1.1.25.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fastcluster/"
 
-    version('3.22.3', commit='e82e54afc9398ac54dc4caba0f7ae5c43e572203')
-    version('3.18.1', commit='101106f3fdd9e2c45d4a670c88f64c12e97a0495')
+    version('1.1.25', sha256='f3661def975802f3dd3cec5b2a1379f3707eacff945cf448e33aec0da1ed4205')
 
-    depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-locfit', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.22.3')
-    depends_on('r@3.4.0:3.4.9', when='@3.18.1')
+    depends_on('r@3.0.0:', type=('build', 'run'))

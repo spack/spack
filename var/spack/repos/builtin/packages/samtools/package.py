@@ -33,6 +33,7 @@ class Samtools(Package):
     homepage = "www.htslib.org"
     url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
+    version('1.9', 'cca9a40d9b91b007af2ff905cb8b5924')
     version('1.8', 'c6e981c92ca00a44656a708c4b52aba3')
     version('1.7', '2240175242b5183bfa6baf1483f68023')
     version('1.6', 'b756f05fd5d1a7042074417edb8c9aea')
@@ -42,6 +43,7 @@ class Samtools(Package):
 
     depends_on('ncurses')
     # htslib became standalone @1.3.1, must use corresponding version
+    depends_on('htslib@1.9',   when='@1.9')
     depends_on('htslib@1.8',   when='@1.8')
     depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')
@@ -59,3 +61,9 @@ class Samtools(Package):
         else:
             make("prefix=%s" % prefix)
             make("prefix=%s" % prefix, "install")
+        # Install dev headers and libs for legacy apps depending on them
+        mkdir(prefix.include)
+        mkdir(prefix.lib)
+        install('sam.h', prefix.include)
+        install('bam.h', prefix.include)
+        install('libbam.a', prefix.lib)

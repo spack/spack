@@ -25,22 +25,15 @@
 from spack import *
 
 
-class REdger(RPackage):
-    """Differential expression analysis of RNA-seq expression profiles with
-       biological replication. Implements a range of statistical methodology
-       based on the negative binomial distributions, including empirical Bayes
-       estimation, exact tests, generalized linear models and quasi-likelihood
-       tests. As well as RNA-seq, it be applied to differential signal analysis
-       of other types of genomic data that produce counts, including ChIP-seq,
-       SAGE and CAGE."""
+class RRots(Package):
+    """Calculates the Reproducibility-Optimized Test Statistic (ROTS)
+       for differential testing in omics data."""
 
-    homepage = "https://bioconductor.org/packages/edgeR/"
-    git      = "https://git.bioconductor.org/packages/edgeR.git"
+    homepage = "https://bioconductor.org/packages/release/bioc/html/ROTS.html"
+    git      = "https://git.bioconductor.org/packages/ROTS.git"
 
-    version('3.22.3', commit='e82e54afc9398ac54dc4caba0f7ae5c43e572203')
-    version('3.18.1', commit='101106f3fdd9e2c45d4a670c88f64c12e97a0495')
+    version('1.8.0', commit='02e3c6455bb1afe7c4cc59ad6d4d8bae7b01428b')
 
-    depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-locfit', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.22.3')
-    depends_on('r@3.4.0:3.4.9', when='@3.18.1')
+    depends_on('r@3.5.0:3.5.9', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
