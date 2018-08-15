@@ -26,7 +26,6 @@ from spack import *
 from glob import glob
 from os.path import exists, join
 from os import makedirs
-from shutil import copy
 
 
 class Ncurses(AutotoolsPackage):
@@ -109,7 +108,7 @@ class Ncurses(AutotoolsPackage):
             if not exists(path):
                 makedirs(path)
             for header in headers:
-                copy(header, path)
+                install(header, path)
 
     @property
     def libs(self):

@@ -25,7 +25,6 @@
 
 import inspect
 import os.path
-import shutil
 
 from spack import *
 
@@ -99,7 +98,7 @@ class Pexsi(MakefilePackage):
             self.stage.source_path,
             'make.inc'
         )
-        shutil.copy(template, makefile)
+        copy(template, makefile)
         for key, value in substitutions:
             filter_file(key, value, makefile)
 
