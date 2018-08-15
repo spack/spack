@@ -128,7 +128,7 @@ def write_license_file(pkg, license_path):
    - If you have a static license file stored in a non-default location, set
      (one of) these variable(s) to the full pathname of your license file.
    - If you use a license server, set the variable(s) to port@host.
- 
+
    You will want to set this variable in a module file so that it gets loaded
    every time someone tries to use {0}.
 
