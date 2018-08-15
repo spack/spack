@@ -30,11 +30,13 @@ from spack import *
 class SuperluDist(Package):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
-    url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
-    version('develop', git='https://github.com/xiaoyeli/superlu_dist', branch='master')
-    version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')
+    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
+    url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
+    git      = "https://github.com/xiaoyeli/superlu_dist.git"
+
+    version('develop', branch='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('5.4.0', 'e64645c5be352ae2c88327af2cac66e1')
     version('5.3.0', '35d5aa8e0a246efaf327988b20106714')
     version('5.2.2', 'a685ef7fb7859b24c8c9d5d5f121a8a5')
@@ -69,6 +71,7 @@ class SuperluDist(Package):
             'BLASLIB      = %s' % lapack_blas.ld_flags,
             'METISLIB     = %s' % spec['metis'].libs.ld_flags,
             'PARMETISLIB  = %s' % spec['parmetis'].libs.ld_flags,
+            'HAVE_PARMETIS= TRUE',
             'FLIBS        =',
             'LIBS         = $(DSUPERLULIB) $(BLASLIB) $(PARMETISLIB) $(METISLIB)',  # noqa
             'ARCH         = ar',

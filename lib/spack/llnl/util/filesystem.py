@@ -60,8 +60,9 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
-    'hide_files',
+    'copy',
     'install',
+    'copy_tree',
     'install_tree',
     'is_exe',
     'join_path',
@@ -265,27 +266,98 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def install(src, dest):
-    """Manually install a file to a particular location."""
-    tty.debug("Installing %s to %s" % (src, dest))
+def copy(src, dest, _permissions=False):
+    """Copies the file *src* to the file or directory *dest*.
+
+    If *dest* specifies a directory, the file will be copied into *dest*
+    using the base filename from *src*.
+
+    Parameters:
+        src (str): the file to copy
+        dest (str): the destination file or directory
+        _permissions (bool): for internal use only
+    """
+    if _permissions:
+        tty.debug('Installing {0} to {1}'.format(src, dest))
+    else:
+        tty.debug('Copying {0} to {1}'.format(src, dest))
 
     # Expand dest to its eventual full path if it is a directory.
     if os.path.isdir(dest):
         dest = join_path(dest, os.path.basename(src))
 
     shutil.copy(src, dest)
-    set_install_permissions(dest)
-    copy_mode(src, dest)
+
+    if _permissions:
+        set_install_permissions(dest)
+        copy_mode(src, dest)
 
 
-def install_tree(src, dest, **kwargs):
-    """Manually install a directory tree to a particular location."""
-    tty.debug("Installing %s to %s" % (src, dest))
-    shutil.copytree(src, dest, **kwargs)
+def install(src, dest):
+    """Installs the file *src* to the file or directory *dest*.
 
-    for s, d in traverse_tree(src, dest, follow_nonexisting=False):
-        set_install_permissions(d)
-        copy_mode(s, d)
+    Same as :py:func:`copy` with the addition of setting proper
+    permissions on the installed file.
+
+    Parameters:
+        src (str): the file to install
+        dest (str): the destination file or directory
+    """
+    copy(src, dest, _permissions=True)
+
+
+def copy_tree(src, dest, symlinks=True, _permissions=False):
+    """Recursively copy an entire directory tree rooted at *src*.
+
+    If the destination directory *dest* does not already exist, it will
+    be created as well as missing parent directories.
+
+    If *symlinks* is true, symbolic links in the source tree are represented
+    as symbolic links in the new tree and the metadata of the original links
+    will be copied as far as the platform allows; if false, the contents and
+    metadata of the linked files are copied to the new tree.
+
+    Parameters:
+        src (str): the directory to copy
+        dest (str): the destination directory
+        symlinks (bool): whether or not to preserve symlinks
+        _permissions (bool): for internal use only
+    """
+    if _permissions:
+        tty.debug('Installing {0} to {1}'.format(src, dest))
+    else:
+        tty.debug('Copying {0} to {1}'.format(src, dest))
+
+    mkdirp(dest)
+
+    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
+        if symlinks and os.path.islink(s):
+            # Note that this won't rewrite absolute links into the old
+            # root to point at the new root. Should we handle that case?
+            target = os.readlink(s)
+            os.symlink(os.path.abspath(target), d)
+        elif os.path.isdir(s):
+            mkdirp(d)
+        else:
+            shutil.copyfile(s, d)
+
+        if _permissions:
+            set_install_permissions(d)
+            copy_mode(s, d)
+
+
+def install_tree(src, dest, symlinks=True):
+    """Recursively install an entire directory tree rooted at *src*.
+
+    Same as :py:func:`copy_tree` with the addition of setting proper
+    permissions on the installed files and directories.
+
+    Parameters:
+        src (str): the directory to install
+        dest (str): the destination directory
+        symlinks (bool): whether or not to preserve symlinks
+    """
+    copy_tree(src, dest, symlinks, _permissions=True)
 
 
 def is_exe(path):
@@ -390,18 +462,6 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         # Otherwise delete the temporary directory
         shutil.rmtree(tmp_dir)
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
-
-
-@contextmanager
-def hide_files(*file_list):
-    try:
-        baks = ['%s.bak' % f for f in file_list]
-        for f, bak in zip(file_list, baks):
-            shutil.move(f, bak)
-        yield
-    finally:
-        for f, bak in zip(file_list, baks):
-            shutil.move(bak, f)
 
 
 def hash_directory(directory):

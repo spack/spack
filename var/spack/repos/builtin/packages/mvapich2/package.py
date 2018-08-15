@@ -46,7 +46,8 @@ class Mvapich2(AutotoolsPackage):
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
 
     # Prefer the latest stable release
-    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e', preferred=True)
+    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd', preferred=True)
+    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e')
     version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
     version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
 
@@ -119,6 +120,7 @@ class Mvapich2(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
+    depends_on('psm', when='fabrics=psm')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -163,7 +165,10 @@ class Mvapich2(AutotoolsPackage):
         opts = []
         # From here on I can suppose that only one variant has been selected
         if 'fabrics=psm' in self.spec:
-            opts = ["--with-device=ch3:psm"]
+            opts = [
+                "--with-device=ch3:psm",
+                "--with-psm={0}".format(self.spec['psm'].prefix)
+            ]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
         elif 'fabrics=nemesistcpib' in self.spec:
@@ -195,6 +200,9 @@ class Mvapich2(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
+        # mvapich2 configure fails when F90 and F90FLAGS are set
+        spack_env.unset('F90')
+        spack_env.unset('F90FLAGS')
         if 'process_managers=slurm' in spec:
             run_env.set('SLURM_MPI_TYPE', 'pmi2')
 

@@ -37,6 +37,9 @@ class Ftgl(AutotoolsPackage):
 
     version('2.1.2', 'f81c0a7128192ba11e036186f9a968f2')
 
+    # There is an unnecessary qualifier around, which makes modern GCC sad
+    patch('remove-extra-qualifier.diff')
+
     # Ftgl does not come with a configure script
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -47,6 +50,13 @@ class Ftgl(AutotoolsPackage):
     depends_on('gl')
     depends_on('glu')
     depends_on('freetype@2.0.9:')
+
+    # Currently, "make install" will fail if the docs weren't built
+    #
+    # FIXME: Can someone with autotools experience fix the build system
+    #        so that it doesn't fail when that happens?
+    #
+    depends_on('doxygen', type='build')
 
     @property
     @when('@2.1.2')

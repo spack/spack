@@ -23,19 +23,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
-class MpixLaunchSwift(Package):
+class MpixLaunchSwift(MakefilePackage):
     """Library that allows a child MPI application to be launched
     inside a subset of processes in a parent MPI application.
     """
 
     homepage = "https://bitbucket.org/kshitijvmehta/mpix_launch_swift"
-    url = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
+    git      = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
 
-    version('develop', git='https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git',
-            branch='envs')
+    version('develop', branch='envs')
 
     depends_on('stc')
     depends_on('tcl')
@@ -43,5 +41,4 @@ class MpixLaunchSwift(Package):
     depends_on('swig', type='build')
 
     def install(self, spec, prefix):
-        make()
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

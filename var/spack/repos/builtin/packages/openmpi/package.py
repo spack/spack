@@ -83,6 +83,7 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
+    version('3.1.1', '493f1db2f75afaab1c8ecba78d2f5aab')  # libmpi.so.40.10.1
     version('3.1.0', '0895e268ca27735d7654bf64cee6c256')  # libmpi.so.40.10.0
 
     # Still supported
@@ -206,6 +207,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -240,6 +242,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('valgrind~mpi', when='+memchecker')
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('slurm', when='schedulers=slurm')
+    depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -340,13 +344,23 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
         ]
 
+        # Add extra_rpaths dirs from compilers.yaml into link wrapper
+        rpaths = [self.compiler.cc_rpath_arg + path
+                  for path in self.compiler.extra_rpaths]
+        config_args.extend([
+            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
+        ])
+
         # According to this comment on github:
         #
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
         #
         # adding --enable-static silently disables slurm support via pmi/pmi2
-        if not spec.satisfies('schedulers=slurm'):
+        if spec.satisfies('schedulers=slurm'):
+            config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+        else:
             config_args.append('--enable-static')
+            config_args.extend(self.with_or_without('pmi'))
 
         if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
@@ -359,8 +373,6 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
         config_args.extend(self.with_or_without('schedulers'))
-        # PMI
-        config_args.extend(self.with_or_without('pmi'))
 
         config_args.extend(self.enable_or_disable('memchecker'))
         if spec.satisfies('+memchecker', strict=True):
@@ -433,6 +445,10 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
+        if '+cxx_exceptions' in spec:
+            config_args.append('--enable-cxx-exceptions')
+        else:
+            config_args.append('--disable-cxx-exceptions')
         return config_args
 
     @run_after('install')

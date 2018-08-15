@@ -32,9 +32,11 @@ class Nalu(CMakePackage):
     """
 
     homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    git      = "https://github.com/NaluCFD/Nalu.git"
 
     tags = ['ecp', 'ecp-apps']
+
+    version('master', branch='master')
 
     variant('openfast', default=False,
             description='Compile with OpenFAST support')
@@ -42,9 +44,6 @@ class Nalu(CMakePackage):
             description='Compile with Tioga support')
     variant('hypre', default=False,
             description='Compile with Hypre support')
-
-    version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')

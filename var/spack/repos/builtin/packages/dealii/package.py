@@ -28,8 +28,10 @@ from spack import *
 class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
+
     homepage = "https://www.dealii.org"
-    url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    git      = "https://github.com/dealii/dealii.git"
 
     maintainers = ['davydden', 'jppelteret']
 
@@ -37,6 +39,7 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('develop', branch='master')
     version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
     version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
     version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
@@ -46,7 +49,6 @@ class Dealii(CMakePackage, CudaPackage):
     version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
     version('8.2.1', '71c728dbec14f371297cd405776ccf08')
     version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
-    version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('assimp',   default=True,

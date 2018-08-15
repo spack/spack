@@ -22,9 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import shutil
-import glob
 from spack import *
 
 # THIS PACKAGE SHOULD NOT EXIST
@@ -36,8 +33,8 @@ from spack import *
 
 class GoBootstrap(Package):
     """Old C-bootstrapped go to bootstrap real go"""
+
     homepage = "https://golang.org"
-    url = "https://go.googlesource.com/go"
 
     extendable = True
 
@@ -75,15 +72,7 @@ class GoBootstrap(Package):
         with working_dir('src'):
             bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
-        try:
-            os.makedirs(prefix)
-        except OSError:
-            pass
-        for f in glob.glob('*'):
-            if os.path.isdir(f):
-                shutil.copytree(f, os.path.join(prefix, f))
-            else:
-                shutil.copy2(f, os.path.join(prefix, f))
+        install_tree('.', prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('GOROOT_BOOTSTRAP', self.spec.prefix)

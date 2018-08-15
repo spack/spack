@@ -147,7 +147,7 @@ class UrlPatch(Patch):
             # use archive digest for compressed archives
             fetch_digest = self.archive_sha256
 
-        return fs.URLFetchStrategy(self.url, digest=fetch_digest)
+        return fs.URLFetchStrategy(self.url, fetch_digest)
 
     def mirror_archive_path(self, stage):
         return os.path.join(os.path.dirname(stage.mirror_path),

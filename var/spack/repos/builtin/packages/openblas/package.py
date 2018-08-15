@@ -31,9 +31,13 @@ import spack.architecture
 
 class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
-    homepage = 'http://www.openblas.net'
-    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
 
+    homepage = 'http://www.openblas.net'
+    url      = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
+    git      = 'https://github.com/xianyi/OpenBLAS.git'
+
+    version('develop', branch='develop')
+    version('0.3.2', sha256='e8ba64f6b103c511ae13736100347deb7121ba9b41ba82052b1a018a65c0cb15')
     version('0.3.0',  '42cde2c1059a8a12227f1e6551c8dbd2')
     version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
@@ -41,8 +45,6 @@ class Openblas(MakefilePackage):
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-    version('develop', git='https://github.com/xianyi/OpenBLAS.git',
-            branch='develop')
 
     variant(
         'shared',
@@ -78,7 +80,7 @@ class Openblas(MakefilePackage):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     #  UPD: the patch has been merged starting version 0.2.20
     patch('openblas_icc.patch', when='@:0.2.19%intel')
-    patch('openblas_icc_openmp.patch', when='%intel@16.0:')
+    patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
 

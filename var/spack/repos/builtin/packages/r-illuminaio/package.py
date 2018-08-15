@@ -30,10 +30,9 @@ class RIlluminaio(RPackage):
        IDAT."""
 
     homepage = "http://bioconductor.org/packages/illuminaio/"
-    url      = "https://git.bioconductor.org/packages/illuminaio"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/illuminaio.git"
 
-    version('0.18.0', git='https://git.bioconductor.org/packages/illuminaio', commit='e6b8ab1f8eacb760aebdb4828e9cfbf07da06eda')
+    version('0.18.0', commit='e6b8ab1f8eacb760aebdb4828e9cfbf07da06eda')
 
     depends_on('r-base64', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@0.18.0')

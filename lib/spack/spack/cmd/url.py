@@ -227,7 +227,7 @@ def url_summary(args):
 
     print()
     print('    Index  Count  Regular Expression')
-    for ni in name_regex_dict:
+    for ni in sorted(name_regex_dict.keys()):
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             ni, name_count_dict[ni], name_regex_dict[ni]))
     print()
@@ -236,7 +236,7 @@ def url_summary(args):
 
     print()
     print('    Index  Count  Regular Expression')
-    for vi in version_regex_dict:
+    for vi in sorted(version_regex_dict.keys()):
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             vi, version_count_dict[vi], version_regex_dict[vi]))
     print()

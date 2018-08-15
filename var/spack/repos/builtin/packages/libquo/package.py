@@ -33,9 +33,10 @@ class Libquo(AutotoolsPackage):
 
     homepage = "https://github.com/lanl/libquo"
     url      = "https://github.com/lanl/libquo/archive/v1.2.9.tar.gz"
+    git      = "https://github.com/lanl/libquo.git"
 
-    version('develop', git='https://github.com/lanl/libquo', branch='master')
-    version('1.3', '3ff74162837425a15ecf695ca0201e4a')
+    version('develop', branch='master')
+    version('1.3',   '3ff74162837425a15ecf695ca0201e4a')
     version('1.2.9', 'ca82ab33f13e2b89983f81e7c02e98c2')
 
     depends_on('mpi')

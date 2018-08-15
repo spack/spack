@@ -30,11 +30,11 @@ class H5zZfp(MakefilePackage):
        HDF5 library using ZFP compression."""
 
     homepage = "http://h5z-zfp.readthedocs.io/en/latest"
-    url      = "https://github.com/LLNL/H5Z-ZFP"
+    git      = "https://github.com/LLNL/H5Z-ZFP.git"
 
-    version('develop', git='https://github.com/LLNL/H5Z-ZFP.git', tag='master')
-    version('0.7.0', git='https://github.com/LLNL/H5Z-ZFP.git', commit='58ac811')
-    version('0.8.0', git='https://github.com/LLNL/H5Z-ZFP.git', commit='af165c4')
+    version('develop', tag='master')
+    version('0.8.0', commit='af165c4')
+    version('0.7.0', commit='58ac811')
 
     variant('fortran', default=True, description='Enable Fortran support')
 

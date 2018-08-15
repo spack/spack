@@ -25,9 +25,9 @@
 import re
 
 import llnl.util.tty as tty
+import llnl.util.multiproc as mp
 
 from spack.architecture import OperatingSystem
-from spack.util.multiproc import parmap
 from spack.util.module_cmd import get_module_cmd
 
 
@@ -60,7 +60,7 @@ class Cnl(OperatingSystem):
         import spack.compilers
 
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(
+        compiler_lists = mp.parmap(
             lambda cmp_cls: self.find_compiler(cmp_cls, *paths), types)
 
         # ensure all the version calls we made are cached in the parent

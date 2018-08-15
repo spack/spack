@@ -49,13 +49,10 @@ class Qtgraph(QMakePackage):
        libgvc within the Qt Graphics View Framework."""
 
     homepage = "https://github.com/OpenSpeedShop/QtGraph"
-    url      = "https://github.com/OpenSpeedShop/QtGraph.git"
+    git      = "https://github.com/OpenSpeedShop/QtGraph.git"
 
-    version('1.0.0.0', branch='1.0.0.0',
-            git='https://github.com/OpenSpeedShop/QtGraph.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/QtGraph.git')
+    version('develop', branch='master')
+    version('1.0.0.0', branch='1.0.0.0')
 
     # qtgraph depends on these packages
     depends_on('qt@4.8.6:', when='@develop')

@@ -30,8 +30,9 @@ class PyMgRastTools(PythonPackage):
     MG-RAST data."""
 
     homepage = "https://github.com/MG-RAST/MG-RAST-Tools"
+    git      = "https://github.com/MG-RAST/MG-RAST-Tools.git"
 
-    version('2018.04.17', git='https://github.com/MG-RAST/MG-RAST-Tools.git', commit='a40c6e6539ad0bc1c08e1b03dfc0a9759755a326')
+    version('2018.04.17', commit='a40c6e6539ad0bc1c08e1b03dfc0a9759755a326')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('py-setuptools@28.0:', type='build')

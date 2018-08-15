@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import glob
 import os.path
 import re
@@ -69,13 +68,13 @@ class Picard(Package):
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "picard.sh")
-        script = join_path(prefix.bin, "picard")
-        copyfile(script_sh, script)
+        script = prefix.bin.picard
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['java'].prefix, 'bin', 'java')
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('picard.jar', join_path(prefix.bin, 'picard.jar'),

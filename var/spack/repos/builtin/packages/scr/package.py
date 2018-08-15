@@ -25,7 +25,6 @@
 from spack import *
 
 import os
-import shutil
 
 
 class Scr(CMakePackage):
@@ -34,15 +33,16 @@ class Scr(CMakePackage):
        capability for MPI codes"""
 
     homepage = "http://computation.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
+    url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
+    git      = "https://github.com/llnl/scr.git"
 
     # NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
     # scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
     # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
     # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
 
-    url = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
+    version('master', branch='master')
     version('1.2.0', '060e9e9c7604c1765f3991f9cd6e9d2d')
-    version('master', git='https://github.com/llnl/scr.git', branch='master')
 
     depends_on('pdsh+static_modules', type=('build', 'run'))
     depends_on('zlib')
@@ -150,4 +150,4 @@ class Scr(CMakePackage):
         if spec.variants['copy_config'].value:
             dest_path = self.get_abs_path_rel_prefix(
                 spec.variants['scr_config'].value)
-            shutil.copyfile(spec.variants['copy_config'].value, dest_path)
+            install(spec.variants['copy_config'].value, dest_path)

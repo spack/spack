@@ -29,9 +29,9 @@ class RAgimicrorna(RPackage):
     """Processing and Analysis of Agilent microRNA data."""
 
     homepage = "https://www.bioconductor.org/packages/AgiMicroRna/"
-    url      = "https://git.bioconductor.org/packages/AgiMicroRna"
+    git      = "https://git.bioconductor.org/packages/AgiMicroRna.git"
 
-    version('2.26.0', git='https://git.bioconductor.org/packages/AgiMicroRna', commit='6dd74bae47986f2a23d03e3f1f9f78f701dd8053')
+    version('2.26.0', commit='6dd74bae47986f2a23d03e3f1f9f78f701dd8053')
 
     depends_on('r@3.4.0:3.4.9', when='@2.26.0')
     depends_on('r-affycoretools', type=('build', 'run'))

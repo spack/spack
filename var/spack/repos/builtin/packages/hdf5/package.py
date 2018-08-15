@@ -111,6 +111,10 @@ class Hdf5(AutotoolsPackage):
     # three src files and leaves the hdf5 build system alone.
     patch('pre-c99-comments.patch', when='@1.8.10')
 
+    # There are build errors with GCC 8, see
+    # https://forum.hdfgroup.org/t/1-10-2-h5detect-compile-error-gcc-8-1-0-on-centos-7-2-solved/4441
+    patch('https://salsa.debian.org/debian-gis-team/hdf5/raw/bf94804af5f80f662cad80a5527535b3c6537df6/debian/patches/gcc-8.patch', sha256='57cee5ff1992b4098eda079815c36fc2da9b10e00a9056df054f2384c4fc7523', when='@1.10.2%gcc@8:')
+
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):

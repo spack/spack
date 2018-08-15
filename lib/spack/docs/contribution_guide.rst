@@ -189,11 +189,16 @@ to update them.
 
 .. warning::
 
-   Flake8 requires setuptools in order to run. If you installed ``py-flake8``
-   with Spack, make sure to add ``py-setuptools`` to your ``PYTHONPATH``.
-   The easiest way to do this is to run ``spack activate py-flake8`` so that
-   all of the dependencies are symlinked to a central location. If you see an
-   error message like:
+   Flake8 and ``pep8-naming`` require a number of dependencies in order
+   to run.  If you installed ``py-flake8`` and ``py-pep8-naming``, the
+   easiest way to ensure the right packages are on your ``PYTHONPATH`` is
+   to run::
+
+     spack activate py-flake8
+     spack activate pep8-naming
+
+   so that all of the dependencies are symlinked to a central
+   location. If you see an error message like:
 
    .. code-block:: console
 

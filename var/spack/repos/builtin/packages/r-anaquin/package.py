@@ -33,9 +33,9 @@ class RAnaquin(RPackage):
     modelling and visualization of spike-in controls."""
 
     homepage = "https://www.bioconductor.org/packages/Anaquin/"
-    url      = "https://git.bioconductor.org/packages/Anaquin"
+    git      = "https://git.bioconductor.org/packages/Anaquin.git"
 
-    version('1.2.0', git='https://git.bioconductor.org/packages/Anaquin', commit='584d1970cc9dc1d354f9a6d7c1306bd7e8567119')
+    version('1.2.0', commit='584d1970cc9dc1d354f9a6d7c1306bd7e8567119')
 
     depends_on('r@3.4.0:3.4.9', when='@1.2.0')
     depends_on('r-deseq2', type=('build', 'run'))
