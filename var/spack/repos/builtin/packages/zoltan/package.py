@@ -104,23 +104,11 @@ class Zoltan(Package):
 
             config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
 
-            # NOTE: Zoltan assumes that it's linking against an MPI library that can
-            # be found with '-lmpi,' which isn't the case for many MPI packages.
-            if os.path.basename(spec['mpi'].mpicc).startswith('mpi') \
-               and os.path.basename(spec['mpi'].mpicxx).startswith('mpi') \
-               and os.path.basename(spec['mpi'].mpifc).startswith('mpi'):
-                # if MPI-wrappers are used we can assume that linking works without
-                # manually specifying libs, thus, pass an empty list of libraries
-                config_args.append('--with-mpi-libs= ')
-            else:
-                # we do not use MPI-wrappers, thus, it is likely that we need to
-                # manually add libs for linking; try to find all possible ones
-                mpi_static_libs = find_libraries('lib*mpi*', spec['mpi'].prefix.lib,
-                                                 shared=False, recursive=False)
-                mpi_shared_libs = find_libraries('lib*mpi*', spec['mpi'].prefix.lib,
-                                                 shared=True, recursive=False)
-                mpi_libs = LibraryList(mpi_static_libs + mpi_shared_libs).link_flags
-                config_args.append('--with-mpi-libs={0}'.format(mpi_libs))
+            # NOTE: Zoltan assumes that it's linking against an MPI library
+            # that can be found with '-lmpi' which isn't the case for many
+            # MPI packages. We rely on the MPI-wrappers to automatically add
+            # what is required for linking and thus pass an empty list of libs
+            config_args.append('--with-mpi-libs= ')
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
