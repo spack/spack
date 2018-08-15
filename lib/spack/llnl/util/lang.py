@@ -555,12 +555,6 @@ class Singleton(object):
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
-    def __setattr__(self, name, val):
-        if name in ['factory', '_instance']:
-            super(Singleton, self).__setattr__(name, val)
-        else:
-            setattr(self.instance, name, val)
-
     def __getitem__(self, name):
         return self.instance[name]
 
