@@ -13,7 +13,7 @@ Intel packages in Spack
 Spack can install and use several software development products offered by Intel.
 Some of these are available under no-cost terms, others require a paid license.
 All share the same basic steps for configuration, installation, and, where
-applicable, license management. The Spack Python class `IntelPackage` implements
+applicable, license management. The Spack Python class ``IntelPackage`` implements
 these steps.
 
 Spack interacts with Intel tools in several routes, like it does for any
@@ -32,7 +32,7 @@ other package:
 3. *Use* the packages, regardless of installation route, to install what we'll
    call *client packages* for you, this being Spack's primary purpose.
 
-An auxiliary route follows from `route 2`_, as it would for most Spack
+An auxiliary route follows from route 2, as it would for most Spack
 packages, namely:
 
 .. _`route 4`:
@@ -61,10 +61,11 @@ Some earlier versions of these libraries were released under a paid license.
 For these older versions, the license must be available at installation time of
 the products and during compilation of client packages.
 
-The library packages can be used both with and without Intel compilers.  The
-various Intel compiler invocation commands offer options to simplify linking
-(sometimes considerably), but Spack always uses fairly explicit linkage
-anyway.
+The library packages work well with the Intel compilers but do not require them
+-- those packages can just as well be used with other compilers.  The Intel
+compiler invocation commands offer custom options to simplify linking Intel
+libraries (sometimes considerably), but Spack always uses fairly explicit
+linkage anyway.
 
 
 """"""""""""""""""
@@ -124,20 +125,12 @@ version numbers seen with most other Spack packages. For example, we have:
        ...
    ...
 
-To install the full studio suite, capable of compiling MPI applications, run:
-
-.. code-block:: console
-
-   $ spack install intel-parallel-studio@cluster.2018.3        # ca. 12 GB
-
-If you need to save some disk space or installation time, you could install
-separately as needed:
-
-.. code-block:: console
-
-   $ spack install intel         # 0.6 GB
-   $ spack install intel-mpi     # 0.5 GB
-   $ spack install intel-mkl     # 2.5 GB
+The full studio suite, capable of compiling MPI applications, currently
+requires about 12 GB of disk space when installed (see section `Install steps
+for packages with compilers and libraries`_ for detailed instructions).
+If you need to save disk space or installation time, you could install the
+``intel`` compilers-only subset (0.6 GB) and just the library packages you
+need, for example ``intel-mpi`` (0.5 GB) and ``intel-mkl`` (2.5 GB).
 
 
 """"""""""""""""""""
@@ -167,9 +160,12 @@ installed external to Spack`_.
 
 If you plan to have Spack install licensed products for you (`route 2`_ above),
 the Intel product installer that Spack will run underneath must have access to
-a license.  Via the means sketched out in the following sections, check and use
-the license provided by default means, or explicitly configure the license for
-Spack.  For authoritative information on Intel licensing, see:
+a license that is either provided by a *license server* or as a *license file*.
+The installer may be able to locate a license that is already configured on
+your system.  If it cannot, you must configure Spack to provide either the
+server location or the license file.
+
+For authoritative information on Intel licensing, see:
 
 * https://software.intel.com/en-us/faq/licensing
 * https://software.intel.com/en-us/articles/how-do-i-manage-my-licenses
@@ -224,10 +220,10 @@ to "activate" it for your serial number, then download the resulting license fil
 If needed, `request to have the file re-sent
 <https://software.intel.com/en-us/articles/resend-license-file>`_ to you.
 
-License files are plain text files containing license tokens in FLEXlm format
-and whose name ends in ``.lic``.  Intel installers and compilers look for
-license files in several locations when they run.  Place your license by one of
-the following means, in order of decreasing preference:
+Intel's license files are text files that contain tokens in the proprietary
+"FLEXlm" format and whose name ends in ``.lic``.
+Intel installers and compilers look for license files in several locations when they run.
+Place your license by one of the following means, in order of decreasing preference:
 
 * Default directory
 
