@@ -71,8 +71,8 @@ packages:
             intel-mkl@2018.1.163: /gpfs/bbp.cscs.ch/apps/tools/install/linux-rhel7-x86_64/gcc-4.8.5/intel-mkl-2018.1.163-l32qhs
         version: [2018.1.163]
     intel-mpi:
-        paths:
-            intel-mpi@2018.1.163: /gpfs/bbp.cscs.ch/apps/tools/install/linux-rhel7-x86_64/gcc-4.8.5/intel-mpi-2018.1.163-p7q2uq
+        modules:
+            intel-mpi@2018.1.163: intel-mpi/2018.1.163
         version: [2018.1.163]
     intel-parallel-studio:
         modules:
