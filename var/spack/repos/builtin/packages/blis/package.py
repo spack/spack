@@ -118,7 +118,7 @@ class Blis(Package):
         else:
             config_args.append("--disable-static")
 
-       # FIXME: add cpu isa variants.
+        # FIXME: add cpu isa variants.
         config_args.append("auto")
 
         configure("--prefix=" + prefix,
