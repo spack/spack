@@ -31,6 +31,9 @@ class MofemFractureModule(CMakePackage):
 
     maintainers = ['likask']
 
+    version('0.9.47',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.47')
     version('0.9.46',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
         tag='v0.9.46')
