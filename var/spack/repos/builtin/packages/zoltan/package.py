@@ -104,16 +104,23 @@ class Zoltan(Package):
 
             config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
 
-            mpi_libs = self.get_mpi_libs()
-
-            # NOTE: Some external mpi installations may have empty lib
-            # directory (e.g. bg-q). In this case we need to explicitly
-            # pass empty library name.
-            if mpi_libs:
-                mpi_libs = ' -l'.join(mpi_libs)
-                config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
-            else:
+            # NOTE: Zoltan assumes that it's linking against an MPI library that can
+            # be found with '-lmpi,' which isn't the case for many MPI packages.
+            if os.path.basename(spec['mpi'].mpicc).startswith('mpi') \
+               and os.path.basename(spec['mpi'].mpicxx).startswith('mpi') \
+               and os.path.basename(spec['mpi'].mpifc).startswith('mpi'):
+                # if MPI-wrappers are used we can assume that linking works without
+                # manually specifying libs, thus, pass an empty list of libraries
                 config_args.append('--with-mpi-libs= ')
+            else:
+                # we do not use MPI-wrappers, thus, it is likely that we need to
+                # manually add libs for linking; try to find all possible ones
+                mpi_static_libs = find_libraries('lib*mpi*', spec['mpi'].prefix.lib,
+                                                 shared=False, recursive=False)
+                mpi_shared_libs = find_libraries('lib*mpi*', spec['mpi'].prefix.lib,
+                                                 shared=True, recursive=False)
+                mpi_libs = LibraryList(mpi_static_libs + mpi_shared_libs).link_flags
+                config_args.append('--with-mpi-libs={0}'.format(mpi_libs))
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
@@ -152,18 +159,3 @@ class Zoltan(Package):
     def get_config_flag(self, flag_name, flag_variant):
         flag_pre = 'en' if '+{0}'.format(flag_variant) in self.spec else 'dis'
         return '--{0}able-{1}'.format(flag_pre, flag_name)
-
-    # NOTE: Zoltan assumes that it's linking against an MPI library that can
-    # be found with '-lmpi,' which isn't the case for many MPI packages.  This
-    # function finds the names of the actual libraries for Zoltan's MPI dep.
-    def get_mpi_libs(self):
-        mpi_libs = set()
-
-        for lib_path in glob.glob(join_path(self.spec['mpi'].prefix.lib, '*')):
-            mpi_lib_match = re.match(
-                r'^(lib)((\w*)mpi(\w*))\.((a)|({0}))$'.format(dso_suffix),
-                os.path.basename(lib_path))
-            if mpi_lib_match:
-                mpi_libs.add(mpi_lib_match.group(2))
-
-        return list(mpi_libs)
