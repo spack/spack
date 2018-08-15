@@ -85,6 +85,8 @@ class Zoltan(Package):
             config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs={0}'.format('-lgfortran'))
+            if spec.satisfies('%intel'):
+                config_args.append('--with-libs={0}'.format('-lifcore'))
 
         if '+parmetis' in spec:
             config_args.append('--with-parmetis')
