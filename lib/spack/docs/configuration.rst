@@ -4,8 +4,7 @@
 Configuration Files in Spack
 ==============================
 
-Spack has many configuration files.  Here is a quick list of them, in
-case you want to skip directly to specific docs:
+Spack has many configuration files.  Here's a quick list, so you can skip to specific docs:
 
 * :ref:`compilers.yaml <compiler-config>`
 * :ref:`config.yaml <config-yaml>`
@@ -18,9 +17,8 @@ case you want to skip directly to specific docs:
 YAML Format
 -------------------------
 
-Spack configuration files are written in YAML.  We chose YAML because
-it's human readable, but also versatile in that it supports dictionaries,
-lists, and nested sections. For more details on the format, see `yaml.org
+Spack configuration files are written in YAML.  This format is human readable and versatile, supporting dictionaries,
+lists, and nested sections. For details, see `yaml.org
 <http://yaml.org>`_ and `libyaml <http://pyyaml.org/wiki/LibYAML>`_.
 Here is an example ``config.yaml`` file:
 
@@ -34,9 +32,9 @@ Here is an example ``config.yaml`` file:
        - $tempdir
        - /nfs/tmp2/$user
 
-Each spack configuration files is nested under a top-level section
+Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
-and ``mirrors.yaml`` starts with ``mirrors:``, etc.
+``mirrors.yaml`` starts with ``mirrors:``, etc.
 
 .. _configuration-scopes:
 
@@ -48,22 +46,22 @@ Spack pulls configuration data from files in several directories. There
 are four configuration scopes.  From lowest to highest:
 
 #. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
-   the "factory" settings. Users should generally not modify the settings
-   here, but should override them in other configuration scopes. The
-   defaults here will change from version to version of Spack.
+   the factory settings. Users should generally not modify the settings
+   here, but should override them in other configuration scopes. These
+   defaults will change from version to version of Spack.
 
 #. **system**: Stored in ``/etc/spack``. These are settings for this
-   machine, or for all machines on which this file system is
+   machine or all machines on which this file system is
    mounted. The site scope can be used for settings idiosyncratic to a
    particular machine, such as the locations of compilers or external
    packages. These settings are presumably controlled by someone with
    root access on the machine.
 
 #. **site**: Stored in ``$(prefix)/etc/spack/``.  Settings here affect
-   only *this instance* of Spack, and they override defaults.  The site
-   scope can can be used for per-project settings (one spack instance per
-   project) or for site-wide settings on a multi-user machine (e.g., for
-   a common spack instance).
+   only *this instance* of Spack and they override defaults.  The site
+   scope can can be used for per-project settings (one Spack instance per
+   project) or for site-wide settings on a multiuser machine (e.g., for
+   a common Spack instance).
 
 #. **user**: Stored in the home directory: ``~/.spack/``. These settings
    affect all instances of Spack and take the highest precedence.
@@ -74,23 +72,23 @@ configurations conflict, settings from higher-precedence scopes override
 lower-precedence settings.
 
 Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``,
-etc.) take a ``--scope=<name>`` parameter that you can use to control
-which scope is modified.  By default they modify the highest-precedence
+etc.) take a ``--scope=<name>`` parameter that controls
+which scope is modified.  By default, they modify the highest-precedence
 scope.
 
 .. _platform-scopes:
 
 -------------------------
-Platform-specific scopes
+Platform-Specific Scopes
 -------------------------
 
-For each scope above, there can *also* be platform-specific settings.
+For each scope above, there may *also* be platform-specific settings.
 For example, on Blue Gene/Q machines, Spack needs to know the location
 of cross-compilers for the compute nodes.  This configuration is in
 ``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence
 over settings in the ``defaults`` scope, but can still be overridden
 by settings in ``system``, ``system/bgq``, ``site``, ``site/bgq``,
-``user``, or ``user/bgq``. So, the full scope precedence is:
+``user``, or ``user/bgq``. Thus the full scope precedence is:
 
 1. ``defaults``
 2. ``defaults/<platform>``
@@ -106,19 +104,19 @@ You can get the name to use for ``<platform>`` by running ``spack arch
 sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
 -------------------------
-Scope precedence
+Scope Precedence
 -------------------------
 
 When spack queries for configuration parameters, it searches in
-higher-precedence scopes first.  So, settings in a higher-precedence file
+higher-precedence scopes first.  Settings in a higher-precedence file
 can override those with the same key in a lower-precedence one.  For
 list-valued settings, Spack *prepends* higher-precedence settings to
 lower-precedence settings. Completely ignoring higher-level configuration
 options is supported with the ``::`` notation for keys (see
-:ref:`config-overrides` below).
+:ref:`config-overrides`, below).
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Simple keys
+Simple Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's look at an example of overriding a single key in a Spack file.  If
@@ -143,7 +141,7 @@ your configurations look like this:
    config:
      install_tree: /some/other/directory
 
-Spack will only override ``install_tree`` in the ``config`` section, and
+Spack will only override ``install_tree`` in the ``config`` section and
 will take the site preferences for other settings.  You can see the
 final, combined configuration with the ``spack config get <configtype>``
 command:
@@ -164,7 +162,7 @@ command:
 .. _config-overrides:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Overriding entire sections
+Overriding Entire Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Above, the site ``config.yaml`` only overrides specific settings in the
@@ -189,10 +187,10 @@ Spack will ignore all lower-precedence configuration under the
      install_tree: /some/other/directory
 
 ^^^^^^^^^^^^^^^^^^^^^^
-List-valued settings
+List-Valued Settings
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Let's revisit the ``config.yaml`` example one more time.  The
+Let's revisit the ``config.yaml`` example.  The
 ``build_stage`` setting's value is an ordered list of directories:
 
 **defaults**
@@ -265,21 +263,21 @@ The merged configuration would look like this:
 .. _config-file-variables:
 
 ------------------------------
-Config file variables
+Config File Variables
 ------------------------------
 
-Spack understands several variables which can be used in config file paths
-where ever they appear. There are three sets of these variables, Spack specific 
-variables, environment variables, and user path variables. Spack specific
-variables and environment variables both are indicated by prefixing the variable
-name with ``$``. User path variables are indicated at the start of the path with
+Spack understands several variables that can be used in config file paths
+where ever they appear. There are three sets of these variables: Spack specific, 
+environment, and user path. Spack-specific
+variables and environment variables are indicated by prefixing the variable
+name with ``$``. User-path variables are indicated at the start of the path with
 ``~`` or ``~user``. Let's discuss each in turn.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Spack Specific Variables
+Spack-Specific Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack understands several special variables. These are:
+Spack understands several special variables:
 
   * ``$spack``: path to the prefix of this spack installation
   * ``$tempdir``: default system temporary directory (as specified in
@@ -288,7 +286,7 @@ Spack understands several special variables. These are:
     variable.
   * ``$user``: name of the current user
 
-Note that, as with shell variables, you can write these as ``$varname``
+As with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
 ``${varname}``. Their names are also case insensitive meaning that ``$SPACK``
 works just as well as ``$spack``. These special variables are also
@@ -299,7 +297,7 @@ be used.
 Environment Variables
 ^^^^^^^^^^^^^^^^^^^^^
 
-Spack then uses ``os.path.expandvars`` to expand any remaining environment
+Spack uses ``os.path.expandvars`` to expand any remaining environment
 variables.
 
 ^^^^^^^^^^^^^^
