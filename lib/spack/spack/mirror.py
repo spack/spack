@@ -202,26 +202,27 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
-    # Iterate through packages and download all safe tarballs for each
-    for spec in version_specs:
-        for node in spec.traverse():
-            add_single_spec(node, mirror_root, categories, **kwargs)
+    mirror_cache = spack.caches.MirrorCache(mirror_root)
+    try:
+        spack.caches.mirror_cache = mirror_cache
+        # Iterate through packages and download all safe tarballs for each
+        for spec in version_specs:
+            for node in spec.traverse():
+                add_single_spec(node, mirror_root, categories, **kwargs)
+    finally:
+        spack.caches.mirror_cache = None
+
+    categories['mirrored'] = list(mirror_cache.new_resources)
+    categories['present'] = list(mirror_cache.existing_resources)
 
     return categories['present'], categories['mirrored'], categories['error']
 
 
 def add_single_spec(spec, mirror_root, categories, **kwargs):
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
-    spec_exists_in_mirror = True
     try:
-        spack.caches.fetch_cache.mirror_root = mirror_root
         spec.package.do_patch()
         spec.package.do_clean()
-
-        if spec_exists_in_mirror:
-            categories['present'].append(spec)
-        else:
-            categories['mirrored'].append(spec)
 
     except Exception as e:
         if spack.config.get('config:debug'):
@@ -230,8 +231,6 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             tty.warn(
                 "Error while fetching %s" % spec.cformat('$_$@'), e.message)
         categories['error'].append(spec)
-    finally:
-        spack.caches.fetch_cache.mirror_root = None
 
 
 class MirrorError(spack.error.SpackError):

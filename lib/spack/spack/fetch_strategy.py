@@ -1111,15 +1111,11 @@ class FsCache(object):
 
     def __init__(self, root):
         self.root = os.path.abspath(root)
-        self.mirror_root = None
 
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
             return
-
-        if self.mirror_root:
-            FsCache._add_to_mirror(self.mirror_root, fetcher, relative_dest)
 
         # Don't store things that are already cached.
         if isinstance(fetcher, CacheURLFetchStrategy):

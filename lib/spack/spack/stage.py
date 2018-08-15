@@ -453,6 +453,9 @@ class Stage(object):
     def cache_local(self):
         spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
 
+        if spack.caches.mirror_cache:
+            spack.caches.mirror_cache.store(self.fetcher, self.mirror_path)
+
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
         archive.  Fail if the stage is not set up or if the archive is not yet
