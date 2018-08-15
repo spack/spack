@@ -81,8 +81,7 @@ class Relion(CMakePackage, CudaPackage):
         if '+cuda' in self.spec:
             # relion+cuda requires selecting cuda_arch
             if not carch:
-                print("you must select cuda_arch")
-                raise ValueError
+                raise ValueError("select cuda_arch when building with +cuda")
             else:
                 args += ['-DCUDA=ON', '-DCudaTexture=ON',
                          '-DCUDA_ARCH=%s' % (carch)]
