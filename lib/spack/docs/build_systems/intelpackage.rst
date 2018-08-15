@@ -883,6 +883,7 @@ sure you followed the `special installation step
 <intel-compiler-anticipation_>`_ to ensure that its virtual packages match the
 compilers it provides.
 
+
 """"""""""""""""""""""""""""""""""""""""""""
 Using Intel tools as explicit dependency
 """"""""""""""""""""""""""""""""""""""""""""
@@ -890,6 +891,64 @@ Using Intel tools as explicit dependency
 With the proper installation as detailed above, no special steps should be
 required when a client package specifically (and thus deliberately) requests an
 Intel package as dependency, this being one of the target use cases for Spack.
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""
+Tips for configuring client packages to use MKL
+"""""""""""""""""""""""""""""""""""""""""""""""
+
+Client applications that use BLAS or LAPACK often have configuration options in
+the form ``./configure --with-blas=... --with-lapack=...``.
+The Intel MKL can easily be used to provide these components, but the client
+application must be configured carefully since properly linking the MKL
+requires several option words rather than just a single library file
+(for background, see Intel's `MKL Link Line Advisor
+<https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/>`_).
+
+The Spack package functions ``.headers`` and ``.libs`` provide lists of fully
+qualified file names for include files and libraries. These may not be useful
+for the configuration stage of a client package.  You can use certain utility
+functions to transform those file lists into suitable options.
+
+In an
+:ref:`AutotoolsPackage <autotoolspackage>`
+use the utility function ``.libs.ld_flags`` to set and pass linkage options
+correctly:
+
+.. code-block:: python
+
+    def configure_args(self):
+        args = []
+        ...
+        args.append('--with-blas=%s' % self.spec['blas'].libs.ld_flags)
+        args.append('--with-lapack=%s' % self.spec['lapack'].libs.ld_flags)
+        ...
+
+.. tip::
+  Even though ``....ld_flags`` will consist of multiple words, quotes are not
+  necessary around them (Spack passes these options without invoking a shell).
+
+Likewise, in a
+:ref:`MakefilePackage <makefilepackage>`
+or similiar package that does not use AutoTools you may need to provide include
+and link options.
+For the former (``-I<dir>``), use ``.headers.include_flags``, for example:
+
+.. code-block:: python
+
+  self.spec['blas'].headers.include_flags
+  
+and to provide linker options (``-L<dir> -llibname ...``), use the same as above,
+
+.. code-block:: python
+
+  self.spec['blas'].libs.ld_flags
+
+
+With Intel tools, do *not* use constructs like ``prefix.include``, or
+``prefix.lib`` as the package installation directories are more complex than
+these simple directory specifications.
+
 
 ^^^^^^^^^^
 Footnotes
