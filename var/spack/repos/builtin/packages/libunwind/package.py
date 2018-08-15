@@ -33,7 +33,7 @@ class Libunwind(AutotoolsPackage):
     url      = "http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz"
 
     version('1.3-rc1', 'f09b670de5db6430a3de666e6aed60e3')
-    version('1.2.1', '06ba9e60d92fd6f55cd9dadb084df19e')
+    version('1.2.1', '06ba9e60d92fd6f55cd9dadb084df19e', preferred=True)
     version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
 
     variant('xz', default=False,
