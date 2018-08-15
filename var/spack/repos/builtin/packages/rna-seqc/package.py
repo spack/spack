@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import os.path
 
 
@@ -51,12 +50,12 @@ class RnaSeqc(Package):
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "rna-seqc.sh")
         script = join_path(prefix.bin, "rna-seqc")
-        copyfile(script_sh, script)
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
+        java = self.spec['jdk'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('RNA-SeQC_v{0}.jar', join_path(prefix.bin, jar_file),
