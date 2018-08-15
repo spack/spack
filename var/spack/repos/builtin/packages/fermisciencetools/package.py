@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Fermisciencetools(Package):
@@ -42,4 +41,4 @@ class Fermisciencetools(Package):
     version('11r5p3', 'cf050ddddfe9251b6ebe8d3fd7de3c3f')
 
     def install(self, spec, prefix):
-        copy_tree('x86_64-unknown-linux-gnu-libc2.17', prefix)
+        install_tree('x86_64-unknown-linux-gnu-libc2.17', prefix)
