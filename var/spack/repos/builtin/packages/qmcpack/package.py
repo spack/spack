@@ -99,11 +99,11 @@ class Qmcpack(CMakePackage):
     # qmcpack data analysis tools
     # basic command line tool based on Python and NumPy
     # blas and lapack patching fails often and so are disabled at this time
-    depends_on('py-numpy~blas~lapack', type='run', when='+da')
+    depends_on('py-numpy~blas~lapack', when='+da', type='run')
 
     # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
-    depends_on('py-matplotlib', type='run', when='+gui')
+    depends_on('py-matplotlib', when='+gui', type='run')
 
     # B-spline basis calculation require a patched version of
     # Quantum Espresso 6.3 (see QMCPACK manual)
@@ -113,11 +113,11 @@ class Qmcpack(CMakePackage):
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
     depends_on('quantum-espresso@6.3~elpa+hdf5',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
-               type='run', when='+qe+mpi')
+                   when='+qe+mpi', type='run')
 
     depends_on('quantum-espresso@6.3~elpa~scalapack~mpi+hdf5',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
-               type='run', when='+qe~mpi')
+                   when='+qe~mpi', type='run')
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0
