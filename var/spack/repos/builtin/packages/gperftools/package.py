@@ -31,8 +31,8 @@ class Gperftools(AutotoolsPackage):
        heap-profiler, and cpu-profiler.
 
     """
-    homepage = "https://code.google.com/p/gperftools"
-    url      = "https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz"
+    homepage = "https://github.com/gperftools/gperftools"
+    url      = "https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz"
 
     version('2.7', '1ee8c8699a0eff6b6a203e59b43330536b22bbcbe6448f54c7091e5efb0763c9',
             url="https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz")
