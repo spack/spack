@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Jmol(Package):
@@ -38,7 +37,7 @@ class Jmol(Package):
     depends_on('java', type='run')
 
     def install(self, spec, prefix):
-        copy_tree('jmol-{0}'.format(self.version), prefix)
+        install_tree('jmol-{0}'.format(self.version), prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix)

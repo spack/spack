@@ -22,40 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import llnl.util.filesystem as fs
-
-
-def test_move_transaction_commit(tmpdir):
-
-    fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-    fake_library.write('Just some fake content.')
-
-    old_md5 = fs.hash_directory(str(tmpdir))
-
-    with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
-        fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-        fake_library.write('Other content.')
-        new_md5 = fs.hash_directory(str(tmpdir))
-
-    assert old_md5 != fs.hash_directory(str(tmpdir))
-    assert new_md5 == fs.hash_directory(str(tmpdir))
+from spack import *
 
 
-def test_move_transaction_rollback(tmpdir):
+class Ross(CMakePackage):
+    """Rensselaer's Optimistic Simulation System"""
 
-    fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-    fake_library.write('Just some fake content.')
+    homepage = "http://carothersc.github.io/ROSS/"
+    git = "https://github.com/carothersc/ROSS.git"
 
-    h = fs.hash_directory(str(tmpdir))
+    version('master')
 
-    try:
-        with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
-            assert h != fs.hash_directory(str(tmpdir))
-            fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-            fake_library.write('Other content.')
-            raise RuntimeError('')
-    except RuntimeError:
-        pass
+    depends_on('mpi')
 
-    assert h == fs.hash_directory(str(tmpdir))
+    def cmake_args(self):
+        if 'x86_64' not in spec.architecture:
+            raise InstallError(
+                'This package currently only builds on x86_64 architectures')
+
+        args = ["-DBUILD_SHARED_LIBS=ON",
+                "-DARCH=x86_64",
+                "-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc,
+                "-DCMAKE_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx]
+        return args

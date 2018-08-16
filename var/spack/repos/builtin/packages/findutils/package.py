@@ -30,7 +30,7 @@ class Findutils(AutotoolsPackage):
        utilities of the GNU operating system."""
 
     homepage = "https://www.gnu.org/software/findutils/"
-    url      = "http://ftpmirror.gnu.org/findutils/findutils-4.6.0.tar.gz"
+    url      = "https://ftpmirror.gnu.org/findutils/findutils-4.6.0.tar.gz"
 
     version('4.6.0',  '9936aa8009438ce185bea2694a997fc1')
     version('4.4.2',  '351cc4adb07d54877fa15f75fb77d39f')

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Mrtrix3(Package):
@@ -53,9 +52,7 @@ class Mrtrix3(Package):
         build = Executable('./build')
         configure()
         build()
-        # install_tree('.', prefix) does not work since the prefix
-        # directory already exists by this point
-        distutils.dir_util.copy_tree('.', prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spac_env, run_env):
         run_env.prepend_path('PATH', self.prefix)

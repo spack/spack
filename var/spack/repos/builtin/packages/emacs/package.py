@@ -31,7 +31,7 @@ class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
+    url      = "https://ftpmirror.gnu.org/emacs/emacs-24.5.tar.gz"
 
     version('26.1', '544d2ab5eb142e9ca69adb023d17bf4b')
     version('25.3', '74ddd373dc52ac05ca7a8c63b1ddbf58')

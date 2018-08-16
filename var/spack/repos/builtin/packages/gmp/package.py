@@ -30,7 +30,7 @@ class Gmp(AutotoolsPackage):
     on signed integers, rational numbers, and floating-point numbers."""
 
     homepage = "https://gmplib.org"
-    url      = "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/gmp/gmp-6.1.2.tar.bz2"
 
     version('6.1.2',  '8ddbb26dc3bd4e2302984debba1406a5')
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')

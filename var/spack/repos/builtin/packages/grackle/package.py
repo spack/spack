@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os.path
-import shutil
 import inspect
 
 from spack import *
@@ -78,7 +77,7 @@ class Grackle(Package):
             'clib',
             'Make.mach.{0}'.format(grackle_architecture)
         )
-        shutil.copy(template, makefile)
+        copy(template, makefile)
         for key, value in substitutions.items():
             filter_file(key, value, makefile)
 
