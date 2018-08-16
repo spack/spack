@@ -40,6 +40,7 @@ class Qmcpack(CMakePackage):
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
+    version('3.5.0', git=url, tag='v3.5.0')
     version('3.4.0', git=url, tag='v3.4.0')
     version('3.3.0', git=url, tag='v3.3.0')
     version('3.2.0', git=url, tag='v3.2.0')
