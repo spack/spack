@@ -32,7 +32,7 @@ class Libtool(AutotoolsPackage):
     url = 'http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
 
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
-            branch='master')
+            branch='master', submodules=True)
     version('2.4.6', 'addf44b646ddb4e3919805aa88fa7c5e')
     version('2.4.2', 'd2f3b7d4627e69e13514a40e72a24d50')
 
