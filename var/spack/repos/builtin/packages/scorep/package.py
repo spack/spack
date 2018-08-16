@@ -73,6 +73,7 @@ class Scorep(AutotoolsPackage):
     depends_on('pdt')
 
     variant('shmem', default=False, description='Enable shmem tracing')
+    variant('gui', default=False, description='Enable Score-P GUI')
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
@@ -101,8 +102,8 @@ class Scorep(AutotoolsPackage):
         elif spec.satisfies('^openmpi'):
             config_args.append('--with-mpi=openmpi')
 
-        if '~shmem' in spec:
-            config_args.append("--without-shmem")
+        config_args += self.with_or_without('shmem')
+        config_args += self.with_or_without('gui')
 
         config_args.extend([
             'CFLAGS={0}'.format(self.compiler.pic_flag),
