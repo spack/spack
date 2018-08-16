@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 
 
 class Workrave(AutotoolsPackage):
@@ -102,4 +101,4 @@ class Workrave(AutotoolsPackage):
         for fname in self.m4files:
             src = '%s/%s/%s.m4' % (self.stage.source_path, fname, fname)
             dest = '%s/m4/%s.m4' % (self.stage.source_path, fname)
-            copyfile(src, dest)
+            copy(src, dest)

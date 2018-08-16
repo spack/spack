@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Biopieces(Package):
@@ -79,7 +78,7 @@ class Biopieces(Package):
     depends_on('scan-for-matches')
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         # Note: user will need to set environment variables on their own,

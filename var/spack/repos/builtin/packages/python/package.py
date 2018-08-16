@@ -27,7 +27,6 @@ import os
 import platform
 import re
 import sys
-import shutil
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
@@ -118,6 +117,10 @@ class Python(AutotoolsPackage):
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
     patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
+
+    # Fixes an alignment problem with more aggressive optimization in gcc8
+    # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
+    patch('gcc-8-2.7.14.patch', when="@2.7.14 %gcc@8:")
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -709,7 +712,7 @@ class Python(AutotoolsPackage):
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
             elif not os.path.islink(src):
-                shutil.copy2(src, dst)
+                copy(src, dst)
                 if 'script' in get_filetype(src):
                     filter_file(
                         self.spec.prefix, os.path.abspath(view.root), dst)

@@ -29,6 +29,6 @@ class Aspell6En(AspellDictPackage):
     """English (en) dictionary for aspell."""
 
     homepage = "http://aspell.net/"
-    url      = "ftp://ftp.gnu.org/gnu/aspell/dict/en/aspell6-en-2017.01.22-0.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/aspell/dict/en/aspell6-en-2017.01.22-0.tar.bz2"
 
     version('2017.01.22-0', 'a6e002076574de9dc4915967032a1dab')

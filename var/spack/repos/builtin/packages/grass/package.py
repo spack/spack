@@ -95,6 +95,8 @@ class Grass(AutotoolsPackage):
             '--with-x',
             '--with-gdal={0}/bin/gdal-config'.format(
                 spec['gdal'].prefix),
+            '--with-proj-share={0}/share/proj'.format(
+                spec['proj'].prefix),
         ]
 
         if '+cxx' in spec:
