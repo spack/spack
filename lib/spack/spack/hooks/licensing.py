@@ -101,13 +101,25 @@ def write_license_file(pkg, license_path):
     if pkg.license_url:
         url += "\t%s\n" % pkg.license_url
 
-    # Assemble. NB: pkg.license_comment will be prepended upon putput.
-    txt = """\
+    # Assemble. NB: pkg.license_comment will be prepended upon output.
+    txt = """
  A license is required to use package '{0}'.
 
- * If your system is already configured for such a license, save this file
-   UNCHANGED.
+ * If your system is already properly configured for such a license, save this
+   file UNCHANGED. The system may be configured if:
 
+    - A license file is installed in a default location.
+""".format(pkg.name)
+
+    if envvars:
+        txt += """\
+    - One of the following environment variable(s) is set for you, possibly via
+      a module file:
+
+{0}
+""".format(envvars)
+
+    txt += """\
  * Otherwise, depending on the license you have, enter AT THE BEGINNING of
    this file:
 
@@ -117,26 +129,12 @@ def write_license_file(pkg, license_path):
    After installation, the following symlink(s) will be added to point to
    this Spack-global file (relative to the installation prefix).
 
-{1}
-""".format(pkg.name, linktargets)
-
-    if envvars:
-        txt += """\
- * Alternatively, you may be able to use the environment variable(s):
-
-{1}
-   - If you have a static license file stored in a non-default location, set
-     (one of) these variable(s) to the full pathname of your license file.
-   - If you use a license server, set the variable(s) to port@host.
-
-   You will want to set this variable in a module file so that it gets loaded
-   every time someone tries to use {0}.
-
-""".format(pkg.name, envvars)
+{0}
+""".format(linktargets)
 
     if url:
         txt += """\
- For further information on how to acquire a license, please refer to:
+ * For further information on licensing, see:
 
 {0}
 """.format(url)
