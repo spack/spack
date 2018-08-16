@@ -608,7 +608,7 @@ class OpenfoamCom(Package):
             self.etc_config['vtk'] = [
                 ('VTK_DIR', spec['vtk'].prefix),
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(pkglib(spec['vtk'], '${VTK_DIR}'))),
+                 foam_add_lib(pkglib(spec['vtk'], '${VTK_DIR}'))),
             ]
 
         # Optional
