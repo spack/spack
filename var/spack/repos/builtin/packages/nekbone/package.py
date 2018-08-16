@@ -62,7 +62,7 @@ class Nekbone(Package):
             cc = spec['mpi'].mpicc
 
         # Install Nekbone in prefix.bin
-        install_tree("../Nekbone", prefix.bin.Nekbone)
+        install_tree(self.stage.source_path, prefix.bin.Nekbone)
 
         # Install scripts in prefix.bin
         nekpmpi = 'test/example1/nekpmpi'
