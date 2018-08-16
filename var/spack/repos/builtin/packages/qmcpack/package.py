@@ -224,10 +224,16 @@ class Qmcpack(CMakePackage):
         ])
 
         # Additionally, we need to pass the BLAS+LAPACK include directory for
-        # header files. Intel MKL requires special case due to differences in
-        # Darwin vs. Linux $MKLROOT naming schemes
+        # header files. This is to insure vectorized math and FFT libraries
+        # get properly detected. Intel MKL requires special case due to
+        # differences in Darwin vs. Linux $MKLROOT naming schemes. This section
+        # of code is intentionally redundant for backwards compatibility.
         if 'intel-mkl' in self.spec:
             lapack_dir = format(join_path(env['MKLROOT'], 'include'))
+            # Next two lines were introduced in QMCPACK 3.5.0 and later.
+            # Prior to v3.5.0, these lines should be benign.
+            args.append('-DENABLE_MKL=1')
+            args.append('-DMKL_ROOT=%s' % env['MKLROOT'])
         else:
             lapack_dir = ':'.join((
                 spec['lapack'].prefix.include,
