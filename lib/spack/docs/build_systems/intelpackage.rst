@@ -897,23 +897,31 @@ Intel package as dependency, this being one of the target use cases for Spack.
 Tips for configuring client packages to use MKL
 """""""""""""""""""""""""""""""""""""""""""""""
 
-Client applications that use BLAS or LAPACK often have configuration options in
-the form ``./configure --with-blas=... --with-lapack=...``.
-The Intel MKL can easily be used to provide these components, but the client
-application must be configured carefully since properly linking the MKL
-requires several option words rather than just a single library file
+The Intel packages that include the MKL support the Spack interfaces to the
+virtual ``blas``, ``lapack`` and ``scalapack`` packages (see the respective
+:ref:`Packaging Guide section <blas_lapack_scalapack>`).
+Client application must be configured carefully since properly linking the
+MKL requires several option words rather than a single library file
 (for background, see Intel's `MKL Link Line Advisor
 <https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/>`_).
 
-The Spack package functions ``.headers`` and ``.libs`` provide lists of fully
-qualified file names for include files and libraries. These may not be useful
-for the configuration stage of a client package.  You can use certain utility
-functions to transform those file lists into suitable options.
+.. tip::
+    With Intel tools, *do not* use constructs like ``.prefix.include`` or
+    ``.prefix.lib``, because the various package installation directories are
+    more complex than the directories returned by these constructs.
 
-In an
+The package functions ``.headers`` and ``.libs`` provide objects containing
+lists of absolute file names of include files and libraries, respectively.
+These lists may not be useful directly.  To transform them into a form suitable
+for various configuration flavors, use functions from the classes
+:py:class:`llnl.util.filesystem.FileList`,
+:py:class:`llnl.util.filesystem.HeaderList`, and
+:py:class:`llnl.util.filesystem.LibraryList`.
+
+For example, for an
 :ref:`AutotoolsPackage <autotoolspackage>`
-use the utility function ``.libs.ld_flags`` to set and pass linkage options
-correctly:
+use ``.libs.ld_flags`` to transform the library file list into linker options
+passed to ``./configure``:
 
 .. code-block:: python
 
@@ -925,29 +933,31 @@ correctly:
         ...
 
 .. tip::
-  Even though ``....ld_flags`` will consist of multiple words, quotes are not
-  necessary around them (Spack passes these options without invoking a shell).
+    Even though ``.ld_flags`` will return a string of multiple words, *do not*
+    use quotes for options like ``--with-blas=...`` because Spack passes them
+    to ``./configure`` without invoking a shell.
 
 Likewise, in a
 :ref:`MakefilePackage <makefilepackage>`
 or similiar package that does not use AutoTools you may need to provide include
-and link options.
-For the former (``-I<dir>``), use ``.headers.include_flags``, for example:
+and link options for use on command lines or in environment variables.
+For example, to generate an option string of the form ``-I<dir>``, use:
 
 .. code-block:: python
 
   self.spec['blas'].headers.include_flags
   
-and to provide linker options (``-L<dir> -llibname ...``), use the same as above,
+and to generate linker options (``-L<dir> -llibname ...``), use the same as above,
 
 .. code-block:: python
 
   self.spec['blas'].libs.ld_flags
 
-
-With Intel tools, do *not* use constructs like ``prefix.include``, or
-``prefix.lib`` as the package installation directories are more complex than
-these simple directory specifications.
+See
+:ref:`MakefilePackage <makefilepackage>`
+and more generally the
+:ref:`Packaging Guide <blas_lapack_scalapack>`
+for background and further examples.
 
 
 ^^^^^^^^^^
