@@ -215,6 +215,18 @@ for varname in "${env_set_varnames[@]}"; do
 done
 
 #
+# Prepend paths as defined in the 'environment' section of the compiler config
+#   names are stored in SPACK_ENV_TO_PREPEND
+#   values are stored in SPACK_ENV_PREPEND_<varname>
+#
+IFS=':' read -ra env_prepend_varnames <<< "$SPACK_ENV_TO_PREPEND"
+for varname in "${env_set_varnames[@]}"; do
+    spack_varname="SPACK_ENV_SET_$varname"
+    export "$varname"="${!spack_varname}:$varname"
+    unset "$spack_varname"
+done
+
+#
 # Filter '.' and Spack environment directories out of PATH so that
 # this script doesn't just call itself
 #
