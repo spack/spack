@@ -111,7 +111,7 @@ class PyNumpy(PythonPackage):
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
-                if '^blis' in spec:
+                elif '^blis' in spec:
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
                 elif '^mkl' in spec:
