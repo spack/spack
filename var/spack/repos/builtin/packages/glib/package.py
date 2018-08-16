@@ -72,6 +72,10 @@ class Glib(AutotoolsPackage):
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
+    # Patch to prevent compiler errors in kernels older than 2.6.35
+    patch('old-kernels.patch', when='@2.56: os=rhel6')
+    patch('old-kernels.patch', when='@2.56: os=centos6')
+    patch('old-kernels.patch', when='@2.56: os=sl6')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
