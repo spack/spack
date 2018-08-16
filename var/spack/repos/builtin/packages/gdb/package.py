@@ -32,7 +32,7 @@ class Gdb(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
+    url      = "https://ftpmirror.gnu.org/gdb/gdb-7.10.tar.gz"
 
     version('8.1', '0c85ecbb43569ec43b1c9230622e84ab')
     version('8.0.1', 'bb45869f8126a84ea2ba13a8c0e7c90e')

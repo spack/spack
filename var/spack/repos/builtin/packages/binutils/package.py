@@ -29,7 +29,7 @@ class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
     homepage = "http://www.gnu.org/software/binutils/"
-    url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.28.tar.bz2"
 
     version('2.29.1', '9af59a2ca3488823e453bb356fe0f113')
     version('2.28', '9e8340c96626b469a603c15c9d843727')
