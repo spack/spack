@@ -22,8 +22,8 @@ class OmegaH(CMakePackage):
     version('9.19.0', sha256='4a1606c4e7287a1b67359cf6ef1c2d7e24b7dc379065566a1d2e0b0330c0abbd')
     version('9.15.0', sha256='342a506a0ff22f6cac759862efdcf34e360110f7901eb9b4c5de8afe38741522')
     version('9.14.0', sha256='035d0f47142f965a57818d1cb6c5c00b5ae6b5a0178b67b0bc9177fa99ba083d')
-    version('9.13.14', sha256='f617dfd024c9cc323e56800ca23df3386bfa37e1b9bd378847d1f5d32d2b8e5d')
-    version('9.13.13', sha256='753702edf4bda9ae57ea21f09ca071e341604a468d8c86468c9aebba049f581c')
+    version('9.13.12', sha256='b37872c6059d5405f971098cce7bab3f74926d99b5f9dc8f8270467a85ed41d7')
+    version('9.13.11', sha256='992ba790cabc07f2c913c3f1e7ab28a46a76084567c39f69b77e4757e05b8720')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
