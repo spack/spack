@@ -38,6 +38,9 @@ class Relion(CMakePackage, CudaPackage):
             git='https://bitbucket.org/scheres/relion-3.0_beta.git')
     version('2.1', preferred='true', tag='2.1')
     version('2.0.3', tag='2.0.3')
+    # relion has no develop branch though pulling from master
+    # should be considered the same as develop
+    version('develop', branch='master')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
