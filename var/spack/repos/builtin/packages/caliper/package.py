@@ -70,7 +70,7 @@ class Caliper(CMakePackage):
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='+libpfm')
     depends_on('mpi', when='+mpi')
-    depends_on('libunwind', when='+callpath')
+    depends_on('unwind', when='+callpath')
     depends_on('sosflow', when='+sosflow')
 
     depends_on('cmake', type='build')

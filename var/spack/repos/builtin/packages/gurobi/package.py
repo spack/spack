@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 import os
 
 
@@ -58,5 +57,4 @@ class Gurobi(Package):
         run_env.set('GUROBI_HOME', self.prefix)
 
     def install(self, spec, prefix):
-        with working_dir('linux64'):
-            copy_tree('.', prefix)
+        install_tree('linux64', prefix)

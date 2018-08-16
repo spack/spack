@@ -194,7 +194,7 @@ class Mfem(Package):
     #            when='+petsc')
     depends_on('mpfr', when='+mpfr')
     depends_on('netcdf', when='+netcdf')
-    depends_on('libunwind', when='+libunwind')
+    depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:', when='+conduit')
@@ -373,7 +373,7 @@ class Mfem(Package):
                 ld_flags_from_dirs([spec['gnutls'].prefix.lib], ['gnutls'])]
 
         if '+libunwind' in spec:
-            libunwind = spec['libunwind']
+            libunwind = spec['unwind']
             headers = find_headers('libunwind', libunwind.prefix.include)
             headers.add_macro('-g')
             libs = find_optional_library('libunwind', libunwind.prefix)
@@ -440,7 +440,7 @@ class Mfem(Package):
             # installed shared mfem library:
             with working_dir('config'):
                 os.rename('config.mk', 'config.mk.orig')
-                shutil.copyfile(str(self.config_mk), 'config.mk')
+                copy(str(self.config_mk), 'config.mk')
                 shutil.copystat('config.mk.orig', 'config.mk')
 
         if '+examples' in spec:

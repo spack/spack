@@ -34,13 +34,13 @@ def _install_shlib(name, src, dst):
     if sys.platform == "darwin":
         shlib0 = name + ".0.dylib"
         shlib = name + ".dylib"
-        shutil.copyfile(join_path(src, shlib0), join_path(dst, shlib0))
+        install(join_path(src, shlib0), join_path(dst, shlib0))
         os.symlink(shlib0, join_path(dst, shlib))
     else:
         shlib000 = name + ".so.0.0.0"
         shlib0 = name + ".so.0"
         shlib = name + ".dylib"
-        shutil.copyfile(join_path(src, shlib000), join_path(dst, shlib000))
+        install(join_path(src, shlib000), join_path(dst, shlib000))
         os.symlink(shlib000, join_path(dst, shlib0))
         os.symlink(shlib0, join_path(dst, shlib))
 

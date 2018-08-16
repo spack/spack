@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
-from shutil import copymode
 
 
 class Bioawk(MakefilePackage):
@@ -45,7 +43,5 @@ class Bioawk(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        copyfile("bioawk", join_path(prefix.bin, "bioawk"))
-        copymode("bioawk", join_path(prefix.bin, "bioawk"))
-        copyfile("maketab", join_path(prefix.bin, "maketab"))
-        copymode("maketab", join_path(prefix.bin, "maketab"))
+        install('bioawk',  prefix.bin)
+        install('maketab', prefix.bin)

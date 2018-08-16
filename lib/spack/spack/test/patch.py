@@ -31,6 +31,7 @@ from llnl.util.filesystem import working_dir, mkdirp
 
 import spack.paths
 import spack.util.compression
+from spack.util.executable import Executable
 from spack.stage import Stage
 from spack.spec import Spec
 
@@ -108,15 +109,31 @@ def test_patch_in_spec(mock_packages, config):
             spec.variants['patches'].value)
 
 
-def test_patched_dependency(mock_packages, config):
+def test_patched_dependency(
+        mock_packages, config, install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = Spec('patch-a-dependency')
     spec.concretize()
     assert 'patches' in list(spec['libelf'].variants.keys())
 
-    # foo
-    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',) ==
+    # make sure the patch makes it into the dependency spec
+    assert (('c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8',) ==
             spec['libelf'].variants['patches'].value)
+
+    # make sure the patch in the dependent's directory is applied to the
+    # dependency
+    libelf = spec['libelf']
+    pkg = libelf.package
+    pkg.do_patch()
+    with pkg.stage:
+        with working_dir(pkg.stage.source_path):
+            # output a Makefile with 'echo Patched!' as the default target
+            configure = Executable('./configure')
+            configure()
+
+            # Make sure the Makefile contains the patched text
+            with open('Makefile') as mf:
+                assert 'Patched!' in mf.read()
 
 
 def test_multiple_patched_dependencies(mock_packages, config):

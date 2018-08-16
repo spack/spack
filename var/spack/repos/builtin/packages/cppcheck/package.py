@@ -23,11 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
-class Cppcheck(Package):
+class Cppcheck(MakefilePackage):
     """A tool for static C/C++ code analysis."""
     homepage = "http://cppcheck.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
@@ -41,12 +39,13 @@ class Cppcheck(Package):
 
     depends_on('py-pygments', when='+htmlreport', type='run')
 
+    def build(self, spec, prefix):
+        make('CFGDIR={0}'.format(prefix.cfg))
+
     def install(self, spec, prefix):
-        # cppcheck does not have a configure script
-        make("CFGDIR=%s" % os.path.join(prefix, 'cfg'))
-        # manually install the final cppcheck binary
+        # Manually install the final cppcheck binary
         mkdirp(prefix.bin)
         install('cppcheck', prefix.bin)
-        shutil.copytree('cfg', os.path.join(prefix, 'cfg'))
+        install_tree('cfg', prefix.cfg)
         if spec.satisfies('+htmlreport'):
             install('htmlreport/cppcheck-htmlreport', prefix.bin)
