@@ -32,6 +32,8 @@ class Atk(Package):
        control running applications."""
     homepage = "https://developer.gnome.org/atk/"
     url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.28/atk-2.28.1.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/atk"
+    list_depath = 2
 
     version('2.28.1', 'dfb5e7474220afa3f4ca7e45af9f3a11')
     version('2.20.0', '5187b0972f4d3905f285540b31395e20')

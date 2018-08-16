@@ -32,6 +32,8 @@ class AtSpi2Core(MesonPackage):
 
     homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-core.html"
     url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/2.28/at-spi2-core-2.28.0.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
+    list_depth = 2
 
     version('2.28.0', '9c42f79636ed1c0e908b7483d789b32e')
 
