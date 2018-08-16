@@ -5,9 +5,10 @@ about: Report a bug in the core of Spack (command not working as expected, etc.)
 ---
 
 
-*Summarize in a couple of lines the bug you encountered. Ideally it 
-should be enough to give core developers an idea what might be happening 
-in the code. Try your best to be clear and concise.* :wink:
+*Explain, in a clear and concise way, the command you ran and the result you were trying to achieve.
+Example: "I ran Spack find to list all the installed packages and..."*
+
+
 
 ### Steps to reproduce the issue
 
@@ -17,14 +18,17 @@ $ spack <command2> <spec>
 ...
 ```
 
-### Expected Result
+### Error Message
 
 What you expected before running the command or performing the steps 
-described above.
-
-### Actual Result
-
-What happened instead
+described above and what happened instead. To provide more information
+you might re-run the commands with the additional `-sd` flags:
+```console
+$ spack -sd <command1> <spec>
+$ spack -sd <command2> <spec>
+...
+```
+that activate the full debug output. 
 
 
 ### Information on your system
