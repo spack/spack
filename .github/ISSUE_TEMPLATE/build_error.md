@@ -10,6 +10,11 @@ report please:*
 1. Provide the information required below.
 1. Clean the issue from the template instructions below when finished.
 
+We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
+
+
+---
+
 ### Steps to reproduce the issue
 
 ```console
@@ -76,12 +81,3 @@ After the failure you will find two files in the current directory:
 
 You can post or attach those files to provide maintainers with more information on what
 is causing the failure.
-
-
------
-
-We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
-
-If you want to ask a question about the tool (how to use it, what it can currently do, etc.), try the `#general` channel on our Slack first. We have a welcoming community and chances are you'll get your reply faster and without opening an issue.
-
-Other than that, thanks for taking the time to contribute to Spack!
