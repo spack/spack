@@ -56,9 +56,9 @@ class Chatterbug(MakefilePackage):
             cxxflag += '-I{0}/scorep'.format(spec['scorep'].prefix.include)
             cxxflag += '-DWRITE_OTF2_TRACE=1 -DSCOREP_USER_ENABLE'
             targets.append(
-                'CXX = {0} {1}'.format('scorep --user --nocompiler ' \
-                                       '--noopenmp --nopomp --nocuda ' \
-                                       '--noopenacc --noopencl --nomemory',
+                'CXX = {0} {1}'.format('scorep --user --nocompiler --noopenmp '
+                                       '--nopomp --nocuda --noopenacc '
+                                       '--noopencl --nomemory',
                                        self.spec['mpi'].mpicxx))
         else:
             targets.append('CXX = {0}'.format(self.spec['mpi'].mpicxx))
