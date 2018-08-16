@@ -32,8 +32,6 @@ class Atk(Package):
        control running applications."""
     homepage = "https://developer.gnome.org/atk/"
     url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.28/atk-2.28.1.tar.xz"
-    list_url = "http://ftp.gnome.org/pub/gnome/sources/atk/"
-    list_depth = 2
 
     version('2.28.1', 'dfb5e7474220afa3f4ca7e45af9f3a11')
     version('2.20.0', '5187b0972f4d3905f285540b31395e20')
@@ -43,6 +41,11 @@ class Atk(Package):
     depends_on('glib')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
+
+    def url_for_version(self, version):
+        """Handle gnome's version-based custom URLs."""
+        url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
+        return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",

@@ -32,8 +32,6 @@ class AtSpi2Core(MesonPackage):
 
     homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-core.html"
     url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/2.28/at-spi2-core-2.28.0.tar.xz"
-    list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/"
-    list_depth = 2
 
     version('2.28.0', '9c42f79636ed1c0e908b7483d789b32e')
 
@@ -41,3 +39,8 @@ class AtSpi2Core(MesonPackage):
     depends_on('dbus@1.12.8:')
     depends_on('libx11')
     depends_on('libxi')
+
+    def url_for_version(self, version):
+        """Handle gnome's version-based custom URLs."""
+        url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
+        return url + '/%s/at-spi2-core-%s.tar.xz' % (version.up_to(2), version)
