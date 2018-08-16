@@ -34,6 +34,8 @@ class Gperftools(AutotoolsPackage):
     homepage = "https://code.google.com/p/gperftools"
     url      = "https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz"
 
+    version('2.7', '1ee8c8699a0eff6b6a203e59b43330536b22bbcbe6448f54c7091e5efb0763c9',
+            url="https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz")
     version('2.4', '2171cea3bbe053036fb5d5d25176a160',
             url="https://github.com/gperftools/gperftools/releases/download/gperftools-2.4/gperftools-2.4.tar.gz")
     version('2.3', 'f54dd119f0e46ac1f13264f8d97adf90',
