@@ -202,52 +202,79 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
+    recursive = True
     # Iterate through packages and download all safe tarballs for each
+    visited = set()
     for spec in version_specs:
-        add_single_spec(spec, mirror_root, categories, **kwargs)
+        if recursive:
+            to_add = set(spec.traverse()) - visited
+        else:
+            to_add = set([spec]) if spec not in visited else set()
+
+        for child_spec in to_add:
+            add_single_spec(child_spec, mirror_root, categories, **kwargs)
 
     return categories['present'], categories['mirrored'], categories['error']
+
+
+def _fetch_and_archive(name, fetcher, archive_path, do_checksum):
+    # This function returns whether the archive path already exists (and the
+    # fetcher did not need to retrieve the source)
+    if os.path.exists(archive_path):
+        tty.msg("{name} : already added".format(name=name))
+        return True
+
+    subdir = os.path.dirname(archive_path)
+    mkdirp(subdir)
+
+    fetcher.fetch()
+    if do_checksum:
+        fetcher.check()
+        tty.msg("{name} : checksum passed".format(name=name))
+
+    # Fetchers have to know how to archive their files.  Use
+    # that to move/copy/create an archive in the mirror.
+    fetcher.archive(archive_path)
+    tty.msg("{name} : added".format(name=name))
+    return False
 
 
 def add_single_spec(spec, mirror_root, categories, **kwargs):
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
     spec_exists_in_mirror = True
+    do_checksum = not kwargs.get('no_checksum', False)
     try:
         with spec.package.stage:
-            # fetcher = stage.fetcher
-            # fetcher.fetch()
-            # ...
-            # fetcher.archive(archive_path)
             for ii, stage in enumerate(spec.package.stage):
                 fetcher = stage.fetcher
+                archive_path = os.path.abspath(os.path.join(
+                    mirror_root, stage.mirror_path))
                 if ii == 0:
-                    # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(os.path.join(
-                        mirror_root, mirror_archive_path(spec, fetcher)))
                     name = spec.cformat("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = os.path.abspath(os.path.join(
-                        mirror_root,
-                        mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.cformat("$_$@"))
-                subdir = os.path.dirname(archive_path)
-                mkdirp(subdir)
 
-                if os.path.exists(archive_path):
-                    tty.msg("{name} : already added".format(name=name))
-                else:
-                    spec_exists_in_mirror = False
-                    fetcher.fetch()
-                    if not kwargs.get('no_checksum', False):
-                        fetcher.check()
-                        tty.msg("{name} : checksum passed".format(name=name))
+                spec_exists_in_mirror &= _fetch_and_archive(
+                    name, fetcher, archive_path, do_checksum)
 
-                    # Fetchers have to know how to archive their files.  Use
-                    # that to move/copy/create an archive in the mirror.
-                    fetcher.archive(archive_path)
-                    tty.msg("{name} : added".format(name=name))
+            for patch in spec.patches:
+                try:
+                    fetcher = patch.fetcher()
+                except AttributeError:
+                    continue
+                archive_path = os.path.abspath(os.path.join(
+                    mirror_root,
+                    patch.mirror_archive_path(spec.package.stage)))
+                name = "{patch} ({pkg})".format(
+                    patch=os.path.basename(patch.path_or_url),
+                    pkg=spec.cformat("$_$@"))
+
+                patch_stage = spack.stage.Stage(
+                    fetcher, mirror_path=archive_path)
+                patch_stage.create()
+                _fetch_and_archive(name, fetcher, archive_path, do_checksum)
 
         if spec_exists_in_mirror:
             categories['present'].append(spec)
