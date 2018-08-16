@@ -35,7 +35,7 @@ class Libiberty(AutotoolsPackage):
     demangling and support functions for the GNU toolchain."""
 
     homepage = "https://www.gnu.org/software/binutils/"
-    url = "https://ftp.gnu.org/gnu/binutils/binutils-2.31.1.tar.xz"
+    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.31.1.tar.xz"
 
     version('2.31.1', '5b7c9d4ce96f507d95c1b9a255e52418')
     version('2.30',   'ffc476dd46c96f932875d1b2e27e929f')

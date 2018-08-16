@@ -40,7 +40,7 @@ class Gawk(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/gawk/"
-    url      = "http://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz"
+    url      = "https://ftpmirror.gnu.org/gawk/gawk-4.1.4.tar.xz"
 
     version('4.1.4', '4e7dbc81163e60fd4f0b52496e7542c9')
 
