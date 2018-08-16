@@ -79,6 +79,8 @@ class Petsc(Package):
             multi=False)
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
+    variant('patchmpi64', default=False,
+            description='Patch of MPI support of int64')
 
     variant('X', default=False,
             description='Activate X support')
@@ -93,6 +95,7 @@ class Petsc(Package):
         patch('macos-clang-8.1.0.diff',
               when='@3.7.5%clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
+    patch('mpi_int64_t_c++11.diff', when='+patchmpi64')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
