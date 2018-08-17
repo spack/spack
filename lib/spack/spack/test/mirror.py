@@ -70,7 +70,8 @@ def check_mirror():
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.set('mirrors', mirrors)
-        spack.mirror.create(mirror_root, repos, no_checksum=True)
+        with spack.config.override('config:checksum', False):
+            spack.mirror.create(mirror_root, repos, no_checksum=True)
 
         # Stage directory exists
         assert os.path.isdir(mirror_root)

@@ -74,9 +74,8 @@ class MirrorCache(object):
         self.existing_resources = set()
 
     def store(self, fetcher, relative_dest):
-        # skip fetchers that aren't cachable
-        if not fetcher.cachable:
-            return
+        # Note this will archive package sources even if they would not
+        # normally be cached (e.g. the current tip of an hg/git branch)
 
         dst = os.path.join(self.root, relative_dest)
         if os.path.exists(dst):
