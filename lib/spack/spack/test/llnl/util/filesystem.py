@@ -26,6 +26,7 @@
 
 import llnl.util.filesystem as fs
 import os
+import stat
 import pytest
 
 
@@ -64,7 +65,6 @@ class TestCopy:
             fs.copy('source/1', 'dest/1')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
 
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
@@ -73,7 +73,14 @@ class TestCopy:
             fs.copy('source/1', 'dest')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+
+
+def check_added_exe_permissions(src, dst):
+    src_mode = os.stat(src).st_mode
+    dst_mode = os.stat(dst).st_mode
+    for perm in [stat.S_IXUSR, stat.S_IXGRP, stat.S_IXOTH]:
+        if src_mode & perm:
+            assert dst_mode & perm
 
 
 class TestInstall:
@@ -86,7 +93,7 @@ class TestInstall:
             fs.install('source/1', 'dest/1')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+            check_added_exe_permissions('source/1', 'dest/1')
 
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
@@ -95,7 +102,7 @@ class TestInstall:
             fs.install('source/1', 'dest')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+            check_added_exe_permissions('source/1', 'dest/1')
 
 
 class TestCopyTree:
