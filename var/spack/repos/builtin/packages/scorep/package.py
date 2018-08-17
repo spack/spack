@@ -78,7 +78,6 @@ class Scorep(AutotoolsPackage):
     depends_on('papi', when="+papi")
     depends_on('pdt', when="+pdt")
 
-
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
     # https://github.com/spack/spack/issues/1609
@@ -98,14 +97,13 @@ class Scorep(AutotoolsPackage):
         if self.version >= Version('4.0'):
             config_args.append("--with-cubew=%s" % spec['cubew'].prefix.bin)
             config_args.append("--with-cubelib=%s" %
-                                    spec['cubelib'].prefix.bin)
+                               spec['cubelib'].prefix.bin)
         else:
             config_args.append("--with-cube=%s" % spec['cube'].prefix.bin)
 
-
         if "+papi" in spec:
             config_args.append("--with-papi-header=%s" %
-                                    spec['papi'].prefix.include)
+                               spec['papi'].prefix.include)
             config_args.append("--with-papi-lib=%s" % spec['papi'].prefix.lib)
 
         if "+pdt" in spec:
@@ -120,7 +118,6 @@ class Scorep(AutotoolsPackage):
             config_args.append('--with-mpi=mpich3')
         elif spec.satisfies('^openmpi'):
             config_args.append('--with-mpi=openmpi')
-
 
         config_args.extend([
             'CFLAGS={0}'.format(self.compiler.pic_flag),
