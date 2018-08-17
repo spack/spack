@@ -93,6 +93,9 @@ class Hwloc(AutotoolsPackage):
         if '@2.0.0:' in self.spec:
             args.append('--enable-netloc')
 
+        if '+cuda' in self.spec:
+            args.append('--disable-nvml')
+
         args.extend(self.enable_or_disable('cairo'))
         args.extend(self.enable_or_disable('cuda'))
         args.extend(self.enable_or_disable('libxml2'))
