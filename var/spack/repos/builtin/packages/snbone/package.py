@@ -31,9 +31,9 @@ class Snbone(MakefilePackage):
        continuous finite element based transport equation solver."""
 
     homepage = "https://github.com/ANL-CESAR/"
-    url = "https://github.com/ANL-CESAR/SNbone.git"
+    git      = "https://github.com/ANL-CESAR/SNbone.git"
 
-    version('develop', git='https://github.com/ANL-CESAR/SNbone.git')
+    version('develop')
 
     tags = ['proxy-app']
 

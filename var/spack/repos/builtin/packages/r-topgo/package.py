@@ -32,10 +32,10 @@ class RTopgo(RPackage):
     between GO terms can be implemented and applied."""
 
     homepage = "https://www.bioconductor.org/packages/topGO/"
-    url      = "https://git.bioconductor.org/packages/topGO"
+    git      = "https://git.bioconductor.org/packages/topGO.git"
 
-    version('2.30.1', git='https://git.bioconductor.org/packages/topGO', commit='b1469ce1d198ccb73ef79ca22cab81659e16dbaa')
-    version('2.28.0', git='https://git.bioconductor.org/packages/topGO', commit='066a975d460046cce33fb27e74e6a0ebc33fd716')
+    version('2.30.1', commit='b1469ce1d198ccb73ef79ca22cab81659e16dbaa')
+    version('2.28.0', commit='066a975d460046cce33fb27e74e6a0ebc33fd716')
 
     depends_on('r@3.4.0:3.4.9')
     depends_on('r-dbi', type=('build', 'run'))

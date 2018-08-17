@@ -33,15 +33,14 @@ class Nekcem(Package):
 
     # Links to homepage and git
     homepage = "https://nekcem.mcs.anl.gov"
-    url      = "https://github.com/NekCEM/NekCEM/archive/development.zip"
+    git      = "https://github.com/NekCEM/NekCEM.git"
 
     # Variants
     variant('mpi', default=True, description='Build with MPI')
 
     # We only have a development version
-    version('develop', git='https://github.com/NekCEM/NekCEM.git')
-    version('0b8bedd', git='https://github.com/NekCEM/NekCEM.git',
-            commit='0b8beddfdcca646bfcc866dfda1c5f893338399b')
+    version('develop')
+    version('0b8bedd', commit='0b8beddfdcca646bfcc866dfda1c5f893338399b')
 
     # dependencies
     depends_on('mpi', when='+mpi')

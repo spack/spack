@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
@@ -39,3 +38,11 @@ class MesaGlu(AutotoolsPackage):
     depends_on('mesa', when='+mesa')
 
     provides('glu@1.3')
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libGLU', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs

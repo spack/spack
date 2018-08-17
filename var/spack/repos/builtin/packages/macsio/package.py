@@ -26,16 +26,16 @@ from spack import *
 
 
 class Macsio(CMakePackage):
-    """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application
-    """
+    """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application."""
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://llnl.github.io/MACSio"
-    url = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
+    url      = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
+    git      = "https://github.com/LLNL/MACSio.git"
 
+    version('develop', branch='master')
     version('1.0', '90e8e00ea84af2a47bee387ad331dbde')
-    version('develop', git='https://github.com/LLNL/MACSio.git',
-            branch='master')
 
     variant('mpi', default=True, description="Build MPI plugin")
     variant('silo', default=True, description="Build with SILO plugin")

@@ -32,10 +32,9 @@ class Xhmm(MakefilePackage):
     (or targeted sequencing, more generally)."""
 
     homepage = "http://atgu.mgh.harvard.edu/xhmm/index.shtml"
-    url      = "https://bitbucket.org/statgen/xhmm.git"
+    git      = "https://bitbucket.org/statgen/xhmm.git"
 
-    version('20160104', git='https://bitbucket.org/statgen/xhmm.git',
-            commit='cc14e528d90932f059ac4fe94e869e81221fd732')
+    version('20160104', commit='cc14e528d90932f059ac4fe94e869e81221fd732')
 
     depends_on('lapack')
 

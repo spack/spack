@@ -29,12 +29,6 @@ class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
 
     homepage = "https://www.opengl.org/"
-    url      = "https://www.opengl.org/"
-
-    # A second argument (usually the hash) must be supplied to the
-    # version directive, but 'n/a' is used here because this package
-    # is a placeholder for a system/vendor installation of OpenGL
-    version('3.2', 'n/a')
 
     provides('gl@:4.5', when='@4.5:')
     provides('gl@:4.4', when='@4.4:')
@@ -86,9 +80,6 @@ class Opengl(Package):
         of OpenGL your Mac uses."""
         raise InstallError(msg)
 
-    def install(self, spec, prefix):
-        pass
-
     @property
     def libs(self):
         for dir in ['lib64', 'lib']:
@@ -96,4 +87,3 @@ class Opengl(Package):
                                   shared=True, recursive=False)
             if libs:
                 return libs
-        return None

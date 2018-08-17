@@ -32,10 +32,10 @@ class RDeseq2(RPackage):
     distribution."""
 
     homepage = "https://www.bioconductor.org/packages/DESeq2/"
-    url      = "https://git.bioconductor.org/packages/DESeq2"
+    git      = "https://git.bioconductor.org/packages/DESeq2.git"
 
-    version('1.18.1', git='https://git.bioconductor.org/packages/DESeq2', commit='ef65091d46436af68915124b752f5e1cc55e93a7')
-    version('1.16.1', git='https://git.bioconductor.org/packages/DESeq2', commit='0a815574382704a08ef8b906eceb0296f81cded5')
+    version('1.18.1', commit='ef65091d46436af68915124b752f5e1cc55e93a7')
+    version('1.16.1', commit='0a815574382704a08ef8b906eceb0296f81cded5')
 
     depends_on('r@3.4.0:3.4.9', when='@1.16.1:')
     depends_on("r-rcpparmadillo", type=('build', 'run'))

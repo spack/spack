@@ -32,10 +32,9 @@ class RSomaticsignatures(RPackage):
        flexibility in the matrix decomposition algorithms."""
 
     homepage = "https://bioconductor.org/packages/SomaticSignatures/"
-    url      = "https://git.bioconductor.org/packages/SomaticSignatures"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/SomaticSignatures.git"
 
-    version('2.12.1', git='https://git.bioconductor.org/packages/SomaticSignatures', commit='932298c6877d076004de5541cec85a14e819517a')
+    version('2.12.1', commit='932298c6877d076004de5541cec85a14e819517a')
 
     depends_on('r-variantannotation', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))

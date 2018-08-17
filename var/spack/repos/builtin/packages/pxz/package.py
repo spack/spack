@@ -30,8 +30,9 @@ class Pxz(MakefilePackage):
 
     homepage = "https://jnovy.fedorapeople.org/pxz/pxz.html"
     url      = "http://jnovy.fedorapeople.org/pxz/pxz-4.999.9beta.20091201git.tar.xz"
+    git      = "https://github.com/jnovy/pxz.git"
 
-    version('develop', git='https://github.com/jnovy/pxz') 
+    version('develop', branch='master')
     version('4.999.9beta.20091201git', '4ae3926185978f5c95c9414dc4634451')
 
     depends_on('lzma')

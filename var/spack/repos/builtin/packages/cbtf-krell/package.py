@@ -50,19 +50,13 @@ class CbtfKrell(CMakePackage):
        CBTF project.  These contributions include many performance data
        collectors and support libraries as well as some example tools
        that drive the data collection at HPC levels of scale.
-
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
-    url = "https://github.com/OpenSpeedShop/cbtf-krell.git"
+    git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf-krell.git')
-
-    version('1.9.1.1', branch='1.9.1.1',
-            git='https://github.com/OpenSpeedShop/cbtf-krell.git')
-
-    version('1.9.1.0', branch='1.9.1.0',
-            git='https://github.com/OpenSpeedShop/cbtf-krell.git')
+    version('develop', branch='master')
+    version('1.9.1.1', branch='1.9.1.1')
+    version('1.9.1.0', branch='1.9.1.0')
 
     # MPI variants
     variant('openmpi', default=False,
@@ -126,7 +120,7 @@ class CbtfKrell(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # for services and collectors
-    depends_on("libmonitor+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch")
 
     depends_on("libunwind", when='@develop')
     depends_on("libunwind@1.1", when='@1.9.1.0:9999')

@@ -31,7 +31,7 @@ class Ed(AutotoolsPackage):
        interactively and via shell scripts."""
 
     homepage = "https://www.gnu.org/software/ed"
-    url = "https://ftp.gnu.org/gnu/ed/ed-1.4.tar.gz"
+    url      = "https://ftpmirror.gnu.org/ed/ed-1.4.tar.gz"
 
     version('1.4', 'da0ddc0e0b0bec2da4b13b0d0d1bce2b')
 

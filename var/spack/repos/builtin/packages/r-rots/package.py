@@ -22,40 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import llnl.util.filesystem as fs
-
-
-def test_move_transaction_commit(tmpdir):
-
-    fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-    fake_library.write('Just some fake content.')
-
-    old_md5 = fs.hash_directory(str(tmpdir))
-
-    with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
-        fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-        fake_library.write('Other content.')
-        new_md5 = fs.hash_directory(str(tmpdir))
-
-    assert old_md5 != fs.hash_directory(str(tmpdir))
-    assert new_md5 == fs.hash_directory(str(tmpdir))
+from spack import *
 
 
-def test_move_transaction_rollback(tmpdir):
+class RRots(Package):
+    """Calculates the Reproducibility-Optimized Test Statistic (ROTS)
+       for differential testing in omics data."""
 
-    fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-    fake_library.write('Just some fake content.')
+    homepage = "https://bioconductor.org/packages/release/bioc/html/ROTS.html"
+    git      = "https://git.bioconductor.org/packages/ROTS.git"
 
-    h = fs.hash_directory(str(tmpdir))
+    version('1.8.0', commit='02e3c6455bb1afe7c4cc59ad6d4d8bae7b01428b')
 
-    try:
-        with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
-            assert h != fs.hash_directory(str(tmpdir))
-            fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-            fake_library.write('Other content.')
-            raise RuntimeError('')
-    except RuntimeError:
-        pass
-
-    assert h == fs.hash_directory(str(tmpdir))
+    depends_on('r@3.5.0:3.5.9', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Savanna(MakefilePackage):
@@ -32,12 +31,10 @@ class Savanna(MakefilePackage):
     """
 
     homepage = "https://github.com/CODARcode/savanna"
-    url = "https://github.com/CODARcode/savanna/archive/v0.5.tar.gz"
+    git      = "https://github.com/CODARcode/savanna.git"
 
-    version('develop', git='https://github.com/CODARcode/savanna.git',
-            branch='master', submodules=True)
-    version('0.5', git='https://github.com/CODARcode/savanna.git',
-            tag='0.5', submodules=True)
+    version('develop', branch='master', submodules=True)
+    version('0.5', tag='0.5', submodules=True)
 
     variant('tau', default=False, description='Enable TAU profiling support')
 
@@ -48,4 +45,4 @@ class Savanna(MakefilePackage):
     depends_on('tau', when='+tau')
 
     def install(self, spec, prefix):
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

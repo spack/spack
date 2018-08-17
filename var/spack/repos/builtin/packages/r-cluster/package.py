@@ -31,7 +31,7 @@ class RCluster(RPackage):
     (1990) "Finding Groups in Data"."""
 
     homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.6.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.7-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
 
     version('2.0.7-1', 'a37add21b91d3e4f3883d005331e0d45')

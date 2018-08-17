@@ -29,7 +29,7 @@ class M4(AutotoolsPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"
-    url      = "https://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz"
+    url      = "https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz"
 
     version('1.4.18', 'a077779db287adf4e12a035029002d28')
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')

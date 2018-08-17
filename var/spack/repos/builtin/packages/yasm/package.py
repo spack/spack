@@ -30,10 +30,12 @@ class Yasm(AutotoolsPackage):
        supports the x86 and AMD64 instruction sets, accepts NASM and
        GAS assembler syntaxes and outputs binary, ELF32 and ELF64
        object formats."""
+
     homepage = "http://yasm.tortall.net"
     url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
+    git      = "https://github.com/yasm/yasm.git"
 
-    version('develop', git='https://github.com/yasm/yasm/')
+    version('develop', branch='master')
     version('1.3.0', 'fc9e586751ff789b34b1f21d572d96af')
 
     depends_on('autoconf', when='@develop')

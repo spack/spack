@@ -29,9 +29,9 @@ class PyOpentuner(PythonPackage):
     """An extensible framework for program autotuning."""
 
     homepage = "http://opentuner.org/"
-    url      = "https://github.com/jansel/opentuner"
+    git      = "https://github.com/jansel/opentuner.git"
 
-    version('0.8.0', git='https://github.com/jansel/opentuner', commit='4cb9135')
+    version('0.8.0', commit='4cb9135')
 
     # No support for Python 3 yet
     depends_on('python@2.7:2.8', type=('build', 'run'))

@@ -35,9 +35,9 @@ class RGosemsim(RPackage):
     Schlicker, Jiang, Lin and Wang respectively."""
 
     homepage = "https://www.bioconductor.org/packages/GOSemSim/"
-    url      = "https://git.bioconductor.org/packages/GOSemSim"
+    git      = "https://git.bioconductor.org/packages/GOSemSim.git"
 
-    version('2.2.0', git='https://git.bioconductor.org/packages/GOSemSim', commit='247434790e6c8cf99e5643f569390362b8c87c52')
+    version('2.2.0', commit='247434790e6c8cf99e5643f569390362b8c87c52')
 
     depends_on('r@3.4.0:3.4.9', when='@2.2.0')
     depends_on('r-annotationdbi', type=('build', 'run'))

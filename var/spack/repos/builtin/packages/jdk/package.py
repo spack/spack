@@ -25,7 +25,6 @@
 #
 # Author: Justin Too <too1@llnl.gov>
 #
-import distutils.dir_util
 from spack import *
 
 
@@ -72,7 +71,7 @@ class Jdk(Package):
         return url.format(version, minor_version)
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('JAVA_HOME', self.spec.prefix)

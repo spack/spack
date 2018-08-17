@@ -23,23 +23,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
 class ThePlatinumSearcher(Package):
     """Fast parallel recursive grep alternative"""
+
     homepage = "https://github.com/monochromegane/the_platinum_searcher"
-    url = "https://github.com/monochromegane/the_platinum_searcher"
+    go       = "github.com/monochromegane/the_platinum_searcher/..."
 
-    package = 'github.com/monochromegane/the_platinum_searcher/...'
-
-    version('head', go=package)
+    version('head')
 
     extends("go", deptypes='build')
 
     def install(self, spec, prefix):
-        env = os.environ
         env['GOPATH'] = self.stage.source_path + ':' + env['GOPATH']
         go('install', self.package, env=env)
-        shutil.copytree('bin', os.path.join(prefix, 'bin'))
+        install_tree('bin', prefix.bin)

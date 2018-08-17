@@ -52,7 +52,7 @@ def test_fetch(
     mock_archive.url
     mock_archive.path
 
-    algo = crypto.hashes[checksum_type]()
+    algo = crypto.hash_fun_for_algo(checksum_type)()
     with open(mock_archive.archive_file, 'rb') as f:
         algo.update(f.read())
     checksum = algo.hexdigest()
@@ -145,7 +145,7 @@ def test_from_list_url(mock_packages, config):
 
 
 def test_hash_detection(checksum_type):
-    algo = crypto.hashes[checksum_type]()
+    algo = crypto.hash_fun_for_algo(checksum_type)()
     h = 'f' * (algo.digest_size * 2)  # hex -> bytes
     checker = crypto.Checker(h)
     assert checker.hash_name == checksum_type

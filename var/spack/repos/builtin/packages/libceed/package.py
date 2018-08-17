@@ -26,16 +26,14 @@ from spack import *
 
 
 class Libceed(Package):
-    """The CEED API Library: Code for Efficient Extensible Discretizations
-    """
+    """The CEED API Library: Code for Efficient Extensible Discretizations."""
 
     homepage = "https://github.com/CEED/libCEED"
-    url      = 'https://github.com/CEED/libCEED'
+    git      = "https://github.com/CEED/libCEED.git"
 
-    version('develop', git='https://github.com/CEED/libCEED.git',
-            branch='master')
-    version('0.2', git='https://github.com/CEED/libCEED.git', tag='v0.2')
-    version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
+    version('develop', branch='master')
+    version('0.2', tag='v0.2')
+    version('0.1', tag='v0.1')
 
     variant('occa', default=True, description='Enable OCCA backends')
     variant('cuda', default=False, description='Enable CUDA support')

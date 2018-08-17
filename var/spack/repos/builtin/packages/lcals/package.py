@@ -35,8 +35,8 @@ class Lcals(MakefilePackage):
         by Frank H. McMahon, UCRL-53745.). The suite contains facilities to
         generate timing statistics and reports."""
 
-    homepage = "https://codesign.llnl.gov/LCALS-downloads/"
-    url = "https://codesign.llnl.gov/LCALS-downloads/lcals-v1.0.2.tgz"
+    homepage = "https://computation.llnl.gov/projects/co-design/lcals"
+    url      = "https://computation.llnl.gov/projects/co-design/download/lcals-v1.0.2.tgz"
 
     tags = ['proxy-app']
 

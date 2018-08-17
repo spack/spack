@@ -1,0 +1,31 @@
+diff --git a/configure b/configure
+index 06ac8b0..d518a1a 100755
+--- a/configure
++++ b/configure
+@@ -10657,6 +10657,8 @@ _LT_EOF
+ 	lf95*)				# Lahey Fortran 8.1
+ 	  whole_archive_flag_spec=
+ 	  tmp_sharedflag='--shared' ;;
++	nagfor*)
++	  tmp_sharedflag='-Wl,-shared' ;;
+ 	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+ 	  tmp_sharedflag='-qmkshrobj'
+ 	  tmp_addflag= ;;
+@@ -14252,6 +14254,8 @@ _LT_EOF
+ 	lf95*)				# Lahey Fortran 8.1
+ 	  whole_archive_flag_spec_F77=
+ 	  tmp_sharedflag='--shared' ;;
++	nagfor*)
++	  tmp_sharedflag='-Wl,-shared' ;;
+ 	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+ 	  tmp_sharedflag='-qmkshrobj'
+ 	  tmp_addflag= ;;
+@@ -17142,6 +17146,8 @@ _LT_EOF
+ 	lf95*)				# Lahey Fortran 8.1
+ 	  whole_archive_flag_spec_FC=
+ 	  tmp_sharedflag='--shared' ;;
++	nagfor*)
++	  tmp_sharedflag='-Wl,-shared' ;;
+ 	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+ 	  tmp_sharedflag='-qmkshrobj'
+ 	  tmp_addflag= ;;
