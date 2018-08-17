@@ -115,6 +115,8 @@ packages:
         paths:
             ncurses@5.9: /usr
         version: [5.9]
+    omega-h:
+        variants: +throw
     openssl:
         paths:
             openssl@1.0.2k: /usr
@@ -135,6 +137,8 @@ packages:
         paths:
             perl@5.16.3: /usr
         version: [5.16.3]
+    petsc:
+        variants: +patchmpi64
     pkg-config:
         paths:
             pkg-config@0.27.1: /usr
@@ -168,6 +172,9 @@ packages:
         paths:
             tcl@8.5.13: /usr
         version: [8.5.13]
+    trilinos:
+        variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+        version: [develop]
     tk:
         paths:
             tk@8.5.13: /usr
