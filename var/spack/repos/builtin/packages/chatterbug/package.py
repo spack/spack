@@ -1,5 +1,4 @@
 ##############################################################################
-
 # Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -30,7 +29,7 @@ class Chatterbug(MakefilePackage):
     """A suite of communication-intensive proxy applications that mimic
        commonly found communication patterns in HPC codes. These codes can be
        used as synthetic codes for benchmarking, or for trace generation using
-       OTF2.
+       Score-P / OTF2.
     """
     tags = ['proxy-app']
 
@@ -40,10 +39,10 @@ class Chatterbug(MakefilePackage):
     version('develop', branch='master')
     version('1.0', tag='v1.0')
 
-    variant('otf2', default=False, description='Build with OTF2 tracing')
+    variant('scorep', default=False, description='Build with Score-P tracing')
 
     depends_on('mpi')
-    depends_on('scorep~gui', when='+otf2')
+    depends_on('scorep', when='+scorep')
 
     @property
     def build_targets(self):
@@ -51,10 +50,8 @@ class Chatterbug(MakefilePackage):
 
         cxxflag = ' -O3 '
 
-        if '+otf2' in self.spec:
-            cxxflag += '-I{0}'.format(spec['scorep'].prefix.include)
-            cxxflag += '-I{0}/scorep'.format(spec['scorep'].prefix.include)
-            cxxflag += '-DWRITE_OTF2_TRACE=1 -DSCOREP_USER_ENABLE'
+        if '+scorep' in self.spec:
+            cxxflag += '-DWRITE_OTF2_TRACE=1 -DSCOREP_USER_ENABLE '
             targets.append(
                 'CXX = {0} {1}'.format('scorep --user --nocompiler --noopenmp '
                                        '--nopomp --nocuda --noopenacc '
@@ -66,10 +63,16 @@ class Chatterbug(MakefilePackage):
         targets.append('CXXFLAGS = {0}'.format(cxxflag))
         return targets
 
+    def build(self, spec, prefix):
+        if "+scorep" in spec:
+            make("WITH_OTF2=YES")
+        else:
+            make()
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-        if '+otf2' in self.spec:
+        if '+scorep' in self.spec:
             install('pairs/pairs.otf2', prefix.bin)
             install('ping-ping/ping-ping.otf2', prefix.bin)
             install('spread/spread.otf2', prefix.bin)
