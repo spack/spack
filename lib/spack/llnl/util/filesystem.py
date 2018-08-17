@@ -312,6 +312,12 @@ def install(src, dest):
 
 
 def resolve_link_target_relative_to_the_link(l):
+    """
+    os.path.isdir uses os.path.exists, which for links will check
+    the existence of the link target. If the link target is relative to
+    the link, we need to construct a pathname that is valid from
+    our cwd (which may not be the same as the link's directory)
+    """
     target = os.readlink(l)
     if os.path.isabs(target):
         return target
@@ -346,10 +352,6 @@ def copy_tree(src, dest, symlinks=True, _permissions=False):
                               follow_nonexisting=True):
         if os.path.islink(s):
             link_target = resolve_link_target_relative_to_the_link(s)
-            # os.path.isdir uses os.path.exists, which for links will check
-            # the existence of the link target. If the target is relative to
-            # the link we need to construct a pathname that is valid from
-            # our cwd (which may not be the same as the link's directory)
             if symlinks or (not os.path.isdir(link_target)):
                 copy(s, d, symlinks=symlinks, _permissions=_permissions)
             else:
@@ -612,6 +614,9 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         rel_child = os.path.join(rel_path, f)
 
         # Treat as a directory
+        # TODO: for symlinks, os.path.isdir looks for the link target. If the
+        # target is relative to the link, then that may not resolve properly
+        # relative to our cwd - see resolve_link_target_relative_to_the_link
         if os.path.isdir(source_child) and (
                 follow_links or not os.path.islink(source_child)):
 
