@@ -266,7 +266,7 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def copy(src, dest, _permissions=False):
+def copy(src, dest, symlinks=False, _permissions=False):
     """Copies the file *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
@@ -275,6 +275,7 @@ def copy(src, dest, _permissions=False):
     Parameters:
         src (str): the file to copy
         dest (str): the destination file or directory
+        symlinks (bool): whether or not to preserve symlinks
         _permissions (bool): for internal use only
     """
     if _permissions:
@@ -286,7 +287,11 @@ def copy(src, dest, _permissions=False):
     if os.path.isdir(dest):
         dest = join_path(dest, os.path.basename(src))
 
-    shutil.copy(src, dest)
+    if symlinks and os.path.islink(src):
+        target = os.readlink(src)
+        os.symlink(target, dest)
+    else:
+        shutil.copy(src, dest)
 
     if _permissions:
         set_install_permissions(dest)
@@ -306,6 +311,14 @@ def install(src, dest):
     copy(src, dest, _permissions=True)
 
 
+def resolve_link_target_relative_to_the_link(l):
+    target = os.readlink(l)
+    if os.path.isabs(target):
+        return target
+    link_dir = os.path.dirname(os.path.abspath(l))
+    return os.path.join(link_dir, target)
+
+
 def copy_tree(src, dest, symlinks=True, _permissions=False):
     """Recursively copy an entire directory tree rooted at *src*.
 
@@ -323,27 +336,29 @@ def copy_tree(src, dest, symlinks=True, _permissions=False):
         symlinks (bool): whether or not to preserve symlinks
         _permissions (bool): for internal use only
     """
-    if _permissions:
-        tty.debug('Installing {0} to {1}'.format(src, dest))
-    else:
-        tty.debug('Copying {0} to {1}'.format(src, dest))
-
     mkdirp(dest)
 
-    for s, d in traverse_tree(src, dest, order='pre', follow_nonexisting=True):
-        if symlinks and os.path.islink(s):
-            # Note that this won't rewrite absolute links into the old
-            # root to point at the new root. Should we handle that case?
-            target = os.readlink(s)
-            os.symlink(target, d)
-        elif os.path.isdir(s):
-            mkdirp(d)
-        else:
-            shutil.copyfile(s, d)
+    src = os.path.abspath(src)
+    dest = os.path.abspath(dest)
 
-        if _permissions:
-            set_install_permissions(d)
-            copy_mode(s, d)
+    for s, d in traverse_tree(src, dest, order='pre',
+                              follow_symlinks=not symlinks,
+                              follow_nonexisting=True):
+        if os.path.islink(s):
+            link_target = resolve_link_target_relative_to_the_link(s)
+            # os.path.isdir uses os.path.exists, which for links will check
+            # the existence of the link target. If the target is relative to
+            # the link we need to construct a pathname that is valid from
+            # our cwd (which may not be the same as the link's directory)
+            if symlinks or (not os.path.isdir(link_target)):
+                copy(s, d, symlinks=symlinks, _permissions=_permissions)
+            else:
+                mkdirp(d)
+        else:
+            if os.path.isdir(s):
+                mkdirp(d)
+            else:
+                copy(s, d, symlinks=symlinks, _permissions=_permissions)
 
 
 def install_tree(src, dest, symlinks=True):
