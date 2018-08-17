@@ -335,7 +335,7 @@ def copy_tree(src, dest, symlinks=True, _permissions=False):
             # Note that this won't rewrite absolute links into the old
             # root to point at the new root. Should we handle that case?
             target = os.readlink(s)
-            os.symlink(os.path.abspath(target), d)
+            os.symlink(target, d)
         elif os.path.isdir(s):
             mkdirp(d)
         else:

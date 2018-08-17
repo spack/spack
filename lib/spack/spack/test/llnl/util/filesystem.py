@@ -48,6 +48,7 @@ def stage(tmpdir_factory):
 
         # Create symlink
         os.symlink(os.path.abspath('source/1'), 'source/2')
+        os.symlink('b/2', 'source/a/b2')
 
         # Create destination directory
         fs.mkdirp('dest')
@@ -132,6 +133,10 @@ class TestCopyTree:
 
             assert os.path.exists('dest/2')
             assert os.path.islink('dest/2')
+
+            assert os.path.exists('dest/a/b2')
+            with fs.working_dir('dest/a'):
+                assert os.path.exists(os.readlink('b2'))
 
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""
