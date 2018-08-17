@@ -266,7 +266,7 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def copy(src, dest, symlinks=False, _permissions=False):
+def copy(src, dest, _permissions=False):
     """Copies the file *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
@@ -275,7 +275,6 @@ def copy(src, dest, symlinks=False, _permissions=False):
     Parameters:
         src (str): the file to copy
         dest (str): the destination file or directory
-        symlinks (bool): whether or not to preserve symlinks
         _permissions (bool): for internal use only
     """
     if _permissions:
@@ -287,11 +286,7 @@ def copy(src, dest, symlinks=False, _permissions=False):
     if os.path.isdir(dest):
         dest = join_path(dest, os.path.basename(src))
 
-    if symlinks and os.path.islink(src):
-        target = os.readlink(src)
-        os.symlink(target, dest)
-    else:
-        shutil.copy(src, dest)
+    shutil.copy(src, dest)
 
     if _permissions:
         set_install_permissions(dest)
@@ -352,15 +347,29 @@ def copy_tree(src, dest, symlinks=True, _permissions=False):
                               follow_nonexisting=True):
         if os.path.islink(s):
             link_target = resolve_link_target_relative_to_the_link(s)
-            if symlinks or (not os.path.isdir(link_target)):
-                copy(s, d, symlinks=symlinks, _permissions=_permissions)
-            else:
+            if symlinks:
+                target = os.readlink(s)
+                if os.path.isabs(target):
+                    new_target = re.sub(src, dest, target)
+                    if new_target != target:
+                        tty.debug("Redirecting link {0} to {1}"
+                                  .format(target, new_target))
+                        target = new_target
+
+                os.symlink(target, d)
+            elif os.path.isdir(link_target):
                 mkdirp(d)
+            else:
+                shutil.copyfile(s, d)
         else:
             if os.path.isdir(s):
                 mkdirp(d)
             else:
-                copy(s, d, symlinks=symlinks, _permissions=_permissions)
+                shutil.copyfile(s, d)
+
+        if os.path.islink(d) and _permissions:
+            set_install_permissions(dest)
+            copy_mode(src, dest)
 
 
 def install_tree(src, dest, symlinks=True):

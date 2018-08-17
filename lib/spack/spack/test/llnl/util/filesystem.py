@@ -140,6 +140,7 @@ class TestCopyTree:
                 assert os.path.exists(os.readlink('b2'))
 
             assert os.path.realpath('dest/f/2') == os.path.abspath('dest/a/b/2')
+            assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
 
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""
