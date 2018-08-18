@@ -60,7 +60,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *

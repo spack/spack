@@ -139,7 +139,8 @@ class TestCopyTree:
             with fs.working_dir('dest/a'):
                 assert os.path.exists(os.readlink('b2'))
 
-            assert os.path.realpath('dest/f/2') == os.path.abspath('dest/a/b/2')
+            assert (os.path.realpath('dest/f/2') 
+                    == os.path.abspath('dest/a/b/2'))
             assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
 
     def test_symlinks_true_ignore(self, stage):
