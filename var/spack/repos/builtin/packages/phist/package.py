@@ -83,6 +83,9 @@ class Phist(CMakePackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('blas')
     depends_on('lapack')
+    # Python 3 or later is required for generating the Fortran 2003 bindings 
+    # since version 1.7, you can get rid of the dependency by switching off 
+    # the feature (e.g. use the '~fortran' variant) 
     depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
@@ -96,7 +99,8 @@ class Phist(CMakePackage):
     depends_on('trilinos', when='+trilinos')
     depends_on('parmetis ^metis+int64', when='+parmetis')
     
-    # Fortran 2003 bindings were included in version 1.7, previously they required a separate package
+    # Fortran 2003 bindings were included in version 1.7, previously they 
+    # required a separate package
     conflicts('+fortran', when='@:1.6.99')
 
     def cmake_args(self):
