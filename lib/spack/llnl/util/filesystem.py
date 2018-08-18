@@ -368,9 +368,9 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             else:
                 shutil.copyfile(s, d)
 
-        if os.path.islink(d) and _permissions:
-            set_install_permissions(dest)
-            copy_mode(src, dest)
+        if _permissions:
+            set_install_permissions(d)
+            copy_mode(s, d)
 
 
 def install_tree(src, dest, symlinks=True, ignore=None):
