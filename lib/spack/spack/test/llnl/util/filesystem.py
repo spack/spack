@@ -142,6 +142,16 @@ class TestCopyTree:
             assert os.path.realpath('dest/f/2') == os.path.abspath('dest/a/b/2')
             assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
 
+    def test_symlinks_true_ignore(self, stage):
+        """Test copying when specifying relative paths that should be ignored
+        """
+        with fs.working_dir(str(stage)):
+            ignore = lambda p: p in ['c/d/e', 'a']
+            fs.copy_tree('source', 'dest', symlinks=True, ignore=ignore)
+            assert not os.path.exists('dest/a')
+            assert os.path.exists('dest/c/d')
+            assert not os.path.exists('dest/c/d/e')
+
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""
 

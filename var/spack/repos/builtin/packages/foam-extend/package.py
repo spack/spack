@@ -382,7 +382,6 @@ class FoamExtend(Package):
 
     def install(self, spec, prefix):
         """Install under the projectdir"""
-        opts = str(self.foam_arch)
 
         # Fairly ugly since intermediate targets are scattered inside sources
         appdir = 'applications'
@@ -419,19 +418,22 @@ class FoamExtend(Package):
             subitem = join_path(appdir, 'Allwmake')
             install(subitem, join_path(self.projectdir, subitem))
 
-            ignored = [opts]  # Ignore intermediate targets
+            foam_arch_str = str(self.foam_arch)
+            # Ignore intermediate targets
+            ignore = lambda p: os.path.basename(p) == foam_arch_str
+
             for d in ['src', 'tutorials']:
                 install_tree(
                     d,
                     join_path(self.projectdir, d),
-                    ignore=shutil.ignore_patterns(*ignored),
+                    ignore=ignore,
                     symlinks=True)
 
             for d in ['solvers', 'utilities']:
                 install_tree(
                     join_path(appdir, d),
                     join_path(self.projectdir, appdir, d),
-                    ignore=shutil.ignore_patterns(*ignored),
+                    ignore=ignore,
                     symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

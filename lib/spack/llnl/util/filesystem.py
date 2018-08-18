@@ -320,7 +320,7 @@ def resolve_link_target_relative_to_the_link(l):
     return os.path.join(link_dir, target)
 
 
-def copy_tree(src, dest, symlinks=True, _permissions=False):
+def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     """Recursively copy an entire directory tree rooted at *src*.
 
     If the destination directory *dest* does not already exist, it will
@@ -344,6 +344,7 @@ def copy_tree(src, dest, symlinks=True, _permissions=False):
 
     for s, d in traverse_tree(src, dest, order='pre',
                               follow_symlinks=not symlinks,
+                              ignore=ignore,
                               follow_nonexisting=True):
         if os.path.islink(s):
             link_target = resolve_link_target_relative_to_the_link(s)
@@ -372,7 +373,7 @@ def copy_tree(src, dest, symlinks=True, _permissions=False):
             copy_mode(src, dest)
 
 
-def install_tree(src, dest, symlinks=True):
+def install_tree(src, dest, symlinks=True, ignore=None):
     """Recursively install an entire directory tree rooted at *src*.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
@@ -383,7 +384,7 @@ def install_tree(src, dest, symlinks=True):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
     """
-    copy_tree(src, dest, symlinks, _permissions=True)
+    copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
 
 def is_exe(path):
@@ -604,7 +605,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         raise ValueError("Order must be 'pre' or 'post'.")
 
     # List of relative paths to ignore under the src root.
-    ignore = kwargs.get('ignore', lambda filename: False)
+    ignore = kwargs.get('ignore', None) or (lambda filename: False)
 
     # Don't descend into ignored directories
     if ignore(rel_path):
