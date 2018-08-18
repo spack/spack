@@ -95,6 +95,9 @@ class Phist(CMakePackage):
 
     depends_on('trilinos', when='+trilinos')
     depends_on('parmetis ^metis+int64', when='+parmetis')
+    
+    # Fortran 2003 bindings were included in version 1.7, previously they required a separate package
+    conflicts('+fortran', when='@:1.6.99')
 
     def cmake_args(self):
         spec = self.spec
