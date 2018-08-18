@@ -22,12 +22,46 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import glob
+import os
 import pytest
 
 import spack.repo
+from llnl.util.filesystem import working_dir
 from spack.build_environment import get_std_cmake_args
 from spack.spec import Spec
 
+
+DATA_PATH = os.path.join(spack.paths.test_path, 'data', 'makefiles')
+
+
+@pytest.mark.parametrize(
+    'directory', glob.iglob(os.path.join(DATA_PATH, 'affirmative', '*'))
+)
+def test_affirmative_make_check(directory, config, mock_packages):
+    """Tests that Spack correctly detects targets in a Makefile."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+
+    with working_dir(directory):
+        assert pkg._has_make_target('check')
+
+@pytest.mark.parametrize(
+    'directory', glob.iglob(os.path.join(DATA_PATH, 'negative', '*'))
+)
+def test_negative_make_check(directory, config, mock_packages):
+    """Tests that Spack correctly ignores false positives in a Makefile."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+
+    with working_dir(directory):
+        assert not pkg._has_make_target('check')
 
 def test_cmake_std_args(config, mock_packages):
     # Call the function on a CMakePackage instance

@@ -1139,7 +1139,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
-    def _if_make_target_execute(self, target):
+    def _has_make_target(self, target):
+        """Checks to see if 'target' is a valid target in a Makefile.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
         make = inspect.getmodule(self).make
 
         # Check if we have a Makefile
@@ -1148,7 +1156,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 break
         else:
             tty.msg('No Makefile found in the build directory')
-            return
+            return False
 
         # Check if 'target' is a valid target.
         #
@@ -1177,18 +1185,35 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         for missing_target_msg in missing_target_msgs:
             if missing_target_msg.format(target) in stderr:
                 tty.msg("Target '" + target + "' not found in " + makefile)
-                return
+                return False
 
-        # Execute target
-        make(target)
+        return True
 
-    def _if_ninja_target_execute(self, target):
+    def _if_make_target_execute(self, target):
+        """Runs ``make target`` if 'target' is a valid target in the Makefile.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
+        if self._has_make_target(target):
+            # Execute target
+            inspect.getmodule(self).make(target)
+
+    def _has_ninja_target(self, target):
+        """Checks to see if 'target' is a valid target in a Ninja build script.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No Ninja build script found in the build directory')
-            return
+            return False
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
@@ -1200,10 +1225,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not matches:
             tty.msg("Target '" + target + "' not found in build.ninja")
-            return
+            return False
 
-        # Execute target
-        ninja(target)
+        return True
+
+    def _if_ninja_target_execute(self, target):
+        """Runs ``ninja target`` if 'target' is a valid target in the Ninja
+        build script.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
+        if self._has_ninja_target(target):
+            # Execute target
+            inspect.getmodule(self).ninja(target)
 
     def _get_needed_resources(self):
         resources = []
