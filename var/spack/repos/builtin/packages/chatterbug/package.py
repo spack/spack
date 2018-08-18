@@ -48,45 +48,18 @@ class Chatterbug(MakefilePackage):
     def build_targets(self):
         targets = []
 
-        cxxflag = ' -O3 '
+        targets.append('MPICXX = {0}'.format(self.spec['mpi'].mpicxx))
 
-        if '+scorep' in self.spec:
-            cxxflag += '-DWRITE_OTF2_TRACE=1 -DSCOREP_USER_ENABLE '
-            targets.append(
-                'CXX = {0} {1}'.format('scorep --user --nocompiler --noopenmp '
-                                       '--nopomp --nocuda --noopenacc '
-                                       '--noopencl --nomemory',
-                                       self.spec['mpi'].mpicxx))
-        else:
-            targets.append('CXX = {0}'.format(self.spec['mpi'].mpicxx))
-
-        targets.append('CXXFLAGS = {0}'.format(cxxflag))
         return targets
 
     def build(self, spec, prefix):
         if "+scorep" in spec:
-            make("WITH_OTF2=YES")
+            make('WITH_OTF2=YES')
         else:
             make()
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-
-        if '+scorep' in self.spec:
-            install('pairs/pairs.otf2', prefix.bin)
-            install('ping-ping/ping-ping.otf2', prefix.bin)
-            install('spread/spread.otf2', prefix.bin)
-            install('stencil3d/stencil3d.otf2', prefix.bin)
-            install('stencil4d/stencil4d.otf2', prefix.bin)
-            install('subcom2d-coll/subcom2d-coll.otf2', prefix.bin)
-            install('subcom3d-a2a/subcom3d-a2a.otf2', prefix.bin)
-            install('unstr-mesh/unstr-mesh.otf2', prefix.bin)
+        if "+scorep" in spec:
+            make('WITH_OTF2=YES', 'PREFIX=' + spec.prefix, 'install')
         else:
-            install('pairs/pairs.x', prefix.bin)
-            install('ping-ping/ping-ping.x', prefix.bin)
-            install('spread/spread.x', prefix.bin)
-            install('stencil3d/stencil3d.x', prefix.bin)
-            install('stencil4d/stencil4d.x', prefix.bin)
-            install('subcom2d-coll/subcom2d-coll.x', prefix.bin)
-            install('subcom3d-a2a/subcom3d-a2a.x', prefix.bin)
-            install('unstr-mesh/unstr-mesh.x', prefix.bin)
+            make('PREFIX=' + spec.prefix, 'install')
