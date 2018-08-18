@@ -26,7 +26,6 @@ from spack.util.prefix import Prefix
 from spack import *
 
 import llnl.util.tty as tty
-import distutils.dir_util
 import os
 
 
