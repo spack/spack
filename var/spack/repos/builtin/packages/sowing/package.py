@@ -34,6 +34,7 @@ class Sowing(AutotoolsPackage):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/externalpackages/sowing-1.1.23-p1.tar.gz"
 
+    version('1.1.25-p1', 'fc5e5664b80e606ad71ba9b85f4c86b9')
     version('1.1.23-p1', '65aaf3ae2a4c0f30d532fec291702e16')
 
     def build(self, spec, prefix):

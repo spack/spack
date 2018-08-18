@@ -29,7 +29,7 @@ class RSpatial(RPackage):
     """Functions for kriging and point pattern analysis."""
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
-    url      = "https://cran.r-project.org/src/contrib/spatial_7.3-11.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/spatial_7.3-10.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/spatial"
 
     version('7.3-10', 'e544e3e3fd92e6868f29b8da2925b214')

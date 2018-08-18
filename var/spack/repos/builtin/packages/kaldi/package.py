@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 from os.path import join
 from fnmatch import fnmatch
 import os
@@ -35,11 +34,11 @@ class Kaldi(Package):    # Does not use Autotools
     Kaldi is intended for use by speech recognition researchers."""
 
     homepage = "https://github.com/kaldi-asr/kaldi"
-    url      = "https://github.com/kaldi-asr/kaldi/archive/master.zip"
+    git      = "https://github.com/kaldi-asr/kaldi.git"
 
-    version('master', git='https://github.com/kaldi-asr/kaldi.git')
-    version('c024e8', git='https://github.com/kaldi-asr/kaldi.git',
-            commit='c024e8aa0a727bf76c91a318f76a1f8b0b59249e')
+    version('master')
+    version('2018-07-11', commit='6f2140b032b0108bc313eefdca65151289642773')
+    version('2015-10-07', commit='c024e8aa0a727bf76c91a318f76a1f8b0b59249e')
 
     variant('shared', default=True,
             description='build shared libraries')
@@ -53,18 +52,16 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('sph2pipe', type='run')
     depends_on('sctk', type='run')
     depends_on('speex', type='run')
-    depends_on('openfst@1.4.1-patch', when='@c024e8')
+    depends_on('openfst@1.4.1-patch', when='@2015-10-07')
+    depends_on('openfst@1.6.0:', when='@2018-07-11')
     depends_on('openfst')
 
-    patch('openfst-1.4.1.patch', when='@c024e8')
+    patch('openfst-1.4.1.patch', when='@2015-10-07')
 
     def install(self, spec, prefix):
         configure_args = ['--fst-root=' + spec['openfst'].prefix]
-
-        if spec.satisfies('c024e8'):
-            configure_args.append('--speex-root=' + spec['speex'].prefix)
-            configure_args.append('--fst-version=' +
-                                  str(spec['openfst'].version))
+        configure_args.append('--fst-version=' + str(spec['openfst'].version))
+        configure_args.append('--speex-root=' + spec['speex'].prefix)
 
         if '~shared' in spec:
             configure_args.append('--static')
@@ -107,7 +104,7 @@ class Kaldi(Package):    # Does not use Autotools
                         install(join(root, name), prefix.bin)
 
             mkdir(prefix.lib)
-            copy_tree('lib', prefix.lib)
+            install_tree('lib', prefix.lib)
 
             for root, dirs, files in os.walk('.'):
                 for name in files:

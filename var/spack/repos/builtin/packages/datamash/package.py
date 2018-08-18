@@ -31,7 +31,7 @@ class Datamash(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/datamash/"
-    url      = "http://ftp.gnu.org/gnu/datamash/datamash-1.0.5.tar.gz"
+    url      = "https://ftpmirror.gnu.org/datamash/datamash-1.0.5.tar.gz"
 
     version('1.3',   '47d382090e367ddb4967d640aba77b66')
     version('1.1.0', '79a6affca08107a095e97e4237fc8775')

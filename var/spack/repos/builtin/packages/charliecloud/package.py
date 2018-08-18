@@ -31,6 +31,8 @@ class Charliecloud(MakefilePackage):
     homepage = "https://hpc.github.io/charliecloud"
     url      = "https://github.com/hpc/charliecloud/archive/v0.2.4.tar.gz"
 
+    version('0.9.1', sha256='8e69150a271285da71ece7a09b48251ef6593f72207c5126741d9976aa737d95')
+    version('0.9.0', sha256='7e74cb16e31fd9d502198f7509bab14d1049ec68ba90b15e277e76f805db9458')
     version('0.2.4', 'b112de661c2c360174b42c99022c1967')
 
     @property

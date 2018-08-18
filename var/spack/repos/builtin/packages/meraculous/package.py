@@ -31,10 +31,9 @@ class Meraculous(CMakePackage):
 
     homepage = "http://jgi.doe.gov/data-and-tools/meraculous/"
     url      = "https://downloads.sourceforge.net/project/meraculous20/Meraculous-v2.2.4.tar.gz"
+    git      = "https://bitbucket.org/berkeleylab/genomics-meraculous2.git"
 
-    version('2.2.5.1',
-            git="https://bitbucket.org/berkeleylab/genomics-meraculous2.git",
-            branch="release-2.2.5.1")
+    version('2.2.5.1', branch='release-2.2.5.1')
     version('2.2.4', '349feb6cb178643a46e4b092c87bad3a')
 
     depends_on('perl', type=('build', 'run'))

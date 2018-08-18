@@ -30,6 +30,6 @@ class Cpuinfo(CMakePackage):
     for performance optimization information about host CPU."""
 
     homepage = "https://github.com/Maratyszcza/cpuinfo/"
-    url      = "https://github.com/Maratyszcza/cpuinfo.git"
+    git      = "https://github.com/Maratyszcza/cpuinfo.git"
 
-    version('master', git='https://github.com/Maratyszcza/cpuinfo.git')
+    version('master')

@@ -35,7 +35,7 @@ class PyPillow(PythonPackage):
     homepage = "https://python-pillow.org/"
     url = "https://pypi.io/packages/source/P/Pillow/Pillow-5.1.0.tar.gz"
 
-    version('5.1.0', '04d2b1d1ce8b9f6831e33fb85b34316d')
+    version('5.1.0', '308f9c13b376abce96ab6ebd6c889cc4')
     version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510')
     version('3.0.0', 'fc8ac44e93da09678eac7e30c9b7377d')
 

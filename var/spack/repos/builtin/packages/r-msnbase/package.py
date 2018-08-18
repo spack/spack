@@ -30,9 +30,9 @@ class RMsnbase(RPackage):
        proteomics data."""
 
     homepage = "https://www.bioconductor.org/packages/MSnbase/"
-    url      = "https://git.bioconductor.org/packages/MSnbase"
+    git      = "https://git.bioconductor.org/packages/MSnbase.git"
 
-    version('2.2.0', git='https://git.bioconductor.org/packages/MSnbase', commit='d6e8fb7f106d05096fa9074da0f829ac8f02c197')
+    version('2.2.0', commit='d6e8fb7f106d05096fa9074da0f829ac8f02c197')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

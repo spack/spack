@@ -30,11 +30,9 @@ class PacbioDaligner(MakefilePackage):
        required for some pacbio utilities."""
 
     homepage = "https://github.com/PacificBiosciences/DALIGNER"
-    url      = "https://github.com/PacificBiosciences/DALIGNER"
+    git      = "https://github.com/PacificBiosciences/DALIGNER.git"
 
-    version('2017-08-05',
-            git='https://github.com/PacificBiosciences/DALIGNER.git',
-            commit='0fe5240d2cc6b55bf9e04465b700b76110749c9d')
+    version('2017-08-05', commit='0fe5240d2cc6b55bf9e04465b700b76110749c9d')
 
     depends_on('gmake', type='build')
     depends_on('pacbio-dazz-db')

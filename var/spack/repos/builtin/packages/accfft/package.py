@@ -31,9 +31,9 @@ class Accfft(CMakePackage, CudaPackage):
     """
 
     homepage = "http://accfft.org"
-    url = "https://github.com/amirgholami/accfft.git"
+    git      = "https://github.com/amirgholami/accfft.git"
 
-    version('develop', git='https://github.com/amirgholami/accfft.git', branch='master')
+    version('develop', branch='master')
 
     variant('pnetcdf', default=True, description='Add support for parallel NetCDF')
     variant('shared', default=True, description='Enables the build of shared libraries')

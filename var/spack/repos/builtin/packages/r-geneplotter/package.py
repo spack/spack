@@ -29,9 +29,9 @@ class RGeneplotter(RPackage):
     """Functions for plotting genomic data."""
 
     homepage = "https://www.bioconductor.org/packages/geneplotter/"
-    url      = "https://git.bioconductor.org/packages/geneplotter"
+    git      = "https://git.bioconductor.org/packages/geneplotter.git"
 
-    version('1.54.0', git='https://git.bioconductor.org/packages/geneplotter', commit='efdd946e092e44e35fde1eb4bcc5ec1d52090940')
+    version('1.54.0', commit='efdd946e092e44e35fde1eb4bcc5ec1d52090940')
 
     depends_on('r@3.4.0:3.4.9', when='@1.54.0')
     depends_on('r-biobase', type=('build', 'run'))
