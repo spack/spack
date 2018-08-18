@@ -331,12 +331,21 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     will be copied as far as the platform allows; if false, the contents and
     metadata of the linked files are copied to the new tree.
 
+    If *ignore* is set, then each path relative to *src* will be passed to
+    this function; the function returns whether that path should be skipped.
+
     Parameters:
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
+        ignore (function): function indicating which files to ignore
         _permissions (bool): for internal use only
     """
+    if _permissions:
+        tty.debug('Installing {0} to {1}'.format(src, dest))
+    else:
+        tty.debug('Copying {0} to {1}'.format(src, dest))
+
     mkdirp(dest)
 
     src = os.path.abspath(src)
@@ -383,6 +392,7 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         src (str): the directory to install
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
+        ignore (function): function indicating which files to ignore
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
@@ -591,7 +601,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
             values are 'pre' and 'post'
-        ignore (str): Predicate indicating which files to ignore
+        ignore (function): function indicating which files to ignore
         follow_nonexisting (bool): Whether to descend into directories in
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
