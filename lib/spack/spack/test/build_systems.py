@@ -28,7 +28,7 @@ import pytest
 
 import spack.repo
 from llnl.util.filesystem import working_dir
-from spack.build_environment import get_std_cmake_args
+from spack.build_environment import get_std_cmake_args, setup_package
 from spack.spec import Spec
 
 
@@ -46,6 +46,7 @@ def test_affirmative_make_check(directory, config, mock_packages):
     s = Spec('mpich')
     s.concretize()
     pkg = spack.repo.get(s)
+    setup_package(pkg, False)
 
     with working_dir(directory):
         assert pkg._has_make_target('check')
@@ -64,6 +65,7 @@ def test_negative_make_check(directory, config, mock_packages):
     s = Spec('mpich')
     s.concretize()
     pkg = spack.repo.get(s)
+    setup_package(pkg, False)
 
     with working_dir(directory):
         assert not pkg._has_make_target('check')
@@ -82,6 +84,7 @@ def test_affirmative_ninja_check(directory, config, mock_packages):
     s = Spec('mpich')
     s.concretize()
     pkg = spack.repo.get(s)
+    setup_package(pkg, False)
 
     with working_dir(directory):
         assert pkg._has_ninja_target('check')
@@ -101,6 +104,7 @@ def test_negative_ninja_check(directory, config, mock_packages):
     s = Spec('mpich')
     s.concretize()
     pkg = spack.repo.get(s)
+    setup_package(pkg, False)
 
     with working_dir(directory):
         assert not pkg._has_ninja_target('check')
