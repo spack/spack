@@ -1217,7 +1217,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
-        all_targets = ninja('-t', 'targets', output=str).split('\n')
+        all_targets = ninja('-t', 'targets', 'all', output=str).split('\n')
 
         # Check if 'target' is a valid target
         matches = [line for line in all_targets
