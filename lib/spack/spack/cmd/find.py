@@ -38,7 +38,7 @@ def setup_parser(subparser):
         help='show full dependency DAG of installed packages')
 
     arguments.add_common_arguments(
-        subparser, ['env', 'long', 'very_long', 'tags'])
+        subparser, ['long', 'very_long', 'tags'])
 
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',

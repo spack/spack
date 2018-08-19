@@ -49,16 +49,14 @@ class ConstraintAction(argparse.Action):
         namespace.constraint = values
         namespace.specs = self._specs
 
-        # env comes from EnvAction if --env is provided
-        self.env = None if not hasattr(namespace, 'env') else namespace.env
-
     def _specs(self, **kwargs):
         qspecs = spack.cmd.parse_specs(self.values)
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        if self.env:
-            kwargs['hashes'] = set(self.env.specs_by_hash.keys())
+        env = spack.environment.active
+        if env:
+            kwargs['hashes'] = set(env.specs_by_hash.keys())
 
         # return everything for an empty query.
         if not qspecs:
@@ -73,16 +71,6 @@ class ConstraintAction(argparse.Action):
 
         return sorted(specs.values())
 
-
-class EnvAction(argparse.Action):
-    """Records the environment to which a command applies."""
-    def __call__(self, parser, namespace, env_name, option_string=None):
-        namespace.env = spack.environment.read(env_name)
-
-
-_arguments['env'] = Args(
-    '-e', '--env', action=EnvAction, default=None,
-    help="run this command on a specific environment")
 
 _arguments['constraint'] = Args(
     'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,

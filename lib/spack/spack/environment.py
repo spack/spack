@@ -40,8 +40,50 @@ from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.version import VersionList
 
 
+#: currently activated environment
+active = None
+
+
 #: path where environments are stored in the spack tree
 env_path = fs.join_path(spack.paths.var_path, 'environments')
+
+
+def activate(name, exact=False):
+    """Activate an environment.
+
+    To activate an environment, we add its configuration scope to the
+    existing Spack configuration, and we set active to the current
+    environment.
+
+    Arguments:
+        name (str): name of the environment to activate
+        exact (bool): use the packages exactly as they appear in the
+            environment's repository
+
+    TODO: Add support for views here.  Activation should set up the shell
+    TODO: environment to use the activated spack environment.
+    """
+    global active
+
+    active = read(name)
+    prepare_config_scope(active)
+    prepare_repository(active, use_repo=exact)
+
+    tty.msg("Using environmennt '%s'" % active.name)
+
+
+def deactivate():
+    """Undo any configuration or repo settings modified by ``activate()``.
+
+    Returns:
+        (bool): True if an environment was deactivated, False if no
+        environment was active.
+
+    """
+    global active
+    if not active:
+        return
+
 
 
 def root(name):
@@ -180,7 +222,7 @@ class Environment(object):
 
     def install(self, install_args=None):
         """Do a `spack install` on all the (concretized)
-        specs in an Environment."""
+           specs in an Environment."""
 
         # Make sure log directory exists
         logs = fs.join_path(self.path, 'logs')
@@ -462,8 +504,6 @@ def prepare_config_scope(environment):
                 tty.die('Spack config %s (%s) not found' %
                         (config_name, config_dir))
 
-        tty.msg('Using Spack config %s scope at %s' %
-                (config_name, config_dir))
         spack.config.config.push_scope(ConfigScope(config_name, config_dir))
 
 
