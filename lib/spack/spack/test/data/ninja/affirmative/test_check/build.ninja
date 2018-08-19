@@ -1,8 +1,6 @@
 # Tests that Spack detects target when it is the second of two targets
 
-cflags = -Wall
-
 rule cc
-  command = gcc $cflags -c $in -o $out
+  command = true
 
-build test check: cc foo.c
+build test check: cc

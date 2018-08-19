@@ -50,6 +50,8 @@ def test_affirmative_make_check(directory, config, mock_packages):
     with working_dir(directory):
         assert pkg._has_make_target('check')
 
+    pkg._if_make_target_execute('check')
+
 
 @pytest.mark.parametrize(
     'directory',
@@ -65,6 +67,8 @@ def test_negative_make_check(directory, config, mock_packages):
 
     with working_dir(directory):
         assert not pkg._has_make_target('check')
+
+    pkg._if_make_target_execute('check')
 
 
 @pytest.mark.parametrize(
@@ -82,6 +86,8 @@ def test_affirmative_ninja_check(directory, config, mock_packages):
     with working_dir(directory):
         assert pkg._has_ninja_target('check')
 
+    pkg._if_ninja_target_execute('check')
+
 
 @pytest.mark.parametrize(
     'directory',
@@ -98,6 +104,8 @@ def test_negative_ninja_check(directory, config, mock_packages):
 
     with working_dir(directory):
         assert not pkg._has_ninja_target('check')
+
+    pkg._if_ninja_target_execute('check')
 
 
 def test_cmake_std_args(config, mock_packages):

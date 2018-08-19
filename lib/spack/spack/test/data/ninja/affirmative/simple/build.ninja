@@ -1,8 +1,6 @@
 # Tests that Spack can handle a simple Ninja build script
 
-cflags = -Wall
-
 rule cc
-  command = gcc $cflags -c $in -o $out
+  command = true
 
-build check: cc foo.c
+build check: cc

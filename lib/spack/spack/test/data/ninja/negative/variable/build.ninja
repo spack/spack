@@ -5,4 +5,4 @@ check = -Wall
 rule cc
   command = gcc $check -c $in -o $out
 
-build check: cc foo.c
+build foo: cc foo.c

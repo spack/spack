@@ -9,8 +9,6 @@ build installcheck: cc foo.c
 
 build checkinstall: cc foo.c
 
-build check.o: cc foo.c
-
 build foo-check-bar: cc foo.c
 
 build foo_check_bar: cc foo.c
