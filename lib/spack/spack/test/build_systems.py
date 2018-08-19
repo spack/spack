@@ -30,6 +30,7 @@ import spack.repo
 from llnl.util.filesystem import working_dir
 from spack.build_environment import get_std_cmake_args, setup_package
 from spack.spec import Spec
+from spack.util.executable import which
 
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
@@ -73,6 +74,7 @@ def test_negative_make_check(directory, config, mock_packages):
         pkg._if_make_target_execute('check')
 
 
+@pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
 @pytest.mark.parametrize(
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'ninja', 'affirmative', '*'))
@@ -92,6 +94,7 @@ def test_affirmative_ninja_check(directory, config, mock_packages):
         pkg._if_ninja_target_execute('check')
 
 
+@pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
 @pytest.mark.parametrize(
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'ninja', 'negative', '*'))
