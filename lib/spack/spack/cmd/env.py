@@ -12,7 +12,6 @@ import spack.environment as ev
 import spack.util.spack_yaml as syaml
 
 import spack.config
-import spack.cmd.spec
 import spack.cmd.install
 import spack.cmd.uninstall
 import spack.cmd.module
@@ -21,7 +20,7 @@ import spack.cmd.common.arguments as arguments
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
 
-description = "group a subset of packages"
+description = "manage virtual environments"
 section = "environment"
 level = "long"
 
@@ -32,7 +31,6 @@ subcommands = [
     'add',
     'remove',
     'upgrade',
-    'spec',
     'concretize',
     'list',
     'loads',
@@ -143,19 +141,6 @@ def environment_remove(args):
         for spec in spack.cmd.parse_specs(args.package):
             environment.remove(spec.format())
     ev.write(environment)
-
-
-def setup_spec_parser(subparser):
-    """show results of concretizing a spec for an environment"""
-    spack.cmd.spec.add_common_arguments(subparser)
-    add_use_repo_argument(subparser)
-
-
-def environment_spec(args):
-    environment = ev.read(args.environment)
-    ev.prepare_repository(environment, use_repo=args.use_repo)
-    ev.prepare_config_scope(environment)
-    spack.cmd.spec.spec(None, args)
 
 
 def setup_concretize_parser(subparser):

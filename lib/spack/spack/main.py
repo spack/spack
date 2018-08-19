@@ -25,6 +25,7 @@ import spack
 import spack.architecture
 import spack.config
 import spack.cmd
+import spack.environment
 import spack.hooks
 import spack.paths
 import spack.repo
@@ -320,6 +321,15 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '-D', '--pdb', action='store_true',
         help="run spack under the pdb debugger")
+
+    env_group = parser.add_mutually_exclusive_group()
+    env_group.add_argument(
+        '-e', '--env', dest='env', metavar='ENV', action='store',
+        help="run spack with a specific environment (see spack env)")
+    env_group.add_argument(
+        '-E', '--exact-env', dest='exact_env', metavar='ENV', action='store',
+        help="run spack with a specific environment AND use its repo")
+
     parser.add_argument(
         '-k', '--insecure', action='store_true',
         help="do not check ssl certificates when downloading")
@@ -572,6 +582,11 @@ def main(argv=None):
     parser = make_argument_parser()
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
+
+    # activate an environment if one was specified on the command line
+    env = args.env or args.exact_env
+    if env:
+        spack.environment.activate(env, args.exact_env is not None)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:

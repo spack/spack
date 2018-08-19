@@ -19,7 +19,7 @@ section = "build"
 level = "short"
 
 
-def add_common_arguments(subparser):
+def setup_parser(subparser):
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
@@ -38,10 +38,6 @@ def add_common_arguments(subparser):
         help='show dependency types')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
-
-
-def setup_parser(subparser):
-    add_common_arguments(subparser)
 
 
 def spec(parser, args):
