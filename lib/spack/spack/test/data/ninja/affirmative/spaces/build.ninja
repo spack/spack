@@ -1,0 +1,8 @@
+# Tests that Spack allows spaces following the target name
+
+cflags = -Wall
+
+rule cc
+  command = gcc $cflags -c $in -o $out
+
+build check   : cc foo.c

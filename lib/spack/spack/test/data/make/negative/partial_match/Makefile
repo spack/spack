@@ -4,6 +4,8 @@ checkinstall:
 
 installcheck:
 
+check.o:
+
 foo-check-bar:
 
 foo_check_bar:

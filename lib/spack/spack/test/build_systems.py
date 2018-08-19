@@ -32,11 +32,12 @@ from spack.build_environment import get_std_cmake_args
 from spack.spec import Spec
 
 
-DATA_PATH = os.path.join(spack.paths.test_path, 'data', 'makefiles')
+DATA_PATH = os.path.join(spack.paths.test_path, 'data')
 
 
 @pytest.mark.parametrize(
-    'directory', glob.iglob(os.path.join(DATA_PATH, 'affirmative', '*'))
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'make', 'affirmative', '*'))
 )
 def test_affirmative_make_check(directory, config, mock_packages):
     """Tests that Spack correctly detects targets in a Makefile."""
@@ -50,7 +51,8 @@ def test_affirmative_make_check(directory, config, mock_packages):
         assert pkg._has_make_target('check')
 
 @pytest.mark.parametrize(
-    'directory', glob.iglob(os.path.join(DATA_PATH, 'negative', '*'))
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'make', 'negative', '*'))
 )
 def test_negative_make_check(directory, config, mock_packages):
     """Tests that Spack correctly ignores false positives in a Makefile."""
@@ -62,6 +64,37 @@ def test_negative_make_check(directory, config, mock_packages):
 
     with working_dir(directory):
         assert not pkg._has_make_target('check')
+
+@pytest.mark.parametrize(
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'ninja', 'affirmative', '*'))
+)
+def test_affirmative_ninja_check(directory, config, mock_packages):
+    """Tests that Spack correctly detects targets in a Ninja build script."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+
+    with working_dir(directory):
+        assert pkg._has_ninja_target('check')
+
+@pytest.mark.parametrize(
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'ninja', 'negative', '*'))
+)
+def test_negative_ninja_check(directory, config, mock_packages):
+    """Tests that Spack correctly ignores false positives in a Ninja
+    build script."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+
+    with working_dir(directory):
+        assert not pkg._has_ninja_target('check')
 
 def test_cmake_std_args(config, mock_packages):
     # Call the function on a CMakePackage instance

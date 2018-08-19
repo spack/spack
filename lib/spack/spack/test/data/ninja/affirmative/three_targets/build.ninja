@@ -1,0 +1,8 @@
+# Tests that Spack detects a target if it is in the middle of a list
+
+cflags = -Wall
+
+rule cc
+  command = gcc $cflags -c $in -o $out
+
+build foo check bar: cc foo.c
