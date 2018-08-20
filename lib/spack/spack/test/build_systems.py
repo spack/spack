@@ -93,6 +93,10 @@ def test_affirmative_ninja_check(directory, config, mock_packages):
 
         pkg._if_ninja_target_execute('check')
 
+        # Clean up Ninja files
+        for filename in glob.iglob('.ninja_*'):
+            os.remove(filename)
+
 
 @pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
 @pytest.mark.parametrize(
