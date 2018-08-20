@@ -33,10 +33,12 @@ class Synapsetool(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', git=url, submodules=True)
-    version('0.2.1', git=url, commit='f4ddf38', submodules=True, preferred=True)
-    version('0.2', git=url, commit='a384860cd3d338201', submodules=True)
+    version('0.2.3', git=url, tag='v0.2.3', submodules=True, preferred=True)
+    version('0.2.1', git=url, tag='v0.2.1', submodules=True)
+    version('0.2.0', git=url, tag='v0.2.0', submodules=True)
 
     variant('mpi', default=False, description="Enable MPI backend")
+    variant('shared', default=True, description="Build shared library")
 
     depends_on('boost@1.55:')
     depends_on('cmake', type='build')
@@ -47,6 +49,18 @@ class Synapsetool(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('python')
 
+    @property
+    def libs(self):
+        """Export the synapse library (especially for neurodamus).
+        Sample usage: spec['synapsetool'].libs.ld_flags
+        """
+        is_shared = '+shared' in self.spec
+        libs = find_libraries('libsyn2', root=self.prefix,
+                                  shared=is_shared, recursive=True)
+        if libs:
+            return libs
+        return None
+
     def cmake_args(self):
         args = []
         if self.spec.satisfies('+mpi'):
@@ -55,4 +69,6 @@ class Synapsetool(CMakePackage):
                 '-DCMAKE_CXX_COMPILER:STRING={}'.format(self.spec['mpi'].mpicxx),
                 '-DSYNTOOL_WITH_MPI:BOOL=ON',
             ])
+        if self.spec.satisfies('~shared'):
+            args.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
         return args

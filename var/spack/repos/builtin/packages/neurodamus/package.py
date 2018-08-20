@@ -34,7 +34,9 @@ class Neurodamus(NeurodamusBase):
 
     variant('coreneuron', default=True, description="Enable CoreNEURON Support")
     variant('profile', default=False, description="Enable profiling using Tau")
+    variant('syn2', default=False, description="Enable Synapsetool reader")
 
+    depends_on("boost", when="+syn2")
     depends_on("hdf5")
     depends_on("mpi")
     depends_on("neuron")
@@ -51,6 +53,7 @@ class Neurodamus(NeurodamusBase):
 
     depends_on("neuron+profile", when='+profile')
     depends_on('reportinglib+profile', when='+profile')
+    depends_on('synapsetool~mpi~shared', when='+syn2')
     depends_on('tau', when='+profile')
 
     # coreneuron support is available for plasticity model
@@ -67,12 +70,29 @@ class Neurodamus(NeurodamusBase):
     def profiling_wrapper_off(self):
         del os.environ["USE_PROFILER_WRAPPER"]
 
+    # Synapsetool bring dependency with boost libraries
+    # As neurodamus is non-cmake package, it's difficult to find
+    # find dependencies easily. Here is custom method that find
+    # additional libraries required while linking synapse tool
+    def syn2_dep_libs(self):
+        spec = self.spec
+        ld_flags = spec['synapsetool'].libs.ld_flags
+        for lib in ['libboost_system-mt', 'libboost_filesystem-mt']:
+            libs = find_libraries(lib, root=spec['boost'].prefix,
+                                  shared=False, recursive=True)
+            ld_flags += ' %s ' % (libs.ld_flags)
+        return ld_flags
+
     def install(self, spec, prefix):
         with working_dir(prefix):
             modlib = os.path.relpath(self.spec['neurodamus-base'].prefix.lib.modlib)
             profile_flag = '-DENABLE_TAU_PROFILER' if '+profile' in spec else ''
             include_flag = ''
             link_flag = ''
+
+            if '+syn2' in spec:
+                include_flag += ' -DENABLE_SYNTOOL'
+                link_flag += self.syn2_dep_libs()
 
             if '+coreneuron' in spec:
                 include_flag += ' -DENABLE_CORENEURON -I%s' % (spec['coreneuron'].prefix.include)
