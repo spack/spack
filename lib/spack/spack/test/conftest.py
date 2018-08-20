@@ -33,7 +33,7 @@ import re
 import ordereddict_backport
 import py
 import pytest
-import yaml
+import ruamel.yaml as yaml
 
 from llnl.util.filesystem import remove_linked_tree
 
