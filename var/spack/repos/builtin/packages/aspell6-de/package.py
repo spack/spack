@@ -29,6 +29,6 @@ class Aspell6De(AspellDictPackage):
     """German (de) dictionary for aspell."""
 
     homepage = "http://aspell.net/"
-    url      = "ftp://ftp.gnu.org/gnu/aspell/dict/de/aspell6-de-20030222-1.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/aspell/dict/de/aspell6-de-20030222-1.tar.bz2"
 
     version('6-de-20030222-1', '5950c5c8a36fc93d4d7616591bace6a6')

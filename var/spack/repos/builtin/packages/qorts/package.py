@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os.path
-from shutil import copyfile
 
 
 class Qorts(RPackage):
@@ -59,7 +58,7 @@ class Qorts(RPackage):
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "QoRTs.sh")
         script = self.prefix.bin.QoRTs
-        copyfile(script_sh, script)
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the

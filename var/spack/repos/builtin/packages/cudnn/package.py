@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Cudnn(Package):
@@ -54,4 +53,4 @@ class Cudnn(Package):
     depends_on('cuda@7.5:', type='run')
 
     def install(self, spec, prefix):
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

@@ -48,7 +48,6 @@ The available directives are:
 
 import collections
 import functools
-import inspect
 import os.path
 import re
 from six import string_types
@@ -115,11 +114,11 @@ class DirectiveMeta(type):
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure
         # that the directives are called on the class to set it up
-        module = inspect.getmodule(cls)
-        if 'spack.pkg' in module.__name__:
+
+        if 'spack.pkg' in cls.__module__:
             # Package name as taken
             # from llnl.util.lang.get_calling_module_name
-            pkg_name = module.__name__.split('.')[-1]
+            pkg_name = cls.__module__.split('.')[-1]
             setattr(cls, 'name', pkg_name)
 
             # Ensure the presence of the dictionaries associated

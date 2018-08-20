@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Clapack(MakefilePackage):
@@ -46,11 +45,12 @@ class Clapack(MakefilePackage):
     depends_on('atlas', when='+external-blas')
 
     def edit(self, spec, prefix):
-        install('make.inc.example', 'make.inc')
+        copy('make.inc.example', 'make.inc')
         if '+external-blas' in spec:
             make_inc = FileFilter('make.inc')
             make_inc.filter(r'^BLASLIB.*',
                             'BLASLIB = ../../libcblaswr.a -lcblas -latlas')
+            makefile = FileFilter('Makefile')
             makefile.filter(r'^lib.*',
                             'lib: variants lapacklib tmglib')
 
@@ -60,4 +60,4 @@ class Clapack(MakefilePackage):
         make('lib')
 
     def install(self, spec, prefix):
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

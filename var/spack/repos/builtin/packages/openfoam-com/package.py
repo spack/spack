@@ -60,7 +60,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *
@@ -608,7 +607,7 @@ class OpenfoamCom(Package):
             self.etc_config['vtk'] = [
                 ('VTK_DIR', spec['vtk'].prefix),
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(pkglib(spec['vtk'], '${VTK_DIR}'))),
+                 foam_add_lib(pkglib(spec['vtk'], '${VTK_DIR}'))),
             ]
 
         # Optional
@@ -692,12 +691,13 @@ class OpenfoamCom(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

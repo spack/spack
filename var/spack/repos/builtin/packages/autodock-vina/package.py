@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
-from shutil import copymode
 import sys
 
 
@@ -66,7 +64,5 @@ class AutodockVina(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
-            copyfile("vina", join_path(prefix.bin, "vina"))
-            copymode("vina", join_path(prefix.bin, "vina"))
-            copyfile("vina_split", join_path(prefix.bin, "vina_split"))
-            copymode("vina_split", join_path(prefix.bin, "vina_split"))
+            install('vina', prefix.bin)
+            install('vina_split', prefix.bin)
