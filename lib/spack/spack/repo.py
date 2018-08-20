@@ -42,7 +42,7 @@ except ImportError:
 
 from types import ModuleType
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
