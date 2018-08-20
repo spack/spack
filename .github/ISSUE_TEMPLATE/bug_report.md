@@ -20,9 +20,11 @@ $ spack <command2> <spec>
 
 ### Error Message
 
-What you expected before running the command or performing the steps 
-described above and what happened instead. To provide more information
-you might re-run the commands with the additional `-sd` flags:
+If Spack reported an error, provide the error message. If it did not report an error
+but the output appears incorrect, provide the incorrect output. If there was no error
+message and no output but the result is incorrect, describe how it does not match
+what you expect. To provide more information you might re-run the commands with 
+the additional -sd flags:
 ```console
 $ spack -sd <command1> <spec>
 $ spack -sd <command2> <spec>

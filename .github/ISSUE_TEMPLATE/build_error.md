@@ -8,7 +8,7 @@ about: Some package in Spack didn't build correctly
 report please:*
 1. Title the issue "Installation issue: <name-of-the-package>".
 1. Provide the information required below.
-1. Clean the issue from the template instructions below when finished.
+1. Remove the template instructions before posting the issue.
 
 We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
 
@@ -24,7 +24,7 @@ $ spack install <spec> # Fill in the exact spec you are using
 
 ### Platform and user environment
 
-Please report here your OS:
+Please report your OS here:
 ```commandline
 $ uname -a 
 Linux nuvolari 4.15.0-29-generic #31-Ubuntu SMP Tue Jul 17 15:39:52 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
@@ -47,34 +47,29 @@ $ spack spec --install-status <spec>
 ...
 ```
 to show people whether Spack installed a faulty software or if it was not able to
-build it at all. Spack as also commands to parse logs and report error and 
-warning messages:
+build it at all. 
+
+If your build didn't make it past the configure stage, Spack as also commands to parse 
+logs and report error and warning messages:
 ```console
 $ spack log-parse --show=errors,warnings <file-to-parse>
 ```
 You might want to run this command on the `config.log` or any other similar file
-found in the stage directory:
+found in the stage directory: 
 ```console
 $ spack location -s <spec>
-```
-or in the installation directory:
-```console
-$ spack location -i <spec>
 ```
 In case in `config.log` there are other settings that you think might be the cause 
 of the build failure, you can consider attaching the file to this issue.
 
-Finally, if the software fails to build and you suspect a compiler error of sort (e.g.
-wrong options passed to the compiler), you can try 
-rebuilding it with:
+Rebuilding the package with the following options:
 ```console
 $ spack -d install -j 1 <spec>
 ...
 ```
-which will activate debug mode and proceed with a single core build of the software.
-After the failure you will find two files in the current directory:
+will provide additional debug information. After the failure you will find two files in the current directory:
 
-1. `spack-cc-<spec>.in`, which contains information on the command given in input 
+1. `spack-cc-<spec>.in`, which contains details on the command given in input 
     to Spack's compiler wrapper  
 1. `spack-cc-<spec>.out`, which contains the command used to compile / link the 
     failed object after Spack's compiler wrapper did its processing 
