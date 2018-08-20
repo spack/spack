@@ -1,16 +1,14 @@
-If you want to report a build error for some package, or a bug in core please use the following template as a guideline:
+---
+name: Bug report 
+about: Report a bug in the core of Spack (command not working as expected, etc.) 
 
------
+---
 
-Summary
 
-### Expected Result
+*Explain, in a clear and concise way, the command you ran and the result you were trying to achieve.
+Example: "I ran Spack find to list all the installed packages and..."*
 
-What you expected
 
-### Actual Result
-
-What happened instead
 
 ### Steps to reproduce the issue
 
@@ -19,6 +17,21 @@ $ spack <command1> <spec>
 $ spack <command2> <spec>
 ...
 ```
+
+### Error Message
+
+If Spack reported an error, provide the error message. If it did not report an error
+but the output appears incorrect, provide the incorrect output. If there was no error
+message and no output but the result is incorrect, describe how it does not match
+what you expect. To provide more information you might re-run the commands with 
+the additional -sd flags:
+```console
+$ spack -sd <command1> <spec>
+$ spack -sd <command2> <spec>
+...
+```
+that activate the full debug output. 
+
 
 ### Information on your system
 
