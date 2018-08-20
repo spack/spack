@@ -60,6 +60,7 @@ import traceback
 import types
 from six import iteritems
 from six import StringIO
+from six import string_types
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
@@ -113,7 +114,11 @@ class MakeExecutable(Executable):
        specify parallel or not on a per-invocation basis.  Using
        'parallel' as a kwarg will override whatever the package's
        global setting is, so you can either default to true or false
-       and override particular calls.
+       and override particular calls. Specifying a value for 'jobs_arg'
+       as a kwarg will use that in place of the default '-j{0}' for
+       specifying the desired level of parallelism (specify multiple arguments
+       as a list or tuple). Specifying 'jobs_env' will name an environment
+       variable which will be set to the parallelism level.
 
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
@@ -128,8 +133,16 @@ class MakeExecutable(Executable):
         parallel = not disable and kwargs.get('parallel', self.jobs > 1)
 
         if parallel:
-            jobs = "-j%d" % self.jobs
-            args = (jobs,) + args
+            jobs = kwargs.pop('jobs_arg', '-j{0}')
+            jobs = (jobs,) if isinstance(jobs, string_types) else jobs
+            args = tuple([j.format(self.jobs) for j in jobs]) + args
+            jobs_env = kwargs.pop('jobs_env', None)
+            if jobs_env:
+                # Caller wants us to set an environment variable to
+                # control the parallelism.
+                make_env = kwargs.pop('env', os.environ).copy()
+                make_env[jobs_env] = str(self.jobs)
+                kwargs['env'] = make_env
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
@@ -387,7 +400,7 @@ def set_module_variables_for_package(pkg, module):
 
     m.meson = Executable('meson')
     m.cmake = Executable('cmake')
-    m.ctest = Executable('ctest')
+    m.ctest = MakeExecutable('ctest', jobs)
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
