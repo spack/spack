@@ -71,6 +71,7 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.store
+from spack.util.string import plural
 from spack.environment import EnvironmentModifications, validate
 from spack.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
@@ -914,17 +915,13 @@ class ChildError(InstallError):
                 nwar = len(warnings)
                 if nerr > 0:
                     # If errors are found, only display errors
-                    if nerr == 1:
-                        out.write("\n1 error found in build log:\n")
-                    else:
-                        out.write("\n%d errors found in build log:\n" % nerr)
+                    out.write(
+                        "\n%s found in build log:\n" % plural(nerr, 'error'))
                     out.write(make_log_context(errors))
                 elif nwar > 0:
                     # If no errors are found but warnings are, display warnings
-                    if nwar == 1:
-                        out.write("\n1 warning found in build log:\n")
-                    else:
-                        out.write("\n%d warnings found in build log:\n" % nwar)
+                    out.write(
+                        "\n%s found in build log:\n" % plural(nwar, 'warning'))
                     out.write(make_log_context(warnings))
 
         else:
