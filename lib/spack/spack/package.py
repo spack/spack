@@ -1954,10 +1954,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Commands should call this routine, and should not call
         activate() directly.
         """
-        if verbose:
-            tty.msg("Activating extension %s for %s" %
-                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
-
         self._sanity_check_extension()
         if not view:
             view = YamlFilesystemView(
@@ -1984,8 +1980,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if verbose:
             tty.msg(
                 "Activated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+                (self.spec.cshort_spec,
+                 self.extendee_spec.cshort_spec))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -2055,8 +2051,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if verbose:
             tty.msg(
                 "Deactivated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+                (self.spec.cshort_spec,
+                 self.extendee_spec.cshort_spec))
 
     def deactivate(self, extension, view, **kwargs):
         """
