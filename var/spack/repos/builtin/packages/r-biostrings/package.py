@@ -43,6 +43,6 @@ class RBiostrings(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-iranges@2.13.24:', when='@2.48.0', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r-xvector@1.19.8', when='@2.48.0', type=('build', 'run'))
+    depends_on('r-xvector@1.19.8:', when='@2.48.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@2.44.2', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@2.48.0', type=('build', 'run'))
