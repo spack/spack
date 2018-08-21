@@ -112,6 +112,8 @@ class PyNumpy(PythonPackage):
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
                 elif '^blis' in spec:
+                    # Fix after this issue is fixed
+                    # https://github.com/spack/spack/issues/4107#issuecomment-402758462
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
                 elif '^mkl' in spec:
