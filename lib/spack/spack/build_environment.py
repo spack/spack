@@ -60,7 +60,6 @@ import traceback
 import types
 from six import iteritems
 from six import StringIO
-from six import string_types
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
@@ -111,15 +110,14 @@ dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
 class MakeExecutable(Executable):
-    """Special callable executable object for make so the user can
-       specify parallel or not on a per-invocation basis.  Using
-       'parallel' as a kwarg will override whatever the package's
-       global setting is, so you can either default to true or false
-       and override particular calls. Specifying a value for 'jobs_arg'
-       as a kwarg will use that in place of the default '-j{0}' for
-       specifying the desired level of parallelism (specify multiple arguments
-       as a list or tuple). Specifying 'jobs_env' will name an environment
-       variable which will be set to the parallelism level.
+    """Special callable executable object for make so the user can specify
+       parallelism options on a per-invocation basis.  Specifying
+       'parallel' to the call will override whatever the package's
+       global setting is, so you can either default to true or false and
+       override particular calls. Specifying 'jobs_env' to a particular
+       call will name an environment variable which will be set to the
+       parallelism level (without affecting the normal invocation with
+       -j).
 
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
@@ -130,20 +128,20 @@ class MakeExecutable(Executable):
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
+        """parallel, and jobs_env from kwargs are swallowed and used here;
+        remaining arguments are passed through to the superclass.
+        """
+
         disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-        parallel = not disable and kwargs.get('parallel', self.jobs > 1)
+        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
-            jobs = kwargs.pop('jobs_arg', '-j{0}')
-            jobs = (jobs,) if isinstance(jobs, string_types) else jobs
-            args = tuple([j.format(self.jobs) for j in jobs]) + args
+            args = ('-j{0}'.format(self.jobs),) + args
             jobs_env = kwargs.pop('jobs_env', None)
             if jobs_env:
                 # Caller wants us to set an environment variable to
                 # control the parallelism.
-                make_env = kwargs.pop('env', os.environ).copy()
-                make_env[jobs_env] = str(self.jobs)
-                kwargs['env'] = make_env
+                kwargs['extra_env'] = {jobs_env: str(self.jobs)}
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
