@@ -1828,6 +1828,7 @@ class Spec(object):
             raise SpecError("Attempting to concretize anonymous spec")
 
         if self._concrete:
+            self._mark_upstream()
             return
 
         changed = True
@@ -1932,6 +1933,9 @@ class Spec(object):
         if matches:
             raise ConflictsInSpecError(self, matches)
 
+        self._mark_upstream()
+
+    def _mark_upstream(self):
         for x in self.traverse():
             upstream, record = spack.store.db.query_by_spec_hash(x.dag_hash())
             if record and upstream and record.installed:
