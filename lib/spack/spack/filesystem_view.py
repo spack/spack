@@ -449,7 +449,15 @@ class YamlFilesystemView(FilesystemView):
             return None
 
     def link_meta_folder(self, spec):
-        src = spack.store.layout.metadata_path(spec)
+        if spec.package._installed_upstream:
+            # TODO: This assumes that older spack versions use the same 
+            # relative metadata directory as the current Spack, which is
+            # generally reasonable (since this is not user-configurable).
+            # If changes to this path are accompanied by a DB version
+            # increment, then there will never by an issue with this.
+            src = os.path.join(spec.prefix, spack.store.layout.metadata_dir)
+        else:
+            src = spack.store.layout.metadata_path(spec)
         tgt = self.get_path_meta_folder(spec)
 
         tree = LinkTree(src)
