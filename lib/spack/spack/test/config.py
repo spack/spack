@@ -7,6 +7,7 @@ import os
 import collections
 import getpass
 import tempfile
+from six import StringIO
 
 from llnl.util.filesystem import touch, mkdirp
 
@@ -15,6 +16,12 @@ import ruamel.yaml as yaml
 
 import spack.paths
 import spack.config
+import spack.schema.compilers
+import spack.schema.config
+import spack.schema.packages
+import spack.schema.mirrors
+import spack.schema.repos
+import spack.util.spack_yaml as syaml
 from spack.util.path import canonicalize_path
 
 
@@ -631,7 +638,7 @@ config:
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
 
 
-def test_immuntable_scope(tmpdir):
+def test_immutable_scope(tmpdir):
     config_yaml = str(tmpdir.join('config.yaml'))
     with open(config_yaml, 'w') as f:
         f.write("""\
@@ -645,3 +652,58 @@ config:
 
     with pytest.raises(spack.config.ConfigError):
         scope.write_section('config')
+
+
+def check_schema(name, file_contents):
+    """Check a Spack YAML schema against some data"""
+    f = StringIO(file_contents)
+    data = syaml.load(f)
+    spack.config._validate(data, name)
+
+
+def test_bad_config_yaml(tmpdir):
+    with pytest.raises(spack.config.ConfigFormatError):
+        check_schema(spack.schema.config.schema, """\
+config:
+    verify_ssl: False
+    module_roots:
+        fmod: /some/fake/location
+""")
+
+
+def test_bad_mirrors_yaml(tmpdir):
+    with pytest.raises(spack.config.ConfigFormatError):
+        check_schema(spack.schema.mirrors.schema, """\
+mirrors:
+    local: True
+""")
+
+
+def test_bad_repos_yaml(tmpdir):
+    with pytest.raises(spack.config.ConfigFormatError):
+        check_schema(spack.schema.repos.schema, """\
+repos:
+    True
+""")
+
+
+def test_bad_compilers_yaml(tmpdir):
+    with pytest.raises(spack.config.ConfigFormatError):
+        check_schema(spack.schema.compilers.schema, """\
+compilers:
+    key_instead_of_list: 'value'
+""")
+
+    with pytest.raises(spack.config.ConfigFormatError):
+        check_schema(spack.schema.compilers.schema, """\
+compilers:
+    - shmompiler:
+         environment: /bad/value
+""")
+
+    with pytest.raises(spack.config.ConfigFormatError):
+        check_schema(spack.schema.compilers.schema, """\
+compilers:
+    - compiler:
+         fenfironfent: /bad/value
+""")

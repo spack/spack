@@ -10,79 +10,84 @@
 """
 
 
-schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack package configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'patternProperties': {
-        r'packages': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {  # package name
-                    'type': 'object',
-                    'default': {},
-                    'additionalProperties': False,
-                    'properties': {
-                        'version': {
-                            'type': 'array',
-                            'default': [],
-                            # version strings
-                            'items': {'anyOf': [{'type': 'string'},
-                                                {'type': 'number'}]}},
-                        'compiler': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {'type': 'string'}},  # compiler specs
-                        'buildable': {
-                            'type':  'boolean',
-                            'default': True,
-                        },
-                        'permissions': {
-                            'type': 'object',
-                            'additionalProperties': False,
-                            'properties': {
-                                'read': {
-                                    'type':  'string',
-                                    'enum': ['user', 'group', 'world'],
-                                },
-                                'write': {
-                                    'type':  'string',
-                                    'enum': ['user', 'group', 'world'],
-                                },
-                                'group': {
-                                    'type':  'string',
-                                },
+#: Properties for inclusion in other schemas
+properties = {
+    'packages': {
+        'type': 'object',
+        'default': {},
+        'additionalProperties': False,
+        'patternProperties': {
+            r'\w[\w-]*': {  # package name
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'version': {
+                        'type': 'array',
+                        'default': [],
+                        # version strings
+                        'items': {'anyOf': [{'type': 'string'},
+                                            {'type': 'number'}]}},
+                    'compiler': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {'type': 'string'}},  # compiler specs
+                    'buildable': {
+                        'type':  'boolean',
+                        'default': True,
+                    },
+                    'permissions': {
+                        'type': 'object',
+                        'additionalProperties': False,
+                        'properties': {
+                            'read': {
+                                'type':  'string',
+                                'enum': ['user', 'group', 'world'],
+                            },
+                            'write': {
+                                'type':  'string',
+                                'enum': ['user', 'group', 'world'],
+                            },
+                            'group': {
+                                'type':  'string',
                             },
                         },
-                        'modules': {
-                            'type': 'object',
-                            'default': {},
-                        },
-                        'providers': {
-                            'type':  'object',
-                            'default': {},
-                            'additionalProperties': False,
-                            'patternProperties': {
-                                r'\w[\w-]*': {
-                                    'type': 'array',
-                                    'default': [],
-                                    'items': {'type': 'string'}, }, }, },
-                        'paths': {
-                            'type': 'object',
-                            'default': {},
-                        },
-                        'variants': {
-                            'oneOf': [
-                                {'type': 'string'},
-                                {'type': 'array',
-                                 'items': {'type': 'string'}}],
-                        },
+                    },
+                    'modules': {
+                        'type': 'object',
+                        'default': {},
+                    },
+                    'providers': {
+                        'type':  'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'patternProperties': {
+                            r'\w[\w-]*': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {'type': 'string'}, }, }, },
+                    'paths': {
+                        'type': 'object',
+                        'default': {},
+                    },
+                    'variants': {
+                        'oneOf': [
+                            {'type': 'string'},
+                            {'type': 'array',
+                             'items': {'type': 'string'}}],
                     },
                 },
             },
         },
     },
+}
+
+
+#: Full schema with metadata
+schema = {
+    '$schema': 'http://json-schema.org/schema#',
+    'title': 'Spack package configuration file schema',
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': properties,
 }

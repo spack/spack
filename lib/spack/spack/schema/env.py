@@ -12,19 +12,22 @@
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack Environments user configuration file schema',
+    'title': 'Spack environment file schema',
     'type': 'object',
     'additionalProperties': False,
-    'properties': {
-        'env': {
+    'patternProperties': {
+        '^env|spack$': {
             'type': 'object',
             'default': {},
             'properties': {
-                'configs': {
+                'include': {
                     'type': 'array',
-                    'default': [],
-                    'items': {'type': 'string'}
+                    'items': {
+                        'type': 'string'
+                    },
                 },
+
+
                 'specs': {
                     'type': 'object',
                     'default': {},
