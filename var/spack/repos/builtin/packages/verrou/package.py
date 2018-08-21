@@ -41,6 +41,10 @@ class Verrou(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
 
+    depends_on('python@:2.99.99', when='@1.1.0:2.0.99', type=('build', 'run'))
+    depends_on('python@3.0:', when='@2.1.0:', type=('build', 'run'))
+    extends('python')
+
     def patch(self):
         # We start with the verrou source tree and a "valgrind-x.y.z" subdir.
         # But we actually need a valgrind source tree with a "verrou" subdir.
