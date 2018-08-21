@@ -39,4 +39,4 @@ class RGenefilter(RPackage):
     depends_on('r-annotate', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.58.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.58.1', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@1.62.0', type=('build', 'run'))
