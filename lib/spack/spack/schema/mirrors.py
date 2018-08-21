@@ -10,20 +10,24 @@
 """
 
 
+#: Properties for inclusion in other schemas
+properties = {
+    'mirrors': {
+        'type': 'object',
+        'default': {},
+        'additionalProperties': False,
+        'patternProperties': {
+            r'\w[\w-]*': {'type': 'string'},
+        },
+    },
+}
+
+
+#: Full schema with metadata
 schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack mirror configuration file schema',
     'type': 'object',
     'additionalProperties': False,
-    'patternProperties': {
-        r'mirrors': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {
-                    'type': 'string'},
-            },
-        },
-    },
+    'properties': properties,
 }

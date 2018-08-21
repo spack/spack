@@ -85,7 +85,6 @@ def deactivate():
         return
 
 
-
 def root(name):
     """Get the root directory for an environment by name."""
     return fs.join_path(env_path, name)

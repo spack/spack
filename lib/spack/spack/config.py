@@ -51,7 +51,12 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.architecture
-import spack.schema
+import spack.schema.compilers
+import spack.schema.mirrors
+import spack.schema.repos
+import spack.schema.packages
+import spack.schema.modules
+import spack.schema.config
 from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -175,7 +180,7 @@ class ConfigScope(object):
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                _validate_section(data, section_schemas[section])
+                _validate(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
@@ -216,7 +221,7 @@ class InternalConfigScope(ConfigScope):
         if data:
             for section in data:
                 dsec = data[section]
-                _validate_section({section: dsec}, section_schemas[section])
+                _validate({section: dsec}, section_schemas[section])
                 self.sections[section] = _mark_internal(
                     syaml.syaml_dict({section: dsec}), name)
 
@@ -234,7 +239,7 @@ class InternalConfigScope(ConfigScope):
         """This only validates, as the data is already in memory."""
         data = self.get_section(section)
         if data is not None:
-            _validate_section(data, section_schemas[section])
+            _validate(data, section_schemas[section])
         self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
@@ -585,7 +590,7 @@ def _validate_section_name(section):
             % (section, " ".join(section_schemas.keys())))
 
 
-def _validate_section(data, schema):
+def _validate(data, schema):
     """Validate data read in from a Spack YAML file.
 
     This leverages the line information (start_mark, end_mark) stored
@@ -593,13 +598,13 @@ def _validate_section(data, schema):
 
     """
     import jsonschema
-    if not hasattr(_validate_section, 'validator'):
+    if not hasattr(_validate, 'validator'):
         default_setting_validator = _extend_with_default(
             jsonschema.Draft4Validator)
-        _validate_section.validator = default_setting_validator
+        _validate.validator = default_setting_validator
 
     try:
-        _validate_section.validator(schema).validate(data)
+        _validate.validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
@@ -623,7 +628,7 @@ def _read_config_file(filename, schema):
             data = _mark_overrides(syaml.load(f))
 
         if data:
-            _validate_section(data, schema)
+            _validate(data, schema)
         return data
 
     except MarkedYAMLError as e:
