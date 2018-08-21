@@ -35,8 +35,8 @@ class RAnnotationdbi(RPackage):
     version('1.38.2', commit='67d46facba8c15fa5f0eb47c4e39b53dbdc67c36')
     version('1.42.1', commit='71085b47ea2e1ef929bebe8b17eb8e8a573f98e3')
 
-    depends_on('r@3.4.0:3.4.9', when='@1.38.2')
-    depends_on('r@3.5.0:3.5.9', when='@1.42.1')
+    depends_on('r@3.4.0:3.4.9', when='@1.38.2', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@1.42.1', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
