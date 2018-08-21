@@ -7,8 +7,8 @@ about: Some package in Spack didn't build correctly
 *Thanks for taking the time to report this build failure. To proceed with the
 report please:*
 1. Title the issue "Installation issue: <name-of-the-package>".
-1. Provide the information required below.
-1. Remove the template instructions before posting the issue.
+2. Provide the information required below.
+3. Remove the template instructions before posting the issue.
 
 We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
 
