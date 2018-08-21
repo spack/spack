@@ -78,7 +78,7 @@ class PyScipy(PythonPackage):
             args = ['-j', str(make_jobs)]
         return args
 
-    def setup_environment(self, spack_env):
+    def setup_environment(self, spack_env, run_env):
         # https://github.com/scipy/scipy/issues/9080#issuecomment-408548876
         spack_env.unset('F90')
 
