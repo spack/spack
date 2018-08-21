@@ -30,10 +30,11 @@ modules:
     naming_scheme: '${PACKAGE}/${VERSION}'
     hash_length: 0
     whitelist:
-      - 'functionalizer'
-      - 'neurodamus'
-      - 'parquet-converters'
-      - 'touchdetector'
+      - functionalizer
+      - git
+      - neurodamus
+      - parquet-converters
+      - touchdetector
     blacklist:
       - '%gcc'
       - '%intel'

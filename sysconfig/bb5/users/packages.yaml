@@ -39,10 +39,6 @@ packages:
         paths:
             fontconfig@2.10.95: /usr
         version: [2.10.95]
-    gettext:
-        paths:
-            gettext@0.19.8.1: /usr
-        version: [0.19.8.1]
     glib:
         paths:
             glib@2.50.3: /usr
@@ -129,7 +125,7 @@ packages:
         version: [1.40.4]
     pcre:
         paths:
-            pcre@8.32: /usr
+            pcre@8.32+jit+utf: /usr
         version: [8.32]
     perl:
         paths:
