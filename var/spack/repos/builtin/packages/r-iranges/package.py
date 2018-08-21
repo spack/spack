@@ -40,7 +40,7 @@ class RIranges(RPackage):
     homepage = "https://www.bioconductor.org/packages/IRanges/"
     git      = "https://git.bioconductor.org/packages/IRanges.git"
 
-    verison('2.14.10', commit='c76118a38e84c7c764141adbd66ee350d0882bc9')
+    version('2.14.10', commit='c76118a38e84c7c764141adbd66ee350d0882bc9')
     version('2.12.0', commit='1b1748655a8529ba87ad0f223f035ef0c08e7fcd')
     version('2.10.5', commit='b00d1d5025e3c480d17c13100f0da5a0132b1614')
 
