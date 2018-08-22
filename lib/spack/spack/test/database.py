@@ -53,10 +53,24 @@ class MockLayout(object):
         return True
 
 
+@pytest.fixture()
+def test_store(tmpdir):
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
+
+    yield
+
+    spack.store.store = real_store
+
+
 @pytest.mark.usefixtures('config')
-def test_mark_installed_upstream(tmpdir_factory):
+def test_mark_installed_upstream(tmpdir_factory, test_store):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
+
+    # Generate initial DB file to avoid reindex
+    with open(prepared_db._index_path, 'w') as F:
+        prepared_db._write_to_file(F)
 
     default = ('build', 'link')
     x = MockPackage('x', [], [])
@@ -71,15 +85,20 @@ def test_mark_installed_upstream(tmpdir_factory):
         spec = spack.spec.Spec('w')
         spec.concretize()
 
-        for dep in spec.traverse(root=False):
-            prepared_db.add(dep, mock_layout)
-
         try:
             original_db = spack.store.db
+            original_layout = spack.store.layout
+            spack.store.layout = mock_layout
+
+            for dep in spec.traverse(root=False):
+                prepared_db.add(dep, mock_layout)
+
             downstream_db_root = str(
                 tmpdir_factory.mktemp('mock_downstream_db_root'))
             spack.store.db = spack.database.Database(
                 downstream_db_root, upstream_dbs=[prepared_db])
+            spack.store.layout = original_layout
+
             new_spec = spack.spec.Spec('w')
             new_spec.concretize()
             for dep in new_spec.traverse(root=False):
@@ -88,12 +107,17 @@ def test_mark_installed_upstream(tmpdir_factory):
             assert new_spec.prefix != mock_layout.path_for_spec(new_spec)
         finally:
             spack.store.db = original_db
+            spack.store.layout = original_layout
 
 
 @pytest.mark.usefixtures('config')
-def test_installed_upstream_external(tmpdir_factory):
+def test_installed_upstream_external(tmpdir_factory, test_store):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
+
+    # Generate initial DB file to avoid reindex
+    with open(prepared_db._index_path, 'w') as F:
+        prepared_db._write_to_file(F)
 
     default = ('build', 'link')
     y = MockPackage('y', [], [])
