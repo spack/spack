@@ -34,7 +34,7 @@ class PyPicrust(PythonPackage):
 
     version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
 
-    depends_on('python@2.7.15:2.999', type='build', 'run')
-    depends_on('py-pycogent', type='build', 'run')
-    depends_on('py-biom-format', type='build', 'run')
+    depends_on('python@2.7.15:2.999', type=('build', 'run'))
+    depends_on('py-pycogent', type=('build', 'run'))
+    depends_on('py-biom-format', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
