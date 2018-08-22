@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-pycogent
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-pycogent
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -48,20 +33,15 @@ class PyPycogent(PythonPackage):
 
     version('1.9', sha256='c9f56d21d764aa62e3e8a9df5a300eb7fb59e502572bec41894d21df19aeceb5')
 
-    variant('matplotlib', default=False, description="graphs related to codon usage") 
+    variant('py-matplotlib', default=False, description="graphs related to codon usage") 
     variant('cython', default=False, description="This module is only necessary .pyx files.")
-    variant('mpi', default=False, description='MPI required for parallel computation.')
+    variant('mpi4py', default=False, description='MPI required for parallel computation.')
     variant('SQLAlchemy', default=False, description='Required for the Ensembl querying code.')
 
-    depends_on('python@2.7.15')
-    depends_on('py-numpy')
+    depends_on('python@2.7.15:2.999', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('zlib')
-    depends_on('matplotlib', when='+matplotlib')
-    depends_on('cython', when='+cython')
-    depends_on('mpi', when='+mpi')
-    depends_on('sqlalchemy', when='+sqlalchemy')
-
-
-#    def build_args(self, spec, prefix):
-#        args = []
-#        return args
+    depends_on('py-matplotlib', when='+py-matplotlib', type=('build', 'run'))
+    depends_on('cython', when='+cython', type=('build', 'run'))
+    depends_on('mpi4py', when='+mpi4py', type=('build', 'run'))
+    depends_on('sqlalchemy', when='+sqlalchemy', type=('build', 'run'))
