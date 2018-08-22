@@ -734,6 +734,8 @@ class Database(object):
                     tty.warn(
                         'Dependency missing due to corrupt install directory:',
                         path, str(e))
+            elif spec.external_path:
+                path = spec.external_path
 
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)

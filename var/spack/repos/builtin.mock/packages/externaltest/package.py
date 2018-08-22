@@ -35,4 +35,4 @@ class Externaltest(Package):
     depends_on('externaltool')
 
     def install(self, spec, prefix):
-        pass
+        touch(join_path(prefix, 'an_installation_file'))
