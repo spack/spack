@@ -64,7 +64,7 @@ def test_store(tmpdir):
 
 
 @pytest.mark.usefixtures('config')
-def test_mark_installed_upstream(tmpdir_factory, test_store):
+def test_installed_upstream(tmpdir_factory, test_store):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
@@ -102,52 +102,16 @@ def test_mark_installed_upstream(tmpdir_factory, test_store):
             new_spec = spack.spec.Spec('w')
             new_spec.concretize()
             for dep in new_spec.traverse(root=False):
-                assert dep.package.installed_upstream
-                assert dep.prefix == mock_layout.path_for_spec(dep)
-            assert new_spec.prefix != mock_layout.path_for_spec(new_spec)
+                upstream, record = spack.store.db.query_by_spec_hash(
+                    dep.dag_hash())
+                assert upstream
+                assert record.path == mock_layout.path_for_spec(dep)
+            upstream, record = spack.store.db.query_by_spec_hash(
+                new_spec.dag_hash())
+            assert not upstream
         finally:
             spack.store.db = original_db
             spack.store.layout = original_layout
-
-
-@pytest.mark.usefixtures('config')
-def test_installed_upstream_external(tmpdir_factory, test_store):
-    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    prepared_db = spack.database.Database(mock_db_root)
-
-    # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as db_file:
-        prepared_db._write_to_file(db_file)
-
-    default = ('build', 'link')
-    y = MockPackage('y', [], [])
-    x = MockPackage('x', [y], [default])
-    mock_repo = MockPackageMultiRepo([x, y])
-
-    mock_layout = MockLayout()
-
-    with spack.repo.swap(mock_repo):
-        x_spec = spack.spec.Spec('x')
-        x_spec.concretize()
-
-        y_spec = x_spec['y']
-        test_external_prefix = "/path/to/external/y/"
-        y_spec.external_path = test_external_prefix
-        prepared_db.add(y_spec, mock_layout)
-
-        try:
-            original_db = spack.store.db
-            downstream_db_root = str(
-                tmpdir_factory.mktemp('mock_downstream_db_root'))
-            spack.store.db = spack.database.Database(
-                downstream_db_root, upstream_dbs=[prepared_db])
-            new_x = spack.spec.Spec('x')
-            new_x.concretize()
-            new_y = new_x['y']
-            assert new_y.package.installed_upstream
-            assert new_y.prefix == test_external_prefix
-        finally:
-            spack.store.db = original_db
 
 
 @pytest.fixture()
