@@ -102,20 +102,20 @@ class Dealii(CMakePackage, CudaPackage):
     # adopt https://github.com/boostorg/serialization/pull/105 as a fix
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
                patches=[patch('boost_1.65.1_singleton.patch',
-                        level=1,
-                        when='@1.65.1'),
+                              level=1,
+                              when='@1.65.1'),
                         patch('boost_1.68.0.patch',
-                        level=1,
-                        when='@1.68.0'),
+                              level=1,
+                              when='@1.68.0'),
                        ],
                when='~python')
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
                patches=[patch('boost_1.65.1_singleton.patch',
-                        level=1,
-                        when='@1.65.1'),
+                              level=1,
+                              when='@1.65.1'),
                         patch('boost_1.68.0.patch',
-                        level=1,
-                        when='@1.68.0'),
+                              level=1,
+                              when='@1.68.0'),
                        ],
                when='+python')
     # bzip2 is not needed since 9.0
