@@ -39,4 +39,4 @@ class PyPicrust(PythonPackage):
     depends_on('py-biom-format@2.1.4:2.2.0', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-future@0.16', type=('build', 'run'))
-    depends_on('py-numpy@1.5.1', type=('build', 'run'))
+    depends_on('py-numpy@1.5.1:999', type=('build', 'run'))
