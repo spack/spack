@@ -1166,11 +1166,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         #
         # GNU Make:
         #     make: *** No rule to make target `test'.  Stop.
+        #           *** No rule to make target 'test'.  Stop.
         #
         # BSD Make:
         #     make: don't know how to make test. Stop
         missing_target_msgs = [
             "No rule to make target `{0}'.  Stop.",
+            "No rule to make target '{0}'.  Stop.",
             "don't know how to make {0}. Stop",
         ]
 
