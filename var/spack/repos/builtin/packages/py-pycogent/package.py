@@ -38,7 +38,7 @@ class PyPycogent(PythonPackage):
     variant('mpi4py', default=False, description='MPI required for parallel computation.')
     variant('SQLAlchemy', default=False, description='Required for the Ensembl querying code.')
 
-    depends_on('python@2.7.15:2.999', type=('build', 'run'))
+    depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('zlib')
     depends_on('py-matplotlib', when='+py-matplotlib', type=('build', 'run'))
