@@ -3220,7 +3220,7 @@ class Spec(object):
 
             if install_status:
                 status = node._install_status()
-                if node.package._installed_upstream:
+                if node.package.installed_upstream:
                     out += colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += "     "  # Package isn't installed
