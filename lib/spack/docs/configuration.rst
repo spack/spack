@@ -4,7 +4,7 @@
 Configuration Files in Spack
 ==============================
 
-Spack has many configuration files.  Here's a quick list, so you can skip to specific docs:
+Spack has many configuration files.  Here's a quick list you can use to skip to specific docs:
 
 * :ref:`compilers.yaml <compiler-config>`
 * :ref:`config.yaml <config-yaml>`
