@@ -46,7 +46,7 @@ class Leveldb(MakefilePackage):
         for library in libraries:
             install(library, prefix.lib)
 
-        install_tree('include/leveldb', prefix.include)
+        install_tree('include', prefix.include)
 
         with open(join_path(prefix.lib, 'pkgconfig', 'leveldb.pc'), 'w') as f:
             f.write('prefix={0}\n'.format(prefix))
