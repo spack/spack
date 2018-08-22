@@ -41,8 +41,8 @@ from spack import *
 
 
 class PyPycogent(PythonPackage):
+    """software library for genomic biology."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://pycogent.org/"
     url      = "https://github.com/pycogent/pycogent/archive/1.9.tar.gz"
 
@@ -52,7 +52,7 @@ class PyPycogent(PythonPackage):
     variant('cython', default=False, description="This module is only necessary .pyx files.")
     variant('mpi', default=False, description='MPI required for parallel computation.')
     variant('SQLAlchemy', default=False, description='Required for the Ensembl querying code.')
-    
+
     depends_on('python@2.7.15')
     depends_on('py-numpy')
     depends_on('zlib')
