@@ -1956,7 +1956,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         if verbose:
             tty.msg('Activating extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec)
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         self._sanity_check_extension()
         if not view:
@@ -1983,7 +1983,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if verbose:
             tty.debug('Activated extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec)
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -2009,14 +2009,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         `remove_dependents=True` deactivates extensions depending on this
         package instead of raising an error.
         """
-        if verbose:
-            tty.msg('Deactivating extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec)
-
         self._sanity_check_extension()
         force = kwargs.get('force', False)
         verbose = kwargs.get('verbose', True)
         remove_dependents = kwargs.get('remove_dependents', False)
+
+        if verbose:
+            tty.msg('Deactivating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         if not view:
             view = YamlFilesystemView(
@@ -2055,7 +2055,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if verbose:
             tty.debug('Deactivated extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec)
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def deactivate(self, extension, view, **kwargs):
         """
