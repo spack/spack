@@ -41,9 +41,8 @@ from spack import *
 
 
 class PyPicrust(PythonPackage):
-    """PICRUSt (pronounced “pie crust”) is a bioinformatics software 
-        package designed to predict metagenome functional content 
-        from marker gene (e.g., 16S rRNA) surveys and full genomes."""
+    """bioinformatics software package designed to predict metagenome
+        functional content from marker gene surveys and full genomes."""
 
     homepage = "http://picrust.github.io/picrust/index.html"
     url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
