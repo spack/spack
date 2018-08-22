@@ -36,7 +36,7 @@ class PyPycogent(PythonPackage):
     variant('py-matplotlib', default=False, description="graphs related to codon usage") 
     variant('py-cython', default=False, description="This module is only necessary .pyx files.")
     variant('py-mpi4py', default=False, description='MPI required for parallel computation.')
-    variant('SQLAlchemy', default=False, description='Required for the Ensembl querying code.')
+    variant('py-sqlalchemy', default=False, description='Required for the Ensembl querying code.')
 
     depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
@@ -44,4 +44,4 @@ class PyPycogent(PythonPackage):
     depends_on('py-matplotlib', when='+py-matplotlib', type=('build', 'run'))
     depends_on('py-cython', when='+py-cython', type=('build', 'run'))
     depends_on('py-mpi4py', when='+py-mpi4py', type=('build', 'run'))
-    depends_on('sqlalchemy', when='+sqlalchemy', type=('build', 'run'))
+    depends_on('py-sqlalchemy', when='+py-sqlalchemy', type=('build', 'run'))
