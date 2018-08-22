@@ -32,6 +32,7 @@ class PyPycogent(PythonPackage):
     url      = "https://github.com/pycogent/pycogent/archive/1.9.tar.gz"
 
     version('1.9', sha256='c9f56d21d764aa62e3e8a9df5a300eb7fb59e502572bec41894d21df19aeceb5')
+    version('1.5.3', sha256='4e19325cd1951382dc71582eb49f44c5a19eb128e3540e29dc28e080091e49cd')
 
     variant('py-matplotlib', default=False, description="graphs related to codon usage") 
     variant('py-cython', default=False, description="This module is only necessary .pyx files.")
