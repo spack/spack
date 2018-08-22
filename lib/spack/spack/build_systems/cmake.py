@@ -7,6 +7,7 @@
 import inspect
 import os
 import platform
+import re
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir
@@ -109,10 +110,12 @@ class CMakePackage(PackageBase):
 
         # Make sure a valid generator was chosen
         valid_generators = ['Unix Makefiles', 'Ninja']
-        if generator not in valid_generators:
+        generator_extractor = re.compile(r'(?:.*?-\s+)?(.*)')
+        primary_generator = generator_extractor.match(generator).group(1)
+        if primary_generator not in valid_generators:
             msg  = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
-            msg += "generators: '{0}'".format("', '".join(valid_generators))
+            msg += "primary generators: '{0}'".format("', '".join(valid_generators))
             raise InstallError(msg)
 
         try:
@@ -124,8 +127,10 @@ class CMakePackage(PackageBase):
             '-G', generator,
             '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
             '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
-            '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON'
         ]
+
+        if primary_generator == 'Unix Makefiles':
+            args.append('-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON')
 
         if platform.mac_ver()[0]:
             args.extend([
