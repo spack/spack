@@ -1403,7 +1403,12 @@ class Spec(object):
     @property
     def prefix(self):
         if self._prefix is None:
-            self.prefix = spack.store.layout.path_for_spec(self)
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.dag_hash())
+            if upstream:
+                self.prefix = record.path
+            else:
+                self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -1828,7 +1833,6 @@ class Spec(object):
             raise SpecError("Attempting to concretize anonymous spec")
 
         if self._concrete:
-            self._mark_upstream()
             return
 
         changed = True
@@ -1932,18 +1936,6 @@ class Spec(object):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
-
-        self._mark_upstream()
-
-    def _mark_upstream(self):
-        for x in self.traverse():
-            upstream, record = spack.store.db.query_by_spec_hash(x.dag_hash())
-            if record and upstream and record.installed:
-                if record.spec.external_path:
-                    x.prefix = record.spec.external_path
-                elif record.path:
-                    x.prefix = record.path
-                x.package._installed_upstream = True
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.

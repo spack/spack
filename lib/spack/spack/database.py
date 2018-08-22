@@ -360,9 +360,6 @@ class Database(object):
                 # if it's here, then we could run into errors.
                 upstream, record = self.query_by_spec_hash(dhash, data=data)
                 child = record.spec if record else None
-                if child and upstream:
-                    child.prefix = record.path
-                    child.package._installed_upstream = True
 
                 if not child:
                     tty.warn("Missing dependency not in database: ",
@@ -450,7 +447,6 @@ class Database(object):
                 #       this?
                 record = InstallRecord.from_dict(spec, rec)
                 data[hash_key] = record
-                spec.prefix = record.path
             except Exception as e:
                 invalid_record(hash_key, e)
 

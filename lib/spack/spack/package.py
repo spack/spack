@@ -488,10 +488,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         except ValueError as e:
             raise ValueError("In package %s: %s" % (self.name, e.message))
 
-        # records whether the package is installed in an upstream Spack
-        # instance
-        self._installed_upstream = False
-
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = None
@@ -511,6 +507,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
         super(PackageBase, self).__init__()
+
+    @property
+    def installed_upstream(self):
+        if not hasattr(self, '_installed_upstream'):
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.spec.dag_hash())
+            self._installed_upstream = upstream
+
+        return self._installed_upstream
 
     def possible_dependencies(
             self, transitive=True, expand_virtuals=True, visited=None):
@@ -1344,7 +1349,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
-        if self._installed_upstream:
+        if self.installed_upstream:
             tty.msg("{0.name} is installed in an upstream Spack instance"
                     " at {0.prefix}".format(self))
             # TODO: post install hooks? perhaps we can regenerate a module

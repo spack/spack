@@ -102,7 +102,7 @@ def test_mark_installed_upstream(tmpdir_factory, test_store):
             new_spec = spack.spec.Spec('w')
             new_spec.concretize()
             for dep in new_spec.traverse(root=False):
-                assert dep.package._installed_upstream
+                assert dep.package.installed_upstream
                 assert dep.prefix == mock_layout.path_for_spec(dep)
             assert new_spec.prefix != mock_layout.path_for_spec(new_spec)
         finally:
@@ -144,7 +144,7 @@ def test_installed_upstream_external(tmpdir_factory, test_store):
             new_x = spack.spec.Spec('x')
             new_x.concretize()
             new_y = new_x['y']
-            assert new_y.package._installed_upstream
+            assert new_y.package.installed_upstream
             assert new_y.prefix == test_external_prefix
         finally:
             spack.store.db = original_db
