@@ -215,14 +215,6 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 export SPACK_ROOT=${_sp_prefix}
 
 #
-# Determine which shell is being used
-#
-function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
-}
-export SPACK_SHELL=$(_spack_determine_shell)
-
-#
 # Check whether a function of the given name is defined
 #
 function _spack_fn_exists() {
@@ -246,7 +238,7 @@ if [ "${need_module}" = "yes" ]; then
         #activate it!
         export MODULE_PREFIX=${_sp_module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        module() { eval $(${MODULE_PREFIX}/Modules/bin/modulecmd $(basename ${SHELL}) $*); }
     fi;
 else
     eval `spack --print-shell-vars sh`
