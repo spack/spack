@@ -69,8 +69,8 @@ def test_mark_installed_upstream(tmpdir_factory, test_store):
     prepared_db = spack.database.Database(mock_db_root)
 
     # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as F:
-        prepared_db._write_to_file(F)
+    with open(prepared_db._index_path, 'w') as db_file:
+        prepared_db._write_to_file(db_file)
 
     default = ('build', 'link')
     x = MockPackage('x', [], [])
@@ -116,8 +116,8 @@ def test_installed_upstream_external(tmpdir_factory, test_store):
     prepared_db = spack.database.Database(mock_db_root)
 
     # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as F:
-        prepared_db._write_to_file(F)
+    with open(prepared_db._index_path, 'w') as db_file:
+        prepared_db._write_to_file(db_file)
 
     default = ('build', 'link')
     y = MockPackage('y', [], [])
