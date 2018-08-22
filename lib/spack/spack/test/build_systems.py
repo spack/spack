@@ -59,6 +59,7 @@ def test_affirmative_make_check(directory, config, mock_packages):
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'make', 'negative', '*'))
 )
+@pytest.mark.regression('9067')
 def test_negative_make_check(directory, config, mock_packages):
     """Tests that Spack correctly ignores false positives in a Makefile."""
 
