@@ -26,8 +26,9 @@ import os
 import shutil
 import glob
 import tempfile
-import yaml
 import re
+
+import ruamel.yaml as yaml
 
 from llnl.util.filesystem import mkdirp
 

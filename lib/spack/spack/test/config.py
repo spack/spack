@@ -30,7 +30,7 @@ import tempfile
 from llnl.util.filesystem import touch, mkdirp
 
 import pytest
-import yaml
+import ruamel.yaml as yaml
 
 import spack.paths
 import spack.config

@@ -30,8 +30,9 @@ class Libfabric(AutotoolsPackage):
        fabric communication services to applications."""
 
     homepage = "https://libfabric.org/"
-    url      = "https://github.com/ofiwg/libfabric/releases/download/v1.6.0/libfabric-1.6.0.tar.gz"
+    url      = "https://github.com/ofiwg/libfabric/releases/download/v1.6.1/libfabric-1.6.1.tar.gz"
 
+    version('1.6.1', 'ff78dc9fcbf273a119c737a4e1df46d1')
     version('1.6.0', '91d63ab3c0b9724a4db660019f928cab')
     version('1.5.3', '1fe07e972fe487c6a3e44c0fb68b49a2')
     version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')

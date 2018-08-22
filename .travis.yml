@@ -132,6 +132,7 @@ addons:
       - graphviz
       - gnupg2
       - cmake
+      - ninja-build
       - r-base
       - r-base-core
       - r-base-dev
