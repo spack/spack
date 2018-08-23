@@ -114,7 +114,7 @@ class PyNumpy(PythonPackage):
                 elif '^blis' in spec:
                     # Fix after this issue is fixed
                     # https://github.com/spack/spack/issues/4107#issuecomment-402758462
-                    f.write('[openblas]\n')
+                    f.write('[blis]\n')
                     f.write('libraries=%s\n'    % names)
                 elif '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
