@@ -95,7 +95,6 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-pdt=%s" % spec['pdt'].prefix.bin)
 
         config_args += self.with_or_without('shmem')
-        config_args += self.with_or_without('mpi')
 
         if spec.satisfies('^intel-mpi'):
             config_args.append('--with-mpi=intel3')
