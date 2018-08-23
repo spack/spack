@@ -58,7 +58,7 @@ class Scorep(AutotoolsPackage):
     depends_on("opari2@1.1.4", when='@1.3')
     depends_on("cube@4.2.3", when='@1.3')
 
-    depends_on("mpi")
+    depends_on("mpi", when='+mpi')
     depends_on("papi")
     depends_on("pdt")
 
@@ -96,12 +96,17 @@ class Scorep(AutotoolsPackage):
 
         config_args += self.with_or_without('shmem')
 
-        if spec.satisfies('^intel-mpi'):
-            config_args.append('--with-mpi=intel3')
-        elif spec.satisfies('^mpich') or spec.satisfies('^mvapich2'):
-            config_args.append('--with-mpi=mpich3')
-        elif spec.satisfies('^openmpi'):
-            config_args.append('--with-mpi=openmpi')
+        if '+mpi' in spec:
+            if spec.satisfies('^intel-mpi'):
+                config_args.append('--with-mpi=intel3')
+            elif spec.satisfies('^mpich') or spec.satisfies('^mvapich2'):
+                config_args.append('--with-mpi=mpich3')
+            elif spec.satisfies('^openmpi'):
+                config_args.append('--with-mpi=openmpi')
+            elif spec.satisfies('^hpe-mpi'):
+                config_args.append('--with-mpi=sgimpt')
+            else:
+                raise Exception('Unrecognized MPI library')
 
         if spec.satisfies('%gcc'):
             config_args.append('--with-nocross-compiler-suite=gcc')
