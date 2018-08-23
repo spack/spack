@@ -431,6 +431,7 @@ class Trilinos(CMakePackage):
             # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
+                '-DTrilinos_ENABLE_STKNGP:BOOL=ON',
                 '-DTrilinos_ENABLE_STKSimd:BOOL=ON',
                 '-DTrilinos_ENABLE_STKIO:BOOL=ON',
                 '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
