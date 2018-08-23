@@ -32,6 +32,17 @@ class PyCogent(PythonPackage):
     url      = "https://pypi.io/packages/source/c/cogent/cogent-1.9.tar.gz"
 
     version('1.9', '7d9f28cd17664c1cd18c568fc53060d6')
+    version('1.5.3', sha256='4e19325cd1951382dc71582eb49f44c5a19eb128e3540e29dc28e080091e49cd')
 
-    depends_on('py-setuptools',   type='build')
-    depends_on('py-numpy',        type=('build', 'run'))
+    variant('matplotlib', default=False, description="graphs related to codon usage")
+    variant('cython', default=False, description="This module is only necessary .pyx files.")
+    variant('mpi4py', default=False, description='MPI required for parallel computation.')
+    variant('sqlalchemy', default=False, description='Required for the Ensembl querying code.')
+
+    depends_on('python@2.6:2.999', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('zlib')
+    depends_on('py-matplotlib', when='+py-matplotlib', type=('build', 'run'))
+    depends_on('py-cython', when='+py-cython', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+py-mpi4py', type=('build', 'run'))
+    depends_on('py-sqlalchemy', when='+py-sqlalchemy', type=('build', 'run'))
