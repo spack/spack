@@ -37,6 +37,7 @@ class Libquo(AutotoolsPackage):
 
     version('develop', branch='master')
     version('1.3',   '1a1fb83d2c9e99ef5d5fcd71037ef8e8')
+    version('1.2.9', '85907cfbdb8b1e57fc5fcf3bced7cfa8')
 
     depends_on('mpi')
 
