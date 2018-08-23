@@ -1957,8 +1957,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         activate() directly.
         """
         if verbose:
-            tty.msg("Activating extension %s for %s" %
-                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.msg('Activating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         self._sanity_check_extension()
         if not view:
@@ -1984,10 +1984,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Activated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Activated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -2015,8 +2013,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         self._sanity_check_extension()
         force = kwargs.get('force', False)
-        verbose = kwargs.get("verbose", True)
-        remove_dependents = kwargs.get("remove_dependents", False)
+        verbose = kwargs.get('verbose', True)
+        remove_dependents = kwargs.get('remove_dependents', False)
+
+        if verbose:
+            tty.msg('Deactivating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         if not view:
             view = YamlFilesystemView(
@@ -2039,11 +2041,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         if remove_dependents:
                             aspec.package.do_deactivate(**kwargs)
                         else:
-                            msg = ("Cannot deactivate %s because %s is "
-                                   "activated and depends on it.")
-                            raise ActivationError(
-                                msg % (self.spec.cshort_spec,
-                                       aspec.cshort_spec))
+                            msg = ('Cannot deactivate {0} because {1} is '
+                                   'activated and depends on it')
+                            raise ActivationError(msg.format(
+                                self.spec.cshort_spec, aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
             self, view, **self.extendee_args)
@@ -2055,10 +2056,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Deactivated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Deactivated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def deactivate(self, extension, view, **kwargs):
         """
