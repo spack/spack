@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 import re
+import ssl
 import tarfile
 import shutil
 import platform
@@ -50,7 +51,7 @@ from spack.schema.buildcache_index import schema
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-from spack.util.web import spider
+from spack.util.web import spider, read_from_url
 from spack.util.executable import ProcessError
 
 
@@ -715,29 +716,6 @@ def get_keys(install=False, trust=False, force=False):
                             'Use -t to install all downloaded keys')
 
 
-def read_from_url(file_uri):
-    file_contents = None
-
-    try:
-        url = urlopen(file_uri)
-    except URLError as url_err:
-        msg = 'Unable to open url {0} due to {1}'.format(
-            file_uri, url_err.message)
-        raise spack.error.SpackError(msg)
-    except Exception as expn:
-        msg = 'Error getting file contents at {0} due to {1}'.format(
-            file_uri, expn.message)
-        raise spack.error.SpackError(msg)
-
-    file_contents = url.read()
-
-    if not file_contents:
-        msg = 'Unable to read file contents at {0}'.format(file_uri)
-        raise spack.error.SpackError(msg)
-
-    return file_contents
-
-
 def needs_rebuild(spec, mirror_url, buildcache_index):
     pkg_name = spec.name
     pkg_version = spec.version
@@ -772,13 +750,36 @@ def needs_rebuild(spec, mirror_url, buildcache_index):
         build_cache_dir = build_cache_directory(mirror_url)
         spec_yaml_file_name = tarball_name(spec, '.spec.yaml')
         file_path = os.path.join(build_cache_dir, spec_yaml_file_name)
+
         try:
             yaml_contents = read_from_url(file_path)
-        except spack.error.SpackError:
-            # let any kind of failure reading the .spec.yaml indicate rebuild
+        except URLError as e:
+            tty.debug(e)
+
+            if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
+                tty.warn("Spack was unable to fetch url list due to a certificate "
+                         "verification problem. You can try running spack -k, "
+                         "which will not check SSL certificates. Use this at your "
+                         "own risk.")
+
             return rebuild_spec
+
+        except Exception as e:
+            tty.warn("Error in needs_rebuild: %s:%s" % (type(e), e),
+                      traceback.format_exc())
+            return rebuild_spec
+
+        if not yaml_contents:
+            tty.warn('reading from {0} returned nothing, rebuilding {1}'.format(
+                file_path, spec.short_spec))
+            return rebuild_spec
+
         spec_yaml = syaml.load(yaml_contents)
 
+        # If either the full_hash didn't exist in the .spec.yaml file, or it
+        # did, but didn't match the one we computed locally, then we should
+        # just rebuild.  This can be simplified once the dag_hash and the
+        # full_hash become the same thing.
         if ('full_hash' not in spec_yaml or
             spec_yaml['full_hash'] != pkg_full_hash):
                 return rebuild_spec
