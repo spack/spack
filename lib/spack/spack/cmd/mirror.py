@@ -78,7 +78,7 @@ def setup_parser(subparser):
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -87,14 +87,14 @@ def setup_parser(subparser):
     remove_parser.add_argument('name')
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_list_scope(),
+        default=spack.config.default_list_scope(),
         help="configuration scope to read from")
 
 

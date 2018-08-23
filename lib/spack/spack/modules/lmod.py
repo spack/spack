@@ -92,11 +92,15 @@ def guess_core_compilers(store=False):
 
     if store and core_compilers:
         # If we asked to store core compilers, update the entry
-        # at 'site' scope (i.e. within the directory hierarchy
+        # in the default modify scope (i.e. within the directory hierarchy
         # of Spack itself)
-        modules_cfg = spack.config.get('modules', scope='site')
+        modules_cfg = spack.config.get(
+            'modules', scope=spack.config.default_modify_scope()
+        )
         modules_cfg.setdefault('lmod', {})['core_compilers'] = core_compilers
-        spack.config.set('modules', modules_cfg, scope='site')
+        spack.config.set(
+            'modules', modules_cfg, scope=spack.config.default_modify_scope()
+        )
 
     return core_compilers or None
 

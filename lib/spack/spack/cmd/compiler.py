@@ -56,7 +56,7 @@ def setup_parser(subparser):
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -68,14 +68,14 @@ def setup_parser(subparser):
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_list_scope(),
+        default=spack.config.default_list_scope(),
         help="configuration scope to read from")
 
     # Info
@@ -83,7 +83,7 @@ def setup_parser(subparser):
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_list_scope(),
+        default=spack.config.default_list_scope(),
         help="configuration scope to read from")
 
 
