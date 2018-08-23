@@ -51,6 +51,7 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.check_upstream = True
 
     @property
     def hidden_file_paths(self):
@@ -94,7 +95,7 @@ class DirectoryLayout(object):
 
         if spec.external:
             return spec.external_path
-        if spec.package.installed_upstream:
+        if self.check_upstream and spec.package.installed_upstream:
             raise SpackError(
                 "Internal error: attempted to call path_for_spec on"
                 " upstream-installed package.")
@@ -245,7 +246,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
     def metadata_path(self, spec):
-        if spec.package.installed_upstream:
+        if self.check_upstream and spec.package.installed_upstream:
             # TODO: This assumes that older spack versions use the same
             # relative metadata directory as the current Spack, which is
             # generally reasonable (since this is not user-configurable).

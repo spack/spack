@@ -506,6 +506,7 @@ class Database(object):
             # instead, we would perpetuate errors over a reindex.
 
             old_data = self._data
+            directory_layout.check_upstream = False
             try:
                 # Initialize data in the reconstructed DB
                 self._data = {}
@@ -581,6 +582,8 @@ class Database(object):
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
+            finally:
+                directory_layout.check_upstream = True
 
     def _check_ref_counts(self):
         """Ensure consistency of reference counts in the DB.
