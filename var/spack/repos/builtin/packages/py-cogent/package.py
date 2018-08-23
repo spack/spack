@@ -29,9 +29,9 @@ class PyCogent(PythonPackage):
     """A toolkit for statistical analysis of biological sequences."""
 
     homepage = "http://pycogent.org"
-    url      = "https://pypi.io/packages/source/c/cogent/cogent-1.9.tar.gz"
+    url      = "https://github.com/pycogent/pycogent/archive/1.9.tar.gz"
 
-    version('1.9', '7d9f28cd17664c1cd18c568fc53060d6')
+    version('1.9', sha256='c9f56d21d764aa62e3e8a9df5a300eb7fb59e502572bec41894d21df19aeceb5')
     version('1.5.3', sha256='4e19325cd1951382dc71582eb49f44c5a19eb128e3540e29dc28e080091e49cd')
 
     variant('matplotlib', default=False, description="graphs related to codon usage")
