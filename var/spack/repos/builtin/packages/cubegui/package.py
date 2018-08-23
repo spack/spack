@@ -38,7 +38,7 @@ class Cubegui(AutotoolsPackage):
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.tar.gz"
 
-    version('4.4', '0ade1cd54636e6c85efba1a4a6af0068 ')
+    version('4.4', '0ade1cd54636e6c85efba1a4a6af0068')
 
     depends_on('cubelib@4.4:')
     depends_on('qt@4.6:')
