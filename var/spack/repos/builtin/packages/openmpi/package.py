@@ -79,10 +79,11 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.1.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.2.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
+    version('3.1.2', '210df69fafd964158527e7f37e333239')  # libmpi.so.40.10.2
     version('3.1.1', '493f1db2f75afaab1c8ecba78d2f5aab')  # libmpi.so.40.10.1
     version('3.1.0', '0895e268ca27735d7654bf64cee6c256')  # libmpi.so.40.10.0
 
