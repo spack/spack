@@ -29,7 +29,7 @@ class PerlSoapLite(PerlPackage):
     """Perl's Web Services Toolkit"""
 
     homepage = "http://search.cpan.org/~phred/SOAP-Lite-1.20/lib/SOAP/Lite.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/SOAP-Lite-1.20.tar.gz"
+    url      = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/SOAP-Lite-1.22.tar.gz"
 
     version('1.22', '86c31341311498a08c6309e62168f655')
 

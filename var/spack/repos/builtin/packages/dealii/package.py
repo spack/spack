@@ -28,8 +28,10 @@ from spack import *
 class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
+
     homepage = "https://www.dealii.org"
-    url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    git      = "https://github.com/dealii/dealii.git"
 
     maintainers = ['davydden', 'jppelteret']
 
@@ -37,6 +39,7 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('develop', branch='master')
     version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
     version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
     version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
@@ -46,7 +49,6 @@ class Dealii(CMakePackage, CudaPackage):
     version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
     version('8.2.1', '71c728dbec14f371297cd405776ccf08')
     version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
-    version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('assimp',   default=True,
@@ -96,21 +98,32 @@ class Dealii(CMakePackage, CudaPackage):
     # https://github.com/dealii/dealii/issues/5262
     # we take the patch from https://github.com/boostorg/serialization/pull/79
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
+    # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
+    # adopt https://github.com/boostorg/serialization/pull/105 as a fix
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='~python')
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
     depends_on('muparser')
     depends_on('suite-sparse')
+    depends_on('suite-sparse@:5.1.0', when='%gcc@:4.8.99')
     depends_on('tbb')
     depends_on('zlib')
 
@@ -155,21 +168,36 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
     # check that the combination of variants makes sense
-    conflicts('^openblas+ilp64', when='@:8.5.1')
-    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
-    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
-    conflicts('+assimp', when='@:8.5.1')
-    conflicts('+gmsh', when='@:8.5.1')
-    conflicts('+nanoflann', when='@:8.5.1')
-    conflicts('+scalapack', when='@:8.5.1')
-    conflicts('+sundials', when='@:8.5.1')
-    conflicts('+adol-c', when='@:8.5.1')
-    conflicts('+slepc', when='~petsc')
-    conflicts('+gsl',    when='@:8.4.2')
-    conflicts('+python', when='@:8.4.2')
-    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc', '+scalapack',
-              '+slepc', '+trilinos']:
-        conflicts(p, when='~mpi')
+    # 64-bit BLAS:
+    for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
+        conflicts('^{0}+ilp64'.format(p), when='@:8.5.1',
+                  msg='64bit BLAS is only supported from 9.0.0')
+
+    # interfaces added in 9.0.0:
+    for p in ['assimp', 'gmsh', 'nanoflann', 'scalapack', 'sundials',
+              'adol-c']:
+        conflicts('+{0}'.format(p), when='@:8.5.1',
+                  msg='The interface to {0} is supported from version 9.0.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    conflicts('+slepc', when='~petsc',
+              msg='It is not possible to enable slepc interfaces '
+                  'without petsc.')
+
+    # interfaces added in 8.5.0:
+    for p in ['gsl', 'python']:
+        conflicts('+{0}'.format(p), when='@:8.4.2',
+                  msg='The interface to {0} is supported from version 8.5.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # MPI requirements:
+    for p in ['arpack', 'hdf5', 'netcdf', 'p4est', 'petsc', 'scalapack',
+              'slepc', 'trilinos']:
+        conflicts('+{0}'.format(p), when='~mpi',
+                  msg='To enable {0} it is necessary to build deal.II with '
+                      'MPI support enabled.'.format(p))
 
     def cmake_args(self):
         spec = self.spec

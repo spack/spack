@@ -39,9 +39,9 @@ class Coevp(MakefilePackage):
     proxy application provides the adaptive sampling support."""
 
     homepage = 'https://github.com/exmatex/CoEVP'
+    git      = 'https://github.com/exmatex/CoEVP.git'
 
-    version('develop', git='https://github.com/exmatex/CoEVP.git',
-            branch='master')
+    version('develop', branch='master')
 
     variant('mpi', default=True, description='Build with MPI Support')
     variant('silo', default=False, description='Build with silo Support')

@@ -30,11 +30,9 @@ class PacbioDamasker(MakefilePackage):
        required for some pacbio utilities."""
 
     homepage = "https://github.com/PacificBiosciences/DAMASKER"
-    url      = "https://github.com/PacificBiosciences/DAMASKER"
+    git      = "https://github.com/PacificBiosciences/DAMASKER.git"
 
-    version('2017-02-11',
-            git='https://github.com/PacificBiosciences/DAMASKER.git',
-            commit='144244b77d52cb785cb1b3b8ae3ab6f3f0c63264')
+    version('2017-02-11', commit='144244b77d52cb785cb1b3b8ae3ab6f3f0c63264')
 
     depends_on('gmake', type='build')
 

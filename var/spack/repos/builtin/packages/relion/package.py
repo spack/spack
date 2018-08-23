@@ -32,31 +32,47 @@ class Relion(CMakePackage, CudaPackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    url      = "https://github.com/3dem/relion"
+    git      = "https://github.com/3dem/relion.git"
 
-    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
-    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
-    version('develop', git='https://github.com/3dem/relion.git')
+    version('3.0_beta',
+            git='https://bitbucket.org/scheres/relion-3.0_beta.git')
+    version('2.1', preferred='true', tag='2.1')
+    version('2.0.3', tag='2.0.3')
+    # relion has no develop branch though pulling from master
+    # should be considered the same as develop
+    version('develop', branch='master')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
     variant('double', default=True, description="double precision (cpu) code")
-    variant('double-gpu', default=False, description="double precision (gpu) code")
+    variant('double-gpu', default=False, description="double precision gpu")
+    # if built with purpose=cluster then relion will link to gpfs libraries
+    # if that's not desirable then use purpose=desktop
+    variant('purpose', default='cluster', values=('cluster', 'desktop'),
+            description="build relion for use in cluster or desktop")
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
+    # relion will not build with newer versions of cmake
+    # per https://github.com/3dem/relion/issues/380
+    depends_on('cmake@3:3.9.4', type='build')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
-    # cuda 9 not yet supported
-    #  https://github.com/3dem/relion/issues/296
-    depends_on('cuda@8.0:8.99', when='+cuda')
-    # use gcc < 5 when compiled with cuda 8
-    conflicts('%gcc@5:', when='+cuda')
+    depends_on('libtiff')
+
+    # relion 3 supports cuda 9
+    # relion < 3 does not
+    depends_on('cuda', when='+cuda')
+    depends_on('cuda@9:', when='@3: +cuda')
+    depends_on('cuda@8.0:8.99', when='@:2 +cuda')
 
     def cmake_args(self):
+
+        carch = self.spec.variants['cuda_arch'].value[0]
+
         args = [
             '-DCMAKE_C_FLAGS=-g',
             '-DCMAKE_CXX_FLAGS=-g',
@@ -65,14 +81,17 @@ class Relion(CMakePackage, CudaPackage):
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
         ]
 
-        carch = self.spec.variants['cuda_arch'].value
-
         if '+cuda' in self.spec:
-            args += [
-                '-DCUDA=on',
-            ]
-            if carch is not None:
-                args += [
-                    '-DCUDA_ARCH=%s' % (carch),
-                ]
+            # relion+cuda requires selecting cuda_arch
+            if not carch:
+                raise ValueError("select cuda_arch when building with +cuda")
+            else:
+                args += ['-DCUDA=ON', '-DCudaTexture=ON',
+                         '-DCUDA_ARCH=%s' % (carch)]
+
+        # these new values were added in relion 3
+        # do not seem to cause problems with < 3
+        else:
+            args += ['-DMKLFFT=ON', '-DFORCE_OWN_TBB=ON', '-DALTCPU=ON']
+
         return args

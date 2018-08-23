@@ -30,10 +30,9 @@ class Librom(AutotoolsPackage):
     """libROM: library for computing large-scale reduced order models"""
 
     homepage = "https://github.com/LLNL/libROM"
-    url      = "https://github.com/LLNL/libROM"
+    git      = "https://github.com/LLNL/libROM.git"
 
-    version('develop', git='https://github.com/LLNL/libROM',
-            branch='master')
+    version('develop', branch='master')
 
     depends_on('lapack')
     depends_on('mpi')

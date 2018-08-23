@@ -26,61 +26,64 @@ from spack import *
 
 
 class Amrex(CMakePackage):
-    """AMReX is the successor to BoxLib.
-       It is a Block-Structured AMR Framework.
-    """
+    """AMReX is a publicly available software framework designed
+    for building massively parallel block- structured adaptive
+    mesh refinement (AMR) applications."""
 
-    homepage = "https://ccse.lbl.gov/AMReX/index.html"
-    url      = "https://github.com/AMReX-Codes/amrex.git"
+    homepage = "https://amrex-codes.github.io/amrex/"
+    git      = "https://github.com/AMReX-Codes/amrex.git"
 
-    version('17.06', git='https://github.com/AMReX-Codes/amrex.git', commit='836d3c7')
-    version('master', git='https://github.com/AMReX-Codes/amrex.git', tag='master')
-    version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='development')
+    version('develop', branch='development')
 
-    variant('dims',
-        default='3',
-        values=('1', '2', '3'),
-        multi=False,
-        description='Number of spatial dimensions')
+    # Config options
+    variant('dimensions', default='3',
+            description='Dimensionality', values=('2', '3'))
+    variant('shared',  default=False,
+            description='Build shared library')
+    variant('mpi',          default=True,
+            description='Build with MPI support')
+    variant('openmp',       default=False,
+            description='Build with OpenMP support')
+    variant('precision',  default='double',
+            description='Real precision (double/single)',
+            values=('single', 'double'))
+    variant('eb',  default=False,
+            description='Build Embedded Boundary classes')
+    variant('fortran',  default=False,
+            description='Build Fortran API')
+    variant('linear_solvers', default=True,
+            description='Build linear solvers')
+    variant('amrdata',    default=False,
+            description='Build data services')
+    variant('particles',  default=False,
+            description='Build particle classes')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
-    variant('prec',
-        default='DOUBLE',
-        values=('FLOAT', 'DOUBLE'),
-        multi=False,
-        description='Floating point precision')
-
-    variant('mpi', default=True, description='Enable MPI parallel support')
-    variant('openmp', default=False, description='Enable OpenMP parallel support')
-    variant('fortran', default=True, description='Enable Fortran support')
-    variant('debug', default=False, description='Enable debugging features')
-    variant('particles', default=False, description='Include particle classes in build')
-
+    # Build dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('python@2.7:', type='build')
+    depends_on('cmake@3.5:',  type='build')
+    conflicts('%clang')
+
+    def cmake_is_on(self, option):
+        return 'ON' if option in self.spec else 'OFF'
 
     def cmake_args(self):
-        spec = self.spec
-
-        cmake_args = [
-            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
-            '-DBL_SPACEDIM:INT=%d' % int(spec.variants['dims'].value),
-            '-DBL_PRECISION:STRING=%s' % spec.variants['prec'].value,
-            '-DENABLE_FMG=%s' % ('+fortran' in spec),
-            '-DENABLE_FBASELIB=%s' % ('+fortran' in spec),
-            '-DBL_DEBUG:INT=%d' % int('+debug' in spec),
-            '-DBL_USE_PARTICLES:INT=%d' % int('+particles' in spec),
-            '-DENABLE_MPI:INT=%d' % int('+mpi' in spec),
-            '-DENABLE_OpenMP:INT=%d' % int('+openmp' in spec),
+        args = [
+            '-DUSE_XSDK_DEFAULTS=ON',
+            '-DDIM:STRING=%s' % self.spec.variants['dimensions'].value,
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % self.cmake_is_on('+shared'),
+            '-DENABLE_MPI:BOOL=%s' % self.cmake_is_on('+mpi'),
+            '-DENABLE_OMP:BOOL=%s' % self.cmake_is_on('+openmp'),
+            '-DXSDK_PRECISION:STRING=%s' %
+            self.spec.variants['precision'].value.upper(),
+            '-DENABLE_EB:BOOL=%s' % self.cmake_is_on('+eb'),
+            '-DXSDK_ENABLE_Fortran:BOOL=%s' % self.cmake_is_on('+fortran'),
+            '-DENABLE_LINEAR_SOLVERS:BOOL=%s' %
+            self.cmake_is_on('+linear_solvers'),
+            '-DENABLE_AMRDATA:BOOL=%s' % self.cmake_is_on('+amrdata'),
+            '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles')
         ]
-
-        if '+mpi' in spec:
-            cmake_args += [
-                '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx
-            ]
-            if '+fortran' in spec:
-                cmake_args += [
-                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
-                ]
-            cmake_args += ['-DENABLE_FORTRAN_MPI=%s' % ('+fortran' in spec)]
-
-        return cmake_args
+        return args

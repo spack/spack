@@ -119,7 +119,7 @@ etc.) but we wanted to make Spack *very* easy to use.  The simple layout
 spares users from the need to install Spack into a Python environment.
 Many users don't have write access to a Python installation, and installing
 an entire new instance of Python to bootstrap Spack would be very complicated.
-Users should not have to install install a big, complicated package to
+Users should not have to install a big, complicated package to
 use the thing that's supposed to spare them from the details of big,
 complicated packages.  The end result is that Spack works out of the
 box: clone it and add ``bin`` to your PATH and you're ready to go.
@@ -314,7 +314,7 @@ See the `Argparse documentation <https://docs.python.org/2.7/library/argparse.ht
 for more details on how to add arguments.
 
 Some commands have a set of subcommands, like ``spack compiler find`` or
-``spack module refresh``. You can add subparsers to your parser to handle
+``spack module lmod refresh``. You can add subparsers to your parser to handle
 this. Check out ``spack edit --command compiler`` for an example of this.
 
 A lot of commands take the same arguments and flags. These arguments should

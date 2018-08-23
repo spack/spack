@@ -30,9 +30,9 @@ class Pbmpi(MakefilePackage):
     """
 
     homepage = "http://megasun.bch.umontreal.ca/People/lartillot/www/index.htm"
-    url      = "https://github.com/bayesiancook/pbmpi"
+    git      = "https://github.com/bayesiancook/pbmpi.git"
 
-    version('partition', git='https://github.com/bayesiancook/pbmpi.git', branch='partition')
+    version('partition', branch='partition')
 
     depends_on('mpi')
     depends_on('libfabric')

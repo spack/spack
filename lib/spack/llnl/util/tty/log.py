@@ -446,10 +446,9 @@ class log_output(object):
         try:
             with keyboard_input(stdin):
                 while True:
-                    # Without the last parameter (timeout) select will
-                    # wait until at least one of the two streams are
-                    # ready. This may cause the function to hang.
-                    rlist, _, xlist = select.select(istreams, [], [], 0)
+                    # No need to set any timeout for select.select
+                    # Wait until a key press or an event on in_pipe.
+                    rlist, _, _ = select.select(istreams, [], [])
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.

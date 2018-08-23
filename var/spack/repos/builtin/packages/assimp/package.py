@@ -30,7 +30,7 @@ class Assimp(CMakePackage):
     import various well-known 3D model formats in a uniform manner."""
 
     homepage = "https://www.assimp.org"
-    url      = "https://github.com/assimp/assimp/archive/v3.3.1.tar.gz"
+    url      = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
 
     version('4.0.1', '23a6301c728a413aafbfa1cca19ba91f')
 

@@ -11,20 +11,22 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
+
+# Adding the keyword dist to permit an `allow_failures` section
+# under `matrix.include`. More information here:
+#
+# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
+dist: trusty
+
 jobs:
   fast_finish: true
   include:
-    - stage: 'flake8 + documentation'
+    - stage: 'style checks'
       python: '2.7'
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'flake8 + documentation'
-      python: '3.6'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
-    - stage: 'unit tests'
+    - stage: 'unit tests + documentation'
       python: '2.6'
       os: linux
       language: python
@@ -32,7 +34,7 @@ jobs:
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
+      env: TEST_SUITE=unit
     - python: '3.3'
       os: linux
       language: python
@@ -48,56 +50,68 @@ jobs:
     - python: '3.6'
       os: linux
       language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
+      env: TEST_SUITE=unit
+    - python: '3.7'
+      os: linux
+      dist: xenial
+      sudo: true
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
     - stage: 'unit tests - osx'
       os: osx
       language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
 # astyle (MakefilePackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=astyle' ]
+      env: [ TEST_SUITE=build, 'SPEC=astyle' ]
 # tut (WafPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=tut' ]
+      env: [ TEST_SUITE=build, 'SPEC=tut' ]
 # py-setuptools (PythonPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=py-setuptools' ]
+      env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
 # perl-dbi (PerlPackage)
 #    - python: '2.7'
 #      os: linux
 #      language: python
-#      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+#      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
 # openjpeg (CMakePackage + external cmake)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
+      env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
 # r-rcpp (RPackage + external R)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
+      env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
 # mpich (AutotoolsPackage)
     - python: '3.6'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
+  allow_failures:
+    - dist: xenial
 
 stages:
-  - 'flake8 + documentation'
-  - 'unit tests'
+  - 'style checks'
+  - 'unit tests + documentation'
   - 'build tests'
   - name: 'unit tests - osx'
     if: type IN (cron)
@@ -118,6 +132,7 @@ addons:
       - graphviz
       - gnupg2
       - cmake
+      - ninja-build
       - r-base
       - r-base-core
       - r-base-dev
@@ -146,6 +161,7 @@ install:
   - pip install --upgrade setuptools
   - pip install --upgrade codecov
   - pip install --upgrade flake8
+  - pip install --upgrade pep8-naming
   - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt; fi
 
 before_script:
@@ -164,7 +180,7 @@ before_script:
 #=============================================================================
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
-  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PYTHON_VERSION --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}"; fi
+  - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then codecov --env PYTHON_VERSION --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}"; fi
 
 #=============================================================================
 # Notifications

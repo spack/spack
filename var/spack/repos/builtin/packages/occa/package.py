@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
 class Occa(Package):
@@ -38,13 +36,12 @@ class Occa(Package):
     """
 
     homepage = "http://libocca.org"
-    url      = 'https://github.com/libocca/occa'
-    git_url  = 'https://github.com/libocca/occa.git'
+    git      = 'https://github.com/libocca/occa.git'
 
-    version('develop', git='https://github.com/libocca/occa.git')
-    version('v1.0.0-alpha.5', git=git_url, tag='v1.0.0-alpha.5')
-    version('v0.2.0', git=git_url, tag='v0.2.0')
-    version('v0.1.0', git=git_url, tag='v0.1.0')
+    version('develop')
+    version('v1.0.0-alpha.5', tag='v1.0.0-alpha.5')
+    version('v0.2.0', tag='v0.2.0')
+    version('v0.1.0', tag='v0.1.0')
 
     variant('cuda',
             default=True,
@@ -64,12 +61,7 @@ class Occa(Package):
     def install(self, spec, prefix):
         # The build environment is set by the 'setup_environment' method.
         # Copy the source to the installation directory and build OCCA there.
-        for file in os.listdir('.'):
-            dest = join_path(prefix, os.path.basename(file))
-            if os.path.isdir(file):
-                shutil.copytree(file, dest)
-            else:
-                shutil.copy2(file, dest)
+        install_tree('.', prefix)
         make('-C', prefix)
 
         if self.run_tests:

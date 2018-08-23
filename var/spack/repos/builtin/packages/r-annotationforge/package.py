@@ -31,9 +31,9 @@ class RAnnotationforge(RPackage):
     with AnnotationDbi."""
 
     homepage = "https://www.bioconductor.org/packages/AnnotationForge/"
-    url      = "https://git.bioconductor.org/packages/AnnotationForge"
+    git      = "https://git.bioconductor.org/packages/AnnotationForge.git"
 
-    version('1.18.2', git='https://git.bioconductor.org/packages/AnnotationForge', commit='44ca3d4ef9e9825c14725ffdbbaa57ea059532e1')
+    version('1.18.2', commit='44ca3d4ef9e9825c14725ffdbbaa57ea059532e1')
 
     depends_on('r@3.4.0:3.4.9', when='@1.18.2')
     depends_on('r-biocgenerics', type=('build', 'run'))

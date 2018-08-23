@@ -30,11 +30,9 @@ class PacbioDextractor(MakefilePackage):
        fork required by some pacbio utilities."""
 
     homepage = "https://github.com/PacificBiosciences/DEXTRACTOR"
-    url      = "https://github.com/PacificBiosciences/DEXTRACTOR"
+    git      = "https://github.com/PacificBiosciences/DEXTRACTOR.git"
 
-    version('2016-08-09',
-            git='https://github.com/PacificBiosciences/DEXTRACTOR.git',
-            commit='89726800346d0bed15d98dcc577f4c7733aab4b1')
+    version('2016-08-09', commit='89726800346d0bed15d98dcc577f4c7733aab4b1')
 
     depends_on('hdf5')
     depends_on('gmake', type='build')

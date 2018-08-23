@@ -30,10 +30,9 @@ class RIrkernel(RPackage):
     """R kernel for Jupyter"""
 
     homepage = "https://irkernel.github.io/"
+    git      = "https://github.com/IRkernel/IRkernel.git"
 
-    # Git repository
-    version('master', git='https://github.com/IRkernel/IRkernel.git',
-        tag='0.7')
+    version('master', tag='0.7')
 
     depends_on('r-repr', type=('build', 'run'))
     depends_on('r-irdisplay', type=('build', 'run'))

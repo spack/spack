@@ -35,26 +35,21 @@ class PyYt(PythonPackage):
        interdisciplinary community.
     """
     homepage = "http://yt-project.org"
-    url = "https://github.com/yt-project/yt.git"
+    url      = "https://github.com/yt-project/yt/archive/yt-3.4.0.tar.gz"
+    git      = "https://github.com/yt-project/yt.git"
 
-    version("3.4.0", "413b835f1b0e2a0bd26f1044ff7dbc94",
-            url="https://github.com/yt-project/yt/archive/yt-3.4.0.tar.gz")
-    version("3.3.5", "2ad314ff3d3261e41825d15db027b0e7",
-            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.5.tar.gz")
-    version("3.3.4", "3a84e56dfd82f9dd923f3fb8490e679c",
-            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.4.tar.gz")
-    version("3.3.1", hg="https://bitbucket.org/yt_analysis/yt",
-            tag="yt-3.3.1", commit="9bc3d0e9b750c923d44d73c447df64fc431f5838")
-    version("3.2.3", hg="https://bitbucket.org/yt_analysis/yt",
-            tag="yt-3.2.3", commit="83d2c1e9313e7d83eb5b96888451ff2646fd8ff3")
-    version("3.1.0", hg="https://bitbucket.org/yt_analysis/yt",
-            tag="yt-3.1.0", commit="fd7cdc4836188a3badf81adb477bcc1b9632e485")
-    version("3.0.2", hg="https://bitbucket.org/yt_analysis/yt",
-            tag="yt-3.0.2", commit="511887af4c995a78fe606e58ce8162c88380ecdc")
-    version("2.6.3", hg="https://bitbucket.org/yt_analysis/yt",
-            tag="yt-2.6.3", commit="816186f16396a16853810ac9ebcde5057d8d5b1a")
-    version("develop", git="https://github.com/yt-project/yt.git",
-            branch="master")
+    version("develop", branch="master")
+
+    version('3.4.1', sha256='b9a73ade3726a8163fc992999c8c1010ca89473131901fe4d48b820ab2ced486')
+    version('3.4.0', sha256='2120793a76864cf3165b2b7290ef719e358fa57501ee8721941e7cfc434cfb2b')
+    version('3.3.5', sha256='2ebe4bbefd9f5367563ce4d7eb87d3f6ef0de1f97ed1c03106d9541e71b7e1ca')
+    version('3.3.4', sha256='2842bab891cfbf3269a3c4bd8f22fef23c9a15a790ba48c6490730cb51ce9b0e')
+    version('3.3.3', sha256='7b9244089e92b1d32cef791cd72760bb8c80b391eaec29672a5377c33f932d88')
+    version('3.3.2', sha256='d323419ad3919e86d2af1738c846021fd7f5b5dc5c06059cdf3a2bc63226466a')
+    version('3.3.1', sha256='7ac68d5e05e2b57fb3635f1027f3201094f3547d584e72ab55fedbfd3bc09a36')
+    version('3.3.0', sha256='e6be799c0d9a83a06649f0d77a61ad9c23b94b34f94e16724e2b18f5c7513c33')
+    version('3.2.3', sha256='96476d17e9ce35f0d4380b2ddb398fe729e39f1f3894602ff07e49844541e5ca')
+    version('3.2.2', sha256='498ed77b3dae8c54929602d4931f3c3e0a3420a9b500cbd870f50b1e0efea8c3')
 
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")

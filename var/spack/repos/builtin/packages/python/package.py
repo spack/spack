@@ -30,7 +30,8 @@ import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import force_remove
+from llnl.util.filesystem import (force_remove, get_filetype,
+                                  path_contains_subdirectory)
 
 import spack.store
 import spack.util.spack_json as sjson
@@ -47,6 +48,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.7.0', '41b6595deb4147a1ed517a7d9a580271')
     version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
     version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
@@ -115,6 +117,10 @@ class Python(AutotoolsPackage):
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
     patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
+
+    # Fixes an alignment problem with more aggressive optimization in gcc8
+    # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
+    patch('gcc-8-2.7.14.patch', when="@2.7.14 %gcc@8:")
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -676,33 +682,49 @@ class Python(AutotoolsPackage):
                         "sys.path[p:p]=new; "
                         "sys.__egginsert = p+len(new)\n")
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        super(Python, self).activate(ext_pkg, view, **args)
 
-        super(Python, self).activate(ext_pkg, **args)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-        self.write_easy_install_pth(
-            exts,
-            prefix=extensions_layout.extendee_target_directory(self))
+        self.write_easy_install_pth(exts, prefix=view.root)
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
-        super(Python, self).deactivate(ext_pkg, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        super(Python, self).deactivate(ext_pkg, view, **args)
 
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(
-                exts,
-                prefix=extensions_layout.extendee_target_directory(self))
+            self.write_easy_install_pth(exts, prefix=view.root)
+
+    def add_files_to_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        for src, dst in merge_map.items():
+            if not path_contains_subdirectory(src, bin_dir):
+                view.link(src, dst)
+            elif not os.path.islink(src):
+                copy(src, dst)
+                if 'script' in get_filetype(src):
+                    filter_file(
+                        self.spec.prefix, os.path.abspath(view.root), dst)
+            else:
+                orig_link_target = os.path.realpath(src)
+                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                view.link(new_link_target, dst)
+
+    def remove_files_from_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        for src, dst in merge_map.items():
+            if not path_contains_subdirectory(src, bin_dir):
+                view.remove_file(src, dst)
+            else:
+                os.remove(dst)

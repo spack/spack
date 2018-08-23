@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 """This module implements Spack's configuration file handling.
 
 This implements Spack's configuration system, which handles merging
@@ -57,9 +59,10 @@ import multiprocessing
 from contextlib import contextmanager
 from six import string_types
 from six import iteritems
+from ordereddict_backport import OrderedDict
 
-import yaml
-from yaml.error import MarkedYAMLError
+import ruamel.yaml as yaml
+from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -69,7 +72,6 @@ import spack.paths
 import spack.architecture
 import spack.schema
 from spack.error import SpackError
-from spack.util.ordereddict import OrderedDict
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -187,7 +189,6 @@ class ConfigScope(object):
         return self.sections[section]
 
     def write_section(self, section):
-        import jsonschema
         filename = self.get_section_filename(section)
         data = self.get_section(section)
         try:
@@ -195,8 +196,6 @@ class ConfigScope(object):
             with open(filename, 'w') as f:
                 _validate_section(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
-        except jsonschema.ValidationError as e:
-            raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
@@ -207,6 +206,19 @@ class ConfigScope(object):
 
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
+
+
+class ImmutableConfigScope(ConfigScope):
+    """A configuration scope that cannot be written to.
+
+    This is used for ConfigScopes passed on the command line.
+    """
+
+    def write_section(self, section):
+        raise ConfigError("Cannot write to immutable scope %s" % self)
+
+    def __repr__(self):
+        return '<ImmutableConfigScope: %s: %s>' % (self.name, self.path)
 
 
 class InternalConfigScope(ConfigScope):
@@ -277,9 +289,8 @@ class Configuration(object):
 
     @property
     def file_scopes(self):
-        """List of scopes with an associated file (non-internal scopes)."""
-        return [s for s in self.scopes.values()
-                if not isinstance(s, InternalConfigScope)]
+        """List of writable scopes with an associated file."""
+        return [s for s in self.scopes.values() if type(s) == ConfigScope]
 
     def highest_precedence_scope(self):
         """Non-internal scope with highest precedence."""
@@ -458,17 +469,65 @@ class Configuration(object):
 
 
 @contextmanager
-def override(path, value):
-    """Simple way to override config settings within a context."""
-    overrides = InternalConfigScope('overrides')
+def override(path_or_scope, value=None):
+    """Simple way to override config settings within a context.
 
-    config.push_scope(overrides)
-    config.set(path, value, scope='overrides')
+    Arguments:
+        path_or_scope (ConfigScope or str): scope or single option to override
+        value (object, optional): value for the single option
 
-    yield config
+    Temporarily push a scope on the current configuration, then remove it
+    after the context completes. If a single option is provided, create
+    an internal config scope for it and push/pop that scope.
 
-    scope = config.pop_scope()
-    assert scope is overrides
+    """
+    if isinstance(path_or_scope, ConfigScope):
+        config.push_scope(path_or_scope)
+        yield config
+        config.pop_scope(path_or_scope)
+
+    else:
+        overrides = InternalConfigScope('overrides')
+
+        config.push_scope(overrides)
+        config.set(path_or_scope, value, scope='overrides')
+
+        yield config
+
+        scope = config.pop_scope()
+        assert scope is overrides
+
+
+#: configuration scopes added on the command line
+#: set by ``spack.main.main()``.
+command_line_scopes = []
+
+
+def _add_platform_scope(cfg, scope_type, name, path):
+    """Add a platform-specific subdirectory for the current platform."""
+    platform = spack.architecture.platform().name
+    plat_name = '%s/%s' % (name, platform)
+    plat_path = os.path.join(path, platform)
+    cfg.push_scope(scope_type(plat_name, plat_path))
+
+
+def _add_command_line_scopes(cfg, command_line_scopes):
+    """Add additional scopes from the --config-scope argument.
+
+    Command line scopes are named after their position in the arg list.
+    """
+    for i, path in enumerate(command_line_scopes):
+        # We ensure that these scopes exist and are readable, as they are
+        # provided on the command line by the user.
+        if not os.path.isdir(path):
+            raise ConfigError("config scope is not a directory: '%s'" % path)
+        elif not os.access(path, os.R_OK):
+            raise ConfigError("config scope is not readable: '%s'" % path)
+
+        # name based on order on the command line
+        name = 'cmd_scope_%d' % i
+        cfg.push_scope(ImmutableConfigScope(name, path))
+        _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
 
 def _config():
@@ -488,16 +547,15 @@ def _config():
     defaults = InternalConfigScope('_builtin', config_defaults)
     cfg.push_scope(defaults)
 
-    # Each scope can have per-platfom overrides in subdirectories
-    platform = spack.architecture.platform().name
-
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
         cfg.push_scope(ConfigScope(name, path))
 
-        plat_name = '%s/%s' % (name, platform)
-        plat_path = os.path.join(path, platform)
-        cfg.push_scope(ConfigScope(plat_name, plat_path))
+        # Each scope can have per-platfom overrides in subdirectories
+        _add_platform_scope(cfg, ConfigScope, name, path)
+
+    # add command-line scopes
+    _add_command_line_scopes(cfg, command_line_scopes)
 
     # we make a special scope for spack commands so that they can
     # override configuration options.
@@ -531,8 +589,9 @@ def scopes():
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in section_schemas:
-        tty.die("Invalid config section: '%s'. Options are: %s"
-                % (section, " ".join(section_schemas.keys())))
+        raise ConfigSectionError(
+            "Invalid config section: '%s'. Options are: %s"
+            % (section, " ".join(section_schemas.keys())))
 
 
 def _validate_section(data, schema):
@@ -544,9 +603,9 @@ def _validate_section(data, schema):
     """
     import jsonschema
     if not hasattr(_validate_section, 'validator'):
-        DefaultSettingValidator = _extend_with_default(
+        default_setting_validator = _extend_with_default(
             jsonschema.Draft4Validator)
-        _validate_section.validator = DefaultSettingValidator
+        _validate_section.validator = default_setting_validator
 
     try:
         _validate_section.validator(schema).validate(data)
@@ -697,6 +756,10 @@ class ConfigError(SpackError):
     """Superclass for all Spack config related errors."""
 
 
+class ConfigSectionError(ConfigError):
+    """Error for referring to a bad config section name in a configuration."""
+
+
 class ConfigFileError(ConfigError):
     """Issue reading or accessing a configuration file."""
 
@@ -705,10 +768,38 @@ class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
 
     def __init__(self, validation_error, data):
-        # Try to get line number from erroneous instance and its parent
-        instance_mark = getattr(validation_error.instance, '_start_mark', None)
-        parent_mark = getattr(validation_error.parent, '_start_mark', None)
-        path = [str(s) for s in getattr(validation_error, 'path', None)]
+        location = '<unknown file>'
+        mark = self._get_mark(validation_error, data)
+        if mark:
+            location = '%s' % mark.name
+            if mark.line is not None:
+                location += ':%d' % (mark.line + 1)
+
+        message = '%s: %s' % (location, validation_error.message)
+        super(ConfigError, self).__init__(message)
+
+    def _get_mark(self, validation_error, data):
+        """Get the file/line mark fo a validation error from a Spack YAML file.
+        """
+        def _get_mark_or_first_member_mark(obj):
+            # mark of object itelf
+            mark = getattr(obj, '_start_mark', None)
+            if mark:
+                return mark
+
+            # mark of first member if it is a container
+            if isinstance(obj, (list, dict)):
+                first_member = next(iter(obj), None)
+                if first_member:
+                    mark = getattr(first_member, '_start_mark', None)
+                    if mark:
+                        return mark
+
+        # Try various places, starting with instance and parent
+        for obj in (validation_error.instance, validation_error.parent):
+            mark = _get_mark_or_first_member_mark(obj)
+            if mark:
+                return mark
 
         def get_path(path, data):
             if path:
@@ -719,29 +810,18 @@ class ConfigFormatError(ConfigError):
         # Try really hard to get the parent (which sometimes is not
         # set) This digs it out of the validated structure if it's not
         # on the validation_error.
-        if path and not parent_mark:
-            parent_path = list(path)[:-1]
-            parent = get_path(parent_path, data)
+        path = validation_error.path
+        if path:
+            parent = get_path(list(path)[:-1], data)
             if path[-1] in parent:
                 if isinstance(parent, dict):
-                    keylist = parent.keys()
+                    keylist = list(parent.keys())
                 elif isinstance(parent, list):
                     keylist = parent
                 idx = keylist.index(path[-1])
-                parent_mark = getattr(keylist[idx], '_start_mark', None)
+                mark = getattr(keylist[idx], '_start_mark', None)
+                if mark:
+                    return mark
 
-        if instance_mark:
-            location = '%s:%d' % (instance_mark.name, instance_mark.line + 1)
-        elif parent_mark:
-            location = '%s:%d' % (parent_mark.name, parent_mark.line + 1)
-        elif path:
-            location = 'At ' + ':'.join(path)
-        else:
-            location = '<unknown line>'
-
-        message = '%s: %s' % (location, validation_error.message)
-        super(ConfigError, self).__init__(message)
-
-
-class ConfigSanityError(ConfigFormatError):
-    """Same as ConfigFormatError, raised when config is written by Spack."""
+        # give up and return None if nothing worked
+        return None

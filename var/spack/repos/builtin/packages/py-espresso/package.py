@@ -38,15 +38,14 @@ class PyEspresso(CMakePackage):
        particle couplings to the LB fluid.
     """
     homepage = "http://espressomd.org/"
-    url      = "https://github.com/espressomd/espresso/tarball/v4.0"
+    git      = "https://github.com/espressomd/espresso.git"
 
-    version('develop', git='https://github.com/espressomd/espresso.git', branch='python')
+    version('develop', branch='python')
 
     depends_on("cmake@3.0:", type='build')
     depends_on("mpi")
     depends_on("boost+serialization+filesystem+system+python+mpi")
     extends("python")
-    depends_on("python")
-    depends_on("py-cython@0.23:")
-    depends_on("py-numpy")
+    depends_on("py-cython@0.23:", type="build")
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("fftw")

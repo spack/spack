@@ -22,15 +22,16 @@ class Plasma(MakefilePackage):
 
     homepage = "https://bitbucket.org/icl/plasma/"
     url      = "https://bitbucket.org/icl/plasma/downloads/plasma-17.1.tar.gz"
+    hg       = "https://luszczek@bitbucket.org/icl/plasma"
 
+    version("develop", hg=hg)
     version("17.1", "64b410b76023a41b3f07a5f0dca554e1")
-
-    version("develop", hg="https://luszczek@bitbucket.org/icl/plasma")
 
     variant('shared', default=True, description="Build shared library (disables static library)")
 
     depends_on("blas")
     depends_on("lapack")
+    depends_on("readline", when='@17.2:')
 
     conflicts("atlas")  # does not have LAPACKE interface
 
@@ -44,7 +45,9 @@ class Plasma(MakefilePackage):
     conflicts("veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8.99")
+    conflicts("%gcc@:4.8.99", when='@:17.1')
+    # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
+    conflicts("%gcc@:5.99", when='@17.2:')
 
     conflicts("%cce")
     conflicts("%clang")
@@ -77,6 +80,7 @@ class Plasma(MakefilePackage):
 
         if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
+            make_inc.filter("-DHAVE_MKL", "")         # not using MKL
 
         header_flags = ""
         # accumulate CPP flags for headers: <cblas.h> and <lapacke.h>
@@ -94,8 +98,11 @@ class Plasma(MakefilePackage):
         # make sure CC variable comes from build environment
         make_inc.filter("CC *[?]*= * .*cc", "")
 
-        make_inc.filter("LIBS *[?]*= * .*", "LIBS = " +
-                        self.getblaslapacklibs().ld_flags)
+        libs = self.getblaslapacklibs().ld_flags
+        if 'readline' in self.spec:
+            libs += ' ' + self.spec['readline'].libs.ld_flags
+            libs += ' ' + find_system_libraries(['libdl']).ld_flags
+        make_inc.filter("LIBS *[?]*= * .*", "LIBS = " + libs)
 
     @property
     def build_targets(self):
@@ -107,7 +114,8 @@ class Plasma(MakefilePackage):
         if "^mkl" in self.spec:
             targets.append("MKLROOT = {0}".format(env["MKLROOT"]))
 
-        targets.append("LIBS = {0}".format(
-            self.getblaslapacklibs().ld_flags))
-
+        targets.append("LIBS = {0} {1} {2}".format(
+                       self.getblaslapacklibs().ld_flags,
+                       self.spec['readline'].libs.ld_flags,
+                       find_system_libraries(['libdl']).ld_flags))
         return targets

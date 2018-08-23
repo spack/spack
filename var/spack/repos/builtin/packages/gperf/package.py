@@ -34,7 +34,7 @@ class Gperf(AutotoolsPackage):
     single string comparison only."""
 
     homepage = "https://www.gnu.org/software/gperf/"
-    url      = "http://ftp.gnu.org/pub/gnu/gperf/gperf-3.0.4.tar.gz"
+    url      = "https://ftpmirror.gnu.org/gperf/gperf-3.0.4.tar.gz"
 
     version('3.0.4', 'c1f1db32fb6598d6a93e6e88796a8632')
 

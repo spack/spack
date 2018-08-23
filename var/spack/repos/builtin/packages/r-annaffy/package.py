@@ -35,9 +35,9 @@ class RAnnaffy(RPackage):
     using various criteria."""
 
     homepage = "https://www.bioconductor.org/packages/annaffy/"
-    url      = "https://git.bioconductor.org/packages/annaffy"
+    git      = "https://git.bioconductor.org/packages/annaffy.git"
 
-    version('1.48.0', git='https://git.bioconductor.org/packages/annaffy', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
+    version('1.48.0', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
 
     depends_on('r@3.4.0:3.4.9', when='@1.48.0')
     depends_on('r-biobase', type=('build', 'run'))
