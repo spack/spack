@@ -42,7 +42,6 @@ class PyCogent(PythonPackage):
     variant('mpi4py', default=False, description='MPI required for parallel computation.')
     variant('sqlalchemy', default=False, description='Required for the Ensembl querying code.')
 
-    depends_on('py-setuptools')
     depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('zlib')
