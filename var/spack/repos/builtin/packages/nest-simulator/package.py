@@ -40,7 +40,6 @@ class NestSimulator(CMakePackage):
     version('2.8.0',  sha256='d47325b27a5599b6ea58a3c4ef06656e7c5a4941c4e94dec6a5c2fa956209915')
     version('2.6.0',  sha256='5fe4924bc57d0c7dd820aa371de935eedf7e813832c0eee2c976b33c9a8db4cf')
     version('2.4.2',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b')
-    version('2.4.2_custom_tso',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b', url='https://github.com/nest/nest-simulator/releases/download/v2.4.2/nest-2.4.2.tar.gz')
 
     variant('python', default=True,
             description='Build the PyNest interface')
@@ -68,10 +67,6 @@ class NestSimulator(CMakePackage):
     depends_on('pkg-config')
 
     extends('python', when='+python')
-
-    patch('nest_2.4.2_tso.patch', when='@2.4.2_custom_tso',
-          description='Fixes initial behavior of TSO models, looses O(10%)'
-                      ' performance.')
 
     # Before 2.12.0 it was an autotools package
     @when('@:2.10.99')
