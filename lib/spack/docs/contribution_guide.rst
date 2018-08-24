@@ -56,7 +56,7 @@ locally to speed up the review process.
 
 
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6, 2.7, and 3.3-3.6 on both macOS and Linux. We currently
+against Python 2.6, 2.7, and 3.4-3.7 on both macOS and Linux. We currently
 perform 3 types of tests:
 
 ^^^^^^^^^^
