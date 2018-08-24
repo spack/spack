@@ -341,6 +341,13 @@ def test_git_url_top_level_git_versions(mock_packages, config):
     assert fetcher.commit == 'abc34'
     assert fetcher.branch is None
 
+    fetcher = spack.fetch_strategy.for_package_version(pkg, 'submodules')
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.url == 'https://example.com/some/git/repo'
+    assert fetcher.tag is None
+    assert fetcher.commit is None
+    assert fetcher.branch is None
+
     fetcher = spack.fetch_strategy.for_package_version(pkg, 'develop')
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert fetcher.url == 'https://example.com/some/git/repo'
