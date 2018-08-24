@@ -181,6 +181,10 @@ def get_path_from_module(mod):
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
+    return get_path_from_module_contents(text, mod)
+
+
+def get_path_from_module_contents(text, module_name):
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
         pattern = r'\WLD_LIBRARY_PATH'
@@ -190,7 +194,7 @@ def get_path_from_module(mod):
 
     # If it lists its package directory, return that
     for line in text:
-        pattern = r'\W{0}_DIR'.format(mod.upper())
+        pattern = r'\W{0}_DIR'.format(module_name.upper())
         if re.search(pattern, line):
             return get_path_arg_from_module_line(line)
 
