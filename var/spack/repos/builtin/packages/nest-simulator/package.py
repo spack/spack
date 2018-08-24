@@ -26,7 +26,7 @@ from spack import *
 
 
 class NestSimulator(CMakePackage):
-    """NEST is a simulator for spiking neural network models 
+    """NEST is a simulator for spiking neural network models
 
     It focuses on the dynamics, size and structure of neural systems rather
     than on the exact morphology of individual neurons."""
@@ -112,7 +112,8 @@ class NestSimulator(CMakePackage):
         else:
             args.append('-Dwith-mpi=OFF')
         if '+python':
-            args.append('-Dwith-python={0}'.format(self.spec['python'].version[0]))
+            version = self.spec['python'].version[0]
+            args.append('-Dwith-python={0}'.format(version))
         else:
             args.append('-Dwith-python=OFF')
         if '+optimize':
