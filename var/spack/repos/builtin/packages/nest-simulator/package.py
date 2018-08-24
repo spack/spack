@@ -26,29 +26,30 @@ from spack import *
 
 
 class NestSimulator(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """NEST is a simulator for spiking neural network models 
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    It focuses on the dynamics, size and structure of neural systems rather
+    than on the exact morphology of individual neurons."""
+
+    homepage = "http://www.nest-simulator.org"
     url      = "https://github.com/nest/nest-simulator/releases/download/v2.12.0/nest-2.12.0.tar.gz"
 
     version('2.14.0', sha256='d6316d6c9153100a3220488abfa738958c4b65bf2622bd15540e4aa81e79f17f')
     version('2.12.0', sha256='bac578f38bb0621618ee9d5f2f1febfee60cddc000ff32e51a5f5470bb3df40d')
-# older versions are AutotoolPackages, if/when multi-buildsystem support is
-# implemented remove comments
-#    version('2.10.0', sha256='2b6fc562cd6362e812d94bb742562a5a685fb1c7e08403765dbe123d59b0996c')
-#    version('2.8.0',  sha256='d47325b27a5599b6ea58a3c4ef06656e7c5a4941c4e94dec6a5c2fa956209915')
-#    version('2.6.0',  sha256='5fe4924bc57d0c7dd820aa371de935eedf7e813832c0eee2c976b33c9a8db4cf')
-#    version('2.4.2',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b')
+    version('2.10.0', sha256='2b6fc562cd6362e812d94bb742562a5a685fb1c7e08403765dbe123d59b0996c')
+    version('2.8.0',  sha256='d47325b27a5599b6ea58a3c4ef06656e7c5a4941c4e94dec6a5c2fa956209915')
+    version('2.6.0',  sha256='5fe4924bc57d0c7dd820aa371de935eedf7e813832c0eee2c976b33c9a8db4cf')
+    version('2.4.2',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b')
+    version('2.4.2_custom_tso',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b', url='https://github.com/nest/nest-simulator/releases/download/v2.4.2/nest-2.4.2.tar.gz')
 
     variant('python', default=True,
             description='Build the PyNest interface')
     variant('mpi', default=False,
             description='Build with MPI bindings')
+    variant('optimize', default=True,
+            description='Build with MPI bindings')
     variant('modules', default=False,
             description='Enables external module support')
-    variant('optimization', default=True,
-            description='Build with -O3')
     # TODO add variants for neurosim and music when these are in spack
 
     depends_on('python',            when='+python')
@@ -68,27 +69,61 @@ class NestSimulator(CMakePackage):
 
     extends('python', when='+python')
 
+    patch('nest_2.4.2_tso.patch', when='@2.4.2_custom_tso',
+          description='Fixes initial behavior of TSO models, looses O(10%)'
+                      ' performance.')
+
+    # Before 2.12.0 it was an autotools package
+    @when('@:2.10.99')
+    def cmake(self, spec, prefix):
+        pass
+
+    @when('@:2.10.99')
+    def build(self, spec, prefix):
+        pass
+
+    @when('@:2.10.99')
+    def install(self, spec, prefix):
+        configure_args = ["CXXFLAGS=-std=c++03",
+                          "--prefix=" + prefix,
+                          "--with-openmp"]
+        if '+python' in spec:
+            configure_args.append("--with-python")
+        else:
+            configure_args.append("--without-python")
+        if '+mpi' in spec:
+            configure_args.append("--with-mpi")
+        else:
+            configure_args.append("--without-mpi")
+        if '+optimize' in spec:
+            configure_args.append("--with-optimize")
+        else:
+            configure_args.append("--without-optimize")
+
+        configure(*configure_args)
+
+        make()
+        make("install")
+
     def cmake_args(self):
         args = []
         if '+mpi' in self.spec:
             args.append('-Dwith-mpi=ON')
-#            args.append('-Dwith-mpi={0}'.format(self.spec['mpi'].prefix))
-#            args.append('-DMPI_C_COMPILER=' + self.spec['mpi'].mpicc)
-#            args.append('-DMPI_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
         else:
             args.append('-Dwith-mpi=OFF')
-
         if '+python':
             args.append('-Dwith-python={0}'.format(self.spec['python'].version[0]))
-#            args.append('-DPYTHON_EXECUTABLE=' + self.spec['python'].executable)
-#            args.append('-DPYTHON_LIBRARY=' + self.spec['python'].libs)
-#            args.append('-DPYTHON_INCLUDE_DIR=' + self.spec['python'].include_dirs)
-
         else:
             args.append('-Dwith-python=OFF')
+        if '+optimize':
+            args.append('-Dwith-optimize=ON')
+        else:
+            args.append('-Dwith-optimize=OFF')
+
         return args
 
     @when('+modules')
+    @when('@:2.14.0')
     @run_after('install')
     def install_headers(self):
         # copy source files to installation folder for older versions
