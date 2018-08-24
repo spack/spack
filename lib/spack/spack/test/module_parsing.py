@@ -26,7 +26,7 @@ import pytest
 import subprocess
 import os
 from spack.util.module_cmd import get_path_from_module
-from spack.util.module_cmd import get_argument_from_module_line
+from spack.util.module_cmd import get_path_arg_from_module_line
 from spack.util.module_cmd import get_module_cmd_from_bash
 from spack.util.module_cmd import get_module_cmd, ModuleError
 
@@ -83,10 +83,10 @@ def test_get_argument_from_module_line():
     bad_lines = ['prepend_path(PATH,/lib/path)',
                  'prepend-path (LD_LIBRARY_PATH) /lib/path']
 
-    assert all(get_argument_from_module_line(l) == '/lib/path' for l in lines)
+    assert all(get_path_arg_from_module_line(l) == '/lib/path' for l in lines)
     for bl in bad_lines:
         with pytest.raises(ValueError):
-            get_argument_from_module_line(bl)
+            get_path_arg_from_module_line(bl)
 
 
 @pytest.mark.skipif(MODULE_NOT_DEFINED, reason='Depends on defined module fn')
