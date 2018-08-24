@@ -35,3 +35,5 @@ class Aida(Package):
 
     def install(self, spec, prefix):
         install_tree('src/cpp', prefix.include)
+        # FIXME: There are other things in there, such as docs and Java jars.
+        #        Which of these things should be installed, and how?
