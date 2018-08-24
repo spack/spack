@@ -29,22 +29,26 @@ class PyCogent(PythonPackage):
     """A toolkit for statistical analysis of biological sequences."""
 
     homepage = "http://pycogent.org"
-    url      = "https://github.com/pycogent/pycogent/archive/1.9.tar.gz"
+    url      = "https://pypi.io/packages/source/c/cogent/py-cogent-1.9.tar.gz"
     list_url = "https://github.com/pycogent/pycogent/archive/"
     list_depth = 1
 
-    version('1.9', sha256='c9f56d21d764aa62e3e8a9df5a300eb7fb59e502572bec41894d21df19aeceb5')
-    version('1.5.3', sha256='4e19325cd1951382dc71582eb49f44c5a19eb128e3540e29dc28e080091e49cd')
+    version('1.9', sha256='57d8c58e0273ffe4f2b907874f9b49dadfd0600f5507b7666369f4e44d56ce14')
+    version('1.5.3', url="https://github.com/pycogent/pycogent/archive/1.5.3-release.tar.gz", 
+        sha256='4e19325cd1951382dc71582eb49f44c5a19eb128e3540e29dc28e080091e49cd')
 
     variant('matplotlib', default=False, description="graphs related to codon usage")
     variant('cython', default=False, description="This module is only necessary .pyx files.")
     variant('mpi4py', default=False, description='MPI required for parallel computation.')
     variant('sqlalchemy', default=False, description='Required for the Ensembl querying code.')
 
+    depends_on('py-wheel')
+    depends_on('py-setuptools')
     depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('zlib')
     depends_on('py-matplotlib', when='+py-matplotlib', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
     depends_on('py-cython', when='+py-cython', type=('build', 'run'))
     depends_on('py-mpi4py', when='+py-mpi4py', type=('build', 'run'))
     depends_on('py-sqlalchemy', when='+py-sqlalchemy', type=('build', 'run'))
