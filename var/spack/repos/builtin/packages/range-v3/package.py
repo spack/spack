@@ -44,11 +44,16 @@ class RangeV3(CMakePackage):
     version('0.2.1', sha256='25d5e3dad8052d668873e960bd78f068bebfba3bd28a278f805ea386f9438790')
     version('0.2.0', sha256='49b1a62a7a36dab582521c8034d8e736a8922af664d007c1529d3162b1294331')
 
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
     depends_on('cmake@3.6:', type='build')
 
     def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
+        args = [
+            '-DRANGES_CXX_STD={0}'.format(self.spec.variants['cxxstd'].value)
+        ]
         return args
