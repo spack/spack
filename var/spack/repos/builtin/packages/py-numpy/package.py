@@ -181,5 +181,5 @@ class PyNumpy(PythonPackage):
         # ImportError: Error importing numpy: you should not try to import
         #       numpy from its source directory; please exit the numpy
         #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')
