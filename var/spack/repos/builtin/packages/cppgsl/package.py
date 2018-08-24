@@ -36,11 +36,16 @@ class Cppgsl(CMakePackage):
     version('2.0.0', sha256='6cce6fb16b651e62711a4f58e484931013c33979b795d1b1f7646f640cfa9c8e')
     version('1.0.0', sha256='9694b04cd78e5b1a769868f19fdd9eea2002de3d4c3a81a1b769209364543c36')
 
+    variant('cxxstd',
+            default='14',
+            values=('14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
     depends_on('cmake@3.1.3:', type='build')
 
     def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
+        args = [
+            '-DGSL_CXX_STANDARD={0}'.format(self.spec.variants['cxxstd'].value)
+        ]
         return args
