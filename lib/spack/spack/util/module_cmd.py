@@ -164,11 +164,9 @@ def get_path_arg_from_module_line(line):
     else:
         path_arg = line.split()[2]
 
-    re_sep = os.sep
-    path_pattern = r'{0}(?:\w|[.-]|{0})*$'.format(re_sep)
-    if not re.match(path_pattern, path_arg):
-        tty.debug("Extracted unexpected path argument from module:"
-                 "\n\tpath argument: " + path_arg +
+    if not os.path.exists(path_arg):
+        tty.warn("Extracted path from module does not exist:"
+                 "\n\tExtracted path: " + path_arg +
                  "\n\tFull line: " + line)
     return path_arg
 
