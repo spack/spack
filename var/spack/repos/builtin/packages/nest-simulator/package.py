@@ -44,7 +44,7 @@ class NestSimulator(CMakePackage):
 
     variant('python', default=True,
             description='Build the PyNest interface')
-    variant('mpi', default=False,
+    variant('mpi', default=True,
             description='Build with MPI bindings')
     variant('optimize', default=True,
             description='Build with MPI bindings')
