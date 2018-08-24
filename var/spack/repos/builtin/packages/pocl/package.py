@@ -57,7 +57,8 @@ class Pocl(CMakePackage):
     provides('opencl@:2.0')
 
     depends_on("cmake @2.8.12:", type="build")
-    depends_on("hwloc")
+    depends_on("hwloc@:1.99.99", when="@:1.1.99")
+    depends_on("hwloc", when="@1.2:")
     depends_on("libtool", type=("build", "link", "run"))
     depends_on("pkgconfig", type="build")
 
