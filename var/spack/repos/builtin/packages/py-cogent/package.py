@@ -42,13 +42,11 @@ class PyCogent(PythonPackage):
     variant('mpi4py', default=False, description='MPI required for parallel computation.')
     variant('sqlalchemy', default=False, description='Required for the Ensembl querying code.')
 
-    depends_on('py-wheel')
     depends_on('py-setuptools')
     depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('zlib')
     depends_on('py-matplotlib', when='+py-matplotlib', type=('build', 'run'))
-    depends_on('py-cython', type=('build', 'run'))
     depends_on('py-cython', when='+py-cython', type=('build', 'run'))
     depends_on('py-mpi4py', when='+py-mpi4py', type=('build', 'run'))
     depends_on('py-sqlalchemy', when='+py-sqlalchemy', type=('build', 'run'))
