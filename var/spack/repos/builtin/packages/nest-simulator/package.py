@@ -45,26 +45,39 @@ class NestSimulator(CMakePackage):
             description='Build the PyNest interface')
     variant('mpi', default=True,
             description='Build with MPI bindings')
+    variant('openmp', default=True,
+            description='"Enable OpenMP support"')
     variant('optimize', default=True,
             description='Build with MPI bindings')
     variant('modules', default=False,
             description='Enables external module support')
+    variant('gsl',     default=True,
+            description="Enable GNU Scientific Library")
+    variant('shared',   default=True,
+            description="Build shared libraries")
     # TODO add variants for neurosim and music when these are in spack
 
-    depends_on('python',            when='+python')
-    depends_on('py-numpy',          when='+python')
-    depends_on('py-cython@0.19.2:', when='+python')
-    depends_on('py-nose',           when='+python')
-    depends_on('py-setuptools',     when='+python')
+    conflicts('~gsl', when='@:2.10.99',
+              msg='Option only introduced for non-ancient versions.')
+    conflicts('~shared', when='@:2.10.99',
+              msg='Option only introduced for non-ancient versions.')
+    conflicts('~openmp', when='@:2.10.99',
+              msg='Option only introduced for non-ancient versions.')
+
+    depends_on('python@2.6:',       when='+python', type=('build', 'run'))
+    depends_on('py-numpy',          when='+python', type=('build', 'run'))
+    depends_on('py-cython@0.19.2:', when='+python', type='build')
+    depends_on('py-nose',           when='+python', type='test')
+    depends_on('py-setuptools',     when='+python', type='build')
 
     depends_on('mpi', when='+mpi')
 
-    depends_on('doxygen')
+    depends_on('doxygen', type='build')
 
-    depends_on('gsl')
+    depends_on('gsl', when='+gsl')
     depends_on('readline')
     depends_on('libtool')
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
 
     extends('python', when='+python')
 
@@ -102,24 +115,43 @@ class NestSimulator(CMakePackage):
 
     def cmake_args(self):
         args = []
+
         if '+mpi' in self.spec:
             args.append('-Dwith-mpi=ON')
         else:
             args.append('-Dwith-mpi=OFF')
+
         if '+python':
             version = self.spec['python'].version[0]
             args.append('-Dwith-python={0}'.format(version))
+            args.append('-Dcythonize-pynest=' + self.spec['py-cython'].prefix)
         else:
             args.append('-Dwith-python=OFF')
-        if '+optimize':
+            args.append('-Dcythonize-pynest=OFF')
+
+        if '+optimize' in self.spec:
             args.append('-Dwith-optimize=ON')
         else:
             args.append('-Dwith-optimize=OFF')
 
+        if '+gsl' in self.spec:
+            cmake_options.append('-Dwith-gsl=' + self.spec['gsl'].prefix)
+        else:
+            cmake_options.append('-Dwith-gsl=OFF')
+
+        if '+openmp' in self.spec:
+            cmake_options.append('-Dwith-openmp=ON')
+        else:
+            cmake_options.append('-Dwith-openmp=OFF')
+
+        if '+shared' in self.spec:
+            cmake_options.append('-Dstatic-libraries=OFF')
+        else:
+            cmake_options.append('-Dstatic-libraries=ON')
+
         return args
 
-    @when('+modules')
-    @when('@:2.14.0')
+    @when('@:2.14.0+modules')
     @run_after('install')
     def install_headers(self):
         # copy source files to installation folder for older versions
@@ -136,3 +168,4 @@ class NestSimulator(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set("NEST_INSTALL_DIR", self.spec.prefix)
+        run_env.set('NEST_EXE', self.prefix.bin.nest)
