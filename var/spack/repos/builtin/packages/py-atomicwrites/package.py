@@ -25,15 +25,14 @@
 from spack import *
 
 
-class PyScandir(PythonPackage):
-    """scandir, a better directory iterator and faster os.walk()."""
+class PyAtomicwrites(PythonPackage):
+    """Atomic file writes."""
 
-    homepage = "https://github.com/benhoyt/scandir"
-    url      = "https://pypi.io/packages/source/s/scandir/scandir-1.9.0.tar.gz"
+    homepage = "https://github.com/untitaker/python-atomicwrites"
+    url      = "https://pypi.io/packages/source/a/atomicwrites/atomicwrites-1.1.5.tar.gz"
 
-    import_modules = ['scandir']
+    import_modules = ['atomicwrites']
 
-    version('1.9.0', '506c4cc5f38c00b301642a9cb0433910')
-    version('1.6',   '0180ddb97c96cbb2d4f25d2ae11c64ac')
+    version('1.1.5', sha256='240831ea22da9ab882b551b31d4225591e5e447a68c5e188db5b89ca1d487585')
 
-    depends_on('py-setuptools', type=('build'))
+    depends_on('py-setuptools', type='build')
