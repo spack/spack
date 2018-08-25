@@ -351,13 +351,14 @@ class Database(object):
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
                     yaml_deps):
-                # TODO: need to be careful because if the
-                # installed spec depends on a hash that exists in our DB and in
-                # the upstream DB, then we want to know which one our spec
-                # depends on. What happens if X->Y, we install X and Y locally,
-                # then Y gets installed upstream, and then we install X'->Y?
-                # If we don't have a system like always using the local version
-                # if it's here, then we could run into errors.
+                # It is important that we always check upstream installations
+                # in the same order, and that we always check the local
+                # installation first: if a downstream Spack installs a package
+                # then dependents in that installation could be using it.
+                # If a hash is installed locally and upstream, there isn't
+                # enough information to determine which one a local package
+                # depends on, so the convention ensures that this isn't an
+                # issue.
                 upstream, record = self.query_by_spec_hash(dhash, data=data)
                 child = record.spec if record else None
 
