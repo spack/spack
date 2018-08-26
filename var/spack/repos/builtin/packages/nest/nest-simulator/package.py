@@ -25,7 +25,7 @@
 from spack import *
 
 
-class NestSimulator(CMakePackage):
+class Nest(CMakePackage):
     """NEST is a simulator for spiking neural network models
 
     It focuses on the dynamics, size and structure of neural systems rather
@@ -168,4 +168,3 @@ class NestSimulator(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set("NEST_INSTALL_DIR", self.spec.prefix)
-        run_env.set('NEST_EXE', self.prefix.bin.nest)
