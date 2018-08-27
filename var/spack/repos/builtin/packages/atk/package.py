@@ -41,6 +41,8 @@ class Atk(Package):
 
     depends_on('meson', type='build', when='@2.28.0:')
     depends_on('glib')
+    #FIXME: python3-dependency should only apply to 2.28.1 #9099
+    depends_on('python@3:')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
 
