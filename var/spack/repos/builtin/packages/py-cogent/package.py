@@ -36,14 +36,13 @@ class PyCogent(PythonPackage):
         sha256='4e19325cd1951382dc71582eb49f44c5a19eb128e3540e29dc28e080091e49cd')
 
     variant('matplotlib', default=False, description="graphs related to codon usage")
-    variant('mpi4py', default=False, description='MPI required for parallel computation.')
-    variant('sqlalchemy', default=False, description='Required for the Ensembl querying code.')
+    variant('mpi', default=False, description='MPI required for parallel computation.')
+    variant('mysql', default=False, description='Required for the Ensembl querying code.')
 
     depends_on('py-setuptools', type=('build'), when='@1.9')
     depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('zlib')
     depends_on('py-matplotlib', when='+matplotlib', type=('build', 'run'))
-    depends_on('py-cython', type=('build'))
-    depends_on('py-mpi4py', when='+mpi4py', type=('build', 'run'))
-    depends_on('py-sqlalchemy', when='+sqlalchemy', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
+    depends_on('py-sqlalchemy', when='+mysql', type=('build', 'run'))
