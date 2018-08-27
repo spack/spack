@@ -301,6 +301,15 @@ def set_build_environment_variables(pkg, env, dirty):
         env_variables = ":".join(env_to_set.keys())
         env.set('SPACK_ENV_TO_SET', env_variables)
 
+    if 'prepend-path' in environment:
+        env_to_prepend = environment['prepend-path']
+        for key, value in iteritems(env_to_prepend):
+            env.set('SPACK_ENV_PREPEND_%s' % key, value)
+            env.prepend_path('%s' % key, value)
+        # Let shell know which variables to set
+        env_variables = ":".join(env_to_prepend.keys())
+        env.set('SPACK_ENV_TO_PREPEND', env_variables)
+
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
