@@ -160,7 +160,7 @@ def clean_environment():
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
-    
+
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
     # assembler issues, e.g.:
@@ -171,6 +171,7 @@ def clean_environment():
             env.remove_path('PATH', p)
 
     env.apply_modifications()
+
 
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
