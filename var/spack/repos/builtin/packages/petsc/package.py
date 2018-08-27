@@ -108,7 +108,11 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python@2.6:2.8', type='build')
+    depends_on('python@2.6:2.8', type='build', when='@:3.8.99')
+
+    # With >=3.9 version petsc will find python2 on the system and continue
+    # build even if launched with python3. See https://github.com/spack/spack/pull/7926
+    depends_on('python', type='build', when='@3.9:')
 
     # Other dependencies
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
@@ -351,6 +355,11 @@ class Petsc(Package):
         # Set PETSC_DIR in the module file
         run_env.set('PETSC_DIR', self.prefix)
         run_env.unset('PETSC_ARCH')
+
+        # Petsc build will use python2 internaly
+        if self.spec.satisfies('^python@3:'):
+             spack_env.unset('PYTHONPATH')
+             spack_env.unset('PYTHONHOME')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # Set up PETSC_DIR for everyone using PETSc package
