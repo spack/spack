@@ -46,14 +46,13 @@ class Zee(CMakePackage):
             description='Compile C++ with warnings')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
-    depends_on('boost')
     depends_on('gmsh -mpi %gcc')
     depends_on('mpi')
     depends_on('omega-h')
     depends_on('petsc +int64')
 
     def _bob_options(self):
-        cmake_var_prefix = self.name.upper() + '_CXX_'
+        cmake_var_prefix = self.name.capitalize() + '_CXX_'
         for variant in ['optimize', 'symbols', 'warnings']:
             cmake_var = cmake_var_prefix + variant.upper()
             if '+' + variant in self.spec:
