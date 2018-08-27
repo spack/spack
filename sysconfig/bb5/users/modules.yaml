@@ -21,6 +21,8 @@ modules:
     '':
       - CMAKE_PREFIX_PATH
   tcl:
+    ^python:
+      autoload: 'direct'
     all:
       suffixes:
           '+profile': 'profile'
@@ -34,6 +36,7 @@ modules:
       - git
       - neurodamus
       - parquet-converters
+      - python
       - steps
       - touchdetector
     blacklist:
