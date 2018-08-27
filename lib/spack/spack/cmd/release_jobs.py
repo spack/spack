@@ -25,7 +25,9 @@
 import os
 
 from jsonschema import validate
+from six import iteritems
 
+from spack.dependency import all_deptypes
 from spack.error import SpackError
 from spack.schema.os_container_mapping import schema
 from spack.util.spec_set import CombinatorialSpecSet
@@ -50,6 +52,64 @@ def setup_parser(subparser):
         help="path to output file to write")
 
 
+def stage_spec_jobs(spec_set):
+    deptype = all_deptypes
+    spec_labels = {}
+    deps = {}
+
+    def key_label(s):
+        return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
+
+    def add_dep(s, d):
+        if s == d:
+            return
+        if s not in deps:
+            deps[s] = set()
+        deps[s].add(d)
+
+    def remove_satisfied_deps(deps, satisfied_list):
+        new_deps = {}
+
+        for key, value in deps.iteritems():
+            newValue = set([ v for v in value if v not in satisfied_list ])
+            if newValue:
+                new_deps[key] = newValue
+
+        return new_deps
+
+    for spec in spec_set:
+        spec.concretize()
+
+        rkey, rlabel = key_label(spec)
+
+        for s in spec.traverse(deptype=deptype):
+            if not s.concrete:
+                s.concretize()
+            skey, slabel = key_label(s)
+            spec_labels[slabel] = s
+            add_dep(rlabel, slabel)
+
+            for d in s.dependencies(deptype=deptype):
+                dkey, dlabel = key_label(d)
+                add_dep(slabel, dlabel)
+
+    dependencies = deps
+    unstaged = set(spec_labels.keys())
+    stages = []
+
+    while deps:
+        depends_on = set(deps.keys())
+        next_stage = unstaged.difference(depends_on)
+        stages.append(next_stage)
+        unstaged.difference_update(next_stage)
+        deps = remove_satisfied_deps(deps, next_stage)
+
+    if unstaged:
+        stages.append(unstaged.copy())
+
+    return spec_labels, dependencies, stages
+
+
 def release_jobs(parser, args):
     share_path = os.path.join('.', 'share', 'spack', 'docker')
     os_container_mapping_path = os.path.join(
@@ -60,6 +120,8 @@ def release_jobs(parser, args):
 
     validate(os_container_mapping, schema)
 
+    containers = os_container_mapping['containers']
+
     release_specs_path = args.spec_set
     if not release_specs_path:
         raise SpackError('Must provide path to release spec-set')
@@ -67,57 +129,69 @@ def release_jobs(parser, args):
     release_spec_set = CombinatorialSpecSet.from_file(release_specs_path)
 
     mirror_url = args.mirror_url
-    # single_stage = 'stage01'
 
     if not mirror_url:
         raise SpackError('Must provide url of target binary mirror')
 
-    # output_object = {
-    #     'stages': [ single_stage ]
-    # }
+    spec_labels, dependencies, stages = stage_spec_jobs(release_spec_set)
 
     output_object = {}
 
-    # job_count = 0
-    # stages = []
+    stage_names = ['stage-{0}'.format(i) for i in range(len(stages))]
+    stage = 0
 
-    stage_name = 'stage-01'
-    stages = [stage_name]
+    def get_job_name(spec, osname):
+        return '{0}'.format(spec.short_spec)
+        # return '{0} / {1}'.format(spec.short_spec, osname)
 
-    for release_spec in release_spec_set:
-        pkg_short_spec = release_spec.short_spec
-        pkg_compiler = release_spec.compiler
-        pkg_spec_name = release_spec.format()
-        pkg_hash = release_spec.dag_hash()
+    for stage_jobs in stages:
+        stage_name = stage_names[stage]
 
-        containers = os_container_mapping['containers']
-        for osname in containers:
-            job_name = '%s / %s' % (release_spec, osname)
-            container_info = containers[osname]
-            build_image = container_info['image']
-            setup_script = container_info['setup_script'] % pkg_compiler
+        for spec_label in stage_jobs:
+            release_spec = spec_labels[spec_label]
 
-            # stage_name = 'stage-%d' % job_count
-            # job_count += 1
-            # stages.append(stage_name)
+            pkg_short_spec = release_spec.short_spec
+            pkg_compiler = release_spec.compiler
+            pkg_spec_name = release_spec.format()
+            pkg_hash = release_spec.dag_hash()
 
-            output_object[job_name] = {
-                'stage': stage_name,
-                'variables': {
-                    'SHORT_SPEC': pkg_short_spec,
-                    'MIRROR_URL': mirror_url,
-                    'HASH': pkg_hash,
-                    'SPEC_NAME': pkg_spec_name
-                },
-                'script': [
-                    setup_script,
-                    './rebuild-package.sh'
-                ],
-                'image': build_image,
-                'tags': ['my-tag']
-            }
+            for osname in containers:
+                job_name = get_job_name(release_spec, osname)
+                container_info = containers[osname]
+                build_image = container_info['image']
+                setup_script = container_info['setup_script'] % pkg_compiler
 
-    output_object['stages'] = stages
+                job_dependencies = []
+                if spec_label in dependencies:
+                    job_dependencies = (
+                        [get_job_name(spec_labels[dep_label], osname)
+                            for dep_label in dependencies[spec_label]])
+
+                output_object[job_name] = {
+                    'stage': stage_name,
+                    'variables': {
+                        'SHORT_SPEC': pkg_short_spec,
+                        'MIRROR_URL': mirror_url,
+                        'HASH': pkg_hash,
+                        'SPEC_NAME': pkg_spec_name
+                    },
+                    'script': [
+                        setup_script,
+                        './rebuild-package.sh'
+                    ],
+                    'image': build_image,
+                    'artifacts': {
+                        'paths': [
+                            'buildcache'
+                        ],
+                    },
+                    'dependencies': job_dependencies,
+                    'tags': ['my-tag']
+                }
+
+        stage += 1
+
+    output_object['stages'] = stage_names
 
     with open(args.output_file, 'w') as outf:
         outf.write(syaml.dump(output_object))

@@ -335,13 +335,17 @@ def check_binaries(args):
     if args.spec:
         specs = [Spec(args.spec)]
     else:
-        release_specs_path = \
-            os.path.join(etc_path, 'spack', 'defaults', 'release.yaml')
-        specs = CombinatorialSpecSet.from_file(release_specs_path)
+        release_specs_path = os.path.join(
+            etc_path, 'spack', 'defaults', 'release.yaml')
+        spec_set = CombinatorialSpecSet.from_file(release_specs_path)
+        specs = [spec for spec in spec_set]
 
     if not specs:
         tty.msg('No specs provided, exiting.')
         sys.exit(0)
+
+    for spec in specs:
+        spec.concretize()
 
     # Next see if there are any configured binary mirrors
     configured_mirrors = spack.config.get('mirrors', scope=args.scope)
@@ -356,7 +360,8 @@ def check_binaries(args):
     no_index = args.no_index
     output_file = args.output_file
 
-    sys.exit(bindist.check(configured_mirrors, specs, no_index, output_file))
+    sys.exit(bindist.check_specs_against_mirrors(
+        configured_mirrors, specs, no_index, output_file))
 
 
 def buildcache(parser, args):

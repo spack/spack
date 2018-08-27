@@ -2,7 +2,7 @@
 
 set -ex
 
-echo "Installing build tools/packages for Ubuntu 16.06"
+echo "Installing build tools/packages for Ubuntu 16.04"
 
 apt-get -yqq update
 apt-get -yqq install \

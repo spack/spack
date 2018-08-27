@@ -717,34 +717,28 @@ def get_keys(install=False, trust=False, force=False):
 
 
 def needs_rebuild(spec, mirror_url, buildcache_index):
+    if not spec.concrete:
+        raise ValueError('spec must be concrete to check against mirror')
+
     pkg_name = spec.name
     pkg_version = spec.version
 
     tty.msg('Checking {0}-{1}'.format(pkg_name, pkg_version))
 
-    spec.concretize()
     pkg_hash = spec.dag_hash()
     pkg_full_hash = spec.full_hash()
-
-    rebuild_spec = {
-        'short_spec': spec.short_spec,
-        'hash': pkg_hash
-    }
 
     if buildcache_index:
         # just look in the index we already fetched
         if pkg_hash in buildcache_index:
             # At least remote binary mirror knows about it, so if the
             # full_hash doesn't match (or remote end doesn't know about
-            # the full_hash), then we trigger a rebuild.
+            # the full_hash), then we trigger a rebuild.  This logic can
+            # be simplified once the dag_hash and the full_hash are the same.
             remote_pkg_info = buildcache_index[pkg_hash]
             if ('full_hash' not in remote_pkg_info or
                 remote_pkg_info['full_hash'] != pkg_full_hash):
-                    return rebuild_spec
-        else:
-            # remote binary mirror doesn't know about this package, we
-            # should probably just rebuild it
-            return rebuild_spec
+                    return True
     else:
         # retrieve the .spec.yaml and look there instead
         build_cache_dir = build_cache_directory(mirror_url)
@@ -762,17 +756,17 @@ def needs_rebuild(spec, mirror_url, buildcache_index):
                          "which will not check SSL certificates. Use this at your "
                          "own risk.")
 
-            return rebuild_spec
+            return True
 
         except Exception as e:
             tty.warn("Error in needs_rebuild: %s:%s" % (type(e), e),
                       traceback.format_exc())
-            return rebuild_spec
+            return True
 
         if not yaml_contents:
             tty.warn('reading from {0} returned nothing, rebuilding {1}'.format(
                 file_path, spec.short_spec))
-            return rebuild_spec
+            return True
 
         spec_yaml = syaml.load(yaml_contents)
 
@@ -782,9 +776,9 @@ def needs_rebuild(spec, mirror_url, buildcache_index):
         # full_hash become the same thing.
         if ('full_hash' not in spec_yaml or
             spec_yaml['full_hash'] != pkg_full_hash):
-                return rebuild_spec
+                return True
 
-    return None
+    return False
 
 
 def get_remote_index(mirror_url):
@@ -797,7 +791,8 @@ def get_remote_index(mirror_url):
     return json.loads(index_contents)
 
 
-def check(mirrors, specs, no_index=False, output_file=None):
+def check_specs_against_mirrors(mirrors, specs, no_index=False,
+                                output_file=None):
     rebuilds = {}
     for mirror in mirrors.keys():
         mirror_url = mirrors[mirror]
@@ -809,9 +804,11 @@ def check(mirrors, specs, no_index=False, output_file=None):
             remote_pkg_index = get_remote_index(mirror_url)
 
         for spec in specs:
-            rebuild_spec = needs_rebuild(spec, mirror_url, remote_pkg_index)
-            if rebuild_spec:
-                rebuild_list.append(rebuild_spec)
+            if needs_rebuild(spec, mirror_url, remote_pkg_index):
+                rebuild_list.append({
+                    'short_spec': spec.short_spec,
+                    'hash': spec.dag_hash()
+                })
 
         if rebuild_list:
             rebuilds[mirror_url] = {
