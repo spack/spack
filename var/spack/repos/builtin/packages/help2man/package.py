@@ -35,3 +35,4 @@ class Help2man(AutotoolsPackage):
     version('1.47.4', '544aca496a7d89de3e5d99e56a2f03d3')
 
     depends_on('gettext', type='build')
+    depends_on('perl', type='build')
