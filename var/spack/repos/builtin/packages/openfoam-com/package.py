@@ -355,6 +355,7 @@ class OpenfoamCom(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
+    patch('1806-have-kahip.patch', when='@1806')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
