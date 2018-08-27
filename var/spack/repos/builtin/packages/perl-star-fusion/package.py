@@ -36,7 +36,7 @@ class PerlStarFusion(Package):
     homepage = "https://github.com/STAR-Fusion/STAR-Fusion"
     git      = "https://github.com/STAR-Fusion/STAR-Fusion.git"
 
-    version('master', commit='a16a0a8')
+    version('master', commit='8c5a541')
 
     extends('perl')
 
