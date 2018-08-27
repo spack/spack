@@ -30,13 +30,12 @@ import shutil
 import platform
 import tempfile
 import hashlib
+import traceback
 from contextlib import closing
 
-import ruamel.yaml as yaml
 from jsonschema import validate
 import json
 
-from six.moves.urllib.request import urlopen
 from six.moves.urllib.error import URLError
 
 import llnl.util.tty as tty
@@ -751,20 +750,20 @@ def needs_rebuild(spec, mirror_url, buildcache_index):
             tty.debug(e)
 
             if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
-                tty.warn("Spack was unable to fetch url list due to a certificate "
-                         "verification problem. You can try running spack -k, "
-                         "which will not check SSL certificates. Use this at your "
-                         "own risk.")
+                tty.warn("Spack was unable to fetch url list due to a "
+                         "certificate verification problem. You can try "
+                         "running spack -k, which will not check SSL "
+                         "certificates. Use this at your own risk.")
 
             return True
 
         except Exception as e:
             tty.warn("Error in needs_rebuild: %s:%s" % (type(e), e),
-                      traceback.format_exc())
+                     traceback.format_exc())
             return True
 
         if not yaml_contents:
-            tty.warn('reading from {0} returned nothing, rebuilding {1}'.format(
+            tty.warn('reading {0} returned nothing, rebuilding {1}'.format(
                 file_path, spec.short_spec))
             return True
 

@@ -94,8 +94,6 @@ class NonDaemonPool(multiprocessing.pool.Pool):
 
 
 def _read_from_url(url, accept_content_type=None):
-    file_contents = None
-
     context = None
     verify_ssl = spack.config.get('config:verify_ssl')
     pyver = sys.version_info

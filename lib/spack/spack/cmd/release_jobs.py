@@ -70,8 +70,8 @@ def stage_spec_jobs(spec_set):
     def remove_satisfied_deps(deps, satisfied_list):
         new_deps = {}
 
-        for key, value in deps.iteritems():
-            newValue = set([ v for v in value if v not in satisfied_list ])
+        for key, value in iteritems(deps):
+            newValue = set([v for v in value if v not in satisfied_list])
             if newValue:
                 new_deps[key] = newValue
 
