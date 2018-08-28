@@ -33,7 +33,7 @@ import re
 import ordereddict_backport
 import py
 import pytest
-import yaml
+import ruamel.yaml as yaml
 
 from llnl.util.filesystem import remove_linked_tree
 
@@ -388,6 +388,7 @@ def install_mockery(tmpdir, config, mock_packages):
     with spack.config.override('config:checksum', False):
         yield
 
+    tmpdir.join('opt').remove()
     spack.store.store = real_store
 
 

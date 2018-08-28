@@ -42,10 +42,10 @@ class Cblas(Package):
     def patch(self):
         mf = FileFilter('Makefile.in')
 
-        mf.filter('^BLLIB =.*', 'BLLIB = %s/libblas.a' %
-                  self.spec['blas'].prefix.lib)
+        mf.filter('^BLLIB =.*', 'BLLIB = {0}'.format(
+                  ' '.join(self.spec['blas'].libs.libraries)))
         mf.filter('^CC =.*', 'CC = cc')
-        mf.filter('^FC =.*', 'FC = f90')
+        mf.filter('^FC =.*', 'FC = fc')
 
     def install(self, spec, prefix):
         make('all')
@@ -53,6 +53,6 @@ class Cblas(Package):
         mkdirp(prefix.include)
 
         # Rename the generated lib file to libcblas.a
-        install('./lib/cblas_LINUX.a', '%s/libcblas.a' % prefix.lib)
-        install('./include/cblas.h', '%s' % prefix.include)
-        install('./include/cblas_f77.h', '%s' % prefix.include)
+        install('lib/cblas_LINUX.a', prefix.lib.join('libcblas.a'))
+        install('include/cblas.h', prefix.include)
+        install('include/cblas_f77.h', prefix.include)

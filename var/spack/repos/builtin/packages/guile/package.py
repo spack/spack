@@ -30,7 +30,7 @@ class Guile(AutotoolsPackage):
     the official extension language for the GNU operating system."""
 
     homepage = "https://www.gnu.org/software/guile/"
-    url      = "https://ftp.gnu.org/gnu/guile/guile-2.2.0.tar.gz"
+    url      = "https://ftpmirror.gnu.org/guile/guile-2.2.0.tar.gz"
 
     version('2.2.0',  '0d5de8075b965f9ee5ea04399b60a3f9')
     version('2.0.14', '333b6eec83e779935a45c818f712484e')

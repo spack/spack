@@ -30,7 +30,7 @@ class Help2man(AutotoolsPackage):
     output of other commands."""
 
     homepage = "https://www.gnu.org/software/help2man/"
-    url      = "http://gnu.askapache.com/help2man/help2man-1.47.4.tar.xz"
+    url      = "https://ftpmirror.gnu.org/help2man/help2man-1.47.4.tar.xz"
 
     version('1.47.4', '544aca496a7d89de3e5d99e56a2f03d3')
 

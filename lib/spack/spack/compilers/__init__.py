@@ -26,7 +26,6 @@
 system and configuring Spack to use multiple compilers.
 """
 import os
-import imp
 
 from llnl.util.lang import list_modules
 
@@ -35,7 +34,7 @@ import spack.error
 import spack.spec
 import spack.config
 import spack.architecture
-
+import spack.util.imp as simp
 from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
@@ -361,7 +360,7 @@ def class_for_compiler_name(compiler_name):
     assert(supported(compiler_name))
 
     file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
-    compiler_mod = imp.load_source(_imported_compilers_module, file_path)
+    compiler_mod = simp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 
     # make a note of the name in the module so we can get to it easily.

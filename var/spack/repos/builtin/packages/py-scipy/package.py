@@ -97,5 +97,5 @@ class PyScipy(PythonPackage):
         # ImportError: Error importing scipy: you should not try to import
         #       scipy from its source directory; please exit the scipy
         #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             python('-c', 'import scipy; scipy.test("full", verbose=2)')

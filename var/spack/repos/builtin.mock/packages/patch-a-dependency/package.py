@@ -33,7 +33,7 @@ class PatchADependency(Package):
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    depends_on('libelf', patches=patch('foo.patch'))
+    depends_on('libelf', patches=patch('libelf.patch'))
 
     def install(self, spec, prefix):
         pass

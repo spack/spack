@@ -504,10 +504,9 @@ class Llvm(CMakePackage):
         if not self.spec.satisfies('+lldb platform=darwin'):
             return
         codesign = which('codesign')
-        cp = which('cp')
         mkdir('tmp')
         llvm_check_file = join_path('tmp', 'llvm_check')
-        cp('/usr/bin/false', llvm_check_file)
+        copy('/usr/bin/false', llvm_check_file)
 
         try:
             codesign('-f', '-s', 'lldb_codesign', '--dryrun',

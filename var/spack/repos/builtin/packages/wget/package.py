@@ -32,7 +32,7 @@ class Wget(AutotoolsPackage):
     cron jobs, terminals without X-Windows support, etc."""
 
     homepage = "http://www.gnu.org/software/wget/"
-    url      = "http://ftp.gnu.org/gnu/wget/wget-1.19.1.tar.gz"
+    url      = "https://ftpmirror.gnu.org/wget/wget-1.19.1.tar.gz"
 
     version('1.19.1', '87cea36b7161fd43e3fd51a4e8b89689')
     version('1.17',   'c4c4727766f24ac716936275014a0536')
