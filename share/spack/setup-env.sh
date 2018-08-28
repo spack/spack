@@ -215,14 +215,6 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 export SPACK_ROOT=${_sp_prefix}
 
 #
-# Determine which shell is being used
-#
-function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
-}
-export SPACK_SHELL=$(_spack_determine_shell)
-
-#
 # Check whether a function of the given name is defined
 #
 function _spack_fn_exists() {
@@ -235,28 +227,65 @@ if ! _spack_fn_exists use && ! _spack_fn_exists module; then
 fi;
 
 
+function _spack_finish_vars() {
+    if test $_spack_var_done -eq 0 ; then
+        wait $_spack_var_pid
+        source $_spack_var_file
+        rm -f $_spack_var_file
+        if [ "${_sp_module_prefix}" != "not_installed" ]; then
+            #activate it!
+            export MODULE_PREFIX=${_sp_module_prefix}
+            _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
+        fi
+        _spack_var_done=1
+    fi
+}
+
 #
 # make available environment-modules
 #
 if [ "${need_module}" = "yes" ]; then
-    eval `spack --print-shell-vars sh,modules`
-
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        #activate it!
-        export MODULE_PREFIX=${_sp_module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
-    fi;
+    _spack_var_list="sh,modules"
+    _spack_no_mods=1
 else
-    eval `spack --print-shell-vars sh`
-fi;
+    _spack_var_list="sh"
+fi
+
+# Also set by --print-shell-vars, init here to avoid duplication
+_sp_module_prefix="not_installed"
+_spack_var_file=$(mktemp)
+spack --print-shell-vars $_spack_var_list > $_spack_var_file 2> /dev/null &
+_spack_var_pid=$!
+_spack_var_done=0
+if _spack_fn_exists use ; then
+  eval orig_"$(declare -f use)"
+  function use () {
+    _spack_finish_vars
+    _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
+    orig_use "$@"
+  }
+fi
+# _sp_module_prefix is set by spack --print-sh-vars
+if test "${need_module}" = "yes" ; then
+    module() {
+      eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SHELL:=bash} $*`
+    }
+fi
+if _spack_fn_exists module ; then
+  eval orig_"$(declare -f module)"
+  function module () {
+    _spack_finish_vars
+    _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+    orig_module "$@"
+  }
+  function ml () {
+    module "$@"
+  }
+fi
 
 #
 # set module system roots
 #
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 
 # Add programmable tab completion for Bash
 #
