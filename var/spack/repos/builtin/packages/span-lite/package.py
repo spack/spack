@@ -25,6 +25,7 @@
 from spack import *
 from shutil import copytree
 
+
 class SpanLite(Package):
     """
     A single-file header-only version of a C++20-like span for C++98, C++11 and
