@@ -3,7 +3,7 @@ MAINTAINER Patrick Gartung (gartung@fnal.gov)
 
 ENV SPACK_ROOT=/spack     \
     FORCE_UNSAFE_CONFIGURE=1 \
-    DISTRO=rhel7 \
+    DISTRO=ScientificLinux \
     container=docker
 
 RUN yum update -y               && \
