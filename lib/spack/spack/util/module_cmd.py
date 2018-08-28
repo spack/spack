@@ -29,7 +29,7 @@ def module(*args):
 
         # Cray modules spit out warnings that we cannot supress.
         # This hack skips to the last output (the environment)
-        env_output =  module_p.communicate()[0]
+        env_output =  str(module_p.communicate()[0].decode())
         env = env_output.strip().split('\n')[-1]
 
         # Update os.environ with new dict
