@@ -47,4 +47,7 @@ class PyCogent(PythonPackage):
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
     depends_on('py-sqlalchemy', when='+mysql', type=('build', 'run'))
     depends_on('py-pymysql')
-    depends_on('py-cython@0.17.1:', when='@1.5.3')
+    depends_on('py-cython@0.17.1:')
+
+    def setup_environment(self, spack_env, run_env):
+       spack_env.set('DONT_USE_PYREX', '1')
