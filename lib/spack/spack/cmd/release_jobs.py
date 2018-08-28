@@ -71,9 +71,9 @@ def stage_spec_jobs(spec_set):
         new_deps = {}
 
         for key, value in iteritems(deps):
-            newValue = set([v for v in value if v not in satisfied_list])
-            if newValue:
-                new_deps[key] = newValue
+            new_value = set([v for v in value if v not in satisfied_list])
+            if new_value:
+                new_deps[key] = new_value
 
         return new_deps
 
@@ -159,7 +159,12 @@ def release_jobs(parser, args):
                 job_name = get_job_name(release_spec, osname)
                 container_info = containers[osname]
                 build_image = container_info['image']
-                setup_script = container_info['setup_script'] % pkg_compiler
+
+                job_scripts = ['./rebuild-package.sh']
+
+                if 'setup_script' in container_info:
+                    job_scripts.insert(
+                        0, container_info['setup_script'] % pkg_compiler)
 
                 job_dependencies = []
                 if spec_label in dependencies:
@@ -175,14 +180,11 @@ def release_jobs(parser, args):
                         'HASH': pkg_hash,
                         'SPEC_NAME': pkg_spec_name
                     },
-                    'script': [
-                        setup_script,
-                        './rebuild-package.sh'
-                    ],
+                    'script': job_scripts,
                     'image': build_image,
                     'artifacts': {
                         'paths': [
-                            'buildcache'
+                            'local_mirror/build_cache'
                         ],
                     },
                     'dependencies': job_dependencies,

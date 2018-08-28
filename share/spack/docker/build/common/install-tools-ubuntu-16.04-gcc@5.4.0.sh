@@ -9,6 +9,7 @@ apt-get -yqq install \
   build-essential    \
   ca-certificates    \
   curl               \
+  file               \
   g++-5              \
   gcc-5              \
   gfortran           \

@@ -43,6 +43,7 @@ schema = {
                     'type': 'object',
                     'default': {},
                     'additionalProperties': False,
+                    'required': ['image'],
                     'properties': {
                         'image': {'type': 'string'},
                         'setup_script': {'type': 'string'},

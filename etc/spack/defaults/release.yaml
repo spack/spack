@@ -10,34 +10,36 @@ spec-set:
             # See for reference: https://gitlab.com/bzip/bzip2
             # bzip2:
             #     versions: [1.0.6]
-            jsoncpp:
-                versions: [1.7.3]
-            libbsd:
-                versions: [0.8.6]
+            # jsoncpp:
+            #     versions: [1.7.3]
+            # libbsd:
+            #     versions: [0.8.6]
             libpng:
                 versions: [1.6.34]
-            libtiff:
-                versions: [4.0.9]
-            lz4:
-                versions: [1.8.1.2]
-            ncurses:
-                versions: [6.1]
-            openmpi:
-                versions: [3.1.0]
-            python:
-                versions: [2.7.14]
             readline:
                 versions: [7.0]
-            sqlite:
-                versions: [3.23.1]
-            tk:
-                versions: [8.6.5]
-            transset:
-                versions: [1.0.1]
-            xz:
-                versions: [5.2.4]
-            zlib:
-                versions: [1.2.11]
+            # libtiff:
+            #     versions: [4.0.9]
+            # lz4:
+            #     versions: [1.8.1.2]
+            # ncurses:
+            #     versions: [6.1]
+            # openmpi:
+            #     versions: [3.1.0]
+            # python:
+            #     versions: [2.7.14]
+            # readline:
+            #     versions: [7.0]
+            # sqlite:
+            #     versions: [3.23.1]
+            # tk:
+            #     versions: [8.6.5]
+            # transset:
+            #     versions: [1.0.1]
+            # xz:
+            #     versions: [5.2.4]
+            # zlib:
+            #     versions: [1.2.11]
         - compilers:
             gcc:
                 versions: [5.4.0]

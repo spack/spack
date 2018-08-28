@@ -327,10 +327,9 @@ def getkeys(args):
 
 
 def check_binaries(args):
-    """
-    Check specs (either a single spec from --spec, or else the full set of
-    release specs) against remote binary mirror(s) to see if any need to be
-    rebuilt.
+    """Check specs (either a single spec from --spec, or else the full set
+    of release specs) against remote binary mirror(s) to see if any need
+    to be rebuilt.
     """
     if args.spec:
         specs = [Spec(args.spec)]
