@@ -1,0 +1,37 @@
+From ee1b13c634943dbe32ac22f5e2154b00eab8c574 Mon Sep 17 00:00:00 2001
+From: Nikhil Jain <nikhil.jain@acm.org>
+Date: Mon, 27 Aug 2018 15:05:30 -0700
+Subject: [PATCH] Do not use int instead of MPI_Request
+
+Change-Id: I8ed36036dde4799fde804784edd8ee7bc699b254
+---
+ pairs/pairs.C         | 2 +-
+ ping-ping/ping-ping.C | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pairs/pairs.C b/pairs/pairs.C
+index 7bc5cf0..4a0ce9d 100644
+--- a/pairs/pairs.C
++++ b/pairs/pairs.C
+@@ -59,7 +59,7 @@ int main(int argc, char **argv)
+ 
+   double startTime, stopTime;
+   MPI_Status status;
+-  int requests[2];
++  MPI_Request requests[2];
+   char *sendbuf, *recvbuf;
+   int partner;
+ 
+diff --git a/ping-ping/ping-ping.C b/ping-ping/ping-ping.C
+index d89e544..dc6aced 100644
+--- a/ping-ping/ping-ping.C
++++ b/ping-ping/ping-ping.C
+@@ -61,7 +61,7 @@ int main(int argc, char **argv)
+   int MAX_ITER = atoi(argv[curP+1]);
+ 
+   char *sendbuf, *recvbuf;
+-  int requests[2];
++  MPI_Request requests[2];
+ 
+   if(paired != -1) {
+     sendbuf = (char*)malloc(msg_size * sizeof(char));
