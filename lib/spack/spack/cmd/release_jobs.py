@@ -152,7 +152,7 @@ def release_jobs(parser, args):
 
             pkg_short_spec = release_spec.short_spec
             pkg_compiler = release_spec.compiler
-            pkg_spec_name = release_spec.format()
+            pkg_spec_name = release_spec.format().strip()
             pkg_hash = release_spec.dag_hash()
 
             for osname in containers:

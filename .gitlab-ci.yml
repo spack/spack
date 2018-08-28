@@ -11,8 +11,8 @@ autoconf@2.69%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cbvv5rj:
   stage: stage-5
   tags: [my-tag]
   variables: {HASH: cbvv5rjbrjxjodn2nl6eo3zczxfmtyf3, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: autoconf@2.69%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cbvv5rj, SPEC_NAME: 'autoconf@2.69%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: autoconf@2.69%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cbvv5rj, SPEC_NAME: autoconf@2.69%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lykrrr4:
   artifacts:
     paths: [buildcache]
@@ -26,7 +26,7 @@ automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lykrrr4:
   tags: [my-tag]
   variables: {HASH: lykrrr4hrdi2binlnhbmokgbb5wvwlsx, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lykrrr4,
-    SPEC_NAME: 'automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64 /ufczdvs:
   artifacts:
     paths: [buildcache]
@@ -38,7 +38,7 @@ bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64 /ufczdvs:
   tags: [my-tag]
   variables: {HASH: ufczdvsqt6edesm36xiucyry7myhj7e7, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64 /ufczdvs,
-    SPEC_NAME: 'bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64}
 ? cmake@3.12.1%gcc@5.4.0~doc+ncurses+openssl+ownlibs patches=dd3a40d4d92f6b2158b87d6fb354c277947c776424aa03f6dc8096cf3135f5d0
   ~qt arch=linux-ubuntu16.04-x86_64 /lk3pxts
 : artifacts:
@@ -53,9 +53,9 @@ bzip2@1.0.6%gcc@5.4.0+shared arch=linux-ubuntu16.04-x86_64 /ufczdvs:
   tags: [my-tag]
   variables: {HASH: lk3pxtstogd2pz6ueafzkbnzmhooi6uu, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: cmake@3.12.1%gcc@5.4.0~doc+ncurses+openssl+ownlibs patches=dd3a40d4d92f6b2158b87d6fb354c277947c776424aa03f6dc8096cf3135f5d0
-      ~qt arch=linux-ubuntu16.04-x86_64 /lk3pxts, SPEC_NAME: 'cmake@3.12.1%gcc@5.4.0~doc+ncurses+openssl+ownlibs
+      ~qt arch=linux-ubuntu16.04-x86_64 /lk3pxts, SPEC_NAME: cmake@3.12.1%gcc@5.4.0~doc+ncurses+openssl+ownlibs
       patches=dd3a40d4d92f6b2158b87d6fb354c277947c776424aa03f6dc8096cf3135f5d0 ~qt
-      arch=linux-ubuntu16.04-x86_64 '}
+      arch=linux-ubuntu16.04-x86_64}
 gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /q4fpyuo:
   artifacts:
     paths: [buildcache]
@@ -66,8 +66,8 @@ gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /q4fpyuo:
   stage: stage-3
   tags: [my-tag]
   variables: {HASH: q4fpyuo7ouhkeq6d3oabtrppctpvxmes, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /q4fpyuo, SPEC_NAME: 'gdbm@1.14.1%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /q4fpyuo, SPEC_NAME: gdbm@1.14.1%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64 /gjjmk2l:
   artifacts:
     paths: [buildcache]
@@ -82,7 +82,7 @@ hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_
   tags: [my-tag]
   variables: {HASH: gjjmk2lkg6s7ezidzrcljkh64rqilhp2, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64
-      /gjjmk2l, SPEC_NAME: 'hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64 '}
+      /gjjmk2l, SPEC_NAME: hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64}
 inputproto@2.3.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /sa75yzj:
   artifacts:
     paths: [buildcache]
@@ -95,7 +95,7 @@ inputproto@2.3.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /sa75yzj:
   tags: [my-tag]
   variables: {HASH: sa75yzj526dnbsn5nzyqxoqznnjy5mhg, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: inputproto@2.3.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /sa75yzj,
-    SPEC_NAME: 'inputproto@2.3.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: inputproto@2.3.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 jsoncpp@1.7.3%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64 /wuqz5n7:
   artifacts:
     paths: [buildcache]
@@ -112,7 +112,7 @@ jsoncpp@1.7.3%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64 
   tags: [my-tag]
   variables: {HASH: wuqz5n74kvfz5b7ndbvf2cvwxrryjhjb, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: jsoncpp@1.7.3%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64
-      /wuqz5n7, SPEC_NAME: 'jsoncpp@1.7.3%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64 '}
+      /wuqz5n7, SPEC_NAME: jsoncpp@1.7.3%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64}
 kbproto@1.0.7%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lup2dwq:
   artifacts:
     paths: [buildcache]
@@ -124,8 +124,8 @@ kbproto@1.0.7%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lup2dwq:
   stage: stage-1
   tags: [my-tag]
   variables: {HASH: lup2dwq35bwbw5jzxheuc2ja3m7gbbre, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: kbproto@1.0.7%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lup2dwq, SPEC_NAME: 'kbproto@1.0.7%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: kbproto@1.0.7%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /lup2dwq, SPEC_NAME: kbproto@1.0.7%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libbsd@0.8.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /f4qkkwm:
   artifacts:
     paths: [buildcache]
@@ -136,8 +136,8 @@ libbsd@0.8.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /f4qkkwm:
   stage: stage-0
   tags: [my-tag]
   variables: {HASH: f4qkkwmagbwroaoljw3irrpswb3uteqy, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libbsd@0.8.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /f4qkkwm, SPEC_NAME: 'libbsd@0.8.6%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libbsd@0.8.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /f4qkkwm, SPEC_NAME: libbsd@0.8.6%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libjpeg-turbo@1.5.90%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /slwcyi5:
   artifacts:
     paths: [buildcache]
@@ -151,7 +151,7 @@ libjpeg-turbo@1.5.90%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /slwcyi5:
   tags: [my-tag]
   variables: {HASH: slwcyi52ryjlf5xm766w7hkicsobz3uv, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libjpeg-turbo@1.5.90%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /slwcyi5,
-    SPEC_NAME: 'libjpeg-turbo@1.5.90%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: libjpeg-turbo@1.5.90%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /5urc6tc:
   artifacts:
     paths: [buildcache]
@@ -165,7 +165,7 @@ libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /5urc6tc:
   tags: [my-tag]
   variables: {HASH: 5urc6tcjae26fbbd2wyfohoszhgxtbmc, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /5urc6tc,
-    SPEC_NAME: 'libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht:
   artifacts:
     paths: [buildcache]
@@ -177,8 +177,8 @@ libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht:
   stage: stage-1
   tags: [my-tag]
   variables: {HASH: a5oblht5r7sql6oimuiq3cn2w4kaikqp, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht, SPEC_NAME: 'libpng@1.6.34%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht, SPEC_NAME: libpng@1.6.34%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libpthread-stubs@0.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cxsj3fy:
   artifacts:
     paths: [buildcache]
@@ -190,7 +190,7 @@ libpthread-stubs@0.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cxsj3fy:
   tags: [my-tag]
   variables: {HASH: cxsj3fynrsbnynygy634l7geyza5fg7k, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libpthread-stubs@0.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cxsj3fy,
-    SPEC_NAME: 'libpthread-stubs@0.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: libpthread-stubs@0.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 libsigsegv@2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fypapcp:
   artifacts:
     paths: [buildcache]
@@ -202,7 +202,7 @@ libsigsegv@2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fypapcp:
   tags: [my-tag]
   variables: {HASH: fypapcprssrj3nstp6njprskeyynsgaz, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libsigsegv@2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fypapcp,
-    SPEC_NAME: 'libsigsegv@2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: libsigsegv@2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 libtiff@4.0.9%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /vrexte2:
   artifacts:
     paths: [buildcache]
@@ -219,8 +219,8 @@ libtiff@4.0.9%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /vrexte2:
   stage: stage-4
   tags: [my-tag]
   variables: {HASH: vrexte2nnfvmu4cpo6gvm5qwbgj6fr34, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libtiff@4.0.9%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /vrexte2, SPEC_NAME: 'libtiff@4.0.9%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libtiff@4.0.9%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /vrexte2, SPEC_NAME: libtiff@4.0.9%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libtool@2.4.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /o2pfwjf:
   artifacts:
     paths: [buildcache]
@@ -232,8 +232,8 @@ libtool@2.4.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /o2pfwjf:
   stage: stage-2
   tags: [my-tag]
   variables: {HASH: o2pfwjf44353ajgr42xqtvzyvqsazkgu, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libtool@2.4.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /o2pfwjf, SPEC_NAME: 'libtool@2.4.6%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libtool@2.4.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /o2pfwjf, SPEC_NAME: libtool@2.4.6%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libx11@1.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /g24fvhw:
   artifacts:
     paths: [buildcache]
@@ -251,8 +251,8 @@ libx11@1.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /g24fvhw:
   stage: stage-5
   tags: [my-tag]
   variables: {HASH: g24fvhwkx4cufqcscsnlltbltfghyrrj, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libx11@1.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /g24fvhw, SPEC_NAME: 'libx11@1.6.5%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libx11@1.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /g24fvhw, SPEC_NAME: libx11@1.6.5%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libxau@1.0.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /7k5vuz7:
   artifacts:
     paths: [buildcache]
@@ -265,8 +265,8 @@ libxau@1.0.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /7k5vuz7:
   stage: stage-2
   tags: [my-tag]
   variables: {HASH: 7k5vuz7rfxnuzcm3bjhrtuwvtnq7oqq4, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libxau@1.0.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /7k5vuz7, SPEC_NAME: 'libxau@1.0.8%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libxau@1.0.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /7k5vuz7, SPEC_NAME: libxau@1.0.8%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libxcb@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /x6h2tn4:
   artifacts:
     paths: [buildcache]
@@ -281,8 +281,8 @@ libxcb@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /x6h2tn4:
   stage: stage-3
   tags: [my-tag]
   variables: {HASH: x6h2tn4b2mx77iwadowmj3hvxhj4rblj, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libxcb@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /x6h2tn4, SPEC_NAME: 'libxcb@1.13%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libxcb@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /x6h2tn4, SPEC_NAME: libxcb@1.13%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libxdmcp@1.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /iqaw73u:
   artifacts:
     paths: [buildcache]
@@ -295,8 +295,8 @@ libxdmcp@1.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /iqaw73u:
   stage: stage-2
   tags: [my-tag]
   variables: {HASH: iqaw73uqxck2brxxw2blqal6scfvczgm, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: libxdmcp@1.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /iqaw73u, SPEC_NAME: 'libxdmcp@1.1.2%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: libxdmcp@1.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /iqaw73u, SPEC_NAME: libxdmcp@1.1.2%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 libxml2@2.9.8%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64 /wpexsph:
   artifacts:
     paths: [buildcache]
@@ -310,7 +310,7 @@ libxml2@2.9.8%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64 /wpexsph:
   tags: [my-tag]
   variables: {HASH: wpexsphdmfayxqxd4up5vgwuqgu5woo7, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: libxml2@2.9.8%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64 /wpexsph,
-    SPEC_NAME: 'libxml2@2.9.8%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: libxml2@2.9.8%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64}
 lz4@1.8.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /p2vjd7t:
   artifacts:
     paths: [buildcache]
@@ -321,8 +321,8 @@ lz4@1.8.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /p2vjd7t:
   stage: stage-0
   tags: [my-tag]
   variables: {HASH: p2vjd7tnfgnk3lpwrs23h6qcjsbpfbpk, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: lz4@1.8.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /p2vjd7t, SPEC_NAME: 'lz4@1.8.1.2%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: lz4@1.8.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /p2vjd7t, SPEC_NAME: lz4@1.8.1.2%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 ? m4@1.4.18%gcc@5.4.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e
   +sigsegv arch=linux-ubuntu16.04-x86_64 /3z33ecf
 : artifacts:
@@ -337,7 +337,7 @@ lz4@1.8.1.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /p2vjd7t:
     SHORT_SPEC: 'm4@1.4.18%gcc@5.4.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e
       +sigsegv arch=linux-ubuntu16.04-x86_64 /3z33ecf', SPEC_NAME: 'm4@1.4.18%gcc@5.4.0
       patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e
-      +sigsegv arch=linux-ubuntu16.04-x86_64 '}
+      +sigsegv arch=linux-ubuntu16.04-x86_64'}
 nasm@2.13.03%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /hdm5sjh:
   artifacts:
     paths: [buildcache]
@@ -348,8 +348,8 @@ nasm@2.13.03%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /hdm5sjh:
   stage: stage-0
   tags: [my-tag]
   variables: {HASH: hdm5sjhwxuingfkmis76o27towzwsxju, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: nasm@2.13.03%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /hdm5sjh, SPEC_NAME: 'nasm@2.13.03%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: nasm@2.13.03%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /hdm5sjh, SPEC_NAME: nasm@2.13.03%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 /3o765ou:
   artifacts:
     paths: [buildcache]
@@ -361,7 +361,7 @@ ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 /3o765ou:
   tags: [my-tag]
   variables: {HASH: 3o765ourmesfrji6yeclb4wb5w54aqbh, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64
-      /3o765ou, SPEC_NAME: 'ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 '}
+      /3o765ou, SPEC_NAME: ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64}
 ? numactl@2.0.11%gcc@5.4.0 patches=592f30f7f5f757dfc239ad0ffd39a9a048487ad803c26b419e0f96b8cda08c1a
   arch=linux-ubuntu16.04-x86_64 /snycp3w
 : artifacts:
@@ -377,8 +377,8 @@ ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 /3o765ou:
   tags: [my-tag]
   variables: {HASH: snycp3wnm7zbvvkvu2c3mtbk73qqiejd, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: numactl@2.0.11%gcc@5.4.0 patches=592f30f7f5f757dfc239ad0ffd39a9a048487ad803c26b419e0f96b8cda08c1a
-      arch=linux-ubuntu16.04-x86_64 /snycp3w, SPEC_NAME: 'numactl@2.0.11%gcc@5.4.0
-      patches=592f30f7f5f757dfc239ad0ffd39a9a048487ad803c26b419e0f96b8cda08c1a arch=linux-ubuntu16.04-x86_64 '}
+      arch=linux-ubuntu16.04-x86_64 /snycp3w, SPEC_NAME: numactl@2.0.11%gcc@5.4.0
+      patches=592f30f7f5f757dfc239ad0ffd39a9a048487ad803c26b419e0f96b8cda08c1a arch=linux-ubuntu16.04-x86_64}
 ? openmpi@3.1.0%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~memchecker~pmi schedulers=
   ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64 /pffooht
 : artifacts:
@@ -406,8 +406,8 @@ ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 /3o765ou:
   variables: {HASH: pffoohtmuvadgaj2setz34kkzgmh4zkn, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: openmpi@3.1.0%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~memchecker~pmi
       schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64 /pffooht,
-    SPEC_NAME: 'openmpi@3.1.0%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~memchecker~pmi
-      schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: openmpi@3.1.0%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~memchecker~pmi
+      schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64}
 openssl@1.0.2o%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64 /b4y3w3b:
   artifacts:
     paths: [buildcache]
@@ -420,7 +420,7 @@ openssl@1.0.2o%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64 /b4y3w3b:
   tags: [my-tag]
   variables: {HASH: b4y3w3bsyvjla6eesv4vt6aplpfrpsha, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: openssl@1.0.2o%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64
-      /b4y3w3b, SPEC_NAME: 'openssl@1.0.2o%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64 '}
+      /b4y3w3b, SPEC_NAME: openssl@1.0.2o%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64}
 ? perl@5.26.2%gcc@5.4.0+cpanm patches=0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac
   +shared+threads arch=linux-ubuntu16.04-x86_64 /n2k4mza
 : artifacts:
@@ -433,9 +433,9 @@ openssl@1.0.2o%gcc@5.4.0+systemcerts arch=linux-ubuntu16.04-x86_64 /b4y3w3b:
   tags: [my-tag]
   variables: {HASH: n2k4mzapfb7qe63kyafa3mbayrlxlvfl, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: perl@5.26.2%gcc@5.4.0+cpanm patches=0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac
-      +shared+threads arch=linux-ubuntu16.04-x86_64 /n2k4mza, SPEC_NAME: 'perl@5.26.2%gcc@5.4.0+cpanm
+      +shared+threads arch=linux-ubuntu16.04-x86_64 /n2k4mza, SPEC_NAME: perl@5.26.2%gcc@5.4.0+cpanm
       patches=0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac +shared+threads
-      arch=linux-ubuntu16.04-x86_64 '}
+      arch=linux-ubuntu16.04-x86_64}
 pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a:
   artifacts:
     paths: [buildcache]
@@ -446,8 +446,8 @@ pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a:
   stage: stage-0
   tags: [my-tag]
   variables: {HASH: fovrh7alpft646n6mhis5mml6k6e5f4v, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a, SPEC_NAME: 'pkgconf@1.4.2%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a, SPEC_NAME: pkgconf@1.4.2%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 ? python@2.7.14%gcc@5.4.0+dbm~optimizations patches=123082ab3483ded78e86d7c809e98a804b3465b4683c96bd79a2fd799f572244
   +pic+pythoncmd+shared~tk~ucs4 arch=linux-ubuntu16.04-x86_64 /3lgyf7i
 : artifacts:
@@ -466,9 +466,9 @@ pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a:
   tags: [my-tag]
   variables: {HASH: 3lgyf7iztgtg25yvgn3umxydctay5kh5, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: python@2.7.14%gcc@5.4.0+dbm~optimizations patches=123082ab3483ded78e86d7c809e98a804b3465b4683c96bd79a2fd799f572244
-      +pic+pythoncmd+shared~tk~ucs4 arch=linux-ubuntu16.04-x86_64 /3lgyf7i, SPEC_NAME: 'python@2.7.14%gcc@5.4.0+dbm~optimizations
+      +pic+pythoncmd+shared~tk~ucs4 arch=linux-ubuntu16.04-x86_64 /3lgyf7i, SPEC_NAME: python@2.7.14%gcc@5.4.0+dbm~optimizations
       patches=123082ab3483ded78e86d7c809e98a804b3465b4683c96bd79a2fd799f572244 +pic+pythoncmd+shared~tk~ucs4
-      arch=linux-ubuntu16.04-x86_64 '}
+      arch=linux-ubuntu16.04-x86_64}
 readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7:
   artifacts:
     paths: [buildcache]
@@ -480,8 +480,8 @@ readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7:
   stage: stage-2
   tags: [my-tag]
   variables: {HASH: nxhwrg7xwc6nbsm2v4ezwe63l6nfidbi, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7, SPEC_NAME: 'readline@7.0%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7, SPEC_NAME: readline@7.0%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 sqlite@3.23.1%gcc@5.4.0~functions arch=linux-ubuntu16.04-x86_64 /4gfm3rc:
   artifacts:
     paths: [buildcache]
@@ -495,7 +495,7 @@ sqlite@3.23.1%gcc@5.4.0~functions arch=linux-ubuntu16.04-x86_64 /4gfm3rc:
   tags: [my-tag]
   variables: {HASH: 4gfm3rc4eaksccjstqxrebmvisa6l3gy, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: sqlite@3.23.1%gcc@5.4.0~functions arch=linux-ubuntu16.04-x86_64 /4gfm3rc,
-    SPEC_NAME: 'sqlite@3.23.1%gcc@5.4.0~functions arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: sqlite@3.23.1%gcc@5.4.0~functions arch=linux-ubuntu16.04-x86_64}
 stages: [stage-0, stage-1, stage-2, stage-3, stage-4, stage-5, stage-6, stage-7, stage-8,
   stage-9]
 tcl@8.6.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /qhwyccy:
@@ -509,8 +509,8 @@ tcl@8.6.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /qhwyccy:
   stage: stage-1
   tags: [my-tag]
   variables: {HASH: qhwyccywhx2i6s7ob2gvjrjtj3rnfuqt, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: tcl@8.6.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /qhwyccy, SPEC_NAME: 'tcl@8.6.8%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: tcl@8.6.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /qhwyccy, SPEC_NAME: tcl@8.6.8%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 tk@8.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /zmh7hmv:
   artifacts:
     paths: [buildcache]
@@ -535,8 +535,8 @@ tk@8.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /zmh7hmv:
   stage: stage-6
   tags: [my-tag]
   variables: {HASH: zmh7hmv25pry54je7zjkuqxcalk7gnmw, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: tk@8.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /zmh7hmv, SPEC_NAME: 'tk@8.6.5%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: tk@8.6.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /zmh7hmv, SPEC_NAME: tk@8.6.5%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 transset@1.0.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /id4paqq:
   artifacts:
     paths: [buildcache]
@@ -559,8 +559,8 @@ transset@1.0.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /id4paqq:
   stage: stage-6
   tags: [my-tag]
   variables: {HASH: id4paqqbiuw7s23bf2mscqqdomxdkj7g, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: transset@1.0.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /id4paqq, SPEC_NAME: 'transset@1.0.1%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: transset@1.0.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /id4paqq, SPEC_NAME: transset@1.0.1%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 util-macros@1.19.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /milz7fm:
   artifacts:
     paths: [buildcache]
@@ -572,7 +572,7 @@ util-macros@1.19.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /milz7fm:
   tags: [my-tag]
   variables: {HASH: milz7fmttmptcic2qdk5cnel7ll5sybr, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: util-macros@1.19.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /milz7fm,
-    SPEC_NAME: 'util-macros@1.19.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: util-macros@1.19.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 xcb-proto@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /m6pp5j4:
   artifacts:
     paths: [buildcache]
@@ -583,8 +583,8 @@ xcb-proto@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /m6pp5j4:
   stage: stage-0
   tags: [my-tag]
   variables: {HASH: m6pp5j4rkgm2hw3xnnosybwzy6vovqcc, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: xcb-proto@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /m6pp5j4, SPEC_NAME: 'xcb-proto@1.13%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: xcb-proto@1.13%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /m6pp5j4, SPEC_NAME: xcb-proto@1.13%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 xextproto@7.3.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /i7yxbfw:
   artifacts:
     paths: [buildcache]
@@ -597,7 +597,7 @@ xextproto@7.3.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /i7yxbfw:
   tags: [my-tag]
   variables: {HASH: i7yxbfw64hth2npnujqyca4flkjljidn, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: xextproto@7.3.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /i7yxbfw,
-    SPEC_NAME: 'xextproto@7.3.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 '}
+    SPEC_NAME: xextproto@7.3.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
 xproto@7.0.31%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /e4l6opb:
   artifacts:
     paths: [buildcache]
@@ -609,8 +609,8 @@ xproto@7.0.31%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /e4l6opb:
   stage: stage-1
   tags: [my-tag]
   variables: {HASH: e4l6opbvzpcfbnrdja2s3ydnsaxjeuyx, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: xproto@7.0.31%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /e4l6opb, SPEC_NAME: 'xproto@7.0.31%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: xproto@7.0.31%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /e4l6opb, SPEC_NAME: xproto@7.0.31%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 xtrans@1.3.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /pe4wz4e:
   artifacts:
     paths: [buildcache]
@@ -622,8 +622,8 @@ xtrans@1.3.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /pe4wz4e:
   stage: stage-1
   tags: [my-tag]
   variables: {HASH: pe4wz4eb4t4kykaapq763odpjqyg4zlw, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: xtrans@1.3.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /pe4wz4e, SPEC_NAME: 'xtrans@1.3.5%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: xtrans@1.3.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /pe4wz4e, SPEC_NAME: xtrans@1.3.5%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 xz@5.2.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /teneqii:
   artifacts:
     paths: [buildcache]
@@ -634,8 +634,8 @@ xz@5.2.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /teneqii:
   stage: stage-0
   tags: [my-tag]
   variables: {HASH: teneqii2xv5u6zl5r6qi3pwurc6pmypz, MIRROR_URL: 'http://172.17.0.1:8081/',
-    SHORT_SPEC: xz@5.2.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /teneqii, SPEC_NAME: 'xz@5.2.4%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64 '}
+    SHORT_SPEC: xz@5.2.4%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /teneqii, SPEC_NAME: xz@5.2.4%gcc@5.4.0
+      arch=linux-ubuntu16.04-x86_64}
 zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 /5nus6kn:
   artifacts:
     paths: [buildcache]
@@ -647,4 +647,4 @@ zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 /5nus6kn
   tags: [my-tag]
   variables: {HASH: 5nus6knzumx4ik2yl44jxtgtsl7d54xb, MIRROR_URL: 'http://172.17.0.1:8081/',
     SHORT_SPEC: zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64
-      /5nus6kn, SPEC_NAME: 'zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 '}
+      /5nus6kn, SPEC_NAME: zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64}
