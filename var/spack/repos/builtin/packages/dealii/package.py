@@ -99,15 +99,24 @@ class Dealii(CMakePackage, CudaPackage):
     # we take the patch from https://github.com/boostorg/serialization/pull/79
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
     # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
-    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:1.67.99+thread+system+serialization+iostreams',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+    # adopt https://github.com/boostorg/serialization/pull/105 as a fix
+    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='~python')
-    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:1.67.99+thread+system+serialization+iostreams+python',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')

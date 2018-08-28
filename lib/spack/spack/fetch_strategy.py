@@ -596,7 +596,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
     enabled = True
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit']
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
