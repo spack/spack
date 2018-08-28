@@ -50,4 +50,4 @@ class PyCogent(PythonPackage):
     depends_on('py-cython@0.17.1:')
 
     def setup_environment(self, spack_env, run_env):
-       spack_env.set('DONT_USE_PYREX', '1')
+        spack_env.set('DONT_USE_PYREX', '1')
