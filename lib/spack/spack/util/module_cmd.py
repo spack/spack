@@ -22,14 +22,14 @@ def module(*args):
     if args[0] in module_change_commands:
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
-        module_p  = subprocess.Popen('module ' + ' '.join(args) + ' 2>&1' + 
+        module_p  = subprocess.Popen('module ' + ' '.join(args) + ' 2>&1' +
                                      ' >/dev/null; python -c %s' % py_cmd,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT, shell=True)
 
         # Cray modules spit out warnings that we cannot supress.
         # This hack skips to the last output (the environment)
-        env_output =  str(module_p.communicate()[0].decode())
+        env_output = str(module_p.communicate()[0].decode())
         env = env_output.strip().split('\n')[-1]
 
         # Update os.environ with new dict
