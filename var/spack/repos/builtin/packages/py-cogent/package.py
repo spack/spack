@@ -41,8 +41,10 @@ class PyCogent(PythonPackage):
 
     depends_on('py-setuptools', type=('build'), when='@1.9')
     depends_on('python@2.6:2.999', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@1.3:', type=('build', 'run'))
     depends_on('zlib')
     depends_on('py-matplotlib', when='+matplotlib', type=('build', 'run'))
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
     depends_on('py-sqlalchemy', when='+mysql', type=('build', 'run'))
+    depends_on('py-pymysql')
+    depends_on('py-cython@0.17.1:', when='@1.5.3')
