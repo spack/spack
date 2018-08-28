@@ -44,6 +44,9 @@ class Chatterbug(MakefilePackage):
     depends_on('mpi')
     depends_on('scorep', when='+scorep')
 
+    # fix from LLNL/chatterbug#1
+    patch("ee1b13c634943dbe32ac22f5e2154b00eab8c574.patch", when="@1.0")
+
     @property
     def build_targets(self):
         targets = []
