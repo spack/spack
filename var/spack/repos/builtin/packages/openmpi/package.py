@@ -89,7 +89,7 @@ class Openmpi(AutotoolsPackage):
 
     # Still supported
     version('3.0.2', '098fa89646f5b4438d9d8534bc960cd6')  # libmpi.so.40.00.2
-    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1    
+    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1
     version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
     version('2.1.5', '6019c8b67d4975d833801e72ba290918')  # libmpi.so.20.10.3 
     version('2.1.4', '003b356a24a5b7bd1705a23ddc69d9a0')  # libmpi.so.20.10.3
@@ -394,7 +394,7 @@ class Openmpi(AutotoolsPackage):
                 config_args.extend([
                     '--enable-java',
                     '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['java'].prefix)
+                    '--with-jdk-dir={0}'.format(spec['java'].home)
                 ])
             else:
                 config_args.extend([
