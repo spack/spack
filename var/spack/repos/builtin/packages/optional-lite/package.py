@@ -25,6 +25,7 @@
 from spack import *
 from shutil import copytree
 
+
 class OptionalLite(Package):
     """
     A single-file header-only version of a C++17-like optional, a nullable
