@@ -23,24 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from shutil import copytree
 
 
-class Star(Package):
-    """STAR is an ultrafast universal RNA-seq aligner."""
+class StringViewLite(Package):
+    """
+    A single-file header-only version of a C++17-like string_view for C++98,
+    C++11 and later
+    """
 
-    homepage = "https://github.com/alexdobin/STAR"
-    url      = "https://github.com/alexdobin/STAR/archive/2.6.1a.tar.gz"
+    homepage = "https://github.com/martinmoene/string-view-lite"
+    url      = "https://github.com/martinmoene/string-view-lite/archive/v1.0.0.tar.gz"
 
-    version('2.6.1a', '1ebaac553809c20900e0b42aadf75cc6')
-    version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
-    version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
-            url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
-
-    depends_on('zlib')
+    version('1.0.0', sha256='44e30dedd6f4777e646da26528f9d2d5cc96fd0fa79e2e5c0adc14817d048d63')
+    version('0.2.0', sha256='c8ae699dfd2ccd15c5835e9b1d246834135bbb91b82f7fc4211b8ac366bffd34')
+    version('0.1.0', sha256='7de87d6595230a6085655dab6145340bc423f2cf206263ef73c9b78f7b153340')
 
     def install(self, spec, prefix):
-        with working_dir('source'):
-            make('STAR', 'STARlong')
-            mkdirp(prefix.bin)
-            install('STAR', prefix.bin)
-            install('STARlong', prefix.bin)
+        copytree('include', prefix.include)

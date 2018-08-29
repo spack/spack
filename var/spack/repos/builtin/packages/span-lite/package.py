@@ -23,24 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from shutil import copytree
 
 
-class Star(Package):
-    """STAR is an ultrafast universal RNA-seq aligner."""
+class SpanLite(Package):
+    """
+    A single-file header-only version of a C++20-like span for C++98, C++11 and
+    later
+    """
 
-    homepage = "https://github.com/alexdobin/STAR"
-    url      = "https://github.com/alexdobin/STAR/archive/2.6.1a.tar.gz"
+    homepage = "https://github.com/martinmoene/span-lite"
+    url      = "https://github.com/martinmoene/span-lite/archive/v0.3.0.tar.gz"
 
-    version('2.6.1a', '1ebaac553809c20900e0b42aadf75cc6')
-    version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
-    version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
-            url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
-
-    depends_on('zlib')
+    version('0.3.0', sha256='e083f368167fe632f866956edaa2c7a7d57a33ffb0d8def9b9f1a9daa47834bb')
+    version('0.2.0', sha256='6e3305fe868442410a00962a39fc59ed494cecc4f99fe2aff187e33932f06e46')
+    version('0.1.0', sha256='0a84b9369f86beba326e2160b683fd0922f416ce136437751a9ed70afcc67a1c')
 
     def install(self, spec, prefix):
-        with working_dir('source'):
-            make('STAR', 'STARlong')
-            mkdirp(prefix.bin)
-            install('STAR', prefix.bin)
-            install('STARlong', prefix.bin)
+        copytree('include', prefix.include)
