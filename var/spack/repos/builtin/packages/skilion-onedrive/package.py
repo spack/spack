@@ -42,7 +42,9 @@ class SkilionOnedrive(MakefilePackage):
         makefile = FileFilter('Makefile')
         # Generate the version file
         makefile.filter('.git/HEAD .git/index', '', string=True)
-        makefile.filter('$(shell git describe --tags)', '{0}'.format(spec.version), string=True)
+        makefile.filter('$(shell git describe --tags)',
+                        '{0}'.format(spec.version),
+                        string=True)
         # Patch sqlite.d https://github.com/skilion/onedrive/issues/392
         sqlited = FileFilter('src/sqlite.d')
         sqlited.filter('std.c.stdlib', 'core.stdc.stdlib', String=True)
