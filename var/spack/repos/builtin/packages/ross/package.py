@@ -26,7 +26,7 @@ from spack import *
 
 
 class Ross(CMakePackage):
-    """Rensselaer's Optimistic Simulation System"""
+    """Rensselaer Optimistic Simulation System"""
 
     homepage = "http://carothersc.github.io/ROSS/"
     git      = "https://github.com/carothersc/ROSS.git"
