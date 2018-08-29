@@ -62,6 +62,5 @@ class Cnvnator(MakefilePackage):
              'HTSDIR={0}'.format(spec['htslib'].prefix.lib))
 
     def install(self, spec, prefix):
-        mkdir = which('mkdir')
         mkdir(prefix.bin)
         install('cnvnator', prefix.bin)
