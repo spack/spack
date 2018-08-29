@@ -27,7 +27,7 @@ import collections
 import contextlib
 import inspect
 
-import yaml
+import ruamel.yaml as yaml
 import pytest
 from six import StringIO
 

@@ -35,10 +35,6 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=unit
-    - python: '3.3'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
     - python: '3.4'
       os: linux
       language: python
@@ -132,6 +128,7 @@ addons:
       - graphviz
       - gnupg2
       - cmake
+      - ninja-build
       - r-base
       - r-base-core
       - r-base-dev

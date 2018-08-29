@@ -139,7 +139,7 @@ from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
 from spack.version import VersionList, VersionRange, Version, ver
-from yaml.error import MarkedYAMLError
+from ruamel.yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
@@ -1470,6 +1470,7 @@ class Spec(object):
                 v.yaml_entry() for _, v in self.variants.items()
             )
         )
+
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d['parameters'] = params
@@ -1911,7 +1912,8 @@ class Spec(object):
                 mvar.value = mvar.value + tuple(patches)
                 # FIXME: Monkey patches mvar to store patches order
                 p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = dedupe(p + patches)
+                mvar._patches_in_order_of_appearance = list(
+                    dedupe(p + patches))
 
         for s in self.traverse():
             if s.external_module:

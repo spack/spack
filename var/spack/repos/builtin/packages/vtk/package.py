@@ -116,14 +116,19 @@ class Vtk(CMakePackage):
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
             '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
-            # Enable/Disable wrappers for Python.
-            '-DVTK_WRAP_PYTHON={0}'.format(
-                'ON' if '+python' in spec else 'OFF'),
-
             # Disable wrappers for other languages.
             '-DVTK_WRAP_JAVA=OFF',
             '-DVTK_WRAP_TCL=OFF',
         ]
+
+        # Enable/Disable wrappers for Python.
+        if '+python' in spec:
+            cmake_args.extend([
+                '-DVTK_WRAP_PYTHON=ON',
+                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path)
+            ])
+        else:
+            cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([

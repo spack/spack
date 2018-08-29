@@ -31,7 +31,7 @@ import tempfile
 import hashlib
 from contextlib import closing
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install_tree, get_filetype

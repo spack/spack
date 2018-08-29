@@ -30,7 +30,7 @@ class Tar(AutotoolsPackage):
     other kinds of manipulation."""
 
     homepage = "https://www.gnu.org/software/tar/"
-    url = "https://ftp.gnu.org/gnu/tar/tar-1.29.tar.gz"
+    url      = "https://ftpmirror.gnu.org/tar/tar-1.29.tar.gz"
 
     version('1.30', 'e0c5ed59e4dd33d765d6c90caadd3c73')
     version('1.29', 'cae466e6e58c7292355e7080248f244db3a4cf755f33f4fa25ca7f9a7ed09af0')

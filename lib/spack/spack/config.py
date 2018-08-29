@@ -61,8 +61,8 @@ from six import string_types
 from six import iteritems
 from ordereddict_backport import OrderedDict
 
-import yaml
-from yaml.error import MarkedYAMLError
+import ruamel.yaml as yaml
+from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -750,6 +750,26 @@ def _merge_yaml(dest, source):
     # In any other case, overwrite with a copy of the source value.
     else:
         return copy.copy(source)
+
+
+#
+# Settings for commands that modify configuration
+#
+def default_modify_scope():
+    """Return the config scope that commands should modify by default.
+
+    Commands that modify configuration by default modify the *highest*
+    priority scope.
+    """
+    return spack.config.config.highest_precedence_scope().name
+
+
+def default_list_scope():
+    """Return the config scope that is listed by default.
+
+    Commands that list configuration list *all* scopes (merged) by default.
+    """
+    return None
 
 
 class ConfigError(SpackError):

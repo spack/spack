@@ -34,6 +34,12 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('professional.2018.3', 'e0fb828de0a5f238f775b6122cc7e2c5',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12999/parallel_studio_xe_2018_update3_professional_edition.tgz')
+    version('cluster.2018.3',      '7112837d20a100b895d9cd9ba9b6748d',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12998/parallel_studio_xe_2018_update3_cluster_edition.tgz')
+    version('composer.2018.3',     '234223cc470717c2095456d9f048d690',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13002/parallel_studio_xe_2018_update3_composer_edition.tgz')
     version('professional.2018.1', '91669ff7afbfd07868a429a122c90357',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
     version('cluster.2018.1',      '9c007011e0e3fc72747b58756fbf01cd',

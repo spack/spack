@@ -41,6 +41,7 @@
 ##########################################################################
 
 from spack import *
+import os
 
 
 class CbtfArgonavisGui(QMakePackage):
@@ -107,10 +108,17 @@ class CbtfArgonavisGui(QMakePackage):
 
         # The implementor of qtgraph has set up the library and include
         # paths in a non-conventional way.  We reflect that here.
+        # What library suffix should be used based on library existence
+        if os.path.isdir(self.spec['qtgraph'].prefix.lib64):
+            qtgraph_lib_dir = self.spec['qtgraph'].prefix.lib64
+        else:
+            qtgraph_lib_dir = self.spec['qtgraph'].prefix.lib
+
         run_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
-                self.spec['qtgraph'].prefix.lib64,
+                qtgraph_lib_dir,
                 '{0}'.format(self.spec['qt'].version.up_to(3))))
+
         # The openspeedshop libraries are needed to actually load the
         # performance information into the GUI.
         run_env.prepend_path(

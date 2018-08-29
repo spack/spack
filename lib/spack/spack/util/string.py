@@ -53,3 +53,23 @@ def comma_and(sequence):
 
 def quote(sequence, q="'"):
     return ['%s%s%s' % (q, e, q) for e in sequence]
+
+
+def plural(n, singular, plural=None):
+    """Pluralize <singular> word by adding an s if n != 1.
+
+    Arguments:
+        n (int): number of things there are
+        singular (str): singular form of word
+        plural (str, optional): optional plural form, for when it's not just
+            singular + 's'
+
+    Returns:
+        (str): "1 thing" if n == 1 or "n things" if n != 1
+    """
+    if n == 1:
+        return "%d %s" % (n, singular)
+    elif plural is not None:
+        return "%d %s" % (n, plural)
+    else:
+        return "%d %ss" % (n, singular)
