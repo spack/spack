@@ -31,7 +31,7 @@ class PyFilelock(PythonPackage):
     inter-process communication"""
 
     homepage = "https://github.com/benediktschmitt/py-filelock"
-    url      = \
+    url = \
         "https://github.com/benediktschmitt/py-filelock/archive/v3.0.4.tar.gz"
 
     version('3.0.4',  '3cafce82375c3b635f2c872acaf3a00b')
