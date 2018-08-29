@@ -42,3 +42,4 @@ class PyMaestrowf(PythonPackage):
     depends_on('py-six',        type=('build', 'run'))
     depends_on('py-enum34',     type=('build', 'run'))
     depends_on('py-tabulate',   type=('build', 'run'))
+    depends_on('py-filelock',   type=('build', 'run'))
