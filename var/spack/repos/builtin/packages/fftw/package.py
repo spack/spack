@@ -162,6 +162,13 @@ class Fftw(AutotoolsPackage):
                 opts += self.enable_or_disable('simd')
                 opts += self.enable_or_disable('fma')
 
+        # Support for Intel compiler:
+        # https://software.intel.com/en-us/articles/performance-tools-for-software-developers-building-fftw-with-the-intel-compilers
+        if '%intel' in spec:
+            options.append(
+                "CFLAGS=-gcc --with-our-malloc16 --with-combined-threads"
+            )
+
         configure = Executable('../configure')
 
         # Build double/float/long double/quad variants
