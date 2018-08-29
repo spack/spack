@@ -41,10 +41,10 @@
    systems (e.g. modules, dotkit, etc.) or to add other custom
    features.
 """
-import imp
 import os.path
 
 import spack.paths
+import spack.util.imp as simp
 from llnl.util.lang import memoized, list_modules
 
 
@@ -54,7 +54,7 @@ def all_hook_modules():
     for name in list_modules(spack.paths.hooks_path):
         mod_name = __name__ + '.' + name
         path = os.path.join(spack.paths.hooks_path, name) + ".py"
-        mod = imp.load_source(mod_name, path)
+        mod = simp.load_source(mod_name, path)
         modules.append(mod)
 
     return modules

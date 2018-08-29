@@ -118,6 +118,10 @@ class Python(AutotoolsPackage):
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
     patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
 
+    # Fixes an alignment problem with more aggressive optimization in gcc8
+    # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
+    patch('gcc-8-2.7.14.patch', when="@2.7.14 %gcc@8:")
+
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
     conflicts(

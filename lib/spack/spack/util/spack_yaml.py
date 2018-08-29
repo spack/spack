@@ -34,10 +34,10 @@
 from ordereddict_backport import OrderedDict
 from six import string_types, StringIO
 
-import yaml
-from yaml import Loader, Dumper
-from yaml.nodes import MappingNode, SequenceNode, ScalarNode
-from yaml.constructor import ConstructorError
+import ruamel.yaml as yaml
+from ruamel.yaml import Loader, Dumper
+from ruamel.yaml.nodes import MappingNode, SequenceNode, ScalarNode
+from ruamel.yaml.constructor import ConstructorError
 
 from llnl.util.tty.color import colorize, clen, cextra
 

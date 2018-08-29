@@ -35,14 +35,15 @@ class Libcint(CMakePackage):
     #
     # Versions
     #
-    version('3.0.12', 'e69117782ff9f443373f30c80ecb6ab7')
-    version('3.0.11', '1fb1db5a426280d38cddbb0098f6c678')
-    version('3.0.10', 'b368e257dba99febf1cdd1391f2e58a3')
-    version('3.0.8',  '61f415ad9c7854963136c6bba7a661eb')
-    version('3.0.7',  'f0f3c971c0d5bb5565ac9ab5e271aa79')
-    version('3.0.6',  '1aafd91107e2418f794ce02b9d88ea8b')
-    version('3.0.5',  'facb1ddabd9497e99d22176a9b9a895f')
-    version('3.0.4',  '55607a61313225ef4434d3e96624a008')
+    version('3.0.13', sha256='ee64f0bc7fb6073063ac3c9bbef8951feada141e197b1a5cc389c8cccf8dc360')
+    version('3.0.12', sha256='7409ef41f1465cf4c1ae9834dfc0b0585c0fdc63b55d8ee8b8a7a6d5e31f309d')
+    version('3.0.11', sha256='4c9c24d4bd4791391848f19a4be5177137aca27a8e0375574101a7a1261157cf')
+    version('3.0.10', sha256='aac6d9630dc4c62840f03262166e877d3aeaf27b6b33498fb490fa3428f12fe4')
+    version('3.0.8',  sha256='ca94772f74aaf7b8ad4d7c1b09578c9115ec909c3d8b82dacc908c351c631c35')
+    version('3.0.7',  sha256='e603cd90567c6116d4f704ea66a010b447c11052e90db1d91488adc187142ead')
+    version('3.0.6',  sha256='a7d6d46de9be044409270b27727a1d620d21b5fda6aa7291548938e1ced25404')
+    version('3.0.5',  sha256='7bde241ce83c00b89c80459e3af5734d40925d8fd9fcaaa7245f61b08192c722')
+    version('3.0.4',  sha256='0f25ef7ad282dd7a20e4decf283558e4f949243a5423ff4c0cd875276c310c47')
 
     #
     # Variants

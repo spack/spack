@@ -121,6 +121,10 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
+    depends_on('rdma-core', when='fabrics=mrail')
+    depends_on('rdma-core', when='fabrics=nemesisib')
+    depends_on('rdma-core', when='fabrics=nemesistcpib')
+    depends_on('rdma-core', when='fabrics=nemesisibtcp')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -180,7 +184,8 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=nemesis' in self.spec:
             opts = ["--with-device=ch3:nemesis"]
         elif 'fabrics=mrail' in self.spec:
-            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
+            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
+                    "--disable-mcast"]
         return opts
 
     @property

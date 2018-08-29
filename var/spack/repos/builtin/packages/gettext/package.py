@@ -29,7 +29,7 @@ class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
 
     version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
     version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
