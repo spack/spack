@@ -46,3 +46,7 @@ class PyFilelock(PythonPackage):
     version('2.0.8',  '939ec6d4e2ecdc353a1f27fc452d8e8c')
 
     depends_on('py-setuptools', type='build')
+
+    def patch(self):
+        """Filter disutils with setuptools in  setup.py."""
+        filter_file('distutils.core', 'setuptools', 'setup.py', string=True)
