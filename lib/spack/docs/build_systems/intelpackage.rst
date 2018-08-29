@@ -910,20 +910,18 @@ a *virtual* ``mkl`` package is declared in Spack.
 
   .. code-block:: python
 
+     # Examples for absolute and conditional dependencies:
      depends_on('mkl')
      depends_on('mkl', when='+mkl')
      depends_on('mkl', when='fftw=mkl')
 
-  During all stages of a client package installation the ``MKLROOT``
-  environment variable (part of the documented API) will be set when
-  ``depends_on('mkl')`` is active.  If a package claims it can use the MKL but
-  its native code is not written to detect the variable (which should be rare),
-  read the value in your Spack package code from ``env["MKLROOT"]`` and pass it
-  to the client code.
+  The ``MKLROOT`` environment variable (part of the documented API) will be set
+  during all stages of client package installation, and is available to both
+  the Spack packaging code and the client code.
 
 * To use MKL as provider for BLAS, LAPACK, or ScaLAPACK:
 
-  The packages that provide ``mkl`` also provide the more narrowly-focused
+  The packages that provide ``mkl`` also provide the narrower
   virtual ``blas``, ``lapack``, and ``scalapack`` packages.
   See the relevant :ref:`Packaging Guide section <blas_lapack_scalapack>`
   for an introduction.
