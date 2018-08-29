@@ -71,6 +71,7 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.store
+from spack.util.string import plural
 from spack.environment import EnvironmentModifications, validate
 from spack.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
@@ -907,16 +908,21 @@ class ChildError(InstallError):
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
-            # the build log with errors highlighted.
-            if self.build_log:
+            # the build log with errors or warnings highlighted.
+            if self.build_log and os.path.exists(self.build_log):
                 errors, warnings = parse_log_events(self.build_log)
                 nerr = len(errors)
+                nwar = len(warnings)
                 if nerr > 0:
-                    if nerr == 1:
-                        out.write("\n1 error found in build log:\n")
-                    else:
-                        out.write("\n%d errors found in build log:\n" % nerr)
+                    # If errors are found, only display errors
+                    out.write(
+                        "\n%s found in build log:\n" % plural(nerr, 'error'))
                     out.write(make_log_context(errors))
+                elif nwar > 0:
+                    # If no errors are found but warnings are, display warnings
+                    out.write(
+                        "\n%s found in build log:\n" % plural(nwar, 'warning'))
+                    out.write(make_log_context(warnings))
 
         else:
             # The error happened in in the Python code, so try to show
@@ -929,7 +935,7 @@ class ChildError(InstallError):
         if out.getvalue():
             out.write('\n')
 
-        if self.build_log:
+        if self.build_log and os.path.exists(self.build_log):
             out.write('See build log for details:\n')
             out.write('  %s' % self.build_log)
 

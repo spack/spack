@@ -33,8 +33,9 @@ class Bison(AutotoolsPackage):
     generalized LR (GLR) parser employing LALR(1) parser tables."""
 
     homepage = "http://www.gnu.org/software/bison/"
-    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.gz"
+    url      = "https://ftpmirror.gnu.org/bison/bison-3.0.4.tar.gz"
 
+    version('3.0.5', '41ad57813157b61bfa47e33067a9d6f0')
     version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
     version('2.7',   'ded660799e76fb1667d594de1f7a0da9')
 

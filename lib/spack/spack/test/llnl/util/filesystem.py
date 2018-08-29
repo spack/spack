@@ -26,6 +26,7 @@
 
 import llnl.util.filesystem as fs
 import os
+import stat
 import pytest
 
 
@@ -45,8 +46,10 @@ def stage(tmpdir_factory):
         fs.touchp('source/c/d/6')
         fs.touchp('source/c/d/e/7')
 
-        # Create symlink
+        # Create symlinks
         os.symlink(os.path.abspath('source/1'), 'source/2')
+        os.symlink('b/2', 'source/a/b2')
+        os.symlink('a/b', 'source/f')
 
         # Create destination directory
         fs.mkdirp('dest')
@@ -64,7 +67,6 @@ class TestCopy:
             fs.copy('source/1', 'dest/1')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
 
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
@@ -73,7 +75,14 @@ class TestCopy:
             fs.copy('source/1', 'dest')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+
+
+def check_added_exe_permissions(src, dst):
+    src_mode = os.stat(src).st_mode
+    dst_mode = os.stat(dst).st_mode
+    for perm in [stat.S_IXUSR, stat.S_IXGRP, stat.S_IXOTH]:
+        if src_mode & perm:
+            assert dst_mode & perm
 
 
 class TestInstall:
@@ -86,7 +95,7 @@ class TestInstall:
             fs.install('source/1', 'dest/1')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+            check_added_exe_permissions('source/1', 'dest/1')
 
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
@@ -95,7 +104,7 @@ class TestInstall:
             fs.install('source/1', 'dest')
 
             assert os.path.exists('dest/1')
-            assert os.stat('source/1').st_mode == os.stat('dest/1').st_mode
+            check_added_exe_permissions('source/1', 'dest/1')
 
 
 class TestCopyTree:
@@ -125,6 +134,24 @@ class TestCopyTree:
 
             assert os.path.exists('dest/2')
             assert os.path.islink('dest/2')
+
+            assert os.path.exists('dest/a/b2')
+            with fs.working_dir('dest/a'):
+                assert os.path.exists(os.readlink('b2'))
+
+            assert (os.path.realpath('dest/f/2') ==
+                    os.path.abspath('dest/a/b/2'))
+            assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
+
+    def test_symlinks_true_ignore(self, stage):
+        """Test copying when specifying relative paths that should be ignored
+        """
+        with fs.working_dir(str(stage)):
+            ignore = lambda p: p in ['c/d/e', 'a']
+            fs.copy_tree('source', 'dest', symlinks=True, ignore=ignore)
+            assert not os.path.exists('dest/a')
+            assert os.path.exists('dest/c/d')
+            assert not os.path.exists('dest/c/d/e')
 
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""

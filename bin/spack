@@ -49,13 +49,6 @@ if sys.version_info[:2] == (2, 6):
 
 sys.path.insert(0, spack_external_libs)
 
-# Handle vendoring of YAML specially, as it has two versions.
-if sys.version_info[0] == 2:
-    spack_yaml_libs = os.path.join(spack_external_libs, "yaml/lib")
-else:
-    spack_yaml_libs = os.path.join(spack_external_libs, "yaml/lib3")
-sys.path.insert(0, spack_yaml_libs)
-
 # Once we've set up the system path, run the spack main method
 import spack.main  # noqa
 sys.exit(spack.main.main())

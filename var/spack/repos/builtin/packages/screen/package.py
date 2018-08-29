@@ -31,7 +31,7 @@ class Screen(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/screen/"
-    url      = "http://ftp.gnu.org/gnu/screen/screen-4.3.1.tar.gz"
+    url      = "https://ftpmirror.gnu.org/screen/screen-4.3.1.tar.gz"
 
     version('4.6.2', 'a0f529d3333b128dfaa324d978ba73a8')
     version('4.3.1', '5bb3b0ff2674e29378c31ad3411170ad')

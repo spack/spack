@@ -50,6 +50,7 @@ class Clapack(MakefilePackage):
             make_inc = FileFilter('make.inc')
             make_inc.filter(r'^BLASLIB.*',
                             'BLASLIB = ../../libcblaswr.a -lcblas -latlas')
+            makefile = FileFilter('Makefile')
             makefile.filter(r'^lib.*',
                             'lib: variants lapacklib tmglib')
 

@@ -26,17 +26,18 @@ from spack import *
 
 
 class Ross(CMakePackage):
-    """Rensselaer's Optimistic Simulation System"""
+    """Rensselaer Optimistic Simulation System"""
 
     homepage = "http://carothersc.github.io/ROSS/"
-    git = "https://github.com/carothersc/ROSS.git"
+    git      = "https://github.com/carothersc/ROSS.git"
 
-    version('master')
+    version('develop', branch='master')
+    version('7.0.0', tag='v7.0.0')
 
     depends_on('mpi')
 
     def cmake_args(self):
-        if 'x86_64' not in spec.architecture:
+        if 'x86_64' not in self.spec.architecture:
             raise InstallError(
                 'This package currently only builds on x86_64 architectures')
 
@@ -44,4 +45,5 @@ class Ross(CMakePackage):
                 "-DARCH=x86_64",
                 "-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc,
                 "-DCMAKE_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx]
+
         return args

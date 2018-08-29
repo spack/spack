@@ -58,6 +58,7 @@ class Dyninst(Package):
     depends_on("elf@1", type='link', when='@9.3.0:')
     depends_on("libdwarf", when='@:9')
     depends_on("boost@1.42:")
+    depends_on('libiberty+pic')
     depends_on('cmake', type='build')
 
     patch('stat_dysect.patch', when='+stat_dysect')

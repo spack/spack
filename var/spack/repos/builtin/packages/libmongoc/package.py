@@ -51,6 +51,7 @@ class Libmongoc(AutotoolsPackage):
     depends_on('automake', type='build', when='@1.8.1')
     depends_on('libtool', type='build', when='@1.8.1')
     depends_on('m4', type='build', when='@1.8.1')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libbson')
 
