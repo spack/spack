@@ -47,6 +47,7 @@ class Flecsi(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("legion+shared", when='~mpi')
     depends_on("legion+shared+mpi", when='+mpi')
+    depends_on("parmetis")
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON']

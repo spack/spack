@@ -23,24 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from shutil import copytree
 
 
-class Star(Package):
-    """STAR is an ultrafast universal RNA-seq aligner."""
+class OptionalLite(Package):
+    """
+    A single-file header-only version of a C++17-like optional, a nullable
+    object for C++98, C++11 and later.
+    """
 
-    homepage = "https://github.com/alexdobin/STAR"
-    url      = "https://github.com/alexdobin/STAR/archive/2.6.1a.tar.gz"
+    homepage = "https://github.com/martinmoene/optional-lite"
+    url      = "https://github.com/martinmoene/optional-lite/archive/v3.0.0.tar.gz"
 
-    version('2.6.1a', '1ebaac553809c20900e0b42aadf75cc6')
-    version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
-    version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
-            url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
-
-    depends_on('zlib')
+    version('3.0.0', sha256='36ae58512c478610647978811f0f4dbe105880372bd7ed39417314d50a27254e')
+    version('2.3.0', sha256='8fe46216147234b172c6a5b182726834afc44dfdca1e976a264d6f96eb183916')
+    version('2.2.0', sha256='9ce1bb021de42f804f8d17ed30b79fc98296122bec8db60492104978cd282fa2')
+    version('2.0.0', sha256='e8d803cbc7be241df41a9ab267b525b7941df09747cd5a7deb55f863bd8a4e8d')
+    version('1.0.3', sha256='7a2fb0fe20d61d091f6730237add9bab58bc0df1288cb96f3e8a61b859539067')
 
     def install(self, spec, prefix):
-        with working_dir('source'):
-            make('STAR', 'STARlong')
-            mkdirp(prefix.bin)
-            install('STAR', prefix.bin)
-            install('STARlong', prefix.bin)
+        copytree('include', prefix.include)
