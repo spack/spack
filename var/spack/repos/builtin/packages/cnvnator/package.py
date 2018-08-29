@@ -44,10 +44,13 @@ class Cnvnator(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
+        # Replace -fopenmp with self.compiler.openmp_flag
+        makefile.filter('-fopenmp', self.compiler.openmp_flag)
         # Replace CXX with CXXFLAGS
         makefile.filter('CXX.*=.*',
-                        'CXXFLAGS = -O3 -std=c++11 \
-                        -DCNVNATOR_VERSION=\\"$(VERSION)\\" $(OMPFLAGS)')
+                        r'CXXFLAGS = -DCNVNATOR_VERSION=\"$(VERSION)\"'
+                        ' $(OMPFLAGS)'
+                        ' {0}'.format(self.compiler.cxx11_flag))
         makefile.filter('$(CXX)', '$(CXX) $(CXXFLAGS)', string=True)
         # Replace -I$(SAMDIR) with -I$(SAMINC)
         makefile.filter('-I$(SAMDIR)', '-I$(SAMINC)', string=True)
