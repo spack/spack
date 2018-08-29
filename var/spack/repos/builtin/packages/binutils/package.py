@@ -55,8 +55,8 @@ class Binutils(AutotoolsPackage):
 
     # Prior to 2.30, gold did not distribute the generated files and
     # thus needs bison, even for a one-time build.
-    depends_on('m4', type='build', when='+gold')
-    depends_on('bison', type='build', when='+gold')
+    depends_on('m4', type='build', when='@:2.29.99 +gold')
+    depends_on('bison', type='build', when='@:2.29.99 +gold')
 
     def configure_args(self):
         spec = self.spec
