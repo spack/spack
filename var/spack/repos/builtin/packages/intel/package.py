@@ -84,9 +84,16 @@ class Intel(IntelPackage):
             bin_dir = join_path(self.prefix, 'compilers_and_libraries',
                                 'linux', 'bin', 'intel64')
             lib_dir = join_path(self.prefix, 'compilers_and_libraries',
-                                'linux', 'compiler', 'lib', 'intel64_lin')
+                                'linux')
+            if os.path.exists(join_path(lib_dir, 'compiler')):
+                lib_dir = join_path(lib_dir, 'compiler')
+            lib_dir = join_path(lib_dir, 'lib', 'intel64_lin')
             for compiler in ['icc', 'icpc', 'ifort']:
-                cfgfilename = join_path(bin_dir, '{0}.cfg'.format(compiler))
+                # We need to figure out the compiler's realpath, otherwise the
+                # compiler might end up using the wrong .cfg file.
+                real_dir = os.path.dirname(
+                    os.path.realpath(join_path(bin_dir, compiler)))
+                cfgfilename = join_path(real_dir, '{0}.cfg'.format(compiler))
                 with open(cfgfilename, 'w') as f:
                     f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
