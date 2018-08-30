@@ -44,12 +44,14 @@ class Zee(CMakePackage):
             description='Compile C++ with debug symbols')
     variant('warnings', default=True,
             description='Compile C++ with warnings')
+    variant('petsc', default=True,
+            description='Compile examples using PETSc')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
     depends_on('gmsh -mpi %gcc')
     depends_on('mpi')
     depends_on('omega-h')
-    depends_on('petsc +int64')
+    depends_on('petsc +int64', when='+petsc')
 
     def _bob_options(self):
         cmake_var_prefix = self.name.capitalize() + '_CXX_'
@@ -59,6 +61,7 @@ class Zee(CMakePackage):
                 yield '-D' + cmake_var + ':BOOL=ON'
             else:
                 yield '-D' + cmake_var + ':BOOL=FALSE'
+        yield '-DZee_USE_PETSc:BOOL=' + 'TRUE' if '+petsc' in self.spec else 'FALSE'
 
     def cmake_args(self):
         return list(self._bob_options())
