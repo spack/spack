@@ -24,13 +24,23 @@ from spack import *
 
 
 class MofemCephas(CMakePackage):
-    """mofem-cephas core library"""
+    """MoFEM is finite element core library"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem-cephas.git"
 
     maintainers = ['likask']
 
+    version('0.8.12', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.12', submodules=True)
+    version('0.8.11', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.11', submodules=True)
+    version('0.8.10', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.10', submodules=True)
+    version('0.8.9', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.9', submodules=True)
+    version('0.8.8', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.8', submodules=True)
     version('0.8.7', git='https://bitbucket.org/likask/mofem-cephas.git',
         tag='v0.8.7', submodules=True)
     version('develop',
@@ -51,7 +61,7 @@ class MofemCephas(CMakePackage):
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
     depends_on("hdf5@:1.8.19+hl+mpi")
-    depends_on("petsc@:3.9.2+mumps+mpi")
+    depends_on("petsc@:3.9.3+mumps+mpi")
     depends_on('slepc', when='+slepc')
     depends_on("moab")
     # Upper bound set to ADOL-C until issues with memory leaks
@@ -77,7 +87,7 @@ class MofemCephas(CMakePackage):
             '-DBOOST_DIR=%s' % spec['boost'].prefix])
 
         # build tests
-        options.append('-DMOFEM_BUILD_TETS={0}'.format(
+        options.append('-DMOFEM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         # variant packages

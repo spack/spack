@@ -31,6 +31,18 @@ class MofemFractureModule(CMakePackage):
 
     maintainers = ['likask']
 
+    version('0.9.47',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.47')
+    version('0.9.46',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.46')
+    version('0.9.45',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.45')
+    version('0.9.44',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.44')
     version('0.9.42',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
         tag='v0.9.42')
@@ -90,7 +102,7 @@ class MofemFractureModule(CMakePackage):
                 '-DFM_VERSION_BUILD=%s' % self.spec.version[2]])
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+        options.append('-DMOFEM_UM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         return options

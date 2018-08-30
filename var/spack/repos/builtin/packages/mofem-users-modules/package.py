@@ -43,14 +43,28 @@ class MofemUsersModules(CMakePackage):
 
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
-    version('1.0', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
 
+    version('0.8.12', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('0.8.11', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('0.8.10', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('0.8.9', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('0.8.8', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('0.8.7', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('develop', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    
     maintainers = ['likask']
 
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
+    depends_on('mofem-cephas@0.8.12', when='@0.8.12')
+    depends_on('mofem-cephas@0.8.11', when='@0.8.11')
+    depends_on('mofem-cephas@0.8.10', when='@0.8.10')
+    depends_on('mofem-cephas@0.8.9', when='@0.8.9')
+    depends_on('mofem-cephas@0.8.8', when='@0.8.8')
+    depends_on('mofem-cephas@0.8.7', when='@0.8.7')
+    depends_on('mofem-cephas@develop', when='@develop')
 
     @property
     def root_cmakelists_dir(self):
@@ -76,7 +90,7 @@ class MofemUsersModules(CMakePackage):
             ('YES' if '+copy_user_modules' in spec else 'NO')])
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+        options.append('-DMOFEM_UM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         return options
