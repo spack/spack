@@ -52,5 +52,5 @@ class RDeseq2(RPackage):
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-hmisc', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.1', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.16.1:1.19', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
