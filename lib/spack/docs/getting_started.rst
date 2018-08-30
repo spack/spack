@@ -484,6 +484,9 @@ simple package.  For example:
 
    $ spack install zlib%gcc@5.3.0
 
+
+.. _vendor-specific-compiler-configuration:
+
 --------------------------------------
 Vendor-Specific Compiler Configuration
 --------------------------------------
