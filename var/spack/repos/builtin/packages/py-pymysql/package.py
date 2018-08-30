@@ -33,5 +33,5 @@ class PyPymysql(PythonPackage):
 
     version('0.9.2', sha256='9ec760cbb251c158c19d6c88c17ca00a8632bac713890e465b2be01fdc30713f')
 
-    depends_on('py-setuptools')
-    depends_on('py-cryptography')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cryptography', type=('build', 'run'))
