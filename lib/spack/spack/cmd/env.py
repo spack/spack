@@ -32,7 +32,7 @@ subcommands = [
     'remove',
     'upgrade',
     'concretize',
-    'list',
+    'status',
     'loads',
     'relocate',
     'stage',
@@ -217,15 +217,15 @@ def environment_relocate(args):
     ev.write(environment)
 
 
-def setup_list_parser(subparser):
-    """list specs in an environment"""
+def setup_status_parser(subparser):
+    """get install status of specs in an environment"""
     arguments.add_common_arguments(
         subparser,
         ['recurse_dependencies', 'long', 'very_long', 'install_status'])
 
 
-def environment_list(args):
-    # TODO? option to list packages w/ multiple instances?
+def environment_status(args):
+    # TODO? option to show packages w/ multiple instances?
     environment = ev.read(args.environment)
     environment.list(
         sys.stdout, recurse_dependencies=args.recurse_dependencies,
