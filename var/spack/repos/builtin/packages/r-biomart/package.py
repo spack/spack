@@ -52,5 +52,5 @@ class RBiomart(RPackage):
     depends_on('r-progress', type=('build', 'run'), when='@2.34.2:')
     depends_on('r-stringr', type=('build', 'run'), when='@2.34.2:')
     depends_on('r-httr', type=('build', 'run'), when='@2.34.2:')
-    depends_on('r@3.4.0:3.4.9', when='@2.32.1', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.32.1:2.35', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@2.36.1', type=('build', 'run'))
