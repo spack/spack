@@ -36,9 +36,9 @@ class PyPybind11(CMakePackage):
 
     homepage = "https://pybind11.readthedocs.io"
     url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
+    git      = "https://github.com/pybind/pybind11.git"
 
-    version('develop', branch='master',
-            git='https://github.com/pybind/pybind11.git')
+    version('develop', branch='master')
     version('2.2.3', '55b637945bbf47d99d2c906bf0c13f49')
     version('2.2.2', 'fc174e1bbfe7ec069af7eea86ec37b5c')
     version('2.2.1', 'bab1d46bbc465af5af3a4129b12bfa3b')
@@ -47,7 +47,7 @@ class PyPybind11(CMakePackage):
     version('2.1.0', '3cf07043d677d200720c928569635e12')
 
     depends_on('py-pytest', type='test')
-    depends_on('py-setuptools', type='build') 
+    depends_on('py-setuptools', type='build')
 
     extends('python')
 

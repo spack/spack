@@ -37,6 +37,7 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
+    version('2018.5', 'ff3ae09f8c23892fbc3008c39f78288f')
     version('2018.4', '5e2e6ba0e25624a94331c945856551c2')
     version('2018.3', 'cd2e136598ffa5c136f077ee85a35b4c')
     version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae')
@@ -73,6 +74,9 @@ class IntelTbb(Package):
             multi=False,
             description='Use the specified C++ standard when building.')
 
+    variant('tm', default=True,
+            description='Enable use of transactional memory on x86')
+
     # Build and install CMake config files if we're new enough.
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
@@ -83,6 +87,9 @@ class IntelTbb(Package):
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
+
+    # Some very old systems don't support transactional memory.
+    patch("disable-tm.patch", when='~tm')
 
     def url_for_version(self, version):
         url = 'https://github.com/01org/tbb/archive/{0}.tar.gz'

@@ -44,31 +44,22 @@ class Vtkh(Package):
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
 
     homepage = "https://github.com/Alpine-DAV/vtk-h"
-    url      = "https://github.com/Alpine-DAV/vtk-h"
-
-    version('0.1.0',
-            git='https://github.com/Alpine-DAV/vtk-h.git',
-            tag='v0.1.0',
-            submodules=True)
-
-    version('develop',
-            git='https://github.com/Alpine-DAV/vtk-h.git',
-            branch='develop',
-            submodules=True)
-
+    git      = "https://github.com/Alpine-DAV/vtk-h.git"
     maintainers = ['cyrush']
 
-    variant("shared", default=True, description="Build vtk-h as shared libs")
+    version('develop', branch='develop', submodules=True)
+    version('0.1.0', branch='develop', tag='v0.1.0', submodules=True)
 
+    variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
     variant("tbb", default=False, description="build tbb support")
     variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=True, description="build openmp support")
 
-    depends_on("cmake@3.8.2:3.9.999")
+    depends_on("cmake@3.8.2:")
 
     depends_on("mpi", when="+mpi")
-    depends_on("tbb", when="@0.1.0+tbb")
+    depends_on("intel-tbb", when="@0.1.0+tbb")
     depends_on("cuda", when="+cuda")
 
     #raise ValueError('A very specific bad thing happened.')

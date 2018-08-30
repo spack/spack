@@ -24,7 +24,6 @@
 ##############################################################################
 import inspect
 import os.path
-import shutil
 
 from spack import *
 
@@ -77,7 +76,7 @@ class Wannier90(MakefilePackage):
             'make.sys'
         )
 
-        shutil.copy(template, self.makefile_name)
+        copy(template, self.makefile_name)
         for key, value in substitutions.items():
             filter_file(key, value, self.makefile_name)
 

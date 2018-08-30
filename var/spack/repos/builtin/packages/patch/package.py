@@ -32,7 +32,7 @@ class Patch(AutotoolsPackage):
     """
 
     homepage = "http://savannah.gnu.org/projects/patch/"
-    url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz"
+    url      = "https://ftpmirror.gnu.org/patch/patch-2.7.6.tar.xz"
 
     version('2.7.6', '78ad9937e4caadcba1526ef1853730d5')
     version('2.7.5', 'e3da7940431633fb65a01b91d3b7a27a')

@@ -32,9 +32,9 @@ class RDeseq(RPackage):
     distribution."""
 
     homepage = "https://www.bioconductor.org/packages/DESeq/"
-    url      = "https://git.bioconductor.org/packages/DESeq"
+    git      = "https://git.bioconductor.org/packages/DESeq.git"
 
-    version('1.28.0', git='https://git.bioconductor.org/packages/DESeq', commit='738371466e6ccf00179fd35b617c8ba0e1e91630')
+    version('1.28.0', commit='738371466e6ccf00179fd35b617c8ba0e1e91630')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

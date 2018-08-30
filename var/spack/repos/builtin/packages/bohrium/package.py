@@ -32,16 +32,18 @@ import os
 class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
-    homepage    = "http://bh107.org"
-    url         = "https://github.com/bh107/bohrium/archive/v0.8.9.tar.gz"
+    homepage = "http://bh107.org"
+    url      = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
+    git      = "https://github.com/bh107/bohrium.git"
+
     maintainers = ['mfherbst']
 
     #
     # Versions
     #
-    version("develop", git="https://github.com/bh107/bohrium.git",
-            branch="master")
-    version('0.9.0', checksum="6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93")
+    version("develop", branch="master")
+    version('0.9.1', sha256='a8675db35ea4587ef12d5885a1aa19b59fd9c3f1366e239059de8b0f3cf51e04')
+    version('0.9.0', sha256='6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93')
 
     #
     # Variants

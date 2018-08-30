@@ -36,31 +36,12 @@ class QuantumEspresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
-    url = 'https://github.com/QEF/q-e/archive/qe-5.3.tar.gz'
+    url      = 'https://github.com/QEF/q-e/archive/qe-6.2.0.tar.gz'
 
-    version(
-        '6.2.0',
-        '972176a58d16ae8cf0c9a308479e2b97',
-        url='https://github.com/QEF/q-e/archive/qe-6.2.0.tar.gz'
-    )
-
-    version(
-        '6.1.0',
-        '3fe861dcb5f6ec3d15f802319d5d801b',
-        url='https://github.com/QEF/q-e/archive/qe-6.1.0.tar.gz'
-    )
-
-    version(
-        '5.4.0',
-        '085f7e4de0952e266957bbc79563c54e',
-        url='https://github.com/QEF/q-e/archive/qe-5.4.tar.gz'
-    )
-
-    version(
-        '5.3.0',
-        'be3f8778e302cffb89258a5f936a7592',
-        url='https://github.com/QEF/q-e/archive/qe-5.3.tar.gz'
-    )
+    version('6.2.0', '972176a58d16ae8cf0c9a308479e2b97')
+    version('6.1.0', '3fe861dcb5f6ec3d15f802319d5d801b')
+    version('5.4',   '085f7e4de0952e266957bbc79563c54e')
+    version('5.3',   'be3f8778e302cffb89258a5f936a7592')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')

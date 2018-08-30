@@ -30,9 +30,9 @@ class RAgdex(RPackage):
     for cross-species genomics."""
 
     homepage = "http://bioconductor.org/packages/AGDEX/"
-    url      = "https://git.bioconductor.org/packages/AGDEX"
+    git      = "https://git.bioconductor.org/packages/AGDEX.git"
 
-    version('1.24.0', git='https://git.bioconductor.org/packages/AGDEX', commit='29c6bcfa6919a5c6d8bcb36b44e75145a60ce7b5')
+    version('1.24.0', commit='29c6bcfa6919a5c6d8bcb36b44e75145a60ce7b5')
 
     depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-biobase', type=('build', 'run'))

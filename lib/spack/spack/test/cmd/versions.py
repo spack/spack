@@ -48,3 +48,17 @@ def test_no_unchecksummed_versions():
     """Test a package for which no unchecksummed versions are available."""
 
     versions('bzip2')
+
+
+@pytest.mark.network
+def test_versions_no_url():
+    """Test a package with versions but without a ``url`` attribute."""
+
+    versions('graphviz')
+
+
+@pytest.mark.network
+def test_no_versions_no_url():
+    """Test a package without versions or a ``url`` attribute."""
+
+    versions('opengl')

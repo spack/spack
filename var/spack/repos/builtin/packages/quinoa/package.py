@@ -34,9 +34,9 @@ class Quinoa(CMakePackage):
     """
 
     homepage = "http://quinoacomputing.org"
-    url      = "https://github.com/quinoacomputing/quinoa/tarball/quinoa_v0.1"
+    git      = "https://github.com/quinoacomputing/quinoa.git"
 
-    version('develop', git='https://github.com/quinoacomputing/quinoa', branch='master')
+    version('develop', branch='master')
 
     depends_on('hdf5+mpi')
     depends_on("charm backend=mpi")

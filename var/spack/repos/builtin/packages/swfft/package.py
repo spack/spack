@@ -30,12 +30,12 @@ class Swfft(MakefilePackage):
     """A stand-alone version of HACC's distributed-memory, pencil-decomposed,
     parallel 3D FFT."""
 
-    homepage = 'https://xgitlab.cels.anl.gov/hacc/SWFFT'
-    url = "https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FSWFFT/repository/archive.tar.gz?sha=v1.0"
+    homepage = "https://xgitlab.cels.anl.gov/hacc/SWFFT"
+    url      = "https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FSWFFT/repository/archive.tar.gz?sha=v1.0"
+    git      = "https://xgitlab.cels.anl.gov/hacc/SWFFT.git"
 
     version('1.0', '0fbc34544b97ba9c3fb19ef2d7a0f076')
-    version('develop', git='https://xgitlab.cels.anl.gov/hacc/SWFFT',
-            branch='master')
+    version('develop', branch='master')
 
     depends_on('mpi')
     depends_on('fftw')

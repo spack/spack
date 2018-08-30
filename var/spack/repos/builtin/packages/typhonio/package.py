@@ -31,10 +31,10 @@ class Typhonio(CMakePackage):
 
     homepage = "http://uk-mac.github.io/typhonio/"
     url      = "https://github.com/UK-MAC/typhonio/archive/v1.6_CMake.tar.gz"
+    git      = "https://github.com/UK-MAC/typhonio.git"
 
+    version('develop', branch='cmake_build')
     version('1.6_CMake', '8e8b2940a57874205e6d451856db5c2755884bf9')
-    version('develop', git='https://github.com/UK-MAC/typhonio.git',
-            branch='cmake_build')
 
     variant('build_type', default='Release', description='The build type to build',
         values=('Debug', 'Release'))
@@ -43,7 +43,7 @@ class Typhonio(CMakePackage):
     variant('doc', default=False, description='Build user guide and doxygen documentation')
 
     depends_on('mpi')
-    depends_on('hdf5')
+    depends_on('hdf5+hl')
 
     def cmake_args(self):
         spec = self.spec

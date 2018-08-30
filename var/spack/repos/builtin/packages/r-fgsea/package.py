@@ -32,9 +32,9 @@ class RFgsea(RPackage):
     stantard approaches to multiple hypothesis correction."""
 
     homepage = "https://www.bioconductor.org/packages/fgsea/"
-    url      = "https://git.bioconductor.org/packages/fgsea"
+    git      = "https://git.bioconductor.org/packages/fgsea.git"
 
-    version('1.2.1', git='https://git.bioconductor.org/packages/fgsea', commit='99b04eef664204d0dca4b9f8027cd7eefb006b72')
+    version('1.2.1', commit='99b04eef664204d0dca4b9f8027cd7eefb006b72')
 
     depends_on('r@3.4.0:3.4.9', when='@1.2.1')
     depends_on('r-fastmatch', type=('build', 'run'))

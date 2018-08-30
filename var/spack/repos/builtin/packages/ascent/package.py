@@ -47,22 +47,11 @@ class Ascent(Package):
     simulations."""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
-
     maintainers = ['cyrush']
 
-    version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            branch='develop',
-            submodules=True,
-            preferred=True)
-
-    version('0.3.0',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            tag='v0.3.0', 
-            submodules=True)
-
-
-    
+    git      = "https://github.com/Alpine-DAV/ascent.git"
+    version('develop', branch='develop', submodules=True, preferred=True)
+    version('0.3.0', branch='v0.3.0', submodules=True)
 
     ###########################################################################
     # package variants

@@ -42,8 +42,8 @@ def extra_repo(tmpdir_factory):
     repo_dir = tmpdir_factory.mktemp(repo_namespace)
     repo_dir.ensure('packages', dir=True)
 
-    with open(str(repo_dir.join('repo.yaml')), 'w') as F:
-        F.write("""
+    with open(str(repo_dir.join('repo.yaml')), 'w') as f:
+        f.write("""
 repo:
   namespace: extra_test_repo
 """)

@@ -48,7 +48,6 @@ The available directives are:
 
 import collections
 import functools
-import inspect
 import os.path
 import re
 from six import string_types
@@ -80,7 +79,7 @@ class DirectiveMeta(type):
     _directive_names = set()
     _directives_to_be_executed = []
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
         # to be executed. Here we go reversed because we want to execute
         # commands:
@@ -109,17 +108,17 @@ class DirectiveMeta(type):
                 DirectiveMeta._directives_to_be_executed)
             DirectiveMeta._directives_to_be_executed = []
 
-        return super(DirectiveMeta, mcs).__new__(
-            mcs, name, bases, attr_dict)
+        return super(DirectiveMeta, cls).__new__(
+            cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure
         # that the directives are called on the class to set it up
-        module = inspect.getmodule(cls)
-        if 'spack.pkg' in module.__name__:
+
+        if 'spack.pkg' in cls.__module__:
             # Package name as taken
             # from llnl.util.lang.get_calling_module_name
-            pkg_name = module.__name__.split('.')[-1]
+            pkg_name = cls.__module__.split('.')[-1]
             setattr(cls, 'name', pkg_name)
 
             # Ensure the presence of the dictionaries associated
@@ -240,16 +239,17 @@ directive = DirectiveMeta.directive
 
 @directive('versions')
 def version(ver, checksum=None, **kwargs):
-    """Adds a version and metadata describing how to fetch it.
-    Metadata is just stored as a dict in the package's versions
-    dictionary.  Package must turn it into a valid fetch strategy
-    later.
+    """Adds a version and metadata describing how to fetch its source code.
+
+    Metadata is stored as a dict of ``kwargs`` in the package class's
+    ``versions`` dictionary.
+
+    The ``dict`` of arguments is turned into a valid fetch strategy
+    later. See ``spack.fetch_strategy.for_package_version()``.
     """
     def _execute_version(pkg):
-        # TODO: checksum vs md5 distinction is confusing -- fix this.
-        # special case checksum for backward compatibility
         if checksum:
-            kwargs['md5'] = checksum
+            kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[Version(ver)] = kwargs

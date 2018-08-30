@@ -31,16 +31,20 @@ class Cleverleaf(CMakePackage):
        Livermore National Laboratory. The primary goal of CleverLeaf is
        to evaluate the application of AMR to the Lagrangian-Eulerian
        hydrodynamics scheme used by CloverLeaf.
-
     """
 
     homepage = "http://uk-mac.github.io/CleverLeaf/"
-    url      = "https://github.com/UK-MAC/CleverLeaf/tarball/master"
+    git      = "https://github.com/UK-MAC/CleverLeaf_ref.git"
 
-    version('develop', git='https://github.com/UK-MAC/CleverLeaf_ref.git',
-            branch='develop')
+    version('develop', branch='develop')
 
     depends_on('samrai@3.8.0:')
     depends_on('hdf5+mpi')
     depends_on('boost')
     depends_on('cmake@3.1:', type='build')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%intel') and name in ['cppflags', 'cxxflags']:
+            flags.append(self.compiler.cxx11_flag)
+
+        return (None, None, flags)

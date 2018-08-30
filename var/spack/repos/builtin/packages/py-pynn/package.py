@@ -32,11 +32,11 @@ class PyPynn(PythonPackage):
 
     homepage = "http://neuralensemble.org/PyNN/"
     url      = "https://pypi.io/packages/source/P/PyNN/PyNN-0.8.3.tar.gz"
+    git      = "https://github.com/NeuralEnsemble/PyNN.git"
 
     version('0.9.1', '3b8a6c63dc59d7ac751029f84dcaf7e6')
     version('0.8.3', '28c63f898093806a57198e9271ed7b82')
-    version('0.8beta', git='https://github.com/NeuralEnsemble/PyNN.git',
-        commit='ffb0cb1661f2b0f2778db8f71865978fe7a7a6a4')
+    version('0.8beta', commit='ffb0cb1661f2b0f2778db8f71865978fe7a7a6a4')
     version('0.8.1', '7fb165ed5af35a115cb9c60991645ae6')
     version('0.7.5', 'd8280544e4c9b34b40fd372b16342841')
 

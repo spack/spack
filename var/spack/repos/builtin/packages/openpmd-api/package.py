@@ -29,11 +29,11 @@ class OpenpmdApi(CMakePackage):
     """API for easy reading and writing of openPMD files"""
 
     homepage = "http://www.openPMD.org"
-    url      = "https://github.com/openPMD/openPMD-api/archive/1.0.0.tar.gz"
+    git      = "https://github.com/openPMD/openPMD-api.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='dev',
-            git='https://github.com/openPMD/openPMD-api.git')
+    version('develop', branch='dev')
 
     variant('mpi', default=True,
             description='Enable parallel I/O')

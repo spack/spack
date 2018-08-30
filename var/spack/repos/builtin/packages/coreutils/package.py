@@ -32,7 +32,7 @@ class Coreutils(AutotoolsPackage):
        operating system.
     """
     homepage = "http://www.gnu.org/software/coreutils/"
-    url      = "http://ftp.gnu.org/gnu/coreutils/coreutils-8.26.tar.xz"
+    url      = "https://ftpmirror.gnu.org/coreutils/coreutils-8.26.tar.xz"
 
     version('8.29', '960cfe75a42c9907c71439f8eb436303')
     version('8.26', 'd5aa2072f662d4118b9f4c63b94601a6')

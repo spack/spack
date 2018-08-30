@@ -30,9 +30,9 @@ class RAneufinder(RPackage):
     export and analysis from whole-genome single cell sequencing data."""
 
     homepage = "https://www.bioconductor.org/packages/AneuFinder/"
-    url      = "https://git.bioconductor.org/packages/AneuFinder"
+    git      = "https://git.bioconductor.org/packages/AneuFinder.git"
 
-    version('1.4.0', git='https://git.bioconductor.org/packages/AneuFinder', commit='e5bdf4d5e4f84ee5680986826ffed636ed853b8e')
+    version('1.4.0', commit='e5bdf4d5e4f84ee5680986826ffed636ed853b8e')
 
     depends_on('r@3.4.0:3.4.9', when='@1.4.0')
     depends_on('r-genomicranges', type=('build', 'run'))

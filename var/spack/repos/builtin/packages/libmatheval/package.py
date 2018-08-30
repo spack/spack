@@ -34,9 +34,16 @@ class Libmatheval(AutotoolsPackage):
     compute symbolic derivatives and output expressions to strings."""
 
     homepage = "https://www.gnu.org/software/libmatheval/"
-    url      = "https://ftp.gnu.org/gnu/libmatheval/libmatheval-1.1.11.tar.gz"
+    url      = "https://ftpmirror.gnu.org/libmatheval/libmatheval-1.1.11.tar.gz"
 
     version('1.1.11', '595420ea60f6ddd75623847f46ca45c4')
 
     # Only needed for unit tests, but configure crashes without it
     depends_on('guile', type='build')
+
+    # guile 2.0 provides a deprecated interface for the unit test using guile
+    patch('guile-2.0.patch', when='^guile@2.0')
+
+    # guile 2.2 does not support deprecated functions any longer
+    # the patch skips the unit tests
+    patch('guile-2.2.patch', when='^guile@2.2:')

@@ -25,7 +25,6 @@
 from spack import *
 
 import os.path
-import shutil
 
 
 class Glib(AutotoolsPackage):
@@ -41,6 +40,7 @@ class Glib(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.56.2', 'd64abd16813501c956c4e123ae79f47f1b58de573df9fdd3b0795f1e2c1aa789')
     version('2.56.1', '40ef3f44f2c651c7a31aedee44259809b6f03d3d20be44545cd7d177221c0b8d')
     version('2.56.0', 'f2b59392f2fb514bbe7791dda0c36da5')
     version('2.55.1', '9cbb6b3c7e75ba75575588497c7707b6')
@@ -73,6 +73,10 @@ class Glib(AutotoolsPackage):
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
+    # Patch to prevent compiler errors in kernels older than 2.6.35
+    patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
+    patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
+    patch('old-kernels.patch', when='@2.56.0:2.56.1 os=scientific6')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
@@ -117,7 +121,7 @@ class Glib(AutotoolsPackage):
         dtrace_copy = join_path(self.dtrace_copy_path, 'dtrace')
 
         with working_dir(self.dtrace_copy_path, create=True):
-            shutil.copy(dtrace, dtrace_copy)
+            copy(dtrace, dtrace_copy)
             filter_file(
                 '^#!/usr/bin/python',
                 '#!/usr/bin/env python',

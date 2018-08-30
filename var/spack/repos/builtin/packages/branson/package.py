@@ -32,10 +32,11 @@ class Branson(CMakePackage):
 
     homepage = "https://github.com/lanl/branson"
     url      = "https://github.com/lanl/branson/archive/1.01.zip"
+    git      = "https://github.com/lanl/branson.git"
 
     tags = ['proxy-app']
 
-    version('develop', git='https://github.com/lanl/branson', branch='develop')
+    version('develop', branch='develop')
     version('1.01', 'cf7095a887a8dd7d417267615bd0452a')
 
     depends_on('mpi@2:')
