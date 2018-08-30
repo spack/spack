@@ -52,5 +52,5 @@ class RSummarizedexperiment(RPackage):
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-genomeinfodb@1.13.1:', when='@1.10.0', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.3:', when='@1.6.5:', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.5:1.9', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.6.5:1.9.9', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.10.0', type=('build', 'run'))
