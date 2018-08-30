@@ -56,5 +56,5 @@ class RGenomicalignments(RPackage):
     depends_on('r-rsamtools@1.21.4:', type=('build', 'run'))
     depends_on('r-rsamtools@1.31.2:', when='@1.16.0', type=('build', 'run'))
     depends_on('r-biocparallel', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.2', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.12.2:1.15', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.16.0', type=('build', 'run'))
