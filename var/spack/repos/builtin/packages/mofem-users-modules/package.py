@@ -51,7 +51,7 @@ class MofemUsersModules(CMakePackage):
     version('0.8.8', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     version('0.8.7', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     version('develop', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    
+
     maintainers = ['likask']
 
     variant('copy_user_modules', default=True,
