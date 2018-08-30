@@ -34,7 +34,7 @@ class Octave(AutotoolsPackage):
     Matlab. It may also be used as a batch-oriented language."""
 
     homepage = "https://www.gnu.org/software/octave/"
-    url      = "https://ftp.gnu.org/gnu/octave/octave-4.0.0.tar.gz"
+    url      = "https://ftpmirror.gnu.org/octave/octave-4.0.0.tar.gz"
 
     extendable = True
 
@@ -186,9 +186,9 @@ class Octave(AutotoolsPackage):
 
         if '+jdk' in spec:
             config_args.extend([
-                "--with-java-homedir=%s"    % spec['java'].prefix,
-                "--with-java-includedir=%s" % spec['java'].prefix.include,
-                "--with-java-libdir=%s"     % spec['java'].prefix.lib
+                "--with-java-homedir=%s"    % spec['java'].home,
+                "--with-java-includedir=%s" % spec['java'].home.include,
+                "--with-java-libdir=%s"     % spec['java'].libs.directories[0]
             ])
         else:
             config_args.append("--disable-java")

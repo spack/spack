@@ -45,17 +45,15 @@ class Trilinos(CMakePackage):
     """
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+    git      = "https://github.com/trilinos/Trilinos.git"
 
     maintainers = ['aprokop']
 
     # ###################### Versions ##########################
 
-    version('xsdk-0.2.0',
-            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
-    version('develop',
-            git='https://github.com/trilinos/Trilinos.git', branch='develop')
-    version('master',
-            git='https://github.com/trilinos/Trilinos.git', branch='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
@@ -193,12 +191,12 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
 
     resource(name='dtk',
-             git='https://github.com/ornl-cees/DataTransferKit',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
              tag='master',
              placement='DataTransferKit',
              when='+dtk')
     resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos',
+             git='https://github.com/trilinos/ForTrilinos.git',
              tag='develop',
              placement='packages/ForTrilinos',
              when='+fortrilinos')
@@ -297,6 +295,7 @@ class Trilinos(CMakePackage):
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
+    depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
@@ -432,6 +431,7 @@ class Trilinos(CMakePackage):
             # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
+                '-DTrilinos_ENABLE_STKNGP:BOOL=ON',
                 '-DTrilinos_ENABLE_STKSimd:BOOL=ON',
                 '-DTrilinos_ENABLE_STKIO:BOOL=ON',
                 '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',

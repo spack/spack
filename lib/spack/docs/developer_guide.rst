@@ -314,7 +314,7 @@ See the `Argparse documentation <https://docs.python.org/2.7/library/argparse.ht
 for more details on how to add arguments.
 
 Some commands have a set of subcommands, like ``spack compiler find`` or
-``spack module refresh``. You can add subparsers to your parser to handle
+``spack module lmod refresh``. You can add subparsers to your parser to handle
 this. Check out ``spack edit --command compiler`` for an example of this.
 
 A lot of commands take the same arguments and flags. These arguments should

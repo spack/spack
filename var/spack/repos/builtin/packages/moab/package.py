@@ -80,6 +80,7 @@ class Moab(AutotoolsPackage):
     # depends_on('vtk', when='+vtk')
 
     depends_on('blas')
+    depends_on('lapack')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -124,7 +125,8 @@ class Moab(AutotoolsPackage):
 #       else:
 #           options.append('--without-mpi')
 
-        options.append('--with-blas=%s' % spec['blas'].libs)
+        options.append('--with-blas=%s' % spec['blas'].libs.ld_flags)
+        options.append('--with-lapack=%s' % spec['lapack'].libs.ld_flags)
 
         if '+hdf5' in spec:
             options.append('--with-hdf5=%s' % spec['hdf5'].prefix)

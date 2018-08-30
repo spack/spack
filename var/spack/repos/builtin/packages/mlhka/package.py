@@ -30,10 +30,9 @@ class Mlhka(Package):
        and divergence data."""
 
     homepage = "https://wright.eeb.utoronto.ca"
-    url      = "https://github.com/rossibarra/MLHKA"
+    git      = "https://github.com/rossibarra/MLHKA.git"
 
-    version('2.1', git='https://github.com/rossibarra/MLHKA.git',
-            commit='e735ddd39073af58da21b00b27dea203736e5467')
+    version('2.1', commit='e735ddd39073af58da21b00b27dea203736e5467')
 
     def install(self, spec, prefix):
         cxx = which('c++')

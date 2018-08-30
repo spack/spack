@@ -29,7 +29,7 @@ class Glvis(MakefilePackage):
     """GLVis: an OpenGL tool for visualization of FEM meshes and functions"""
 
     homepage = "http://glvis.org"
-    url      = "https://github.com/GLVis/glvis"
+    git      = "https://github.com/glvis/glvis.git"
 
     maintainers = ['goxberry', 'v-dobrev', 'tzanio']
 
@@ -52,7 +52,7 @@ class Glvis(MakefilePackage):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('develop', git='https://github.com/glvis/glvis', branch='master')
+    version('develop', branch='master')
 
     version('3.4',
             '289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
@@ -82,7 +82,7 @@ class Glvis(MakefilePackage):
             description='Use antialiased fonts via freetype & fontconfig')
 
     depends_on('mfem@develop', when='@develop')
-    depends_on('mfem@3.4', when='@3.4')
+    depends_on('mfem@3.4.0', when='@3.4')
     depends_on('mfem@3.3', when='@3.3')
     depends_on('mfem@3.2', when='@3.2')
     depends_on('mfem@3.1', when='@3.1')

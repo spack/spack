@@ -30,7 +30,7 @@ class Gmake(AutotoolsPackage):
     other non-source files of a program from the program's source files."""
 
     homepage = "https://www.gnu.org/software/make/"
-    url      = "https://ftp.gnu.org/gnu/make/make-4.2.1.tar.gz"
+    url      = "https://ftpmirror.gnu.org/make/make-4.2.1.tar.gz"
 
     version('4.2.1', '7d0dcb6c474b258aab4d54098f2cf5a7')
     version('4.0',   'b5e558f981326d9ca1bfdb841640721a')

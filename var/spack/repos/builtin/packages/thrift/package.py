@@ -73,7 +73,6 @@ class Thrift(Package):
 
     def install(self, spec, prefix):
         env['PY_PREFIX'] = prefix
-        env['JAVA_HOME'] = spec['java'].prefix
 
         # configure options
         options = ['--prefix=%s' % prefix]

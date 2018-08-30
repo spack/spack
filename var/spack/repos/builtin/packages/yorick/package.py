@@ -24,8 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import shutil
-import glob
 
 
 class Yorick(Package):
@@ -40,12 +38,11 @@ class Yorick(Package):
 
     homepage = "http://dhmunro.github.io/yorick-doc/"
     url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
+    git      = "https://github.com/dhmunro/yorick.git"
 
+    version('master', branch='master')
     version('2.2.04', '1b5b0da6ad81b2d9dba64d991ec17939')
-    version('master', branch='master',
-            git='https://github.com/dhmunro/yorick.git')
-    version('f90-plugin', branch='f90-plugin',
-            git='https://github.com/trmwzm/yorick.git')
+    version('f90-plugin', branch='f90-plugin')
 
     variant('X', default=False, description='Enable X11 support')
 
@@ -75,13 +72,4 @@ class Yorick(Package):
         make()
         make("install")
 
-        try:
-            os.makedirs(prefix)
-        except OSError:
-            pass
-        os.chdir("relocate")
-        for f in glob.glob('*'):
-            if os.path.isdir(f):
-                shutil.copytree(f, os.path.join(prefix, f))
-            else:
-                shutil.copy2(f, os.path.join(prefix, f))
+        install_tree('relocate', prefix)

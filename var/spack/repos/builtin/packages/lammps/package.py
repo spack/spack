@@ -35,15 +35,17 @@ class Lammps(CMakePackage):
     """
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
+    git      = "https://github.com/lammps/lammps.git"
 
     tags = ['ecp', 'ecp-apps']
 
+    version('develop', branch='master')
+    version('20180822', sha256='9f8942ca3f8e81377ae88ccfd075da4e27d0dd677526085e1a807777c8324074')
     version('20180629', '6d5941863ee25ad2227ff3b7577d5e7c')
     version('20180316', '25bad35679583e0dd8cb8753665bb84b')
     version('20180222', '4d0513e3183bd57721814d217fdaf957')
     version('20170922', '4306071f919ec7e759bda195c26cfd9a')
     version('20170901', '767e7f07289663f033474dfe974974e7')
-    version('develop', git='https://github.com/lammps/lammps', branch='master')
 
     def url_for_version(self, version):
         vdate = dt.datetime.strptime(str(version), "%Y%m%d")

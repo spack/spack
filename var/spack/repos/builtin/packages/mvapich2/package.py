@@ -46,7 +46,8 @@ class Mvapich2(AutotoolsPackage):
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
 
     # Prefer the latest stable release
-    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e', preferred=True)
+    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd', preferred=True)
+    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e')
     version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
     version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
 
@@ -120,6 +121,10 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
+    depends_on('rdma-core', when='fabrics=mrail')
+    depends_on('rdma-core', when='fabrics=nemesisib')
+    depends_on('rdma-core', when='fabrics=nemesistcpib')
+    depends_on('rdma-core', when='fabrics=nemesisibtcp')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -179,7 +184,8 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=nemesis' in self.spec:
             opts = ["--with-device=ch3:nemesis"]
         elif 'fabrics=mrail' in self.spec:
-            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
+            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
+                    "--disable-mcast"]
         return opts
 
     @property

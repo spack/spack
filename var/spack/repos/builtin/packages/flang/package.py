@@ -29,30 +29,23 @@ import os
 
 class Flang(CMakePackage):
     """Flang is a Fortran compiler targeting LLVM."""
+
     homepage = "https://github.com/flang-compiler/flang"
-    url      = "https://github.com/flang-compiler/flang/archive/flang_20180319.tar.gz"
 
-    version('develop', git='https://github.com/flang-compiler/flang', branch='master')
-    version('20180319', 'e659bad83b791f90af2c5cd672864669')
+    url      = "https://github.com/flang-compiler/flang/archive/flang_20180612.tar.gz"
+    git      = "https://github.com/flang-compiler/flang.git"
 
-    depends_on(
-            "llvm+clang@4.0.1,5.0.0,6.0.0",
-        patches=[
-            patch('https://github.com/llvm-mirror/clang/pull/33.diff',
-                      sha256='e46d7ab305e5e95c51f4656d9b52058143cd85d859b312b3c80e93a02d54b4a5',
-                      when='@4.0.1', level=1, working_dir='tools/clang'),
-            patch('https://github.com/llvm-mirror/clang/pull/35.diff',
-                      sha256='7f39555783993f78b75c380ca5ef167c1d8b88cc75c6542f6c94e0b6acfb7c5d',
-                      when='@5.0.0', level=1, working_dir='tools/clang'),
-            patch('https://github.com/llvm-mirror/llvm/pull/56.diff',
-                      sha256='2ee155aa1017766cdae3a860050d82ed48961a2f88bcef760d4922ff25ce381e',
-                      when='@6.0.0', level=1),
-            patch('https://github.com/llvm-mirror/clang/pull/40.diff',
-                      sha256='5021f2ea54e957eb1c712f9e9a87b3dc33616ebd2e84735b6735f788fd2c45e9',
-                      when='@6.0.0', level=1, working_dir='tools/clang')
-        ]
-    )
-    depends_on("pgmath@develop", when="@develop")
+    version('develop', branch='master')
+    version('20180612', '62284e26214eaaff261a922c67f6878c')
+
+    depends_on('llvm@flang-develop', when='@develop')
+    depends_on('llvm@flang-20180612', when='@20180612 target=x86_64')
+
+    # LLVM version specific to OpenPOWER.
+    depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le')
+
+    depends_on('pgmath@develop', when='@develop')
+    depends_on('pgmath@20180612', when='@20180612')
 
     def cmake_args(self):
         options = [
@@ -79,23 +72,14 @@ class Flang(CMakePackage):
         flang = os.path.join(self.spec.prefix.bin, 'flang')
         with open(flang, 'w') as out:
             out.write('#!/bin/bash\n')
-            if '@develop' in self.spec:
-                out.write(
-                    '{0} -I{1} -L{2} -L{3} {4}{5} {6}{7} -B{8} "$@"\n'.format(
-                        self.spec['llvm'].prefix.bin.flang,
-                        self.prefix.include, self.prefix.lib,
-                        self.spec['pgmath'].prefix.lib,
-                        self.compiler.fc_rpath_arg, self.prefix.lib,
-                        self.compiler.fc_rpath_arg,
-                        self.spec['pgmath'].prefix.lib,
-                        self.spec.prefix.bin))
-            else:
-                out.write(
-                    '{0} -I{1} -L{2} {3}{4} -B{5} "$@"\n'.format(
-                        self.spec['llvm'].prefix.bin.flang,
-                        self.prefix.include, self.prefix.lib,
-                        self.compiler.fc_rpath_arg, self.prefix.lib,
-                        self.spec.prefix.bin))
+            out.write(
+                '{0} -I{1} -L{2} -L{3} {4}{5} {6}{7} -B{8} "$@"\n'.format(
+                    self.spec['llvm'].prefix.bin.flang,
+                    self.prefix.include, self.prefix.lib,
+                    self.spec['pgmath'].prefix.lib,
+                    self.compiler.fc_rpath_arg, self.prefix.lib,
+                    self.compiler.fc_rpath_arg,
+                    self.spec['pgmath'].prefix.lib, self.spec.prefix.bin))
             out.close()
         chmod = which('chmod')
         chmod('+x', flang)

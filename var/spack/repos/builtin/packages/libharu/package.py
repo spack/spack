@@ -34,11 +34,11 @@ class Libharu(AutotoolsPackage):
 
     homepage = "http://libharu.org"
     url      = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
+    git      = "https://github.com/libharu/libharu.git"
 
+    version('master', branch='master')
     version('2.3.0', '4f916aa49c3069b3a10850013c507460')
     version('2.2.0', 'b65a6fc33a0bdad89bec6b7def101f01')
-    version('master', branch='master',
-            git='https://github.com/libharu/libharu.git')
 
     depends_on('libtool', type=('build'))
     depends_on('autoconf', type=('build'))

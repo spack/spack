@@ -70,7 +70,7 @@ class Poppler(CMakePackage):
     # Only needed to run `make test`
     resource(
         name='test',
-        git='https://anongit.freedesktop.org/git/poppler/test',
+        git='https://anongit.freedesktop.org/git/poppler/test.git',
         placement='testdata'
     )
 

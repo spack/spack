@@ -31,7 +31,7 @@
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack module file configuration file schema',
+    'title': 'Spack core configuration file schema',
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {

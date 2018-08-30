@@ -38,13 +38,14 @@ class Geopm(AutotoolsPackage):
 
     homepage = "https://geopm.github.io"
     url      = "https://github.com/geopm/geopm/releases/download/v0.4.0/geopm-0.4.0.tar.gz"
+    git      = "https://github.com/geopm/geopm.git"
 
     # Add additional proper versions and checksums here. "spack checksum geopm"
+    version('develop', branch='dev')
+    version('master', branch='master')
     version('0.5.0', '61b454bc74d4606fe84818aef16c1be4')
     version('0.4.0', 'd4cc8fffe521296dab379857d7e2064d')
     version('0.3.0', '568fd37234396fff134f8d57b60f2b83')
-    version('master', git='https://github.com/geopm/geopm.git', branch='master')
-    version('develop', git='https://github.com/geopm/geopm.git', branch='dev')
 
     # Variants reflecting most ./configure --help options
     variant('debug', default=False, description='Enable debug.')

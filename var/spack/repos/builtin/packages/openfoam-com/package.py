@@ -60,7 +60,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *
@@ -276,16 +275,16 @@ class OpenfoamCom(Package):
 
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
-    gitrepo  = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
     url      = "https://sourceforge.net/projects/openfoamplus/files/v1706/OpenFOAM-v1706.tgz"
+    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
     list_url = "https://sourceforge.net/projects/openfoamplus/files/"
     list_depth = 2
 
+    version('develop', branch='develop', submodules='True')  # Needs credentials
     version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
-    version('develop', branch='develop', git=gitrepo, submodules='True')  # Needs credentials
 
     variant('float32', default=False,
             description='Use single-precision')
@@ -356,6 +355,7 @@ class OpenfoamCom(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
+    patch('1806-have-kahip.patch', when='@1806')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -608,7 +608,7 @@ class OpenfoamCom(Package):
             self.etc_config['vtk'] = [
                 ('VTK_DIR', spec['vtk'].prefix),
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(pkglib(spec['vtk'], '${VTK_DIR}'))),
+                 foam_add_lib(pkglib(spec['vtk'], '${VTK_DIR}'))),
             ]
 
         # Optional
@@ -692,12 +692,13 @@ class OpenfoamCom(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

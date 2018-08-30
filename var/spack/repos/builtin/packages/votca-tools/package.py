@@ -35,8 +35,9 @@ class VotcaTools(CMakePackage):
     """
     homepage = "http://www.votca.org"
     url      = "https://github.com/votca/tools/tarball/v1.4"
+    git      = "https://github.com/votca/tools.git"
 
-    version('develop', git='https://github.com/votca/tools', branch='master')
+    version('develop', branch='master')
     version('1.4', 'cd47868e9f28e2c7b9d01f95aa0185ca')
     version('1.4.1', '3176b72f8a41ec053cc740a5398e7dc4')
 
@@ -47,3 +48,9 @@ class VotcaTools(CMakePackage):
     depends_on("eigen@3.3:", when="@1.5:")
     depends_on("boost")
     depends_on("sqlite")
+
+    def cmake_args(self):
+        args = [
+            '-DWITH_RC_FILES=OFF'
+        ]
+        return args

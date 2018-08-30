@@ -36,18 +36,18 @@ class Caliper(CMakePackage):
     """
 
     homepage = "https://github.com/LLNL/Caliper"
-    url      = ""
+    git      = "https://github.com/LLNL/Caliper.git"
 
-    version('master', git='https://github.com/LLNL/Caliper.git')
-    version('1.7.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.7.0')
+    version('master')
+    version('1.7.0', tag='v1.7.0')
     # version 1.6.0 is broken b/c it downloads the wrong gotcha version
-    version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
+    version('1.6.0', tag='v1.6.0')
 
     is_linux = sys.platform.startswith('linux')
 
-    variant('mpi', default=True, 
+    variant('mpi', default=True,
             description='Enable MPI wrappers')
-    variant('dyninst', default=False, 
+    variant('dyninst', default=False,
             description='Enable symbol translation support with dyninst')
     # libunwind has some issues on Mac
     variant('callpath', default=sys.platform != 'darwin',
@@ -70,7 +70,7 @@ class Caliper(CMakePackage):
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='+libpfm')
     depends_on('mpi', when='+mpi')
-    depends_on('libunwind', when='+callpath')
+    depends_on('unwind', when='+callpath')
     depends_on('sosflow', when='+sosflow')
 
     depends_on('cmake', type='build')

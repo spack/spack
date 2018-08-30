@@ -29,9 +29,8 @@ class RPreprocesscore(RPackage):
     """A library of core preprocessing routines"""
 
     homepage = "https://bioconductor.org/packages/preprocessCore/"
-    url      = "https://git.bioconductor.org/packages/preprocessCore"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/preprocessCore.git"
 
-    version('1.38.1', git='https://git.bioconductor.org/packages/preprocessCore', commit='c58cb4c720eda0f1c733b989b14912093a7c5fbc')
+    version('1.38.1', commit='c58cb4c720eda0f1c733b989b14912093a7c5fbc')
 
     depends_on('r@3.4.0:3.4.9', when='@1.38.1')

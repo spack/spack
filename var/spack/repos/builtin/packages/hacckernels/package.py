@@ -33,12 +33,11 @@ class Hacckernels(CMakePackage):
     cores and beyond."""
 
     homepage = "https://xgitlab.cels.anl.gov/hacc/HACCKernels"
-    url      = "https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FHACCKernels/repository/archive.tar.gz"
+    git      = "https://xgitlab.cels.anl.gov/hacc/HACCKernels.git"
 
     tags = ['proxy-app']
 
-    version('develop', git='https://xgitlab.cels.anl.gov/hacc/HACCKernels.git',
-            branch='master')
+    version('develop', branch='master')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

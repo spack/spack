@@ -28,7 +28,6 @@ from llnl.util import tty
 
 import glob
 import os
-import shutil
 import sys
 
 
@@ -37,10 +36,11 @@ class Gcc(AutotoolsPackage):
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    url      = 'http://ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
     version('7.3.0', 'be2da21680f27624f3a87055c4ba5af2')
     version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
@@ -206,7 +206,7 @@ class Gcc(AutotoolsPackage):
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 new_header = join_path(new_dispatch_dir, 'object.h')
-                shutil.copyfile('/usr/include/dispatch/object.h', new_header)
+                install('/usr/include/dispatch/object.h', new_header)
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t',
                             new_header)

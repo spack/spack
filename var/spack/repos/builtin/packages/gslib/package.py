@@ -29,11 +29,11 @@ class Gslib(Package):
     """Highly scalable Gather-scatter code with AMG and XXT solvers"""
 
     homepage = "https://github.com/gslib/gslib"
-    url      = "https://github.com/gslib/gslib"
+    git      = "https://github.com/gslib/gslib.git"
 
-    version('1.0.2', git='https://github.com/gslib/gslib.git', tag='v1.0.2')
-    version('1.0.1', git='https://github.com/gslib/gslib.git', tag='v1.0.1')
-    version('1.0.0', git='https://github.com/gslib/gslib.git', tag='v1.0.0')
+    version('1.0.2', tag='v1.0.2')
+    version('1.0.1', tag='v1.0.1')
+    version('1.0.0', tag='v1.0.0')
 
     variant('mpi', default=True, description='Build with MPI')
     variant('mpiio', default=True, description='Build with MPI I/O')

@@ -32,12 +32,13 @@ class Nekbone(Package):
        the spectral element method."""
 
     homepage = "https://github.com/Nek5000/Nekbone"
-    url = "https://github.com/Nek5000/Nekbone/tarball/v17.0"
+    url      = "https://github.com/Nek5000/Nekbone/archive/v17.0.tar.gz"
+    git      = "https://github.com/Nek5000/Nekbone.git"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('17.0', 'cc339684547614a0725959e41839fec1', git='https://github.com/Nek5000/Nekbone.git')
-    version('develop', git='https://github.com/Nek5000/Nekbone.git')
+    version('develop', branch='master')
+    version('17.0', sha256='ae361cc61368a924398a28a296f675b7f0c4a9516788a7f8fa3c09d787cdf69b')
 
     # Variants
     variant('mpi', default=True, description='Build with MPI')
@@ -61,7 +62,7 @@ class Nekbone(Package):
             cc = spec['mpi'].mpicc
 
         # Install Nekbone in prefix.bin
-        install_tree("../Nekbone", prefix.bin.Nekbone)
+        install_tree(self.stage.source_path, prefix.bin.Nekbone)
 
         # Install scripts in prefix.bin
         nekpmpi = 'test/example1/nekpmpi'

@@ -34,7 +34,7 @@ class Stow(AutotoolsPackage):
        installed in the same place."""
 
     homepage = "https://www.gnu.org/software/stow/"
-    url      = "https://mirrors.kernel.org/gnu/stow/stow-2.2.2.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/stow/stow-2.2.2.tar.bz2"
 
     version('2.2.2', 'af1e1de9d973c835bee80c745b5ee849')
     version('2.2.0', '5bb56592eff9aaf9dfb6c975b3004240')

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Mrtrix3(Package):
@@ -33,10 +32,9 @@ class Mrtrix3(Package):
        density."""
 
     homepage = "http://www.mrtrix.org/"
-    url      = "https://github.com/MRtrix3/mrtrix3"
+    git      = "https://github.com/MRtrix3/mrtrix3.git"
 
-    version('2017-09-25', commit='72aca89e3d38c9d9e0c47104d0fb5bd2cbdb536d',
-            git='https://github.com/MRtrix3/mrtrix3.git')
+    version('2017-09-25', commit='72aca89e3d38c9d9e0c47104d0fb5bd2cbdb536d')
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
@@ -54,9 +52,7 @@ class Mrtrix3(Package):
         build = Executable('./build')
         configure()
         build()
-        # install_tree('.', prefix) does not work since the prefix
-        # directory already exists by this point
-        distutils.dir_util.copy_tree('.', prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spac_env, run_env):
         run_env.prepend_path('PATH', self.prefix)

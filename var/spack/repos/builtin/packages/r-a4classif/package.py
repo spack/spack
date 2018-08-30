@@ -29,10 +29,9 @@ class RA4classif(RPackage):
     """Automated Affymetrix Array Analysis Classification Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4Classif/"
-    url      = "https://git.bioconductor.org/packages/a4Classif"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/a4Classif.git"
 
-    version('1.24.0', git='https://git.bioconductor.org/packages/a4Classif', commit='ca06bf274c87a73fc12c29a6eea4b90289fe30b1')
+    version('1.24.0', commit='ca06bf274c87a73fc12c29a6eea4b90289fe30b1')
 
     depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-a4core', type=('build', 'run'))
