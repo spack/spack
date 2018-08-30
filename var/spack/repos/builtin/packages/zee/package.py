@@ -61,7 +61,7 @@ class Zee(CMakePackage):
                 yield '-D' + cmake_var + ':BOOL=ON'
             else:
                 yield '-D' + cmake_var + ':BOOL=FALSE'
-        yield '-DZee_USE_PETSc:BOOL=' + 'TRUE' if '+petsc' in self.spec else 'FALSE'
+        yield '-DZee_USE_PETSc:BOOL=' + ('TRUE' if '+petsc' in self.spec else 'FALSE')
 
     def cmake_args(self):
         return list(self._bob_options())
