@@ -36,7 +36,8 @@ class Aspect(CMakePackage):
     maintainers = ['tjhei']
 
     version('develop', branch='master')
-    version('2.0.0', 'dfecc571fb221f28a0800034cd29c95c')
+    version('2.0.1', sha256='0bf5600c42afce9d39c1d285b0654ecfdeb0f30e9f3421651c95f54ca01ac165')
+    version('2.0.0', sha256='d485c07f54248e824bdfa35f3eec8971b65e8b7114552ffa2c771bc0dede8cc0')
 
     variant('build_type', default='Release',
             description='The build type to build',
