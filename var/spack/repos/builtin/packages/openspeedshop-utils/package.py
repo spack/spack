@@ -130,7 +130,8 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("boost@1.66.0", when='@2.3.1.3:9999')
 
     depends_on("dyninst@develop", when='@develop')
-    depends_on("dyninst@9.3.2", when='@2.3.1.3:9999')
+    # This will change to dyninst@10.0 when it is released
+    depends_on("dyninst@develop", when='@2.3.1.3:9999')
 
     depends_on("python", when='@develop')
     depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')

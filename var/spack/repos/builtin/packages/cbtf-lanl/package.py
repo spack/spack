@@ -51,6 +51,7 @@ class CbtfLanl(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
 
     version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
 
