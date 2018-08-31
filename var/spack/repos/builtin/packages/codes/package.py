@@ -50,7 +50,10 @@ class Codes(AutotoolsPackage):
     depends_on('ross')
     depends_on('sst-dumpi', when="+dumpi")
 
+    # CODES documentation says to use these flags (--force, --install, and
+    # add the local m4 directory to the search path
     autoreconf_extra_args = ["-fi", "-Im4"]
+    # Testing if srcdir is '.' in configure.ac does not work with spack
     patch('codes-1.0.0.patch')
 
     def configure_args(self):
