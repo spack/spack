@@ -37,19 +37,22 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/2.3.0/gdal-2.3.0.tar.xz"
+    url        = "http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
+
+    maintainers = ['adamjstewart']
 
     import_modules = [
         'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
-    version('2.3.0',  '2fe9d64fcd9dc37645940df020d3e200')
-    version('2.1.2',  'ae85b78888514c75e813d658cac9478e')
-    version('2.0.2',  '940208e737c87d31a90eaae43d0efd65')
-    version('1.11.5', '5fcee5622430fbeb25556a4d07c06dd7')
+    version('2.3.1',  sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
+    version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
+    version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
+    version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -88,7 +91,9 @@ class Gdal(AutotoolsPackage):
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
 
-    extends('perl', when='+perl')
+    # FIXME: Allow packages to extend multiple packages
+    # See https://github.com/spack/spack/issues/987
+    # extends('perl', when='+perl')
     extends('python', when='+python')
 
     # GDAL depends on GNUmake on Unix platforms.
@@ -131,9 +136,10 @@ class Gdal(AutotoolsPackage):
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
+    depends_on('poppler@:0.63', when='@:2.3.0 +poppler')
     depends_on('proj', when='+proj @2.3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
-    depends_on('python', type=('build', 'run'), when='+python')
+    depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
