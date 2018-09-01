@@ -25,21 +25,28 @@
 from spack import *
 
 
-class RFnn(RPackage):
-    """Cover-tree and kd-tree fast k-nearest neighbor search algorithms and
-    related applications including KNN classification, regression and
-    information measures are implemented."""
+class RKs(RPackage):
+    """Kernel smoothers for univariate and multivariate data."""
 
-    homepage = "https://cran.r-project.org/web/packages/FNN/index.html"
-    url      = "https://cran.r-project.org/src/contrib/FNN_1.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/FNN"
+    homepage = "https://cran.r-project.org/package=ks"
+    url      = "https://cran.r-project.org/src/contrib/Archive/ks/ks_1.11.2.tar.gz"
 
-    version('1.1',   '8ba8f5b8be271785593e13eae7b8c393')
-    version('1.0',   'e9a47dc69d1ba55165be0877b8443fe0')
-    version('0.6-4', '1c105df9763ceb7b13989cdbcb542fcc')
-    version('0.6-3', 'f0f0184e50f9f30a36ed5cff24d6cff2')
-    version('0.6-2', '20648ba934ea32b1b00dafb75e1a830c')
+    version('1.11.2', sha256='9dfd485096e1e67abc7dfcb7b76a83de110dd15bcfeffe5c899605b3a5592961')
 
-    depends_on('r@3.0.0:')
-    depends_on('r-mvtnorm', type=('build', 'run'))
-    depends_on('r-chemometrics', type=('build', 'run'))
+    depends_on('r@2.10:')
+
+#  3 ERROR: dependencies 'FNN', 'kernlab', 'mclust', 'multicool', 'mvtnorm' are not available for package 'ks'
+    depends_on('r-fnn@1.1:')
+    depends_on('r-kernlab')
+    #depends_on('r-kernsmooth@2.22:')
+    #depends_on('r-matrix')
+    depends_on('r-mclust', type=('build', 'run'))
+    #depends_on('r-mgcv')
+    depends_on('r-multicool')
+    depends_on('r-mvtnorm@1.0:', type=('build', 'run'))
+    #depends_on('r-maps')
+    #depends_on('r-mass')
+    #depends_on('r-misc3d@0.4:')
+    ###depends_on('r-oceanview')          <-- not in spack
+    ###depends_on('r-oz')                 <-- not in spack
+    #depends_on('r-rgl@0.66:')
