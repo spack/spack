@@ -398,36 +398,31 @@ class Python(AutotoolsPackage):
         on the version of Python and how it was installed.
 
         In general, Python 2 comes with ``python`` and ``python2`` commands,
-        while Python 3 only comes with a ``python3`` command.
+        while Python 3 only comes with a ``python3`` command. However, some
+        package managers will symlink ``python`` to ``python3``, while others
+        may contain ``python3.6``, ``python3.5``, and ``python3.4`` in the
+        same directory.
 
-        :returns: The Python command
-        :rtype: Executable
+        Returns:
+            Executable: the Python command
         """
         # We need to be careful here. If the user is using an externally
-        # installed python, all 3 commands could be in the same directory.
-
-        # Search for `python2` iff using Python 2
-        if (self.spec.satisfies('@:2') and
-                os.path.exists(os.path.join(self.prefix.bin, 'python2'))):
-            command = 'python2'
-        # Search for `python3` iff using Python 3
-        elif (self.spec.satisfies('@3:') and
-                os.path.exists(os.path.join(self.prefix.bin, 'python3'))):
-            command = 'python3'
-        # If neither were found, try `python`
-        elif os.path.exists(os.path.join(self.prefix.bin, 'python')):
-            command = 'python'
+        # installed python, several different commands could be located
+        # in the same directory. Be as specific as possible. Search for:
+        #
+        # * python3.6
+        # * python3
+        # * python
+        #
+        # in that order if using python@3.6.5, for example.
+        version = self.spec.version
+        for ver in [version.up_to(2), version.up_to(1), '']:
+            path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            if os.path.exists(path):
+                return Executable(path)
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
-
-        # The python command may be a symlink if it was installed
-        # with Homebrew. Since some packages try to determine the
-        # location of libraries and headers based on the path,
-        # return the realpath
-        path = os.path.realpath(os.path.join(self.prefix.bin, command))
-
-        return Executable(path)
 
     def print_string(self, string):
         """Returns the appropriate print string depending on the
