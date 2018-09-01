@@ -35,18 +35,8 @@ class RKs(RPackage):
 
     depends_on('r@2.10:')
 
-#  3 ERROR: dependencies 'FNN', 'kernlab', 'mclust', 'multicool', 'mvtnorm' are not available for package 'ks'
     depends_on('r-fnn@1.1:')
     depends_on('r-kernlab')
-    #depends_on('r-kernsmooth@2.22:')
-    #depends_on('r-matrix')
     depends_on('r-mclust', type=('build', 'run'))
-    #depends_on('r-mgcv')
     depends_on('r-multicool')
     depends_on('r-mvtnorm@1.0:', type=('build', 'run'))
-    #depends_on('r-maps')
-    #depends_on('r-mass')
-    #depends_on('r-misc3d@0.4:')
-    ###depends_on('r-oceanview')          <-- not in spack
-    ###depends_on('r-oz')                 <-- not in spack
-    #depends_on('r-rgl@0.66:')
