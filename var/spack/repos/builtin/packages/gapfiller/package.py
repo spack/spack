@@ -44,7 +44,18 @@ class Gapfiller(Package):
         return "file://{0}/39GapFiller_v{1}_linux-x86_64.tar.gz".format(
                 os.getcwd(), version.dashed)
 
-    depends_on('perl', type=('build', 'run'))
+    depends_on('perl+threads', type=('build', 'run'))
+
+    def patch(self):
+        with working_dir('src'):
+            files = glob.iglob("*.pl")
+            for file in files:
+                change = FileFilter(file)
+                change.filter('usr/bin/perl', 'usr/bin/env perl')
+                change.filter('require "getopts.pl";', 'use Getopt::Std;')
+                change.filter('&Getopts(', 'getopts(')
+                change.filter('\r', '')
+                set_executable(file)
 
     def install(self, spec, prefix):
         install_tree('bowtie', prefix.bowtie)
