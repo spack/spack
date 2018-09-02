@@ -26,6 +26,7 @@ from spack import *
 import os
 import glob
 
+
 class Gapfiller(Package):
     """GapFiller is a stand-alone program for closing gaps within
        pre-assembled scaffolds.
