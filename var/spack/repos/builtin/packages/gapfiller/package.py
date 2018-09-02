@@ -24,7 +24,7 @@
 ##############################################################################
 from spack import *
 import os
-
+import glob
 
 class Gapfiller(Package):
     """GapFiller is a stand-alone program for closing gaps within
@@ -47,17 +47,17 @@ class Gapfiller(Package):
     depends_on('perl+threads', type=('build', 'run'))
 
     def patch(self):
-        with working_dir('src'):
+        with working_dir('.'):
             files = glob.iglob("*.pl")
             for file in files:
                 change = FileFilter(file)
                 change.filter('usr/bin/perl', 'usr/bin/env perl')
                 change.filter('require "getopts.pl";', 'use Getopt::Std;')
-                change.filter('&Getopts(', 'getopts(')
+                change.filter('&Getopts', 'getopts')
                 change.filter('\r', '')
                 set_executable(file)
 
     def install(self, spec, prefix):
-        install_tree('bowtie', prefix.bowtie)
-        install_tree('bwa', prefix.bwa)
-        install('GapFiller.pl', prefix)
+        install_tree('bowtie', prefix.bin.bowtie)
+        install_tree('bwa', prefix.bin.bwa)
+        install('GapFiller.pl', prefix.bin)
