@@ -115,7 +115,7 @@ def name_only(pkgs, query):
         tty.msg("{0} available packages match {1}.".format(len(pkgs),
                                                            ' '.join(query)))
     colify(pkgs, indent=indent)
-    if sys.stdout.isatty() and ' '.join(query) != '':
+    if sys.stdout.isatty() and ' '.join(query) != '' and len(pkgs) > 0:
         tty.msg("If you are looking for installed packages try "
                 "`spack find {0}`".format(' '.join(query)))
 
