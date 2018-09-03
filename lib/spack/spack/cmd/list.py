@@ -112,7 +112,8 @@ def filter_by_name(pkgs, args):
 def name_only(pkgs, query):
     indent = 0
     if sys.stdout.isatty():
-        tty.msg("{} packages match {}.".format(len(pkgs), ' '.join(query)))
+        tty.msg("{} available packages match {}.".format(len(pkgs),
+                                                         ' '.join(query)))
     colify(pkgs, indent=indent)
     if sys.stdout.isatty() and ' '.join(query) != '':
         tty.msg("If you are looking for installed packages try "
