@@ -64,9 +64,11 @@ def test_static_to_shared_library(build_environment):
 
     expected = {
         'linux': ('/bin/mycc -shared'
+                  ' -Wl,--disable-new-dtags'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
         'darwin': ('/bin/mycc -dynamiclib'
+                   ' -Wl,--disable-new-dtags'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }
 
