@@ -381,6 +381,22 @@ esac
 # Linker flags
 case "$mode" in
     ld|ccld)
+        # This is needed to ensure we set RPATH instead of RUNPATH.
+        # Documentation on this mechanism is lacking at best. A few sources
+        # of information are (note that some of them take explicitly the
+        # opposite stance that Spack does):
+        #
+        # http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+        # https://wiki.debian.org/RpathIssue
+        #
+        # The only discussion I could find on enabling new dynamic tags by
+        # default on ld is the following:
+        #
+        # https://sourceware.org/ml/binutils/2013-01/msg00307.html
+        #
+        flags+=('-Wl,--disable-new-dtags')
+
+        # Add other flags
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
