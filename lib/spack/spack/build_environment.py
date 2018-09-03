@@ -141,6 +141,7 @@ def clean_environment():
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+    env.unset('MAKEFLAGS')
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
