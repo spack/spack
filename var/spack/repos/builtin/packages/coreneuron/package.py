@@ -69,17 +69,20 @@ class Coreneuron(CMakePackage):
         del os.environ["USE_PROFILER_WRAPPER"]
 
     def get_flags(self):
+        spec = self.spec
         flags = "-g -O2"
-        if 'bgq' in self.spec.architecture and '%xl' in self.spec:
+        if 'bgq' in spec.architecture and '%xl' in spec:
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
-        if '%intel' in self.spec:
-            if '+knl' in self.spec:
+        if '%intel' in spec:
+            flags = '-g -xHost -O2 -qopt-report=5'
+            if '+knl' in spec:
                 flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
-            else:
-                flags = '-g -xHost -O2 -qopt-report=5'
-        if '+debug' in self.spec:
+        if '+gpu' in spec:
+            flags = '-O2 -Minline=size:1000,levels:100,totalsize:40000,maxsize:4000'
+            flags += ' -ta=tesla:cuda%s' % (spec['cuda'].version.up_to(2))
+        if '+debug' in spec:
             flags = '-g -O0'
-        if '+profile' in self.spec:
+        if '+profile' in spec:
             flags += ' -DTAU'
         return flags
 
@@ -105,7 +108,7 @@ class Coreneuron(CMakePackage):
                    '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF')
                    ]
 
-        if spec.satisfies('~shared'):
+        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
             options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
         if 'bgq' in spec.architecture and '%xl' in spec:
@@ -136,7 +139,8 @@ class Coreneuron(CMakePackage):
         Sample usage: spec['coreneuron'].libs.ld_flags
         """
         search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False]]
-        is_shared = '+shared' in self.spec
+        spec = self.spec
+        is_shared = spec.satisfies('+shared') and spec.satisfies('~gpu')
         for path, recursive in search_paths:
             libs = find_libraries('libcoreneuron', root=path,
                                   shared=is_shared, recursive=False)

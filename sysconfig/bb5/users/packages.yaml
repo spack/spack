@@ -27,6 +27,10 @@ packages:
         paths:
             cmake@3.12.0: /gpfs/bbp.cscs.ch/apps/tools/install/linux-rhel7-x86_64/gcc-4.8.5/cmake-3.12.0-ybmxsc
         version: [3.12.0]
+    cuda:
+        modules:
+            cuda@9.0.176: cuda/9.0.176
+        version: [9.0.176]
     curl:
         paths:
             curl@7.29.0: /usr
