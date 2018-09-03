@@ -40,8 +40,8 @@ class Nektar(CMakePackage):
     variant('scotch', default=False,
             description='Builds with scotch partitioning support')
 
-    depends_on('cmake@2.8.8:', type='build', when="~hdf5")
-    depends_on('cmake@3.2:', type='build', when="+hdf5")
+    depends_on('cmake@2.8.8:3.9.99', type='build', when="~hdf5")
+    depends_on('cmake@3.2:3.9.99', type='build', when="+hdf5")
 
     depends_on('blas')
     depends_on('lapack')
