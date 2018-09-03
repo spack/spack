@@ -140,9 +140,12 @@ def find(parser, args):
 
     # Exit early if no package matches the constraint
     if not query_specs and args.constraint:
-        msg = "No package matches the query: {0}"
+        msg = "No installed package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
-        tty.msg(msg)
+        msg2 = "If you are looking for installable packages try "
+        msg2 += "`spack list {}`"
+        msg2 = msg2.format(' '.join(args.constraint))
+        tty.msg(msg, msg2)
         return
 
     # If tags have been specified on the command line, filter by tags

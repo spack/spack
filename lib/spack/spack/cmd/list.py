@@ -109,11 +109,14 @@ def filter_by_name(pkgs, args):
 
 
 @formatter
-def name_only(pkgs):
+def name_only(pkgs, query):
     indent = 0
     if sys.stdout.isatty():
-        tty.msg("%d packages." % len(pkgs))
+        tty.msg("{} packages match {}.".format(len(pkgs), ' '.join(query)))
     colify(pkgs, indent=indent)
+    if sys.stdout.isatty() and ' '.join(query) != '':
+        tty.msg("If you are looking for installed packages try "
+                "`spack find {}`".format(' '.join(query)))
 
 
 def github_url(pkg):
@@ -142,7 +145,7 @@ def rows_for_ncols(elts, ncols):
 
 
 @formatter
-def rst(pkg_names):
+def rst(pkg_names, query):
     """Print out information on all packages in restructured text."""
 
     pkgs = [spack.repo.get(name) for name in pkg_names]
@@ -157,7 +160,8 @@ def rst(pkg_names):
     print('automatically generated based on the packages in the latest Spack')
     print('release.')
     print()
-    print('Spack currently has %d mainline packages:' % len(pkgs))
+    print('Spack currently has {} mainline packages matching {}:'
+          ''.format(len(pkgs), ' '.join(query)))
     print()
     print(rst_table('`%s`_' % p for p in pkg_names))
     print()
@@ -199,7 +203,7 @@ def rst(pkg_names):
 
 
 @formatter
-def html(pkg_names):
+def html(pkg_names, query):
     """Print out information on all packages in Sphinx HTML.
 
     This is intended to be inlined directly into Sphinx documentation.
@@ -226,7 +230,8 @@ def html(pkg_names):
     # Start with the number of packages, skipping the title and intro
     # blurb, which we maintain in the RST file.
     print('<p>')
-    print('Spack currently has %d mainline packages:' % len(pkgs))
+    print('Spack currently has {} mainline packages matching {}:'
+          ''.format(len(pkgs), ' '.join(query)))
     print('</p>')
 
     # Table of links to all packages
@@ -308,4 +313,4 @@ def list(parser, args):
         sorted_packages = sorted(sorted_packages)
 
     # Print to stdout
-    formatters[args.format](sorted_packages)
+    formatters[args.format](sorted_packages, query=args.filter)
