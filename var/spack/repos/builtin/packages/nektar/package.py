@@ -60,6 +60,10 @@ class Nektar(CMakePackage):
     conflicts("+hdf5", when="~mpi",
               msg="Nektar's hdf5 output is for parallel builds only")
 
+    # Add '-pthread' flag for solvers and NekMesh
+    patch('CMakeLists_solvers.patch')
+    patch('CMakeLists_NekMesh.patch')
+
     def cmake_args(self):
         args = []
 
