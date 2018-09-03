@@ -112,8 +112,9 @@ def filter_by_name(pkgs, args):
 def name_only(pkgs, query):
     indent = 0
     if sys.stdout.isatty():
-        tty.msg("{0} available packages match {1}.".format(len(pkgs),
-                                                           ' '.join(query)))
+        msg = "{0} available packages".format(len(pkgs))
+        msg += " matching {0}".format(' '.join(query)) if query != [] else ':'
+        tty.msg(msg)
     colify(pkgs, indent=indent)
     if sys.stdout.isatty() and ' '.join(query) != '' and len(pkgs) > 0:
         tty.msg("If you are looking for installed packages try "
@@ -161,8 +162,9 @@ def rst(pkg_names, query):
     print('automatically generated based on the packages in the latest Spack')
     print('release.')
     print()
-    print('Spack currently has {0} mainline packages matching {1}:'
-          ''.format(len(pkgs), ' '.join(query)))
+    msg = 'Spack currently has {0} mainline packages'.format(len(pkgs))
+    msg += ' matching "{0}":'.format(' '.join(query)) if query != [] else ':'
+    print(msg)
     print()
     print(rst_table('`%s`_' % p for p in pkg_names))
     print()
@@ -231,8 +233,9 @@ def html(pkg_names, query):
     # Start with the number of packages, skipping the title and intro
     # blurb, which we maintain in the RST file.
     print('<p>')
-    print('Spack currently has {0} mainline packages matching {1}:'
-          ''.format(len(pkgs), ' '.join(query)))
+    msg = 'Spack currently has {0} mainline packages'.format(len(pkgs))
+    msg += ' matching "{0}":'.format(' '.join(query)) if query != [] else ':'
+    print(msg)
     print('</p>')
 
     # Table of links to all packages
