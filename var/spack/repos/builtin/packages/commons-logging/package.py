@@ -25,27 +25,27 @@
 from spack import *
 
 
-class Singularity(AutotoolsPackage):
-    """Singularity is a container platform focused on supporting 'Mobility of
-       Compute'"""
+class CommonsLogging(Package):
+    """When writing a library it is very useful to log information. However
+    there are many logging implementations out there, and a library cannot
+    impose the use of a particular one on the overall application that the
+    library is a part of.
 
-    homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/singularityware/singularity/releases/download/2.5.2/singularity-2.5.2.tar.gz"
-    git      = "https://github.com/singularityware/singularity.git"
+    The Logging package is an ultra-thin bridge between different logging
+    implementations. A library that uses the commons-logging API can be used
+    with any logging implementation at runtime. Commons-logging comes with
+    support for a number of popular logging implementations, and writing
+    adapters for others is a reasonably simple task."""
 
-    # Versions before 2.5.2 suffer from a serious security problem.
-    # https://nvd.nist.gov/vuln/detail/CVE-2018-12021
-    version('develop', branch='master')
-    version('2.6.0', sha256='7c425211a099f6fa6f74037e6e17be58fb5923b0bd11aea745e48ef83c488b49')
-    version('2.5.2', '2edc1a8ac9a4d7d26fba6244f1c5fd95')
+    homepage = "http://commons.apache.org/proper/commons-logging/"
+    url      = "http://archive.apache.org/dist/commons/logging/binaries/commons-logging-1.2-bin.tar.gz"
 
-    depends_on('libarchive', when='@2.5.2:')
-    # these are only needed if we're grabbing the unreleased tree
-    depends_on('m4',       type='build', when='@develop')
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool',  type='build', when='@develop')
+    version('1.2',   'ac043ce7ab3374eb4ed58354a6b2c3de')
+    version('1.1.3', 'b132f9a1e875677ae6b449406cff2a78')
+    version('1.1.1', 'e5de09672af9b386c30a311654d8541a')
 
-    # When installing as root, the copy has to run before chmod runs
+    extends('jdk')
+    depends_on('java', type='run')
+
     def install(self, spec, prefix):
-        make('install', parallel=False)
+        install('commons-logging-{0}.jar'.format(self.version), prefix)

@@ -596,6 +596,9 @@ name or compiler specifier to their left in the spec.
 If the compiler spec is omitted, Spack will choose a default compiler
 based on site policies.
 
+
+.. _basic-variants:
+
 ^^^^^^^^
 Variants
 ^^^^^^^^

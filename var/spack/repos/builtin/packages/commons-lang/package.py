@@ -25,27 +25,26 @@
 from spack import *
 
 
-class Singularity(AutotoolsPackage):
-    """Singularity is a container platform focused on supporting 'Mobility of
-       Compute'"""
+class CommonsLang(Package):
+    """The standard Java libraries fail to provide enough methods for
+    manipulation of its core classes. Apache Commons Lang provides these
+    extra methods.
 
-    homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/singularityware/singularity/releases/download/2.5.2/singularity-2.5.2.tar.gz"
-    git      = "https://github.com/singularityware/singularity.git"
+    Lang provides a host of helper utilities for the java.lang API, notably
+    String manipulation methods, basic numerical methods, object reflection,
+    concurrency, creation and serialization and System properties. Additionally
+    it contains basic enhancements to java.util.Date and a series of utilities
+    dedicated to help with building methods, such as hashCode, toString and
+    equals."""
 
-    # Versions before 2.5.2 suffer from a serious security problem.
-    # https://nvd.nist.gov/vuln/detail/CVE-2018-12021
-    version('develop', branch='master')
-    version('2.6.0', sha256='7c425211a099f6fa6f74037e6e17be58fb5923b0bd11aea745e48ef83c488b49')
-    version('2.5.2', '2edc1a8ac9a4d7d26fba6244f1c5fd95')
+    homepage = "http://commons.apache.org/proper/commons-lang/"
+    url      = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang-2.6-bin.tar.gz"
 
-    depends_on('libarchive', when='@2.5.2:')
-    # these are only needed if we're grabbing the unreleased tree
-    depends_on('m4',       type='build', when='@develop')
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool',  type='build', when='@develop')
+    version('2.6', '444075803459bffebfb5e28877861d23')
+    version('2.4', '5ff5d890e46021a2dbd77caba80f90f2')
 
-    # When installing as root, the copy has to run before chmod runs
+    extends('jdk')
+    depends_on('java@2:', type='run')
+
     def install(self, spec, prefix):
-        make('install', parallel=False)
+        install('commons-lang-{0}.jar'.format(self.version), prefix)

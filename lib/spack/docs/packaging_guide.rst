@@ -2759,6 +2759,8 @@ is handy when a package supports additional variants like
 
    variant('openmp', default=True, description="Enable OpenMP support.")
 
+.. _blas_lapack_scalapack:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Blas, Lapack and ScaLapack libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

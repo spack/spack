@@ -25,27 +25,22 @@
 from spack import *
 
 
-class Singularity(AutotoolsPackage):
-    """Singularity is a container platform focused on supporting 'Mobility of
-       Compute'"""
+class Jackcess(Package):
+    """Jackcess is a pure Java library for reading from and writing to
+    MS Access databases (currently supporting versions 2000-2016)."""
 
-    homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/singularityware/singularity/releases/download/2.5.2/singularity-2.5.2.tar.gz"
-    git      = "https://github.com/singularityware/singularity.git"
+    homepage = "http://jackcess.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/jackcess/files/jackcess/2.1.12/jackcess-2.1.12.jar"
 
-    # Versions before 2.5.2 suffer from a serious security problem.
-    # https://nvd.nist.gov/vuln/detail/CVE-2018-12021
-    version('develop', branch='master')
-    version('2.6.0', sha256='7c425211a099f6fa6f74037e6e17be58fb5923b0bd11aea745e48ef83c488b49')
-    version('2.5.2', '2edc1a8ac9a4d7d26fba6244f1c5fd95')
+    version('2.1.12',   '7d051d8dd93f2fe7e5e86389ea380619', expand=False)
+    version('1.2.14.3', 'ef778421c1385ac9ab4aa7edfb954caa', expand=False)
 
-    depends_on('libarchive', when='@2.5.2:')
-    # these are only needed if we're grabbing the unreleased tree
-    depends_on('m4',       type='build', when='@develop')
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool',  type='build', when='@develop')
+    extends('jdk')
+    depends_on('java', type='run')
+    depends_on('commons-lang@2.6', when='@2.1.12', type='run')
+    depends_on('commons-lang@2.4', when='@1.2.14.3', type='run')
+    depends_on('commons-logging@1.1.3', when='@2.1.12', type='run')
+    depends_on('commons-logging@1.1.1', when='@1.2.14.3', type='run')
 
-    # When installing as root, the copy has to run before chmod runs
     def install(self, spec, prefix):
-        make('install', parallel=False)
+        install('jackcess-{0}.jar'.format(self.version), prefix)

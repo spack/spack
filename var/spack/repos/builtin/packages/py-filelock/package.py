@@ -6,8 +6,8 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,25 +25,21 @@
 from spack import *
 
 
-class Ross(CMakePackage):
-    """Rensselaer Optimistic Simulation System"""
+class PyFilelock(PythonPackage):
+    """This package contains a single module, which implements a platform
+    independent file lock in Python, which provides a simple way of
+    inter-process communication"""
 
-    homepage = "http://carothersc.github.io/ROSS/"
-    git      = "https://github.com/carothersc/ROSS.git"
+    homepage = "https://github.com/benediktschmitt/py-filelock"
+    url = "https://github.com/benediktschmitt/py-filelock/archive/v3.0.4.tar.gz"
 
-    version('develop', branch='master')
-    version('7.0.0', tag='v7.0.0')
-
-    depends_on('mpi')
-
-    def cmake_args(self):
-        if 'x86_64' not in self.spec.architecture:
-            raise InstallError(
-                'This package currently only builds on x86_64 architectures')
-
-        args = ["-DBUILD_SHARED_LIBS=ON",
-                "-DARCH=x86_64",
-                "-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc,
-                "-DCMAKE_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx]
-
-        return args
+    version('3.0.4',  '3cafce82375c3b635f2c872acaf3a00b')
+    version('3.0.3',  'e4bd69f15ebcc6d5a3d684cea3694840')
+    version('3.0.1',  'cbf41ad3d89c89e2b752bc85b501dff6')
+    version('3.0.0',  '29d199e8998ac324d0d7cab7aa814943')
+    version('2.0.13', 'cdd0c4f3e905fbab76d1202ce8e8b454')
+    version('2.0.12', 'fffda24b6cfd459ea5d2d5c335e949e2')
+    version('2.0.11', '9e8cbbe18494d12647050bb32a7e624d')
+    version('2.0.10', '1791e72bb19e503fdd0f365fb8ce2a4d')
+    version('2.0.9',  'b0269e7f77a090cc0d5fc9cf5fbe6ac2')
+    version('2.0.8',  '939ec6d4e2ecdc353a1f27fc452d8e8c')
