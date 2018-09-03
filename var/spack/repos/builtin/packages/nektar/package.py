@@ -72,4 +72,6 @@ class Nektar(CMakePackage):
         args.append('-DNEKTAR_USE_HDF5=%s' % hasfeature('+hdf5'))
         args.append('-DNEKTAR_USE_SCOTCH=%s' % hasfeature('+scotch'))
         args.append('-DNEKTAR_USE_PETSC=OFF')
+        args.append('-DNEKTAR_BUILD_TESTS=OFF')
+        args.append('-DNEKTAR_BUILD_UNIT_TESTS=OFF')
         return args
