@@ -143,7 +143,7 @@ def find(parser, args):
         msg = "No installed package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         msg2 = "If you are looking for installable packages try "
-        msg2 += "`spack list {}`"
+        msg2 += "`spack list {0}`"
         msg2 = msg2.format(' '.join(args.constraint))
         tty.msg(msg, msg2)
         return
