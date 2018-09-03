@@ -142,13 +142,18 @@ cache:
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions python > /dev/null || brew install python; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then rm /usr/local/include/c++ ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gcc    > /dev/null || brew install gcc;    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gnupg2 > /dev/null || brew install gnupg2; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        brew update;
+        export HOMEBREW_NO_AUTO_UPDATE=1;
+        rm /usr/local/include/c++ ;
+        brew ls --versions gcc    > /dev/null || brew install gcc;
+        brew ls --versions gnupg2 > /dev/null || brew install gnupg2;
+        brew install python@2;
+        pip2 install --upgrade pip;
+        pip2 install virtualenv;
+        virtualenv venv;
+        source venv/bin/activate;
+    fi
 
 # Install various dependencies
 install:
