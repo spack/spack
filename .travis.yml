@@ -57,8 +57,7 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=doc
-    - stage: 'unit tests - osx'
-      os: osx
+    - os: osx
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
 # mpich (AutotoolsPackage)
@@ -109,8 +108,6 @@ stages:
   - 'style checks'
   - 'unit tests + documentation'
   - 'build tests'
-  - name: 'unit tests - osx'
-    if: type IN (cron)
 
 
 #=============================================================================
