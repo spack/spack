@@ -51,6 +51,14 @@ def setup_parser(subparser):
         '-o', '--output-file', default=".gitlab-ci.yml",
         help="path to output file to write")
 
+    subparser.add_argument(
+        '-t', '--shared-runner-tag', default=None,
+        help="tag to add to jobs for shared runner selection")
+
+    subparser.add_argument(
+        '-k', '--signing-key', default=None,
+        help="hash of gpg key to use for package signing")
+
 
 def stage_spec_jobs(spec_set):
     deptype = all_deptypes
@@ -172,7 +180,7 @@ def release_jobs(parser, args):
                         [get_job_name(spec_labels[dep_label], osname)
                             for dep_label in dependencies[spec_label]])
 
-                output_object[job_name] = {
+                job_object = {
                     'stage': stage_name,
                     'variables': {
                         'SHORT_SPEC': pkg_short_spec,
@@ -188,8 +196,15 @@ def release_jobs(parser, args):
                         ],
                     },
                     'dependencies': job_dependencies,
-                    'tags': ['my-tag']
                 }
+
+                if args.shared_runner_tag:
+                    job_object['tags'] = [args.shared_runner_tag]
+
+                if args.signing_key:
+                    job_object['variables']['SIGN_KEY_HASH'] = args.signing_key
+
+                output_object[job_name] = job_object
 
         stage += 1
 
