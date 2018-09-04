@@ -34,7 +34,7 @@ class Montage(MakefilePackage):
 
     version('5.0', sha256='72e034adb77c8a05ac40daf9d1923c66e94faa0b08d3d441256d9058fbc2aa34')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type=('build'))
 
     def install(self, spec, prefix):
         make("all")
