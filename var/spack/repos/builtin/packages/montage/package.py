@@ -36,7 +36,7 @@ class Montage(MakefilePackage):
 
     variant('cfitsio',  default=False, description='Include FITS support')
     variant('mpi',      default=False, description='Include MPI support')
-    variant('wcs',      devault=False, description='Include wcs support')
+    variant('wcs',      default=False, description='Include wcs support')
 
     depends_on('py-setuptools', type=('build'))
 
