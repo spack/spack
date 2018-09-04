@@ -33,6 +33,8 @@ parameters=(
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
     SPACK_TARGET_ARGS
+    SPACK_DISABLE_NEW_DTAGS
+    SPACK_LINKER_ARG
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
 )
@@ -166,6 +168,22 @@ if [[ -z $mode ]]; then
         fi
     done
 fi
+
+# This is needed to ensure we set RPATH instead of RUNPATH.
+# Documentation on this mechanism is lacking at best. A few sources
+# of information are (note that some of them take explicitly the
+# opposite stance that Spack does):
+#
+# http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+# https://wiki.debian.org/RpathIssue
+#
+# The only discussion I could find on enabling new dynamic tags by
+# default on ld is the following:
+#
+# https://sourceware.org/ml/binutils/2013-01/msg00307.html
+#
+disable_new_dtags="${SPACK_DISABLE_NEW_DTAGS}"
+linker_arg="${SPACK_LINKER_ARG}"
 
 # Set up rpath variable according to language.
 eval rpath=\$SPACK_${comp}_RPATH_ARG
@@ -381,22 +399,6 @@ esac
 # Linker flags
 case "$mode" in
     ld|ccld)
-        # This is needed to ensure we set RPATH instead of RUNPATH.
-        # Documentation on this mechanism is lacking at best. A few sources
-        # of information are (note that some of them take explicitly the
-        # opposite stance that Spack does):
-        #
-        # http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
-        # https://wiki.debian.org/RpathIssue
-        #
-        # The only discussion I could find on enabling new dynamic tags by
-        # default on ld is the following:
-        #
-        # https://sourceware.org/ml/binutils/2013-01/msg00307.html
-        #
-        flags+=('-Wl,--disable-new-dtags')
-
-        # Add other flags
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
@@ -478,10 +480,12 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
+        if [ ! -z "$disable_new_dtags" ] ; then args+=("$linker_arg$disable_new_dtags") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
+        if [ ! -z "$disable_new_dtags" ] ; then args+=("$disable_new_dtags") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;

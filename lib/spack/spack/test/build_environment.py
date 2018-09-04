@@ -42,6 +42,8 @@ def build_environment(working_env):
     os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
+    os.environ['SPACK_LINKER_ARG'] = '-Wl,'
+    os.environ['SPACK_DISABLE_NEW_DTAGS'] = '--disable-new-dtags'
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
     os.environ['SPACK_TARGET_ARGS'] = ''
 
