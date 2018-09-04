@@ -42,6 +42,5 @@ class Bamdst(MakefilePackage):
         makefile.filter('CC= .*', 'CC = cc')
 
     def install(self, spec, prefix):
-        make()
         mkdir(prefix.bin)
         install('bamdst', prefix.bin)
