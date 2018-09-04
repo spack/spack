@@ -62,3 +62,7 @@ class IntelMkl(IntelPackage):
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
+
+    @property
+    def libs(self):
+        return self.scalapack_libs + self.lapack_libs + self.blas_libs

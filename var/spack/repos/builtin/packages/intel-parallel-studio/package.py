@@ -191,3 +191,7 @@ class IntelParallelStudio(IntelPackage):
             'F90':  spack_fc,
             'FC':   spack_fc,
         })
+
+    @property
+    def libs(self):
+        return self.scalapack_libs + self.lapack_libs + self.blas_libs
