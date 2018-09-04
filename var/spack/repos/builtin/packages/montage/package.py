@@ -41,7 +41,7 @@ class Montage(MakefilePackage):
     depends_on('py-setuptools', type=('build'))
 
     depends_on('cfitsio', when='+cfitsio')
-    depends_on('wcs', when='+wcs')
+    depends_on('wcslib', when='+wcs')
     depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
