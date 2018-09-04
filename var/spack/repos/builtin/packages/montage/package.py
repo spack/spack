@@ -37,5 +37,4 @@ class Montage(MakefilePackage):
 
     def install(self, spec, prefix):
         make("all")
-        make("install")
         install_tree('bin', prefix.bin)
