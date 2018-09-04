@@ -30,7 +30,7 @@ class PyMaestrowf(PythonPackage):
        simulation studies."""
 
     homepage = "https://github.com/LLNL/maestrowf/"
-    url      = "https://github.com/LLNL/maestrowf/archive/v1.1.2x.tar.gz"
+    url      = "https://github.com/LLNL/maestrowf/archive/v1.1.2.tar.gz"
 
     version('1.1.2', 'a9e05d82910cd2dd077321fb9b0c8dcd')
     version('1.1.1', 'd38bbf634de4f29fd01d1864ba2f70e0')
