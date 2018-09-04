@@ -6,41 +6,52 @@
 """Schema for env.yaml configuration file.
 
 .. literalinclude:: ../spack/schema/env.py
-   :lines: 32-
+   :lines: 36-
 """
+from llnl.util.lang import union_dicts
+
+import spack.schema.merged
+import spack.schema.modules
 
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack environment file schema',
+    'definitions': spack.schema.modules.definitions,
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
         '^env|spack$': {
             'type': 'object',
             'default': {},
-            'properties': {
-                'include': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'string'
+            'additionalProperties': False,
+            'properties': union_dicts(
+                # merged configuration scope schemas
+                spack.schema.merged.properties,
+                # extra environment schema properties
+                {
+                    'include': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'string'
+                        },
                     },
-                },
-
-
-                'specs': {
-                    'type': 'object',
-                    'default': {},
-                    'additionalProperties': False,
-                    'patternProperties': {
-                        r'\w[\w-]*': {  # user spec
-                            'type': 'object',
-                            'default': {},
-                            'additionalProperties': False,
+                    'specs': {
+                        # Specs is a list of specs, which can have
+                        # optional additional properties in a sub-dict
+                        'type': 'array',
+                        'default': [],
+                        'additionalProperties': False,
+                        'items': {
+                            'anyOf': [
+                                {'type': 'string'},
+                                {'type': 'null'},
+                                {'type': 'object'},
+                            ]
                         }
                     }
                 }
-            }
+            )
         }
     }
 }

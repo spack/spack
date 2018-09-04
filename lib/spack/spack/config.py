@@ -177,6 +177,8 @@ class ConfigScope(object):
     def write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
+        _validate(data, section_schemas[section])
+
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
@@ -192,6 +194,77 @@ class ConfigScope(object):
 
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
+
+
+class SingleFileScope(ConfigScope):
+    """This class represents a configuration scope in a single YAML file."""
+    def __init__(self, name, path, schema, yaml_path=None):
+        """Similar to ``ConfigScope`` but can be embedded in another schema.
+
+        Arguments:
+            schema (dict): jsonschema for the file to read
+            yaml_path (list): list of dict keys in the schema where
+                config data can be found.
+
+        """
+        super(SingleFileScope, self).__init__(name, path)
+        self._raw_data = None
+        self.schema = schema
+        self.yaml_path = yaml_path or []
+
+    def get_section_filename(self, section):
+        return self.path
+
+    def get_section(self, section):
+        # read raw data from the file, which looks like:
+        # {
+        #   'config': {
+        #      ... data ...
+        #   },
+        #   'packages': {
+        #      ... data ...
+        #   },
+        # }
+        if self._raw_data is None:
+            self._raw_data = _read_config_file(self.path, self.schema)
+            if self._raw_data is None:
+                return None
+
+            for key in self.yaml_path:
+                self._raw_data = self._raw_data[key]
+
+        # data in self.sections looks (awkwardly) like this:
+        # {
+        #   'config': {
+        #      'config': {
+        #         ... data ...
+        #       }
+        #   },
+        #   'packages': {
+        #      'packages': {
+        #         ... data ...
+        #      }
+        #   }
+        # }
+        return self.sections.setdefault(
+            section, {section: self._raw_data.get(section)})
+
+    def write_section(self, section):
+        _validate(self.sections, self.schema)
+        try:
+            parent = os.path.dirname(self.path)
+            mkdirp(parent)
+
+            tmp = os.path.join(parent, '.%s.tmp' % self.path)
+            with open(tmp, 'w') as f:
+                syaml.dump(self.sections, stream=f, default_flow_style=False)
+            os.path.move(tmp, self.path)
+        except (yaml.YAMLError, IOError) as e:
+            raise ConfigFileError(
+                "Error writing to config file: '%s'" % str(e))
+
+    def __repr__(self):
+        return '<SingleFileScope: %s: %s>' % (self.name, self.path)
 
 
 class ImmutableConfigScope(ConfigScope):
@@ -215,7 +288,7 @@ class InternalConfigScope(ConfigScope):
     override settings from files.
     """
     def __init__(self, name, data=None):
-        self.name = name
+        super(InternalConfigScope, self).__init__(name, None)
         self.sections = syaml.syaml_dict()
 
         if data:

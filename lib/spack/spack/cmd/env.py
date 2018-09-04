@@ -44,17 +44,16 @@ subcommands = [
 # =============== Modifies Environment
 
 def setup_create_parser(subparser):
-    """create a new environment"""
+    """create a new environment."""
+    subparser.add_argument('env', help='name of environment to create')
     subparser.add_argument(
-        '--init-file', dest='init_file',
-        help='File with user specs to add and configuration yaml to use')
+        'envfile', nargs='?', help='optional initialization file')
 
 
 def environment_create(args):
-    if os.path.exists(ev.root(args.environment)):
-        raise tty.die("Environment already exists: " + args.environment)
-
-    _environment_create(args.environment)
+    if os.path.exists(ev.root(args.env)):
+        raise tty.die("Environment already exists: " + args.env)
+    _environment_create(args.env)
 
 
 def _environment_create(name, init_config=None):
@@ -310,7 +309,6 @@ def add_use_repo_argument(cmd_parser):
 
 
 def setup_parser(subparser):
-    subparser.add_argument('environment', help="name of environment")
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='environment_command')
 
@@ -324,6 +322,7 @@ def setup_parser(subparser):
 
 def env(parser, args, **kwargs):
     """Look for a function called environment_<name> and call it."""
+
     function_name = 'environment_%s' % args.environment_command
     action = globals()[function_name]
     action(args)
