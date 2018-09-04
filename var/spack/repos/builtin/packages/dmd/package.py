@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Dmd(MakefilePackage):
@@ -36,16 +37,60 @@ class Dmd(MakefilePackage):
     depends_on('openssl')
     depends_on('curl')
 
+    # https://wiki.dlang.org/Building_under_Posix
+    resource(name='druntime',
+             url='https://github.com/dlang/druntime/archive/v2.081.1.tar.gz',
+             md5='49c8ba48fcb1e53d553a52d8ed7f9164',
+             placement='druntime')
+    resource(name='phobos',
+             url='https://github.com/dlang/phobos/archive/v2.081.1.tar.gz',
+             md5='ccf4787275b490eb2ddfc6713f9e9882',
+             placement='phobos')
+    resource(name='tools',
+             url='https://github.com/dlang/tools/archive/v2.081.1.tar.gz',
+             md5='a3bc7ed3d60b39712ef011bf19b3d427',
+             placement='tools')
+
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix.linux.bin64)
+        run_env.prepend_path('LIBRARY_PATH', self.prefix.linux.lib64)
+        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix.linux.lib64)
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('posix.mak')
-        makefile.filter('$(PWD)/../install', prefix, string=True)
+        # Move contents to dmd/
+        mkdir = which('mkdir')
+        mkdir('dmd')
+        mv = which('mv')
+        dmd_files = [f for f in os.listdir('.')
+                     if not f.startswith(('dmd',
+                                          'druntime',
+                                          'phobos',
+                                          'tools',
+                                          'spack-build'))]
+        for f in dmd_files:
+            mv(f, 'dmd')
+        # Edit
+        dmd_mak = FileFilter('dmd/posix.mak')
+        dmd_mak.filter('$(PWD)/../install', prefix, string=True)
+        dr_mak = FileFilter('druntime/posix.mak')
+        dr_mak.filter('INSTALL_DIR=.*', 'INSTALL_DIR={0}'.format(prefix))
+        pb_mak = FileFilter('phobos/posix.mak')
+        pb_mak.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
+        tl_mak = FileFilter('tools/posix.mak')
+        tl_mak.filter('INSTALL_DIR = .*', 'INSTALL_DIR = {0}'.format(prefix))
 
     def build(self, spec, prefix):
-        make('-f', 'posix.mak', 'AUTO_BOOTSTRAP=1')
+        with working_dir('dmd'):
+            make('-f', 'posix.mak', 'AUTO_BOOTSTRAP=1')
+        with working_dir('phobos'):
+            make('-f', 'posix.mak')
 
     def install(self, spec, prefix):
-        make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
-        install_tree('src', prefix.src)
+        with working_dir('dmd'):
+            make('-f', 'posix.mak', 'install', 'AUTO_BOOTSTRAP=1')
+        with working_dir('phobos'):
+            make('-f', 'posix.mak', 'install')
+        with working_dir('tools'):
+            make('-f', 'posix.mak', 'install')
+        with working_dir('druntime'):
+            make('-f', 'posix.mak', 'install')
