@@ -26,9 +26,10 @@ from spack import *
 
 
 class Montage(MakefilePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Montage is a toolkit for assembling Flexible Image Transport System
+        (FITS) images into custom mosaics."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://montage.ipac.caltech.edu/"
     url      = "http://montage.ipac.caltech.edu/download/Montage_v5.0.tar.gz"
 
     version('5.0', sha256='72e034adb77c8a05ac40daf9d1923c66e94faa0b08d3d441256d9058fbc2aa34')
