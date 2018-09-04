@@ -33,7 +33,8 @@ class Synapsetool(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', git=url, submodules=True)
-    version('0.2.3', git=url, tag='v0.2.3', submodules=True, preferred=True)
+    version('0.2.4', git=url, tag='v0.2.4', submodules=True, preferred=True)
+    version('0.2.3', git=url, tag='v0.2.3', submodules=True)
     version('0.2.1', git=url, tag='v0.2.1', submodules=True)
     version('0.2.0', git=url, tag='v0.2.0', submodules=True)
 
