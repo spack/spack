@@ -42,3 +42,14 @@ class RNloptr(RPackage):
     version('1.0.4', 'f2775dfb4f7f5552d46937a04c062b0d')
 
     depends_on('r-testthat', type=('build', 'run'))
+    depends_on('nlopt')
+
+    def configure_args(self):
+        nloptSpec = self.spec['nlopt']
+        nloptInclude = nloptSpec.prefix.include
+        nloptLib = find_libraries('libnlopt', nloptSpec.prefix, recursive=True)
+        args = [
+            '--with-nlopt-cflags=-I{0}'.format(nloptInclude),
+            '--with-nlopt-libs={0}'.format(nloptLib),
+        ]
+        return args
