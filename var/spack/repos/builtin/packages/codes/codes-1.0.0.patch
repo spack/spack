@@ -1,0 +1,16 @@
+diff --git a/configure.ac b/configure.ac
+index b3650e5..5ec28b4 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -222,9 +222,9 @@ AS_IF([test "x$enable_valgrind_clean" = "xyes"], [
+ 
+ 
+ dnl AC_CONFIG_FILES([src/iokernellang/codesparser.y])
+-if test "x$srcdir" != "x."; then
++AS_IF([test ! -d tests/conf], [
+     AC_CONFIG_LINKS([tests/conf:$srcdir/tests/conf])
+-fi
++])
+ 
+ AC_CONFIG_FILES([Makefile])
+ 
