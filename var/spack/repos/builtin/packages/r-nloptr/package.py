@@ -48,7 +48,7 @@ class RNloptr(RPackage):
         nlopt_spec = self.spec['nlopt']
         nlopt_include = nlopt_spec.prefix.include
         nlopt_lib = find_libraries('libnlopt', nlopt_spec.prefix,
-                            recursive=True)
+                                recursive=True)
         args = [
             '--with-nlopt-cflags=-I{0}'.format(nlopt_include),
             '--with-nlopt-libs={0}'.format(nlopt_lib),
