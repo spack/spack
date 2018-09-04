@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-########################################################################test###
+##############################################################################
 from spack import *
 
 
@@ -46,8 +46,8 @@ class PyCogent(PythonPackage):
     depends_on('py-matplotlib', when='+matplotlib', type=('build', 'run'))
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
     depends_on('py-sqlalchemy', when='+mysql', type=('build', 'run'))
-    depends_on('py-pymysql')
-    depends_on('py-cython@0.17.1:')
+    depends_on('py-pymysql', when='+mysql', type=('build', 'run'))
+    depends_on('py-cython@0.17.1:', type='build')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DONT_USE_PYREX', '1')
