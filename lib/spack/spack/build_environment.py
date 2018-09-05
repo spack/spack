@@ -635,29 +635,8 @@ def setup_package(pkg, dirty):
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
 
-    if dirty:
+    if not dirty:
         clean_environment()
-
-    # Loading modules, in particular if they are meant to be used outside
-    # of Spack, can change environment variables that are relevant to the
-    # build of packages. To avoid a polluted environment, preserve the
-    # value of a few, selected, environment variables
-    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
-        # All module loads that otherwise would belong in previous
-        # functions have to occur after the spack_env object has its
-        # modifications applied. Otherwise the environment modifications
-        # could undo module changes, such as unsetting LD_LIBRARY_PATH
-        # after a module changes it.
-        for mod in pkg.compiler.modules:
-            # Fixes issue https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                load_module("cce")
-            load_module(mod)
-
-        if pkg.architecture.target.module_name:
-            load_module(pkg.architecture.target.module_name)
-
-        load_external_modules(pkg)
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
@@ -685,6 +664,27 @@ def setup_package(pkg, dirty):
 
     set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
+
+    # Loading modules, in particular if they are meant to be used outside
+    # of Spack, can change environment variables that are relevant to the
+    # build of packages. To avoid a polluted environment, preserve the
+    # value of a few, selected, environment variables
+    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
+        # All module loads that otherwise would belong in previous
+        # functions have to occur after the spack_env object has its
+        # modifications applied. Otherwise the environment modifications
+        # could undo module changes, such as unsetting LD_LIBRARY_PATH
+        # after a module changes it.
+        for mod in pkg.compiler.modules:
+            # Fixes issue https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                load_module("cce")
+            load_module(mod)
+
+        if pkg.architecture.target.module_name:
+            load_module(pkg.architecture.target.module_name)
+
+        load_external_modules(pkg)
 
     # Make sure nothing's strange about the Spack environment.
     validate(spack_env, tty.warn)
