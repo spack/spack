@@ -233,5 +233,4 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
     spack_path = os.path.join(spack.paths.prefix, 'lib/spack/env')
     paths = os.environ['PATH'].split(':')
 
-    assert paths[0] == spack_path
-    assert module_path in paths
+    assert paths.index(spack_path) < paths.index(module_path)
