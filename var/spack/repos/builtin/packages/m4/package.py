@@ -35,6 +35,9 @@ class M4(AutotoolsPackage):
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
 
     patch('gnulib-pgi.patch', when='@1.4.18')
+    # from: https://fedora.pkgs.org/rawhide/fedora-x86_64/m4-1.4.18-9.fc29.x86_64.rpm.html
+    # Patch credit to Vitezslav Crhonek <vcrhonek@redhat.com>
+    patch('m4-1.4.18-glibc-change-work-around.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
