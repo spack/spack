@@ -311,6 +311,8 @@ while [ -n "$1" ]; do
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 rp="${arg#-Wl,}"
+            elif [[ "$arg" = --enable-new-dtags ]] ; then
+                :  # We want to remove explicitly this flag
             else
                 other_args+=("-Wl,$arg")
             fi
@@ -342,7 +344,11 @@ while [ -n "$1" ]; do
             fi
             ;;
         *)
-            other_args+=("$1")
+            if [[ "$1" = --enable-new-dtags ]] ; then
+                :  # We want to remove explicitly this flag
+            else
+                other_args+=("$1")
+            fi
             ;;
     esac
 
