@@ -303,14 +303,20 @@ def set_build_environment_variables(pkg, env, dirty):
     # the given compiler
     compiler = pkg.compiler
     environment = compiler.environment
-    if 'set' in environment:
-        env_to_set = environment['set']
-        for key, value in iteritems(env_to_set):
-            env.set('SPACK_ENV_SET_%s' % key, value)
-            env.set('%s' % key, value)
-        # Let shell know which variables to set
-        env_variables = ":".join(env_to_set.keys())
-        env.set('SPACK_ENV_TO_SET', env_variables)
+
+    for command, variable in iteritems(environment):
+        if command == 'set':
+            for name, value in iteritems(variable):
+                env.set(name, value)
+        elif command == 'unset':
+            for name, _ in iteritems(variable):
+                env.unset(name)
+        elif command == 'prepend-path':
+            for name, value in iteritems(variable):
+                env.prepend_path(name, value)
+        elif command == 'append-path':
+            for name, value in iteritems(variable):
+                env.append_path(name, value)
 
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)

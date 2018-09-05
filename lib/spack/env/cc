@@ -203,18 +203,6 @@ if [[ -z $command ]]; then
 fi
 
 #
-# Set paths as defined in the 'environment' section of the compiler config
-#   names are stored in SPACK_ENV_TO_SET
-#   values are stored in SPACK_ENV_SET_<varname>
-#
-IFS=':' read -ra env_set_varnames <<< "$SPACK_ENV_TO_SET"
-for varname in "${env_set_varnames[@]}"; do
-    spack_varname="SPACK_ENV_SET_$varname"
-    export "$varname"="${!spack_varname}"
-    unset "$spack_varname"
-done
-
-#
 # Filter '.' and Spack environment directories out of PATH so that
 # this script doesn't just call itself
 #
