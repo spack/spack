@@ -262,7 +262,7 @@ fi;
 #
 IFS=':' read -ra tcl_roots <<< "$_sp_tcl_roots"
 for tcl_root in "${tcl_roots[@]}"; do
-    _spack_pathadd MODULE_PATH "${tcl_root}/$_sp_sys_type"
+    _spack_pathadd MODULEPATH "${tcl_root}/$_sp_sys_type"
 done
 
 IFS=':' read -ra dotkit_roots <<< "$_sp_dotkit_roots"
