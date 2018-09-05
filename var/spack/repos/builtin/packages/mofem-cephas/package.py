@@ -56,7 +56,7 @@ class MofemCephas(CMakePackage):
     variant('slepc', default=False, description='Compile with Slepc')
 
     depends_on("mpi")
-    depends_on("boost")
+    depends_on("boost@:1.67")
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
