@@ -33,6 +33,4 @@ class RMulticool(RPackage):
 
     version('0.1-9', sha256='bdf92571cef1b649952d155395a92b8683099ee13114f73a9d41fc5d7d49d329')
 
-    depends_on('r')
-
-    depends_on('r-rcpp@0.11.2:')
+    depends_on('r-rcpp@0.11.2:', type=('build', 'run'))

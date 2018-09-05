@@ -38,4 +38,4 @@ class RSom(RPackage):
     version('0.3-3', 'd4ac444be24f71d08b99974c2f4b96e5')
     version('0.3-2', '4ce28f46df68fbb73905711ba2416fac')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))
