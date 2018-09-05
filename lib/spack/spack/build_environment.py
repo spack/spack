@@ -669,6 +669,8 @@ def setup_package(pkg, dirty):
     # of Spack, can change environment variables that are relevant to the
     # build of packages. To avoid a polluted environment, preserve the
     # value of a few, selected, environment variables
+    # With the current ordering of environment modifications, this is strictly
+    # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
         # functions have to occur after the spack_env object has its
