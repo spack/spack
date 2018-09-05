@@ -25,22 +25,13 @@
 from spack import *
 
 
-class Bamdst(MakefilePackage):
-    "Bamdst is a a lightweight bam file depth statistical tool."
+class PyPymysql(PythonPackage):
+    """Pure-Python MySQL client library"""
 
-    homepage = "https://github.com/shiquan/bamdst"
-    git      = "https://github.com/shiquan/bamdst.git"
+    homepage = "https://github.com/PyMySQL/PyMySQL/"
+    url      = "https://pypi.io/packages/source/p/pymysql/PyMySQL-0.9.2.tar.gz"
 
-    version('master', git='https://github.com/shiquan/bamdst.git')
+    version('0.9.2', sha256='9ec760cbb251c158c19d6c88c17ca00a8632bac713890e465b2be01fdc30713f')
 
-    depends_on('zlib')
-
-    parallel = False
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('CC= .*', 'CC = cc')
-
-    def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('bamdst', prefix.bin)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cryptography', type=('build', 'run'))

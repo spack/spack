@@ -25,22 +25,14 @@
 from spack import *
 
 
-class Bamdst(MakefilePackage):
-    "Bamdst is a a lightweight bam file depth statistical tool."
+class Aida(Package):
+    """Abstract Interfaces for Data Analysis"""
 
-    homepage = "https://github.com/shiquan/bamdst"
-    git      = "https://github.com/shiquan/bamdst.git"
+    homepage = "http://aida.freehep.org/"
+    url      = "ftp://ftp.slac.stanford.edu/software/freehep/AIDA/v3.2.1/aida-3.2.1.tar.gz"
 
-    version('master', git='https://github.com/shiquan/bamdst.git')
-
-    depends_on('zlib')
-
-    parallel = False
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('CC= .*', 'CC = cc')
+    version('3.2.1', sha256='c51da83e99c0985a7ef3e8bc5a60c3ae61f3ca603b61100c2438b4cdadd5bb2e')
 
     def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('bamdst', prefix.bin)
+        install_tree('src/cpp', prefix.include)
+        install_tree('lib', prefix)

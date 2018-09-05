@@ -1,0 +1,43 @@
+From 8ebf541e97e7c0573cde6a51353a47e3c509ca00 Mon Sep 17 00:00:00 2001
+From: Scott Thornton <wsttiger@gmail.com>
+Date: Mon, 30 Jul 2018 15:18:29 -0500
+Subject: [PATCH 1/2] Set EXPORT_NAME to match OpenBLASConfig.cmake
+
+---
+ CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 97f8adeda..4dc18da99 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -169,6 +169,7 @@ endif()
+ # Set output for libopenblas
+ set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+ set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES LIBRARY_OUTPUT_NAME_DEBUG "${OpenBLAS_LIBNAME}_d")
++set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES EXPORT_NAME "OpenBLAS")
+ 
+ foreach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+   string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+
+From 2a9a9389ef6c3da56fda859c9586becc41a2e780 Mon Sep 17 00:00:00 2001
+From: Scott Thornton <wsttiger@gmail.com>
+Date: Thu, 2 Aug 2018 14:58:52 -0500
+Subject: [PATCH 2/2] Added target_include_directories()
+
+---
+ CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4dc18da99..20ce02e87 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -150,6 +150,7 @@ endif()
+ 
+ # add objects to the openblas lib
+ add_library(${OpenBLAS_LIBNAME} ${LA_SOURCES} ${LAPACKE_SOURCES} ${RELA_SOURCES} ${TARGET_OBJS} ${OpenBLAS_DEF_FILE})
++target_include_directories(${OpenBLAS_LIBNAME} INTERFACE $<INSTALL_INTERFACE:include>)
+ 
+ # Android needs to explicitly link against libm
+ if(ANDROID)

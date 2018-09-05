@@ -25,22 +25,18 @@
 from spack import *
 
 
-class Bamdst(MakefilePackage):
-    "Bamdst is a a lightweight bam file depth statistical tool."
+class PyPicrust(PythonPackage):
+    """bioinformatics software package designed to predict metagenome
+        functional content from marker gene surveys and full genomes."""
 
-    homepage = "https://github.com/shiquan/bamdst"
-    git      = "https://github.com/shiquan/bamdst.git"
+    homepage = "http://picrust.github.io/picrust/index.html"
+    url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
 
-    version('master', git='https://github.com/shiquan/bamdst.git')
+    version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
 
-    depends_on('zlib')
-
-    parallel = False
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('CC= .*', 'CC = cc')
-
-    def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('bamdst', prefix.bin)
+    depends_on('python@2.7.15:2.999', type=('build', 'run'))
+    depends_on('py-cogent@1.5.3', type=('build', 'run'))
+    depends_on('py-biom-format@2.1.4:2.1.999', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-future@0.16.0', type=('build', 'run'))
+    depends_on('py-numpy@1.5.1:', type=('build', 'run'))

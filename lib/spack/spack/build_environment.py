@@ -110,11 +110,14 @@ dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
 class MakeExecutable(Executable):
-    """Special callable executable object for make so the user can
-       specify parallel or not on a per-invocation basis.  Using
-       'parallel' as a kwarg will override whatever the package's
-       global setting is, so you can either default to true or false
-       and override particular calls.
+    """Special callable executable object for make so the user can specify
+       parallelism options on a per-invocation basis.  Specifying
+       'parallel' to the call will override whatever the package's
+       global setting is, so you can either default to true or false and
+       override particular calls. Specifying 'jobs_env' to a particular
+       call will name an environment variable which will be set to the
+       parallelism level (without affecting the normal invocation with
+       -j).
 
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
@@ -125,12 +128,20 @@ class MakeExecutable(Executable):
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
+        """parallel, and jobs_env from kwargs are swallowed and used here;
+        remaining arguments are passed through to the superclass.
+        """
+
         disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-        parallel = not disable and kwargs.get('parallel', self.jobs > 1)
+        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
-            jobs = "-j%d" % self.jobs
-            args = (jobs,) + args
+            args = ('-j{0}'.format(self.jobs),) + args
+            jobs_env = kwargs.pop('jobs_env', None)
+            if jobs_env:
+                # Caller wants us to set an environment variable to
+                # control the parallelism.
+                kwargs['extra_env'] = {jobs_env: str(self.jobs)}
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
@@ -388,7 +399,7 @@ def set_module_variables_for_package(pkg, module):
 
     m.meson = Executable('meson')
     m.cmake = Executable('cmake')
-    m.ctest = Executable('ctest')
+    m.ctest = MakeExecutable('ctest', jobs)
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)

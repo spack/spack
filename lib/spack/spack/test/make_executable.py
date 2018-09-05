@@ -122,3 +122,10 @@ class MakeExecutableTest(unittest.TestCase):
                               output=str).strip(), '-j8 install')
 
         del os.environ['SPACK_NO_PARALLEL_MAKE']
+
+    def test_make_jobs_env(self):
+        make = MakeExecutable('make', 8)
+        dump_env = {}
+        self.assertEqual(make(output=str, jobs_env='MAKE_PARALLELISM',
+                              _dump_env=dump_env).strip(), '-j8')
+        self.assertEqual(dump_env['MAKE_PARALLELISM'], '8')

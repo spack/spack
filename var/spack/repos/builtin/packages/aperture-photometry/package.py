@@ -23,24 +23,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os.path
 
 
-class Bamdst(MakefilePackage):
-    "Bamdst is a a lightweight bam file depth statistical tool."
+class AperturePhotometry(Package):
+    """Aperture Photometry Tool APT is software for astronomical research"""
 
-    homepage = "https://github.com/shiquan/bamdst"
-    git      = "https://github.com/shiquan/bamdst.git"
+    homepage = "http://www.aperturephotometry.org/aptool/"
+    url      = "http://www.aperturephotometry.org/aptool/wp-content/plugins/download-monitor/download.php?id=1"
 
-    version('master', git='https://github.com/shiquan/bamdst.git')
+    version('2.7.2', '2beca6aac14c5e0a94d115f81edf0caa9ec83dc9d32893ea00ee376c9360deb0', extension='tar.gz')
 
-    depends_on('zlib')
-
-    parallel = False
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('CC= .*', 'CC = cc')
+    depends_on('java')
 
     def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('bamdst', prefix.bin)
+        mkdirp(prefix.bin)
+        jar_file = 'APT.jar'
+        install(jar_file, prefix.bin)
+        java = join_path(self.spec['java'].prefix, 'bin', 'java')
+        script_sh = join_path(os.path.dirname(__file__), "APT.sh")
+        script = join_path(prefix.bin, "apt")
+        install(script_sh, script)
+        set_executable(script)
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+        filter_file('^java', java, script, **kwargs)
+        filter_file('APT.jar', join_path(prefix.bin, 'APT.jar'),
+                    script, **kwargs)
