@@ -55,6 +55,7 @@ class CbtfKrell(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
 
@@ -94,7 +95,8 @@ class CbtfKrell(CMakePackage):
 
     # For Dyninst
     depends_on("dyninst@develop", when='@develop')
-    depends_on("dyninst@9.3.2", when='@1.9.1.0:9999')
+    # This will change to dyninst@10.0 when it is released
+    depends_on("dyninst@develop", when='@1.9.1.0:9999')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')

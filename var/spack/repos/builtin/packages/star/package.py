@@ -29,8 +29,9 @@ class Star(Package):
     """STAR is an ultrafast universal RNA-seq aligner."""
 
     homepage = "https://github.com/alexdobin/STAR"
-    url      = "https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz"
+    url      = "https://github.com/alexdobin/STAR/archive/2.6.1a.tar.gz"
 
+    version('2.6.1a', '1ebaac553809c20900e0b42aadf75cc6')
     version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
     version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
             url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')

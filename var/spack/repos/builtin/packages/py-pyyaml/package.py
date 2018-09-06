@@ -30,4 +30,5 @@ class PyPyyaml(PythonPackage):
     homepage = "http://pyyaml.org/wiki/PyYAML"
     url      = "http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz"
 
+    version('3.12', '4c129761b661d181ebf7ff4eb2d79950')
     version('3.11', 'f50e08ef0fe55178479d3a618efe21db')

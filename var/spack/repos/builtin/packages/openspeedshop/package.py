@@ -66,6 +66,7 @@ class Openspeedshop(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     version('develop', branch='master')
+    version('2.3.1.5', branch='2.3.1.5')
     version('2.3.1.4', branch='2.3.1.4')
     version('2.3.1.3', branch='2.3.1.3')
 
@@ -128,7 +129,8 @@ class Openspeedshop(CMakePackage):
     depends_on("boost@1.66.0", when='@2.3.1.3:9999')
 
     depends_on("dyninst@develop", when='@develop')
-    depends_on("dyninst@9.3.2", when='@2.3.1.3:9999')
+    # This will change to version dyninst@10.0 when it is released
+    depends_on("dyninst@develop", when='@2.3.1.3:9999')
 
     depends_on("python", when='@develop')
     depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')

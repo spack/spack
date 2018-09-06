@@ -400,7 +400,7 @@ class PythonPackage(PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the current directory
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             for module in self.import_modules:
                 self.python('-c', 'import {0}'.format(module))
 

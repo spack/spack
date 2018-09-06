@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.config
+
 from spack.util.editor import editor
 
 description = "get and set configuration options"
@@ -75,7 +76,7 @@ def config_blame(args):
 def config_edit(args):
     if not args.scope:
         if args.section == 'compilers':
-            args.scope = spack.cmd.default_modify_scope()
+            args.scope = spack.config.default_modify_scope()
         else:
             args.scope = 'user'
     if not args.section:

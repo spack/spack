@@ -479,6 +479,9 @@ you will prevent the generation of module files for any package that
 is compiled with ``gcc@4.4.7``, with the only exception of any ``gcc``
 or any ``llvm`` installation.
 
+
+.. _modules-naming-scheme:
+
 """""""""""""""""""""""""""
 Customize the naming scheme
 """""""""""""""""""""""""""

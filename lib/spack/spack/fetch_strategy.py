@@ -306,13 +306,13 @@ class URLFetchStrategy(FetchStrategy):
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
                                    flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
-            tty.warn("The contents of ",
-                     (self.archive_file if self.archive_file is not None
-                      else "the archive"),
-                     " look like HTML.",
-                     "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean <package>' to remove the bad archive, then",
-                     "fix your internet gateway issue and install again.")
+            msg = ("The contents of {0} look like HTML. Either the URL "
+                   "you are trying to use does not exist or you have an "
+                   "internet gateway issue. You can remove the bad archive "
+                   "using 'spack clean <package>', then try again using "
+                   "the correct URL.")
+            tty.warn(msg.format(self.archive_file or "the archive"))
+
         if save_file:
             os.rename(partial_file, save_file)
 
@@ -596,7 +596,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
     enabled = True
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit']
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call

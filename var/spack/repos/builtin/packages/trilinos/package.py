@@ -309,6 +309,7 @@ class Trilinos(CMakePackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
+    patch('superlu_dist_v5.4.0.patch', when='@develop')
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
@@ -431,6 +432,7 @@ class Trilinos(CMakePackage):
             # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
+                '-DTrilinos_ENABLE_STKNGP:BOOL=ON',
                 '-DTrilinos_ENABLE_STKSimd:BOOL=ON',
                 '-DTrilinos_ENABLE_STKIO:BOOL=ON',
                 '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
