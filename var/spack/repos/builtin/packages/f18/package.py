@@ -24,13 +24,11 @@
 ##############################################################################
 
 from spack import *
-import os
 
 
 class F18(CMakePackage):
     """F18 is a front-end for Fortran intended to replace the existing front-end
     in the Flang compiler"""
-
 
     homepage = "https://github.com/flang-compiler/f18"
 
