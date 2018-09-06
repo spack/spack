@@ -38,5 +38,4 @@ class Redis(MakefilePackage):
 
     # Redis make file uses a not standard flag to pass the install path
     def install(self, spec, prefix):
-        make()
         make('PREFIX={0}'.format(prefix), 'install')
