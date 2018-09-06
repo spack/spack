@@ -42,13 +42,12 @@ class Libmesh(Package):
     variant('slepc', default=False, description='SLEPc eigensolver')
 
     depends_on('mpi', when='+mpi')
-    
+
     # Parallel version of libmesh needs parallel solvers
     depends_on('petsc+mpi', when='+mpi')
 
     # SLEPc version needs slepc
     depends_on('slepc', when='+slepc')
-
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix]
