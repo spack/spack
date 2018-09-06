@@ -24,7 +24,7 @@ for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ip
 install("{} %{}".format(JDK, CC))
 
 # Install Java packages
-for pgk in ["maven@3.3.9", "gradle@4.8.1", "ant@1.9.9", "sbt@1.1.6", "bazel@0.13.0"]:
+for pgk in ["maven@3.3.9", "gradle@4.8.1", "ant@1.9.9", "sbt@1.1.6", "bazel@0.12.0"]:
     install("{} %{} ^{}".format(pgk, CC, JDK))
 
 # Install non-Java packages
@@ -36,15 +36,14 @@ packages = {"miniconda2@4.5.4": [""],
             "gcc~binutils@7.3.0": [""],
             "pgi+nvidia+single~network@18.4": [""],
             "environment-modules@3.2.10": [""],
-            "cuda@9.1.85": [""],
             "cuda@9.0.176": [""],
             "cuda@8.0.61": [""],
             "cuda@7.5.18": [""],
             "cuda@6.5.14": [""],
-            "cudnn@7.0": ["^cuda@9.1.85", "^cuda@8.0.61"],
+            "cudnn@7.0": ["^cuda@9.0.176", "^cuda@8.0.61"],
             "cudnn@6.0": ["^cuda@8.0.61"],
             "cudnn@5.1": ["^cuda@8.0.61"],
-            "cmake@3.11.2": [""]
+            "cmake@3.9.6": [""]
 }
 for pkg,specs in packages.items():
     for spec in specs:
