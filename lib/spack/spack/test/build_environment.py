@@ -131,7 +131,6 @@ def test_cc_not_changed_by_modules(monkeypatch):
 
 @pytest.mark.usefixtures('config', 'mock_packages')
 def test_compiler_config_modifications(monkeypatch):
-
     s = spack.spec.Spec('cmake')
     s.concretize()
     pkg = s.package
@@ -209,3 +208,29 @@ def test_compiler_config_modifications(monkeypatch):
     os.environ.pop('PATH_LIST', None)
     os.environ.pop('EMPTY_PATH_LIST', None)
     os.environ.pop('NEW_PATH_LIST', None)
+
+
+@pytest.mark.regression('9107')
+def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
+    s = spack.spec.Spec('cmake')
+    s.concretize()
+    pkg = s.package
+
+    module_path = '/path/to/module'
+
+    def _set_wrong_cc(x):
+        os.environ['PATH'] = module_path + ':' + os.environ['PATH']
+
+    monkeypatch.setattr(
+        spack.build_environment, 'load_module', _set_wrong_cc
+    )
+    monkeypatch.setattr(
+        pkg.compiler, 'modules', ['some_module']
+    )
+
+    spack.build_environment.setup_package(pkg, False)
+
+    spack_path = os.path.join(spack.paths.prefix, 'lib/spack/env')
+    paths = os.environ['PATH'].split(':')
+
+    assert paths.index(spack_path) < paths.index(module_path)
