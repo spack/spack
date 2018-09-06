@@ -63,9 +63,9 @@ def setup_parser(subparser):
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
     create_parser.add_argument(
-        '-o', '--one-version-per-spec', action='store_const',
-        const=1, default=0,
-        help="only fetch one 'preferred' version per spec, not all known")
+        '-n', '--versions-per-spec', type=int,
+        default=1,
+        help="the number of versions to fetch for each spec")
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -211,7 +211,7 @@ def mirror_create(args):
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(
-            directory, specs, num_versions=args.one_version_per_spec)
+            directory, specs, num_versions=args.versions_per_spec)
         p, m, e = len(present), len(mirrored), len(error)
 
         verb = "updated" if existed else "created"

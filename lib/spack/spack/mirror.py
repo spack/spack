@@ -102,7 +102,11 @@ def mirror_archive_path(spec, fetcher, resource_id=None):
 
 
 def get_matching_versions(specs, **kwargs):
-    """Get a spec for EACH known version matching any spec in the list."""
+    """Get a spec for EACH known version matching any spec in the list.
+    For concrete specs, this retrieves the concrete version and, if more
+    than one version per spec is requested, retrieves the latest versions
+    of the package.
+    """
     matching = []
     for spec in specs:
         pkg = spec.package
@@ -112,15 +116,22 @@ def get_matching_versions(specs, **kwargs):
             tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
-        num_versions = kwargs.get('num_versions', 0)
+        pkg_versions = kwargs.get('num_versions', 1)
+
+        version_order = list(reversed(sorted(pkg.versions)))
         matching_spec = []
-        for i, v in enumerate(reversed(sorted(pkg.versions))):
+        if spec.concrete:
+            matching_spec.append(spec)
+            pkg_versions -= 1
+            version_order.remove(spec.version)
+
+        for v in version_order:
             # Generate no more than num_versions versions for each spec.
-            if num_versions and i >= num_versions:
+            if pkg_versions < 1:
                 break
 
             # Generate only versions that satisfy the spec.
-            if v.satisfies(spec.versions):
+            if spec.concrete or v.satisfies(spec.versions):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
@@ -128,6 +139,7 @@ def get_matching_versions(specs, **kwargs):
                 # concretization phase
                 s.variants.spec = s
                 matching_spec.append(s)
+                pkg_versions -= 1
 
         if not matching_spec:
             tty.warn("No known version matches spec: %s" % spec)
