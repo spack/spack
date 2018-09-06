@@ -45,7 +45,7 @@ class Montage(MakefilePackage):
     depends_on('mpi', when='+mpi')
 
     def patch(self):
-        if self.spec.variants['mpi'].value:
+        if self.spec.variants['mpi'].value == 'mpi':
             filter_file(r'#.MPICC..=', 'MPICC =', 'Montage/Makefile.LINUX')
 
     def install(self, spec, prefix):
