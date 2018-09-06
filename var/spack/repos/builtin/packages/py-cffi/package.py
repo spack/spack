@@ -33,6 +33,7 @@ class PyCffi(PythonPackage):
 
     import_modules = ['cffi']
 
+    version('1.11.5', 'ac8492f4ad952360737413e82d661908')
     version('1.10.0', '2b5fa41182ed0edaf929a789e602a070')
     version('1.1.2',  'ca6e6c45b45caa87aee9adc7c796eaea')
 

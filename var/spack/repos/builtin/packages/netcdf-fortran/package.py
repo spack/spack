@@ -36,6 +36,13 @@ class NetcdfFortran(AutotoolsPackage):
 
     depends_on('netcdf')
 
+    # The default libtool.m4 is too old to handle NAG compiler properly:
+    # https://github.com/Unidata/netcdf-fortran/issues/94
+    patch('nag.patch', when='@:4.4.4%nag')
+
+    def configure_args(self):
+        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+
     @property
     def libs(self):
         libraries = ['libnetcdff']

@@ -23,29 +23,31 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import re
 
 
 class Bmake(Package):
-    """bmake: portable BSD make
+    """Portable version of NetBSD make(1)."""
 
-       bmake is the BSD make(1) utility ported to several non-BSD
-       systems. It supports GNU's autoconf."""
+    homepage = "http://www.crufty.net/help/sjg/bmake.htm"
+    url      = "http://www.crufty.net/ftp/pub/sjg/bmake-20180512.tar.gz"
 
-    homepage = "http://www.crufty.net/FreeWare/"
-    url      = "ftp://ftp.netbsd.org/pub/NetBSD/misc/sjg/bmake-20171207.tar.gz"
-
+    version('20180512', '48ba5933833a7f224d76ce482eedfec0')
     version('20171207', '5d7f2f85f16c4a6ba34ceea68957447f')
 
-    def install(self, spec, prefix):
-        # Do not pre-roff cat pages
-        mk_file = FileFilter('mk/man.mk')
-        mk_file.filter(re.escape(r'MANTARGET?'), 'MANTARGET')
+    phases = ['configure', 'build', 'install']
 
-        # -DWITHOUT_PROG_LINK does not symlink bmake as
-        # -"bmake-VERSION"
+    def patch(self):
+        # Do not pre-roff cat pages
+        filter_file('MANTARGET?', 'MANTARGET', 'mk/man.mk', string=True)
+
+    def configure(self, spec, prefix):
         sh = which('sh')
-        sh('boot-strap', '--prefix={0}'.format(prefix),
-           '-DWITHOUT_PROG_LINK', '--install')
-        mkdirp(prefix.man1)
-        install('bmake.1', join_path(prefix.man1, 'bmake.1'))
+        sh('boot-strap', 'op=configure')
+
+    def build(self, spec, prefix):
+        sh = which('sh')
+        sh('boot-strap', 'op=build')
+
+    def install(self, spec, prefix):
+        sh = which('sh')
+        sh('boot-strap', '--prefix={0}'.format(prefix), 'op=install')

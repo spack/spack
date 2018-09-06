@@ -29,9 +29,11 @@ class Libxml2(AutotoolsPackage):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
        project (but usable outside of the Gnome platform), it is free
        software available under the MIT License."""
-    homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.2.tar.gz"
 
+    homepage = "http://xmlsoft.org"
+    url      = "http://xmlsoft.org/sources/libxml2-2.9.8.tar.gz"
+
+    version('2.9.8', 'b786e353e2aa1b872d70d5d1ca0c740d')
     version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
     version('2.7.8', '8127a65e8c3b08856093099b52599c86')

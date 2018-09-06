@@ -34,6 +34,7 @@ import spack.cmd
 import spack.util.web
 import spack.repo
 from spack.spec import Spec
+from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
 from spack.util.naming import mod_to_class
 from spack.util.naming import simplify_name, valid_fully_qualified_module_name
@@ -189,6 +190,18 @@ class CMakePackageTemplate(PackageTemplate):
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
+class MesonPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for meson-based packages"""
+
+    base_class_name = 'MesonPackage'
+
+    body = """\
+    def meson_args(self):
         # FIXME: If not needed delete this function
         args = []
         return args"""
@@ -388,6 +401,7 @@ templates = {
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
+    'meson':      MesonPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -458,6 +472,7 @@ class BuildSystemGuesser:
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
+            (r'/meson\.build$',       'meson'),
         ]
 
         # Peek inside the compressed file.
@@ -675,8 +690,8 @@ def create(parser, args):
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
-    PackageClass = templates[build_system]
-    package = PackageClass(name, url, versions)
+    package_class = templates[build_system]
+    package = package_class(name, url, versions)
     tty.msg("Created template for {0} package".format(package.name))
 
     # Create a directory for the new package
@@ -693,4 +708,4 @@ def create(parser, args):
     tty.msg("Created package file: {0}".format(pkg_path))
 
     # Open up the new package file in your $EDITOR
-    spack.editor(pkg_path)
+    editor(pkg_path)

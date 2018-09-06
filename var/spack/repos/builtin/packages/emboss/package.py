@@ -38,3 +38,8 @@ class Emboss(AutotoolsPackage):
     depends_on('libxpm')
     depends_on('libgd')
     depends_on('postgresql')
+
+    @run_after('configure')
+    def skip_update_checks(self):
+        # Delete $(bindir)/embossupdate to skip update checks
+        filter_file('$(bindir)/embossupdate', '', 'Makefile', string=True)

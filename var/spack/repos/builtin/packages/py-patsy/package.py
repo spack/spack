@@ -41,5 +41,4 @@ class PyPatsy(PythonPackage):
     depends_on('py-scipy',       type=('build', 'run'), when="+splines")
     depends_on('py-six',         type=('build', 'run'))
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
+    depends_on('py-nose', type='test')

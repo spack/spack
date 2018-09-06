@@ -96,6 +96,15 @@ class Paraview(CMakePackage):
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
+        spack_env.set('PARAVIEW_VTK_DIR',
+                      join_path(lib_dir, 'cmake', paraview_version))
+
     def setup_environment(self, spack_env, run_env):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
@@ -106,6 +115,8 @@ class Paraview(CMakePackage):
                              paraview_version))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
+        run_env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', paraview_version))
         if '+python' in self.spec:
             run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
                                  paraview_version))

@@ -33,9 +33,9 @@ class RAims(RPackage):
     as well as on dataset of gene expression data."""
 
     homepage = "http://bioconductor.org/packages/AIMS/"
-    url      = "https://git.bioconductor.org/packages/AIMS"
+    git      = "https://git.bioconductor.org/packages/AIMS.git"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/AIMS', commit='86b866c20e191047492c51b43e3f73082c3f8357')
+    version('1.8.0', commit='86b866c20e191047492c51b43e3f73082c3f8357')
 
     depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-e1071', type=('build', 'run'))

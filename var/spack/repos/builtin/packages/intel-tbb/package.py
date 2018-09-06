@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 import glob
+import inspect
+import platform
 
 
 class IntelTbb(Package):
@@ -34,33 +36,67 @@ class IntelTbb(Package):
     """
     homepage = "http://www.threadingbuildingblocks.org/"
 
-    # Only version-specific URL's work for TBB
-    version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae',
-            url='https://github.com/01org/tbb/archive/2018_U2.tar.gz')
-    version('2018.1', 'b2f2fa09adf44a22f4024049907f774b',
-            url='https://github.com/01org/tbb/archive/2018_U1.tar.gz')
-    version('2018.0', 'e54de69981905ad69eb9cf0226b9bf5f9a4ba065',
-            url='https://github.com/01org/tbb/archive/2018.tar.gz')
-    version('2017.8', '488f049fd107d8b1f6ba59cf4aad881172525106',
-            url='https://github.com/01org/tbb/archive/2017_U8.tar.gz')
-    version('2017.6', 'c0a722fd1ae66b40aeab25da6049086ef5f02f17',
-            url='https://github.com/01org/tbb/archive/2017_U6.tar.gz')
-    version('2017.5', '26f720729d322913912e99d1e4a36bd10625d3ca',
-            url='https://github.com/01org/tbb/archive/2017_U5.tar.gz')
-    version('2017.3', '2c451a5bcf6fc31487b98b4b29651c369874277c',
-            url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb2017_20161128oss_src.tgz')
-    version('4.4.4', 'd4cee5e4ca75cab5181834877738619c56afeb71',
-            url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')
-    version('4.4.3', '80707e277f69d9b20eeebdd7a5f5331137868ce1',
-            url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160128oss_src_0.tgz')
+    # See url_for_version() below.
+    version('2018.5', 'ff3ae09f8c23892fbc3008c39f78288f')
+    version('2018.4', '5e2e6ba0e25624a94331c945856551c2')
+    version('2018.3', 'cd2e136598ffa5c136f077ee85a35b4c')
+    version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae')
+    version('2018.1', 'b2f2fa09adf44a22f4024049907f774b')
+    version('2018',   '7fb30d5ea2545f26ce02757d9ab05e6c')
+    version('2017.8', '7240f57f1aeea0e266a5e17ae68fdc16')
+    version('2017.7', '364f2a4b80e978f38a69cbf7c466b898')
+    version('2017.6', 'ec21254af4fc2a29574c272f501a3138')
+    version('2017.5', '85b41c64102c052e24d8a39f6193e599')
+    version('2017.4', '71526b2fef098515e212302d1455de7d')
+    version('2017.3', 'd7622eeaafeff8d271c7aa684bd82ddb')
+    version('2017.2', '9605cbea96998a10a186fc72c35cbd76')
+    version('2017.1', '6c0fe8aa7bc911a85e8e522e620511b3')
+    version('2017',   '9e7f9ea684ecf84ac74dcd3c6012cfa6')
+    version('4.4.6',  '20e15206f70c2651bfc964e451a443a0')
+    version('4.4.5',  '531a67cd98f9b4ec8ece95c5f8193a83')
+    version('4.4.4',  '61531b2e8684e06a621dcdca1a7a420e')
+    version('4.4.3',  '8e3e39e1fdfb3f7c3a5ac8ec1afe186e')
+    version('4.4.2',  'e92b110e8eb238741b00e3789b39969e')
+    version('4.4.1',  'a02c9958f02c1b5f3626874219979ae8')
+    version('4.4',    '1d512085221996eae6cec04e1a4cd3dd')
 
     provides('tbb')
+
+    conflicts('%gcc@6.1:', when='@:4.4.3',
+              msg='4.4.4 or later required for GCC >= 6.1.')
 
     variant('shared', default=True,
             description='Builds a shared version of TBB libraries')
 
-    # include patch for gcc rtm options
-    patch("tbb_gcc_rtm_key.patch", level=0)
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
+    variant('tm', default=True,
+            description='Enable use of transactional memory on x86')
+
+    # Build and install CMake config files if we're new enough.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+
+    # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
+
+    # Patch cmakeConfig.cmake.in to find the libraries where we install them.
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
+
+    # Some very old systems don't support transactional memory.
+    patch("disable-tm.patch", when='~tm')
+
+    def url_for_version(self, version):
+        url = 'https://github.com/01org/tbb/archive/{0}.tar.gz'
+        if (version[0] >= 2017) and len(version) > 1:
+            return url.format('{0}_U{1}'.format(version[0], version[1]))
+        else:
+            return url.format(version)
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
@@ -80,9 +116,6 @@ class IntelTbb(Package):
                         of.write(l)
 
     def install(self, spec, prefix):
-        if spec.satisfies('%gcc@6.1:') and spec.satisfies('@:4.4.3'):
-            raise InstallError('Only TBB 4.4.4 and above build with GCC 6.1!')
-
         # We need to follow TBB's compiler selection logic to get the proper
         # build + link flags but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:
@@ -113,6 +146,10 @@ class IntelTbb(Package):
         if '+shared' not in self.spec:
             make_opts.append("extra_inc=big_iron.inc")
 
+        if spec.variants['cxxstd'].value != 'default':
+            make_opts.append('stdver=c++{0}'.
+                             format(spec.variants['cxxstd'].value))
+
         #
         # tbb does not have a configure script or make install target
         # we simply call make, and try to put the pieces together
@@ -137,3 +174,12 @@ class IntelTbb(Package):
             fs = glob.glob(join_path("build", "*debug", lib_name + "_debug.*"))
             for f in fs:
                 install(f, prefix.lib)
+
+        if self.spec.satisfies('@2017.0:'):
+            # Generate and install the CMake Config file.
+            cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
+                          '-DTBB_OS={0}'.format(platform.system()),
+                          '-P',
+                          'tbb_config_generator.cmake')
+            with working_dir(join_path(self.stage.source_path, 'cmake')):
+                inspect.getmodule(self).cmake(*cmake_args)

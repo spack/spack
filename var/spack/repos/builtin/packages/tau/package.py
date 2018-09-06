@@ -195,43 +195,43 @@ class Tau(Package):
             options.append('-opari')
 
         if '+mpi' in spec:
-            strMpiIncTmp = ""
-            strMpiInc = ""
-            strMpiLibsTmp = ""
-            strMpiLibs = ""
-            strMpiLibraryTmp = ""
-            strMpiLibrary = ""
-            strMpiPrefix = spec['mpi'].prefix
-            strMpi = os.popen(strMpiPrefix + '/bin/mpicc -show').read()
-            listMpiOpts = strMpi.split()
+            str_mpi_inc_tmp = ""
+            str_mpi_inc = ""
+            str_mpi_libs_tmp = ""
+            str_mpi_libs = ""
+            str_mpi_library_tmp = ""
+            str_mpi_library = ""
+            str_mpi_prefix = spec['mpi'].prefix
+            str_mpi = os.popen(str_mpi_prefix + '/bin/mpicc -show').read()
+            list_mpi_opts = str_mpi.split()
 
-            for MpiItem in listMpiOpts:
+            for mpi_item in list_mpi_opts:
 
-                if "-I" in MpiItem:
-                    if strMpiIncTmp == "":
-                        strMpiIncTmp = MpiItem[2:]
+                if "-I" in mpi_item:
+                    if str_mpi_inc_tmp == "":
+                        str_mpi_inc_tmp = mpi_item[2:]
                     else:
-                        strMpiIncTmp += " "
-                        strMpiIncTmp += MpiItem[2:]
+                        str_mpi_inc_tmp += " "
+                        str_mpi_inc_tmp += mpi_item[2:]
 
-                    strMpiInc = strMpiIncTmp
+                    str_mpi_inc = str_mpi_inc_tmp
 
-                if "-L" in MpiItem:
-                    strMpiLibsTmp = MpiItem[2:]
-                    strMpiLibs = strMpiLibsTmp
+                if "-L" in mpi_item:
+                    str_mpi_libs_tmp = mpi_item[2:]
+                    str_mpi_libs = str_mpi_libs_tmp
 
-                if "-l" in MpiItem:
-                    strMpiLibraryTmp = MpiItem
+                if "-l" in mpi_item:
+                    str_mpi_library_tmp = mpi_item
 
-                    strMpiLibrary = strMpiLibraryTmp
+                    str_mpi_library = str_mpi_library_tmp
 
             options.append('-mpi')
-            options.append('-mpiinc=' + strMpiInc)
-            options.append('-mpilib=' + strMpiLibs)
+            options.append('-mpiinc=' + str_mpi_inc)
+            options.append('-mpilib=' + str_mpi_libs)
             libintl = spec['gettext'].prefix + '/lib'
             options.append(
                 '-mpilibrary=' +
-                strMpiLibrary +
+                str_mpi_library +
                 ' -L' +
                 libintl +
                 ' -Wl,-rpath,' +

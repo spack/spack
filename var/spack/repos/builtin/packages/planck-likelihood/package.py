@@ -141,8 +141,8 @@ class PlanckLikelihood(Package):
     @on_package_attributes(run_tests=True)
     def check_install(self):
         prefix = self.prefix
-        clik_example_C = Executable(join_path(prefix.bin, 'clik_example_C'))
+        clik_example_c = Executable(join_path(prefix.bin, 'clik_example_C'))
         with working_dir('spack-check', create=True):
-            clik_example_C(join_path(prefix, 'share', 'clik',
+            clik_example_c(join_path(prefix, 'share', 'clik',
                                      'plc_2.0', 'hi_l', 'plik',
                                      'plik_dx11dr2_HM_v18_TT.clik'))

@@ -29,9 +29,9 @@ class RA4reporting(RPackage):
     """Automated Affymetrix Array Analysis Reporting Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4Reporting"
-    url      = "https://git.bioconductor.org/packages/a4Reporting"
-    list_url = homepage
-    version('1.24.0', git='https://git.bioconductor.org/packages/a4Reporting', commit='bf22c4d50daf40fc9eaf8c476385bf4a24a5b5ce')
+    git      = "https://git.bioconductor.org/packages/a4Reporting.git"
+
+    version('1.24.0', commit='bf22c4d50daf40fc9eaf8c476385bf4a24a5b5ce')
 
     depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-annaffy', type=('build', 'run'))

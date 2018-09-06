@@ -22,9 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -54,7 +53,10 @@ class Xl(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('13.1'):
-            tty.die("Only xlC 13.1 and above have some c++11 support.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          "< 13.1")
         else:
             return "-qlanglvl=extended0x"
 

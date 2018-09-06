@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
-from shutil import copyfile
 import os.path
 
 
@@ -47,18 +45,18 @@ class Trimmomatic(Package):
         install(jar_file, prefix.bin)
 
         # Put the adapter files someplace sensible
-        copy_tree('adapters', join_path(self.prefix.share, 'adapters'))
+        install_tree('adapters', prefix.share.adapters)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "trimmomatic.sh")
-        script = join_path(prefix.bin, "trimmomatic")
-        copyfile(script_sh, script)
+        script = prefix.bin.trimmomatic
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['java'].prefix, 'bin', 'java')
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('trimmomatic.jar', join_path(prefix.bin, jar_file),

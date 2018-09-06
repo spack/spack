@@ -33,9 +33,9 @@ class RAffyplm(RPackage):
     PLM based quality assessment tools."""
 
     homepage = "https://www.bioconductor.org/packages/affyPLM/"
-    url      = "https://git.bioconductor.org/packages/affyPLM"
+    git      = "https://git.bioconductor.org/packages/affyPLM.git"
 
-    version('1.52.1', git='https://git.bioconductor.org/packages/affyPLM', commit='e8613a6018c4ee58045df6bf19128844f50a1f43')
+    version('1.52.1', commit='e8613a6018c4ee58045df6bf19128844f50a1f43')
 
     depends_on('r@3.4.0:3.4.9', when='@1.52.1')
     depends_on('r-biocgenerics', type=('build', 'run'))

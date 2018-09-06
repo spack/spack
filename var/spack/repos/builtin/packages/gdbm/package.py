@@ -33,7 +33,7 @@ class Gdbm(AutotoolsPackage):
     manipulate a hashed database."""
 
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
-    url      = "http://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
+    url      = "https://ftpmirror.gnu.org/gdbm/gdbm-1.13.tar.gz"
 
     version('1.14.1', 'c2ddcb3897efa0f57484af2bd4f4f848')
     version('1.13',  '8929dcda2a8de3fd2367bdbf66769376')
@@ -46,4 +46,12 @@ class Gdbm(AutotoolsPackage):
     depends_on("readline")
 
     def configure_args(self):
-        return ['--enable-libgdbm-compat']
+
+        # GDBM uses some non-standard GNU extensions,
+        # enabled with -D_GNU_SOURCE.  See:
+        #   https://patchwork.ozlabs.org/patch/771300/
+        #   https://stackoverflow.com/questions/5582211
+        #   https://www.gnu.org/software/automake/manual/html_node/Flag-Variables-Ordering.html
+        return [
+            '--enable-libgdbm-compat',
+            'CPPFLAGS=-D_GNU_SOURCE']

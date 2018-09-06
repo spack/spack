@@ -35,9 +35,9 @@ class RAlsace(RPackage):
     retention time correction, etcetera."""
 
     homepage = "https://www.bioconductor.org/packages/alsace/"
-    url      = "https://git.bioconductor.org/packages/alsace"
+    git      = "https://git.bioconductor.org/packages/alsace.git"
 
-    version('1.12.0', git='https://git.bioconductor.org/packages/alsace', commit='1364c65bbff05786d05c02799fd44fd57748fae3')
+    version('1.12.0', commit='1364c65bbff05786d05c02799fd44fd57748fae3')
 
     depends_on('r-als', type=('build', 'run'))
     depends_on('r-ptw', type=('build', 'run'))

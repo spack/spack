@@ -32,10 +32,9 @@ class Mrbayes(AutotoolsPackage):
        of model parameters."""
 
     homepage = "http://mrbayes.sourceforge.net"
-    url      = "https://github.com/NBISweden/MrBayes"
+    git      = "https://github.com/NBISweden/MrBayes.git"
 
-    version('2017-11-22', commit='8a9adb11bcc538cb95d91d57568dff383f924503',
-            git='https://github.com/NBISweden/MrBayes.git')
+    version('2017-11-22', commit='8a9adb11bcc538cb95d91d57568dff383f924503')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('beagle', default=True, description='Enable BEAGLE library for speed benefits')

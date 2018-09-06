@@ -25,7 +25,7 @@
 import os
 import sys
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -45,17 +45,15 @@ class Trilinos(CMakePackage):
     """
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+    git      = "https://github.com/trilinos/Trilinos.git"
 
     maintainers = ['aprokop']
 
     # ###################### Versions ##########################
 
-    version('xsdk-0.2.0',
-            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
-    version('develop',
-            git='https://github.com/trilinos/Trilinos.git', tag='develop')
-    version('master',
-            git='https://github.com/trilinos/Trilinos.git', tag='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
@@ -147,22 +145,36 @@ class Trilinos(CMakePackage):
             description='Enable Intrepid')
     variant('intrepid2',    default=False,
             description='Enable Intrepid2')
+    variant('isorropia',    default=False,
+            description='Compile with Isorropia')
     variant('kokkos',       default=True,
             description='Compile with Kokkos')
     variant('ml',           default=True,
             description='Compile with ML')
+    variant('minitensor',   default=False,
+            description='Compile with MiniTensor')
     variant('muelu',        default=True,
             description='Compile with Muelu')
     variant('nox',          default=False,
-            description='Enable NOX')
+            description='Compile with NOX')
+    variant('piro',         default=False,
+            description='Compile with Piro')
+    variant('phalanx',      default=False,
+            description='Compile with Phalanx')
     variant('rol',          default=False,
-            description='Enable ROL')
+            description='Compile with ROL')
+    variant('rythmos',      default=False,
+            description='Compile with Rythmos')
     variant('sacado',       default=True,
             description='Compile with Sacado')
     variant('stk',          default=False,
             description='Compile with STK')
     variant('shards',       default=False,
-            description='Enable Shards')
+            description='Compile with Shards')
+    variant('teko',         default=False,
+            description='Compile with Teko')
+    variant('tempus',       default=False,
+            description='Compile with Tempus')
     variant('teuchos',      default=True,
             description='Compile with Teuchos')
     variant('tpetra',       default=True,
@@ -179,22 +191,67 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
 
     resource(name='dtk',
-             git='https://github.com/ornl-cees/DataTransferKit',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
              tag='master',
              placement='DataTransferKit',
              when='+dtk')
     resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos',
+             git='https://github.com/trilinos/ForTrilinos.git',
              tag='develop',
              placement='packages/ForTrilinos',
              when='+fortrilinos')
 
-    conflicts('+tpetra', when='~kokkos')
-    conflicts('+intrepid2', when='~kokkos')
+    conflicts('+amesos2', when='~teuchos')
     conflicts('+amesos2', when='~tpetra')
+    conflicts('+amesos', when='~epetra')
+    conflicts('+amesos', when='~teuchos')
+    conflicts('+anasazi', when='~teuchos')
+    conflicts('+belos', when='~teuchos')
+    conflicts('+epetraext', when='~epetra')
+    conflicts('+epetraext', when='~teuchos')
+    conflicts('+ifpack2', when='~belos')
+    conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
+    conflicts('+ifpack', when='~epetra')
+    conflicts('+ifpack', when='~teuchos')
+    conflicts('+intrepid2', when='~kokkos')
+    conflicts('+intrepid2', when='~shards')
+    conflicts('+intrepid2', when='~teuchos')
+    conflicts('+intrepid', when='~sacado')
+    conflicts('+intrepid', when='~shards')
+    conflicts('+intrepid', when='~teuchos')
+    conflicts('+isorropia', when='~epetra')
+    conflicts('+isorropia', when='~epetraext')
+    conflicts('+isorropia', when='~teuchos')
+    conflicts('+isorropia', when='~zoltan')
+    conflicts('+muelu', when='~teuchos')
+    conflicts('+muelu', when='~xpetra')
+    conflicts('+nox', when='~teuchos')
+    conflicts('+phalanx', when='~kokkos')
+    conflicts('+phalanx', when='~sacado')
+    conflicts('+phalanx', when='~teuchos')
+    conflicts('+piro', when='~teuchos')
+    conflicts('+rol', when='~teuchos')
+    conflicts('+rythmos', when='~teuchos')
+    conflicts('+teko', when='~amesos')
+    conflicts('+teko', when='~anasazi')
+    conflicts('+teko', when='~aztec')
+    conflicts('+teko', when='~ifpack')
+    conflicts('+teko', when='~ml')
+    conflicts('+teko', when='~teuchos')
+    conflicts('+teko', when='~tpetra')
+    conflicts('+tempus', when='~nox')
+    conflicts('+tempus', when='~teuchos')
+    conflicts('+tpetra', when='~kokkos')
+    conflicts('+tpetra', when='~teuchos')
+    conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
+    conflicts('+zoltan2', when='~xpetra')
+    conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+dtk', when='~intrepid2')
+    conflicts('+dtk', when='~kokkos')
+    conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
@@ -224,6 +281,7 @@ class Trilinos(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf+mpi', when="~pnetcdf")
     depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
+    depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -237,6 +295,7 @@ class Trilinos(CMakePackage):
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
+    depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
@@ -251,8 +310,12 @@ class Trilinos(CMakePackage):
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
-    patch('xlf_seacas.patch', when='@12.10.1%xl')
-    patch('xlf_seacas.patch', when='@12.10.1%xl_r')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
+    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %clang')
+    patch('xlf_tpetra.patch', when='@12.12.1:%xl')
+    patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
+    patch('xlf_tpetra.patch', when='@12.12.1:%clang')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -320,22 +383,36 @@ class Trilinos(CMakePackage):
                 'ON' if '+intrepid' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Intrepid2=%s' % (
                 'ON' if '+intrepid2' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Isorropia=%s' % (
+                'ON' if '+isorropia' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Kokkos:BOOL=%s' % (
                 'ON' if '+kokkos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_MiniTensor=%s' % (
+                'ON' if '+minitensor' in spec else 'OFF'),
             '-DTrilinos_ENABLE_ML:BOOL=%s' % (
                 'ON' if '+ml' in spec else 'OFF'),
             '-DTrilinos_ENABLE_MueLu:BOOL=%s' % (
                 'ON' if '+muelu' in spec else 'OFF'),
             '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
                 'ON' if '+nox' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Piro:BOOL=%s' % (
+                'ON' if '+piro' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Phalanx=%s' % (
+                'ON' if '+phalanx' in spec else 'OFF'),
             '-DTrilinos_ENABLE_PyTrilinos:BOOL=%s' % (
                 'ON' if '+python' in spec else 'OFF'),
             '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
                 'ON' if '+rol' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Rythmos=%s' % (
+                'ON' if '+rythmos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Sacado:BOOL=%s' % (
                 'ON' if '+sacado' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Shards=%s' % (
                 'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Teko=%s' % (
+                'ON' if '+teko' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Tempus=%s' % (
+                'ON' if '+tempus' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
@@ -354,6 +431,7 @@ class Trilinos(CMakePackage):
             # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
+                '-DTrilinos_ENABLE_STKNGP:BOOL=ON',
                 '-DTrilinos_ENABLE_STKSimd:BOOL=ON',
                 '-DTrilinos_ENABLE_STKIO:BOOL=ON',
                 '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
@@ -625,7 +703,7 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
 
-        if sys.platform == 'darwin' and macOS_version() >= Version('10.12'):
+        if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

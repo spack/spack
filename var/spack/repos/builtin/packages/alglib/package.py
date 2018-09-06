@@ -26,7 +26,6 @@ from spack import *
 import glob
 import os
 import sys
-import shutil
 
 
 class Alglib(MakefilePackage):
@@ -48,7 +47,7 @@ class Alglib(MakefilePackage):
         make_file_src = join_path(os.path.dirname(self.module.__file__),
                                   'Makefile')
         make_file = join_path(self.stage.source_path, 'src', 'Makefile')
-        shutil.copy(make_file_src, make_file)
+        copy(make_file_src, make_file)
         filter_file(r'so', dso_suffix, make_file)
 
     def install(self, spec, prefix):

@@ -263,7 +263,7 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Now reverse the result and start discarding things
     # as soon as you have matches. In the end the list should
     # be emptied.
-    L = list(reversed(result))
+    rlist = list(reversed(result))
 
     # At this point make sure the search list is a sequence
     if isinstance(search_list, six.string_types):
@@ -272,14 +272,14 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Discard entries in the order they appear in search list
     for x in search_list:
         try:
-            while fnmatch.fnmatch(L[-1], x) or x in L[-1]:
-                L.pop()
+            while fnmatch.fnmatch(rlist[-1], x) or x in rlist[-1]:
+                rlist.pop()
         except IndexError:
             # List is empty
             pass
 
     # List should be empty here
-    assert len(L) == 0
+    assert len(rlist) == 0
 
 
 @pytest.mark.parametrize('root,search_list,kwargs,expected', [

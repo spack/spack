@@ -24,6 +24,8 @@
 ##############################################################################
 import re
 import pytest
+
+import spack.repo
 from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
 from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
@@ -141,3 +143,11 @@ def test_url_summary():
     out_correct_versions = int(
         re.search(r'Versions correctly parsed:\s*(\d+)', out).group(1))
     assert out_correct_versions == correct_versions
+
+
+def test_url_stats(capfd):
+    with capfd.disabled():
+        output = url('stats')
+        npkgs = '%d packages' % len(spack.repo.all_package_names())
+        assert npkgs in output
+        assert 'total versions' in output

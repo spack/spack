@@ -30,9 +30,8 @@ class RXmapbridge(RPackage):
        exports plotting files in a suitable format."""
 
     homepage = "https://www.bioconductor.org/packages/xmapbridge/"
-    url      = "https://git.bioconductor.org/packages/xmapbridge"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/xmapbridge.git"
 
-    version('1.34.0', git='https://git.bioconductor.org/packages/xmapbridge', commit='f162e1f72ead5f5a1aede69032d5771a6572d965')
+    version('1.34.0', commit='f162e1f72ead5f5a1aede69032d5771a6572d965')
 
     depends_on('r@3.4.0:3.4.9', when='@1.34.0')

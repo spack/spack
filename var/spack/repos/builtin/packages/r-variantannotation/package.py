@@ -30,10 +30,9 @@ class RVariantannotation(RPackage):
        outcomes."""
 
     homepage = "https://www.bioconductor.org/packages/VariantAnnotation/"
-    url      = "https://git.bioconductor.org/packages/VariantAnnotation"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/VariantAnnotation.git"
 
-    version('1.22.3', git='https://git.bioconductor.org/packages/VariantAnnotation', commit='3a91b6d4297aa416d5f056dec6f8925eb1a8eaee')
+    version('1.22.3', commit='3a91b6d4297aa416d5f056dec6f8925eb1a8eaee')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))

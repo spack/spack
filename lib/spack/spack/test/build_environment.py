@@ -25,6 +25,8 @@
 import os
 import pytest
 
+import spack.build_environment
+import spack.spec
 from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
 from spack.util.executable import Executable
@@ -56,6 +58,8 @@ def build_environment():
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
 
+    os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
+
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']
 
@@ -65,7 +69,8 @@ def build_environment():
                  'SPACK_ENV_PATH', 'SPACK_DEBUG_LOG_DIR',
                  'SPACK_COMPILER_SPEC', 'SPACK_SHORT_SPEC',
                  'SPACK_CC_RPATH_ARG', 'SPACK_CXX_RPATH_ARG',
-                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG'):
+                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG',
+                 'SPACK_SYSTEM_DIRS'):
         del os.environ[name]
 
 
@@ -94,5 +99,30 @@ def test_static_to_shared_library(build_environment):
                 shared_lib = '{0}.{1}'.format(
                     os.path.splitext(static_lib)[0], dso_suffix)
 
-            assert output == expected[arch].format(
-                static_lib, shared_lib, os.path.basename(shared_lib))
+            assert set(output.split()) == set(expected[arch].format(
+                static_lib, shared_lib, os.path.basename(shared_lib)).split())
+
+
+@pytest.mark.regression('8345')
+@pytest.mark.usefixtures('config', 'mock_packages')
+def test_cc_not_changed_by_modules(monkeypatch):
+
+    s = spack.spec.Spec('cmake')
+    s.concretize()
+    pkg = s.package
+
+    def _set_wrong_cc(x):
+        os.environ['CC'] = 'NOT_THIS_PLEASE'
+        os.environ['ANOTHER_VAR'] = 'THIS_IS_SET'
+
+    monkeypatch.setattr(
+        spack.build_environment, 'load_module', _set_wrong_cc
+    )
+    monkeypatch.setattr(
+        pkg.compiler, 'modules', ['some_module']
+    )
+
+    spack.build_environment.setup_package(pkg, False)
+
+    assert os.environ['CC'] != 'NOT_THIS_PLEASE'
+    assert os.environ['ANOTHER_VAR'] == 'THIS_IS_SET'

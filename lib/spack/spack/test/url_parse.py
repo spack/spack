@@ -75,6 +75,8 @@ from spack.version import Version
     ('ncbi-blast-2.6.0+-src', 'ncbi-blast-2.6.0'),
     # License
     ('cppad-20170114.gpl', 'cppad-20170114'),
+    # Arch
+    ('pcraster-4.1.0_x86-64', 'pcraster-4.1.0'),
     # OS - linux
     ('astyle_2.04_linux', 'astyle_2.04'),
     # OS - unix
