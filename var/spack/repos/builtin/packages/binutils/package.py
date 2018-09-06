@@ -104,7 +104,7 @@ class Binutils(AutotoolsPackage):
             outputdir = os.path.join(prefix.include, subdir)
             mkdirp(outputdir)
             for current_file in glob.glob(os.path.join(self.build_directory,
-                                                       'include', subdir, 
+                                                       'include', subdir,
                                                        '*')):
                 install(current_file, outputdir)
         bfd_file = os.path.join(prefix.include, 'bfd.h')
