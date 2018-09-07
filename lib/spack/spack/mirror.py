@@ -236,6 +236,9 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
         spec.package.do_clean()
 
     except Exception as e:
+        # TODO: current error reporting lacks context
+        # import traceback
+        # error = traceback.format_exc()
         if spack.config.get('config:debug'):
             sys.excepthook(*sys.exc_info())
         else:
