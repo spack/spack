@@ -1121,11 +1121,7 @@ class FsCache(object):
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        FsCache._add_to_mirror(self.root, fetcher, relative_dest)
-
-    @staticmethod
-    def _add_to_mirror(mirror_root, fetcher, relative_dest):
-        dst = os.path.join(mirror_root, relative_dest)
+        dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
