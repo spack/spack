@@ -37,5 +37,15 @@ class Assimp(CMakePackage):
     depends_on('boost')
 
     def cmake_args(self):
-        args = ['-DASSIMP_BUILD_TESTS=OFF']
+        args = [
+            '-DASSIMP_BUILD_TESTS=OFF',
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in self.spec else 'OFF'),
+        ]
         return args
+
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+        return (None, None, flags)
