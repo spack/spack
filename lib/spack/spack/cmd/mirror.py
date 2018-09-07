@@ -233,4 +233,7 @@ def mirror(parser, args):
               'rm': mirror_remove,
               'list': mirror_list}
 
+    if args.no_checksum:
+        spack.config.set('config:checksum', False, scope='command_line')
+
     action[args.mirror_command](args)

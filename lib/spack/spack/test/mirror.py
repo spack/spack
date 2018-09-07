@@ -71,7 +71,7 @@ def check_mirror():
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.set('mirrors', mirrors)
         with spack.config.override('config:checksum', False):
-            spack.mirror.create(mirror_root, repos, no_checksum=True)
+            spack.mirror.create(mirror_root, repos)
 
         # Stage directory exists
         assert os.path.isdir(mirror_root)
@@ -193,8 +193,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         monkeypatch.setattr(spack.caches.MirrorCache, 'store', record_store)
 
         with spack.config.override('config:checksum', False):
-            spack.mirror.create(mirror_root, list(spec.traverse()),
-                                no_checksum=True)
+            spack.mirror.create(mirror_root, list(spec.traverse()))
 
         assert not (set(['urlpatch.patch', 'urlpatch2.patch.gz']) -
                     files_cached_in_mirror)

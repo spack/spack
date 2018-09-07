@@ -170,9 +170,8 @@ def create(path, specs, **kwargs):
             to the mirror.
 
     Keyword args:
-        no_checksum: If True, do not checkpoint when fetching (default False)
         num_versions: Max number of versions to fetch per spec, \
-            if spec is ambiguous (default is 0 for all of them)
+            (default is 1 each spec)
 
     Return Value:
         Returns a tuple of lists: (present, mirrored, error)
