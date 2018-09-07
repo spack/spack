@@ -41,13 +41,13 @@ class Libmesh(Package):
     variant('mpi', default=True, description='Enables MPI parallelism')
     variant('slepc', default=False, description='SLEPc eigensolver')
 
+    # Parallel version of libMesh needs MPI & parallel solvers
     depends_on('mpi', when='+mpi')
-
-    # Parallel version of libmesh needs parallel solvers
     depends_on('petsc+mpi', when='+mpi')
 
-    # SLEPc version needs slepc
+    # SLEPc version needs SLEPc and requires MPI
     depends_on('slepc', when='+slepc')
+    conflicts('~mpi', when='+slepc')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix]
@@ -56,7 +56,9 @@ class Libmesh(Package):
             config_args.append('CC=%s' % spec['mpi'].mpicc)
             config_args.append('CXX=%s' % spec['mpi'].mpicxx)
             config_args.append('PETSC_DIR=%s' % spec['petsc'].prefix)
-            config_args.append('SLEPC_DIR=%s' % spec['slepc'].prefix)
+
+            if '+slepc' in spec:
+                config_args.append('SLEPC_DIR=%s' % spec['slepc'].prefix)
 
         configure(*config_args)
 
