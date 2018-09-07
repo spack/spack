@@ -27,7 +27,7 @@ class MofemFractureModule(CMakePackage):
     """mofem fracture module"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem_um_fracture_mechanics"
+    git = "https://bitbucket.org/likask/mofem_um_fracture_mechanics.git"
 
     maintainers = ['likask']
 

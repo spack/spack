@@ -27,7 +27,7 @@ class MofemMinimalSurfaceEquation(CMakePackage):
     """mofem minimal surface equation"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem_um_minimal_surface_equation"
+    git = "https://bitbucket.org/likask/mofem_um_minimal_surface_equation.git"
 
     maintainers = ['likask']
 

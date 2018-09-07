@@ -27,7 +27,7 @@ class MofemCephas(CMakePackage):
     """MoFEM is finite element core library"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem-cephas.git"
+    git = "https://bitbucket.org/likask/mofem-cephas.git"
 
     maintainers = ['likask']
 
@@ -62,7 +62,7 @@ class MofemCephas(CMakePackage):
     variant('slepc', default=False, description='Compile with Slepc')
 
     depends_on("mpi")
-    depends_on("boost@:1.67")
+    depends_on("boost@:1.68")
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
