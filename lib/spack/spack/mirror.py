@@ -194,7 +194,7 @@ def create(path, specs, **kwargs):
 
     # Get concrete specs for each matching version of these specs.
     version_specs = get_matching_versions(
-        specs, num_versions=kwargs.get('num_versions', 0))
+        specs, num_versions=kwargs.get('num_versions', 1))
     for s in version_specs:
         s.concretize()
 
