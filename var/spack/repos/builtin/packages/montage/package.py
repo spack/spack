@@ -38,10 +38,7 @@ class Montage(MakefilePackage):
     variant('mpi',      default=False, description='Include MPI support') 
     variant('wcs',      default=False, description='use spack wcs library')
 
-    depends_on('py-setuptools', type=('build'))
-
     depends_on('cfitsio', when='+cfitsio')
-#    depends_on('wcslib', when='+wcs')
     depends_on('wcslib', when='+wcs')
     depends_on('mpi', when='+mpi')
 
@@ -52,8 +49,10 @@ class Montage(MakefilePackage):
             filter_file(r'.*cfitsio.*', '', 'lib/src/Makefile')
         if self.spec.variants['wcs'].value == 'wcs':
             filter_file(r'.*wcssubs3.9.0.montage.*', '', 'lib/src/Makefile')
-            filter_file(r'.wcs.h.', '<wcs.h>', 'lib/src/two_plane_v1.1/two_plane.c')
-            filter_file(r'.fitsio.h.', '<fitsio.h>', 'lib/src/two_plane_v1.1/two_plane.c')
+            filter_file(r'.wcs.h.', '<wcs.h>',
+                        'lib/src/two_plane_v1.1/two_plane.c')
+            filter_file(r'.fitsio.h.', '<fitsio.h>',
+                        'lib/src/two_plane_v1.1/two_plane.c')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path('CPATH', self.prefix.include.wcslib)
