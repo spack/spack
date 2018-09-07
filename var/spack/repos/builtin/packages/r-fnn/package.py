@@ -40,6 +40,6 @@ class RFnn(RPackage):
     version('0.6-3', 'f0f0184e50f9f30a36ed5cff24d6cff2')
     version('0.6-2', '20648ba934ea32b1b00dafb75e1a830c')
 
-    depends_on('r@3.4.0:3.4.9')
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-chemometrics', type=('build', 'run'))
