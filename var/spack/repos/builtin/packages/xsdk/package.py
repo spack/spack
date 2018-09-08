@@ -71,7 +71,7 @@ class Xsdk(Package):
     depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@develop')
 
-    depends_on('dealii@develop~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@develop')
+    depends_on('dealii@develop~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@develop')
 
     depends_on('pflotran@xsdk-0.3.0', when='@0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
