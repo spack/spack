@@ -41,8 +41,8 @@ class PyEspresso(CMakePackage):
     git      = "https://github.com/espressomd/espresso.git"
     url      = "https://github.com/espressomd/espresso/releases/download/4.0.0/espresso-4.0.0.tar.gz"
 
-    version('4.0.0', sha256='8e128847447eebd843de24be9b4ad14aa19c028ae48879a5a4535a9683836e6b')
     version('develop', branch='python')
+    version('4.0.0', sha256='8e128847447eebd843de24be9b4ad14aa19c028ae48879a5a4535a9683836e6b')
 
     depends_on("cmake@3.0:", type='build')
     depends_on("mpi")
