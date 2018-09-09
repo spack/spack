@@ -309,13 +309,14 @@ class Trilinos(CMakePackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
+    patch('superlu_dist_v5.4.0.patch', when='@develop')
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %clang')
-    patch('xlf_tpetra.patch', when='@12.12.1:%xl')
-    patch('xlf_tpetra.patch', when='@12.12.1:%xl_r')
-    patch('xlf_tpetra.patch', when='@12.12.1:%clang')
+    patch('xlf_tpetra.patch', when='@12.12.1%xl')
+    patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
+    patch('xlf_tpetra.patch', when='@12.12.1%clang')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"

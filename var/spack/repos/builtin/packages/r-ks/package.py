@@ -25,30 +25,21 @@
 from spack import *
 
 
-class Assimp(CMakePackage):
-    """Open Asset Import Library (Assimp) is a portable Open Source library to
-    import various well-known 3D model formats in a uniform manner."""
+class RKs(RPackage):
+    """Kernel smoothers for univariate and multivariate data."""
 
-    homepage = "https://www.assimp.org"
-    url      = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
+    homepage = "https://cran.r-project.org/package=ks"
+    url      = "https://cran.r-project.org/src/contrib/Archive/ks/ks_1.11.2.tar.gz"
 
-    version('4.0.1', '23a6301c728a413aafbfa1cca19ba91f')
+    version('1.11.2', sha256='9dfd485096e1e67abc7dfcb7b76a83de110dd15bcfeffe5c899605b3a5592961')
 
-    variant('shared',  default=True,
-            description='Enables the build of shared libraries')
+    depends_on('r@2.10:', type=('build', 'run'))
 
-    depends_on('boost')
-
-    def cmake_args(self):
-        args = [
-            '-DASSIMP_BUILD_TESTS=OFF',
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in self.spec else 'OFF'),
-        ]
-        return args
-
-    def flag_handler(self, name, flags):
-        flags = list(flags)
-        if name == 'cxxflags':
-            flags.append(self.compiler.cxx11_flag)
-        return (None, None, flags)
+    depends_on('r-fnn@1.1:', type=('build', 'run'))
+    depends_on('r-kernlab', type=('build', 'run'))
+    depends_on('r-mclust', type=('build', 'run'))
+    depends_on('r-multicool', type=('build', 'run'))
+    depends_on('r-mvtnorm@1.0:', type=('build', 'run'))
+    depends_on('r-kernsmooth@2.22:', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-mgcv', type=('build', 'run'))

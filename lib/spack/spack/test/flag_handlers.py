@@ -44,16 +44,16 @@ def add_o3_to_build_system_cflags(pkg, name, flags):
     return (flags, None, build_system_flags)
 
 
-@pytest.mark.usefixtures('config')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestFlagHandlers(object):
     def test_no_build_system_flags(self, temp_env):
         # Test that both autotools and cmake work getting no build_system flags
-        s1 = spack.spec.Spec('callpath')
+        s1 = spack.spec.Spec('cmake-client')
         s1.concretize()
         pkg1 = spack.repo.get(s1)
         spack.build_environment.setup_package(pkg1, False)
 
-        s2 = spack.spec.Spec('libelf')
+        s2 = spack.spec.Spec('patchelf')
         s2.concretize()
         pkg2 = spack.repo.get(s2)
         spack.build_environment.setup_package(pkg2, False)
@@ -95,7 +95,7 @@ class TestFlagHandlers(object):
         assert 'SPACK_CPPFLAGS' not in os.environ
 
     def test_build_system_flags_cmake(self, temp_env):
-        s = spack.spec.Spec('callpath cppflags=-g')
+        s = spack.spec.Spec('cmake-client cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = pkg.build_system_flags
@@ -109,7 +109,7 @@ class TestFlagHandlers(object):
         assert set(pkg.cmake_flag_args) == expected
 
     def test_build_system_flags_autotools(self, temp_env):
-        s = spack.spec.Spec('libelf cppflags=-g')
+        s = spack.spec.Spec('patchelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = pkg.build_system_flags
@@ -134,7 +134,7 @@ class TestFlagHandlers(object):
             assert True
 
     def test_add_build_system_flags_autotools(self, temp_env):
-        s = spack.spec.Spec('libelf cppflags=-g')
+        s = spack.spec.Spec('patchelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = add_o3_to_build_system_cflags
@@ -146,7 +146,7 @@ class TestFlagHandlers(object):
         assert pkg.configure_flag_args == ['CFLAGS=-O3']
 
     def test_add_build_system_flags_cmake(self, temp_env):
-        s = spack.spec.Spec('callpath cppflags=-g')
+        s = spack.spec.Spec('cmake-client cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = add_o3_to_build_system_cflags
@@ -158,7 +158,7 @@ class TestFlagHandlers(object):
         assert pkg.cmake_flag_args == ['-DCMAKE_C_FLAGS=-O3']
 
     def test_ld_flags_cmake(self, temp_env):
-        s = spack.spec.Spec('callpath ldflags=-mthreads')
+        s = spack.spec.Spec('cmake-client ldflags=-mthreads')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = pkg.build_system_flags
@@ -174,7 +174,7 @@ class TestFlagHandlers(object):
         assert set(pkg.cmake_flag_args) == expected
 
     def test_ld_libs_cmake(self, temp_env):
-        s = spack.spec.Spec('callpath ldlibs=-lfoo')
+        s = spack.spec.Spec('cmake-client ldlibs=-lfoo')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = pkg.build_system_flags

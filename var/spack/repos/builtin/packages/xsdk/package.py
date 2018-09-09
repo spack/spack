@@ -61,7 +61,7 @@ class Xsdk(Package):
                when='@0.3.0')
     depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@xsdk-0.2.0')
-    depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra+nox~ifpack2~zoltan2~amesos2~exodus',
+    depends_on('trilinos@develop+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus',
                when='@develop')
 
     depends_on('petsc@3.8.2+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
@@ -70,6 +70,8 @@ class Xsdk(Package):
                when='@xsdk-0.2.0')
     depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@develop')
+
+    depends_on('dealii@develop~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@develop')
 
     depends_on('pflotran@xsdk-0.3.0', when='@0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
