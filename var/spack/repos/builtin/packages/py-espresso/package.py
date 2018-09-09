@@ -44,6 +44,9 @@ class PyEspresso(CMakePackage):
     version('develop', branch='python')
     version('4.0.0', sha256='8e128847447eebd843de24be9b4ad14aa19c028ae48879a5a4535a9683836e6b')
 
+    # https://github.com/espressomd/espresso/pull/2244
+    patch('2244.patch')
+
     depends_on("cmake@3.0:", type='build')
     depends_on("mpi")
     depends_on("boost+serialization+filesystem+system+python+mpi")
