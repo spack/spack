@@ -63,10 +63,15 @@ class Coreneuron(CMakePackage):
     @run_before('build')
     def profiling_wrapper_on(self):
         os.environ["USE_PROFILER_WRAPPER"] = "1"
+        tau_file = self.stage.source_path + "/extra/instrumentation.tau"
+        tau_opts = "-optPDTInst -optNoCompInst -optRevert -optVerbose"
+        tau_opts += " -optTauSelectFile=%s" % tau_file
+        os.environ["TAU_OPTIONS"] = tau_opts
 
     @run_after ('install')
     def profiling_wrapper_off(self):
         del os.environ["USE_PROFILER_WRAPPER"]
+        del os.environ["TAU_OPTIONS"]
 
     def get_flags(self):
         spec = self.spec
@@ -82,8 +87,10 @@ class Coreneuron(CMakePackage):
             flags += ' -ta=tesla:cuda%s' % (spec['cuda'].version.up_to(2))
         if '+debug' in spec:
             flags = '-g -O0'
+        # when pdt is used for instrumentation, the gcc's unint128 extension
+        # is activated from random123 which results in compilation error
         if '+profile' in spec:
-            flags += ' -DTAU'
+            flags += ' -DTAU -DR123_USE_GNU_UINT128=0'
         return flags
 
     def cmake_args(self):
