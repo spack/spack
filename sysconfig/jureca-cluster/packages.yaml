@@ -1,0 +1,58 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@system: /usr
+        buildable: False
+        version: [system]
+    automake:
+        paths:
+            automake@system: /usr
+        buildable: False
+        version: [system]
+    bison:
+        paths:
+            bison@3.0.4: /usr
+        buildable: False
+        version: [3.0.4]
+    cmake:
+        version: [3.9.4]
+    gettext:
+        paths:
+            gettext@0.19.8: /usr
+        buildable: False
+        version: [0.19.8]
+    hdf5:
+        paths:
+            hdf5@1.8.20%intel: /usr/local/software/jureca/Stages/2018a/software/HDF5/1.8.20-iimpi-2018a
+        variants: ~fortran ~cxx
+        buildable: False
+        version: [1.8.20]
+    intel-mpi-external:
+        paths:
+            intel-mpi-external@5.5.0: /usr/local/software/jureca/Stages/2018a/software/impi/2018.2.199-iccifort-2018.2.199-GCC-5.5.0/intel64
+        version: [5.5.0]
+        buildable: False
+    m4:
+        paths:
+            m4@1.4.16: /usr
+        buildable: False
+        version: [1.4.16]
+    openssl:
+        paths:
+            openssl@system: /usr
+    pkg-config:
+        paths:
+            pkg-config@0.29.1: /usr
+        buildable: False
+        version: [0.29.1]
+    python:
+        paths:
+            python@2.7.14: /usr/local/software/jureca/Stages/2018a/software/Python/2.7.14-GCCcore-5.5.0
+        version: [2.7.14]
+        buildable: False
+    zlib:
+        version: [1.2.8]
+    all:
+        compiler: [intel]
+        providers:
+            mpi: [intel-mpi-external]
