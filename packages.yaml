@@ -48,6 +48,11 @@ packages:
             gcc@6.4.0%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-z3457r46gt7ctihyd6ejkz4asud4i47r
         buildable: False
 
+    jdk:
+        paths:
+            jdk@1.8.0_172-b11%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-1.8.0_172-b11-ungbhvkynaxhb326mhl54dlzrb6sadlf
+            jdk@1.8.0_181-b13%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-1.8.0_181-b13-o2xanegcli5b7oufe5hipg2ulpe5x76y
+
     slurm:
         paths:
             slurm@system: /usr

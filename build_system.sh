@@ -16,7 +16,7 @@ for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ip
 # Install Intel Parallel Studio
 for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@16.0.4 threads=openmp",
             "intel-parallel-studio@cluster.2017.7+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@17.0.7 threads=openmp",
-            "intel-parallel-studio@cluster.2018.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@18.0.3 threads=openmp"]:
+            "intel-parallel-studio@cluster.2018.3+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@18.0.3 threads=openmp"]:
     os.system("rm -f $HOME/spack/etc/spack/licenses/intel/license.lic")
     install(pkg)
 
