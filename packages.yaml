@@ -26,7 +26,9 @@ packages:
         paths:
             intel-parallel-studio@cluster.2016.4%intel@16.0.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ybjjq75tqpzgzjc4drolyijzm45g5qul
             intel-parallel-studio@cluster.2017.5%intel@17.0.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.5/intel-parallel-studio-cluster.2017.5-h4hjkh276hoh7gcbkvhfqep3oadt6nck
+            intel-parallel-studio@cluster.2017.7%intel@17.0.7+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.7/intel-parallel-studio-cluster.2017.7-4vcranl6mvpuo5rhk3txwn5dhob2ojo7
             intel-parallel-studio@cluster.2018.1%intel@18.0.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-18.0.1/intel-parallel-studio-cluster.2018.1-krilumgdhss3rpqeb5o57ulnuhmviemo
+            intel-parallel-studio@cluster.2018.3%intel@18.0.3+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-18.0.3/intel-parallel-studio-cluster.2018.3-3hmyb4zopofdmd5zachrixo3xdauwtvi
         buildable: False
 
     pgi:
