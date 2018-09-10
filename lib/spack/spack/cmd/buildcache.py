@@ -135,6 +135,15 @@ def setup_parser(subparser):
         help='Do not use buildcache index, instead retrieve .spec.yaml files')
     check.set_defaults(func=check_binaries)
 
+    dltarball = subparsers.add_parser('download', help=get_tarball.__doc__)
+    dltarball.add_argument(
+        '-s', '--spec', default=None,
+        help="Download built tarball for spec from mirror")
+    dltarball.add_argument(
+        '-p', '--path', default=None,
+        help="Path to directory where tarball should be downloaded")
+    dltarball.set_defaults(func=get_tarball)
+
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
@@ -361,6 +370,21 @@ def check_binaries(args):
 
     sys.exit(bindist.check_specs_against_mirrors(
         configured_mirrors, specs, no_index, output_file))
+
+
+def get_tarball(args):
+    """Download buildcache entry from remote mirror to local folder"""
+    if not args.spec:
+        tty.msg('No specs provided, exiting.')
+        sys.exit(0)
+
+    if not args.path:
+        tty.msg('No download path provided, exiting')
+        sys.exit(0)
+
+    spec = Spec(args.spec)
+    spec.concretize()
+    bindist.download_buildcache_entry(spec, args.path)
 
 
 def buildcache(parser, args):

@@ -452,7 +452,7 @@ def download_tarball(spec):
                 "download of pre-compiled packages.")
     tarball = tarball_path_name(spec, '.spack')
     for key in mirrors:
-        url = mirrors[key] + "/build_cache/" + tarball
+        url = mirrors[key] + "/" + _build_cache_relative_path + "/" + tarball
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
         try:
@@ -821,3 +821,39 @@ def check_specs_against_mirrors(mirrors, specs, no_index=False,
             outf.write(json.dumps(rebuilds))
 
     return 1 if rebuilds else 0
+
+
+def download_buildcache_entry(spec, path):
+    if not spec.concrete:
+        raise ValueError('spec must be concrete to download buildcache entry')
+
+    mirrors = spack.config.get('mirrors')
+    if len(mirrors) == 0:
+        tty.die("Please add a spack mirror to allow " +
+                "download of buildcache entries.")
+
+    tarfile_name = tarball_name(spec, '.spack')
+    specfile_name = tarball_name(spec, '.spec.yaml')
+    tarball_dir_name = tarball_directory_name(spec)
+    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
+
+    local_tarball_path = os.path.join(path, tarball_dir_name)
+    mkdirp(local_tarball_path)
+
+    for key in mirrors:
+        mirror_root = mirrors[key] + "/" + _build_cache_relative_path
+        tarball_url = mirror_root + "/" + tarball_path_name
+        stage = Stage(tarball_url, name="build_cache",
+                      path=local_tarball_path, keep=True)
+        try:
+            stage.fetch()
+
+            specfile_url = mirror_root + "/" + specfile_name
+            stage2 = Stage(specfile_url, name="build_cache", path=path, keep=True)
+            try:
+                stage2.fetch()
+                break
+            except fs.FetchError:
+                continue
+        except fs.FetchError:
+            continue

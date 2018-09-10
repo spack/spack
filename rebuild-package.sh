@@ -66,7 +66,7 @@ if [[ $? -ne 0 ]]; then
 
     # `${buildcache_create_cmd}`
 
-    spack -d buildcache create -u -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
+    spack buildcache create -u -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
     # Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
@@ -80,4 +80,5 @@ else
     # this point and put it in the artifacts directory.  Or maybe the
     # install command can first look in the artifacts dir, and then on
     # the remote mirror for dependencies?
+    spack buildcache download --spec "${SPEC_NAME}" --path "${BUILD_CACHE_DIR}/"
 fi
