@@ -186,8 +186,22 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc
+                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if self.spec.satisfies('%intel'):
+                # "Inspired" by what is done in the elemental package
+                # ifort doesn't automatically link all run-time libraries
+                ifort = env['SPACK_F77']
+                intel_bin = os.path.dirname(ifort)
+                intel_lib_root = os.path.join(
+                    intel_bin, '..', '..', 'compiler', 'lib')
+                libfortran = find_libraries([
+                    'libifport', 'libifcoremt', 'libimf', 'libsvml',
+                    'libipgo', 'libintlc', 'libpthread'
+                ], root=intel_lib_root, recursive=True)
+                compiler_opts.append(
+                    '--FC_LINKER_FLAGS={0}'.format(libfortran.ld_flags)
+                )
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -226,8 +240,9 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL:
-        if 'scalapack' in spec:
+        # Help PETSc pick up Scalapack from MKL
+        # 'satisfies' is used to only pick up scalapack when needed
+        if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
