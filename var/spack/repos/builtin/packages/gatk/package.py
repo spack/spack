@@ -51,7 +51,8 @@ class Gatk(Package):
         # The list of files to install varies with release...
         # ... but skip the spack-{build.env}.out files and gatkdoc directory.
         files = [x for x in glob.glob("*")
-                 if not re.match("^spack-", x) and not re.match("^gatkdoc", x) and not re.match("^.*\.sh$", x) and is_exe(x)]
+                 if not re.match("^spack-", x) and not re.match("^gatkdoc", x)
+                 and not re.match("^.*\.sh$", x) and is_exe(x)]
         for f in files:
             install(f, prefix.bin)
 
