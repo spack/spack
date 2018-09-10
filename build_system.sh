@@ -4,7 +4,7 @@ from spack_install import install
 import os
 
 CC  = "gcc@4.8.5"
-JDK = "jdk@1.8.0_172-b11"
+JDK = "jdk@1.8.0_181-b13"
 
 # Install Intel Compiler
 for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
@@ -24,7 +24,7 @@ for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ip
 install("{} %{}".format(JDK, CC))
 
 # Install Java packages
-for pgk in ["maven@3.3.9", "gradle@4.8.1", "ant@1.9.9", "sbt@1.1.6", "bazel@0.12.0"]:
+for pgk in ["maven@3.3.9", "gradle@4.8.1", "ant@1.9.9", "sbt@1.1.6"]:
     install("{} %{} ^{}".format(pgk, CC, JDK))
 
 # Install non-Java packages
