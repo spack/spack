@@ -29,36 +29,6 @@ packages:
             intel-parallel-studio@cluster.2018.1%intel@18.0.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-18.0.1/intel-parallel-studio-cluster.2018.1-krilumgdhss3rpqeb5o57ulnuhmviemo
         buildable: False
 
-    jdk:
-        paths:
-            jdk@1.8.0_172-b11%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-1.8.0_172-b11-ungbhvkynaxhb326mhl54dlzrb6sadlf
-        version: [1.8.0_172-b11]
-        buildable: False
-
-    maven:
-        paths:
-          maven@3.3.9%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/maven-3.3.9-att6yx636vqdcxj7f4pt6wmdx6whbrqa
-        version: [3.3.9]
-        buildable: False
-
-    ant:
-        paths:
-            ant@1.9.9%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/ant-1.9.9-itr53v6zc4gqyhhpwk7u5kl2h5skcdss
-        version: [1.9.9]
-        buildable: False
-
-    gradle:
-        paths:
-            gradle@4.8.1%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-4.8.1-mrl376papceefweqogwh2buoj6ta52dn
-        version: [4.8.1]
-        buildable: False
-
-    sbt:
-        paths:
-            sbt@1.1.6%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/sbt-1.1.6-vlwypm7ritb3chv2te66c5gyjilawe2v
-        version: [1.1.6]
-        buildable: False
-
     pgi:
         paths:
             pgi@18.4%gcc@4.8.5~amd~java~mpi~network+nvidia+single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-18.4-afzgv4bbjee475vqjrgp7e5f73bf5rcc
