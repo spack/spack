@@ -55,15 +55,15 @@ class Dftfe(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-                '-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].mpicc),
-                '-DCMAKE_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx),
-                '-DALGLIB_DIR={0}'.format(spec['alglib'].prefix),
-                '-DLIBXC_DIR={0}'.format(spec['libxc'].prefix),
-                '-DXML_LIB_DIR={0}/lib'.format(spec['libxml2'].prefix),
-                '-DXML_INCLUDE_DIR={0}/include'.format(spec['libxml2'].prefix),
-                '-DSPGLIB_DIR={0}'.format(spec['spglib'].prefix),
-                ]
-        
+            '-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].mpicc),
+            '-DCMAKE_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx),
+            '-DALGLIB_DIR={0}'.format(spec['alglib'].prefix),
+            '-DLIBXC_DIR={0}'.format(spec['libxc'].prefix),
+            '-DXML_LIB_DIR={0}/lib'.format(spec['libxml2'].prefix),
+            '-DXML_INCLUDE_DIR={0}/include'.format(spec['libxml2'].prefix),
+            '-DSPGLIB_DIR={0}'.format(spec['spglib'].prefix),
+        ]
+
         if spec.satisfies('^intel-mkl'):
             args.append('-DWITH_INTEL_MKL=ON')
         else:
