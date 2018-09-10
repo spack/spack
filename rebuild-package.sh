@@ -35,12 +35,12 @@ spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
 #     ( echo "${SPACK_PRIVATE_KEY}" | tr -d ' \n' | base64 -d )
 # ) > ./keystuff.key
 
-( echo "${SPACK_PRIVATE_KEY}" | tr -d ' \n' | base64 -d ) > ./keystuff.key
+# ( echo "${SPACK_PRIVATE_KEY}" | tr -d ' \n' | base64 -d ) > ./keystuff.key
 
-spack gpg trust ./keystuff.key
+# spack gpg trust ./keystuff.key
 
-spack gpg list --signing
-spack gpg list --trusted
+# spack gpg list --signing
+# spack gpg list --trusted
 
 # spack gpg trust echo "$SPACK_PUBLIC_KEY" | tr -d ' \n' | base64 -d
 
@@ -66,7 +66,7 @@ if [[ $? -ne 0 ]]; then
 
     # `${buildcache_create_cmd}`
 
-    spack -d buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
+    spack -d buildcache create -u -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
     # Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
