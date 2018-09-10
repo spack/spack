@@ -161,6 +161,8 @@ class Tau(Package):
             options.extend(['-arch=bgq', '-BGQTIMERS'])
         elif 'cray' in spec.architecture:
             options.append('-arch=craycnl')
+        elif 'x86_64' in spec.architecture:
+            options.append('-arch=x86_64')
 
         # latest 2.26.2 version doesnt build on osx with plugins
         # also seeing this issue on bg-q
