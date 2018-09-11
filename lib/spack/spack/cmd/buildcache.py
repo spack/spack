@@ -144,6 +144,13 @@ def setup_parser(subparser):
         help="Path to directory where tarball should be downloaded")
     dltarball.set_defaults(func=get_tarball)
 
+    getname = subparsers.add_parser('getname',
+                                    help=get_buildcache_name.__doc__)
+    getname.add_argument(
+        '-s', '--spec', default=None,
+        help='Spec for which buildcache name is desired')
+    getname.set_defaults(func=get_buildcache_name)
+
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
@@ -385,6 +392,26 @@ def get_tarball(args):
     spec = Spec(args.spec)
     spec.concretize()
     bindist.download_buildcache_entry(spec, args.path)
+
+
+def get_buildcache_name(args):
+    """Get name (prefix) of buildcache entries for this spec"""
+    if not args.spec:
+        tty.msg('No specs provided, exiting.')
+        sys.exit(1)
+
+    try:
+        spec = Spec(args.spec)
+        spec.concretize()
+    except Exception:
+        tty.error('Unable to concrectize spec {0}'.format(args.spec))
+        sys.exit(1)
+
+    buildcache_name = bindist.tarball_name(spec, '')
+
+    print('{0}'.format(buildcache_name))
+
+    sys.exit(0)
 
 
 def buildcache(parser, args):

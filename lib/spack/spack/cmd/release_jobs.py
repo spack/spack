@@ -175,9 +175,13 @@ def release_jobs(parser, args):
                         0, container_info['setup_script'] % pkg_compiler)
 
                 job_dependencies = []
+                job_deps_env = []
                 if spec_label in dependencies:
                     job_dependencies = (
                         [get_job_name(spec_labels[dep_label], osname)
+                            for dep_label in dependencies[spec_label]])
+                    job_deps_env = (
+                        [spec_labels[dep_label].format().strip()
                             for dep_label in dependencies[spec_label]])
 
                 job_object = {
@@ -186,7 +190,8 @@ def release_jobs(parser, args):
                         'SHORT_SPEC': pkg_short_spec,
                         'MIRROR_URL': mirror_url,
                         'HASH': pkg_hash,
-                        'SPEC_NAME': pkg_spec_name
+                        'SPEC_NAME': pkg_spec_name,
+                        'DEPENDENCIES': ';'.join(job_deps_env),
                     },
                     'script': job_scripts,
                     'image': build_image,

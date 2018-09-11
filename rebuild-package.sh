@@ -13,16 +13,32 @@ export PATH="${SPACK_BIN_DIR}:${PATH}"
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
 
-# Configure mirrors.  The first is the remote binary mirror
-# we want to update, the second is a local mirror where build
-# artifacts are created and then later consumed as dependencies.
-# Here we're counting on mirror precedence:
-#     https://spack.readthedocs.io/en/latest/mirrors.html#mirror-precedence
-# so that we first check the local mirror (the artifacts generated
-# by jobs in previous stages), and then the remote mirror.  Looking
-# at the "mirror add" code, however, it seems new mirrors are inserted
-# in the list at position zero.
-spack mirror add remote_binary_mirror ${MIRROR_URL}
+# Get buildcache name so we can write a CDash build id file in the right place
+JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache getname --spec "${SPEC_NAME}"`
+
+if [[ $? -eq 0 ]]; then
+    JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
+
+    # TODO: Build/send POST request to "addBuild" for this job.  Get back the job id and
+    # write it to ${JOB_CDASH_ID_FILE}
+fi
+
+# Now get CDash ids for dependencies
+IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
+for i in "${DEPS[@]}"; do
+    echo "Getting cdash id for dependency --> ${i} <--"
+    DEP_JOB_BUILDCACHE_NAME=`spack buildcache getname --spec "${i}"`
+
+    if [[ $? -eq 0 ]]; then
+        DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
+
+        # TODO: Read dependency CDash id from file named above
+
+        # TODO: Build/send POST request to "relateBuilds" between job and dependency
+    fi
+done
+
+# Configure mirror
 spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
 
 # Now that we have mirrors configured, attempt to download and trust
@@ -49,30 +65,15 @@ spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
 spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
 
 if [[ $? -ne 0 ]]; then
-    # May need to trust buildcache keys here, so that the "--use-cache"
-    # flag to install works for getting built dependencies from the mirror
-    #spack buildcache keys -y
-
     spack install --use-cache "${SPEC_NAME}"
-
-    # buildcache_create_cmd="spack -d buildcache create -a -f "
-
-    # if [ -n "${SIGN_KEY_HASH}" ]
-    # then
-    #     buildcache_create_cmd="${buildcache_create_cmd} -k ${SIGN_KEY_HASH}"
-    # fi
-
-    # buildcache_create_cmd="${buildcache_create_cmd} -d ${LOCAL_MIRROR} \\"${SPEC_NAME}\\""
-
-    # `${buildcache_create_cmd}`
 
     spack buildcache create -u -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
-    # Now push buildcache entry to remote mirror, something like:
+    # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
     # is implemented
-    ls -al "${BUILD_CACHE_DIR}/"
-    ls -al "${BUILD_CACHE_DIR}/linux-ubuntu16.04-x86_64/gcc-5.4.0"
+
+    # TODO: Build/send POST request to update CDash job status
 else
     echo "spec ${SPEC_NAME} is already up to date on remote mirror"
     # Now that jobs in later stages may depend on this jobs artifacts,
@@ -81,4 +82,6 @@ else
     # install command can first look in the artifacts dir, and then on
     # the remote mirror for dependencies?
     spack buildcache download --spec "${SPEC_NAME}" --path "${BUILD_CACHE_DIR}/"
+
+    # TODO: Also here, update CDash job status
 fi
