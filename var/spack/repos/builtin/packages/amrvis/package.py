@@ -50,7 +50,7 @@ class Amrvis(MakefilePackage):
         multi=False,
         description='Floating point precision'
     )
-    variant('mpi', default=False, description='Enable MPI parallel support')
+    variant('mpi', default=True, description='Enable MPI parallel support')
     variant('debug', default=False, description='Enable debugging features')
     variant('profiling', default=False,
             description='Enable AMReX profiling features')
