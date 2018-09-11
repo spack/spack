@@ -43,7 +43,7 @@ class Namd(MakefilePackage):
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
 
-    depends_on('charm')
+    depends_on('charmpp')
 
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
