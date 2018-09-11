@@ -34,7 +34,7 @@ class PySpyder(PythonPackage):
     version('3.1.3', '4b9b7c8c3e6dc00001e6e98473473c36')
     version('2.3.9', 'dd01e07a77123c128ff79ba57b97c1d7')
 
-    depends_on('py-setuptools',       type='build')
+    depends_on('python@2.7.0:2.8.0,3.3.0:')
     depends_on('py-rope@0.9.4:',      type=('build', 'run'), when='^python@:3')
     # depends_on('py-rope_py3k',    type=('build', 'run'), when='^python@3:')
     depends_on('py-jedi@0.9.0',       type=('build', 'run'))
@@ -49,7 +49,7 @@ class PySpyder(PythonPackage):
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
     depends_on('py-qtpy@1.1.0:',      type=('build', 'run'))
-    depends_on('py-zmq',              type=('build', 'run'))
-    depends_on('py-chardet@2:',       type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
+    depends_on('py-zmq',              type=('build', 'run'))
+    depends_on('py-chardet@2.0.0:',   type=('build', 'run'))
     depends_on('py-numpydoc',         type=('build', 'run'))
