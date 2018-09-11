@@ -31,8 +31,9 @@ class Dftfe(CMakePackage):
     homepage = "https://sites.google.com/umich.edu/dftfe/"
     url      = "https://github.com/dftfeDevelopers/dftfe/archive/0.5.1.tar.gz"
 
-    version('0.5.1', '17a4b5a979fff62d7f4d5c53e0c6c229')
-    version('0.5.0', 'c7bd9153912dc49e4bbdf58522bf08d8')
+    version('0.5.2', sha256='9dc4fa9f16b00be6fb1890d8af4a1cd3e4a2f06a2539df999671a09f3d26ec64')
+    version('0.5.1', sha256='e47272d3783cf675dcd8bc31da07765695164110bfebbbab29f5815531f148c1')
+    version('0.5.0', sha256='9aadb9a9b059f98f88c7756b417423dc67d02f1cdd2ed7472ba395fcfafc6dcb')
 
     variant('scalapack', default=True, description='Use ScaLAPACK, strongly recommended for problem sizes >5000 electrons')
     variant('build_type', default='Release',
@@ -42,7 +43,7 @@ class Dftfe(CMakePackage):
 
     depends_on('mpi')
     depends_on('dealii+p4est+petsc+slepc+int64+scalapack+mpi')
-    depends_on('dealii@9.0.0', when='@0.5.1')
+    depends_on('dealii@9.0.0:', when='@0.5.1:')
     depends_on('scalapack', when='+scalapack')
     depends_on('alglib')
     depends_on('libxc')
