@@ -52,16 +52,16 @@ class Portcullis(AutotoolsPackage):
     def patch(self):
         # remove static linking to libstdc++
         filter_file(
-            r'^AM_LDFLAGS=\"-static-libstdc\+\+\"$',
+            'AM_LDFLAGS="-static-libstdc++"',
             'AM_LDFLAGS=""',
-            'configure.ac'
+            'configure.ac', string=True
         )
 
         # prevent install scripts from ruining our PYTHONPATH
         filter_file(
-            r'export\sPYTHONPATH\=\$\(DESTDIR\)\$\(pythondir\)',
-            "export PYTHONPATH=\"$(PYTHONPATH):$(DESTDIR)$(pythondir)\"",
-            'scripts/Makefile.am'
+            'export PYTHONPATH=$(DESTDIR)$(pythondir)',
+            'export PYTHONPATH="$(PYTHONPATH):$(DESTDIR)$(pythondir)"',
+            'scripts/Makefile.am', string=True
         )
 
     def build(self, spec, prefix):
