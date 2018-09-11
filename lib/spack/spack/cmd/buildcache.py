@@ -26,6 +26,13 @@ import argparse
 import os
 import sys
 
+have_boto3_support=False
+try:
+    import boto3
+    have_boto3_support=True
+except Exception:
+    pass
+
 import llnl.util.tty as tty
 
 import spack.cmd
@@ -108,6 +115,7 @@ def setup_parser(subparser):
                         help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
 
+    # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser('check', help=check_binaries.__doc__)
     check.add_argument(
         '-m', '--mirror-url', default=None,
@@ -135,6 +143,7 @@ def setup_parser(subparser):
         help='Do not use buildcache index, instead retrieve .spec.yaml files')
     check.set_defaults(func=check_binaries)
 
+    # Download tarball and spec.yaml
     dltarball = subparsers.add_parser('download', help=get_tarball.__doc__)
     dltarball.add_argument(
         '-s', '--spec', default=None,
@@ -144,12 +153,29 @@ def setup_parser(subparser):
         help="Path to directory where tarball should be downloaded")
     dltarball.set_defaults(func=get_tarball)
 
+    # Get buildcache name
     getname = subparsers.add_parser('getname',
                                     help=get_buildcache_name.__doc__)
     getname.add_argument(
         '-s', '--spec', default=None,
         help='Spec for which buildcache name is desired')
     getname.set_defaults(func=get_buildcache_name)
+
+    # Put buildcache entry somewhere (file system or s3)
+    put = sp.add_parser('put', help=put_buildcache.__doc__)
+    put.add_argument('-d', '--directory', default='.',
+                     help="Location of mirror directory, similar to 'create'")
+    put.add_argument('-s', '--spec', default=None,
+                     help="Spec indicating which binary to put")
+    put.add_argument('-m', '--mirror-name', default=None,
+                     help="Name of mirror where binary should be pushed")
+    put.add_argument('-p', '--profile', default=None,
+                     help="Name of AWS profile")
+    put.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.cmd.default_modify_scope(),
+        help="configuration scope giving possible mirrors")
+    put.set_defaults(func=put_buildcache)
 
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
@@ -410,6 +436,74 @@ def get_buildcache_name(args):
     buildcache_name = bindist.tarball_name(spec, '')
 
     print('{0}'.format(buildcache_name))
+
+    sys.exit(0)
+
+
+def mirror_buildcache_entry(client, spec,
+                            local_mirror_dir, remote_mirror_url):
+    # TODO:
+    #   1) check remote mirror url to determine file or s3
+    #   1a) If it's an s3 url and we don't have boto3 (have_boto3_support is
+    #     false), then we need to fail gracefully with a message about
+    #     installing it.
+    #   2) for s3, infer bucket name from url
+    #   3) look for spec in local_mirror_dir, try a buildcache
+    #     create if the package isn't already there
+    #   4) copy/push both the .spec.yaml and .spack files into place
+
+    # root = os.getcwd()
+    # filename = os.path.join(root, file)
+    # client.upload_file(filename, bucket, key)
+    # tty.msg("Uploaded %s to %s as %s" % (file, bucket, key))
+
+    return True
+
+
+def _get_s3_client(profile):
+    """Create AWS s3 client"""
+    if profile:
+        session = boto3.Session(profile_name=profile)
+        client = session.client('s3')
+    else:
+        client = boto3.client('s3')
+
+    return client
+
+
+def put_buildcache(args):
+    """Put buildcache entry (binary package) to file system or s3 bucket"""
+    if not args.spec:
+        tty.msg('No specs provided, exiting.')
+        sys.exit(1)
+
+    try:
+        spec = Spec(args.spec)
+        spec.concretize()
+    except Exception:
+        tty.error('Unable to concrectize spec {0}'.format(args.spec))
+        sys.exit(1)
+
+    mirror_dir = args.directory
+
+    if not args.mirror_name:
+        tty.msg('Please provide name of mirror to push tarball')
+        sys.exit(1)
+
+    target_mirror_name = args.mirror_name
+    configured_mirrors = spack.config.get('mirrors', scope=args.scope)
+
+    if target_mirror_name not in configured_mirrors:
+        tty.msg('Mirror {0} could not be found'.format(target_mirror_name))
+        sys.exit(1)
+
+    mirror_url = configured_mirrors[target_mirror_name]
+    client = _get_s3_client(args.profile)
+    success = mirror_buildcache_entry(
+        client, spec, mirror_dir, mirror_url)
+
+    if not success:
+        sys.exit(1)
 
     sys.exit(0)
 
