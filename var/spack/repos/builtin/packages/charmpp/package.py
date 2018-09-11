@@ -30,7 +30,7 @@ import sys
 from spack import *
 
 
-class Charm(Package):
+class Charmpp(Package):
     """Charm++ is a parallel programming framework in C++ supported by
     an adaptive runtime system, which enhances user productivity and
     allows programs to run portably from small multicore computers
