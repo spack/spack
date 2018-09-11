@@ -240,8 +240,8 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL
-        # 'satisfies' is used to only pick up scalapack when needed
+        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # help PETSc pick up Scalapack from MKL
         if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
