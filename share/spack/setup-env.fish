@@ -1,3 +1,50 @@
+##############################################################################
+# This file is part of Spack.
+# Ported from bash (setup-env.sh) by Johannes Blaschke,
+#                                    johannes@blaschke.science
+##############################################################################
+
+
+
+################################################################################
+#
+# This file is part of Spack and sets up the spack environment for the friendly
+# interactive shell (fish). This includes dotkit support, module support, and it
+# also puts spack in your path. The script also checks that at least module
+# support exists, and provides suggestions if it doesn't. Source it like this:
+#
+#    . /path/to/spack/share/spack/setup-env.fish
+#
+################################################################################
+# This is a wrapper around the spack command that forwards calls to 'spack use'
+# and 'spack unuse' to shell functions. This in turn allows them to be used to
+# invoke dotkit functions.
+#
+# 'spack use' is smarter than just 'use' because it converts its arguments into
+# a unique spack spec that is then passed to dotkit commands. This allows the
+# user to use packages without knowing all their installation details.
+#
+# e.g., rather than requiring a full spec for libelf, the user can type:
+#
+#     spack use libelf
+#
+# This will first find the available libelf dotkits and use a matching one. If
+# there are two versions of libelf, the user would need to be more specific,
+# e.g.:
+
+#     spack use libelf@0.8.13
+#
+# This is very similar to how regular spack commands work and it avoids the need
+# to come up with a user-friendly naming scheme for spack dotfiles.
+################################################################################
+
+
+
+
+
+
+
+
 function get_sp_flags -d "return leading flags"
     #
     # accumulate initial flags for main spack command
@@ -94,6 +141,7 @@ end
 
 
 
+# temporary debugging statements
 
 echo "sp_flags = $sp_flags"
 echo "remaining_args = $remaining_args"
