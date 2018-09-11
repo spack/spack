@@ -136,11 +136,13 @@ end
 #
 
 set sp_subcommand ""
-set sp_spec $remaining_args
+
 if test "$remaining_args[1]"
     set sp_subcommand $remaining_args[1]
-    set sp_spec $remaining_args[2..-1]                     # simulates bash shift
+    set remaining_args $remaining_args[2..-1]              # simulates bash shift
 end
+
+set sp_spec $remaining_args
 
 
 
@@ -150,10 +152,15 @@ end
 
 switch $sp_subcommand
 
+    # CASE: spack subcommand is `cd`: if the sub command arg is `-h`, nothing
+    # further needs to be done. Otherwise, test the location referring the
+    # subcommand and cd there (if it exists).
+
     case "cd"
 
         set sp_arg ""
 
+        # Extract the first subcommand argument:
         # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
         #    undefined, or if it is an array, `test -n $argv` is unpredictable.
         #    Instead, encapsulate `argv` in a string, and test the string
@@ -164,21 +171,29 @@ switch $sp_subcommand
         end
 
         if test $sp_arg = "-h"
+            # nothing more needs to be done for `-h`
             command spack cd -h
         else
+            # extract location using the subcommand (fish `(...)`)
             set LOC (spack location $sp_arg $remaining_args)
 
+            # test location and cd if exists:
             if test -d "$LOC"
                 cd $LOC
             else
-                return q
+                exit 1
             end
 
         end
 
-        return
+        exit 0
+
+
+    # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
 
     case "use" or "unuse" or "load" or "unload"
+
+        # Shift any other args for use off before parsing spec.
 end
 
 
