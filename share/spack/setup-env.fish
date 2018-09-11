@@ -53,14 +53,49 @@ end
 
 
 
-set remaining_args 0 # remaining (unparsed) arguments
+#
+# save raw arguments into an array before butchering them
+#
+
+set args $argv
+
+
+
+#
+# accumulate initial flags for main spack command
+#
+
+set remaining_args "" # remaining (unparsed) arguments
 set sp_flags (get_sp_flags $argv)
 
-echo $sp_flags
-echo $remaining_args
+
+
+#
+# h and V flags don't require further output parsing.
+#
 
 if check_sp_flags $sp_flags
-    echo "OK"
-else
-    echo "not OK"
+    command spack $sp_flags $remaining_args
 end
+
+
+
+#
+# isolate subcommand and subcommand specs
+#  -> bit of a hack: test -n and test -z are not working atm (=> future fish)
+#
+
+set sp_subcommand ""
+set sp_spec $remaining_args
+if count $remaining_args[1] > /dev/null
+    set sp_subcommand $remaining_args[1]
+    set sp_spec $remaining_args[2..-1]
+end
+
+
+
+
+echo "sp_flags = $sp_flags"
+echo "remaining_args = $remaining_args"
+echo "sp_subcommand = $sp_subcommand"
+echo "sp_spec = $sp_spec"
