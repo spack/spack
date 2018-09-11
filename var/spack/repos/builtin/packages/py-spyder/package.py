@@ -31,7 +31,6 @@ class PySpyder(PythonPackage):
     homepage = "https://github.com/spyder-ide/spyder"
     url      = "https://pypi.io/packages/source/s/spyder/spyder-3.1.3.tar.gz"
 
-    version('3.3.1', sha256='992d74f07961df9a9b9aa495fa2d87832699ada5323850dc3e26ac0ff640b170')
     version('3.1.3', '4b9b7c8c3e6dc00001e6e98473473c36')
     version('2.3.9', 'dd01e07a77123c128ff79ba57b97c1d7')
 
