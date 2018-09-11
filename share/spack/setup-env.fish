@@ -41,10 +41,6 @@
 
 
 
-
-
-
-
 function get_sp_flags -d "return leading flags"
     #
     # accumulate initial flags for main spack command
@@ -80,13 +76,18 @@ function get_sp_flags -d "return leading flags"
     set -x remaining_args ""
 end
 
+
+
+
 function check_sp_flags -d "check spack flags for h/V flags"
 
     # check if inputs contain h or V flags.
 
     # skip if called with blank input
-    #  -> bit of a hack: test -n and test -z are not working atm (=> future fish)
-    if count $argv > /dev/null
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    if test -n "$argv"
         if echo $argv | string match -r -q ".*h.*"
             return 0
         end
@@ -129,14 +130,55 @@ end
 
 #
 # isolate subcommand and subcommand specs
-#  -> bit of a hack: test -n and test -z are not working atm (=> future fish)
+#  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+#     undefined, or if it is an array, `test -n $argv` is unpredictable.
+#     Instead, encapsulate `argv` in a string, and test the string instead.
 #
 
 set sp_subcommand ""
 set sp_spec $remaining_args
-if count $remaining_args[1] > /dev/null
+if test "$remaining_args[1]"
     set sp_subcommand $remaining_args[1]
-    set sp_spec $remaining_args[2..-1]
+    set sp_spec $remaining_args[2..-1]                     # simulates bash shift
+end
+
+
+
+#
+# Filter out use and unuse. For any other commands, just run the command.
+#
+
+switch $sp_subcommand
+
+    case "cd"
+
+        set sp_arg ""
+
+        # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+        #    undefined, or if it is an array, `test -n $argv` is unpredictable.
+        #    Instead, encapsulate `argv` in a string, and test the string
+        #    instead.
+        if test "$remaining_args[1]"
+            set sp_arg $remaining_args[1]
+            set remaining_args $remaining_args[2..-1]      # simulates bash shift
+        end
+
+        if test $sp_arg = "-h"
+            command spack cd -h
+        else
+            set LOC (spack location $sp_arg $remaining_args)
+
+            if test -d "$LOC"
+                cd $LOC
+            else
+                return q
+            end
+
+        end
+
+        return
+
+    case "use" or "unuse" or "load" or "unload"
 end
 
 
