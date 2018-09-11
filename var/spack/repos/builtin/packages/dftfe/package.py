@@ -79,5 +79,7 @@ class Dftfe(CMakePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.lib64)
-        install(join_path(self.build_directory, 'main'), join_path(prefix.bin, 'dftfe'))
-        install(join_path(self.build_directory, 'libdftfe.so'), prefix.lib64)
+        install(join_path(self.build_directory, 'main'),
+                join_path(prefix.bin, 'dftfe'))
+        install(join_path(self.build_directory, 'libdftfe.so'),
+                prefix.lib64)
