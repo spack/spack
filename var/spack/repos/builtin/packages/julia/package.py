@@ -36,6 +36,7 @@ class Julia(Package):
     git      = "https://github.com/JuliaLang/julia.git"
 
     version('master', branch='master')
+    version('1.0.0',     sha256='1a2497977b1d43bb821a5b7475b4054b29938baae8170881c6b8dd4099d133f1')
     version('0.6.2', '255d80bc8d56d5f059fe18f0798e32f6')
     version('release-0.5', branch='release-0.5')
     version('0.5.2', '8c3fff150a6f96cf0536fb3b4eaa5cbb')
