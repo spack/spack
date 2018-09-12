@@ -43,7 +43,7 @@ class PyMultiqc(PythonPackage):
     depends_on('py-jinja2@2.9:', type=('build', 'run'))
     depends_on('py-lzstring', type=('build', 'run'))
     depends_on('py-future@0.14.1:', type=('build', 'run'))
-    depends_on('py-spectra', type=('build', 'run'))
+    depends_on('py-spectra@0.0.10:', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
