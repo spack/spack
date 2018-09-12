@@ -32,6 +32,8 @@ class Mxnet(MakefilePackage):
     homepage = "http://mxnet.io"
     url      = "https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz"
 
+    version('1.3.0', 'c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2',
+            url='https://github.com/apache/incubator-mxnet/releases/download/1.3.0/apache-mxnet-src-1.3.0-incubating.tar.gz')
     version('0.10.0.post2',  '7819d511cf4a6efad681e6662fa966e4',
             url="https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz")
     version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
@@ -50,7 +52,7 @@ class Mxnet(MakefilePackage):
     depends_on('mshadow@20170721')
     depends_on('ps-lite@20170328')
     depends_on('nnvm~shared@20170418')
-    depends_on('openblas')
+    depends_on('blas', type=('build', 'link', 'run'))
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
@@ -59,8 +61,19 @@ class Mxnet(MakefilePackage):
     patch('makefile.patch', when='@0.10:0.11')
 
     def build(self, spec, prefix):
-        filter_file('export CC = gcc', '', 'make/config.mk', string=True)
-        filter_file('export CXX = g++', '', 'make/config.mk', string=True)
+        # copy template configuration file
+        copy('make/config.mk', 'config.mk')
+
+        # remove compiler overrides
+        filter_file('export CC = gcc', '', 'config.mk', string=True)
+        filter_file('export CXX = g++', '', 'config.mk', string=True)
+
+        # add blas prefix to include paths
+        filter_file(
+            '-I$(NNVM_PATH)/include',
+            '-I$(NNVM_PATH)/include -I%s/include' % spec['blas'].prefix,
+            'Makefile', string=True
+        )
 
         args = [
             'CC=%s' % self.compiler.cc,
@@ -72,7 +85,6 @@ class Mxnet(MakefilePackage):
             'USE_OPENMP=%s' % ('1' if '+openmp' in spec else '0'),
             'USE_CUDA=%s' % ('1' if '+cuda' in spec else '0'),
             'USE_CUDNN=%s' % ('1' if '+cuda' in spec else '0'),
-            'CUB_INCLUDE=%s' % spec['cub'].prefix.include,
             'USE_OPENCV=%s' % ('1' if '+opencv' in spec else '0'),
             'USE_PROFILER=%s' % ('1' if '+profiler' in spec else '0'),
         ]
@@ -91,7 +103,8 @@ class Mxnet(MakefilePackage):
 
         if '+cuda' in spec:
             args.extend(['USE_CUDA_PATH=%s' % spec['cuda'].prefix,
-                         'CUDNN_PATH=%s' % spec['cudnn'].prefix])
+                         'CUDNN_PATH=%s' % spec['cudnn'].prefix,
+                         'CUB_INCLUDE=%s' % spec['cub'].prefix.include])
 
         make(*args)
 
