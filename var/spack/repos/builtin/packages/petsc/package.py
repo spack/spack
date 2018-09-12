@@ -189,19 +189,9 @@ class Petsc(Package):
                 '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
             if self.spec.satisfies('%intel'):
-                # "Inspired" by what is done in the elemental package
-                # ifort doesn't automatically link all run-time libraries
-                ifort = env['SPACK_F77']
-                intel_bin = os.path.dirname(ifort)
-                intel_lib_root = os.path.join(
-                    intel_bin, '..', '..', 'compiler', 'lib')
-                libfortran = find_libraries([
-                    'libifport', 'libifcoremt', 'libimf', 'libsvml',
-                    'libipgo', 'libintlc', 'libpthread'
-                ], root=intel_lib_root, recursive=True)
-                compiler_opts.append(
-                    '--FC_LINKER_FLAGS={0}'.format(libfortran.ld_flags)
-                )
+                # mpiifort needs some help to automatically link
+                # all necessary run-time libraries
+                compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
     def install(self, spec, prefix):
