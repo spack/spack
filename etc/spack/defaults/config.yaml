@@ -14,6 +14,16 @@
 #   ~/.spack/config.yaml
 # -------------------------------------------------------------------------
 config:
+  # If 'true' enforces RPATH for ELF binaries, if 'false'
+  # enforces RUNPATH. See:
+  #
+  # http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+  # http://xahlee.info/UnixResource_dir/_/ldpath.html
+  # https://gms.tf/ld_library_path-considered-harmful.html
+  #
+  # for more information on the subject.
+  rpath: true
+
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree: $spack/opt/spack

@@ -105,7 +105,8 @@ def wrapper_environment():
             SPACK_RPATH_DIRS=None,
             SPACK_TARGET_ARGS='',
             SPACK_LINKER_ARG='-Wl,',
-            SPACK_DISABLE_NEW_DTAGS='--disable-new-dtags'):
+            SPACK_DTAGS_TO_ENABLE='--disable-new-dtags',
+            SPACK_DTAGS_TO_DISABLE='--enable-new-dtags'):
         yield
 
 
@@ -488,9 +489,10 @@ def test_ccache_prepend_for_cc():
         check_args(
             cc, test_args,
             ['ccache'] +  # ccache prepended in cc mode
-            [real_cc, '-Wl,--disable-new-dtags'] +
+            [real_cc] +
             test_include_paths +
             test_library_paths +
+            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             test_args_without_paths)
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
@@ -511,9 +513,10 @@ def test_no_ccache_prepend_for_fc():
     check_args(
         fc, test_args,
         # no ccache for Fortran
-        [real_cc, '-Wl,--disable-new-dtags'] +
+        [real_cc] +
         test_include_paths +
         test_library_paths +
+        ['-Wl,--disable-new-dtags'] +
         test_wl_rpaths +
         test_args_without_paths)
     os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"

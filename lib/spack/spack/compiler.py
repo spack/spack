@@ -234,6 +234,12 @@ class Compiler(object):
             return ''
         return '--disable-new-dtags'
 
+    @property
+    def enable_new_dtags(self):
+        if platform.platform().lower() == 'macos':
+            return ''
+        return '--enable-new-dtags'
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler

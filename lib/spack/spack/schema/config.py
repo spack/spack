@@ -16,6 +16,7 @@ properties = {
         'type': 'object',
         'default': {},
         'properties': {
+            'rpath': {'type': 'boolean'},
             'install_tree': {'type': 'string'},
             'install_hash_length': {'type': 'integer', 'minimum': 1},
             'install_path_scheme': {'type': 'string'},

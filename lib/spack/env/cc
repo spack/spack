@@ -33,7 +33,8 @@ parameters=(
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
     SPACK_TARGET_ARGS
-    SPACK_DISABLE_NEW_DTAGS
+    SPACK_DTAGS_TO_ENABLE
+    SPACK_DTAGS_TO_DISABLE
     SPACK_LINKER_ARG
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
@@ -169,7 +170,9 @@ if [[ -z $mode ]]; then
     done
 fi
 
-# This is needed to ensure we set RPATH instead of RUNPATH.
+# This is needed to ensure we set RPATH instead of RUNPATH
+# (or the opposite, depending on the configuration in config.yaml)
+#
 # Documentation on this mechanism is lacking at best. A few sources
 # of information are (note that some of them take explicitly the
 # opposite stance that Spack does):
@@ -182,7 +185,8 @@ fi
 #
 # https://sourceware.org/ml/binutils/2013-01/msg00307.html
 #
-disable_new_dtags="${SPACK_DISABLE_NEW_DTAGS}"
+dtags_to_enable="${SPACK_DTAGS_TO_ENABLE}"
+dtags_to_disable="${SPACK_DTAGS_TO_DISABLE}"
 linker_arg="${SPACK_LINKER_ARG}"
 
 # Set up rpath variable according to language.
@@ -311,7 +315,7 @@ while [ -n "$1" ]; do
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 rp="${arg#-Wl,}"
-            elif [[ "$arg" = --enable-new-dtags ]] ; then
+            elif [[ "$arg" = "$dtags_to_disable" ]] ; then
                 :  # We want to remove explicitly this flag
             else
                 other_args+=("-Wl,$arg")
@@ -344,7 +348,7 @@ while [ -n "$1" ]; do
             fi
             ;;
         *)
-            if [[ "$1" = --enable-new-dtags ]] ; then
+            if [[ "$1" = "$dtags_to_disable" ]] ; then
                 :  # We want to remove explicitly this flag
             else
                 other_args+=("$1")
@@ -486,12 +490,12 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
-        if [ ! -z "$disable_new_dtags" ] ; then args+=("$linker_arg$disable_new_dtags") ; fi
+        if [ ! -z "$dtags_to_enable" ] ; then args+=("$linker_arg$dtags_to_enable") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
-        if [ ! -z "$disable_new_dtags" ] ; then args+=("$disable_new_dtags") ; fi
+        if [ ! -z "$dtags_to_enable" ] ; then args+=("$dtags_to_enable") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;
