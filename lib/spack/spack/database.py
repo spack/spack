@@ -205,6 +205,8 @@ class Database(object):
         # initialize rest of state.
         self.default_lock_timeout = (
             spack.config.get('config:file_lock_timeout') or _db_lock_timeout)
+        tty.debug('DEFAULT LOCK TIMEOUT: {0}s'.format(
+                  str(self.default_lock_timeout)))
         self.lock = Lock(self._lock_path,
                          default_timeout=self.default_lock_timeout)
         self._data = {}
