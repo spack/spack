@@ -31,11 +31,12 @@ import spack.cmd.common.arguments as arguments
 
 description = """show what would be installed, given a spec"""
 
-help = """
+longdescription = """
 
 For further documentation regarding the spec syntax see
     spack help --spec
 """
+
 section = "build"
 level = "short"
 
