@@ -37,7 +37,7 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
 
 
 # Default timeout in seconds, after which locks will raise exceptions.
-_default_timeout = 60
+_default_timeout = 120
 
 # Sleep time per iteration in spin loop (in seconds)
 _sleep_time = 1e-5
@@ -52,7 +52,8 @@ class Lock(object):
     is enabled) and recent NFS versions.
     """
 
-    def __init__(self, path, start=0, length=0, debug=False):
+    def __init__(self, path, start=0, length=0, debug=False,
+                 default_timeout=None):
         """Construct a new lock on the file at ``path``.
 
         By default, the lock applies to the whole file.  Optionally,
@@ -76,11 +77,13 @@ class Lock(object):
         # enable debug mode
         self.debug = debug
 
+        self.default_timeout = (default_timeout or _default_timeout)
+
         # PID and host of lock holder (only used in debug mode)
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
-    def _lock(self, op, timeout=_default_timeout):
+    def _lock(self, op, timeout=None):
         """This takes a lock using POSIX locks (``fcntl.lockf``).
 
         The lock is implemented as a spin lock using a nonblocking call
@@ -93,6 +96,8 @@ class Lock(object):
         If the lock times out, it raises a ``LockError``.
         """
         assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
+
+        timeout = timeout or self.default_timeout
 
         start_time = time.time()
         while (time.time() - start_time) < timeout:
@@ -203,7 +208,7 @@ class Lock(object):
         self._file.close()
         self._file = None
 
-    def acquire_read(self, timeout=_default_timeout):
+    def acquire_read(self, timeout=None):
         """Acquires a recursive, shared lock for reading.
 
         Read and write locks can be acquired and released in arbitrary
@@ -214,6 +219,8 @@ class Lock(object):
         the POSIX lock, False if it is a nested transaction.
 
         """
+        timeout = timeout or self.default_timeout
+
         if self._reads == 0 and self._writes == 0:
             self._debug(
                 'READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
@@ -228,7 +235,7 @@ class Lock(object):
             self._reads += 1
             return False
 
-    def acquire_write(self, timeout=_default_timeout):
+    def acquire_write(self, timeout=None):
         """Acquires a recursive, exclusive lock for writing.
 
         Read and write locks can be acquired and released in arbitrary
@@ -239,6 +246,8 @@ class Lock(object):
         the POSIX lock, False if it is a nested transaction.
 
         """
+        timeout = timeout or self.default_timeout
+
         if self._writes == 0:
             self._debug(
                 'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
@@ -323,7 +332,7 @@ class LockTransaction(object):
     """
 
     def __init__(self, lock, acquire_fn=None, release_fn=None,
-                 timeout=_default_timeout):
+                 timeout=None):
         self._lock = lock
         self._timeout = timeout
         self._acquire_fn = acquire_fn

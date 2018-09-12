@@ -73,7 +73,7 @@ _db_dirname = '.spack-db'
 _db_version = Version('0.9.3')
 
 # Timeout for spack database locks in seconds
-_db_lock_timeout = 600
+_db_lock_timeout = 120
 
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
@@ -203,19 +203,22 @@ class Database(object):
             mkdirp(self._db_dir)
 
         # initialize rest of state.
-        self.lock = Lock(self._lock_path)
+        self.default_lock_timeout = (
+            spack.config.get('config:file_lock_timeout') or _db_lock_timeout)
+        self.lock = Lock(self._lock_path,
+                         default_timeout=self.default_lock_timeout)
         self._data = {}
 
         # whether there was an error at the start of a read transaction
         self._error = None
 
-    def write_transaction(self, timeout=_db_lock_timeout):
+    def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self.lock, self._read, self._write, timeout)
+        return WriteTransaction(self.lock, self._read, self._write)
 
-    def read_transaction(self, timeout=_db_lock_timeout):
+    def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
-        return ReadTransaction(self.lock, self._read, timeout=timeout)
+        return ReadTransaction(self.lock, self._read)
 
     def prefix_lock(self, spec):
         """Get a lock on a particular spec's installation directory.
@@ -236,14 +239,16 @@ class Database(object):
         if prefix not in self._prefix_locks:
             self._prefix_locks[prefix] = Lock(
                 self.prefix_lock_path,
-                spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=self.default_lock_timeout)
 
         return self._prefix_locks[prefix]
 
     @contextlib.contextmanager
     def prefix_read_lock(self, spec):
         prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_read(_db_lock_timeout)
+        prefix_lock.acquire_read()
 
         try:
             yield self
@@ -258,7 +263,7 @@ class Database(object):
     @contextlib.contextmanager
     def prefix_write_lock(self, spec):
         prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_write(_db_lock_timeout)
+        prefix_lock.acquire_write()
 
         try:
             yield self
@@ -447,7 +452,7 @@ class Database(object):
                 self._data = {}
 
         transaction = WriteTransaction(
-            self.lock, _read_suppress_error, self._write, _db_lock_timeout
+            self.lock, _read_suppress_error, self._write
         )
 
         with transaction:
@@ -611,7 +616,7 @@ class Database(object):
             if os.access(self._db_dir, os.R_OK | os.W_OK):
                 # if we can write, then read AND write a JSON file.
                 self._read_from_file(self._old_yaml_index_path, format='yaml')
-                with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+                with WriteTransaction(self.lock):
                     self._write(None, None, None)
             else:
                 # Read chck for a YAML file if we can't find JSON.
@@ -620,7 +625,7 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
-            with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+            with WriteTransaction(self.lock):
                 self._write(None, None, None)
             self.reindex(spack.store.layout)
 

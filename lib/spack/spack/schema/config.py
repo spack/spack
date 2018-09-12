@@ -70,6 +70,7 @@ schema = {
                 'dirty': {'type': 'boolean'},
                 'build_jobs': {'type': 'integer', 'minimum': 1},
                 'ccache': {'type': 'boolean'},
+                'file_lock_timeout': {'type': 'integer', 'minimum': 1},
             }
         },
     },
