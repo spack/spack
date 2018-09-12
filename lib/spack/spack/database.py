@@ -256,7 +256,7 @@ class Database(object):
             yield self
         except LockError:
             raise
-        except Exception, KeyboardInterrupt:
+        except (Exception, KeyboardInterrupt):
             prefix_lock.release_read()
             raise
         else:
@@ -271,7 +271,7 @@ class Database(object):
             yield self
         except LockError:
             raise
-        except Exception, KeyboardInterrupt:
+        except (Exception, KeyboardInterrupt):
             prefix_lock.release_write()
             raise
         else:
