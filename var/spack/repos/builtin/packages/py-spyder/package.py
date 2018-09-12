@@ -49,6 +49,7 @@ class PySpyder(PythonPackage):
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
     depends_on('py-qtpy@1.1.0:',      type=('build', 'run'))
+    depends_on('qt+webkit',           type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
     depends_on('py-zmq',              type=('build', 'run'))
     depends_on('py-chardet@2.0.0:',   type=('build', 'run'))
