@@ -105,4 +105,4 @@ class NcbiRmblastn(AutotoolsPackage):
                 mkdirp(prefix.bin)
                 install_tree('ReleaseMT/bin', prefix.bin)
         else:
-            super().install(self, spec, prefix)
+            super(NcbiRmblastn, self).install(spec, prefix)
