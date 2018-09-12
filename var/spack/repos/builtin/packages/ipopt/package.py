@@ -47,6 +47,8 @@ class Ipopt(AutotoolsPackage):
             description="Build with Coin Harwell Subroutine Libraries")
     variant('metis', default=False,
             description="Build with METIS partitioning support")
+    variant('debug', default=False,
+            description="Build debug instead of optimized version")
 
     depends_on("blas")
     depends_on("lapack")
@@ -99,5 +101,13 @@ class Ipopt(AutotoolsPackage):
             args.extend([
                 '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
                 '--with-metis-incdir=%s' % spec['metis'].prefix.include])
+
+        # The IPOPT configure file states that '--enable-debug' implies
+        # '--disable-shared', but adding '--enable-shared' overrides
+        # '--disable-shared' and builds a shared library with debug symbols
+        if '+debug' in spec:
+            args.append('--enable-debug')
+        else:
+            args.append('--disable-debug')
 
         return args
