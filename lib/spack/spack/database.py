@@ -63,7 +63,7 @@ from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
-from spack.util.lock import Lock, WriteTransaction, ReadTransaction
+from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
 
 # DB goes in this directory underneath the root
@@ -73,7 +73,7 @@ _db_dirname = '.spack-db'
 _db_version = Version('0.9.3')
 
 # Timeout for spack database locks in seconds
-_db_lock_timeout = 60
+_db_lock_timeout = 600
 
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
@@ -243,19 +243,31 @@ class Database(object):
     @contextlib.contextmanager
     def prefix_read_lock(self, spec):
         prefix_lock = self.prefix_lock(spec)
+        prefix_lock.acquire_read(_db_lock_timeout)
+
         try:
-            prefix_lock.acquire_read(60)
             yield self
-        finally:
+        except LockError:
+            raise
+        except:
+            prefix_lock.release_read()
+            raise
+        else:
             prefix_lock.release_read()
 
     @contextlib.contextmanager
     def prefix_write_lock(self, spec):
         prefix_lock = self.prefix_lock(spec)
+        prefix_lock.acquire_write(_db_lock_timeout)
+
         try:
-            prefix_lock.acquire_write(60)
             yield self
-        finally:
+        except LockError:
+            raise
+        except:
+            prefix_lock.release_write()
+            raise
+        else:
             prefix_lock.release_write()
 
     def _write_to_file(self, stream):
