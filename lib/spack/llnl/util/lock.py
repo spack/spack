@@ -40,7 +40,7 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
 _default_timeout = 120
 
 # Sleep time per iteration in spin loop (in seconds)
-_sleep_time = 1e-5
+_sleep_time = 1e-2
 
 
 class Lock(object):
