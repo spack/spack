@@ -55,6 +55,8 @@ class Hypre(Package):
     variant('int64', default=False,
             description="Use 64bit integers")
     variant('mpi', default=True, description='Enable MPI support')
+    variant('debug', default=False,
+            description='Build debug instead of optimized version')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -103,6 +105,11 @@ class Hypre(Package):
             # MLI and FEI do not build without superlu on Linux
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
+
+        if '+debug' in self.spec:
+            configure_args.append("--enable-debug")
+        else:
+            configure_args.append("--disable-debug")
 
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
