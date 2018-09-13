@@ -148,7 +148,7 @@ def load_module(mod):
     exec(compile(load, '<string>', 'exec'))
 
 
-def get_argument_from_module_line(line):
+def get_path_arg_from_module_line(line):
     if '(' in line and ')' in line:
         # Determine which lua quote symbol is being used for the argument
         comma_index = line.index(',')
@@ -160,9 +160,15 @@ def get_argument_from_module_line(line):
             # Change error text to describe what is going on.
             raise ValueError("No lua quote symbol found in lmod module line.")
         words_and_symbols = line.split(lua_quote)
-        return words_and_symbols[-2]
+        path_arg = words_and_symbols[-2]
     else:
-        return line.split()[2]
+        path_arg = line.split()[2]
+
+    if not os.path.exists(path_arg):
+        tty.warn("Extracted path from module does not exist:"
+                 "\n\tExtracted path: " + path_arg +
+                 "\n\tFull line: " + line)
+    return path_arg
 
 
 def get_path_from_module(mod):
@@ -175,16 +181,22 @@ def get_path_from_module(mod):
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
+    return get_path_from_module_contents(text, mod)
+
+
+def get_path_from_module_contents(text, module_name):
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0:
-            path = get_argument_from_module_line(line)
+        pattern = r'\WLD_LIBRARY_PATH'
+        if re.search(pattern, line):
+            path = get_path_arg_from_module_line(line)
             return path[:path.find('/lib')]
 
     # If it lists its package directory, return that
     for line in text:
-        if line.find(mod.upper() + '_DIR') >= 0:
-            return get_argument_from_module_line(line)
+        pattern = r'\W{0}_DIR'.format(module_name.upper())
+        if re.search(pattern, line):
+            return get_path_arg_from_module_line(line)
 
     # If it lists a -rpath instruction, use that
     for line in text:
@@ -200,8 +212,9 @@ def get_path_from_module(mod):
 
     # If it sets the PATH, use it
     for line in text:
-        if line.find('PATH') >= 0:
-            path = get_argument_from_module_line(line)
+        pattern = r'\WPATH'
+        if re.search(pattern, line):
+            path = get_path_arg_from_module_line(line)
             return path[:path.find('/bin')]
 
     # Unable to find module path
