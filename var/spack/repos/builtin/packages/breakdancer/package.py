@@ -26,8 +26,8 @@ from spack import *
 
 
 class Breakdancer(CMakePackage):
-    """BreakDancer-1.3.6, released under GPLv3, is a Cpp package that provides
-    genome-wide detection of structural variants from next generation
+    """BreakDancer-1.3.6, released under GPLv3, is a perl/Cpp package that
+    provides genome-wide detection of structural variants from next generation
     paired-end sequencing reads. It includes two complementary programs.
     BreakDancerMax predicts five types of structural variants: insertions,
     deletions, inversions, inter- and intra-chromosomal translocations from
@@ -37,10 +37,15 @@ class Breakdancer(CMakePackage):
     100bp) using normally mapped read pairs.."""
 
     homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
-    git      = "https://github.com/genome/breakdancer.git"
+    url      = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
 
-    version('master', submodules='true')
+    version('1.4.5', '5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6')
+    version('master', submodules='true', 
+            git='https://github.com/genome/breakdancer.git', preferred=True)
 
     depends_on('zlib')
+
+    depends_on('perl-statistics-descriptive', type=('build', 'run'))
+    depends_on('perl-math-cdf', type=('build', 'run'))
 
     parallel = False
