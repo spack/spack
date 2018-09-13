@@ -99,6 +99,13 @@ class Mxnet(MakefilePackage):
                         '-lopencv_core -lopencv_imgproc -lopencv_imgcodecs',
                         'Makefile', string=True)
 
+        if 'openblas' in spec:
+            args.extend(['USE_BLAS=openblas'])
+        elif 'atlas' in spec or 'cblas' in spec:
+            args.extend(['USE_BLAS=atlas'])
+        else:
+            args.extend(['USE_BLAS=blas'])
+
         if '+cuda' in spec:
             args.extend(['USE_CUDA_PATH=%s' % spec['cuda'].prefix,
                          'CUDNN_PATH=%s' % spec['cudnn'].prefix,
