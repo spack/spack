@@ -76,13 +76,10 @@ function get_sp_flags -d "return leading flags"
     #
 
     # initialize argument counter
-    set i 0
+    set -l i 0
 
     # iterate over elements (`elt`) in `argv` array
     for elt in $argv
-
-        # # increment argument counter: used in place of bash's `shift` command
-        # set i (math $i+1)
 
         # match element `elt` of `argv` array to check if it has a leading dash
         if echo $elt | string match -r -q "^-"
@@ -95,29 +92,29 @@ function get_sp_flags -d "return leading flags"
             # bash compatibility: stop when the match first fails. Upon failure,
             # we pack the remainder of `argv` into a global `remaining_args`
             # array (`i` tracks the index of the next element).
-            set -x remaining_args (shift_args $argv[$i..-1])
+            set remaining_args (shift_args $argv[$i..-1])
             return
         end
 
         # increment argument counter: used in place of bash's `shift` command
-        set i (math $i+1)
+        set -l i (math $i+1)
 
     end
 
     # if all elements in `argv` are matched, make sure that `remaining_args` is
     # initialized to an empty array (this might be overkill...).
-    set -x remaining_args ""
+    set remaining_args ""
 end
 
 
 
 function get_mod_args -d "return submodule flags"
 
-    set -x sp_subcommand_args ""
-    set -x sp_module_args ""
+    set sp_subcommand_args ""
+    set sp_module_args ""
 
     # initialize argument counter
-    set i 0
+    set -l i 0
 
     for elt in $argv
 
@@ -126,21 +123,22 @@ function get_mod_args -d "return submodule flags"
 
         if echo $elt | string match -r -q "^-"
 
-            if test "$elt" = "-r" -o "$elt" = "--dependencies"
-                set -x sp_subcommand_args $sp_subcommand_args $elt
+            if test \("$elt" = "-r" \) -o  \("$elt" = "--dependencies"\)
+                echo "hi"
+                set sp_subcommand_args $sp_subcommand_args $elt
             else
-                set -x sp_module_args $sp_module_args $elt
+                set sp_module_args $sp_module_args $elt
             end
 
         else
             # bash compatibility: stop when the match first fails. Upon failure,
             # we pack the remainder of `argv` into a global `remaining_args`
             # array (`i` tracks the index of the next element).
-            set -x remaining_args (shift_args $argv[$i..-1])
+            set remaining_args (shift_args $argv[$i..-1])
         end
 
         # increment argument counter: used in place of bash's `shift` command
-        set i (math $i+1)
+        set -l i (math $i+1)
 
     end
 end
@@ -175,7 +173,7 @@ end
 # save raw arguments into an array before butchering them
 #
 
-set args $argv
+set -l args $argv
 
 
 
@@ -184,7 +182,7 @@ set args $argv
 #
 
 set remaining_args "" # remaining (unparsed) arguments
-set sp_flags (get_sp_flags $argv)
+set -l sp_flags (get_sp_flags $argv)
 
 
 
@@ -208,11 +206,11 @@ end
 set sp_subcommand ""
 
 if test -n "$remaining_args[1]"
-    set -x sp_subcommand $remaining_args[1]
-    set -x remaining_args (shift_args $remaining_args)     # simulates bash shift
+    set sp_subcommand $remaining_args[1]
+    set remaining_args (shift_args $remaining_args)     # simulates bash shift
 end
 
-set sp_spec $remaining_args
+set -l sp_spec $remaining_args
 
 
 
@@ -228,7 +226,7 @@ switch $sp_subcommand
 
     case "cd"
 
-        set sp_arg ""
+        set -l sp_arg ""
 
         # Extract the first subcommand argument:
         # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
@@ -237,7 +235,7 @@ switch $sp_subcommand
         #    instead.
         if test -n "$remaining_args[1]"
             set sp_arg $remaining_args[1]
-            set -x remaining_args (shift_args $remaining_args)     # simulates bash shift
+            set remaining_args (shift_args $remaining_args)     # simulates bash shift
         end
 
         if test $sp_arg = "-h"
@@ -245,7 +243,7 @@ switch $sp_subcommand
             command spack cd -h
         else
             # extract location using the subcommand (fish `(...)`)
-            set LOC (spack location $sp_arg $remaining_args)
+            set -l LOC (spack location $sp_arg $remaining_args)
 
             # test location and cd if exists:
             if test -d "$LOC"
