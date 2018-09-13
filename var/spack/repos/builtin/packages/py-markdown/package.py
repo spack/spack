@@ -50,3 +50,4 @@ class PyMarkdown(PythonPackage):
     version('2.5', '6ba74a1e7141c9603750d80711b639a7577bffb785708e6260090239ee5bc76d')
 
     depends_on('python@2.7:2.8,3.2:3.4')
+    depends_on('py-setuptools', type='build', when='@2.6.11:')
