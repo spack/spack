@@ -28,7 +28,7 @@ import os
 import platform
 
 import spack.build_environment
-from llnl.util.filesystem import working_dir, join_path
+from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
@@ -89,6 +89,11 @@ class CMakePackage(PackageBase):
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
+
+    @property
+    def archive_files(self):
+        """Files to archive for packages based on CMake"""
+        return [os.path.join(self.build_directory, 'CMakeCache.txt')]
 
     @property
     def root_cmakelists_dir(self):
@@ -203,7 +208,7 @@ class CMakePackage(PackageBase):
 
         :return: directory where to build the package
         """
-        return join_path(self.stage.source_path, 'spack-build')
+        return os.path.join(self.stage.source_path, 'spack-build')
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to
@@ -250,9 +255,13 @@ class CMakePackage(PackageBase):
         """
         with working_dir(self.build_directory):
             if self.generator == 'Unix Makefiles':
-                self._if_make_target_execute('test')
+                self._if_make_target_execute('test',
+                                             jobs_env='CTEST_PARALLEL_LEVEL')
+                self._if_make_target_execute('check')
             elif self.generator == 'Ninja':
-                self._if_ninja_target_execute('test')
+                self._if_ninja_target_execute('test',
+                                              jobs_env='CTEST_PARALLEL_LEVEL')
+                self._if_ninja_target_execute('check')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

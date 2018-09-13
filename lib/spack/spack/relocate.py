@@ -26,7 +26,7 @@
 import os
 import platform
 import re
-import spack
+import spack.repo
 import spack.cmd
 from spack.util.executable import Executable, ProcessError
 from llnl.util.filesystem import filter_file
@@ -256,17 +256,6 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     return
 
 
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable('file')
-    file.add_default_env('LC_ALL', 'C')
-    output = file('-b', '-h', '%s' % path_name,
-                  output=str, error=str)
-    return output.strip()
-
-
 def strings_contains_installroot(path_name, root_dir):
     """
     Check if the file contain the install root string.
@@ -355,6 +344,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
+                old_dir != new_dir and
                 strings_contains_installroot(path_name, old_dir)):
                     raise InstallRootStringException(path_name, old_dir)
 
@@ -373,6 +363,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
+                    old_dir != new_dir and
                     strings_contains_installroot(path_name, old_dir)):
                         raise InstallRootStringException(path_name, old_dir)
     else:
@@ -426,8 +417,8 @@ def make_binary_placeholder(cur_path_names, allow_root):
             if (not allow_root and
                 strings_contains_installroot(cur_path,
                                              spack.store.layout.root)):
-                raise InstallRootStringException(cur_path,
-                                                 spack.store.layout.root)
+                raise InstallRootStringException(
+                    cur_path, spack.store.layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -435,10 +426,10 @@ def make_binary_placeholder(cur_path_names, allow_root):
                 new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if (not allow_root and
-                    strings_contains_installroot(cur_path,
-                                                 spack.store.layout.root)):
-                    raise InstallRootStringException(cur_path,
-                                                     spack.store.layout.root)
+                    strings_contains_installroot(
+                        cur_path, spack.store.layout.root)):
+                    raise InstallRootStringException(
+                        cur_path, spack.store.layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
 

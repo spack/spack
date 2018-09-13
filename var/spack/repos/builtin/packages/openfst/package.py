@@ -50,7 +50,18 @@ class Openfst(AutotoolsPackage):
     conflicts('%intel@16:')
     conflicts('%gcc@6:')
 
+    variant('far', default=False, description="Enable FAR support")
+
     # Patch openfst-1.4.1 for kaldi@c024e8
     # See https://github.com/kaldi-asr/kaldi/blob/c024e8aa0a727bf76c91a318f76a1f8b0b59249e/tools/Makefile#L82-L88
     patch('openfst-1.4.1.patch', when='@1.4.1-patch')
     patch('openfst_gcc41up.patch', when='@1.4.1-patch')
+
+    def configure_args(self):
+        args = []
+        spec = self.spec
+        if '+far' in spec:
+            args.append('--enable-far')
+        else:
+            args.append('--disable-far')
+        return args

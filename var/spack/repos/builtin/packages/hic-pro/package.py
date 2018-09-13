@@ -37,7 +37,7 @@ class HicPro(MakefilePackage):
 
     depends_on('bowtie2')
     depends_on('samtools')
-    depends_on('python@2.7:2.8')
+    depends_on('python+ucs4@2.7:2.8')
     depends_on('r')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
@@ -65,10 +65,10 @@ class HicPro(MakefilePackage):
         make('readstrimming')
         make('iced')
 
-    def install(sefl, spec, prefix):
+    def install(self, spec, prefix):
         # Patch INSTALLPATH in config-system.txt
         config = FileFilter('config-system.txt')
-        config.filter('/HiC-Pro_2.10.0', '')
+        config.filter('/HiC-Pro_%s' % self.version, '')
         # Install
         install('config-hicpro.txt', prefix)
         install('config-install.txt', prefix)

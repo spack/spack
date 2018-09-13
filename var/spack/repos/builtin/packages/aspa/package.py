@@ -32,12 +32,14 @@ class Aspa(MakefilePackage):
     demands upon the exascale ecosystem that need to be identified and
     quantified.
     """
-    tags = ['proxy-app']
-    homepage = "http://www.exmatex.org/aspa.html"
-    url = "https://github.com/exmatex/ASPA/archive/master.tar.gz"
 
-    version('master', git='https://github.com/exmatex/ASPA.git',
-            description='master')
+    homepage = "http://www.exmatex.org/aspa.html"
+    git      = "https://github.com/exmatex/ASPA.git"
+
+    tags = ['proxy-app']
+
+    version('master', branch='master')
+
     variant('mpi', default=True, description='Build with MPI Support')
 
     depends_on('lapack')

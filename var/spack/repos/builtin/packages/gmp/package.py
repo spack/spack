@@ -30,7 +30,7 @@ class Gmp(AutotoolsPackage):
     on signed integers, rational numbers, and floating-point numbers."""
 
     homepage = "https://gmplib.org"
-    url      = "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/gmp/gmp-6.1.2.tar.bz2"
 
     version('6.1.2',  '8ddbb26dc3bd4e2302984debba1406a5')
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
@@ -38,6 +38,8 @@ class Gmp(AutotoolsPackage):
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
     version('5.1.3', 'a082867cbca5e898371a97bb27b31fea')
+    # Old version needed for a binary package in ghc-bootstrap
+    version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

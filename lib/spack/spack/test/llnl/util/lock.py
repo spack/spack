@@ -62,19 +62,20 @@ actually on a shared filesystem.
 
 """
 import os
+import socket
 import shutil
 import tempfile
 import traceback
 import glob
 import getpass
 from contextlib import contextmanager
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 import pytest
 
-from llnl.util.filesystem import join_path, touch
-from spack.util.multiproc import Barrier
-from llnl.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
+import llnl.util.lock as lk
+import llnl.util.multiproc as mp
+from llnl.util.filesystem import touch
 
 
 #
@@ -127,12 +128,27 @@ This may need to be higher for some filesystems."""
 lock_fail_timeout = 0.1
 
 
+def make_readable(*paths):
+    for path in paths:
+        mode = 0o555 if os.path.isdir(path) else 0o444
+        os.chmod(path, mode)
+
+
+def make_writable(*paths):
+    for path in paths:
+        mode = 0o755 if os.path.isdir(path) else 0o744
+        os.chmod(path, mode)
+
+
 @contextmanager
-def read_only(path):
-    orginal_mode = os.stat(path).st_mode
-    os.chmod(path, 0o444)
+def read_only(*paths):
+    modes = [os.stat(p).st_mode for p in paths]
+    make_readable(*paths)
+
     yield
-    os.chmod(path, orginal_mode)
+
+    for path, mode in zip(paths, modes):
+        os.chmod(path, mode)
 
 
 @pytest.fixture(scope='session', params=locations)
@@ -171,6 +187,7 @@ def lock_dir(lock_test_directory):
         comm.barrier()
 
     if not mpi or comm.rank == 0:
+        make_writable(tempdir)
         shutil.rmtree(tempdir)
 
 
@@ -180,30 +197,44 @@ def private_lock_path(lock_dir):
 
     For other modes, it is the same as a shared lock.
     """
-    lock_file = join_path(lock_dir, 'lockfile')
+    lock_file = os.path.join(lock_dir, 'lockfile')
     if mpi:
         lock_file += '.%s' % comm.rank
+
     yield lock_file
+
+    if os.path.exists(lock_file):
+        make_writable(lock_dir, lock_file)
+        os.unlink(lock_file)
 
 
 @pytest.fixture
 def lock_path(lock_dir):
     """This lock is shared among all processes in a multiproc test."""
-    lock_file = join_path(lock_dir, 'lockfile')
+    lock_file = os.path.join(lock_dir, 'lockfile')
+
     yield lock_file
 
+    if os.path.exists(lock_file):
+        make_writable(lock_dir, lock_file)
+        os.unlink(lock_file)
 
-def local_multiproc_test(*functions):
+
+def local_multiproc_test(*functions, **kwargs):
     """Order some processes using simple barrier synchronization."""
-    b = Barrier(len(functions), timeout=barrier_timeout)
-    procs = [Process(target=f, args=(b,)) for f in functions]
+    b = mp.Barrier(len(functions), timeout=barrier_timeout)
+
+    args = (b,) + tuple(kwargs.get('extra_args', ()))
+    procs = [Process(target=f, args=args, name=f.__name__)
+             for f in functions]
 
     for p in procs:
         p.start()
 
     for p in procs:
         p.join()
-        assert p.exitcode == 0
+
+    assert all(p.exitcode == 0 for p in procs)
 
 
 def mpi_multiproc_test(*functions):
@@ -257,7 +288,7 @@ multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 #
 def acquire_write(lock_path, start=0, length=0):
     def fn(barrier):
-        lock = Lock(lock_path, start, length)
+        lock = lk.Lock(lock_path, start, length)
         lock.acquire_write()  # grab exclusive lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
@@ -266,7 +297,7 @@ def acquire_write(lock_path, start=0, length=0):
 
 def acquire_read(lock_path, start=0, length=0):
     def fn(barrier):
-        lock = Lock(lock_path, start, length)
+        lock = lk.Lock(lock_path, start, length)
         lock.acquire_read()  # grab shared lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
@@ -275,9 +306,9 @@ def acquire_read(lock_path, start=0, length=0):
 
 def timeout_write(lock_path, start=0, length=0):
     def fn(barrier):
-        lock = Lock(lock_path, start, length)
+        lock = lk.Lock(lock_path, start, length)
         barrier.wait()  # wait for lock acquire in first process
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
         barrier.wait()
     return fn
@@ -285,9 +316,9 @@ def timeout_write(lock_path, start=0, length=0):
 
 def timeout_read(lock_path, start=0, length=0):
     def fn(barrier):
-        lock = Lock(lock_path, start, length)
+        lock = lk.Lock(lock_path, start, length)
         barrier.wait()  # wait for lock acquire in first process
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()
     return fn
@@ -527,9 +558,47 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         timeout_write(lock_path, 5, 1))
 
 
-#
-# Test that read can be upgraded to write.
-#
+def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
+    """read-only directory, read-only lockfile."""
+    touch(lock_path)
+    with read_only(lock_path, lock_dir):
+        lock = lk.Lock(lock_path)
+
+        with lk.ReadTransaction(lock):
+            pass
+
+        with pytest.raises(lk.LockROFileError):
+            with lk.WriteTransaction(lock):
+                pass
+
+
+def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
+    """read-only directory, writable lockfile."""
+    touch(lock_path)
+    with read_only(lock_dir):
+        lock = lk.Lock(lock_path)
+
+        with lk.ReadTransaction(lock):
+            pass
+
+        with lk.WriteTransaction(lock):
+            pass
+
+
+def test_read_lock_no_lockfile(lock_dir, lock_path):
+    """read-only directory, no lockfile (so can't create)."""
+    with read_only(lock_dir):
+        lock = lk.Lock(lock_path)
+
+        with pytest.raises(lk.CantCreateLockError):
+            with lk.ReadTransaction(lock):
+                pass
+
+        with pytest.raises(lk.CantCreateLockError):
+            with lk.WriteTransaction(lock):
+                pass
+
+
 def test_upgrade_read_to_write(private_lock_path):
     """Test that a read lock can be upgraded to a write lock.
 
@@ -542,7 +611,7 @@ def test_upgrade_read_to_write(private_lock_path):
     # to begin wtih.
     touch(private_lock_path)
 
-    lock = Lock(private_lock_path)
+    lock = lk.Lock(private_lock_path)
     assert lock._reads == 0
     assert lock._writes == 0
 
@@ -567,16 +636,14 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._file is None
 
 
-#
-# Test that read-only file can be read-locked but not write-locked.
-#
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
-    # ensure lock file exists the first time, so we open it read-only
-    # to begin wtih.
+    """Test that read-only file can be read-locked but not write-locked."""
+    # ensure lock file exists the first time
     touch(private_lock_path)
 
+    # open it read-only to begin wtih.
     with read_only(private_lock_path):
-        lock = Lock(private_lock_path)
+        lock = lk.Lock(private_lock_path)
         assert lock._reads == 0
         assert lock._writes == 0
 
@@ -585,7 +652,8 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         assert lock._writes == 0
         assert lock._file.mode == 'r'
 
-        with pytest.raises(LockError):
+        # upgrade to writ here
+        with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
 
 
@@ -595,7 +663,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
 #
 def test_complex_acquire_and_release_chain(lock_path):
     def p1(barrier):
-        lock = Lock(lock_path)
+        lock = lk.Lock(lock_path)
 
         lock.acquire_write()
         barrier.wait()  # ---------------------------------------- 1
@@ -603,7 +671,7 @@ def test_complex_acquire_and_release_chain(lock_path):
         barrier.wait()  # ---------------------------------------- 2
         lock.release_write()   # release and others acquire read
         barrier.wait()  # ---------------------------------------- 3
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
         lock.acquire_read()
         barrier.wait()  # ---------------------------------------- 4
@@ -612,9 +680,9 @@ def test_complex_acquire_and_release_chain(lock_path):
 
         # p2 upgrades read to write
         barrier.wait()  # ---------------------------------------- 6
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()  # ---------------------------------------- 7
         # p2 releases write and read
@@ -624,9 +692,9 @@ def test_complex_acquire_and_release_chain(lock_path):
         barrier.wait()  # ---------------------------------------- 9
         # p3 upgrades read to write
         barrier.wait()  # ---------------------------------------- 10
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()  # ---------------------------------------- 11
         # p3 releases locks
@@ -636,13 +704,13 @@ def test_complex_acquire_and_release_chain(lock_path):
         lock.release_read()
 
     def p2(barrier):
-        lock = Lock(lock_path)
+        lock = lk.Lock(lock_path)
 
         # p1 acquires write
         barrier.wait()  # ---------------------------------------- 1
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()  # ---------------------------------------- 2
         lock.acquire_read()
@@ -664,9 +732,9 @@ def test_complex_acquire_and_release_chain(lock_path):
         barrier.wait()  # ---------------------------------------- 9
         # p3 upgrades read to write
         barrier.wait()  # ---------------------------------------- 10
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()  # ---------------------------------------- 11
         # p3 releases locks
@@ -676,13 +744,13 @@ def test_complex_acquire_and_release_chain(lock_path):
         lock.release_read()
 
     def p3(barrier):
-        lock = Lock(lock_path)
+        lock = lk.Lock(lock_path)
 
         # p1 acquires write
         barrier.wait()  # ---------------------------------------- 1
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()  # ---------------------------------------- 2
         lock.acquire_read()
@@ -694,9 +762,9 @@ def test_complex_acquire_and_release_chain(lock_path):
 
         # p2 upgrades read to write
         barrier.wait()  # ---------------------------------------- 6
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
-        with pytest.raises(LockError):
+        with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()  # ---------------------------------------- 7
         # p2 releases write & read
@@ -726,9 +794,9 @@ def test_transaction(lock_path):
         vals['exited'] = True
         vals['exception'] = (t or v or tb)
 
-    lock = Lock(lock_path)
+    lock = lk.Lock(lock_path)
     vals = {'entered': False, 'exited': False, 'exception': False}
-    with ReadTransaction(lock, enter_fn, exit_fn):
+    with lk.ReadTransaction(lock, enter_fn, exit_fn):
         pass
 
     assert vals['entered']
@@ -736,7 +804,7 @@ def test_transaction(lock_path):
     assert not vals['exception']
 
     vals = {'entered': False, 'exited': False, 'exception': False}
-    with WriteTransaction(lock, enter_fn, exit_fn):
+    with lk.WriteTransaction(lock, enter_fn, exit_fn):
         pass
 
     assert vals['entered']
@@ -752,14 +820,14 @@ def test_transaction_with_exception(lock_path):
         vals['exited'] = True
         vals['exception'] = (t or v or tb)
 
-    lock = Lock(lock_path)
+    lock = lk.Lock(lock_path)
 
     def do_read_with_exception():
-        with ReadTransaction(lock, enter_fn, exit_fn):
+        with lk.ReadTransaction(lock, enter_fn, exit_fn):
             raise Exception()
 
     def do_write_with_exception():
-        with WriteTransaction(lock, enter_fn, exit_fn):
+        with lk.WriteTransaction(lock, enter_fn, exit_fn):
             raise Exception()
 
     vals = {'entered': False, 'exited': False, 'exception': False}
@@ -791,11 +859,11 @@ def test_transaction_with_context_manager(lock_path):
         vals['exited_fn'] = True
         vals['exception_fn'] = (t or v or tb)
 
-    lock = Lock(lock_path)
+    lock = lk.Lock(lock_path)
 
     vals = {'entered': False, 'exited': False, 'exited_fn': False,
             'exception': False, 'exception_fn': False}
-    with ReadTransaction(lock, TestContextManager, exit_fn):
+    with lk.ReadTransaction(lock, TestContextManager, exit_fn):
         pass
 
     assert vals['entered']
@@ -806,7 +874,7 @@ def test_transaction_with_context_manager(lock_path):
 
     vals = {'entered': False, 'exited': False, 'exited_fn': False,
             'exception': False, 'exception_fn': False}
-    with ReadTransaction(lock, TestContextManager):
+    with lk.ReadTransaction(lock, TestContextManager):
         pass
 
     assert vals['entered']
@@ -817,7 +885,7 @@ def test_transaction_with_context_manager(lock_path):
 
     vals = {'entered': False, 'exited': False, 'exited_fn': False,
             'exception': False, 'exception_fn': False}
-    with WriteTransaction(lock, TestContextManager, exit_fn):
+    with lk.WriteTransaction(lock, TestContextManager, exit_fn):
         pass
 
     assert vals['entered']
@@ -828,7 +896,7 @@ def test_transaction_with_context_manager(lock_path):
 
     vals = {'entered': False, 'exited': False, 'exited_fn': False,
             'exception': False, 'exception_fn': False}
-    with WriteTransaction(lock, TestContextManager):
+    with lk.WriteTransaction(lock, TestContextManager):
         pass
 
     assert vals['entered']
@@ -851,14 +919,14 @@ def test_transaction_with_context_manager_and_exception(lock_path):
         vals['exited_fn'] = True
         vals['exception_fn'] = (t or v or tb)
 
-    lock = Lock(lock_path)
+    lock = lk.Lock(lock_path)
 
     def do_read_with_exception(exit_fn):
-        with ReadTransaction(lock, TestContextManager, exit_fn):
+        with lk.ReadTransaction(lock, TestContextManager, exit_fn):
             raise Exception()
 
     def do_write_with_exception(exit_fn):
-        with WriteTransaction(lock, TestContextManager, exit_fn):
+        with lk.WriteTransaction(lock, TestContextManager, exit_fn):
             raise Exception()
 
     vals = {'entered': False, 'exited': False, 'exited_fn': False,
@@ -900,3 +968,102 @@ def test_transaction_with_context_manager_and_exception(lock_path):
     assert vals['exception']
     assert not vals['exited_fn']
     assert not vals['exception_fn']
+
+
+def test_lock_debug_output(lock_path):
+    host = socket.getfqdn()
+
+    def p1(barrier, q1, q2):
+        # exchange pids
+        p1_pid = os.getpid()
+        q1.put(p1_pid)
+        p2_pid = q2.get()
+
+        # set up lock
+        lock = lk.Lock(lock_path, debug=True)
+
+        with lk.WriteTransaction(lock):
+            # p1 takes write lock and writes pid/host to file
+            barrier.wait()  # ------------------------------------ 1
+
+        assert lock.pid == p1_pid
+        assert lock.host == host
+
+        # wait for p2 to verify contents of file
+        barrier.wait()  # ---------------------------------------- 2
+
+        # wait for p2 to take a write lock
+        barrier.wait()  # ---------------------------------------- 3
+
+        # verify pid/host info again
+        with lk.ReadTransaction(lock):
+            assert lock.old_pid == p1_pid
+            assert lock.old_host == host
+
+            assert lock.pid == p2_pid
+            assert lock.host == host
+
+        barrier.wait()  # ---------------------------------------- 4
+
+    def p2(barrier, q1, q2):
+        # exchange pids
+        p2_pid = os.getpid()
+        p1_pid = q1.get()
+        q2.put(p2_pid)
+
+        # set up lock
+        lock = lk.Lock(lock_path, debug=True)
+
+        # p1 takes write lock and writes pid/host to file
+        barrier.wait()  # ---------------------------------------- 1
+
+        # verify that p1 wrote information to lock file
+        with lk.ReadTransaction(lock):
+            assert lock.pid == p1_pid
+            assert lock.host == host
+
+        barrier.wait()  # ---------------------------------------- 2
+
+        # take a write lock on the file and verify pid/host info
+        with lk.WriteTransaction(lock):
+            assert lock.old_pid == p1_pid
+            assert lock.old_host == host
+
+            assert lock.pid == p2_pid
+            assert lock.host == host
+
+            barrier.wait()  # ------------------------------------ 3
+
+        # wait for p1 to verify pid/host info
+        barrier.wait()  # ---------------------------------------- 4
+
+    q1, q2 = Queue(), Queue()
+    local_multiproc_test(p2, p1, extra_args=(q1, q2))
+
+
+def test_lock_with_no_parent_directory(tmpdir):
+    """Make sure locks work even when their parent directory does not exist."""
+    with tmpdir.as_cwd():
+        lock = lk.Lock('foo/bar/baz/lockfile')
+        with lk.WriteTransaction(lock):
+            pass
+
+
+def test_lock_in_current_directory(tmpdir):
+    """Make sure locks work even when their parent directory does not exist."""
+    with tmpdir.as_cwd():
+        # test we can create a lock in the current directory
+        lock = lk.Lock('lockfile')
+        for i in range(10):
+            with lk.ReadTransaction(lock):
+                pass
+            with lk.WriteTransaction(lock):
+                pass
+
+        # and that we can do the same thing after it's already there
+        lock = lk.Lock('lockfile')
+        for i in range(10):
+            with lk.ReadTransaction(lock):
+                pass
+            with lk.WriteTransaction(lock):
+                pass

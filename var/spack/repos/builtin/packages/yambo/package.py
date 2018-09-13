@@ -37,8 +37,9 @@ class Yambo(AutotoolsPackage):
     """
 
     homepage = "http://www.yambo-code.org/index.php"
-    url = "https://github.com/yambo-code/yambo/archive/4.1.3.tar.gz"
+    url = "https://github.com/yambo-code/yambo/archive/4.2.2.tar.gz"
 
+    version('4.2.2', '97f3513bd726141be5e18072118b6fb5')
     version('4.2.1', '99027014192c0f0f4b5d9b48414ad85d')
     version('4.2.0', '0cbb4d7c9790596d163ebe872d95bd30')
 

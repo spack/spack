@@ -49,10 +49,9 @@ class PyScipy(PythonPackage):
         'scipy.special._precompute'
     ]
 
+    version('1.1.0', 'aa6bcc85276b6f25e17bcfc4dede8718')
     version('1.0.0', '53fa34bd3733a9a4216842b6000f7316')
-    # See https://github.com/spack/spack/issues/2737
-    version('0.19.1', '6b4d91b62f1926282b127194a06b72b3',
-            url="https://pypi.io/packages/source/s/scipy/scipy-0.19.1.tar.gz")
+    version('0.19.1', '6b4d91b62f1926282b127194a06b72b3')
     version('0.19.0', '91b8396231eec780222a57703d3ec550',
             url="https://pypi.io/packages/source/s/scipy/scipy-0.19.0.zip")
     version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
@@ -62,6 +61,7 @@ class PyScipy(PythonPackage):
 
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-nose', type='test')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
@@ -69,17 +69,14 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-
     def build_args(self, spec, prefix):
         args = []
 
         # Build in parallel
-        # Known problems with Python 3
+        # Known problems with Python 3.5+
+        # https://github.com/spack/spack/issues/7927
         # https://github.com/scipy/scipy/issues/7112
-        if not spec.satisfies('^python@3:'):
+        if not spec.satisfies('^python@3.5:'):
             args.extend(['-j', str(make_jobs)])
 
         return args
@@ -100,5 +97,5 @@ class PyScipy(PythonPackage):
         # ImportError: Error importing scipy: you should not try to import
         #       scipy from its source directory; please exit the scipy
         #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             python('-c', 'import scipy; scipy.test("full", verbose=2)')

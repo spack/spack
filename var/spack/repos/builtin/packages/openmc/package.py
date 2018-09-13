@@ -35,9 +35,10 @@ class Openmc(CMakePackage):
 
     homepage = "http://openmc.readthedocs.io/"
     url = "https://github.com/mit-crpg/openmc/tarball/v0.10.0"
+    git = "https://github.com/mit-crpg/openmc.git"
 
     version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
-    version('develop', git='https://github.com/mit-crpg/openmc.git')
+    version('develop')
 
     depends_on("hdf5+hl")
 

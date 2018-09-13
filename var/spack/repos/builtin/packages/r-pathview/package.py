@@ -36,9 +36,9 @@ class RPathview(RPackage):
     tools for large-scale and fully automated analysis."""
 
     homepage = "https://www.bioconductor.org/packages/pathview/"
-    url      = "https://git.bioconductor.org/packages/pathview"
+    git      = "https://git.bioconductor.org/packages/pathview.git"
 
-    version('1.16.7', git='https://git.bioconductor.org/packages/pathview', commit='fc560ed15ef7393a73d35e714716cc24dc835339')
+    version('1.16.7', commit='fc560ed15ef7393a73d35e714716cc24dc835339')
 
     depends_on('r-keggrest', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))

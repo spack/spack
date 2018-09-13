@@ -38,7 +38,7 @@ class Nag(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['nagfor']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
         'cc': 'cc',
@@ -72,7 +72,7 @@ class Nag(Compiler):
         return '-Wl,-Wl,,-rpath,,'
 
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The ``-V`` option works for nag compilers.
         Output looks like this::
 

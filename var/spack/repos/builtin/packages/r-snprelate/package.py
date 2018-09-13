@@ -44,9 +44,9 @@ class RSnprelate(RPackage):
        structural variation calls."""
 
     homepage = "https://bioconductor.org/packages/SNPRelate"
-    url      = "https://git.bioconductor.org/packages/SNPRelate"
+    git      = "https://git.bioconductor.org/packages/SNPRelate.git"
 
-    version('1.12.2', git='https://git.bioconductor.org/packages/SNPRelate', commit='dce2e2b6f36483a9f905bb5df6ae834a9f1136fe')
+    version('1.12.2', commit='dce2e2b6f36483a9f905bb5df6ae834a9f1136fe')
 
     depends_on('r@3.4.0:3.4.9', when='@1.12.2')
     depends_on('r-gdsfmt@1.8.3:', type=('build', 'run'))

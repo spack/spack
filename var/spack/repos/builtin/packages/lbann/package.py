@@ -34,8 +34,9 @@ class Lbann(CMakePackage):
 
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
+    git      = "https://github.com/LLNL/lbann.git"
 
-    version('develop', git='https://github.com/LLNL/lbann.git', branch="develop")
+    version('develop', branch='develop')
     version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
     version('0.92', 'c0eb1595a7c74640e96f280beb497564')
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
@@ -51,15 +52,41 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
-    depends_on('elemental +openmp_blas +shared +int64')
+    # It seems that there is a need for one statement per version bounds
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@0.95:')
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90')
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
+               when=('build_type=Debug' '@0.95:'))
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
+               when=('build_type=Debug' '@:0.90'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
+               when=('+gpu' '@0.95:'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
+               when=('+gpu' '@:0.90'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
+               when=('build_type=Debug' '@0.95:' '+gpu'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
+               when=('build_type=Debug' '@:0.90' '+gpu'))
+    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug'))
+               when=('build_type=Debug' '@0.91:0.94'))
+
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi')
+    depends_on('mpi', when='~gpu')
+    depends_on('mpi +cuda', when='+gpu')
     depends_on('hwloc ~pci ~libxml2')
-    depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib ~eigen', when='+opencv')
+    # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
+    # Additionally disable video related options, they incorrectly link in a
+    # bad OpenMP library when building with clang or Intel compilers
+    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib '
+               '+fast-math +powerpc +vsx ~calib3d ~cuda ~dnn ~eigen'
+               '~features2d ~flann ~gtk ~ipp ~ipp_iw ~jasper ~java ~lapack ~ml'
+               '~openmp ~opencl ~opencl_svm ~openclamdblas ~openclamdfft'
+               '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
+               '~videostab ~videoio ~vtk', when='+opencv')
+
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')
@@ -68,19 +95,19 @@ class Lbann(CMakePackage):
     def common_config_args(self):
         spec = self.spec
         # Environment variables
-        CPPFLAGS = []
-        CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
+        cppflags = []
+        cppflags.append('-DLBANN_SET_EL_RNG -ldl')
 
         return [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
-            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
+            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
             '-DLBANN_VERSION=spack',
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
-    @when('@:0.91' or '@0.94:')
+    @when('@:0.90,0.94:')
     def cmake_args(self):
         spec = self.spec
         args = self.common_config_args
@@ -90,10 +117,17 @@ class Lbann(CMakePackage):
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE=OFF',
-            '-DElemental_DIR={0}/CMake/elemental'.format(
-                spec['elemental'].prefix),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
+
+        if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
+            args.extend([
+                '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
+                    spec['hydrogen'].prefix)])
+        elif self.spec.satisfies('@0.94'):
+            args.extend([
+                '-DElemental_DIR={0}/CMake/elemental'.format(
+                    spec['elemental'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):

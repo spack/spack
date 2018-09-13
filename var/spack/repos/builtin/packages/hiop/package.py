@@ -33,10 +33,9 @@ class Hiop(CMakePackage):
     specialized linear algebra kernels."""
 
     homepage = "https://github.com/LLNL/hiop"
-    url      = "https://github.com/LLNL/hiop"
+    git      = "https://github.com/LLNL/hiop.git"
 
-    version('0.1', git='https://github.com/LLNL/hiop',
-            tag='v0.1')
+    version('0.1', tag='v0.1')
 
     variant('mpi', default=True,
             description='Enable/Disable MPI')

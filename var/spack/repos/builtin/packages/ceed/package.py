@@ -73,10 +73,10 @@ class Ceed(Package):
     depends_on('nekcem@0b8bedd', when='@1.0.0+nek')
 
     # PETSc, HPGMG
-    # For a +quickbuild we disable boost, hdf5, and superlu-dist in PETSc.
+    # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
     # Ideally, these can be turned into recommendations to Spack for
     # concretizing the PETSc spec, if Spack ever supports recommendations.
-    depends_on('petsc@3.8.3~boost~hdf5~superlu-dist',
+    depends_on('petsc@3.8.3~hdf5~superlu-dist',
                when='@1.0.0+petsc+quickbuild')
     depends_on('petsc@3.8.3+mpi+double~int64', when='@1.0.0+petsc~mfem')
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,

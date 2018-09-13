@@ -29,11 +29,9 @@ from itertools import product as iproduct
 from six import iteritems
 from pprint import pformat
 
-import spack.util.spack_yaml as syaml
-from yaml.error import MarkedYAMLError
-
-import spack
 import spack.error
+import spack.util.spack_yaml as syaml
+from ruamel.yaml.error import MarkedYAMLError
 
 
 class ProviderIndex(object):

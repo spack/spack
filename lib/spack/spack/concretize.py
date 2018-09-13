@@ -36,9 +36,13 @@ TODO: make this customizable and allow users to configure
 from __future__ import print_function
 from itertools import chain
 from functools_backport import reverse_order
+from contextlib import contextmanager
 from six import iteritems
 
-import spack
+import llnl.util.lang
+
+import spack.repo
+import spack.abi
 import spack.spec
 import spack.compilers
 import spack.architecture
@@ -47,18 +51,29 @@ from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
-class DefaultConcretizer(object):
+#: Concretizer singleton
+concretizer = llnl.util.lang.Singleton(lambda: Concretizer())
+
+
+#: impements rudimentary logic for ABI compatibility
+_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+
+
+class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
     def __init__(self):
+        # controls whether we check that compiler versions actually exist
+        # during concretization. Used for testing and for mirror creation
         self.check_for_compiler_existence = True
 
+    @contextmanager
     def disable_compiler_existence_check(self):
+        saved = self.check_for_compiler_existence
         self.check_for_compiler_existence = False
-
-    def enable_compiler_existence_check(self):
-        self.check_for_compiler_existence = True
+        yield
+        self.check_for_compiler_existence = saved
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -71,7 +86,7 @@ class DefaultConcretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.providers_for(spec)
+            candidates = spack.repo.path.providers_for(spec)
             if not candidates:
                 raise spack.spec.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
@@ -132,8 +147,8 @@ class DefaultConcretizer(object):
         return sorted(candidates,
                       reverse=True,
                       key=lambda spec: (
-                          spack.abi.compatible(spec, abi_exemplar, loose=True),
-                          spack.abi.compatible(spec, abi_exemplar)))
+                          _abi.compatible(spec, abi_exemplar, loose=True),
+                          _abi.compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take

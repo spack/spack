@@ -37,7 +37,8 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.dependency
+import spack.repo
 import spack.cmd.common.arguments as arguments
 
 description = "list and search available packages"
@@ -184,7 +185,7 @@ def rst(pkg_names):
                                    reversed(sorted(pkg.versions))))
             print()
 
-        for deptype in spack.all_deptypes:
+        for deptype in spack.dependency.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('%s Dependencies' % deptype.capitalize())
@@ -272,7 +273,7 @@ def html(pkg_names):
             print(', '.join(str(v) for v in reversed(sorted(pkg.versions))))
             print('</dd>')
 
-        for deptype in spack.all_deptypes:
+        for deptype in spack.dependency.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('<dt>%s Dependencies:</dt>' % deptype.capitalize())
@@ -301,7 +302,8 @@ def list(parser, args):
 
     # Filter by tags
     if args.tags:
-        packages_with_tags = set(spack.repo.packages_with_tags(*args.tags))
+        packages_with_tags = set(
+            spack.repo.path.packages_with_tags(*args.tags))
         sorted_packages = set(sorted_packages) & packages_with_tags
         sorted_packages = sorted(sorted_packages)
 

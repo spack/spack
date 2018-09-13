@@ -37,9 +37,11 @@ class Hpgmg(Package):
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
     url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
-    tags     = ['proxy-app']
+    git      = "https://bitbucket.org/hpgmg/hpgmg.git"
 
-    version('develop', git='https://bitbucket.org/hpgmg/hpgmg.git', branch='master')
+    tags = ['proxy-app']
+
+    version('develop', branch='master')
     version('a0a5510df23b', 'b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
     version('0.3',          '12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
 

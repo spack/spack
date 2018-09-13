@@ -25,7 +25,8 @@
 import os
 
 import pytest
-import spack
+
+from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
 import spack.util.gpg as gpg_util
 from spack.main import SpackCommand
 from spack.util.executable import ProcessError
@@ -58,10 +59,10 @@ def has_gnupg2():
 def test_gpg(gpg, tmpdir, testing_gpg_directory):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+        gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
 
     # Import the default key.
-    gpg('init', '--from', spack.mock_gpg_keys_path)
+    gpg('init', '--from', mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.
@@ -69,14 +70,14 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory):
     gpg('list', '--signing')
 
     # Verify the file now that the key has been trusted.
-    gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+    gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
 
     # Untrust the default key.
     gpg('untrust', 'Spack testing')
 
     # Now that the key is untrusted, verification should fail.
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+        gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
 
     # Create a file to test signing.
     test_path = tmpdir.join('to-sign.txt')

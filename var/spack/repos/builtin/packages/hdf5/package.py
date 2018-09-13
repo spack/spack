@@ -39,6 +39,8 @@ class Hdf5(AutotoolsPackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
+    version('1.10.3', 'b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
+    version('1.10.2', '8d4eae84e533efa57496638fd0dca8c3')
     version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
@@ -109,6 +111,10 @@ class Hdf5(AutotoolsPackage):
     # three src files, this patch accomplishes the simple task of patching the
     # three src files and leaves the hdf5 build system alone.
     patch('pre-c99-comments.patch', when='@1.8.10')
+
+    # There are build errors with GCC 8, see
+    # https://forum.hdfgroup.org/t/1-10-2-h5detect-compile-error-gcc-8-1-0-on-centos-7-2-solved/4441
+    patch('https://salsa.debian.org/debian-gis-team/hdf5/raw/bf94804af5f80f662cad80a5527535b3c6537df6/debian/patches/gcc-8.patch', sha256='57cee5ff1992b4098eda079815c36fc2da9b10e00a9056df054f2384c4fc7523', when='@1.10.2%gcc@8:')
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 

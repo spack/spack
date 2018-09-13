@@ -34,20 +34,30 @@ class Libffs(CMakePackage):
     """
 
     homepage = "http://www.cc.gatech.edu/systems/projects/FFS"
-    url = "https://github.com/GTkorvo/ffs/archive/v1.1.tar.gz"
+    url      = "https://github.com/GTkorvo/ffs/archive/v1.1.tar.gz"
+    git      = "https://github.com/GTkorvo/ffs.git"
 
-    version('develop', git='https://github.com/GTkorvo/ffs.git',
-            branch='master')
+    version('develop', branch='master')
+    version('1.5',   'c41c5f5f448b627740deecd695b7bbf8')
     version('1.1.1', 'aa1c8ad5cf35e8cf76735e3a60891509')
-    version('1.1', '561c6b3abc53e12b3c01192e8ef2ffbc')
+    version('1.1',   '561c6b3abc53e12b3c01192e8ef2ffbc')
 
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('flex', type='build', when='@:1.4')
+    depends_on('bison', type='build', when='@:1.4')
+    depends_on('gtkorvo-cercs-env', type='build', when='@:1.4')
     depends_on('gtkorvo-atl')
     depends_on('gtkorvo-dill')
-    depends_on('gtkorvo-cercs-env')
 
     def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                "-DBUILD_SHARED_STATIC=STATIC"]
+        args = ["-DTARGET_CNL=1"]
+        if self.spec.satisfies('@1.5:'):
+            args.append("-DBUILD_SHARED_LIBS=OFF")
+        else:
+            args.append("-DENABLE_BUILD_STATIC=STATIC")
+
+        if self.run_tests:
+            args.append('-DENABLE_TESTING=0')
+        else:
+            args.append('-DENABLE_TESTING=0')
+
         return args

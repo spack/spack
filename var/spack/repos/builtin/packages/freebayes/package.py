@@ -30,9 +30,9 @@ class Freebayes(MakefilePackage):
        genotyping."""
 
     homepage = "https://github.com/ekg/freebayes"
+    git      = "https://github.com/ekg/freebayes.git"
 
-    version('1.1.0', git='https://github.com/ekg/freebayes.git',
-            commit='39e5e4bcb801556141f2da36aba1df5c5c60701f',
+    version('1.1.0', commit='39e5e4bcb801556141f2da36aba1df5c5c60701f',
             submodules=True)
 
     depends_on('cmake', type='build')

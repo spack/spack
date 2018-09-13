@@ -27,7 +27,7 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.repo
 import spack.store
 import spack.cmd
 
@@ -57,14 +57,14 @@ def inverted_dependencies():
        actual dependents.
     """
     dag = {}
-    for pkg in spack.repo.all_packages():
+    for pkg in spack.repo.path.all_packages():
         dag.setdefault(pkg.name, set())
         for dep in pkg.dependencies:
             deps = [dep]
 
             # expand virtuals if necessary
-            if spack.repo.is_virtual(dep):
-                deps += [s.name for s in spack.repo.providers_for(dep)]
+            if spack.repo.path.is_virtual(dep):
+                deps += [s.name for s in spack.repo.path.providers_for(dep)]
 
             for d in deps:
                 dag.setdefault(d, set()).add(pkg.name)

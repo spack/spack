@@ -24,9 +24,10 @@
 ##############################################################################
 import os
 
-import spack
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import mkdirp
+
+from spack.util.editor import editor
 
 
 def pre_install(spec):
@@ -55,7 +56,7 @@ def set_up_license(pkg):
             # Create a new license file
             write_license_file(pkg, license_path)
             # Open up file in user's favorite $EDITOR for editing
-            spack.editor(license_path)
+            editor(license_path)
             tty.msg("Added global license file %s" % license_path)
         else:
             # Use already existing license file
@@ -84,63 +85,74 @@ def write_license_file(pkg, license_path):
     Comments give suggestions on alternative methods of
     installing a license."""
 
-    comment = pkg.license_comment
+    # License files
+    linktargets = ""
+    for f in pkg.license_files:
+        linktargets += "\t%s\n" % f
 
+    # Environment variables
+    envvars = ""
+    if pkg.license_vars:
+        for varname in pkg.license_vars:
+            envvars += "\t%s\n" % varname
+
+    # Documentation
+    url = ""
+    if pkg.license_url:
+        url += "\t%s\n" % pkg.license_url
+
+    # Assemble. NB: pkg.license_comment will be prepended upon output.
+    txt = """
+ A license is required to use package '{0}'.
+
+ * If your system is already properly configured for such a license, save this
+   file UNCHANGED. The system may be configured if:
+
+    - A license file is installed in a default location.
+""".format(pkg.name)
+
+    if envvars:
+        txt += """\
+    - One of the following environment variable(s) is set for you, possibly via
+      a module file:
+
+{0}
+""".format(envvars)
+
+    txt += """\
+ * Otherwise, depending on the license you have, enter AT THE BEGINNING of
+   this file:
+
+   - the contents of your license file, or
+   - the address(es) of your license server.
+
+   After installation, the following symlink(s) will be added to point to
+   this Spack-global file (relative to the installation prefix).
+
+{0}
+""".format(linktargets)
+
+    if url:
+        txt += """\
+ * For further information on licensing, see:
+
+{0}
+""".format(url)
+
+    txt += """\
+ Recap:
+ - You may not need to modify this file at all.
+ - Otherwise, enter your license or server address AT THE BEGINNING.
+"""
     # Global license directory may not already exist
     if not os.path.exists(os.path.dirname(license_path)):
         os.makedirs(os.path.dirname(license_path))
-    license = open(license_path, 'w')
 
-    # License files
-    license.write("""\
-{0} A license is required to use {1}.
-{0}
-{0} The recommended solution is to store your license key in this global
-{0} license file. After installation, the following symlink(s) will be
-{0} added to point to this file (relative to the installation prefix):
-{0}
-""".format(comment, pkg.name))
-
-    for filename in pkg.license_files:
-        license.write("{0}\t{1}\n".format(comment, filename))
-
-    license.write("{0}\n".format(comment))
-
-    # Environment variables
-    if pkg.license_vars:
-        license.write("""\
-{0} Alternatively, use one of the following environment variable(s):
-{0}
-""".format(comment))
-
-        for var in pkg.license_vars:
-            license.write("{0}\t{1}\n".format(comment, var))
-
-        license.write("""\
-{0}
-{0} If you choose to store your license in a non-standard location, you may
-{0} set one of these variable(s) to the full pathname to the license file, or
-{0} port@host if you store your license keys on a dedicated license server.
-{0} You will likely want to set this variable in a module file so that it
-{0} gets loaded every time someone tries to use {1}.
-{0}
-""".format(comment, pkg.name))
-
-    # Documentation
-    if pkg.license_url:
-        license.write("""\
-{0} For further information on how to acquire a license, please refer to:
-{0}
-{0}\t{1}
-{0}
-""".format(comment, pkg.license_url))
-
-    license.write("""\
-{0} You may enter your license below.
-
-""".format(comment))
-
-    license.close()
+    # Output
+    with open(license_path, 'w') as f:
+        for line in txt.splitlines():
+            f.write("{0}{1}\n".format(pkg.license_comment, line))
+        f.close()
 
 
 def post_install(spec):
@@ -156,7 +168,7 @@ def symlink_license(pkg):
     """Create local symlinks that point to the global license file."""
     target = pkg.global_license_file
     for filename in pkg.license_files:
-        link_name = join_path(pkg.prefix, filename)
+        link_name = os.path.join(pkg.prefix, filename)
         link_name = os.path.abspath(link_name)
         license_dir = os.path.dirname(link_name)
         if not os.path.exists(license_dir):

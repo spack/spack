@@ -28,7 +28,7 @@ from itertools import product
 from spack.util.executable import which
 
 # Supported archive extensions.
-PRE_EXTS = ["tar"]
+PRE_EXTS = ["tar", "TAR"]
 EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz

@@ -36,7 +36,7 @@ Package repositories allow you to:
 
 1. Maintain your own packages separately from Spack;
 
-2. Share your packages (e.g. by hosting them in a shared file system),
+2. Share your packages (e.g., by hosting them in a shared file system),
    without committing them to the built-in Spack package repository; and
 
 3. Override built-in Spack packages with your own implementation.
@@ -72,7 +72,7 @@ paths to repositories. Each path is on a separate line starting with
   - /opt/local-repo
   - $spack/var/spack/repos/builtin
 
-When Spack interprets a spec, e.g. ``mpich`` in ``spack install mpich``,
+When Spack interprets a spec, e.g., ``mpich`` in ``spack install mpich``,
 it searches these repositories in order (first to last) to resolve each
 package name.  In this example, Spack will look for the following
 packages and use the first valid file:
@@ -142,7 +142,7 @@ packages created by the Computation directorate might use ``llnl.comp``.
 Spack cannot ensure that every repository is named uniquely, but it will
 prevent you from registering two repositories with the same namespace at
 the same time.  If you try to add a repository that has the same name as
-an existing one, e.g. ``builtin``, Spack will print a warning message.
+an existing one, e.g., ``builtin``, Spack will print a warning message.
 
 .. _namespace-example:
 
@@ -445,7 +445,7 @@ Spack repo namespaces are actually Python namespaces tacked on under
 ``spack.pkg``.  The search semantics of ``repos.yaml`` are actually
 implemented using Python's built-in `sys.path
 <https://docs.python.org/2/library/sys.html#sys.path>`_ search.  The
-:py:mod:`spack.repository` module implements a custom `Python importer
+:py:mod:`spack.repo` module implements a custom `Python importer
 <https://docs.python.org/2/library/imp.html>`_.
 
 .. warning::

@@ -17,6 +17,7 @@ packages:
   all:
     compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
+      D: [ldc]
       awk: [gawk]
       blas: [openblas]
       daal: [intel-daal]
@@ -26,6 +27,7 @@ packages:
       golang: [gcc]
       ipp: [intel-ipp]
       java: [jdk]
+      jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
       mkl: [intel-mkl]
       mpe: [mpe2]
@@ -37,4 +39,5 @@ packages:
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
-      jpeg: [libjpeg-turbo, libjpeg]
+      unwind: [libunwind]
+

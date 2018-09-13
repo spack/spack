@@ -29,7 +29,7 @@ from six import string_types
 import sys
 
 import llnl.util.tty as tty
-import spack
+
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']
@@ -93,7 +93,11 @@ class Executable(object):
             *args (str): Command-line arguments to the executable to run
 
         Keyword Arguments:
+            _dump_env (dict): Dict to be set to the environment actually
+                used (envisaged for testing purposes only)
             env (dict): The environment to run the executable with
+            extra_env (dict): Extra items to add to the environment
+                (neither requires nor precludes env)
             fail_on_error (bool): Raise an exception if the subprocess returns
                 an error. Default is True. The return code is available as
                 ``exe.returncode``
@@ -115,6 +119,7 @@ class Executable(object):
           for ``input``
 
         By default, the subprocess inherits the parent's file descriptors.
+
         """
         # Environment
         env_arg = kwargs.get('env', None)
@@ -124,6 +129,10 @@ class Executable(object):
         else:
             env = self.default_env.copy()
             env.update(env_arg)
+        env.update(kwargs.get('extra_env', {}))
+        if '_dump_env' in kwargs:
+            kwargs['_dump_env'].clear()
+            kwargs['_dump_env'].update(env)
 
         fail_on_error = kwargs.pop('fail_on_error', True)
         ignore_errors = kwargs.pop('ignore_errors', ())

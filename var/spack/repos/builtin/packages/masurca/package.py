@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Masurca(Package):
@@ -34,6 +33,7 @@ class Masurca(Package):
     homepage = "http://www.genome.umd.edu/masurca.html"
     url      = "ftp://ftp.genome.umd.edu/pub/MaSuRCA/latest/MaSuRCA-3.2.3.tar.gz"
 
+    version('3.2.6', 'f068f91e33fd7381de406a7a954bfe01')
     version('3.2.3', 'd9b4419adfe6b64e42ce986253a50ff5')
 
     depends_on('perl', type=('build', 'run'))
@@ -43,4 +43,4 @@ class Masurca(Package):
     def install(self, spec, prefix):
         installer = Executable('./install.sh')
         installer()
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)

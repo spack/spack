@@ -22,15 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import fnmatch
 import os
+import fnmatch
 
-import pytest
 import six
-import spack
+import pytest
+
 from llnl.util.filesystem import LibraryList, HeaderList
 from llnl.util.filesystem import find_libraries, find_headers, find
+
+import spack.paths
 
 
 @pytest.fixture()
@@ -211,7 +212,7 @@ class TestHeaderList(object):
 
 
 #: Directory where the data for the test below is stored
-search_dir = os.path.join(spack.test_path, 'data', 'directory_search')
+search_dir = os.path.join(spack.paths.test_path, 'data', 'directory_search')
 
 
 @pytest.mark.parametrize('search_fn,search_list,root,kwargs', [
@@ -262,7 +263,7 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Now reverse the result and start discarding things
     # as soon as you have matches. In the end the list should
     # be emptied.
-    L = list(reversed(result))
+    rlist = list(reversed(result))
 
     # At this point make sure the search list is a sequence
     if isinstance(search_list, six.string_types):
@@ -271,14 +272,14 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Discard entries in the order they appear in search list
     for x in search_list:
         try:
-            while fnmatch.fnmatch(L[-1], x) or x in L[-1]:
-                L.pop()
+            while fnmatch.fnmatch(rlist[-1], x) or x in rlist[-1]:
+                rlist.pop()
         except IndexError:
             # List is empty
             pass
 
     # List should be empty here
-    assert len(L) == 0
+    assert len(rlist) == 0
 
 
 @pytest.mark.parametrize('root,search_list,kwargs,expected', [

@@ -32,6 +32,9 @@ class Neovim(CMakePackage):
     homepage = "http://neovim.io"
     url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
 
+    version('0.3.1', '5405bced1c929ebc245c75409cd6c7ef')
+    version('0.3.0', 'e5fdb2025757c337c17449c296eddf5b')
+    version('0.2.2', '44b69f8ace88b646ec890670f1e462c4')
     version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
     version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
 

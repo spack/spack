@@ -23,19 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
 
 
 class Sbt(Package):
     """Scala Build Tool"""
 
-    homepage = "http://www.scala-sbt.org"
-    url      = "https://dl.bintray.com/sbt/native-packages/sbt/0.13.12/sbt-0.13.12.tgz"
+    homepage = 'http://www.scala-sbt.org'
+    url      = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
 
-    version('0.13.12', 'cec3071d46ef13334c8097cc3467ff28')
+    version('1.1.6', 'd307b131ed041c783ac5ed7bbb4768dc')
+    version('1.1.5', 'b771480feb07f98fa8cd6d787c8d4485')
+    version('1.1.4', 'c71e5fa846164d14d4cd450520d66c6a')
+    version('0.13.17', 'c52c6152cc7aadfd1f0736a1a5d0a5b8')
 
     depends_on('java')
 
     def install(self, spec, prefix):
-        shutil.copytree('bin', join_path(prefix, 'bin'), symlinks=True)
-        shutil.copytree('conf', join_path(prefix, 'conf'), symlinks=True)
+        install_tree('bin',  prefix.bin)
+        install_tree('conf', prefix.conf)

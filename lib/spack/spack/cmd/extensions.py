@@ -27,11 +27,11 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
 import spack.cmd
 import spack.cmd.find
+import spack.repo
 import spack.store
-from spack.directory_layout import YamlViewExtensionsLayout
+from spack.filesystem_view import YamlFilesystemView
 
 description = "list extensions for package"
 section = "extensions"
@@ -105,7 +105,7 @@ def extensions(parser, args):
     if show_packages:
         #
         # List package names of extensions
-        extensions = spack.repo.extensions_for(spec)
+        extensions = spack.repo.path.extensions_for(spec)
         if not extensions:
             tty.msg("%s has no extensions." % spec.cshort_spec)
         else:
@@ -113,16 +113,19 @@ def extensions(parser, args):
             tty.msg("%d extensions:" % len(extensions))
             colify(ext.name for ext in extensions)
 
-    layout = spack.store.extensions
-    if args.view is not None:
-        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+    if args.view:
+        target = args.view
+    else:
+        target = spec.prefix
+
+    view = YamlFilesystemView(target, spack.store.layout)
 
     if show_installed:
         #
         # List specs of installed extensions.
         #
-        installed = [s.spec
-                     for s in spack.store.db.installed_extensions_for(spec)]
+        installed = [
+            s.spec for s in spack.store.db.installed_extensions_for(spec)]
 
         if show_all:
             print
@@ -136,7 +139,7 @@ def extensions(parser, args):
         #
         # List specs of activated extensions.
         #
-        activated = layout.extension_map(spec)
+        activated = view.extensions_layout.extension_map(spec)
         if show_all:
             print
         if not activated:

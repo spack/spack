@@ -33,9 +33,9 @@ class RBiovizbase(RPackage):
     and encourages consistency."""
 
     homepage = "http://bioconductor.org/packages/biovizBase/"
-    url      = "https://git.bioconductor.org/packages/biovizBase"
+    git      = "https://git.bioconductor.org/packages/biovizBase.git"
 
-    version('1.24.0', git='https://git.bioconductor.org/packages/biovizBase', commit='ae9cd2ff665b74a8f45ed9c1d17fc0a778b4af6c')
+    version('1.24.0', commit='ae9cd2ff665b74a8f45ed9c1d17fc0a778b4af6c')
 
     depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-scales', type=('build', 'run'))

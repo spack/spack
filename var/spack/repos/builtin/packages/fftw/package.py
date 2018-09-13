@@ -39,6 +39,7 @@ class Fftw(AutotoolsPackage):
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
+    version('3.3.8', '8aac833c943d8e90d51b697b27d4384d')
     version('3.3.7', '0d5915d7d39b3253c1cc05030d79ac47')
     version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
@@ -87,6 +88,8 @@ class Fftw(AutotoolsPackage):
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+    # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
+    conflicts('%gcc@8:8.9999', when="@3.3.7")
 
     @property
     def libs(self):

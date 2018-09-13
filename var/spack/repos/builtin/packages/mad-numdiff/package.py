@@ -31,6 +31,7 @@ class MadNumdiff(CMakePackage):
 
     homepage = "https://github.com/quinoacomputing/ndiff"
     url      = "https://github.com/quinoacomputing/ndiff/tarball/20150724"
+    git      = "https://github.com/quinoacomputing/ndiff.git"
 
-    version('develop', git='https://github.com/quinoacomputing/ndiff', branch='master')
+    version('develop', branch='master')
     version('20150724', '7723c0f2499aea8fd960377c5bed28d8')

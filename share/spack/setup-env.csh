@@ -39,15 +39,13 @@ if ($?SPACK_ROOT) then
     alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
 
-    # Shamelessly stolen from setup-env.sh
-    set _sp_sys_type    = `$SPACK_ROOT/bin/spack python -c 'print(spack.architecture.sys_type())'`
-    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('dotkit')))"`
-    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('tcl')))"`
+    # Set variables needed by this script
+    _spack_pathadd PATH "$SPACK_ROOT/bin"
+    eval `spack --print-shell-vars csh`
 
     # Set up modules and dotkit search paths in the user environment
     _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
     _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-    _spack_pathadd PATH       "$SPACK_ROOT/bin"
 else
     echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
 endif

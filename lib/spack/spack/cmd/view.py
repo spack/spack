@@ -52,13 +52,14 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 '''
-
 import os
-import spack
+
+import llnl.util.tty as tty
+from llnl.util.link_tree import MergeConflictError
+
 import spack.cmd
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
-import llnl.util.tty as tty
 
 description = "produce a single-rooted directory view of packages"
 section = "environment"
@@ -207,9 +208,15 @@ def view(parser, args):
 
     # Map action to corresponding functionality
     if args.action in actions_link:
-        view.add_specs(*specs,
-                       with_dependencies=with_dependencies,
-                       exclude=args.exclude)
+        try:
+            view.add_specs(*specs,
+                           with_dependencies=with_dependencies,
+                           exclude=args.exclude)
+        except MergeConflictError:
+            tty.info("Some file blocked the merge, adding the '-i' flag will "
+                     "ignore this conflict. For more information see e.g. "
+                     "https://github.com/spack/spack/issues/9029")
+            raise
 
     elif args.action in actions_remove:
         view.remove_specs(*specs,

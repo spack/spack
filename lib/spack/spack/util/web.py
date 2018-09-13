@@ -49,8 +49,12 @@ except ImportError:
 
 import llnl.util.tty as tty
 
-import spack
+import spack.config
+import spack.cmd
+import spack.url
+import spack.stage
 import spack.error
+import spack.util.crypto
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 
@@ -111,18 +115,19 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
     try:
         context = None
-        if sys.version_info < (2, 7, 9) or \
-                ((3,) < sys.version_info < (3, 4, 3)):
-            if not spack.insecure:
+        verify_ssl = spack.config.get('config:verify_ssl')
+        pyver = sys.version_info
+        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+            if verify_ssl:
                 tty.warn("Spack will not check SSL certificates. You need to "
                          "update your Python to enable certificate "
                          "verification.")
-        else:
+        elif verify_ssl:
             # We explicitly create default context to avoid error described in
             # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl._create_unverified_context() \
-                if spack.insecure \
-                else ssl.create_default_context()
+            context = ssl.create_default_context()
+        else:
+            context = ssl._create_unverified_context()
 
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -281,6 +286,13 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     for aurl in archive_urls:
         list_urls.add(spack.url.find_list_url(aurl))
 
+    # Add '/' to the end of the URL. Some web servers require this.
+    additional_list_urls = set()
+    for lurl in list_urls:
+        if not lurl.endswith('/'):
+            additional_list_urls.add(lurl + '/')
+    list_urls.update(additional_list_urls)
+
     # Grab some web pages to scrape.
     pages = {}
     links = set()
@@ -392,7 +404,7 @@ def get_checksums_for_versions(
 
                 # Checksum the archive and add it to the list
                 version_hashes.append((version, spack.util.crypto.checksum(
-                    hashlib.md5, stage.archive_file)))
+                    hashlib.sha256, stage.archive_file)))
                 i += 1
         except spack.stage.FailedDownloadError:
             tty.msg("Failed to fetch {0}".format(url))
@@ -408,7 +420,7 @@ def get_checksums_for_versions(
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}'{2}')".format(
+        "    version('{0}', {1}sha256='{2}')".format(
             v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
     ])
 

@@ -37,9 +37,9 @@ class RAcme(RPackage):
     experiments quite easily with enough memory."""
 
     homepage = "https://www.bioconductor.org/packages/ACME/"
-    url      = "https://git.bioconductor.org/packages/ACME"
+    git      = "https://git.bioconductor.org/packages/ACME.git"
 
-    version('2.32.0', git='https://git.bioconductor.org/packages/ACME', commit='76372255d7714a0c8128a11c028bf70214dac407')
+    version('2.32.0', commit='76372255d7714a0c8128a11c028bf70214dac407')
 
     depends_on('r@3.4.0:3.4.9', when='@2.32.0')
     depends_on('r-biobase', type=('build', 'run'))

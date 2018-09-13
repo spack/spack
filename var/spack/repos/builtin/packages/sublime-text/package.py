@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class SublimeText(Package):
@@ -31,8 +30,9 @@ class SublimeText(Package):
     prose."""
 
     homepage = "http://www.sublimetext.com/"
-    url      = "https://download.sublimetext.com/sublime_text_3_build_3126_x64.tar.bz2"
+    url      = "https://download.sublimetext.com/sublime_text_3_build_3176_x64.tar.bz2"
 
+    version('3_build_3176', '7d4c8c5167224888d901e8cbafb6ec7f')
     version('3_build_3126', 'acc34252b0ea7dff1f581c5db1564dcb')
     version('2.0.2',        '699cd26d7fe0bada29eb1b2cd7b50e4b')
 
@@ -52,8 +52,8 @@ class SublimeText(Package):
         if version[0] == 2:
             return "https://download.sublimetext.com/Sublime%20Text%20{0}%20x64.tar.bz2".format(version)
         else:
-            return "https://download.sublimetext.com/sublime_text_3_build_{0}_x64.tar.bz2".format(version)
+            return "https://download.sublimetext.com/sublime_text_{0}_x64.tar.bz2".format(version)
 
     def install(self, spec, prefix):
         # Sublime text comes as a pre-compiled binary.
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

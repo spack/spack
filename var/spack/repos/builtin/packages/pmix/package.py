@@ -51,9 +51,11 @@ class Pmix(AutotoolsPackage):
 
     version('2.1.1',    'f9f109421661b757245d5e0bd44a38b3')
     version('2.1.0',    'fc97513b601d78fe7c6bb20c6a21df3c')
+    version('2.0.3',    'fae199c9fa1d1f1bc20c336f1292f950')
     version('2.0.2',    'e3ed1deed87c84f9b43da2621c6ad689')
     version('2.0.1',    'ba3193b485843516e6b4e8641e443b1e')
     version('2.0.0',    '3e047c2ea0ba8ee9925ed92b205fd92e')
+    version('1.2.5',    'c3d20cd9d365a813dc367afdf0f41c37')
     version('1.2.4',    '242a812e206e7c5948f1f5c9688eb2a7')
     version('1.2.3',    '102b1cc650018b62348b45d572b158e9')
     version('1.2.2',    'd85c8fd437bd88f984549425ad369e9f')

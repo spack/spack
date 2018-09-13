@@ -28,7 +28,7 @@ import re
 
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
 import spack.modules
 
 # Character limit for shebang line.  Using Linux's 127 characters
@@ -56,7 +56,7 @@ def filter_shebang(path):
         original = original_file.read()
 
     # This line will be prepended to file
-    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):

@@ -33,9 +33,9 @@ to download packages directly from a mirror (e.g., on an intranet).
 import sys
 import os
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.config
 import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
@@ -44,7 +44,7 @@ from spack.version import VersionList
 from spack.util.compression import allowed_archive
 
 
-def mirror_archive_filename(spec, fetcher, resourceId=None):
+def mirror_archive_filename(spec, fetcher, resource_id=None):
     """Get the name of the spec's archive in the mirror."""
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
@@ -87,18 +87,18 @@ Spack not to expand it with the following syntax:
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    if resourceId:
-        filename = "%s-%s" % (resourceId, spec.version) + ".%s" % ext
+    if resource_id:
+        filename = "%s-%s" % (resource_id, spec.version) + ".%s" % ext
     else:
         filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
 
     return filename
 
 
-def mirror_archive_path(spec, fetcher, resourceId=None):
+def mirror_archive_path(spec, fetcher, resource_id=None):
     """Get the relative path to the spec's archive within a mirror."""
-    return join_path(
-        spec.name, mirror_archive_filename(spec, fetcher, resourceId))
+    return os.path.join(
+        spec.name, mirror_archive_filename(spec, fetcher, resource_id))
 
 
 def get_matching_versions(specs, **kwargs):
@@ -222,12 +222,12 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 fetcher = stage.fetcher
                 if ii == 0:
                     # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(join_path(
+                    archive_path = os.path.abspath(os.path.join(
                         mirror_root, mirror_archive_path(spec, fetcher)))
                     name = spec.cformat("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = os.path.abspath(join_path(
+                    archive_path = os.path.abspath(os.path.join(
                         mirror_root,
                         mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
@@ -255,7 +255,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             categories['mirrored'].append(spec)
 
     except Exception as e:
-        if spack.debug:
+        if spack.config.get('config:debug'):
             sys.excepthook(*sys.exc_info())
         else:
             tty.warn(

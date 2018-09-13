@@ -48,21 +48,22 @@ import contextlib
 from six import string_types
 from six import iteritems
 
-from yaml.error import MarkedYAMLError, YAMLError
+from ruamel.yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
-from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
+from llnl.util.filesystem import mkdirp
 
 import spack.store
-import spack.repository
+import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
+from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
+from spack.util.lock import Lock, WriteTransaction, ReadTransaction
 
 
 # DB goes in this directory underneath the root
@@ -184,18 +185,18 @@ class Database(object):
 
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
-            self._db_dir = join_path(self.root, _db_dirname)
+            self._db_dir = os.path.join(self.root, _db_dirname)
         else:
             # Allow customizing the database directory location for testing.
             self._db_dir = db_dir
 
         # Set up layout of database files within the db dir
-        self._old_yaml_index_path = join_path(self._db_dir, 'index.yaml')
-        self._index_path = join_path(self._db_dir, 'index.json')
-        self._lock_path = join_path(self._db_dir, 'lock')
+        self._old_yaml_index_path = os.path.join(self._db_dir, 'index.yaml')
+        self._index_path = os.path.join(self._db_dir, 'index.json')
+        self._lock_path = os.path.join(self._db_dir, 'lock')
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = join_path(self._db_dir, 'prefix_lock')
+        self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
 
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
@@ -823,7 +824,8 @@ class Database(object):
         the given spec
         """
         if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+            view = YamlFilesystemView(extendee_spec.prefix, spack.store.layout)
+            extensions_layout = view.extensions_layout
         for spec in self.query():
             try:
                 extensions_layout.check_activated(extendee_spec, spec)
@@ -903,7 +905,7 @@ class Database(object):
                 if explicit is not any and rec.explicit != explicit:
                     continue
 
-                if known is not any and spack.repo.exists(
+                if known is not any and spack.repo.path.exists(
                         rec.spec.name) != known:
                     continue
 

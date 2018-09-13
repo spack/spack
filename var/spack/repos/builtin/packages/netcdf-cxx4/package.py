@@ -41,6 +41,9 @@ class NetcdfCxx4(AutotoolsPackage):
 
     force_autoreconf = True
 
+    def configure_args(self):
+        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+
     @property
     def libs(self):
         shared = True

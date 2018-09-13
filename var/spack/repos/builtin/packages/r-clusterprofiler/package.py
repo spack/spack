@@ -30,9 +30,9 @@ class RClusterprofiler(RPackage):
     profiles (GO and KEGG) of gene and gene clusters."""
 
     homepage = "https://www.bioconductor.org/packages/clusterProfiler/"
-    url      = "https://git.bioconductor.org/packages/clusterProfiler"
+    git      = "https://git.bioconductor.org/packages/clusterProfiler.git"
 
-    version('3.4.4', git='https://git.bioconductor.org/packages/clusterProfiler', commit='b86b00e8405fe130e439362651a5567736e2d9d7')
+    version('3.4.4', commit='b86b00e8405fe130e439362651a5567736e2d9d7')
 
     depends_on('r@3.4.0:3.4.9', when='@3.4.4')
     depends_on('r-tidyr', type=('build', 'run'))

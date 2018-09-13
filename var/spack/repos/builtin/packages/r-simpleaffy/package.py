@@ -33,10 +33,9 @@ class RSimpleaffy(RPackage):
        for generating high resolution journal figures..."""
 
     homepage = "http://bioconductor.org/packages/simpleaffy/"
-    url      = "https://git.bioconductor.org/packages/simpleaffy"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/simpleaffy.git"
 
-    version('2.52.0', git='https://git.bioconductor.org/packages/simpleaffy', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
+    version('2.52.0', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

@@ -38,13 +38,13 @@ class Neuron(Package):
 
     homepage = "https://www.neuron.yale.edu/"
     url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/nrn-7.5.tar.gz"
-    github   = "https://github.com/nrnhines/nrn"
+    git      = "https://github.com/nrnhines/nrn.git"
 
+    version('develop', branch='master')
     version('7.5', 'fb72c841374dfacbb6c2168ff57bfae9')
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
-    version('develop', git=github)
 
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('python',        default=True,  description='Enable python')
@@ -59,7 +59,7 @@ class Neuron(Package):
     depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')
     depends_on('libtool',    type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig',  type='build')
 
     depends_on('mpi',         when='+mpi')
     depends_on('python@2.6:', when='+python')
@@ -87,7 +87,7 @@ class Neuron(Package):
 
     def patch(self):
         # aclocal need complete include path (especially on os x)
-        pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
+        pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkgconfig'].prefix)
         libtool_inc = '-I %s/share/aclocal/' % (self.spec['libtool'].prefix)
         newpath = 'aclocal -I m4 %s %s' % (pkgconf_inc, libtool_inc)
         filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")

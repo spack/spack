@@ -27,7 +27,6 @@ import os.path
 import inspect
 import hashlib
 
-import spack
 import spack.error
 import spack.fetch_strategy as fs
 import spack.stage
@@ -154,7 +153,7 @@ class UrlPatch(Patch):
         if self.archive_sha256:
             fetch_digest = self.archive_sha256
 
-        fetcher = fs.URLFetchStrategy(self.url, digest=fetch_digest)
+        fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
         mirror = os.path.join(
             os.path.dirname(stage.mirror_path),
             os.path.basename(self.url))

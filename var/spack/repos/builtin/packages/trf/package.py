@@ -44,3 +44,5 @@ class Trf(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('trf409.linux64', prefix.bin.trf)
+        chmod = which('chmod')
+        chmod('+x', prefix.bin.trf)

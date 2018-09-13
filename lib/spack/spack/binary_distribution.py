@@ -22,28 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
 import re
 import tarfile
-import yaml
 import shutil
 import platform
 import tempfile
+import hashlib
+from contextlib import closing
+
+import ruamel.yaml as yaml
 
 import llnl.util.tty as tty
-from spack.util.gpg import Gpg
-from llnl.util.filesystem import mkdirp, join_path, install_tree
-from spack.util.web import spider
+from llnl.util.filesystem import mkdirp, install_tree, get_filetype
+
 import spack.cmd
-import spack
-from spack.stage import Stage
 import spack.fetch_strategy as fs
-from contextlib import closing
 import spack.util.gpg as gpg_util
-import hashlib
-from spack.util.executable import ProcessError
 import spack.relocate as relocate
+from spack.stage import Stage
+from spack.util.gpg import Gpg
+from spack.util.web import spider
+from spack.util.executable import ProcessError
 
 
 class NoOverwriteException(Exception):
@@ -146,9 +146,9 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  Check if the file contains a string with the installroot.
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
-            if relocate.strings_contains_installroot(path_name,
-                                                     spack.store.layout.root):
-                filetype = relocate.get_filetype(path_name)
+            if relocate.strings_contains_installroot(
+                    path_name, spack.store.layout.root):
+                filetype = get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
@@ -160,8 +160,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
-    buildinfo['relative_prefix'] = os.path.relpath(prefix,
-                                                   spack.store.layout.root)
+    buildinfo['relative_prefix'] = os.path.relpath(
+        prefix, spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -203,13 +203,13 @@ def tarball_path_name(spec, ext):
 
 def checksum_tarball(file):
     # calculate sha256 hash of tar file
-    BLOCKSIZE = 65536
+    block_size = 65536
     hasher = hashlib.sha256()
     with open(file, 'rb') as tfile:
-        buf = tfile.read(BLOCKSIZE)
+        buf = tfile.read(block_size)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = tfile.read(BLOCKSIZE)
+            buf = tfile.read(block_size)
     return hasher.hexdigest()
 
 
@@ -262,9 +262,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     """
     # set up some paths
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_dir = join_path(outdir, "build_cache",
-                            tarball_directory_name(spec))
-    tarfile_path = join_path(tarfile_dir, tarfile_name)
+    tarfile_dir = os.path.join(outdir, "build_cache",
+                               tarball_directory_name(spec))
+    tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     mkdirp(tarfile_dir)
     spackfile_path = os.path.join(
         outdir, "build_cache", tarball_path_name(spec, '.spack'))
@@ -276,18 +276,18 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
-    spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
+    spec_file = os.path.join(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.realpath(
-        join_path(outdir, "build_cache", specfile_name))
-    indexfile_path = join_path(outdir, "build_cache", "index.html")
+        os.path.join(outdir, "build_cache", specfile_name))
+    indexfile_path = os.path.join(outdir, "build_cache", "index.html")
     if os.path.exists(specfile_path):
         if force:
             os.remove(specfile_path)
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(tempfile.mkdtemp(), os.path.basename(spec.prefix))
+    workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
@@ -331,8 +331,8 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # Add original install prefix relative to layout root to spec.yaml.
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
-    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix,
-                                                   spack.store.layout.root)
+    buildinfo['relative_prefix'] = os.path.relpath(
+        spec.prefix, spack.store.layout.root)
     spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
@@ -364,7 +364,7 @@ def download_tarball(spec):
     Download binary tarball for given package into stage area
     Return True if successful
     """
-    mirrors = spack.config.get_config('mirrors')
+    mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
@@ -510,7 +510,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # the base of the install prefix is used when creating the tarball
     # so the pathname should be the same now that the directory layout
     # is confirmed
-    workdir = join_path(tmpdir, os.path.basename(spec.prefix))
+    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
 
     # cleanup
     os.remove(tarfile_path)
@@ -529,16 +529,21 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
 
+#: Internal cache for get_specs
+_cached_specs = None
+
+
 def get_specs(force=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
-    if spack.binary_cache_retrieved_specs:
-        tty.debug("Using previously-retrieved specs")
-        previously_retrieved = spack.binary_cache_retrieved_specs
-        return previously_retrieved
+    global _cached_specs
 
-    mirrors = spack.config.get_config('mirrors')
+    if _cached_specs:
+        tty.debug("Using previously-retrieved specs")
+        return _cached_specs
+
+    mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
         tty.warn("No Spack mirrors are currently configured")
         return {}
@@ -562,7 +567,7 @@ def get_specs(force=False):
                 if re.search("spec.yaml", link) and re.search(path, link):
                     urls.add(link)
 
-    specs = set()
+    _cached_specs = set()
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -578,17 +583,16 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = spack.spec.Spec.from_yaml(f)
                 spec._mark_concrete()
-                specs.add(spec)
+                _cached_specs.add(spec)
 
-    spack.binary_cache_retrieved_specs = specs
-    return specs
+    return _cached_specs
 
 
 def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
     """
-    mirrors = spack.config.get_config('mirrors')
+    mirrors = spack.config.get('mirrors')
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")

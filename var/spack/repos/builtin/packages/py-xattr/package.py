@@ -30,9 +30,9 @@ class PyXattr(PythonPackage):
         sans libattr dependency"""
 
     homepage = "http://pyxattr.k1024.org/"
+    git      = "https://github.com/fwang2/pyxattr.git"
 
-    version('develop', git='https://github.com/fwang2/pyxattr.git',
-            branch='dev')
+    version('develop', branch='dev')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')

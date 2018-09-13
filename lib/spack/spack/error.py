@@ -25,10 +25,14 @@
 from __future__ import print_function
 
 import sys
+import inspect
 
 import llnl.util.tty as tty
-import spack
-import inspect
+
+
+#: whether we should write stack traces or short error messages
+#: this is module-scoped because it needs to be set very early
+debug = False
 
 
 class SpackError(Exception):
@@ -59,7 +63,7 @@ class SpackError(Exception):
         """Print extended debug information about this exception.
 
         This is usually printed when the top-level Spack error handler
-        calls ``die()``, but it acn be called separately beforehand if a
+        calls ``die()``, but it can be called separately beforehand if a
         lower-level error handler needs to print error context and
         continue without raising the exception to the top level.
         """
@@ -73,7 +77,7 @@ class SpackError(Exception):
             sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
-        if spack.debug:
+        if debug:
             if self.traceback:
                 # exception came from a build child, already got
                 # traceback in child, so print it.

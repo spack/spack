@@ -30,7 +30,6 @@ import platform
 
 import spack
 
-
 description = "launch an interpreter as spack would launch a command"
 section = "developer"
 level = "long"

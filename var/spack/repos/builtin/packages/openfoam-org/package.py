@@ -55,7 +55,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 import llnl.util.tty as tty
@@ -80,12 +79,15 @@ class OpenfoamOrg(Package):
     homepage = "http://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
+    git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
+    version('develop', branch='master')
     version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
     version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
-    version('develop', git='https://github.com/OpenFOAM/OpenFOAM-dev.git')
+    version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
+            url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -112,13 +114,7 @@ class OpenfoamOrg(Package):
     patch('50-etc.patch', when='@5.0:')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
-
-    # Some user config settings
-    config = {
-        'mplib': 'SYSTEMMPI',   # Use system mpi for spack
-        # Add links into bin/, lib/ (eg, for other applications)
-        'link': False
-    }
+    patch('240-etc.patch', when='@2.4.0')
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None
@@ -135,6 +131,21 @@ class OpenfoamOrg(Package):
     #
     # - End of definitions / setup -
     #
+
+    # Some user config settings
+    @property
+    def config(self):
+        settings = {
+            # Use system mpi for spack
+            'mplib': 'SYSTEMMPI',
+
+            # Add links into bin/, lib/ (eg, for other applications)
+            'link': False,
+        }
+        # OpenFOAM v2.4 and earlier lacks WM_LABEL_OPTION
+        if self.spec.satisfies('@:2.4'):
+            settings['label-size'] = False
+        return settings
 
     def setup_environment(self, spack_env, run_env):
         # This should be similar to the openfoam-com package,
@@ -266,10 +277,18 @@ class OpenfoamOrg(Package):
 
         # Adjust components to use SPACK variants
         for component, subdict in self.etc_config.items():
-            write_environ(
-                subdict,
-                posix=join_path('etc', 'config.sh',  component),
-                cshell=join_path('etc', 'config.csh', component))
+            # Versions up to 3.0 used an etc/config/component.sh naming
+            # convention instead of etc/config.sh/component
+            if spec.satisfies('@:3.0'):
+                write_environ(
+                    subdict,
+                    posix=join_path('etc', 'config',  component) + '.sh',
+                    cshell=join_path('etc', 'config', component) + '.csh')
+            else:
+                write_environ(
+                    subdict,
+                    posix=join_path('etc', 'config.sh',  component),
+                    cshell=join_path('etc', 'config.csh', component))
 
     def build(self, spec, prefix):
         """Build using the OpenFOAM Allwmake script, with a wrapper to source
@@ -325,12 +344,13 @@ class OpenfoamOrg(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')
