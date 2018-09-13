@@ -186,8 +186,12 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc
+                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if self.spec.satisfies('%intel'):
+                # mpiifort needs some help to automatically link
+                # all necessary run-time libraries
+                compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -226,8 +230,9 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL:
-        if 'scalapack' in spec:
+        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # help PETSc pick up Scalapack from MKL
+        if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),

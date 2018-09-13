@@ -35,7 +35,7 @@ class Comd(MakefilePackage):
     versions of CoMD will be released to incorporate the lessons learned from
     the co-design process."""
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/comd.html"
     url      = "https://github.com/ECP-copa/CoMD/archive/v1.1.tar.gz"
