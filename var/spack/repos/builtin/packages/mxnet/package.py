@@ -75,13 +75,14 @@ class Mxnet(MakefilePackage):
             'Makefile', string=True
         )
 
+        # mxnet comes with its own version of nnvm and dmlc.
+        # building it will fail if we use the spack paths
+
         args = [
             'CC=%s' % self.compiler.cc,
             'CXX=%s' % self.compiler.cxx,
-            'DMLC_CORE=%s' % spec['dmlc-core'].prefix,
             'MSHADOW_PATH=%s' % spec['mshadow'].prefix,
             'PS_PATH=%s' % spec['ps-lite'].prefix,
-            'NNVM_PATH=%s' % spec['nnvm'].prefix,
             'USE_OPENMP=%s' % ('1' if '+openmp' in spec else '0'),
             'USE_CUDA=%s' % ('1' if '+cuda' in spec else '0'),
             'USE_CUDNN=%s' % ('1' if '+cuda' in spec else '0'),
@@ -98,9 +99,6 @@ class Mxnet(MakefilePackage):
                         '-lopencv_core -lopencv_imgproc -lopencv_imgcodecs',
                         'Makefile', string=True)
 
-        # TODO: Add more BLAS support
-        args.append('USE_BLAS=openblas')
-
         if '+cuda' in spec:
             args.extend(['USE_CUDA_PATH=%s' % spec['cuda'].prefix,
                          'CUDNN_PATH=%s' % spec['cudnn'].prefix,
@@ -109,6 +107,7 @@ class Mxnet(MakefilePackage):
         make(*args)
 
     def install(self, spec, prefix):
+        # mxnet is just a shared library -- no need to install a bin tree
+
         install_tree('include', prefix.include)
         install_tree('lib', prefix.lib)
-        install_tree('bin', prefix.bin)
