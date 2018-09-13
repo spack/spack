@@ -56,4 +56,4 @@ class PyMultiqc(PythonPackage):
 
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'))
-    depends_on('py-markdown', type('build', 'run'))
+    depends_on('py-markdown', type=('build', 'run'))
