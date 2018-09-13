@@ -37,4 +37,5 @@ class PyNetworkx(PythonPackage):
     version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
 
     depends_on('py-decorator', type=('build', 'run'))
+    depends_on('py-decorator@4.1.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-setuptools', type='build')
