@@ -348,6 +348,27 @@ class Openspeedshop(CMakePackage):
         run_env.set('XPLAT_RSH', 'ssh')
         run_env.set('MRNET_COMM_PATH',
                     join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
+
+        # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
+        # This is needed by O|SS and CBTF tools to deploy the correct
+        # mpi runtimes for ossmpi, ossmpit, ossmpip, and cbtfsummary
+        # Users may have to set the CBTF_MPI_IMPLEMENTATION variable
+        # manually if multiple mpi's are specified in the build
+        if self.spec.satisfies('+mpich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
+
+        if self.spec.satisfies('+mvapich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
+
+        if self.spec.satisfies('+mvapich2'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
+
+        if self.spec.satisfies('+mpt'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
+
+        if self.spec.satisfies('+openmpi'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
+
         run_env.set('CBTF_MRNET_BACKEND_PATH',
                     join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
         run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)

@@ -43,6 +43,7 @@
 from spack import *
 import spack
 import spack.store
+import os
 
 
 class CbtfKrell(CMakePackage):
@@ -125,10 +126,10 @@ class CbtfKrell(CMakePackage):
     depends_on("libmonitor@2013.02.18+krellpatch")
 
     depends_on("libunwind", when='@develop')
-    depends_on("libunwind@1.1", when='@1.9.1.0:9999')
+    depends_on("libunwind@1.2.1", when='@1.9.1.0:9999')
 
     depends_on("papi", when='@develop')
-    depends_on("papi@5.5.1", when='@1.9.1.0:9999')
+    depends_on("papi@5.6.0", when='@1.9.1.0:9999')
 
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
@@ -139,6 +140,9 @@ class CbtfKrell(CMakePackage):
     depends_on("mvapich2", when='+mvapich2')
     depends_on("mvapich", when='+mvapich')
     depends_on("mpt", when='+mpt')
+
+    depends_on("python", when='@develop')
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')
 
     depends_on("gotcha")
 
@@ -263,3 +267,49 @@ class CbtfKrell(CMakePackage):
             self.set_cray_login_node_cmake_options(spec, cmake_args)
 
         return cmake_args
+
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environments for a package."""
+
+        # Environment settings for cbtf-krell
+        run_env.prepend_path('PATH', self.prefix.bin)
+        run_env.prepend_path('PATH', self.prefix.sbin)
+
+        # Find openspeedshop library path
+        cbtfk_libdir = find_libraries('libcbtf-core.so.1.1.0',
+                                      root=self.prefix,
+                                      shared=True, recursive=True)
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             os.path.dirname(cbtfk_libdir.joined()))
+
+        cbtf_mc = '/sbin/cbtf_mrnet_commnode'
+        cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
+        run_env.set('XPLAT_RSH', 'ssh')
+        run_env.set('MRNET_COMM_PATH',
+                    join_path(self.spec.prefix + cbtf_mc))
+
+        # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
+        # This is needed by CBTF tools to deploy the correct
+        # mpi runtimes for cbtfsummary
+        # Users may have to set the CBTF_MPI_IMPLEMENTATION variable
+        # manually if multiple mpi's are specified in the build
+
+        if self.spec.satisfies('+mpich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
+
+        if self.spec.satisfies('+mvapich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
+
+        if self.spec.satisfies('+mvapich2'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
+
+        if self.spec.satisfies('+mpt'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
+
+        if self.spec.satisfies('+openmpi'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
+
+        run_env.set('CBTF_MRNET_BACKEND_PATH',
+                    join_path(self.prefix + cbtf_lmb))
+        run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
+        run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
