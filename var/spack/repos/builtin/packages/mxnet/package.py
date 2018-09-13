@@ -45,6 +45,7 @@ class Mxnet(MakefilePackage):
     variant('opencv', default=True, description='Enable OpenCV support')
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('profiler', default=False, description='Enable Profiler (for verification and debug only).')
+    variant('python', default=True, description='Install python bindings')
 
     depends_on('dmlc-core@20170508')
     depends_on('dmlc-core+openmp', when='+openmp')
@@ -57,6 +58,11 @@ class Mxnet(MakefilePackage):
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
     depends_on('opencv+core+imgproc+highgui+jpeg+png+tiff~eigen~ipp@3.0:', when='+opencv')
+
+    # python extensions
+    depends_on('python@2.7:', type=('build', 'run'), when='+python')
+    depends_on('py-setuptools', type='build', when='+python')
+    extends('python', when='+python')
 
     patch('makefile.patch', when='@0.10:0.11')
 
@@ -118,3 +124,8 @@ class Mxnet(MakefilePackage):
 
         install_tree('include', prefix.include)
         install_tree('lib', prefix.lib)
+
+        # install python bindings
+        if '+python' in spec:
+            python = which('python')
+            python('python/setup.py', 'install', '--prefix={0}'.format(prefix))
