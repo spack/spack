@@ -14,16 +14,6 @@
 #   ~/.spack/config.yaml
 # -------------------------------------------------------------------------
 config:
-  # If 'true' enforces RPATH for ELF binaries, if 'false'
-  # enforces RUNPATH. See:
-  #
-  # http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
-  # http://xahlee.info/UnixResource_dir/_/ldpath.html
-  # https://gms.tf/ld_library_path-considered-harmful.html
-  #
-  # for more information on the subject.
-  rpath: true
-
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree: $spack/opt/spack
@@ -148,3 +138,23 @@ config:
   # anticipates that a significant delay indicates that the lock attempt will
   # never succeed.
   package_lock_timeout: null
+
+  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries
+  # so that they can find their dependencies. Has no effect on macOS.
+  #
+  # There are two options:
+  #
+  #   1. rpath: use RPATH: force --disable-new-tags flag to be passed to ld
+  #   2. runpath: use RUNPATH: force --enable-new-tags flag to be passed to ld
+  #
+  # RPATH search paths have higher precedence than LD_LIBRARY_PATH
+  # and ld.so will search for libraries in transitive RPATHs of
+  # parent objects.
+  #
+  # RUNPATH search paths have lower precedence than LD_LIBRARRY_PATH,
+  # and ld.so will ONLY search for dependencies in the RUNPATH of
+  # the loading object.
+  #
+  # DO NOT MIX these within the same install tree. See the Spack
+  # documentation for details.
+  shared_linking: 'rpath'
