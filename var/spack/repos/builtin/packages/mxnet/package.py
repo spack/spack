@@ -52,7 +52,7 @@ class Mxnet(MakefilePackage):
     depends_on('mshadow@20170721')
     depends_on('ps-lite@20170328')
     depends_on('nnvm~shared@20170418')
-    depends_on('blas', type=('build', 'link', 'run'))
+    depends_on('blas')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
