@@ -160,6 +160,7 @@ class Kokkos(Package):
                 g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
             if 'cuda' in spec:
                 g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
+
             # Host architectures
             host_arch = spec.variants['host_arch'].value
             # GPU architectures
@@ -203,6 +204,7 @@ class Kokkos(Package):
             if kokkos_options_args:
                 g_args.append('--with-options={0}'
                               .format(','.join(kokkos_options_args)))
+
 
             generate(*g_args)
             make()
