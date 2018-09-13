@@ -33,21 +33,32 @@ from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
-import spack
 import spack.config
+import spack.paths
 import spack.spec
 import spack.store
 from spack.error import SpackError
 
+
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify configuration by default modify the *highest*
-# priority scope.
-default_modify_scope = spack.config.highest_precedence_scope().name
+def default_modify_scope():
+    """Return the config scope that commands should modify by default.
 
-# Commands that list configuration list *all* scopes by default.
-default_list_scope = None
+    Commands that modify configuration by default modify the *highest*
+    priority scope.
+    """
+    return spack.config.config.highest_precedence_scope().name
+
+
+def default_list_scope():
+    """Return the config scope that is listed by default.
+
+    Commands that list configuration list *all* scopes (merged) by default.
+    """
+    return None
+
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list
@@ -57,8 +68,6 @@ ignore_files = r'^\.|^__init__.py$|^#'
 
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
-
-command_path = os.path.join(spack.lib_path, "spack", "cmd")
 
 #: Names of all commands
 all_commands = []
@@ -74,11 +83,26 @@ def cmd_name(python_name):
     return python_name.replace('_', '-')
 
 
-for file in os.listdir(command_path):
-    if file.endswith(".py") and not re.search(ignore_files, file):
-        cmd = re.sub(r'.py$', '', file)
-        all_commands.append(cmd_name(cmd))
-all_commands.sort()
+#: global, cached list of all commands -- access through all_commands()
+_all_commands = None
+
+
+def all_commands():
+    """Get a sorted list of all spack commands.
+
+    This will list the lib/spack/spack/cmd directory and find the
+    commands there to construct the list.  It does not actually import
+    the python files -- just gets the names.
+    """
+    global _all_commands
+    if _all_commands is None:
+        _all_commands = []
+        for file in os.listdir(spack.paths.command_path):
+            if file.endswith(".py") and not re.search(ignore_files, file):
+                cmd = re.sub(r'.py$', '', file)
+                _all_commands.append(cmd_name(cmd))
+        _all_commands.sort()
+    return _all_commands
 
 
 def remove_options(parser, *options):
@@ -130,14 +154,15 @@ def parse_specs(args, **kwargs):
     """
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
+    tests = kwargs.get('tests', False)
 
     try:
         specs = spack.spec.parse(args)
         for spec in specs:
             if concretize:
-                spec.concretize()  # implies normalize
+                spec.concretize(tests=tests)  # implies normalize
             elif normalize:
-                spec.normalize()
+                spec.normalize(tests=tests)
 
         return specs
 
@@ -320,5 +345,5 @@ def display_specs(specs, args=None, **kwargs):
 
 def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')

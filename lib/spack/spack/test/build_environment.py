@@ -25,17 +25,18 @@
 import os
 import pytest
 
-import spack
-from llnl.util.filesystem import join_path
+import spack.build_environment
+import spack.spec
+from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
 from spack.util.executable import Executable
 
 
 @pytest.fixture
 def build_environment():
-    cc = Executable(join_path(spack.build_env_path, "cc"))
-    cxx = Executable(join_path(spack.build_env_path, "c++"))
-    fc = Executable(join_path(spack.build_env_path, "fc"))
+    cc = Executable(os.path.join(build_env_path, "cc"))
+    cxx = Executable(os.path.join(build_env_path, "c++"))
+    fc = Executable(os.path.join(build_env_path, "fc"))
 
     realcc = "/bin/mycc"
     prefix = "/spack-test-prefix"
@@ -97,3 +98,28 @@ def test_static_to_shared_library(build_environment):
 
             assert output == expected[arch].format(
                 static_lib, shared_lib, os.path.basename(shared_lib))
+
+
+@pytest.mark.regression('8345')
+@pytest.mark.usefixtures('config', 'mock_packages')
+def test_cc_not_changed_by_modules(monkeypatch):
+
+    s = spack.spec.Spec('cmake')
+    s.concretize()
+    pkg = s.package
+
+    def _set_wrong_cc(x):
+        os.environ['CC'] = 'NOT_THIS_PLEASE'
+        os.environ['ANOTHER_VAR'] = 'THIS_IS_SET'
+
+    monkeypatch.setattr(
+        spack.build_environment, 'load_module', _set_wrong_cc
+    )
+    monkeypatch.setattr(
+        pkg.compiler, 'modules', ['some_module']
+    )
+
+    spack.build_environment.setup_package(pkg, False)
+
+    assert os.environ['CC'] != 'NOT_THIS_PLEASE'
+    assert os.environ['ANOTHER_VAR'] == 'THIS_IS_SET'

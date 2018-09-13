@@ -29,7 +29,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir, mkdirp
 
-import spack
+import spack.paths
 import spack.util.compression
 from spack.stage import Stage
 from spack.spec import Spec
@@ -39,11 +39,11 @@ from spack.spec import Spec
 def mock_stage(tmpdir, monkeypatch):
     # don't disrupt the spack install directory with tests.
     mock_path = str(tmpdir)
-    monkeypatch.setattr(spack, 'stage_path', mock_path)
+    monkeypatch.setattr(spack.paths, 'stage_path', mock_path)
     return mock_path
 
 
-data_path = os.path.join(spack.test_path, 'data', 'patch')
+data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
 
 
 @pytest.mark.parametrize('filename, sha256, archive_sha256', [
@@ -93,7 +93,7 @@ third line
             assert filecmp.cmp('foo.txt', 'foo-expected.txt')
 
 
-def test_patch_in_spec(builtin_mock, config):
+def test_patch_in_spec(mock_packages, config):
     """Test whether patches in a package appear in the spec."""
     spec = Spec('patch')
     spec.concretize()
@@ -108,7 +108,7 @@ def test_patch_in_spec(builtin_mock, config):
             spec.variants['patches'].value)
 
 
-def test_patched_dependency(builtin_mock, config):
+def test_patched_dependency(mock_packages, config):
     """Test whether patched dependencies work."""
     spec = Spec('patch-a-dependency')
     spec.concretize()
@@ -119,7 +119,7 @@ def test_patched_dependency(builtin_mock, config):
             spec['libelf'].variants['patches'].value)
 
 
-def test_multiple_patched_dependencies(builtin_mock, config):
+def test_multiple_patched_dependencies(mock_packages, config):
     """Test whether multiple patched dependencies work."""
     spec = Spec('patch-several-dependencies')
     spec.concretize()
@@ -138,7 +138,7 @@ def test_multiple_patched_dependencies(builtin_mock, config):
             spec['fake'].variants['patches'].value)
 
 
-def test_conditional_patched_dependencies(builtin_mock, config):
+def test_conditional_patched_dependencies(mock_packages, config):
     """Test whether conditional patched dependencies work."""
     spec = Spec('patch-several-dependencies @1.0')
     spec.concretize()
@@ -166,7 +166,7 @@ def test_conditional_patched_dependencies(builtin_mock, config):
             spec['fake'].variants['patches'].value)
 
 
-def test_conditional_patched_deps_with_conditions(builtin_mock, config):
+def test_conditional_patched_deps_with_conditions(mock_packages, config):
     """Test whether conditional patched dependencies with conditions work."""
     spec = Spec('patch-several-dependencies @1.0 ^libdwarf@20111030')
     spec.concretize()

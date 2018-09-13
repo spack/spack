@@ -41,6 +41,7 @@ class Gromacs(CMakePackage):
     homepage = 'http://www.gromacs.org'
     url = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
 
+    version('2018.1', '7ee393fa3c6b7ae351d47eae2adf980e')
     version('2018', '6467ffb1575b8271548a13abfba6374c')
     version('2016.4', '19c8b5c85f3ec62df79d2249a3c272f8')
     version('2016.3', 'e9e3a41bd123b52fbcc6b32d09f8202b')

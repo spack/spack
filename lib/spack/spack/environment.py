@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
+import contextlib
 import inspect
 import json
 import os
@@ -30,6 +31,9 @@ import re
 import sys
 import os.path
 import subprocess
+
+import llnl.util.tty as tty
+
 from llnl.util.lang import dedupe
 
 
@@ -598,3 +602,41 @@ def inspect_path(root, inspections, exclude=None):
                 env.prepend_path(variable, expected)
 
     return env
+
+
+@contextlib.contextmanager
+def preserve_environment(*variables):
+    """Ensures that the value of the environment variables passed as
+    arguments is the same before entering to the context manager and after
+    exiting it.
+
+    Variables that are unset before entering the context manager will be
+    explicitly unset on exit.
+
+    Args:
+        variables (list of str): list of environment variables to be preserved
+    """
+    cache = {}
+    for var in variables:
+        # The environment variable to be preserved might not be there.
+        # In that case store None as a placeholder.
+        cache[var] = os.environ.get(var, None)
+
+    yield
+
+    for var in variables:
+        value = cache[var]
+        msg = '[PRESERVE_ENVIRONMENT]'
+        if value is not None:
+            # Print a debug statement if the value changed
+            if var not in os.environ:
+                msg += ' {0} was unset, will be reset to "{1}"'
+                tty.debug(msg.format(var, value))
+            elif os.environ[var] != value:
+                msg += ' {0} was set to "{1}", will be reset to "{2}"'
+                tty.debug(msg.format(var, os.environ[var], value))
+            os.environ[var] = value
+        elif var in os.environ:
+            msg += ' {0} was set to "{1}", will be unset'
+            tty.debug(msg.format(var, os.environ[var]))
+            del os.environ[var]

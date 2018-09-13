@@ -22,16 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+import os.path
 import collections
 import contextlib
 import inspect
-import os.path
-import yaml
 
-from six import StringIO
+import yaml
 import pytest
-import spack
+from six import StringIO
+
+import spack.paths
+import spack.spec
 import spack.modules.common
 import spack.util.path
 
@@ -90,14 +91,6 @@ def modulefile_content(filename_dict, request):
 
 
 @pytest.fixture()
-def update_template_dirs(config, monkeypatch):
-    """Mocks the template directories for tests"""
-    dirs = spack.config.get_config('config')['template_dirs']
-    dirs = [spack.util.path.canonicalize_path(x) for x in dirs]
-    monkeypatch.setattr(spack, 'template_dirs', dirs)
-
-
-@pytest.fixture()
 def patch_configuration(monkeypatch, request):
     """Reads a configuration file from the mock ones prepared for tests
     and monkeypatches the right classes to hook it in.
@@ -110,7 +103,7 @@ def patch_configuration(monkeypatch, request):
     writer_key = str(writer_mod.__name__).split('.')[-1]
     # Root folder for configuration
     root_for_conf = os.path.join(
-        spack.test_path, 'data', 'modules', writer_key
+        spack.paths.test_path, 'data', 'modules', writer_key
     )
 
     def _impl(filename):

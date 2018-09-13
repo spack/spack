@@ -22,14 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import spack
-from llnl.util.filesystem import join_path
-from spack.directory_layout import YamlDirectoryLayout
-from spack.filesystem_view import YamlFilesystemView
-
 import os
 import pytest
+
+import spack.spec
+from spack.directory_layout import YamlDirectoryLayout
+from spack.filesystem_view import YamlFilesystemView
 
 
 class FakeExtensionPackage(object):
@@ -97,7 +95,7 @@ def python_and_extension_dirs(tmpdir):
     create_dir_structure(ext_prefix, ext_dirs)
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(join_path(ext_prefix, easy_install_location), 'w') as F:
+    with open(str(ext_prefix.join(easy_install_location)), 'w') as F:
         F.write("""path/to/ext1.egg
 path/to/setuptools.egg""")
 
@@ -137,10 +135,10 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg)
 
-    assert os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
+    assert os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(join_path(python_prefix, easy_install_location), 'r') as F:
+    with open(os.path.join(python_prefix, easy_install_location), 'r') as F:
         easy_install_contents = F.read()
 
     assert 'ext1.egg' in easy_install_contents
@@ -163,9 +161,9 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
 
-    assert not os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
+    assert not os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
-    assert os.path.exists(join_path(view_dir, 'bin/py-ext-tool'))
+    assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
 
 
 @pytest.fixture()
@@ -247,7 +245,7 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg)
 
-    assert os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+    assert os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
 
 def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
@@ -266,6 +264,6 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
 
-    assert not os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+    assert not os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
-    assert os.path.exists(join_path(view_dir, 'bin/perl-ext-tool'))
+    assert os.path.exists(os.path.join(view_dir, 'bin/perl-ext-tool'))

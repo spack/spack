@@ -22,19 +22,96 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import collections
 import getpass
-import os
 import tempfile
 
-import spack.util.ordereddict
 import pytest
-import spack
-import spack.config
 import yaml
+
+import spack.paths
+import spack.config
 from spack.util.path import canonicalize_path
 
-# Some sample compiler config data
+
+# sample config data
+config_low = {
+    'config': {
+        'install_tree': 'install_tree_path',
+        'build_stage': ['path1', 'path2', 'path3']}}
+
+config_override_all = {
+    'config:': {
+        'install_tree:': 'override_all'}}
+
+config_override_key = {
+    'config': {
+        'install_tree:': 'override_key'}}
+
+config_merge_list = {
+    'config': {
+        'build_stage': ['patha', 'pathb']}}
+
+config_override_list = {
+    'config': {
+        'build_stage:': ['patha', 'pathb']}}
+
+
+@pytest.fixture()
+def config(tmpdir):
+    """Mocks the configuration scope."""
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
+          for name in ['low', 'high']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+
+
+@pytest.fixture()
+def write_config_file(tmpdir):
+    """Returns a function that writes a config file."""
+    def _write(config, data, scope):
+        config_yaml = tmpdir.join(scope, config + '.yaml')
+        config_yaml.ensure()
+        with config_yaml.open('w') as f:
+            yaml.dump(data, f)
+    return _write
+
+
+def check_compiler_config(comps, *compiler_names):
+    """Check that named compilers in comps match Spack's config."""
+    config = spack.config.get('compilers')
+    compiler_list = ['cc', 'cxx', 'f77', 'fc']
+    flag_list = ['cflags', 'cxxflags', 'fflags', 'cppflags',
+                 'ldflags', 'ldlibs']
+    param_list = ['modules', 'paths', 'spec', 'operating_system']
+    for compiler in config:
+        conf = compiler['compiler']
+        if conf['spec'] in compiler_names:
+            comp = next((c['compiler'] for c in comps if
+                         c['compiler']['spec'] == conf['spec']), None)
+            if not comp:
+                raise ValueError('Bad config spec')
+            for p in param_list:
+                assert conf[p] == comp[p]
+            for f in flag_list:
+                expected = comp.get('flags', {}).get(f, None)
+                actual = conf.get('flags', {}).get(f, None)
+                assert expected == actual
+            for c in compiler_list:
+                expected = comp['paths'][c]
+                actual = conf['paths'][c]
+                assert expected == actual
+
+
+#
+# Some sample compiler config data and tests.
+#
 a_comps = {
     'compilers': [
         {'compiler': {
@@ -139,32 +216,98 @@ b_comps = {
     ]
 }
 
-# Some Sample repo data
+
+@pytest.fixture()
+def compiler_specs():
+    """Returns a couple of compiler specs needed for the tests"""
+    a = [ac['compiler']['spec'] for ac in a_comps['compilers']]
+    b = [bc['compiler']['spec'] for bc in b_comps['compilers']]
+    CompilerSpecs = collections.namedtuple('CompilerSpecs', ['a', 'b'])
+    return CompilerSpecs(a=a, b=b)
+
+
+def test_write_key_in_memory(config, compiler_specs):
+    # Write b_comps "on top of" a_comps.
+    spack.config.set('compilers', a_comps['compilers'], scope='low')
+    spack.config.set('compilers', b_comps['compilers'], scope='high')
+
+    # Make sure the config looks how we expect.
+    check_compiler_config(a_comps['compilers'], *compiler_specs.a)
+    check_compiler_config(b_comps['compilers'], *compiler_specs.b)
+
+
+def test_write_key_to_disk(config, compiler_specs):
+    # Write b_comps "on top of" a_comps.
+    spack.config.set('compilers', a_comps['compilers'], scope='low')
+    spack.config.set('compilers', b_comps['compilers'], scope='high')
+
+    # Clear caches so we're forced to read from disk.
+    spack.config.config.clear_caches()
+
+    # Same check again, to ensure consistency.
+    check_compiler_config(a_comps['compilers'], *compiler_specs.a)
+    check_compiler_config(b_comps['compilers'], *compiler_specs.b)
+
+
+def test_write_to_same_priority_file(config, compiler_specs):
+    # Write b_comps in the same file as a_comps.
+    spack.config.set('compilers', a_comps['compilers'], scope='low')
+    spack.config.set('compilers', b_comps['compilers'], scope='low')
+
+    # Clear caches so we're forced to read from disk.
+    spack.config.config.clear_caches()
+
+    # Same check again, to ensure consistency.
+    check_compiler_config(a_comps['compilers'], *compiler_specs.a)
+    check_compiler_config(b_comps['compilers'], *compiler_specs.b)
+
+
+#
+# Sample repo data and tests
+#
 repos_low = {'repos': ["/some/path"]}
 repos_high = {'repos': ["/some/other/path"]}
 
 
-# sample config data
-config_low = {
-    'config': {
-        'install_tree': 'install_tree_path',
-        'build_stage': ['path1', 'path2', 'path3']}}
+# repos
+def test_write_list_in_memory(config):
+    spack.config.set('repos', repos_low['repos'], scope='low')
+    spack.config.set('repos', repos_high['repos'], scope='high')
 
-config_override_all = {
-    'config:': {
-        'install_tree:': 'override_all'}}
+    config = spack.config.get('repos')
+    assert config == repos_high['repos'] + repos_low['repos']
 
-config_override_key = {
-    'config': {
-        'install_tree:': 'override_key'}}
 
-config_merge_list = {
-    'config': {
-        'build_stage': ['patha', 'pathb']}}
+def test_substitute_config_variables(config):
+    prefix = spack.paths.prefix.lstrip('/')
 
-config_override_list = {
-    'config': {
-        'build_stage:': ['patha', 'pathb']}}
+    assert os.path.join(
+        '/foo/bar/baz', prefix
+    ) == canonicalize_path('/foo/bar/baz/$spack')
+
+    assert os.path.join(
+        spack.paths.prefix, 'foo/bar/baz'
+    ) == canonicalize_path('$spack/foo/bar/baz/')
+
+    assert os.path.join(
+        '/foo/bar/baz', prefix, 'foo/bar/baz'
+    ) == canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
+
+    assert os.path.join(
+        '/foo/bar/baz', prefix
+    ) == canonicalize_path('/foo/bar/baz/${spack}')
+
+    assert os.path.join(
+        spack.paths.prefix, 'foo/bar/baz'
+    ) == canonicalize_path('${spack}/foo/bar/baz/')
+
+    assert os.path.join(
+        '/foo/bar/baz', prefix, 'foo/bar/baz'
+    ) == canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
+
+    assert os.path.join(
+        '/foo/bar/baz', prefix, 'foo/bar/baz'
+    ) != canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
 
 
 packages_merge_low = {
@@ -204,215 +347,174 @@ def test_merge_with_defaults(config, write_config_file):
     """
     write_config_file('packages', packages_merge_low, 'low')
     write_config_file('packages', packages_merge_high, 'high')
-    cfg = spack.config.get_config('packages')
+    cfg = spack.config.get('packages')
 
     assert cfg['foo']['version'] == ['a']
     assert cfg['bar']['version'] == ['b']
     assert cfg['baz']['version'] == ['c']
 
 
-def check_compiler_config(comps, *compiler_names):
-    """Check that named compilers in comps match Spack's config."""
-    config = spack.config.get_config('compilers')
-    compiler_list = ['cc', 'cxx', 'f77', 'fc']
-    flag_list = ['cflags', 'cxxflags', 'fflags', 'cppflags',
-                 'ldflags', 'ldlibs']
-    param_list = ['modules', 'paths', 'spec', 'operating_system']
-    for compiler in config:
-        conf = compiler['compiler']
-        if conf['spec'] in compiler_names:
-            comp = next((c['compiler'] for c in comps if
-                         c['compiler']['spec'] == conf['spec']), None)
-            if not comp:
-                raise ValueError('Bad config spec')
-            for p in param_list:
-                assert conf[p] == comp[p]
-            for f in flag_list:
-                expected = comp.get('flags', {}).get(f, None)
-                actual = conf.get('flags', {}).get(f, None)
-                assert expected == actual
-            for c in compiler_list:
-                expected = comp['paths'][c]
-                actual = conf['paths'][c]
-                assert expected == actual
+def test_substitute_user(config):
+    user = getpass.getuser()
+    assert '/foo/bar/' + user + '/baz' == canonicalize_path(
+        '/foo/bar/$user/baz'
+    )
 
 
-@pytest.fixture()
-def config(tmpdir):
-    """Mocks the configuration scope."""
-    spack.config.clear_config_caches()
-    real_scope = spack.config.config_scopes
-    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
-    for priority in ['low', 'high']:
-        spack.config.ConfigScope(priority, str(tmpdir.join(priority)))
-    Config = collections.namedtuple('Config', ['real', 'mock'])
-    yield Config(real=real_scope, mock=spack.config.config_scopes)
-    spack.config.config_scopes = real_scope
-    spack.config.clear_config_caches()
+def test_substitute_tempdir(config):
+    tempdir = tempfile.gettempdir()
+    assert tempdir == canonicalize_path('$tempdir')
+    assert tempdir + '/foo/bar/baz' == canonicalize_path(
+        '$tempdir/foo/bar/baz'
+    )
 
 
-@pytest.fixture()
-def write_config_file(tmpdir):
-    """Returns a function that writes a config file."""
-    def _write(config, data, scope):
-        config_yaml = tmpdir.join(scope, config + '.yaml')
-        config_yaml.ensure()
-        with config_yaml.open('w') as f:
-            yaml.dump(data, f)
-    return _write
+def test_read_config(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    assert spack.config.get('config') == config_low['config']
 
 
-@pytest.fixture()
-def compiler_specs():
-    """Returns a couple of compiler specs needed for the tests"""
-    a = [ac['compiler']['spec'] for ac in a_comps['compilers']]
-    b = [bc['compiler']['spec'] for bc in b_comps['compilers']]
-    CompilerSpecs = collections.namedtuple('CompilerSpecs', ['a', 'b'])
-    return CompilerSpecs(a=a, b=b)
+def test_read_config_override_all(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    write_config_file('config', config_override_all, 'high')
+    assert spack.config.get('config') == {
+        'install_tree': 'override_all'
+    }
 
 
-@pytest.mark.usefixtures('config')
-class TestConfig(object):
+def test_read_config_override_key(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    write_config_file('config', config_override_key, 'high')
+    assert spack.config.get('config') == {
+        'install_tree': 'override_key',
+        'build_stage': ['path1', 'path2', 'path3']
+    }
 
-    def test_write_list_in_memory(self):
-        spack.config.update_config('repos', repos_low['repos'], scope='low')
-        spack.config.update_config('repos', repos_high['repos'], scope='high')
 
-        config = spack.config.get_config('repos')
-        assert config == repos_high['repos'] + repos_low['repos']
+def test_read_config_merge_list(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    write_config_file('config', config_merge_list, 'high')
+    assert spack.config.get('config') == {
+        'install_tree': 'install_tree_path',
+        'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
+    }
 
-    def test_write_key_in_memory(self, compiler_specs):
-        # Write b_comps "on top of" a_comps.
-        spack.config.update_config(
-            'compilers', a_comps['compilers'], scope='low'
-        )
-        spack.config.update_config(
-            'compilers', b_comps['compilers'], scope='high'
-        )
-        # Make sure the config looks how we expect.
-        check_compiler_config(a_comps['compilers'], *compiler_specs.a)
-        check_compiler_config(b_comps['compilers'], *compiler_specs.b)
 
-    def test_write_key_to_disk(self, compiler_specs):
-        # Write b_comps "on top of" a_comps.
-        spack.config.update_config(
-            'compilers', a_comps['compilers'], scope='low'
-        )
-        spack.config.update_config(
-            'compilers', b_comps['compilers'], scope='high'
-        )
-        # Clear caches so we're forced to read from disk.
-        spack.config.clear_config_caches()
-        # Same check again, to ensure consistency.
-        check_compiler_config(a_comps['compilers'], *compiler_specs.a)
-        check_compiler_config(b_comps['compilers'], *compiler_specs.b)
+def test_read_config_override_list(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    write_config_file('config', config_override_list, 'high')
+    assert spack.config.get('config') == {
+        'install_tree': 'install_tree_path',
+        'build_stage': ['patha', 'pathb']
+    }
 
-    def test_write_to_same_priority_file(self, compiler_specs):
-        # Write b_comps in the same file as a_comps.
-        spack.config.update_config(
-            'compilers', a_comps['compilers'], scope='low'
-        )
-        spack.config.update_config(
-            'compilers', b_comps['compilers'], scope='low'
-        )
-        # Clear caches so we're forced to read from disk.
-        spack.config.clear_config_caches()
-        # Same check again, to ensure consistency.
-        check_compiler_config(a_comps['compilers'], *compiler_specs.a)
-        check_compiler_config(b_comps['compilers'], *compiler_specs.b)
 
-    def check_canonical(self, var, expected):
-        """Ensure that <expected> is substituted properly for <var> in strings
-           containing <var> in various positions."""
-        path = '/foo/bar/baz'
+def test_internal_config_update(config, write_config_file):
+    write_config_file('config', config_low, 'low')
 
-        self.assertEqual(canonicalize_path(var + path),
-                         expected + path)
+    before = config.get('config')
+    assert before['install_tree'] == 'install_tree_path'
 
-        self.assertEqual(canonicalize_path(path + var),
-                         path + '/' + expected)
+    # add an internal configuration scope
+    scope = spack.config.InternalConfigScope('command_line')
+    assert 'InternalConfigScope' in repr(scope)
 
-        self.assertEqual(canonicalize_path(path + var + path),
-                         expected + path)
+    config.push_scope(scope)
 
-    def test_substitute_config_variables(self):
-        prefix = spack.prefix.lstrip('/')
+    command_config = config.get('config', scope='command_line')
+    command_config['install_tree'] = 'foo/bar'
 
-        assert os.path.join(
-            '/foo/bar/baz', prefix
-        ) == canonicalize_path('/foo/bar/baz/$spack')
+    config.set('config', command_config, scope='command_line')
 
-        assert os.path.join(
-            spack.prefix, 'foo/bar/baz'
-        ) == canonicalize_path('$spack/foo/bar/baz/')
+    after = config.get('config')
+    assert after['install_tree'] == 'foo/bar'
 
-        assert os.path.join(
-            '/foo/bar/baz', prefix, 'foo/bar/baz'
-        ) == canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
 
-        assert os.path.join(
-            '/foo/bar/baz', prefix
-        ) == canonicalize_path('/foo/bar/baz/${spack}')
+def test_internal_config_filename(config, write_config_file):
+    write_config_file('config', config_low, 'low')
+    config.push_scope(spack.config.InternalConfigScope('command_line'))
 
-        assert os.path.join(
-            spack.prefix, 'foo/bar/baz'
-        ) == canonicalize_path('${spack}/foo/bar/baz/')
+    with pytest.raises(NotImplementedError):
+        config.get_config_filename('command_line', 'config')
 
-        assert os.path.join(
-            '/foo/bar/baz', prefix, 'foo/bar/baz'
-        ) == canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
 
-        assert os.path.join(
-            '/foo/bar/baz', prefix, 'foo/bar/baz'
-        ) != canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
-
-    def test_substitute_user(self):
-        user = getpass.getuser()
-        assert '/foo/bar/' + user + '/baz' == canonicalize_path(
-            '/foo/bar/$user/baz'
-        )
-
-    def test_substitute_tempdir(self):
-        tempdir = tempfile.gettempdir()
-        assert tempdir == canonicalize_path('$tempdir')
-        assert tempdir + '/foo/bar/baz' == canonicalize_path(
-            '$tempdir/foo/bar/baz'
-        )
-
-    def test_read_config(self, write_config_file):
-        write_config_file('config', config_low, 'low')
-        assert spack.config.get_config('config') == config_low['config']
-
-    def test_read_config_override_all(self, write_config_file):
-        write_config_file('config', config_low, 'low')
-        write_config_file('config', config_override_all, 'high')
-        assert spack.config.get_config('config') == {
-            'install_tree': 'override_all'
+def test_mark_internal():
+    data = {
+        'config': {
+            'bool': False,
+            'int': 6,
+            'numbers': [1, 2, 3],
+            'string': 'foo',
+            'dict': {
+                'more_numbers': [1, 2, 3],
+                'another_string': 'foo',
+                'another_int': 7,
+            }
         }
+    }
 
-    def test_read_config_override_key(self, write_config_file):
-        write_config_file('config', config_low, 'low')
-        write_config_file('config', config_override_key, 'high')
-        assert spack.config.get_config('config') == {
-            'install_tree': 'override_key',
-            'build_stage': ['path1', 'path2', 'path3']
-        }
+    marked = spack.config._mark_internal(data, 'x')
 
-    def test_read_config_merge_list(self, write_config_file):
-        write_config_file('config', config_low, 'low')
-        write_config_file('config', config_merge_list, 'high')
-        assert spack.config.get_config('config') == {
-            'install_tree': 'install_tree_path',
-            'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
-        }
+    # marked version should be equal to the original
+    assert data == marked
 
-    def test_read_config_override_list(self, write_config_file):
-        write_config_file('config', config_low, 'low')
-        write_config_file('config', config_override_list, 'high')
-        assert spack.config.get_config('config') == {
-            'install_tree': 'install_tree_path',
-            'build_stage': ['patha', 'pathb']
+    def assert_marked(obj):
+        if type(obj) is bool:
+            return  # can't subclass bool, so can't mark it
+
+        assert hasattr(obj, '_start_mark') and obj._start_mark.name == 'x'
+        assert hasattr(obj, '_end_mark') and obj._end_mark.name == 'x'
+
+    # everything in the marked version should have marks
+    checks = (marked.keys(), marked.values(),
+              marked['config'].keys(), marked['config'].values(),
+              marked['config']['numbers'],
+              marked['config']['dict'].keys(),
+              marked['config']['dict'].values(),
+              marked['config']['dict']['more_numbers'])
+
+    for seq in checks:
+        for obj in seq:
+            assert_marked(obj)
+
+
+def test_internal_config_from_data():
+    config = spack.config.Configuration()
+
+    # add an internal config initialized from an inline dict
+    config.push_scope(spack.config.InternalConfigScope('_builtin', {
+        'config': {
+            'verify_ssl': False,
+            'build_jobs': 6,
         }
+    }))
+
+    assert config.get('config:verify_ssl', scope='_builtin') is False
+    assert config.get('config:build_jobs', scope='_builtin') == 6
+
+    assert config.get('config:verify_ssl') is False
+    assert config.get('config:build_jobs') == 6
+
+    # push one on top and see what happens.
+    config.push_scope(spack.config.InternalConfigScope('higher', {
+        'config': {
+            'checksum': True,
+            'verify_ssl': True,
+        }
+    }))
+
+    assert config.get('config:verify_ssl', scope='_builtin') is False
+    assert config.get('config:build_jobs', scope='_builtin') == 6
+
+    assert config.get('config:verify_ssl', scope='higher') is True
+    assert config.get('config:build_jobs', scope='higher') is None
+
+    assert config.get('config:verify_ssl') is True
+    assert config.get('config:build_jobs') == 6
+    assert config.get('config:checksum') is True
+
+    assert config.get('config:checksum', scope='_builtin') is None
+    assert config.get('config:checksum', scope='higher') is True
 
 
 def test_keys_are_ordered():
@@ -432,7 +534,7 @@ def test_keys_are_ordered():
 
     config_scope = spack.config.ConfigScope(
         'modules',
-        os.path.join(spack.test_path, 'data', 'config')
+        os.path.join(spack.paths.test_path, 'data', 'config')
     )
 
     data = config_scope.get_section('modules')

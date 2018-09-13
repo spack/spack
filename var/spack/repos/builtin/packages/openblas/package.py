@@ -34,6 +34,7 @@ class Openblas(MakefilePackage):
     homepage = 'http://www.openblas.net'
     url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
 
+    version('0.3.0',  '42cde2c1059a8a12227f1e6551c8dbd2')
     version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')

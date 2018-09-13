@@ -34,6 +34,7 @@ class Typhon(CMakePackage):
     homepage = "https://github.com/UK-MAC/Typhon"
     url      = "https://github.com/UK-MAC/Typhon/archive/v3.0.tar.gz"
 
+    version('3.0.1', '89045decfba5fd468ef05ad4c924df8c')
     version('3.0', 'ec67cd1aa585ce2410d4fa50514a916f')
 
     depends_on('mpi')

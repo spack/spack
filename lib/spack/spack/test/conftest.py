@@ -28,20 +28,21 @@ import os
 import shutil
 import re
 
-import spack.util.ordereddict
-
 import py
 import pytest
 
 from llnl.util.filesystem import remove_linked_tree
 
-import spack
 import spack.architecture
+import spack.config
+import spack.caches
 import spack.database
 import spack.directory_layout
+import spack.paths
 import spack.platforms.test
-import spack.repository
+import spack.repo
 import spack.stage
+import spack.util.ordereddict
 import spack.util.executable
 import spack.util.pattern
 from spack.dependency import Dependency
@@ -77,11 +78,11 @@ def no_chdir():
 @pytest.fixture(scope='session', autouse=True)
 def mock_stage(tmpdir_factory):
     """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.stage_path
+    stage_path = spack.paths.stage_path
     new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.stage_path = new_stage
+    spack.paths.stage_path = new_stage
     yield new_stage
-    spack.stage_path = stage_path
+    spack.paths.stage_path = stage_path
 
 
 @pytest.fixture(scope='session')
@@ -118,14 +119,14 @@ def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
     yield
 
     files_in_stage = set()
-    if os.path.exists(spack.stage_path):
+    if os.path.exists(spack.paths.stage_path):
         files_in_stage = set(
-            os.listdir(spack.stage_path)) - _ignore_stage_files
+            os.listdir(spack.paths.stage_path)) - _ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(spack.stage_path, f)
+            path = os.path.join(spack.paths.stage_path, f)
             remove_whatever_it_is(path)
     else:
         _ignore_stage_files |= files_in_stage
@@ -134,7 +135,7 @@ def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
 
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.fetch_cache with a mock object that does nothing
+    """Substitutes spack.paths.fetch_cache with a mock object that does nothing
     and raises on fetch.
     """
     class MockCache(object):
@@ -154,7 +155,7 @@ def mock_fetch_cache(monkeypatch):
         def __str__(self):
             return "[mock fetch cache]"
 
-    monkeypatch.setattr(spack, 'fetch_cache', MockCache())
+    monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
 # FIXME: The lines below should better be added to a fixture with
@@ -171,27 +172,23 @@ spack.architecture.platform = lambda: spack.platforms.test.Test()
 @pytest.fixture(scope='session')
 def repo_path():
     """Session scoped RepoPath object pointing to the mock repository"""
-    return spack.repository.RepoPath(spack.mock_packages_path)
+    return spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture(scope='module')
-def builtin_mock(repo_path):
-    """Uses the 'builtin.mock' repository instead of 'builtin'"""
+def mock_packages(repo_path):
+    """Use the 'builtin.mock' repository instead of 'builtin'"""
     mock_repo = copy.deepcopy(repo_path)
-    spack.repo.swap(mock_repo)
-    BuiltinMock = collections.namedtuple('BuiltinMock', ['real', 'mock'])
-    # Confusing, but we swapped above
-    yield BuiltinMock(real=mock_repo, mock=spack.repo)
-    spack.repo.swap(mock_repo)
+    with spack.repo.swap(mock_repo):
+        yield
 
 
-@pytest.fixture()
-def refresh_builtin_mock(builtin_mock, repo_path):
-    """Refreshes the state of spack.repo"""
-    # Get back the real repository
+@pytest.fixture(scope='function')
+def mutable_mock_packages(mock_packages, repo_path):
+    """Function-scoped mock packages, for tests that need to modify them."""
     mock_repo = copy.deepcopy(repo_path)
-    spack.repo.swap(mock_repo)
-    return builtin_mock
+    with spack.repo.swap(mock_repo):
+        yield
 
 
 @pytest.fixture(scope='session')
@@ -215,17 +212,23 @@ def configuration_dir(tmpdir_factory, linux_os):
     directory path.
     """
     tmpdir = tmpdir_factory.mktemp('configurations')
+
     # Name of the yaml files in the test/data folder
-    test_path = py.path.local(spack.test_path)
+    test_path = py.path.local(spack.paths.test_path)
     compilers_yaml = test_path.join('data', 'compilers.yaml')
     packages_yaml = test_path.join('data', 'packages.yaml')
     config_yaml = test_path.join('data', 'config.yaml')
+    repos_yaml = test_path.join('data', 'repos.yaml')
+
     # Create temporary 'site' and 'user' folders
     tmpdir.ensure('site', dir=True)
     tmpdir.ensure('user', dir=True)
+
     # Copy the configurations that don't need further work
     packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
     config_yaml.copy(tmpdir.join('site', 'config.yaml'))
+    repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
+
     # Write the one that needs modifications
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
@@ -238,149 +241,105 @@ def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
     spack.package_prefs.PackagePrefs.clear_caches()
-    spack.config.clear_config_caches()
-    real_scope = spack.config.config_scopes
-    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
-    spack.config.ConfigScope('site', str(configuration_dir.join('site')))
-    spack.config.ConfigScope('system', str(configuration_dir.join('system')))
-    spack.config.ConfigScope('user', str(configuration_dir.join('user')))
-    Config = collections.namedtuple('Config', ['real', 'mock'])
 
-    yield Config(real=real_scope, mock=spack.config.config_scopes)
+    real_configuration = spack.config.config
 
-    spack.config.config_scopes = real_scope
-    spack.config.clear_config_caches()
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+          for name in ['site', 'system', 'user']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
+def _populate(mock_db):
+    """Populate a mock database with packages.
+
+    Here is what the mock DB looks like:
+
+    o  mpileaks     o  mpileaks'    o  mpileaks''
+    |\              |\              |\
+    | o  callpath   | o  callpath'  | o  callpath''
+    |/|             |/|             |/|
+    o |  mpich      o |  mpich2     o |  zmpi
+      |               |             o |  fake
+      |               |               |
+      |               |______________/
+      | .____________/
+      |/
+      o  dyninst
+      |\
+      | o  libdwarf
+      |/
+      o  libelf
+    """
+    def _install(spec):
+        s = spack.spec.Spec(spec).concretized()
+        pkg = spack.repo.get(s)
+        pkg.do_install(fake=True)
+
+    # Transaction used to avoid repeated writes.
+    with mock_db.write_transaction():
+        _install('mpileaks ^mpich')
+        _install('mpileaks ^mpich2')
+        _install('mpileaks ^zmpi')
+        _install('externaltest')
+
+
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, builtin_mock, config):
+def database(tmpdir_factory, mock_packages, config):
     """Creates a mock database with some packages installed note that
     the ref count for dyninst here will be 3, as it's recycled
     across each install.
     """
-
-    # Here is what the mock DB looks like:
-    #
-    # o  mpileaks     o  mpileaks'    o  mpileaks''
-    # |\              |\              |\
-    # | o  callpath   | o  callpath'  | o  callpath''
-    # |/|             |/|             |/|
-    # o |  mpich      o |  mpich2     o |  zmpi
-    #   |               |             o |  fake
-    #   |               |               |
-    #   |               |______________/
-    #   | .____________/
-    #   |/
-    #   o  dyninst
-    #   |\
-    #   | o  libdwarf
-    #   |/
-    #   o  libelf
+    # save the real store
+    real_store = spack.store.store
 
     # Make a fake install directory
     install_path = tmpdir_factory.mktemp('install_for_database')
-    spack_install_path = spack.store.root
 
-    spack.store.root = str(install_path)
-    install_layout = spack.directory_layout.YamlDirectoryLayout(
-        str(install_path))
-    spack_install_layout = spack.store.layout
-    spack.store.layout = install_layout
+    # Make fake store (database and install layout)
+    tmp_store = spack.store.Store(str(install_path))
+    spack.store.store = tmp_store
 
-    # Make fake database and fake install directory.
-    install_db = spack.database.Database(str(install_path))
-    spack_install_db = spack.store.db
-    spack.store.db = install_db
+    _populate(tmp_store.db)
 
-    Entry = collections.namedtuple('Entry', ['path', 'layout', 'db'])
-    Database = collections.namedtuple(
-        'Database', ['real', 'mock', 'install', 'uninstall', 'refresh'])
+    yield tmp_store.db
 
-    real = Entry(
-        path=spack_install_path,
-        layout=spack_install_layout,
-        db=spack_install_db)
-    mock = Entry(path=install_path, layout=install_layout, db=install_db)
-
-    def _install(spec):
-        s = spack.spec.Spec(spec)
-        s.concretize()
-        pkg = spack.repo.get(s)
-        pkg.do_install(fake=True)
-
-    def _uninstall(spec):
-        spec.package.do_uninstall(spec)
-
-    def _refresh():
-        with spack.store.db.write_transaction():
-            for spec in spack.store.db.query():
-                _uninstall(spec)
-            _install('mpileaks ^mpich')
-            _install('mpileaks ^mpich2')
-            _install('mpileaks ^zmpi')
-            _install('externaltest')
-
-    t = Database(
-        real=real,
-        mock=mock,
-        install=_install,
-        uninstall=_uninstall,
-        refresh=_refresh)
-
-    # Transaction used to avoid repeated writes.
-    with spack.store.db.write_transaction():
-        t.install('mpileaks ^mpich')
-        t.install('mpileaks ^mpich2')
-        t.install('mpileaks ^zmpi')
-        t.install('externaltest')
-
-    yield t
-
-    with spack.store.db.write_transaction():
-        for spec in spack.store.db.query():
+    with tmp_store.db.write_transaction():
+        for spec in tmp_store.db.query():
             if spec.package.installed:
-                t.uninstall(spec)
+                PackageBase.uninstall_by_spec(spec, force=True)
             else:
-                spack.store.db.remove(spec)
+                tmp_store.db.remove(spec)
 
     install_path.remove(rec=1)
-    spack.store.root = spack_install_path
-    spack.store.layout = spack_install_layout
-    spack.store.db = spack_install_db
+    spack.store.store = real_store
 
 
-@pytest.fixture()
-def refresh_db_on_exit(database):
-    """"Restores the state of the database after a test."""
-    yield
-    database.refresh()
+@pytest.fixture(scope='function')
+def mutable_database(database):
+    """For tests that need to modify the database instance."""
+    yield database
+    with database.write_transaction():
+        for spec in spack.store.db.query():
+            PackageBase.uninstall_by_spec(spec, force=True)
+    _populate(database)
 
 
-@pytest.fixture()
-def install_mockery(tmpdir, config, builtin_mock):
+@pytest.fixture(scope='function')
+def install_mockery(tmpdir, config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    layout = spack.store.layout
-    extensions = spack.store.extensions
-    db = spack.store.db
-    new_opt = str(tmpdir.join('opt'))
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
 
-    # Use a fake install directory to avoid conflicts bt/w
-    # installed pkgs and mock packages.
-    spack.store.layout = spack.directory_layout.YamlDirectoryLayout(new_opt)
-    spack.store.extensions = spack.directory_layout.YamlExtensionsLayout(
-        new_opt, spack.store.layout)
-    spack.store.db = spack.database.Database(new_opt)
+    # We use a fake package, so temporarily disable checksumming
+    with spack.config.override('config:checksum', False):
+        yield
 
-    # We use a fake package, so skip the checksum.
-    spack.do_checksum = False
-    yield
-    # Turn checksumming back on
-    spack.do_checksum = True
-    # Restore Spack's layout.
-    spack.store.layout = layout
-    spack.store.extensions = extensions
-    spack.store.db = db
+    spack.store.store = real_store
 
 
 @pytest.fixture()
@@ -652,7 +611,11 @@ class MockPackage(object):
             if not conditions or dep.name not in conditions:
                 self.dependencies[dep.name] = {Spec(name): d}
             else:
-                self.dependencies[dep.name] = {Spec(conditions[dep.name]): d}
+                dep_conditions = conditions[dep.name]
+                dep_conditions = dict(
+                    (Spec(x), Dependency(self, Spec(y), type=dtype))
+                    for x, y in dep_conditions.items())
+                self.dependencies[dep.name] = dep_conditions
 
         if versions:
             self.versions = versions

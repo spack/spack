@@ -41,5 +41,7 @@ class Trimgalore(Package):
     depends_on('fastqc')
 
     def install(self, spec, prefix):
+        filter_file(r'#!/usr/bin/perl', '#!/usr/bin/env perl', 'trim_galore')
+
         mkdirp(prefix.bin)
         install('trim_galore', prefix.bin)

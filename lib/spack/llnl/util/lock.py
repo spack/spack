@@ -195,11 +195,13 @@ class Lock(object):
 
         """
         if self._reads == 0 and self._writes == 0:
-            tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
-                      .format(self))
+            self._debug(
+                'READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
+                .format(self))
             self._lock(fcntl.LOCK_SH, timeout=timeout)   # can raise LockError.
-            tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
-                      .format(self))
+            self._debug(
+                'READ LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
+                .format(self))
             self._reads += 1
             return True
         else:
@@ -218,12 +220,13 @@ class Lock(object):
 
         """
         if self._writes == 0:
-            tty.debug(
+            self._debug(
                 'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
                 .format(self))
             self._lock(fcntl.LOCK_EX, timeout=timeout)   # can raise LockError.
-            tty.debug('WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
-                      .format(self))
+            self._debug(
+                'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
+                .format(self))
             self._writes += 1
             return True
         else:
@@ -243,8 +246,9 @@ class Lock(object):
         assert self._reads > 0
 
         if self._reads == 1 and self._writes == 0:
-            tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Released]'
-                      .format(self))
+            self._debug(
+                'READ LOCK: {0.path}[{0._start}:{0._length}] [Released]'
+                .format(self))
             self._unlock()      # can raise LockError.
             self._reads -= 1
             return True
@@ -265,14 +269,18 @@ class Lock(object):
         assert self._writes > 0
 
         if self._writes == 1 and self._reads == 0:
-            tty.debug('WRITE LOCK: {0.path}[{0._start}:{0._length}] [Released]'
-                      .format(self))
+            self._debug(
+                'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Released]'
+                .format(self))
             self._unlock()      # can raise LockError.
             self._writes -= 1
             return True
         else:
             self._writes -= 1
             return False
+
+    def _debug(self, *args):
+        tty.debug(*args)
 
 
 class LockTransaction(object):

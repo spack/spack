@@ -218,6 +218,7 @@ installed with Spack:
 
 * sphinx
 * sphinxcontrib-programoutput
+* sphinx-rtd-theme
 * graphviz
 * git
 * mercurial
@@ -232,6 +233,7 @@ installed with Spack:
    .. code-block:: console
 
       $ spack activate py-sphinx
+      $ spack activate py-sphinx-rtd-theme
       $ spack activate py-sphinxcontrib-programoutput
 
    so that all of the dependencies are symlinked to a central location.

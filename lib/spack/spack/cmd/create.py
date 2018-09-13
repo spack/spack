@@ -28,12 +28,13 @@ import os
 import re
 
 import llnl.util.tty as tty
-import spack
+from llnl.util.filesystem import mkdirp
+
 import spack.cmd
 import spack.util.web
-from llnl.util.filesystem import mkdirp
-from spack.repository import Repo
+import spack.repo
 from spack.spec import Spec
+from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
 from spack.util.naming import mod_to_class
 from spack.util.naming import simplify_name, valid_fully_qualified_module_name
@@ -648,17 +649,17 @@ def get_repository(args, name):
     # Figure out where the new package should live
     repo_path = args.repo
     if repo_path is not None:
-        repo = Repo(repo_path)
+        repo = spack.repo.Repo(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die("Can't create package with namespace {0} in repo with "
                     "namespace {1}".format(spec.namespace, repo.namespace))
     else:
         if spec.namespace:
-            repo = spack.repo.get_repo(spec.namespace, None)
+            repo = spack.repo.path.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.first_repo()
+            repo = spack.repo.path.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:
@@ -693,4 +694,4 @@ def create(parser, args):
     tty.msg("Created package file: {0}".format(pkg_path))
 
     # Open up the new package file in your $EDITOR
-    spack.editor(pkg_path)
+    editor(pkg_path)

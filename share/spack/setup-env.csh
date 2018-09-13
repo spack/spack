@@ -41,8 +41,8 @@ if ($?SPACK_ROOT) then
 
     # Shamelessly stolen from setup-env.sh
     set _sp_sys_type    = `$SPACK_ROOT/bin/spack python -c 'print(spack.architecture.sys_type())'`
-    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('dotkit')))"`
-    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('tcl')))"`
+    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get('config:module_roots', {}).get('dotkit')))"`
+    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get('config:module_roots', {}).get('tcl')))"`
 
     # Set up modules and dotkit search paths in the user environment
     _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"

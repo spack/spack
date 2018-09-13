@@ -151,6 +151,17 @@ to ``false`` to disable these checks.  Disabling this can expose you to
 attacks.  Use at your own risk.
 
 --------------------
+``locks``
+--------------------
+
+When set to ``true``, concurrent instances of Spack will use locks to
+avoid modifying the install tree, database file, etc. If false, Spack
+will disable all locking, but you must **not** run concurrent instances
+of Spack.  For filesystems that don't support locking, you should set
+this to ``false`` and run one Spack at a time, but otherwise we recommend
+enabling locks.
+
+--------------------
 ``dirty``
 --------------------
 

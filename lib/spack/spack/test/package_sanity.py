@@ -23,13 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """This test does sanity checks on Spack's builtin package database."""
-
 import re
 
 import pytest
 
-import spack
-from spack.repository import RepoPath
+import spack.repo
+from spack.paths import mock_packages_path
+from spack.repo import RepoPath
 
 
 def check_db():
@@ -46,10 +46,9 @@ def test_get_all_packages():
 
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
-    db = RepoPath(spack.mock_packages_path)
-    spack.repo.swap(db)
-    check_db()
-    spack.repo.swap(db)
+    db = RepoPath(mock_packages_path)
+    with spack.repo.swap(db):
+        check_db()
 
 
 def test_all_versions_are_lowercase():
@@ -64,9 +63,9 @@ def test_all_versions_are_lowercase():
 
 def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
-    defaults = spack.config.get_config('packages', scope='defaults')
+    defaults = spack.config.get('packages', scope='defaults')
     default_providers = defaults['all']['providers']
-    providers = spack.repo.provider_index.providers
+    providers = spack.repo.path.provider_index.providers
 
     for provider in providers:
         assert provider in default_providers

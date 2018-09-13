@@ -31,8 +31,8 @@ import unittest
 import tempfile
 import shutil
 
-import spack
-from llnl.util.filesystem import mkdirp, join_path
+from spack.paths import build_env_path
+from llnl.util.filesystem import mkdirp
 from spack.util.executable import Executable
 
 # Complicated compiler test command
@@ -54,11 +54,11 @@ test_command = [
 class CompilerWrapperTest(unittest.TestCase):
 
     def setUp(self):
-        self.cc = Executable(join_path(spack.build_env_path, "cc"))
-        self.ld = Executable(join_path(spack.build_env_path, "ld"))
-        self.cpp = Executable(join_path(spack.build_env_path, "cpp"))
-        self.cxx = Executable(join_path(spack.build_env_path, "c++"))
-        self.fc = Executable(join_path(spack.build_env_path, "fc"))
+        self.cc = Executable(os.path.join(build_env_path, "cc"))
+        self.ld = Executable(os.path.join(build_env_path, "ld"))
+        self.cpp = Executable(os.path.join(build_env_path, "cpp"))
+        self.cxx = Executable(os.path.join(build_env_path, "c++"))
+        self.fc = Executable(os.path.join(build_env_path, "fc"))
 
         self.realcc = "/bin/mycc"
         self.prefix = "/spack-test-prefix"
@@ -82,20 +82,20 @@ class CompilerWrapperTest(unittest.TestCase):
 
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
-        self.dep1 = join_path(self.tmp_deps, 'dep1')
-        self.dep2 = join_path(self.tmp_deps, 'dep2')
-        self.dep3 = join_path(self.tmp_deps, 'dep3')
-        self.dep4 = join_path(self.tmp_deps, 'dep4')
+        self.dep1 = os.path.join(self.tmp_deps, 'dep1')
+        self.dep2 = os.path.join(self.tmp_deps, 'dep2')
+        self.dep3 = os.path.join(self.tmp_deps, 'dep3')
+        self.dep4 = os.path.join(self.tmp_deps, 'dep4')
 
-        mkdirp(join_path(self.dep1, 'include'))
-        mkdirp(join_path(self.dep1, 'lib'))
+        mkdirp(os.path.join(self.dep1, 'include'))
+        mkdirp(os.path.join(self.dep1, 'lib'))
 
-        mkdirp(join_path(self.dep2, 'lib64'))
+        mkdirp(os.path.join(self.dep2, 'lib64'))
 
-        mkdirp(join_path(self.dep3, 'include'))
-        mkdirp(join_path(self.dep3, 'lib64'))
+        mkdirp(os.path.join(self.dep3, 'include'))
+        mkdirp(os.path.join(self.dep3, 'lib64'))
 
-        mkdirp(join_path(self.dep4, 'include'))
+        mkdirp(os.path.join(self.dep4, 'include'))
 
         if 'SPACK_DEPENDENCIES' in os.environ:
             del os.environ['SPACK_DEPENDENCIES']

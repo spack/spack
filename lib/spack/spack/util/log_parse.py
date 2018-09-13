@@ -30,7 +30,7 @@ from six import StringIO
 from ctest_log_parser import CTestLogParser, BuildError, BuildWarning
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 
 __all__ = ['parse_log_events', 'make_log_context']
 
@@ -130,8 +130,8 @@ def make_log_context(log_events, width=None):
             wrapped_line = line_fmt % (i, '\n'.join(lines))
 
             if i in error_lines:
-                out.write(
-                    colorize('  @%s{>> %s}\n' % (color, wrapped_line)))
+                out.write(colorize(
+                    '  @%s{>> %s}\n' % (color, cescape(wrapped_line))))
             else:
                 out.write('     %s\n' % wrapped_line)
 

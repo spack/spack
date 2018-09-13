@@ -44,10 +44,11 @@ class Trinity(MakefilePackage):
 
     version('2.6.6', 'b7472e98ab36655a6d9296d965471a56')
 
-    depends_on("jdk@8")
+    depends_on("java@8:")
     depends_on("bowtie2")
     depends_on("jellyfish")
     depends_on("salmon")
+    depends_on("perl+threads")
 
     def build(self, spec, prefix):
         make

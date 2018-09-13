@@ -47,9 +47,7 @@ class PyMccabe(PythonPackage):
     depends_on('python@2.7:2.8,3.3:')
 
     depends_on('py-setuptools', type='build')
-
-    # TODO: Add test dependencies
-    # depends_on('py-pytest', type='test')
+    depends_on('py-pytest', type='test')
 
     def patch(self):
         """Filter pytest-runner requirement out of setup.py."""

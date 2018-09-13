@@ -25,10 +25,9 @@
 from __future__ import print_function
 
 import sys
+import inspect
 
 import llnl.util.tty as tty
-import spack
-import inspect
 
 
 class SpackError(Exception):
@@ -73,7 +72,8 @@ class SpackError(Exception):
             sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
-        if spack.debug:
+        import spack.config
+        if spack.config.get('config:debug'):
             if self.traceback:
                 # exception came from a build child, already got
                 # traceback in child, so print it.

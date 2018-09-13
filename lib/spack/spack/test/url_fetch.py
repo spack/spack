@@ -27,7 +27,8 @@ import pytest
 
 from llnl.util.filesystem import working_dir, is_exe
 
-import spack
+import spack.repo
+import spack.config
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
 from spack.version import ver
@@ -45,7 +46,7 @@ def test_fetch(
         secure,
         checksum_type,
         config,
-        refresh_builtin_mock
+        mutable_mock_packages
 ):
     """Fetch an archive and make sure we can checksum it."""
     mock_archive.url
@@ -67,11 +68,8 @@ def test_fetch(
 
     # Enter the stage directory and check some properties
     with pkg.stage:
-        try:
-            spack.insecure = secure
+        with spack.config.override('config:verify_ssl', secure):
             pkg.do_stage()
-        finally:
-            spack.insecure = False
 
         with working_dir(pkg.stage.source_path):
             assert os.path.exists('configure')
@@ -83,7 +81,7 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
-def test_from_list_url(builtin_mock, config):
+def test_from_list_url(mock_packages, config):
     pkg = spack.repo.get('url-list-test')
     for ver_str in ['0.0.0', '1.0.0', '2.0.0',
                     '3.0', '4.5', '2.0.0b2',

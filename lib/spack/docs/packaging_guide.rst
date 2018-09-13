@@ -1565,6 +1565,14 @@ correct way to specify this would be:
 
    depends_on('python@2.6.0:2.6.999')
 
+A spec can contain multiple version ranges separated by commas.
+For example, if you need Boost 1.59.0 or newer, but there are known
+issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
+
+.. code-block:: python
+
+   depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
+
 
 ^^^^^^^^^^^^^^^^
 Dependency types
@@ -2646,8 +2654,8 @@ In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
 alike. To that end the compiler classes in ``spack`` implement the
-following **properties**: ``openmp_flag``, ``cxx11_flag``,
-``cxx14_flag``, which can be accessed in a package by
+following **properties**: ``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``,
+``cxx14_flag``, and ``cxx17_flag``, which can be accessed in a package by
 ``self.compiler.cxx11_flag`` and alike. Note that the implementation is
 such that if a given compiler version does not support this feature, an
 error will be produced. Therefore package developers can also use these
@@ -2755,11 +2763,11 @@ Prefix Attribute        Location
 
 Of course, this only works if your file or directory is a valid Python
 variable name. If your file or directory contains dashes or dots, use
-``join_path`` instead:
+``join`` instead:
 
 .. code-block:: python
 
-   join_path(prefix.lib, 'libz.a')
+   prefix.lib.join('libz.a')
 
 
 .. _spec-objects:

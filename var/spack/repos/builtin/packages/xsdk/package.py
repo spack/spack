@@ -37,7 +37,7 @@ class Xsdk(Package):
 
     # Dummy url since Spack complains if I don't list something, will be
     # removed when metapackage is available
-    url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
+    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
 
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
     version('0.3.0', 'a52dc710c744afa0b71429b8ec9425bc', preferred=True)
@@ -51,7 +51,7 @@ class Xsdk(Package):
     depends_on('hypre@develop~internal-superlu', when='@develop')
 
     depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0')
-    depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
+    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
 
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')

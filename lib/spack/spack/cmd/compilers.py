@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
+import spack.config
 from spack.cmd.compiler import compiler_list
 
 description = "list available compilers"
@@ -31,9 +31,11 @@ level = "short"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.config_scopes
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
     subparser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
+        '--scope', choices=scopes, metavar=scopes_metavar,
         help="configuration scope to read/modify")
 
 

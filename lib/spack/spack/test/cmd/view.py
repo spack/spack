@@ -34,7 +34,7 @@ view = SpackCommand('view')
 
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add'])
 def test_view_link_type(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, cmd):
     install('libdwarf')
     viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
@@ -45,7 +45,7 @@ def test_view_link_type(
 
 
 def test_view_external(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('externaltool')
     viewpath = str(tmpdir.mkdir('view'))
@@ -54,7 +54,7 @@ def test_view_external(
 
 
 def test_view_extension(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('extendee')
     install('extension1@1.0')
@@ -80,7 +80,7 @@ def test_view_extension(
 
 
 def test_view_extension_remove(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('extendee')
     install('extension1@1.0')
@@ -99,7 +99,7 @@ def test_view_extension_remove(
 
 
 def test_view_extension_conflict(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('extendee')
     install('extension1@1.0')
@@ -111,7 +111,7 @@ def test_view_extension_conflict(
 
 
 def test_view_extension_conflict_ignored(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('extendee')
     install('extension1@1.0')
@@ -124,7 +124,7 @@ def test_view_extension_conflict_ignored(
 
 
 def test_view_extension_global_activation(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('extendee')
     install('extension1@1.0')
@@ -153,7 +153,7 @@ def test_view_extension_global_activation(
 
 
 def test_view_extendee_with_global_activations(
-        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('extendee')
     install('extension1@1.0')

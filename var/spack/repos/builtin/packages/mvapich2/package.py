@@ -125,6 +125,18 @@ class Mvapich2(AutotoolsPackage):
     )
 
     @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
+
+    @property
     def process_manager_options(self):
         spec = self.spec
 

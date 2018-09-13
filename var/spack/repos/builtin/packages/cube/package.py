@@ -34,8 +34,9 @@ class Cube(AutotoolsPackage):
     """
 
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
-    url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz"
+    url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/CubeBundle-4.4.tar.gz"
 
+    version('4.4',   'f4f0544883bdd5bad9e11a4a692858bf')
     version('4.3.5', 'e5dce986e3c6381ea3a5fcb66c553adc')
     version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa')
     version('4.3.3', '07e109248ed8ffc7bdcce614264a2909')
@@ -48,11 +49,16 @@ class Cube(AutotoolsPackage):
 
     depends_on('zlib')
 
-    depends_on('qt@5:', when='@4.3.0:4.3.999 +gui')
+    depends_on('qt@5:', when='@4.3.0: +gui')
     depends_on('qt@4.8:', when='@4.2.0:4.2.999 +gui')
 
     def url_for_version(self, version):
-        return 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cube-{1}.tar.gz'.format(version.up_to(2), version)
+        if version >= Version('4.4'):
+            filename = 'CubeBundle-{0}.tar.gz'.format(version)
+        else:
+            filename = 'cube-{0}.tar.gz'.format(version)
+
+        return 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/{1}'.format(version.up_to(2), filename)
 
     def configure_args(self):
         spec = self.spec

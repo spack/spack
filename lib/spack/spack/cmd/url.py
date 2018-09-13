@@ -26,7 +26,7 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 
-import spack
+import spack.repo
 
 from llnl.util import tty
 from spack.url import parse_version_offset, parse_name_offset
@@ -144,7 +144,7 @@ def url_list(args):
     urls = set()
 
     # Gather set of URLs from all packages
-    for pkg in spack.repo.all_packages():
+    for pkg in spack.repo.path.all_packages():
         url = getattr(pkg.__class__, 'url', None)
         urls = url_list_parsing(args, urls, url, pkg)
 
@@ -178,7 +178,7 @@ def url_summary(args):
     tty.msg('Generating a summary of URL parsing in Spack...')
 
     # Loop through all packages
-    for pkg in spack.repo.all_packages():
+    for pkg in spack.repo.path.all_packages():
         urls = set()
 
         url = getattr(pkg.__class__, 'url', None)

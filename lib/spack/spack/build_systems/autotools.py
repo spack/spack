@@ -32,7 +32,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, join_path, force_remove
+from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -177,7 +177,7 @@ class AutotoolsPackage(PackageBase):
     @property
     def configure_abs_path(self):
         # Absolute path to configure
-        configure_abs_path = join_path(
+        configure_abs_path = os.path.join(
             os.path.abspath(self.configure_directory), 'configure'
         )
         return configure_abs_path
@@ -220,7 +220,7 @@ class AutotoolsPackage(PackageBase):
             if 'pkgconfig' in spec:
                 autoreconf_args += [
                     '-I',
-                    join_path(spec['pkgconfig'].prefix, 'share', 'aclocal'),
+                    os.path.join(spec['pkgconfig'].prefix, 'share', 'aclocal'),
                 ]
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)

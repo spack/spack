@@ -27,7 +27,6 @@ import os.path
 import inspect
 import hashlib
 
-import spack
 import spack.error
 import spack.fetch_strategy as fs
 import spack.stage

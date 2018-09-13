@@ -27,15 +27,16 @@ non-hierarchical modules.
 """
 import os.path
 import string
-import spack.tengine as tengine
 
 import llnl.util.tty as tty
 
+import spack.config
+import spack.tengine as tengine
 from .common import BaseConfiguration, BaseFileLayout
-from .common import BaseContext, BaseModuleFileWriter, configuration
+from .common import BaseContext, BaseModuleFileWriter
 
 #: TCL specific part of the configuration
-configuration = configuration.get('tcl', {})
+configuration = spack.config.get('modules:tcl', {})
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}

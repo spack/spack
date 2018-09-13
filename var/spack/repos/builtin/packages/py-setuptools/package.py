@@ -34,6 +34,7 @@ class PySetuptools(PythonPackage):
 
     import_modules = ['pkg_resources', 'setuptools', 'setuptools.command']
 
+    version('39.2.0', 'dd4e3fa83a21bf7bf9c51026dc8a4e59')
     version('39.0.1', '75310b72ca0ab4e673bf7679f69d7a62')
     version('35.0.2', 'c368b4970d3ad3eab5afe4ef4dbe2437')
     version('34.4.1', '5f9b07aeaafd29eac2548fc0b89a4934')

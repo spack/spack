@@ -101,7 +101,7 @@ def check_invalid_constraint(spec, constraint):
         spec.constrain(constraint)
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestSpecSematics(object):
     """This tests satisfies(), constrain() and other semantic operations
     on specs.

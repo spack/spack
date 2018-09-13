@@ -36,6 +36,7 @@ class Isaac(CMakePackage):
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('1.4.0', '3ad05c8fad4673366077204c5d39285f')
     version('1.3.3', '7aeebaf0c5a77e2cb9bea066750e369b')
     version('1.3.2', 'c557daa74de52fd79e734c9758fca38b')
     version('1.3.1', '7fe075f9af68d05355eaba0e224f20ca')
@@ -52,7 +53,7 @@ class Isaac(CMakePackage):
     depends_on('boost@1.56.0:', type='link')
     depends_on('boost@1.65.1:', type='link', when='^cuda@9:')
     depends_on('cuda@7.0:', type='link', when='+cuda')
-    # depends_on('alpaka', when='+alpaka')
+    # depends_on('alpaka@0.3', when='+alpaka')
     depends_on('icet', type='link')
     depends_on('mpi', type='link')
 

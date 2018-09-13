@@ -34,11 +34,12 @@ import argparse
 
 from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
+from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
@@ -113,7 +114,7 @@ echo $PATH"""
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
 
     stage = spack.stage.Stage(
         mirrors['spack-mirror-test'], name="build_cache", keep=True)
@@ -201,7 +202,7 @@ echo $PATH"""
     buildcache.buildcache(parser, args)
 
     # Copy a key to the mirror to have something to download
-    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+    shutil.copyfile(mock_gpg_keys_path + '/external.key',
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
@@ -212,7 +213,7 @@ echo $PATH"""
 
     # unregister mirror with spack config
     mirrors = {}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
     shutil.rmtree(mirror_path)
     stage.destroy()
 

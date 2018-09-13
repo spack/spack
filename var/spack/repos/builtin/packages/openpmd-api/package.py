@@ -47,17 +47,14 @@ class OpenpmdApi(CMakePackage):
     #         description='Enable JSON support')
     variant('python', default=True,
             description='Enable Python bindings')
-    variant('test', default=True,
-            description='Build the tests')
 
     depends_on('cmake@3.10.0:', type='build')
-    depends_on('boost@1.62.0:')
     depends_on('mpark-variant@1.3.0:')
-    depends_on('catch@2.2.1: ~single_header', when='+test', type='build')
+    depends_on('catch@2.2.1: ~single_header', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
-    depends_on('hdf5@1.8.6:', when='+hdf5')
-    depends_on('hdf5@1.8.6: ~mpi', when='~mpi +hdf5')
-    depends_on('hdf5@1.8.6: +mpi', when='+mpi +hdf5')
+    depends_on('hdf5@1.8.13:', when='+hdf5')
+    depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
+    depends_on('hdf5@1.8.13: +mpi', when='+mpi +hdf5')
     depends_on('adios@1.10.0:', when='+adios1')
     depends_on('adios@1.10.0: ~mpi', when='~mpi +adios1')
     depends_on('adios@1.10.0: +mpi', when='+mpi +adios1')
@@ -87,7 +84,7 @@ class OpenpmdApi(CMakePackage):
             '-DopenPMD_USE_PYTHON:BOOL={0}'.format(
                 'ON' if '+python' in spec else 'OFF'),
             '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if '+test' in spec else 'OFF')
+                'ON' if self.run_tests else 'OFF')
         ]
 
         if spec.satisfies('+python'):
@@ -96,7 +93,7 @@ class OpenpmdApi(CMakePackage):
 
         # switch internally shipped third-party libraries for spack
         args.append('-DopenPMD_USE_INTERNAL_VARIANT:BOOL=OFF')
-        if spec.satisfies('+test'):
+        if self.run_tests:
             args.append('-DopenPMD_USE_INTERNAL_CATCH:BOOL=OFF')
 
         return args

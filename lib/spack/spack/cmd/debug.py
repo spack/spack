@@ -30,7 +30,7 @@ from glob import glob
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
-import spack
+import spack.paths
 from spack.util.executable import which
 
 description = "debugging commands for troubleshooting Spack"
@@ -52,7 +52,7 @@ def _debug_tarball_suffix():
     if not git:
         return 'nobranch-nogit-%s' % suffix
 
-    with working_dir(spack.spack_root):
+    with working_dir(spack.paths.prefix):
         if not os.path.isdir('.git'):
             return 'nobranch.nogit.%s' % suffix
 

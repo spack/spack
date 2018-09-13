@@ -29,9 +29,9 @@ import tempfile
 import yaml
 import re
 
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.config
 import spack.spec
 from spack.error import SpackError
 
@@ -227,7 +227,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             with open(path) as f:
                 spec = spack.spec.Spec.from_yaml(f)
         except Exception as e:
-            if spack.debug:
+            if spack.config.get('config:debug'):
                 raise
             raise SpecReadError(
                 'Unable to read file: %s' % path, 'Cause: ' + str(e))
@@ -239,22 +239,22 @@ class YamlDirectoryLayout(DirectoryLayout):
     def spec_file_path(self, spec):
         """Gets full path to spec file"""
         _check_concrete(spec)
-        return join_path(self.metadata_path(spec), self.spec_file_name)
+        return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
     def metadata_path(self, spec):
-        return join_path(self.path_for_spec(spec), self.metadata_dir)
+        return os.path.join(self.path_for_spec(spec), self.metadata_dir)
 
     def build_log_path(self, spec):
-        return join_path(self.path_for_spec(spec), self.metadata_dir,
-                         self.build_log_name)
+        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
+                            self.build_log_name)
 
     def build_env_path(self, spec):
-        return join_path(self.path_for_spec(spec), self.metadata_dir,
-                         self.build_env_name)
+        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
+                            self.build_env_name)
 
     def build_packages_path(self, spec):
-        return join_path(self.path_for_spec(spec), self.metadata_dir,
-                         self.packages_dir)
+        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
+                            self.packages_dir)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)
@@ -302,7 +302,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         path_elems = ["*"] * len(self.path_scheme.split(os.sep))
         path_elems += [self.metadata_dir, self.spec_file_name]
-        pattern = join_path(self.root, *path_elems)
+        pattern = os.path.join(self.root, *path_elems)
         spec_files = glob.glob(pattern)
         return [self.read_spec(s) for s in spec_files]
 
@@ -356,8 +356,8 @@ class YamlExtensionsLayout(ExtensionsLayout):
     def extension_file_path(self, spec):
         """Gets full path to an installed package's extension file"""
         _check_concrete(spec)
-        return join_path(self.layout.metadata_path(spec),
-                         self.extension_file_name)
+        return os.path.join(self.layout.metadata_path(spec),
+                            self.extension_file_name)
 
     def extension_map(self, spec):
         """Defensive copying version of _extension_map() for external API."""
@@ -446,8 +446,8 @@ class YamlViewExtensionsLayout(YamlExtensionsLayout):
     def extension_file_path(self, spec):
         """Gets the full path to an installed package's extension file."""
         _check_concrete(spec)
-        return join_path(self.root, self.layout.metadata_dir, spec.name,
-                         self.extension_file_name)
+        return os.path.join(self.root, self.layout.metadata_dir, spec.name,
+                            self.extension_file_name)
 
     def extendee_target_directory(self, extendee):
         return self.root

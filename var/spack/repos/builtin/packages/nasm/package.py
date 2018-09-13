@@ -36,3 +36,7 @@ class Nasm(AutotoolsPackage):
 
     version('2.13.03', 'd5ca2ad7121ccbae69dd606b1038532c')
     version('2.11.06', '2b958e9f5d200641e6fc9564977aecc5')
+
+    # Fix compilation with GCC 8
+    # https://bugzilla.nasm.us/show_bug.cgi?id=3392461
+    patch('https://src.fedoraproject.org/rpms/nasm/raw/0cc3eb244bd971df81a7f02bc12c5ec259e1a5d6/f/0001-Remove-invalid-pure_func-qualifiers.patch', level=1, sha256='ac9f315d204afa6b99ceefa1fe46d4eed2b8a23c7315d32d33c0f378d930e950', when='@2.13.03 %gcc@8:')

@@ -34,13 +34,14 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
-import llnl.util.lock
-from llnl.util.filesystem import mkdirp, join_path, can_access
+from llnl.util.filesystem import mkdirp, can_access
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
-import spack
+import spack.paths
+import spack.caches
 import spack.config
 import spack.error
+import spack.util.lock
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
@@ -83,8 +84,7 @@ def get_tmp_root():
         return None
 
     if _tmp_root is None:
-        config = spack.config.get_config('config')
-        candidates = config['build_stage']
+        candidates = spack.config.get('config:build_stage')
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
@@ -93,7 +93,7 @@ def get_tmp_root():
             raise StageError("No accessible stage paths in %s", candidates)
 
         # Return None to indicate we're using a local staging area.
-        if path == canonicalize_path(spack.stage_path):
+        if path == canonicalize_path(spack.paths.stage_path):
             _use_tmp_stage = False
             return None
 
@@ -144,10 +144,6 @@ class Stage(object):
                                     # (handled by user of Stage)
         finally:
             stage.destroy()         # Explicitly destroy the stage directory.
-
-    If spack.use_tmp_stage is True, spack will attempt to create
-    stages in a tmp directory.  Otherwise, stages are created directly
-    in spack.stage_path.
 
     There are two kinds of stages: named and unnamed.  Named stages
     can persist between runs of spack, e.g. if you fetched a tarball
@@ -216,7 +212,7 @@ class Stage(object):
         if path is not None:
             self.path = path
         else:
-            self.path = join_path(spack.stage_path, self.name)
+            self.path = os.path.join(spack.paths.stage_path, self.name)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
@@ -229,9 +225,9 @@ class Stage(object):
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = join_path(spack.stage_path, '.lock')
+                stage_lock_path = os.path.join(spack.paths.stage_path, '.lock')
 
-                Stage.stage_locks[self.name] = llnl.util.lock.Lock(
+                Stage.stage_locks[self.name] = spack.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
 
             self._lock = Stage.stage_locks[self.name]
@@ -377,7 +373,7 @@ class Stage(object):
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
-            mirrors = spack.config.get_config('mirrors')
+            mirrors = spack.config.get('mirrors')
 
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
@@ -408,7 +404,7 @@ class Stage(object):
                         url, digest, expand=expand, extension=extension))
             if self.default_fetcher.cachable:
                 fetchers.insert(
-                    0, spack.fetch_cache.fetcher(
+                    0, spack.caches.fetch_cache.fetcher(
                         self.mirror_path, digest, expand=expand,
                         extension=extension))
 
@@ -455,7 +451,7 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.fetch_cache.store(self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -478,17 +474,13 @@ class Stage(object):
         """Creates the stage directory.
 
         If get_tmp_root() is None, the stage directory is created
-        directly under spack.stage_path, otherwise this will attempt to
+        directly under spack.paths.stage_path, otherwise this will attempt to
         create a stage in a temporary directory and link it into
-        spack.stage_path.
-
-        Spack will use the first writable location in spack.tmp_dirs
-        to create a stage. If there is no valid location in tmp_dirs,
-        fall back to making the stage inside spack.stage_path.
+        spack.paths.stage_path.
 
         """
         # Create the top-level stage directory
-        mkdirp(spack.stage_path)
+        mkdirp(spack.paths.stage_path)
         remove_if_dead_link(self.path)
 
         # If a tmp_root exists then create a directory there and then link it
@@ -546,7 +538,7 @@ class ResourceStage(Stage):
         if not isinstance(placement, dict):
             placement = {'': placement}
 
-        target_path = join_path(
+        target_path = os.path.join(
             root_stage.source_path, resource.destination)
 
         try:
@@ -558,8 +550,8 @@ class ResourceStage(Stage):
                 raise
 
         for key, value in iteritems(placement):
-            destination_path = join_path(target_path, value)
-            source_path = join_path(self.source_path, key)
+            destination_path = os.path.join(target_path, value)
+            source_path = os.path.join(self.source_path, key)
 
             if not os.path.exists(destination_path):
                 tty.info('Moving resource stage\n\tsource : '
@@ -651,11 +643,11 @@ class DIYStage(object):
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_config('mirrors')
+    config = spack.config.get('mirrors')
     return [val for name, val in iteritems(config)]
 
 
-def ensure_access(file=spack.stage_path):
+def ensure_access(file=spack.paths.stage_path):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
         tty.die("Insufficient permissions for %s" % file)
@@ -663,9 +655,9 @@ def ensure_access(file=spack.stage_path):
 
 def purge():
     """Remove all build directories in the top-level stage path."""
-    if os.path.isdir(spack.stage_path):
-        for stage_dir in os.listdir(spack.stage_path):
-            stage_path = join_path(spack.stage_path, stage_dir)
+    if os.path.isdir(spack.paths.stage_path):
+        for stage_dir in os.listdir(spack.paths.stage_path):
+            stage_path = os.path.join(spack.paths.stage_path, stage_dir)
             remove_linked_tree(stage_path)
 
 

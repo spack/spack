@@ -39,6 +39,7 @@ class Hdf5(AutotoolsPackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
+    version('1.10.2', '8d4eae84e533efa57496638fd0dca8c3')
     version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
