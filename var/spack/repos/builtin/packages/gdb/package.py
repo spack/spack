@@ -46,7 +46,7 @@ class Gdb(AutotoolsPackage):
     version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
 
     variant('python', default=True, description='Compile with Python support')
-    variant('xz', default=False, description='Compile with lzma support')
+    variant('xz', default=True, description='Compile with lzma support')
 
     # Required dependency
     depends_on('texinfo', type='build')
