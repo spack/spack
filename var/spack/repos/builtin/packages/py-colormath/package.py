@@ -37,3 +37,4 @@ class PyColormath(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-networkx', type=('build', 'run'))
+    depends_on('py-networkx@2.0:', type=('build', 'run'), when='@3.0.0:')
