@@ -53,3 +53,4 @@ class PyMultiqc(PythonPackage):
     # in the multiqc source, but it ends up being imported
     # in lib/python2.7/site-packages/multiqc/utils/megaqc.py
     depends_on('py-requests', type=('build', 'run'))
+    depends_on('py-enum34', type=('build', 'run'))
