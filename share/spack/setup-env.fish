@@ -1,5 +1,5 @@
 #################################################################################
-# This file is part of Spack.
+# This file is part of Spack's fish (friendly interactive shell) support
 # Ported from bash (setup-env.sh) by Johannes Blaschke,
 #                                    johannes@blaschke.science
 #################################################################################
@@ -41,6 +41,35 @@
 
 
 
+
+
+function shift_args -d "simulates bash shift"
+    #
+    # Returns argv[2..-1] (as an array)
+    #  -> if argv has only 1 element, then returns the empty string
+    # simulates the behavior of bash `shift`
+    #
+
+    if test -z "$argv[2]"
+        # there are no more element, returning the empty string
+        echo ""
+    else
+        # return the next elements `$argv[2..-1]` as an array
+        #  -> since we want to be able to call it as part of `set x (shift_args
+        #     $x)`, we return these one-at-a-time using echo... this means that
+        #     the sub-command stream will correctly concatenate the output into
+        #     an array
+        for elt in $argv[2..-1]
+            echo $elt
+        end
+    end
+
+end
+
+
+
+
+
 function get_sp_flags -d "return leading flags"
     #
     # accumulate initial flags for main spack command
@@ -52,8 +81,8 @@ function get_sp_flags -d "return leading flags"
     # iterate over elements (`elt`) in `argv` array
     for elt in $argv
 
-        # increment argument counter: used in place of bash's `shift` command
-        set i (math $i+1)
+        # # increment argument counter: used in place of bash's `shift` command
+        # set i (math $i+1)
 
         # match element `elt` of `argv` array to check if it has a leading dash
         if echo $elt | string match -r -q "^-"
@@ -66,15 +95,56 @@ function get_sp_flags -d "return leading flags"
             # bash compatibility: stop when the match first fails. Upon failure,
             # we pack the remainder of `argv` into a global `remaining_args`
             # array (`i` tracks the index of the next element).
-            set -x remaining_args $argv[$i..-1]
+            set -x remaining_args (shift_args $argv[$i..-1])
             return
         end
+
+        # increment argument counter: used in place of bash's `shift` command
+        set i (math $i+1)
+
     end
 
     # if all elements in `argv` are matched, make sure that `remaining_args` is
     # initialized to an empty array (this might be overkill...).
     set -x remaining_args ""
 end
+
+
+
+function get_mod_args -d "return submodule flags"
+
+    set -x sp_subcommand_args ""
+    set -x sp_module_args ""
+
+    # initialize argument counter
+    set i 0
+
+    for elt in $argv
+
+        # # increment argument counter: used in place of bash's `shift` command
+        # set i (math $i+1)
+
+        if echo $elt | string match -r -q "^-"
+
+            if test "$elt" = "-r" -o "$elt" = "--dependencies"
+                set -x sp_subcommand_args $sp_subcommand_args $elt
+            else
+                set -x sp_module_args $sp_module_args $elt
+            end
+
+        else
+            # bash compatibility: stop when the match first fails. Upon failure,
+            # we pack the remainder of `argv` into a global `remaining_args`
+            # array (`i` tracks the index of the next element).
+            set -x remaining_args (shift_args $argv[$i..-1])
+        end
+
+        # increment argument counter: used in place of bash's `shift` command
+        set i (math $i+1)
+
+    end
+end
+
 
 
 
@@ -137,9 +207,9 @@ end
 
 set sp_subcommand ""
 
-if test "$remaining_args[1]"
-    set sp_subcommand $remaining_args[1]
-    set remaining_args $remaining_args[2..-1]              # simulates bash shift
+if test -n "$remaining_args[1]"
+    set -x sp_subcommand $remaining_args[1]
+    set -x remaining_args (shift_args $remaining_args)     # simulates bash shift
 end
 
 set sp_spec $remaining_args
@@ -165,9 +235,9 @@ switch $sp_subcommand
         #    undefined, or if it is an array, `test -n $argv` is unpredictable.
         #    Instead, encapsulate `argv` in a string, and test the string
         #    instead.
-        if test "$remaining_args[1]"
+        if test -n "$remaining_args[1]"
             set sp_arg $remaining_args[1]
-            set remaining_args $remaining_args[2..-1]      # simulates bash shift
+            set -x remaining_args (shift_args $remaining_args)     # simulates bash shift
         end
 
         if test $sp_arg = "-h"
@@ -190,10 +260,24 @@ switch $sp_subcommand
 
 
     # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
+    # These statements deal with the technical details of actually using
+    # modules.
 
     case "use" or "unuse" or "load" or "unload"
 
         # Shift any other args for use off before parsing spec.
+        set sp_subcommand_args ""
+        set sp_module_args ""
+
+        get_mod_args $remaining_args
+
+        set sp_spec $remaining_args
+
+
+        # Here the user has run use or unuse with a spec. Find a matching spec
+        # using 'spack module find', then use the appropriate module tool's
+        # commands to add/remove the result from the environment. If spack
+        # module command comes back with an error, do nothing.
 end
 
 
@@ -203,4 +287,6 @@ end
 echo "sp_flags = $sp_flags"
 echo "remaining_args = $remaining_args"
 echo "sp_subcommand = $sp_subcommand"
+echo "sp_subcommand_args = $sp_subcommand"
+echo "sp_module_args = $sp_module_args"
 echo "sp_spec = $sp_spec"
