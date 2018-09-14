@@ -36,10 +36,6 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
            'LockPermissionError', 'LockROFileError', 'CantCreateLockError']
 
 
-# Default timeout in seconds, after which locks will raise exceptions.
-_default_timeout = 120
-
-
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
 
@@ -74,7 +70,10 @@ class Lock(object):
         # enable debug mode
         self.debug = debug
 
-        self.default_timeout = (default_timeout or _default_timeout)
+        # If the user doesn't set a default timeout, or if they choose
+        # None, 0, etc. then lock attempts will not time out (unless the
+        # user sets a timeout for each attempt)
+        self.default_timeout = default_timeout or None
 
         # PID and host of lock holder (only used in debug mode)
         self.pid = self.old_pid = None
@@ -111,7 +110,7 @@ class Lock(object):
                 yield wait_time
 
         start_time = time.time()
-        while (time.time() - start_time) < timeout:
+        while (not timeout) or (time.time() - start_time) < timeout:
             # Create file and parent directories if they don't exist.
             if self._file is None:
                 parent = self._ensure_parent_directory()
