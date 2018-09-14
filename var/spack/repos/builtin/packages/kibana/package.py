@@ -25,27 +25,16 @@
 from spack import *
 
 
-class Elasticsearch(Package):
-    """Elasticsearch is a search engine based on Lucene. It provides a
-    distributed, multitenant-capable full-text search engine with an HTTP web
-    interface and schema-free JSON documents.
-    """
+class Kibana(Package):
+    """Kibana lets you visualize your Elasticsearch data and navigate the
+    Elastic Stack"""
 
-    homepage = "https://www.elastic.co/"
-    url      = "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.4.tar.gz"
+    homepage = "https://www.elastic.co/products/kibana"
+    url      = "https://artifacts.elastic.co/downloads/kibana/kibana-6.4.0-linux-x86_64.tar.gz"
 
-    version('6.4.0', '5c23c99a52600b250a6871bf6a744e8b')
-    version('6.2.4', '692d01956fe7aee2d08ac0fbf7b7a19e')
+    version('6.4.0', sha256='df2056105a08c206a1adf9caed09a152a53429a0f1efc1ba3ccd616092d78aee')
 
     depends_on('jdk', type='run')
 
     def install(self, spec, prefix):
-        dirs = [
-            'bin',
-            'config',
-            'lib',
-            'modules',
-            'plugins']
-
-        for d in dirs:
-            install_tree(d, join_path(prefix, d))
+        install_tree('.', join_path(prefix, '.'))
