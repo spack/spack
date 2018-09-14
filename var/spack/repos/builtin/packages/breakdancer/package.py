@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
+import os
 
 
 class Breakdancer(CMakePackage):
@@ -45,7 +47,18 @@ class Breakdancer(CMakePackage):
 
     depends_on('zlib')
 
-    depends_on('perl-statistics-descriptive', type=('build', 'run'))
-    depends_on('perl-math-cdf', type=('build', 'run'))
+    depends_on('perl-statistics-descriptive', type='run')
+    depends_on('perl-math-cdf', type='run')
+    depends_on('perl-gd-graph', type='run')
+    depends_on('perl-gdgraph-histogram', type='run')
+    depends_on('perl-list-moreutils', type='run')
+    depends_on('perl-exporter-tiny', type='run')
+
+    # TODO: remove git submodules, and depend on boost & samtools
 
     parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        # bam2cfg.pl should be in the path
+        bam2cfg_path = os.path.dirname(glob.glob(join_path(prefix.lib, '*bam2cfg.pl')))
+        run_env.prepend_path('PATH', bam2cfg_path)
