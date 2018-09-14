@@ -27,8 +27,9 @@ from spack import *
 
 class PyPylint(PythonPackage):
     """array processing for numbers, strings, records, and objects."""
+
     homepage = "https://pypi.python.org/pypi/pylint"
-    url      = "https://pypi.io/packages/source/p/pylint/pylint-1.7.2.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pylint/pylint-1.6.5.tar.gz"
 
     # version('1.7.2', '27ee752cdcfacb05bf4940947e6b35c6') # see dependencies
     version('1.6.5', '31da2185bf59142479e4fa16d8a9e347')

@@ -132,7 +132,7 @@ class Gcc(Compiler):
             return 'unknown'
 
         version = super(Gcc, cls).default_version(cc)
-        if version in ['7']:
+        if ver(version) >= ver('7'):
             version = get_compiler_version(cc, '-dumpfullversion')
         return version
 
@@ -161,7 +161,7 @@ class Gcc(Compiler):
         version = get_compiler_version(
             fc, '-dumpversion',
             r'(?:GNU Fortran \(GCC\) )?([\d.]+)')
-        if version in ['7']:
+        if ver(version) >= ver('7'):
             version = get_compiler_version(fc, '-dumpfullversion')
         return version
 

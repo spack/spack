@@ -32,16 +32,24 @@ class Libquo(AutotoolsPackage):
     single- and multi-threaded libraries."""
 
     homepage = "https://github.com/lanl/libquo"
-    url      = "https://github.com/lanl/libquo/archive/v1.2.9.tar.gz"
+    url      = "http://lanl.github.io/libquo/dists/libquo-1.3.tar.gz"
+    git      = "https://github.com/lanl/libquo.git"
 
-    version('develop', git='https://github.com/lanl/libquo', branch='master')
-    version('1.3', '3ff74162837425a15ecf695ca0201e4a')
-    version('1.2.9', 'ca82ab33f13e2b89983f81e7c02e98c2')
+    version('develop', branch='master')
+    version('1.3',   '1a1fb83d2c9e99ef5d5fcd71037ef8e8')
+    version('1.2.9', '85907cfbdb8b1e57fc5fcf3bced7cfa8')
 
     depends_on('mpi')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+
+    depends_on('m4',       when='@develop', type='build')
+    depends_on('autoconf', when='@develop', type='build')
+    depends_on('automake', when='@develop', type='build')
+    depends_on('libtool',  when='@develop', type='build')
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen')
 
     def configure_args(self):
         return [

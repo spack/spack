@@ -45,6 +45,7 @@ import spack.stage
         ('GNUmakefile',    'makefile'),
         ('makefile',       'makefile'),
         ('Makefile',       'makefile'),
+        ('meson.build',    'meson'),
         ('foobar',         'generic')
     ]
 )

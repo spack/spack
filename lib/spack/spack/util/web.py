@@ -286,6 +286,13 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     for aurl in archive_urls:
         list_urls.add(spack.url.find_list_url(aurl))
 
+    # Add '/' to the end of the URL. Some web servers require this.
+    additional_list_urls = set()
+    for lurl in list_urls:
+        if not lurl.endswith('/'):
+            additional_list_urls.add(lurl + '/')
+    list_urls.update(additional_list_urls)
+
     # Grab some web pages to scrape.
     pages = {}
     links = set()
@@ -397,7 +404,7 @@ def get_checksums_for_versions(
 
                 # Checksum the archive and add it to the list
                 version_hashes.append((version, spack.util.crypto.checksum(
-                    hashlib.md5, stage.archive_file)))
+                    hashlib.sha256, stage.archive_file)))
                 i += 1
         except spack.stage.FailedDownloadError:
             tty.msg("Failed to fetch {0}".format(url))
@@ -413,7 +420,7 @@ def get_checksums_for_versions(
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}'{2}')".format(
+        "    version('{0}', {1}sha256='{2}')".format(
             v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
     ])
 

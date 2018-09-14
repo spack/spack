@@ -34,7 +34,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.15.1.zip"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -45,9 +45,7 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
-    # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
-    # FIXME: Is this expected?
-
+    version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
     version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
     version('1.14.2', '080f01a19707cf467393e426382c7619')
     version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
@@ -67,23 +65,21 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    depends_on('py-nose@1.0.0:', type='test')
+    depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
+    depends_on('py-pytest', when='@1.15:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
-        arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
         self.spec.include = join_path(
             self.prefix.lib,
             'python{0}'.format(python_version),
             'site-packages',
-            'numpy-{0}-py{1}-{2}.egg'.format(
-                self.spec.version, python_version, arch),
             'numpy/core/include')
 
     def patch(self):
@@ -158,6 +154,17 @@ class PyNumpy(PythonPackage):
 
         return args
 
+    def setup_environment(self, spack_env, run_env):
+        python_version = self.spec['python'].version.up_to(2)
+
+        include_path = join_path(
+            self.prefix.lib,
+            'python{0}'.format(python_version),
+            'site-packages',
+            'numpy/core/include')
+
+        run_env.prepend_path('CPATH', include_path)
+
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
@@ -174,5 +181,5 @@ class PyNumpy(PythonPackage):
         # ImportError: Error importing numpy: you should not try to import
         #       numpy from its source directory; please exit the numpy
         #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

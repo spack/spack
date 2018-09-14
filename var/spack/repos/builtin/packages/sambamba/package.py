@@ -29,9 +29,9 @@ class Sambamba(Package):
     """Sambamba: process your BAM data faster (bioinformatics)"""
 
     homepage = "http://lomereiter.github.io/sambamba/"
+    git      = "https://github.com/lomereiter/sambamba.git"
 
-    version('0.6.6', git='https://github.com/lomereiter/sambamba.git',
-            tag='v0.6.6', submodules=True)
+    version('0.6.6', tag='v0.6.6', submodules=True)
 
     depends_on('ldc~shared', type=('build', 'link'))
     depends_on('python', type='build')

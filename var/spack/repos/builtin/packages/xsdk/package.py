@@ -37,7 +37,7 @@ class Xsdk(Package):
 
     # Dummy url since Spack complains if I don't list something, will be
     # removed when metapackage is available
-    url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
+    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
 
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
     version('0.3.0', 'a52dc710c744afa0b71429b8ec9425bc', preferred=True)
@@ -51,7 +51,7 @@ class Xsdk(Package):
     depends_on('hypre@develop~internal-superlu', when='@develop')
 
     depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0')
-    depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
+    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
 
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
@@ -61,15 +61,17 @@ class Xsdk(Package):
                when='@0.3.0')
     depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@xsdk-0.2.0')
-    depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra+nox~ifpack2~zoltan2~amesos2~exodus',
+    depends_on('trilinos@develop+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus',
                when='@develop')
 
-    depends_on('petsc@3.8.2+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@3.8.2+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@0.3.0')
-    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@xsdk-0.2.0')
-    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@develop')
+
+    depends_on('dealii@develop~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@develop')
 
     depends_on('pflotran@xsdk-0.3.0', when='@0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
@@ -82,10 +84,15 @@ class Xsdk(Package):
     depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0')
     depends_on('sundials@3.1.0~int64+hypre', when='@develop')
 
-    depends_on('plasma@17.1', when='@develop %gcc@4.9:')
+    depends_on('plasma@17.2:', when='@develop %gcc@6.0:')
 
     depends_on('magma@2.2.0', when='@0.3.0 +cuda')
     depends_on('magma@2.2.0', when='@develop +cuda')
+
+    depends_on('amrex@develop', when='@develop %gcc')
+    depends_on('amrex@develop', when='@develop %intel')
+
+    depends_on('slepc@develop', when='@develop')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK

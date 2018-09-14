@@ -33,17 +33,18 @@ class Hypre(Package):
        unstructured grid problems."""
 
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
-    url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
+    url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
+    git      = "https://github.com/LLNL/hypre.git"
 
-    version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1', url='https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz')
-    version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b', url='https://github.com/LLNL/hypre/archive/v2.13.0.tar.gz')
-    version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c', url='https://github.com/LLNL/hypre/archive/v2.12.1.tar.gz')
+    version('develop', branch='master')
+    version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1')
+    version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b')
+    version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c')
     version('2.11.2', 'd507943a1a3ce5681c3308e2f3a6dd34')
     version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
-    version('develop', git='https://github.com/LLNL/hypre', tag='master')
-    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='xsdk-0.2.0')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
     # hypre does not know how to build shared libraries on Darwin
     variant('shared', default=(sys.platform != 'darwin'),
@@ -61,6 +62,14 @@ class Hypre(Package):
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
+
+    def url_for_version(self, version):
+        if version >= Version('2.12.0'):
+            url = 'https://github.com/LLNL/hypre/archive/v{0}.tar.gz'
+        else:
+            url = 'http://computation.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
+
+        return url.format(version)
 
     def install(self, spec, prefix):
         # Note: --with-(lapack|blas)_libs= needs space separated list of names

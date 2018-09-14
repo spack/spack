@@ -37,7 +37,12 @@ class Samrai(AutotoolsPackage):
     url      = "https://computation.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
 
+    version('3.12.0',     '07364f6e209284e45ac0e9caf1d610f6')
+    version('3.11.5',     '4359a03145c03501b230777f92b62104')
+    version('3.11.4',     '473d6796772f5926b1c0d1cf8f3f8c99')
+    # Version 3.11.3 permissions don't allow downloading
     version('3.11.2',     'd5f59f8efd755b23b797e46349428206')
+    version('3.11.1',     '19a2398a7448ec0f0f0c5e8fc6f80478')
     version('3.10.0',     'ff5f5b8b4a35b52a1b7e37a74166c65a')
     version('3.9.1',      '232d04d0c995f5abf20d94350befd0b2')
     version('3.8.0',      'c18fcffa706346bfa5828b36787ce5fe')
@@ -59,8 +64,12 @@ class Samrai(AutotoolsPackage):
     depends_on('mpi')
     depends_on('zlib')
     depends_on('hdf5+mpi')
-    depends_on('boost')
     depends_on('m4', type='build')
+
+    # Starting with 3.12.0, samrai no longer depends on boost.
+    # version 3.11.5 or earlier can only work with boost version
+    # 1.64.0 or earlier.
+    depends_on('boost@:1.64.0', when='@0:3.11.99', type='build')
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
@@ -74,7 +83,6 @@ class Samrai(AutotoolsPackage):
             '--with-F77=%s' % self.spec['mpi'].mpifc,
             '--with-M4=%s' % self.spec['m4'].prefix,
             '--with-hdf5=%s' % self.spec['hdf5'].prefix,
-            '--with-boost=%s' % self.spec['boost'].prefix,
             '--with-zlib=%s' % self.spec['zlib'].prefix,
             '--without-blas',
             '--without-lapack',
@@ -89,5 +97,17 @@ class Samrai(AutotoolsPackage):
             options.extend([
                 '--enable-opt',
                 '--disable-debug'])
+
+        if self.version >= Version('3.12.0'):
+            # only version 3.12.0 and above, samrai does not use
+            # boost, but needs c++11. Without c++11 flags, samrai
+            # cannot build with either gcc or intel compilers.
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx11_flag
+        else:
+            # boost 1.64.0 or earlier works with samrai 2.4.4~3.11.5
+            options.append('--with-boost=%s' % self.spec['boost'].prefix)
 
         return options

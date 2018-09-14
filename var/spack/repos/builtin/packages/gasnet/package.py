@@ -33,8 +33,9 @@ class Gasnet(AutotoolsPackage):
        Cray Chapel, and Titanium.
     """
     homepage = "http://gasnet.lbl.gov"
-    url      = "http://gasnet.lbl.gov/GASNet-1.24.0.tar.gz"
+    url      = "http://gasnet.lbl.gov/download/GASNet-1.24.0.tar.gz"
 
+    version('1.32.0', sha256='42e4774b3bbc7c142f77c41b6ce86b594f579073f46c31f47f424c7e31ee1511')
     version('1.30.0', '2ddb1d8397d62acfd389095ca8da72f6')
     version('1.28.2', '6ca0463dc2430570e40646c4d1e97b36')
     version('1.28.0', 'b44446d951d3d8954aa1570e3556ba61')

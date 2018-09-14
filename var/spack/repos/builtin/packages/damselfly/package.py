@@ -28,9 +28,8 @@ from spack import *
 class Damselfly(CMakePackage):
     """Damselfly is a model-based parallel network simulator."""
     homepage = "https://github.com/llnl/damselfly"
-    url      = "https://github.com/llnl/damselfly"
+    url      = "https://github.com/LLNL/damselfly/archive/v1.0.tar.gz"
 
-    version('1.0', '05cf7e2d8ece4408c0f2abb7ab63fd74c0d62895',
-            git='https://github.com/llnl/damselfly.git', tag='v1.0')
+    version('1.0', sha256='560e1b800c9036766396a1033c00914bd8d181b911e87140c3ac8879baf6545a')
 
     depends_on('cmake@2.6:', type='build')

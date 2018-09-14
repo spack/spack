@@ -35,6 +35,7 @@ class Libpng(AutotoolsPackage):
 
     version('1.6.34', '03fbc5134830240104e96d3cda648e71')
     version('1.6.29', '68553080685f812d1dd7a6b8215c37d8')
+    version('1.6.28', '897ccec1ebfb0922e83c2bfaa1be8748')
     version('1.6.27', '58698519e9f6126c1caeefc28dbcbd5f')
     # From http://www.libpng.org/pub/png/libpng.html (2017-01-04)
     #     Virtually all libpng versions through 1.6.26, 1.5.27,

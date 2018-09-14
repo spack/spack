@@ -74,7 +74,7 @@ class ABI(object):
             return None
         if not output:
             return None
-        libpath = os.readlink(output.strip())
+        libpath = os.path.realpath(output.strip())
         if not libpath:
             return None
         return os.path.basename(libpath)

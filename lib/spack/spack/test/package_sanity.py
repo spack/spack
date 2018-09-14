@@ -27,13 +27,13 @@ import re
 
 import pytest
 
+import spack.paths
 import spack.repo
-from spack.paths import mock_packages_path
-from spack.repo import RepoPath
+import spack.fetch_strategy
 
 
-def check_db():
-    """Get all packages in a DB to make sure they work."""
+def check_repo():
+    """Get all packages in the builtin repo to make sure they work."""
     for name in spack.repo.all_package_names():
         spack.repo.get(name)
 
@@ -41,14 +41,14 @@ def check_db():
 @pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
-    check_db()
+    check_repo()
 
 
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
-    db = RepoPath(mock_packages_path)
+    db = spack.repo.RepoPath(spack.paths.mock_packages_path)
     with spack.repo.swap(db):
-        check_db()
+        check_repo()
 
 
 def test_all_versions_are_lowercase():
@@ -69,3 +69,12 @@ def test_all_virtual_packages_have_default_providers():
 
     for provider in providers:
         assert provider in default_providers
+
+
+def test_package_version_consistency():
+    """Make sure all versions on builtin packages can produce a fetcher."""
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        spack.fetch_strategy.check_pkg_attributes(pkg)
+        for version in pkg.versions:
+            assert spack.fetch_strategy.for_package_version(pkg, version)

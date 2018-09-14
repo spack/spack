@@ -44,10 +44,10 @@ class Exasp2(MakefilePackage):
 
     homepage = "https://github.com/ECP-copa/ExaSP2"
     url      = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
+    git      = "https://github.com/ECP-copa/ExaSP2.git"
 
+    version('develop', branch='master')
     version('1.0', 'dba545995acc73f2bd1101bcb377bff5')
-    version('develop', git='https://github.com/ECP-copa/ExaSP2',
-            branch='master')
 
     variant('mpi', default=True, description='Build With MPI Support')
 
@@ -81,8 +81,8 @@ class Exasp2(MakefilePackage):
         math_includes += " -I" + spec['blas'].prefix.include
         targets.append('SPACKBLASINCLUDES=' + math_includes)
         # And BML
-        bmlLibDirs = spec['bml'].libs.directories[0]
-        targets.append('BML_PATH=' + bmlLibDirs)
+        bml_lib_dirs = spec['bml'].libs.directories[0]
+        targets.append('BML_PATH=' + bml_lib_dirs)
         targets.append('--file=Makefile.vanilla')
         return targets
 

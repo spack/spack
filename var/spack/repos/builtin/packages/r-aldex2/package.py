@@ -39,9 +39,9 @@ class RAldex2(RPackage):
     and fdr values calculated by the Benjamini Hochberg correction."""
 
     homepage = "http://bioconductor.org/packages/ALDEx2/"
-    url      = "https://git.bioconductor.org/packages/ALDEx2"
+    git      = "https://git.bioconductor.org/packages/ALDEx2.git"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/ALDEx2', commit='24104824ca2402ad4f54fbf1ed9cee7fac2aaaf1')
+    version('1.8.0', commit='24104824ca2402ad4f54fbf1ed9cee7fac2aaaf1')
 
     depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-s4vectors', type=('build', 'run'))

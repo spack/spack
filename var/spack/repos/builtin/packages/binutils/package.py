@@ -29,8 +29,9 @@ class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
     homepage = "http://www.gnu.org/software/binutils/"
-    url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.28.tar.bz2"
 
+    version('2.31.1', 'ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0')
     version('2.29.1', '9af59a2ca3488823e453bb356fe0f113')
     version('2.28', '9e8340c96626b469a603c15c9d843727')
     version('2.27', '2869c9bf3e60ee97c74ac2a6bf4e9d68')
@@ -44,29 +45,30 @@ class Binutils(AutotoolsPackage):
             description="enable plugins, needed for gold linker")
     variant('gold', default=True, description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
+    variant('nls', default=True, description='Enable Native Language Support')
 
-    patch('cr16.patch')
+    patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
 
     depends_on('zlib')
+    depends_on('gettext', when='+nls')
 
-    depends_on('m4', type='build')
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
+    # Prior to 2.30, gold did not distribute the generated files and
+    # thus needs bison, even for a one-time build.
+    depends_on('m4', type='build', when='@:2.29.99 +gold')
+    depends_on('bison', type='build', when='@:2.29.99 +gold')
 
     def configure_args(self):
         spec = self.spec
 
         configure_args = [
-            '--with-system-zlib',
             '--disable-dependency-tracking',
             '--disable-werror',
-            '--enable-interwork',
             '--enable-multilib',
             '--enable-shared',
             '--enable-64-bit-bfd',
             '--enable-targets=all',
+            '--with-system-zlib',
             '--with-sysroot=/',
         ]
 
@@ -78,6 +80,11 @@ class Binutils(AutotoolsPackage):
 
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')
+
+        if '+nls' in spec:
+            configure_args.append('--enable-nls')
+        else:
+            configure_args.append('--disable-nls')
 
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew

@@ -30,15 +30,16 @@ class Lazyten(CMakePackage):
     """Lightweight linear algebra library based on lazy matrices"""
 
     homepage = "http://lazyten.org"
-    url = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
+    url      = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
+    git      = "https://github.com/lazyten/lazyten.git"
+
     maintainers = ['mfherbst']
 
     #
     # Versions
     #
+    version("develop", branch="master")
     version('0.4.1', 'd06f7996144e1bf1b0aee82c2af36e83')
-    version("develop", git="https://github.com/lazyten/lazyten.git",
-            branch="master")
 
     #
     # Variants

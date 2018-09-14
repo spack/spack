@@ -37,9 +37,9 @@ class RBiomformat(RPackage):
     as extensions of common core functions/methods."""
 
     homepage = "https://www.bioconductor.org/packages/biomformat/"
-    url      = "https://git.bioconductor.org/packages/biomformat"
+    git      = "https://git.bioconductor.org/packages/biomformat.git"
 
-    version('1.4.0', git='https://git.bioconductor.org/packages/biomformat', commit='83b4b1883bc56ea93a0a6ca90fc1b18712ef0f1a')
+    version('1.4.0', commit='83b4b1883bc56ea93a0a6ca90fc1b18712ef0f1a')
 
     depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))

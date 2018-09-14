@@ -30,10 +30,11 @@ class Xtensor(CMakePackage):
 
     homepage = "http://quantstack.net/xtensor"
     url      = "https://github.com/QuantStack/xtensor/archive/0.13.1.tar.gz"
+    git      = "https://github.com/QuantStack/xtensor.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='master',
-            git='https://github.com/QuantStack/xtensor.git')
+    version('develop', branch='master')
     version('0.15.1', 'c24ecc406003bd1ac22291f1f7cac29a')
     version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
 

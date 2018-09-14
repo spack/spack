@@ -36,6 +36,7 @@ class Mesa(AutotoolsPackage):
     _oldurlfmt = "https://mesa.freedesktop.org/archive/older-versions/{0}.x/{1}/mesa-{1}.tar.xz"
     list_depth = 2
 
+    version('18.1.2', 'a2d4f031eb6bd6111d44d84004476918')
     version('17.2.3', 'a7dca71afbc7294cb7d505067fd44ef6')
     version('17.2.2', '1a157b5baefb5adf9f4fbb8a6632d74c')
     version('17.1.5', '6cf936fbcaadd98924298a7009e8265d')
@@ -196,3 +197,11 @@ class Mesa(AutotoolsPackage):
                 configure(*options)
             else:
                 raise
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libGL', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs

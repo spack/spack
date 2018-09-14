@@ -429,3 +429,30 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
             assert '<Text>configure: error: in /path/to/some/file:</Text>' in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        msg = ''
+        try:
+            install('build-error')
+            assert False, "no exception was raised!"
+        except spack.build_environment.ChildError as e:
+            msg = e.long_message
+
+        assert 'configure: error: in /path/to/some/file:' in msg
+        assert 'configure: error: cannot run C compiled programs.' in msg
+
+
+@pytest.mark.disable_clean_stage_check
+def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        msg = ''
+        try:
+            install('build-warnings')
+        except spack.build_environment.ChildError as e:
+            msg = e.long_message
+
+        assert 'WARNING: ALL CAPITAL WARNING!' in msg
+        assert 'foo.c:89: warning: some weird warning!' in msg
