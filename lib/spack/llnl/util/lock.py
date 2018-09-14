@@ -39,9 +39,6 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
 # Default timeout in seconds, after which locks will raise exceptions.
 _default_timeout = 120
 
-# Sleep time per iteration in spin loop (in seconds)
-_sleep_time = 1e-2
-
 
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
@@ -99,6 +96,20 @@ class Lock(object):
 
         timeout = timeout or self.default_timeout
 
+        def _next_wait_time():
+            # Poll interval of .1s until 1 second has passed
+            # Then poll interval of .2s until 1 minute has passed
+            # Then poll interval of .5s
+            wait_time = 1e-1
+            total = 0
+            while True:
+                if total > 5:
+                    wait_time = 2e-1
+                elif total > 60:
+                    wait_time = 5e-1
+                total += wait_time
+                yield wait_time
+
         start_time = time.time()
         while (time.time() - start_time) < timeout:
             # Create file and parent directories if they don't exist.
@@ -149,7 +160,7 @@ class Lock(object):
                 else:
                     raise
 
-            time.sleep(_sleep_time)
+            time.sleep(_next_wait_time())
 
         raise LockTimeoutError("Timed out waiting for lock.")
 
