@@ -79,6 +79,21 @@ class Lock(object):
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
+    @staticmethod
+    def _poll_interval_generator():
+        # Poll interval of .1s until 1 second has passed
+        # Then poll interval of .2s until 1 minute has passed
+        # Then poll interval of .5s
+        wait_time = 1e-1
+        total = 0
+        while True:
+            if total > 5:
+                wait_time = 2e-1
+            elif total > 60:
+                wait_time = 5e-1
+            total += wait_time
+            yield wait_time
+
     def _lock(self, op, timeout=None):
         """This takes a lock using POSIX locks (``fcntl.lockf``).
 
@@ -95,20 +110,7 @@ class Lock(object):
 
         timeout = timeout or self.default_timeout
 
-        def _next_wait_time():
-            # Poll interval of .1s until 1 second has passed
-            # Then poll interval of .2s until 1 minute has passed
-            # Then poll interval of .5s
-            wait_time = 1e-1
-            total = 0
-            while True:
-                if total > 5:
-                    wait_time = 2e-1
-                elif total > 60:
-                    wait_time = 5e-1
-                total += wait_time
-                yield wait_time
-
+        intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         while (not timeout) or (time.time() - start_time) < timeout:
             # Create file and parent directories if they don't exist.
@@ -159,7 +161,7 @@ class Lock(object):
                 else:
                     raise
 
-            time.sleep(_next_wait_time())
+            time.sleep(intervals.next())
 
         raise LockTimeoutError("Timed out waiting for lock.")
 
