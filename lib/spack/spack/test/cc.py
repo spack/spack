@@ -145,35 +145,43 @@ def wrapper_flags():
         yield
 
 
-@pytest.fixture(scope='session')
-def dep1(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep1')
-    path.mkdir('include')
-    path.mkdir('lib')
-    yield str(path)
+"""
+dep1/
+  include/
+  lib/
+dep2/
+  lib64/
+dep3/
+  include/
+  lib64/
+dep4/
+  include/
+"""
 
+INCLUDE, LIB, LIB64 = 1, 2, 3
+dep_paths = {
+    1: [INCLUDE, LIB],
+    2: [LIB64],
+    3: [INCLUDE, LIB64],
+    4: [INCLUDE],
+}
+dir_types = {
+    INCLUDE: 'include',
+    LIB: 'lib',
+    LIB64: 'lib64',
+}
 
-@pytest.fixture(scope='session')
-def dep2(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep2')
-    path.mkdir('lib64')
-    yield str(path)
+def dep_path(dep, type):
+    prefix = 'dep{0}'.format(str(dep))
+    if type in dep_paths[dep]:
+        return dir_types[type]
 
+def deps_paths(deps, type):
+    paths = list(dep_path(dep, type) for dep in deps)
+    return list(p for p in paths if p)
 
-@pytest.fixture(scope='session')
-def dep3(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep3')
-    path.mkdir('include')
-    path.mkdir('lib64')
-    yield str(path)
-
-
-@pytest.fixture(scope='session')
-def dep4(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep4')
-    path.mkdir('include')
-    yield str(path)
-
+def spack_env_var(values):
+    return ':'.join(str(x) for x in values)
 
 pytestmark = pytest.mark.usefixtures('wrapper_environment')
 
@@ -308,16 +316,24 @@ def test_dep_rpath():
         test_args_without_paths)
 
 
-def test_dep_include(dep4):
+def test_dep_include():
     """Ensure a single dependency include directory is added."""
-    with set_env(SPACK_DEPENDENCIES=dep4,
-                 SPACK_RPATH_DEPS=dep4,
-                 SPACK_LINK_DEPS=dep4):
+    lib_dirs = deps_paths([4], LIB)
+    include_dirs = deps_paths([4], INCLUDE)
+
+    expected_include_args = list('-I{0}'.format(x) for x in include_dirs)
+
+    include_env = spack_env_var(include_dirs)
+    lib_env = spack_env_var(lib_dirs)
+
+    with set_env(SPACK_RPATH_DIRS=lib_env,
+                 SPACK_INCLUDE_DIRS=include_env,
+                 SPACK_LINK_DIRS=lib_env):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
-            ['-I' + dep4 + '/include'] +
+            expected_include_args +
             test_library_paths +
             test_wl_rpaths +
             pkg_wl_rpaths +
