@@ -34,7 +34,7 @@ class Rmats(Package):
     homepage = "https://rnaseq-mats.sourceforge.net/index.html"
     url      = "https://downloads.sourceforge.net/project/rnaseq-mats/MATS/rMATS.4.0.2.tgz"
 
-    version('4.0.2', 'afab002a9ae836d396909aede96318f6dab6e5818078246419dd563624bf26d1')
+    version('4.0.2', sha256='afab002a9ae836d396909aede96318f6dab6e5818078246419dd563624bf26d1')
 
     depends_on('python@2.7:', type='run')
     depends_on('py-numpy', type=('build', 'run'))
