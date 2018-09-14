@@ -30,10 +30,10 @@ class EnvironmentModules(Package):
     """The Environment Modules package provides for the dynamic
     modification of a user's environment via modulefiles."""
 
-    homepage = "https://sourceforge.net/p/modules/wiki/Home/"
-    url = "http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz"
+    homepage = "https://sourceforge.net/p/modules/"
+    url = "http://prdownloads.sourceforge.net/modules/modules-4.1.4.tar.gz"
 
-    version('3.2.10', '8b097fdcb90c514d7540bb55a3cb90fb')
+    version('4.1.4', sha256='965b6056ea6b72b87d9352d4c1db1d7a7f9f358b9408df2689d823b932d6aa7f')
 
     variant('X', default=True, description='Build with X functionality')
 
@@ -58,6 +58,7 @@ class EnvironmentModules(Package):
         if not tcl_config_found:
             raise InstallError('Failed to locate ' + tcl_config_name)
 
+        # NOTE: this is no longer a valid link
         # See: https://sourceforge.net/p/modules/bugs/62/
         cpp_flags = ['-DUSE_INTERP_ERRORLINE']
 
