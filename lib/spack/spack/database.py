@@ -203,12 +203,18 @@ class Database(object):
             mkdirp(self._db_dir)
 
         # initialize rest of state.
-        self.default_lock_timeout = (
-            spack.config.get('config:file_lock_timeout') or _db_lock_timeout)
-        tty.debug('DEFAULT LOCK TIMEOUT: {0}s'.format(
-                  str(self.default_lock_timeout)))
+        self.db_lock_timeout = (
+            spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
+        self.package_lock_timeout = (
+            spack.config.get('config:package_lock_timeout') or None)
+        tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
+                  str(self.db_lock_timeout)))
+        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout)) 
+                             if self.package_lock_timeout else 'No timeout')
+        tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
+                  str(timeout_format_str)))
         self.lock = Lock(self._lock_path,
-                         default_timeout=self.default_lock_timeout)
+                         default_timeout=self.db_lock_timeout)
         self._data = {}
 
         # whether there was an error at the start of a read transaction
@@ -243,7 +249,7 @@ class Database(object):
                 self.prefix_lock_path,
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
-                default_timeout=self.default_lock_timeout)
+                default_timeout=self.package_lock_timeout)
 
         return self._prefix_locks[prefix]
 
