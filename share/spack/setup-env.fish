@@ -118,13 +118,11 @@ function get_mod_args -d "return submodule flags"
 
     for elt in $argv
 
-        # # increment argument counter: used in place of bash's `shift` command
-        # set i (math $i+1)
-
         if echo $elt | string match -r -q "^-"
 
-            if test \("$elt" = "-r" \) -o  \("$elt" = "--dependencies"\)
-                echo "hi"
+            if test "$elt" = "-r"
+                set sp_subcommand_args $sp_subcommand_args $elt
+            else if test "$elt" = "--dependencies"
                 set sp_subcommand_args $sp_subcommand_args $elt
             else
                 set sp_module_args $sp_module_args $elt
@@ -135,12 +133,17 @@ function get_mod_args -d "return submodule flags"
             # we pack the remainder of `argv` into a global `remaining_args`
             # array (`i` tracks the index of the next element).
             set remaining_args (shift_args $argv[$i..-1])
+            return
         end
 
         # increment argument counter: used in place of bash's `shift` command
         set -l i (math $i+1)
 
     end
+
+    # if all elements in `argv` are matched, make sure that `remaining_args` is
+    # initialized to an empty array (this might be overkill...).
+    set remaining_args ""
 end
 
 
@@ -276,12 +279,25 @@ switch $sp_subcommand
         # using 'spack module find', then use the appropriate module tool's
         # commands to add/remove the result from the environment. If spack
         # module command comes back with an error, do nothing.
+
+        switch $sp_subcommand
+
+            case "use"
+
+            case "unuse"
+
+            case "load"
+
+            case "unload"
+
+        end
 end
 
 
 
 # temporary debugging statements
 
+echo "argv = $argv"
 echo "sp_flags = $sp_flags"
 echo "remaining_args = $remaining_args"
 echo "sp_subcommand = $sp_subcommand"
