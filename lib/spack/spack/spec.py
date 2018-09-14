@@ -1478,7 +1478,7 @@ class Spec(object):
         if self.external:
             d['external'] = {
                 'path': self.external_path,
-                'module': bool(self.external_module)
+                'module': self.external_module
             }
 
         # TODO: restore build dependencies here once we have less picky
@@ -1916,7 +1916,7 @@ class Spec(object):
                     dedupe(p + patches))
 
         for s in self.traverse():
-            if s.external_module:
+            if s.external_module and not s.external_path:
                 compiler = spack.compilers.compiler_for_spec(
                     s.compiler, s.architecture)
                 for mod in compiler.modules:
