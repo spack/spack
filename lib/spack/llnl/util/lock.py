@@ -110,7 +110,7 @@ class Lock(object):
 
         timeout = timeout or self.default_timeout
 
-        intervals = iter(Lock._poll_interval_generator())
+        poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         while (not timeout) or (time.time() - start_time) < timeout:
             # Create file and parent directories if they don't exist.
@@ -161,7 +161,7 @@ class Lock(object):
                 else:
                     raise
 
-            time.sleep(intervals.next())
+            time.sleep(next(poll_intervals))
 
         raise LockTimeoutError("Timed out waiting for lock.")
 
