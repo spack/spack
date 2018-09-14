@@ -18,9 +18,17 @@ JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache get-name --spec "${SPEC_NAME}"`
 
 if [[ $? -eq 0 ]]; then
     JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
+    JOB_ADDBUILD_URL="${CDASH_BASE_URL}/api/v1/addBuild.php"
 
     # TODO: Build/send POST request to "addBuild" for this job.  Get back the job id and
-    # write it to ${JOB_CDASH_ID_FILE}
+    # write it to ${JOB_CDASH_ID_FILE}.
+
+    # Required params:
+    #   project = based on release
+    #   site = ?
+    #   name = derived from job name
+    #   stamp = e.g. "20180911-0136-Experimental"
+
 fi
 
 # Now get CDash ids for dependencies
@@ -31,10 +39,14 @@ for i in "${DEPS[@]}"; do
 
     if [[ $? -eq 0 ]]; then
         DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
-
+        DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
         # TODO: Read dependency CDash id from file named above
 
-        # TODO: Build/send POST request to "relateBuilds" between job and dependency
+        # TODO: Build/send POST request to "relateBuilds" between job and dependency,
+        # Required params:
+        #   buildid = this build's id
+        #   relatedid = dependency's buildid
+        #   relationship = "depends on"
     fi
 done
 

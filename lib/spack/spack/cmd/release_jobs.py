@@ -59,6 +59,10 @@ def setup_parser(subparser):
         '-k', '--signing-key', default=None,
         help="hash of gpg key to use for package signing")
 
+    subparser.add_argument(
+        '-c', '--cdash-url', default='https://cdash.spack.io',
+        help="Base url of CDash instance jobs should communicate with")
+
 
 def stage_spec_jobs(spec_set):
     deptype = all_deptypes
@@ -141,6 +145,8 @@ def release_jobs(parser, args):
     if not mirror_url:
         raise SpackError('Must provide url of target binary mirror')
 
+    cdash_url = args.cdash_url
+
     spec_labels, dependencies, stages = stage_spec_jobs(release_spec_set)
 
     output_object = {}
@@ -189,6 +195,7 @@ def release_jobs(parser, args):
                     'variables': {
                         'SHORT_SPEC': pkg_short_spec,
                         'MIRROR_URL': mirror_url,
+                        'CDASH_BASE_URL': cdash_url,
                         'HASH': pkg_hash,
                         'SPEC_NAME': pkg_spec_name,
                         'DEPENDENCIES': ';'.join(job_deps_env),
