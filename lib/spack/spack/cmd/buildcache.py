@@ -154,7 +154,7 @@ def setup_parser(subparser):
     dltarball.set_defaults(func=get_tarball)
 
     # Get buildcache name
-    getname = subparsers.add_parser('getname',
+    getname = subparsers.add_parser('get-name',
                                     help=get_buildcache_name.__doc__)
     getname.add_argument(
         '-s', '--spec', default=None,
@@ -162,7 +162,7 @@ def setup_parser(subparser):
     getname.set_defaults(func=get_buildcache_name)
 
     # Put buildcache entry somewhere (file system or s3)
-    put = sp.add_parser('put', help=put_buildcache.__doc__)
+    put = subparsers.add_parser('put', help=put_buildcache.__doc__)
     put.add_argument('-d', '--directory', default='.',
                      help="Location of mirror directory, similar to 'create'")
     put.add_argument('-s', '--spec', default=None,

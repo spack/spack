@@ -14,7 +14,7 @@ export PATH="${SPACK_BIN_DIR}:${PATH}"
 mkdir -p "${BUILD_CACHE_DIR}"
 
 # Get buildcache name so we can write a CDash build id file in the right place
-JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache getname --spec "${SPEC_NAME}"`
+JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache get-name --spec "${SPEC_NAME}"`
 
 if [[ $? -eq 0 ]]; then
     JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
@@ -27,7 +27,7 @@ fi
 IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
 for i in "${DEPS[@]}"; do
     echo "Getting cdash id for dependency --> ${i} <--"
-    DEP_JOB_BUILDCACHE_NAME=`spack buildcache getname --spec "${i}"`
+    DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${i}"`
 
     if [[ $? -eq 0 ]]; then
         DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
@@ -38,12 +38,11 @@ for i in "${DEPS[@]}"; do
     fi
 done
 
-# Configure mirror
-spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
-
-# Now that we have mirrors configured, attempt to download and trust
-# keys from that mirror.
-# spack buildcache keys --install --trust --force
+#
+# Somehow, we need to:
+#   1) get our hands on a signing key so we can sign the package we build
+#   2) trust a key for verifying packages (so we can use signed dependencies)
+#
 
 # (
 #     ( echo "${SPACK_PUBLIC_KEY}" | tr -d ' \n' | base64 -d ) &&
@@ -65,8 +64,14 @@ spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
 spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
 
 if [[ $? -ne 0 ]]; then
+    # Configure mirror
+    spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
+
+    # Install package, using the buildcache from the local mirror to
+    # satisfy dependencies.
     spack install --use-cache "${SPEC_NAME}"
 
+    # Create buildcache entry for this package
     spack buildcache create -u -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
@@ -75,12 +80,12 @@ if [[ $? -ne 0 ]]; then
 
     # TODO: Build/send POST request to update CDash job status
 else
-    echo "spec ${SPEC_NAME} is already up to date on remote mirror"
-    # Now that jobs in later stages may depend on this jobs artifacts,
-    # we may want to fetch the built tarball from the remote mirror at
-    # this point and put it in the artifacts directory.  Or maybe the
-    # install command can first look in the artifacts dir, and then on
-    # the remote mirror for dependencies?
+    echo "spec ${SPEC_NAME} is already up to date on remote mirror, downloading it"
+
+    # Configure remote mirror so we can download buildcache entry
+    spack mirror add remote_binary_mirror ${MIRROR_URL}
+
+    # Now download it
     spack buildcache download --spec "${SPEC_NAME}" --path "${BUILD_CACHE_DIR}/"
 
     # TODO: Also here, update CDash job status
