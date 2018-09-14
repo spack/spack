@@ -209,8 +209,8 @@ class Database(object):
             spack.config.get('config:package_lock_timeout') or None)
         tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
                   str(self.db_lock_timeout)))
-        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout)) 
-                             if self.package_lock_timeout else 'No timeout')
+        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
+                              if self.package_lock_timeout else 'No timeout')
         tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
                   str(timeout_format_str)))
         self.lock = Lock(self._lock_path,
