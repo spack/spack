@@ -60,5 +60,7 @@ class Breakdancer(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         # bam2cfg.pl should be in the path
-        bam2cfg_path = os.path.dirname(glob.glob(join_path(prefix.lib, '*bam2cfg.pl')))
+        perl_dirs = glob.glob(join_path(prefix.lib, '*bam2cfg.pl')
+        assert len(perl_dirs) == 1
+        bam2cfg_path = os.path.dirname(perl_dirs[0])
         run_env.prepend_path('PATH', bam2cfg_path)
