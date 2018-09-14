@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import glob
-import os
 
 
 class Breakdancer(CMakePackage):
@@ -45,6 +43,8 @@ class Breakdancer(CMakePackage):
     version('master', submodules='true', 
             git='https://github.com/genome/breakdancer.git', preferred=True)
 
+    phases = ['edit', 'cmake', 'build', 'install']
+
     depends_on('zlib')
 
     depends_on('perl-statistics-descriptive', type='run')
@@ -59,8 +59,13 @@ class Breakdancer(CMakePackage):
     parallel = False
 
     def setup_environment(self, spack_env, run_env):
-        # bam2cfg.pl should be in the path
-        perl_dirs = glob.glob(join_path(prefix.lib, '*bam2cfg.pl'))
-        assert len(perl_dirs) == 1
-        bam2cfg_path = os.path.dirname(perl_dirs[0])
-        run_env.prepend_path('PATH', bam2cfg_path)
+        # get the perl tools in the path
+        run_env.prepend_path('PATH', self.prefix.lib)
+
+    def edit(self, spec, prefix):
+        # perl tools end up in a silly lib subdirectory, fixing that
+        filter_file(r'set\(SUPPORT_LIBDIR lib\/breakdancer-max\$ \
+                    \{EXE_VERSION_SUFFIX\}\)',
+                    'set(SUPPORT_LIBDIR lib)',
+                    join_path(self.stage.source_path,
+                              'perl', 'CMakeLists.txt'))
