@@ -45,12 +45,8 @@ class RNloptr(RPackage):
     depends_on('nlopt')
 
     def configure_args(self):
-        nlopt_spec = self.spec['nlopt']
-        nlopt_include = nlopt_spec.prefix.include
-        nlopt_lib = find_libraries('libnlopt', nlopt_spec.prefix,
-                                   recursive=True)
         args = [
-            '--with-nlopt-cflags=-I{0}'.format(nlopt_include),
-            '--with-nlopt-libs={0}'.format(nlopt_lib),
+            '--with-nlopt-cflags={0}'.format(self.spec['nlopt'].headers.include_flags),
+            '--with-nlopt-libs={0}'.format(self.spec['nlopt'].libs.libraries[0]),
         ]
         return args
