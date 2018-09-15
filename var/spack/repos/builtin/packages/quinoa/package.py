@@ -39,7 +39,7 @@ class Quinoa(CMakePackage):
     version('develop', branch='master')
 
     depends_on('hdf5+mpi')
-    depends_on("charm backend=mpi")
+    depends_on("charmpp backend=mpi")
     depends_on("trilinos+exodus")
     depends_on("boost")
     depends_on("hypre~internal-superlu")
