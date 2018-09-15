@@ -37,7 +37,7 @@ class RdmaCore(CMakePackage):
 
     depends_on('libnl')
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
-    conflicts('%intel', msg='rdma-core can not be build with intel (use gcc)')
+    conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
 
     def cmake_args(self):
         cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
