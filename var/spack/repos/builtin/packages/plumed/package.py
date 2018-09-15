@@ -43,6 +43,7 @@ class Plumed(AutotoolsPackage):
     homepage = 'http://www.plumed.org/'
     url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
 
+    version('2.4.2', '0f66f24b4c763ae8b2f39574113e9935')
     version('2.4.1', '6558e1fd02fc46e847ab6a3fb5ed5411')
     version('2.3.5', '3cc5f025cb6f5d963f3c778f15c77d44')
     version('2.3.3', '9f5729e406e79a06a16976fcb020e024')
