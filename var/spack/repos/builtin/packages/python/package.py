@@ -101,6 +101,7 @@ class Python(AutotoolsPackage):
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
+    depends_on("pkgconfig", type="build")
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -110,6 +111,10 @@ class Python(AutotoolsPackage):
     depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
     depends_on("gdbm", when='+dbm')
+
+    # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+    depends_on("libffi", when="@3.7:")
+    depends_on("openssl@1.0.2:", when="@3.7:")
 
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
@@ -168,12 +173,33 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
-        config_args = [
-            '--with-threads',
-            'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
-            'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
-        ]
+        link_deps = spec.dependencies('link')
+
+        # Header files are often included assuming they reside in a
+        # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
+        # which is why we don't use HeaderList here. The header files of
+        # libffi reside in prefix.lib but the configure script of Python
+        # finds them using pkg-config.
+        cppflags = '-I' + ' -I'.join(dep.prefix.include
+                                     for dep in link_deps
+                                     if dep.name != 'libffi')
+
+        # Currently, the only way to get SpecBuildInterface wrappers of the
+        # dependencies (which we need to get their 'libs') is to get them
+        # using spec.__getitem__.
+        ldflags = ' '.join(spec[dep.name].libs.search_flags
+                           for dep in link_deps)
+
+        config_args = ['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags]
+
+        # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        if spec.satisfies('@:3.6'):
+            config_args.append('--with-threads')
+
+        if '^libffi' in spec:
+            config_args.append('--with-system-ffi')
+        else:
+            config_args.append('--without-system-ffi')
 
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
