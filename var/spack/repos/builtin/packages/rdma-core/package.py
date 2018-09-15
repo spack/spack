@@ -34,6 +34,7 @@ class RdmaCore(CMakePackage):
     version('17.1', '1d19caf554f815990af5c21356ac4d3a')
     version('13', '6b072b4307d1cfe45eba4373f68e2927')
 
+    depends_on('pkgconfig', type='build')
     depends_on('libnl')
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
 
