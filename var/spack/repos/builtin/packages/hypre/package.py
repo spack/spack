@@ -46,7 +46,10 @@ class Hypre(Package):
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
-    # hypre does not know how to build shared libraries on Darwin
+    # Versions 2.13.0 and later can be patched to build shared
+    # libraries on Darwin; the patch for this capability does not
+    # apply to version 2.12.1 and earlier due to changes in the build system
+    # between versions 2.12.1 and 2.13.0.
     variant('shared', default=(sys.platform != 'darwin'),
             description="Build shared library (disables static library)")
     # SuperluDist have conflicting headers with those in Hypre
@@ -61,9 +64,17 @@ class Hypre(Package):
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
 
+    # Patch to build shared libraries on Darwin
+    patch('darwin-shared-libs-for-hypre-2.13.0.patch', when='+shared@2.13.0 platform=darwin')
+    patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0: platform=darwin')
+
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
+
+    # Patch to build shared libraries on Darwin does not apply to
+    # versions before 2.13.0
+    conflicts("+shared@:2.12.99 platform=darwin")
 
     def url_for_version(self, version):
         if version >= Version('2.12.0'):
