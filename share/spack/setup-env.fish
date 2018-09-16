@@ -120,9 +120,9 @@ function get_mod_args -d "return submodule flags"
 
         if echo $elt | string match -r -q "^-"
 
-            if test "$elt" = "-r"
+            if test "x$elt" = "x-r"
                 set sp_subcommand_args $sp_subcommand_args $elt
-            else if test "$elt" = "--dependencies"
+            else if test "x$elt" = "x--dependencies"
                 set sp_subcommand_args $sp_subcommand_args $elt
             else
                 set sp_module_args $sp_module_args $elt
@@ -241,7 +241,7 @@ switch $sp_subcommand
             set remaining_args (shift_args $remaining_args)     # simulates bash shift
         end
 
-        if test $sp_arg = "-h"
+        if test "x$sp_arg" = "x-h"
             # nothing more needs to be done for `-h`
             command spack cd -h
         else
@@ -283,14 +283,43 @@ switch $sp_subcommand
         switch $sp_subcommand
 
             case "use"
+                set -l dotkit_args $sp_subcommand_args $sp_spec
+                if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
+                    use $sp_module_args $sp_full_spec
+                else
+                    exit 1
+                end
 
             case "unuse"
+                set -l dotkit_args $sp_subcommand_args $sp_spec
+                if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
+                    unuse $sp_module_args $sp_full_spec
+                else
+                    exit 1
+                end
 
             case "load"
+                set -l tcl_args $sp_subcommand_args $sp_spec
+                if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
+                    module load $sp_module_args $sp_full_spec
+                else
+                    exit 1
+                end
 
             case "unload"
-
+                set -l tcl_args $sp_subcommand_args $sp_spec
+                if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
+                    module unload $sp_module_args $sp_full_spec
+                else
+                    exit 1
+                end
         end
+
+
+    # CASE: Catch-all
+    case "*"
+        command spack $argv
+
 end
 
 
