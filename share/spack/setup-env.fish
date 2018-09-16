@@ -172,164 +172,156 @@ end
 
 
 
-#
-# save raw arguments into an array before butchering them
-#
 
-set -l args $argv
+function spack -d "wrapper for the `spack` command"
 
+    #
+    # save raw arguments into an array before butchering them
+    #
 
-
-#
-# accumulate initial flags for main spack command
-#
-
-set remaining_args "" # remaining (unparsed) arguments
-set -l sp_flags (get_sp_flags $argv)
+    set -l args $argv
 
 
 
-#
-# h and V flags don't require further output parsing.
-#
+    #
+    # accumulate initial flags for main spack command
+    #
 
-if check_sp_flags $sp_flags
-    command spack $sp_flags $remaining_args
-end
-
-
-
-#
-# isolate subcommand and subcommand specs
-#  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-#     undefined, or if it is an array, `test -n $argv` is unpredictable.
-#     Instead, encapsulate `argv` in a string, and test the string instead.
-#
-
-set sp_subcommand ""
-
-if test -n "$remaining_args[1]"
-    set sp_subcommand $remaining_args[1]
-    set remaining_args (shift_args $remaining_args)     # simulates bash shift
-end
-
-set -l sp_spec $remaining_args
+    set remaining_args "" # remaining (unparsed) arguments
+    set -l sp_flags (get_sp_flags $argv)
 
 
 
-#
-# Filter out use and unuse. For any other commands, just run the command.
-#
+    #
+    # h and V flags don't require further output parsing.
+    #
 
-switch $sp_subcommand
+    if check_sp_flags $sp_flags
+        command spack $sp_flags $remaining_args
+    end
 
-    # CASE: spack subcommand is `cd`: if the sub command arg is `-h`, nothing
-    # further needs to be done. Otherwise, test the location referring the
-    # subcommand and cd there (if it exists).
 
-    case "cd"
 
-        set -l sp_arg ""
+    #
+    # isolate subcommand and subcommand specs
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    #
 
-        # Extract the first subcommand argument:
-        # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-        #    undefined, or if it is an array, `test -n $argv` is unpredictable.
-        #    Instead, encapsulate `argv` in a string, and test the string
-        #    instead.
-        if test -n "$remaining_args[1]"
-            set sp_arg $remaining_args[1]
-            set remaining_args (shift_args $remaining_args)     # simulates bash shift
-        end
+    set sp_subcommand ""
 
-        if test "x$sp_arg" = "x-h"
-            # nothing more needs to be done for `-h`
-            command spack cd -h
-        else
-            # extract location using the subcommand (fish `(...)`)
-            set -l LOC (spack location $sp_arg $remaining_args)
+    if test -n "$remaining_args[1]"
+        set sp_subcommand $remaining_args[1]
+        set remaining_args (shift_args $remaining_args)     # simulates bash shift
+    end
 
-            # test location and cd if exists:
-            if test -d "$LOC"
-                cd $LOC
-            else
-                exit 1
+    set -l sp_spec $remaining_args
+
+
+
+    #
+    # Filter out use and unuse. For any other commands, just run the command.
+    #
+
+    switch $sp_subcommand
+
+        # CASE: spack subcommand is `cd`: if the sub command arg is `-h`, nothing
+        # further needs to be done. Otherwise, test the location referring the
+        # subcommand and cd there (if it exists).
+
+        case "cd"
+
+            set -l sp_arg ""
+
+            # Extract the first subcommand argument:
+            # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+            #    undefined, or if it is an array, `test -n $argv` is unpredictable.
+            #    Instead, encapsulate `argv` in a string, and test the string
+            #    instead.
+            if test -n "$remaining_args[1]"
+                set sp_arg $remaining_args[1]
+                set remaining_args (shift_args $remaining_args)     # simulates bash shift
             end
 
-        end
+            if test "x$sp_arg" = "x-h"
+                # nothing more needs to be done for `-h`
+                command spack cd -h
+            else
+                # extract location using the subcommand (fish `(...)`)
+                set -l LOC (spack location $sp_arg $remaining_args)
 
-        exit 0
-
-
-    # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
-    # These statements deal with the technical details of actually using
-    # modules.
-
-    case "use" or "unuse" or "load" or "unload"
-
-        # Shift any other args for use off before parsing spec.
-        set sp_subcommand_args ""
-        set sp_module_args ""
-
-        get_mod_args $remaining_args
-
-        set sp_spec $remaining_args
-
-
-        # Here the user has run use or unuse with a spec. Find a matching spec
-        # using 'spack module find', then use the appropriate module tool's
-        # commands to add/remove the result from the environment. If spack
-        # module command comes back with an error, do nothing.
-
-        switch $sp_subcommand
-
-            case "use"
-                set -l dotkit_args $sp_subcommand_args $sp_spec
-                if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
-                    use $sp_module_args $sp_full_spec
+                # test location and cd if exists:
+                if test -d "$LOC"
+                    cd $LOC
                 else
                     exit 1
                 end
 
-            case "unuse"
-                set -l dotkit_args $sp_subcommand_args $sp_spec
-                if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
-                    unuse $sp_module_args $sp_full_spec
-                else
-                    exit 1
-                end
+            end
 
-            case "load"
-                set -l tcl_args $sp_subcommand_args $sp_spec
-                if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
-                    module load $sp_module_args $sp_full_spec
-                else
-                    exit 1
-                end
-
-            case "unload"
-                set -l tcl_args $sp_subcommand_args $sp_spec
-                if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
-                    module unload $sp_module_args $sp_full_spec
-                else
-                    exit 1
-                end
-        end
+            exit 0
 
 
-    # CASE: Catch-all
-    case "*"
-        command spack $argv
+            # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
+            # These statements deal with the technical details of actually using
+            # modules.
 
+        case "use" or "unuse" or "load" or "unload"
+
+            # Shift any other args for use off before parsing spec.
+            set sp_subcommand_args ""
+            set sp_module_args ""
+
+            get_mod_args $remaining_args
+
+            set sp_spec $remaining_args
+
+
+            # Here the user has run use or unuse with a spec. Find a matching spec
+            # using 'spack module find', then use the appropriate module tool's
+            # commands to add/remove the result from the environment. If spack
+            # module command comes back with an error, do nothing.
+
+            switch $sp_subcommand
+
+                case "use"
+                    set -l dotkit_args $sp_subcommand_args $sp_spec
+                    if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
+                        use $sp_module_args $sp_full_spec
+                    else
+                        exit 1
+                    end
+
+                case "unuse"
+                    set -l dotkit_args $sp_subcommand_args $sp_spec
+                    if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
+                        unuse $sp_module_args $sp_full_spec
+                    else
+                        exit 1
+                    end
+
+                case "load"
+                    set -l tcl_args $sp_subcommand_args $sp_spec
+                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
+                        module load $sp_module_args $sp_full_spec
+                    else
+                        exit 1
+                    end
+
+                case "unload"
+                    set -l tcl_args $sp_subcommand_args $sp_spec
+                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
+                        module unload $sp_module_args $sp_full_spec
+                    else
+                        exit 1
+                    end
+            end
+
+
+            # CASE: Catch-all
+        case "*"
+            command spack $argv
+
+    end
 end
-
-
-
-# temporary debugging statements
-
-echo "argv = $argv"
-echo "sp_flags = $sp_flags"
-echo "remaining_args = $remaining_args"
-echo "sp_subcommand = $sp_subcommand"
-echo "sp_subcommand_args = $sp_subcommand"
-echo "sp_module_args = $sp_module_args"
-echo "sp_spec = $sp_spec"
