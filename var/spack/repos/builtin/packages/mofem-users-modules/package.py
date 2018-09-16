@@ -44,6 +44,7 @@ class MofemUsersModules(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
 
+    version('0.8.13', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     version('0.8.12', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     version('0.8.11', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
     version('0.8.10', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
@@ -58,6 +59,7 @@ class MofemUsersModules(CMakePackage):
         description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
+    depends_on('mofem-cephas@0.8.13', when='@0.8.13')
     depends_on('mofem-cephas@0.8.12', when='@0.8.12')
     depends_on('mofem-cephas@0.8.11', when='@0.8.11')
     depends_on('mofem-cephas@0.8.10', when='@0.8.10')
