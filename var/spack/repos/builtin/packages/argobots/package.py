@@ -25,18 +25,17 @@
 from spack import *
 
 
-class PyPicrust(PythonPackage):
-    """bioinformatics software package designed to predict metagenome
-        functional content from marker gene surveys and full genomes."""
+class Argobots(AutotoolsPackage):
+    """Argobots, which was developed as a part of the Argo project, is
+    a lightweight runtime system that supports integrated computation
+    and data movement with massive concurrency. It will directly
+    leverage the lowest-level constructs in the hardware and OS:
+    lightweight notification mechanisms, data movement engines, memory
+    mapping, and data placement strategies. It consists of an
+    execution model and a memory model."""
 
-    homepage = "http://picrust.github.io/picrust/index.html"
-    url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
+    homepage = "http://www.argobots.org/"
+    url      = "https://github.com/pmodels/argobots/releases/download/v1.0b1/argobots-1.0b1.tar.gz"
 
-    version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
-
-    depends_on('python@2.7:2.999', type=('build', 'run'))
-    depends_on('py-cogent@1.5.3', type=('build', 'run'))
-    depends_on('py-biom-format@2.1.4:2.1.999', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.16.0', type=('build', 'run'))
-    depends_on('py-numpy@1.5.1:', type=('build', 'run'))
+    version("1.0b1", "5eeab7b2c639d08bbea22db3026cdf39")
+    version("1.0a1", "9d29d57d14d718f93b505178f6ba3e08")

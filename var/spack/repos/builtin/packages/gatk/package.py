@@ -35,6 +35,8 @@ class Gatk(Package):
     homepage = "https://software.broadinstitute.org/gatk/"
     url      = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip"
 
+    version('4.0.8.1', sha256='6d47463dfd8c16ffae82fd29e4e73503e5b7cd0fcc6fea2ed50ee3760dd9acd9',
+            url='https://github.com/broadinstitute/gatk/archive/4.0.8.1.tar.gz')
     version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
             url="https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
     version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
@@ -46,10 +48,10 @@ class Gatk(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        # The list of files to install varies with release...
-        # ... but skip the spack-{build.env}.out files and gatkdoc directory.
+
+        # Install all executable non-script files to prefix bin
         files = [x for x in glob.glob("*")
-                 if not re.match("^spack-", x) and not re.match("^gatkdoc", x)]
+                 if not re.match("^.*\.sh$", x) and is_exe(x)]
         for f in files:
             install(f, prefix.bin)
 

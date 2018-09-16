@@ -76,6 +76,10 @@ class Sqlite(AutotoolsPackage):
                         'extension-functions.c'},
              when='+functions')
 
+    @property
+    def libs(self):
+        return find_libraries('libsqlite3', root=self.prefix.lib)
+
     def get_arch(self):
         arch = architecture.Arch()
         arch.platform = architecture.platform()
