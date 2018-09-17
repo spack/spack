@@ -101,9 +101,9 @@ config:
   # therefore generally be left untouched.
   db_lock_timeout: 120
 
-  # TODO: turn this off by setting it 'null' before merging
   # How long to wait when attempting to modify a package (e.g. to install it).
-  # This value should typically be 'null' unless the Spack instance only ever
-  # has a single user at a time, and only if the user anticipates that a
-  # significant delay indicates that the lock attempt will never succeed.
-  package_lock_timeout: 120
+  # This value should typically be 'null' (never time out) unless the Spack
+  # instance only ever has a single user at a time, and only if the user
+  # anticipates that a significant delay indicates that the lock attempt will
+  # never succeed.
+  package_lock_timeout: null
