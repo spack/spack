@@ -204,8 +204,6 @@ def check_args(cc, args, expected):
     """
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         cc_modified_args = cc(*args, output=str).strip().split('\n')
-        if expected != cc_modified_args:
-            import pdb; pdb.set_trace()
         assert expected == cc_modified_args
 
 

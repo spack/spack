@@ -34,7 +34,14 @@ from spack.util.spack_yaml import syaml_dict, syaml_str
 
 
 @pytest.fixture
-def build_environment():
+def working_env():
+    saved_env = os.environ.copy()
+    yield
+    os.environ = saved_env
+
+
+@pytest.fixture
+def build_environment(working_env):
     cc = Executable(os.path.join(build_env_path, "cc"))
     cxx = Executable(os.path.join(build_env_path, "c++"))
     fc = Executable(os.path.join(build_env_path, "fc"))
@@ -66,14 +73,6 @@ def build_environment():
 
     yield {'cc': cc, 'cxx': cxx, 'fc': fc}
 
-    for name in ('SPACK_CC', 'SPACK_CXX', 'SPACK_FC', 'SPACK_PREFIX',
-                 'SPACK_ENV_PATH', 'SPACK_DEBUG_LOG_DIR',
-                 'SPACK_COMPILER_SPEC', 'SPACK_SHORT_SPEC',
-                 'SPACK_CC_RPATH_ARG', 'SPACK_CXX_RPATH_ARG',
-                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG',
-                 'SPACK_SYSTEM_DIRS'):
-        del os.environ[name]
-
 
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
@@ -104,7 +103,7 @@ def test_static_to_shared_library(build_environment):
 
 @pytest.mark.regression('8345')
 @pytest.mark.usefixtures('config', 'mock_packages')
-def test_cc_not_changed_by_modules(monkeypatch):
+def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
     s = spack.spec.Spec('cmake')
     s.concretize()
