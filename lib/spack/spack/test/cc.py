@@ -132,53 +132,6 @@ def wrapper_flags():
         yield
 
 
-class Dependencies(object):
-    """
-    dep1/
-      include/
-      lib/
-    dep2/
-      lib64/
-    dep3/
-      include/
-      lib64/
-    dep4/
-      include/
-    """
-    def __init__(self):
-        self.lib_dirs = list()
-        self.link_args = list()
-        self.rpath_dirs = list()
-        self.ccld_rpath_args = list()
-        self.ld_rpath_args = list()
-        self.include_dirs = list()
-        self.include_args = list()
-
-    def add_lib(self, dep, rpath=True, dirname=None):
-        prefix = 'dep{0}'.format(str(dep))
-        dirname = dirname or 'lib'
-        lib_dir = os.path.join(prefix, dirname)
-        self.lib_dirs.append(lib_dir)
-        self.link_args.append('-L' + lib_dir)
-        if rpath:
-            self.rpath_dirs.append(lib_dir)
-            self.ccld_rpath_args.append('-Wl,-rpath,' + lib_dir)
-            self.ld_rpath_args.append('' + lib_dir)
-
-    def add_include(self, dep, dirname=None):
-        prefix = 'dep{0}'.format(str(dep))
-        dirname = dirname or 'include'
-        include_dir = os.path.join(prefix, dirname)
-        self.include_dirs.append(include_dir)
-        self.include_args.append('-I' + include_dir)
-
-    def spack_env_vars(self):
-        return {
-            'SPACK_INCLUDE_DIRS': ':'.join(self.include_dirs),
-            'SPACK_LINK_DIRS': ':'.join(self.lib_dirs),
-            'SPACK_RPATH_DIRS': ':'.join(self.rpath_dirs)
-        }
-
 pytestmark = pytest.mark.usefixtures('wrapper_environment')
 
 
