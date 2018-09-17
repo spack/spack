@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import os
 
 
 class Cistem(AutotoolsPackage):
@@ -32,9 +32,12 @@ class Cistem(AutotoolsPackage):
        from them."""
 
     homepage = "https://cistem.org/"
-    url      = "https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0"
 
-    version('1.0.0', '479f395b30ad630df3cbba9c56eb29c2')
+    version('1.0.0', sha256='c62068f53d0a269ffa1bfff34641597d3795989a930686437fba9eed7a991af6')
+
+    def url_for_version(self, version):
+        c_file = "file://{0}/cistem-{1}-beta-source-code.tar.gz"
+        return c_file.format(os.getcwd(), version)
 
     depends_on('wx@3.0.2')
     depends_on('fftw')
