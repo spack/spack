@@ -43,7 +43,7 @@ class Energyplus(Package):
             url="https://github.com/NREL/EnergyPlus/releases/download/v8.9.0-WithIDDFixes/EnergyPlus-8.9.0-eba93e8e1b-Linux-x86_64.tar.gz")
 
     def install(self, spec, prefix):
-        # binary distribution, we just unpack to usr/share/energyplus
+        # binary distribution, we just unpack to lib/energyplus
         # and then symlink the appropriate targets
 
         # there is only one folder with a semi-predictable name so we glob it
