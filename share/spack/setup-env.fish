@@ -325,3 +325,44 @@ function spack -d "wrapper for the `spack` command"
 
     end
 end
+
+
+
+#################################################################################
+# Prepends directories to path, if they exist.
+#      pathadd /path/to/dir            # add to PATH
+# or   pathadd OTHERPATH /path/to/dir  # add to OTHERPATH
+#################################################################################
+function spack_pathadd
+    # If no variable name is supplied, just append to PATH otherwise append to
+    # that variable.
+
+    set -l pa_varname PATH
+    set -l pa_new_path $argv[1]
+
+    if test -n "$argv[2]"
+        set pa_varname $argv[1]
+        set pa_new_path $argv[2]
+    end
+
+    set -l pa_oldvalue $$pa_varname
+
+    if test -d "$pa_new_path"
+        if string match -q "$pa_new_path" $pa_oldvalue
+        else
+            if test -n "$pa_oldvalue"
+                set -g $pa_varname $pa_new_path $pa_oldvalue
+            else
+                set -g $pa_varname $pa_new_path
+            end
+        end
+    end
+end
+
+
+
+#
+# Figure out where this file is.  Below code needs to be portable to
+# bash and zsh.
+#
+set sp_source_file (status -f)  # name of current file

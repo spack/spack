@@ -27,8 +27,8 @@ import os
 
 
 class EnvironmentModules(Package):
-    """The Environment Modules package provides for the dynamic
-    modification of a user's environment via modulefiles."""
+    """The Environment Modules package provides for the dynamic modification of
+    a user's environment via modulefiles."""
 
     homepage = "https://sourceforge.net/p/modules/"
     url = "http://prdownloads.sourceforge.net/modules/modules-4.1.4.tar.gz"
@@ -58,8 +58,6 @@ class EnvironmentModules(Package):
         if not tcl_config_found:
             raise InstallError('Failed to locate ' + tcl_config_name)
 
-        # NOTE: this is no longer a valid link
-        # See: https://sourceforge.net/p/modules/bugs/62/
         cpp_flags = ['-DUSE_INTERP_ERRORLINE']
 
         config_args = [
