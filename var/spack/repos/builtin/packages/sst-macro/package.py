@@ -64,8 +64,9 @@ class SstMacro(AutotoolsPackage):
     variant('otf2', default=False, description='Enable OTF2 trace emission and replay support')
     variant('skeletonizer', default=False, description='Enable Clang source-to-source autoskeletonization')
     variant('threaded', default=False, description='Enable thread-parallel PDES simulation')
-    variant('mpi', default=False, description='Enable distributed PDES simulation')
-    variant('static', default=False, description='Build static libraries')
+    variant('mpi', default=True, description='Enable distributed PDES simulation')
+    variant('static', default=True, description='Build static libraries')
+    variant('shared', default=True, description='Build shared libraries')
 
     @run_before('autoreconf')
     def bootstrap(self):
@@ -80,7 +81,10 @@ class SstMacro(AutotoolsPackage):
         env['CXXFLAGS'] = '-O2'
 
         spec = self.spec
-        args.append('--%sable-static' % 'en' if '+static' in spec else 'dis')
+        args.append(
+            '--enable-static=' % ('yes' if '+static' in spec else 'no'))
+        args.append(
+            '--enable-shared=' % ('yes' if '+shared' in spec else 'no'))
 
         if spec.satisfies("@8.0.0:"):
             args.extend([
