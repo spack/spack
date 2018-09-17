@@ -81,15 +81,15 @@ class Lock(object):
 
     @staticmethod
     def _poll_interval_generator():
-        # Poll interval of .1s until 1 second has passed
-        # Then poll interval of .2s until 1 minute has passed
+        # Poll interval of .1s until 2 seconds have passed
+        # Then poll interval of .2s until 10 seconds have passed
         # Then poll interval of .5s
         wait_time = 1e-1
         total = 0
         while True:
-            if total > 5:
+            if total > 2:
                 wait_time = 2e-1
-            elif total > 60:
+            elif total > 10:
                 wait_time = 5e-1
             total += wait_time
             yield wait_time
