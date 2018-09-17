@@ -88,17 +88,17 @@ class NcbiRmblastn(AutotoolsPackage):
         ]
         if self.spec.version == Version('2.6.0'):
             options += [
-                        '--without-vdb',
-                        '--without-nettle',
-                        '--without-gsoap',
-                        '--without-avro',
-                        '--without-cereal',
-                        '--without-sasl2',
-                        '--without-mongodb',
-                        '--without-gmock',
-                        '--without-lapack',
-                        '--without-lmdb'
-                       ]
+                '--without-vdb',
+                '--without-nettle',
+                '--without-gsoap',
+                '--without-avro',
+                '--without-cereal',
+                '--without-sasl2',
+                '--without-mongodb',
+                '--without-gmock',
+                '--without-lapack',
+                '--without-lmdb'
+            ]
         return options
 
     @when('@2.6.0')
