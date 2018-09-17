@@ -80,19 +80,6 @@ test_args_without_paths = [
 #: The prefix of the package being mock installed
 pkg_prefix = '/spack-test-prefix'
 
-#
-# Expected RPATHs for the package itself.  The package is expected to
-# have only one of /lib or /lib64, but we add both b/c we can't know
-# before installing.
-#
-pkg_wl_rpaths = [
-    '-Wl,-rpath,' + pkg_prefix + '/lib',
-    '-Wl,-rpath,' + pkg_prefix + '/lib64']
-
-pkg_rpaths = [
-    '-rpath', '/spack-test-prefix/lib',
-    '-rpath', '/spack-test-prefix/lib64']
-
 # Compilers to use during tests
 cc = Executable(os.path.join(build_env_path, "cc"))
 ld = Executable(os.path.join(build_env_path, "ld"))
@@ -254,7 +241,6 @@ def test_ld_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_rpaths +
-        pkg_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -279,7 +265,6 @@ def test_cc_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -294,7 +279,6 @@ def test_cxx_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -309,7 +293,6 @@ def test_fc_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -322,7 +305,6 @@ def test_dep_rpath():
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths)
 
 
@@ -336,7 +318,6 @@ def test_dep_include():
             ['-Ix'] +
             test_library_paths +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             test_args_without_paths)
 
 
@@ -351,7 +332,6 @@ def test_dep_lib():
             test_library_paths +
             ['-Lx'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             ['-Wl,-rpath,x'] +
             test_args_without_paths)
 
@@ -366,7 +346,6 @@ def test_dep_lib_no_rpath():
             test_library_paths +
             ['-Lx'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             test_args_without_paths)
 
 
@@ -379,7 +358,6 @@ def test_dep_lib_no_lib():
             test_include_paths +
             test_library_paths +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             ['-Wl,-rpath,x'] +
             test_args_without_paths)
 
@@ -401,7 +379,6 @@ def test_ccld_deps():
              '-Lylib',
              '-Lzlib'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             ['-Wl,-rpath,xlib',
              '-Wl,-rpath,ylib',
              '-Wl,-rpath,zlib'] +
@@ -452,7 +429,6 @@ def test_ccld_with_system_dirs():
             ['-L/usr/local/lib',
              '-L/lib64/'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             ['-Wl,-rpath,xlib',
              '-Wl,-rpath,ylib',
              '-Wl,-rpath,zlib'] +
@@ -474,7 +450,6 @@ def test_ld_deps():
              '-Lylib',
              '-Lzlib'] +
             test_rpaths +
-            pkg_rpaths +
             ['-rpath', 'xlib',
              '-rpath', 'ylib',
              '-rpath', 'zlib'] +
@@ -494,7 +469,6 @@ def test_ld_deps_no_rpath():
              '-Lylib',
              '-Lzlib'] +
             test_rpaths +
-            pkg_rpaths +
             test_args_without_paths)
 
 
@@ -508,7 +482,6 @@ def test_ld_deps_no_link():
             test_include_paths +
             test_library_paths +
             test_rpaths +
-            pkg_rpaths +
             ['-rpath', 'xlib',
              '-rpath', 'ylib',
              '-rpath', 'zlib'] +
@@ -532,7 +505,6 @@ def test_ld_deps_partial():
             test_library_paths +
             ['-Lxlib'] +
             test_rpaths +
-            pkg_rpaths +
             ['-rpath', 'xlib'] +
             ['-r'] +
             test_args_without_paths)
@@ -560,7 +532,6 @@ def test_ccache_prepend_for_cc():
             test_include_paths +
             test_library_paths +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             test_args_without_paths)
 
 
@@ -572,5 +543,4 @@ def test_no_ccache_prepend_for_fc():
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths)
