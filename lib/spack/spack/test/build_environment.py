@@ -127,7 +127,7 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
-def test_compiler_config_modifications(monkeypatch):
+def test_compiler_config_modifications(monkeypatch, working_env):
     s = spack.spec.Spec('cmake')
     s.concretize()
     pkg = s.package
@@ -200,15 +200,10 @@ def test_compiler_config_modifications(monkeypatch):
     expected = '/path/first:/path/last'
     assert os.environ['NEW_PATH_LIST'] == expected
 
-    os.environ.pop('SOME_VAR_STR', None)
-    os.environ.pop('SOME_VAR_NUM', None)
-    os.environ.pop('PATH_LIST', None)
-    os.environ.pop('EMPTY_PATH_LIST', None)
-    os.environ.pop('NEW_PATH_LIST', None)
-
 
 @pytest.mark.regression('9107')
-def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
+def test_spack_paths_before_module_paths(
+        config, mock_packages, monkeypatch, working_env):
     s = spack.spec.Spec('cmake')
     s.concretize()
     pkg = s.package
