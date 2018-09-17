@@ -26,10 +26,10 @@ from spack import *
 
 
 class SstMacro(AutotoolsPackage):
-    """The SST/macro software package provides a simulator for large-scale
+    """The SST Macro software package Simulates large-scale
     parallel computer architectures for the coarse-grained study of
     distributed-memory applications. The simulator is driven from either a
-    trace file or skeleton application. SST/macro's modular architecture can
+    trace file or skeletoned application. SST/macro's modular architecture can
     be extended with additional network models, trace file formats,
     software services, and processor models.
     """
@@ -44,23 +44,28 @@ class SstMacro(AutotoolsPackage):
     version('6.1.0', '98b737be6326b8bd711de832ccd94d14')
 
     depends_on('boost@1.59:', when='@:6.1.0')
+
     depends_on('autoconf@1.68:', type='build', when='@develop')
     depends_on('automake@1.11.1:', type='build', when='@develop')
     depends_on('libtool@1.2.4:', type='build', when='@develop')
     depends_on('m4', type='build', when='@develop')
+
     depends_on('autoconf@1.68:', type='build', when='@master')
     depends_on('automake@1.11.1:', type='build', when='@master')
     depends_on('libtool@1.2.4:', type='build', when='@master')
     depends_on('m4', type='build', when='@master')
 
+    depends_on('binutils', type='build')
     depends_on('zlib', type=('build', 'link'))
     depends_on('otf2', when='+otf2')
-    depends_on('llvm+clang@:5.99.99', when='+autoskeletonizer')
+    depends_on('llvm+clang@:5.99.99', when='+skeletonizer')
     depends_on('mpi', when='+mpi')
 
     variant('otf2', default=False, description='Enable OTF2 trace emission and replay support')
     variant('skeletonizer', default=False, description='Enable Clang source-to-source autoskeletonization')
     variant('threaded', default=False, description='Enable thread-parallel PDES simulation')
+    variant('mpi', default=False, description='Enable distributed PDES simulation')
+    variant('static', default=False, description='Build static libraries')
 
     @run_before('autoreconf')
     def bootstrap(self):
@@ -70,13 +75,27 @@ class SstMacro(AutotoolsPackage):
     def configure_args(self):
         args = ['--disable-regex']
 
+        # Set CFLAGS and CXXFLAGS so they won't automatically insert '-g'
+        env['CFLAGS'] = '-O2'
+        env['CXXFLAGS'] = '-O2'
+
         spec = self.spec
+        args.append('--%sable-static' % 'en' if '+static' in spec else 'dis')
+
         if spec.satisfies("@8.0.0:"):
             args.extend([
                 '--%sable-otf2' % ('en' if '+otf2' in spec else 'dis'),
-                '--%sable-multithreaded' % (
+                '--%sable-multithread' % (
                     'en' if '+threaded' in spec else 'dis')
             ])
+
             if '+skeletonizer' in spec:
                 args.append('--with-clang=' + spec['llvm'].prefix)
+
+            if '+mpi' in spec:
+                env['CC'] = spec['mpi'].mpicc
+                env['CXX'] = spec['mpi'].mpicxx
+                env['F77'] = spec['mpi'].mpif77
+                env['FC'] = spec['mpi'].mpifc
+
         return args
