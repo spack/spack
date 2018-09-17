@@ -26,7 +26,6 @@ from spack import *
 from glob import glob
 from os.path import exists, join
 from os import makedirs
-from shutil import copy
 
 
 class Ncurses(AutotoolsPackage):
@@ -37,7 +36,7 @@ class Ncurses(AutotoolsPackage):
     SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz"
+    url      = "https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
 
     version('6.1', '98c889aaf8d23910d2b92d65be2e737a')
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
@@ -109,7 +108,7 @@ class Ncurses(AutotoolsPackage):
             if not exists(path):
                 makedirs(path)
             for header in headers:
-                copy(header, path)
+                install(header, path)
 
     @property
     def libs(self):

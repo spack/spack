@@ -33,16 +33,16 @@ class PyFiscalyear(PythonPackage):
 
     homepage = "https://github.com/adamjstewart/fiscalyear"
     url      = "https://pypi.io/packages/source/f/fiscalyear/fiscalyear-0.1.0.tar.gz"
+    git      = "https://github.com/adamjstewart/fiscalyear.git"
 
+    maintainers = ['adamjstewart']
     import_modules = ['fiscalyear']
 
-    version('master', branch='master',
-            git='https://github.com/adamjstewart/fiscalyear.git')
+    version('master', branch='master')
     version('0.1.0', '30e36b259f3e72e4929abbf259335742')
 
     depends_on('python@2.5:')
     depends_on('py-setuptools', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest', type='test')
-    # depends_on('py-pytest-runner', type='test')
+    depends_on('py-pytest', type='test')
+    depends_on('py-pytest-runner', type='test')

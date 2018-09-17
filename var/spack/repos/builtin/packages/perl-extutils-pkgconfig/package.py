@@ -33,4 +33,4 @@ class PerlExtutilsPkgconfig(PerlPackage):
 
     version('1.16', 'b86318f2b6ac6af3ee985299e1e38fe5')
 
-    depends_on('pkg-config', type=('build', 'run'))
+    depends_on('pkgconfig', type=('build', 'run'))

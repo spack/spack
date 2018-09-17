@@ -28,24 +28,28 @@ import hashlib
 import llnl.util.tty as tty
 
 
-"""Set of acceptable hashes that Spack will use."""
-_hash_algorithms = [
-    'md5',
-    'sha1',
-    'sha224',
-    'sha256',
-    'sha384',
-    'sha512']
+#: Set of hash algorithms that Spack can use, mapped to digest size in bytes
+hashes = {
+    'md5': 16,
+    'sha1': 20,
+    'sha224': 28,
+    'sha256': 32,
+    'sha384': 48,
+    'sha512': 64
+}
 
 
+#: size of hash digests in bytes, mapped to algoritm names
+_size_to_hash = dict((v, k) for k, v in hashes.items())
+
+
+#: List of deprecated hash functions. On some systems, these cannot be
+#: used without special options to hashlib.
 _deprecated_hash_algorithms = ['md5']
 
 
-hashes = dict()
-
-
-"""Index for looking up hasher for a digest."""
-_size_to_hash = dict()
+#: cache of hash functions generated
+_hash_functions = {}
 
 
 class DeprecatedHash(object):
@@ -65,22 +69,41 @@ class DeprecatedHash(object):
             return hashlib.new(self.hash_alg)
 
 
-for h in _hash_algorithms:
-    try:
-        if h in _deprecated_hash_algorithms:
-            hash_gen = DeprecatedHash(
-                h, tty.debug, disable_security_check=False)
-            _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
+def hash_fun_for_algo(algo):
+    """Get a function that can perform the specified hash algorithm."""
+    hash_gen = _hash_functions.get(algo)
+    if hash_gen is None:
+        if algo in _deprecated_hash_algorithms:
+            try:
+                hash_gen = DeprecatedHash(
+                    algo, tty.debug, disable_security_check=False)
+
+                # call once to get a ValueError if usedforsecurity is needed
+                hash_gen(disable_alert=True)
+            except ValueError:
+                # Some systems may support the 'usedforsecurity' option
+                # so try with that (but display a warning when it is used)
+                hash_gen = DeprecatedHash(
+                    algo, tty.warn, disable_security_check=True)
         else:
-            hash_gen = getattr(hashlib, h)
-            _size_to_hash[hash_gen().digest_size] = hash_gen
-        hashes[h] = hash_gen
-    except ValueError:
-        # Some systems may support the 'usedforsecurity' option so try with
-        # that (but display a warning when it is used)
-        hash_gen = DeprecatedHash(h, tty.warn, disable_security_check=True)
-        hashes[h] = hash_gen
-        _size_to_hash[hash_gen(disable_alert=True).digest_size] = hash_gen
+            hash_gen = getattr(hashlib, algo)
+        _hash_functions[algo] = hash_gen
+
+    return hash_gen
+
+
+def hash_algo_for_digest(hexdigest):
+    """Gets name of the hash algorithm for a hex digest."""
+    bytes = len(hexdigest) / 2
+    if bytes not in _size_to_hash:
+        raise ValueError(
+            'Spack knows no hash algorithm for this digest: %s' % hexdigest)
+    return _size_to_hash[bytes]
+
+
+def hash_fun_for_digest(hexdigest):
+    """Gets a hash function corresponding to a hex digest."""
+    return hash_fun_for_algo(hash_algo_for_digest(hexdigest))
 
 
 def checksum(hashlib_algo, filename, **kwargs):
@@ -123,15 +146,8 @@ class Checker(object):
     def __init__(self, hexdigest, **kwargs):
         self.block_size = kwargs.get('block_size', 2**20)
         self.hexdigest = hexdigest
-        self.sum       = None
-
-        bytes = len(hexdigest) / 2
-        if bytes not in _size_to_hash:
-            raise ValueError(
-                'Spack knows no hash algorithm for this digest: %s'
-                % hexdigest)
-
-        self.hash_fun = _size_to_hash[bytes]
+        self.sum = None
+        self.hash_fun = hash_fun_for_digest(hexdigest)
 
     @property
     def hash_name(self):

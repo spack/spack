@@ -33,6 +33,8 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
+
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
 
@@ -110,47 +112,48 @@ def check_mirror():
                         assert all(l in exclude for l in dcmp.left_only)
 
 
-@pytest.mark.usefixtures('config', 'mutable_mock_packages')
-class TestMirror(object):
-    def test_url_mirror(self, mock_archive):
-        set_up_package('trivial-install-test-package', mock_archive, 'url')
-        check_mirror()
-        repos.clear()
+def test_url_mirror(mock_archive):
+    set_up_package('trivial-install-test-package', mock_archive, 'url')
+    check_mirror()
+    repos.clear()
 
-    @pytest.mark.skipif(
-        not which('git'), reason='requires git to be installed')
-    def test_git_mirror(self, mock_git_repository):
-        set_up_package('git-test', mock_git_repository, 'git')
-        check_mirror()
-        repos.clear()
 
-    @pytest.mark.skipif(
-        not which('svn'), reason='requires subversion to be installed')
-    def test_svn_mirror(self, mock_svn_repository):
-        set_up_package('svn-test', mock_svn_repository, 'svn')
-        check_mirror()
-        repos.clear()
+@pytest.mark.skipif(
+    not which('git'), reason='requires git to be installed')
+def test_git_mirror(mock_git_repository):
+    set_up_package('git-test', mock_git_repository, 'git')
+    check_mirror()
+    repos.clear()
 
-    @pytest.mark.skipif(
-        not which('hg'), reason='requires mercurial to be installed')
-    def test_hg_mirror(self, mock_hg_repository):
-        set_up_package('hg-test', mock_hg_repository, 'hg')
-        check_mirror()
-        repos.clear()
 
-    @pytest.mark.skipif(
-        not all([which('svn'), which('hg'), which('git')]),
-        reason='requires subversion, git, and mercurial to be installed')
-    def test_all_mirror(
-            self,
-            mock_git_repository,
-            mock_svn_repository,
-            mock_hg_repository,
-            mock_archive):
+@pytest.mark.skipif(
+    not which('svn'), reason='requires subversion to be installed')
+def test_svn_mirror(mock_svn_repository):
+    set_up_package('svn-test', mock_svn_repository, 'svn')
+    check_mirror()
+    repos.clear()
 
-        set_up_package('git-test', mock_git_repository, 'git')
-        set_up_package('svn-test', mock_svn_repository, 'svn')
-        set_up_package('hg-test', mock_hg_repository, 'hg')
-        set_up_package('trivial-install-test-package', mock_archive, 'url')
-        check_mirror()
-        repos.clear()
+
+@pytest.mark.skipif(
+    not which('hg'), reason='requires mercurial to be installed')
+def test_hg_mirror(mock_hg_repository):
+    set_up_package('hg-test', mock_hg_repository, 'hg')
+    check_mirror()
+    repos.clear()
+
+
+@pytest.mark.skipif(
+    not all([which('svn'), which('hg'), which('git')]),
+    reason='requires subversion, git, and mercurial to be installed')
+def test_all_mirror(
+        mock_git_repository,
+        mock_svn_repository,
+        mock_hg_repository,
+        mock_archive):
+
+    set_up_package('git-test', mock_git_repository, 'git')
+    set_up_package('svn-test', mock_svn_repository, 'svn')
+    set_up_package('hg-test', mock_hg_repository, 'hg')
+    set_up_package('trivial-install-test-package', mock_archive, 'url')
+    check_mirror()
+    repos.clear()

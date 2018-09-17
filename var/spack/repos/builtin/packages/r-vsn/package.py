@@ -40,9 +40,9 @@ class RVsn(RPackage):
        differential transcription."""
 
     homepage = "https://www.bioconductor.org/packages/vsn/"
-    url      = "https://git.bioconductor.org/packages/vsn"
+    git      = "https://git.bioconductor.org/packages/vsn.git"
 
-    version('3.44.0', git='https://git.bioconductor.org/packages/vsn', commit='e54513fcdd07ccfb8094359e93cef145450f0ee0')
+    version('3.44.0', commit='e54513fcdd07ccfb8094359e93cef145450f0ee0')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))

@@ -139,7 +139,7 @@ from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
 from spack.version import VersionList, VersionRange, Version, ver
-from yaml.error import MarkedYAMLError
+from ruamel.yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
@@ -1440,8 +1440,13 @@ class Spec(object):
                 self.to_node_dict(hash_function=lambda s: s.full_hash()),
                 default_flow_style=True, width=maxint)
             package_hash = self.package.content_hash()
-            sha = hashlib.sha256(yaml_text.encode('utf-8') + package_hash)
-            self._full_hash = base64.b32encode(sha.digest()).lower()
+            sha = hashlib.sha1(yaml_text.encode('utf-8') + package_hash)
+
+            b32_hash = base64.b32encode(sha.digest()).lower()
+            if sys.version_info[0] >= 3:
+                b32_hash = b32_hash.decode('utf-8')
+
+            self._full_hash = b32_hash
 
         return self._full_hash[:length]
 
@@ -1465,6 +1470,7 @@ class Spec(object):
                 v.yaml_entry() for _, v in self.variants.items()
             )
         )
+
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d['parameters'] = params
@@ -1472,7 +1478,7 @@ class Spec(object):
         if self.external:
             d['external'] = {
                 'path': self.external_path,
-                'module': bool(self.external_module)
+                'module': self.external_module
             }
 
         # TODO: restore build dependencies here once we have less picky
@@ -1906,10 +1912,11 @@ class Spec(object):
                 mvar.value = mvar.value + tuple(patches)
                 # FIXME: Monkey patches mvar to store patches order
                 p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = dedupe(p + patches)
+                mvar._patches_in_order_of_appearance = list(
+                    dedupe(p + patches))
 
         for s in self.traverse():
-            if s.external_module:
+            if s.external_module and not s.external_path:
                 compiler = spack.compilers.compiler_for_spec(
                     s.compiler, s.architecture)
                 for mod in compiler.modules:
@@ -3198,7 +3205,7 @@ class Spec(object):
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
-        deptypes = kwargs.pop('deptypes', ('build', 'link'))
+        deptypes = kwargs.pop('deptypes', 'all')
         check_kwargs(kwargs, self.tree)
 
         out = ""
@@ -3226,12 +3233,21 @@ class Spec(object):
                 out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
 
             if show_types:
+                types = set()
+                if cover == 'nodes':
+                    # when only covering nodes, we merge dependency types
+                    # from all dependents before showing them.
+                    for name, ds in node.dependents_dict().items():
+                        if ds.deptypes:
+                            types.update(set(ds.deptypes))
+                elif dep_spec.deptypes:
+                    # when covering edges or paths, we show dependency
+                    # types only for the edge through which we visited
+                    types = set(dep_spec.deptypes)
+
                 out += '['
-                if dep_spec.deptypes:
-                    for t in all_deptypes:
-                        out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
-                else:
-                    out += ' ' * len(all_deptypes)
+                for t in all_deptypes:
+                    out += ''.join(t[0] if t in types else ' ')
                 out += ']  '
 
             out += ("    " * d)

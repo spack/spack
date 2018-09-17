@@ -325,6 +325,8 @@ license server, you can set this in ``compilers.yaml`` as follows:
       ...
 
 
+.. _configs-tutorial-package-prefs:
+
 -------------------------------
 Configuring Package Preferences
 -------------------------------

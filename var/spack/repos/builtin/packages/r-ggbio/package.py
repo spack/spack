@@ -37,10 +37,9 @@ class RGgbio(RPackage):
        and several splicing summaries."""
 
     homepage = "http://bioconductor.org/packages/ggbio/"
-    url      = "https://git.bioconductor.org/packages/ggbio"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/ggbio.git"
 
-    version('1.24.1', git='https://git.bioconductor.org/packages/ggbio', commit='ef04c1bca1330f37152bcc21080cbde94849a094')
+    version('1.24.1', commit='ef04c1bca1330f37152bcc21080cbde94849a094')
 
     depends_on('r-gridextra', type=('build', 'run'))
     depends_on('r-scales', type=('build', 'run'))

@@ -38,3 +38,7 @@ class PyNumba(PythonPackage):
     depends_on('py-argparse',       type=('build', 'run'))
     depends_on('py-funcsigs',       type=('build', 'run'), when='^python@:3.3.99')
     depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
+
+    # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
+    # See https://reviews.llvm.org/D44140
+    conflicts('^llvm@6.0.0')

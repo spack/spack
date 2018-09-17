@@ -22,9 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-import shutil
 
 
 class AtomDft(MakefilePackage):
@@ -40,7 +38,7 @@ class AtomDft(MakefilePackage):
     depends_on('xmlf90')
 
     def edit(self, spec, prefix):
-        shutil.copyfile('arch.make.sample', 'arch.make')
+        copy('arch.make.sample', 'arch.make')
 
     @property
     def build_targets(self):

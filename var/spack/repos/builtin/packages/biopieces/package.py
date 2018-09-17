@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Biopieces(Package):
@@ -32,10 +31,10 @@ class Biopieces(Package):
        simple and complex tasks."""
 
     homepage = "http://maasha.github.io/biopieces/"
-    url      = "https://github.com/maasha/biopieces/archive/2.0.tar.gz"
+    git      = "https://github.com/maasha/biopieces.git"
 
     version('2016-04-12', commit='982f80f7c55e2cae67737d80fe35a4e784762856',
-            git='https://github.com/maasha/biopieces.git', submodules=True)
+            submodules=True)
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-module-build', type=('build', 'run'))
@@ -79,7 +78,7 @@ class Biopieces(Package):
     depends_on('scan-for-matches')
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         # Note: user will need to set environment variables on their own,

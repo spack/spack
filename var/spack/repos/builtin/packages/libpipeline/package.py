@@ -35,6 +35,4 @@ class Libpipeline(AutotoolsPackage):
     version('1.4.2', '30cec7bcd6fee723adea6a54389f3da2')
 
     depends_on('pkgconfig', type='build')
-    # TODO: Add a 'test' deptype
-    # See https://github.com/spack/spack/issues/1279
-    # depends_on('check', type='test')
+    depends_on('check', type='test')

@@ -55,7 +55,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 import llnl.util.tty as tty
@@ -80,14 +79,15 @@ class OpenfoamOrg(Package):
     homepage = "http://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
+    git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
+    version('develop', branch='master')
     version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
     version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
     version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
-    version('develop', git='https://github.com/OpenFOAM/OpenFOAM-dev.git')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -344,12 +344,13 @@ class OpenfoamOrg(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

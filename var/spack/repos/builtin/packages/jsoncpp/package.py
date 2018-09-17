@@ -42,8 +42,7 @@ class Jsoncpp(CMakePackage):
                     'MinSizeRel', 'Coverage'))
 
     depends_on('cmake@3.1:', type='build')
-    # TODO: Add a 'test' deptype
-    # depends_on('python', type='test')
+    depends_on('python', type='test')
 
     def cmake_args(self):
         return ['-DBUILD_SHARED_LIBS=ON']

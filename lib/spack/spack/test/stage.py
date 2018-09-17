@@ -111,7 +111,7 @@ def get_stage_path(stage, stage_name):
 
 
 @pytest.fixture()
-def tmpdir_for_stage(mock_archive):
+def tmpdir_for_stage(mock_archive, mutable_config):
     """Uses a temporary directory for staging"""
     current = spack.paths.stage_path
     spack.config.set(
@@ -123,7 +123,7 @@ def tmpdir_for_stage(mock_archive):
 
 
 @pytest.fixture()
-def mock_archive(tmpdir, monkeypatch):
+def mock_archive(tmpdir, monkeypatch, mutable_config):
     """Creates a mock archive with the structure expected by the tests"""
     # Mock up a stage area that looks like this:
     #

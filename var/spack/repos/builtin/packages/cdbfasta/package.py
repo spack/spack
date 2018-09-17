@@ -29,9 +29,9 @@ class Cdbfasta(MakefilePackage):
     """Fast indexing and retrieval of fasta records from flat file databases"""
 
     homepage = "https://github.com/gpertea/cdbfasta"
-    url      = "https://github.com/gpertea/cdbfasta"
+    git      = "https://github.com/gpertea/cdbfasta.git"
 
-    version('2017-03-16', git='https://github.com/gpertea/cdbfasta.git', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
+    version('2017-03-16', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
 
     depends_on('zlib')
 

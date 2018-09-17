@@ -22,10 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
-from spack.environment import EnvironmentModifications
 
 
 class IntelIpp(IntelPackage):
@@ -33,6 +30,8 @@ class IntelIpp(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2018.3.222', '2ccc16ec002466e52f1e6e1bfe9b1149',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13006/l_ipp_2018.3.222.tgz')
     version('2018.2.199', 'f87276b485d2f6ec070c1b41ac1ed871',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12726/l_ipp_2018.2.199.tgz')
     version('2018.1.163', '183d4888f3d91f632b617fdd401f04ed',
@@ -47,40 +46,8 @@ class IntelIpp(IntelPackage):
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11031/l_ipp_2017.1.132.tgz")
     version('2017.0.098', 'e7be757ebe351d9f9beed7efdc7b7118',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9663/l_ipp_2017.0.098.tgz")
+    # built from parallel_studio_xe_2016.3.067
     version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9067/l_ipp_9.0.3.210.tgz")
 
     provides('ipp')
-
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See:
-        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        if self.version >= Version('2017.2'):
-            return False
-        else:
-            return True
-
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
-
-        These environment variables come from running:
-
-        .. code-block:: console
-
-           $ source ipp/bin/ippvars.sh intel64
-        """
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment variables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
-        ippvars = os.path.join(self.prefix.ipp.bin, 'ippvars.sh')
-
-        if os.path.isfile(ippvars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                ippvars, 'intel64'))

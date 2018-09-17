@@ -31,9 +31,9 @@ class Cnpy(CMakePackage):
     """cnpy: library to read/write .npy and .npz files in C/C++."""
 
     homepage = "https://github.com/rogersce/cnpy"
-    url      = "https://github.com/rogersce/cnpy"
+    git      = "https://github.com/rogersce/cnpy.git"
 
-    version('master', git='https://github.com/rogersce/cnpy.git', branch="master")
+    version('master', branch='master')
 
     def cmake_args(self):
         args = []

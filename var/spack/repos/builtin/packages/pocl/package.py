@@ -35,16 +35,17 @@ class Pocl(CMakePackage):
     GPUs/accelerators."""
 
     homepage = "http://portablecl.org"
-    url = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
+    url      = "https://github.com/pocl/pocl/archive/v1.1.tar.gz"
+    git      = "https://github.com/pocl/pocl.git"
 
-    version("master", git="https://github.com/pocl/pocl.git")
-    version('0.14', '1d35f09299e76b9e3918c42826555194')
-    # version("0.14-rc",
-    #         git="https://github.com/pocl/pocl.git", branch="release_0_14")
-    version("0.13", "344480864d4269f2f63f1509395898bd")
-    version("0.12", "e197ba3aa01a35f40581c48e053330dd")
-    version("0.11", "9be0640cde2983062c47393d9e8e8fe7")
-    version("0.10", "0096be4f595c7b5cbfa42430c8b3af6a")
+    version("master", branch="master")
+    version('1.1', sha256='1e8dd0693a88c84937754df947b202871a40545b1b0a97ebefa370b0281c3c53')
+    version('1.0', sha256='94bd86a2f9847c03e6c3bf8dca12af3734f8b272ffeacbc3fa8fcca58844b1d4')
+    version('0.14', sha256='2127bf925a91fbbe3daf2f1bac0da5c8aceb16e2a9434977a3057eade974106a')
+    version('0.13', sha256='a17f37d8f26819c0c8efc6de2b57f67a0c8a81514fc9cd5005434e49d67499f9')
+    version('0.12', sha256='5160d7a59721e6a7d0fc85868381c0afceaa7c07b9956c9be1e3b51e80c29f76')
+    version('0.11', sha256='24bb801fb87d104b66faaa95d1890776fdeabb37ad1b12fb977281737c7f29bb')
+    version('0.10', sha256='e9c38f774a77e61f66d850b705a5ba42d49356c40e75733db4c4811e091e5088')
 
     # This is Github's pocl/pocl#373
     patch("uint.patch", when="@:0.13")
@@ -57,6 +58,7 @@ class Pocl(CMakePackage):
 
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
+    depends_on("hwloc@:1.99.99", when="@:1.1.99")
     depends_on("libtool", type=("build", "link", "run"))
     depends_on("pkgconfig", type="build")
 
@@ -64,7 +66,9 @@ class Pocl(CMakePackage):
     # enabled by default, and also because they fail to build for us
     # (see #1616)
     # These are the supported LLVM versions
-    depends_on("llvm +clang @3.7:3.9", when="@master")
+    depends_on("llvm +clang @6.0:7.0", when="@master")
+    depends_on("llvm +clang @5.0:6.0", when="@1.1")
+    depends_on("llvm +clang @4.0:5.0", when="@1.0")
     depends_on("llvm +clang @3.7:4.0", when="@0.14")
     depends_on("llvm +clang @3.7:3.8", when="@0.13")
     depends_on("llvm +clang @3.2:3.7", when="@0.12")
@@ -77,6 +81,14 @@ class Pocl(CMakePackage):
                          "that will be made available for download"))
     variant("icd", default=False,
             description="Support a system-wide ICD loader")
+
+    def url_for_version(self, version):
+        if version >= Version('1.0'):
+            url = "https://github.com/pocl/pocl/archive/v{0}.tar.gz"
+        else:
+            url = "http://portablecl.org/downloads/pocl-{0}.tar.gz"
+
+        return url.format(version.up_to(2))
 
     def cmake_args(self):
         spec = self.spec

@@ -38,12 +38,13 @@ class Phist(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/essex/phist/"
-    url = 'https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz'
+    url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
+    git      = "https://bitbucket.org/essex/phist/phist.git"
 
-    version('develop',
-            git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
-    version('master',
-            git='https://bitbucket.org/essex/phist/phist.git', branch='master')
+    version('develop', branch='devel')
+    version('master', branch='master')
+    version('1.7.2', sha256='29b504d78b5efd57b87d2ca6e20bc8a32b1ba55b40f5a5b7189cc0d28e43bcc0')
+    version('1.6.1', sha256='4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d')
     version('1.6.0', '751f855230d6227b972b5ab7bce2c65f')
     version('1.4.3', 'af3300378d4282366d148e38c3a3199a')
 
@@ -80,6 +81,7 @@ class Phist(CMakePackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('python@3:', when='@1.7:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
     depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')

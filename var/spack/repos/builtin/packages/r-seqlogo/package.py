@@ -31,8 +31,8 @@ class RSeqlogo(RPackage):
        Stephens (1990)."""
 
     homepage = "https://bioconductor.org/packages/seqLogo/"
-    url      = "https://git.bioconductor.org/packages/seqLogo"
+    git      = "https://git.bioconductor.org/packages/seqLogo.git"
 
-    version('1.44.0', git='https://git.bioconductor.org/packages/seqLogo', commit='4cac14ff29f413d6de1a9944eb5d21bfe5045fac')
+    version('1.44.0', commit='4cac14ff29f413d6de1a9944eb5d21bfe5045fac')
 
     depends_on('r@3.4.3:3.4.9', when='@1.44.0')

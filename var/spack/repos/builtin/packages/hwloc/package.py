@@ -44,10 +44,11 @@ class Hwloc(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org/projects/hwloc/"
-    url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
+    url      = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
 
+    version('2.0.2',  '71d1211eaa4b25ac7ad80cf326784e87')
     version('2.0.1',  '442b2482bb5b81983ed256522aadbf94')
     version('2.0.0',  '027e6928ae0b5b64c821d0a71a61cd82')
     version('1.11.9', '4d5f5da8b1d09731d82e865ecf3fa399')

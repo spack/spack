@@ -40,15 +40,17 @@ class RBiomart(RPackage):
        online queries from gene annotation to database mining."""
 
     homepage = "https://bioconductor.org/packages/biomaRt/"
-    url      = "https://git.bioconductor.org/packages/biomaRt"
+    git      = "https://git.bioconductor.org/packages/biomaRt.git"
 
-    version('2.34.2', git='https://git.bioconductor.org/packages/biomaRt', commit='a7030915fbc6120cc6812aefdedba423a207459b')
-    version('2.32.1', git='https://git.bioconductor.org/packages/biomaRt', commit='f84d74424fa599f6d08f8db4612ca09914a9087f')
+    version('2.36.1', commit='5634e57e20199f9dc1f8b927eb3893143fc02f4f')
+    version('2.34.2', commit='a7030915fbc6120cc6812aefdedba423a207459b')
+    version('2.32.1', commit='f84d74424fa599f6d08f8db4612ca09914a9087f')
 
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-progress', type=('build', 'run'), when='@2.34.2')
-    depends_on('r-stringr', type=('build', 'run'), when='@2.34.2')
-    depends_on('r-httr', type=('build', 'run'), when='@2.34.2')
-    depends_on('r@3.4.0:3.4.9', when='@2.32.1:')
+    depends_on('r-progress', type=('build', 'run'), when='@2.34.2:')
+    depends_on('r-stringr', type=('build', 'run'), when='@2.34.2:')
+    depends_on('r-httr', type=('build', 'run'), when='@2.34.2:')
+    depends_on('r@3.4.0:3.4.9', when='@2.32.1:2.35.9', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@2.36.1', type=('build', 'run'))

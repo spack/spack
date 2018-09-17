@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import sys
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
@@ -33,11 +32,10 @@ class Elemental(CMakePackage):
        and optimization library."""
 
     homepage = "http://libelemental.org"
-    url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
+    url      = "https://github.com/elemental/Elemental/archive/v0.87.7.tar.gz"
+    git      = "https://github.com/elemental/Elemental.git"
 
-    version('hydrogen-develop', git='https://github.com/LLNL/Elemental.git', branch='hydrogen')
-
-    version('develop', git='https://github.com/elemental/Elemental.git', branch='master')
+    version('develop', branch='master')
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
@@ -88,7 +86,7 @@ class Elemental(CMakePackage):
 
     depends_on('veclibfort', when='blas=accelerate')
 
-    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl ~cuda', when='blas=essl ~openmp_blas ~int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
@@ -116,7 +114,6 @@ class Elemental(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recursive=True
         )
 
-    @when('@0.87.6:')
     def cmake_args(self):
         spec = self.spec
 
@@ -146,20 +143,20 @@ class Elemental(CMakePackage):
             ifort = env['SPACK_F77']
             intel_bin = os.path.dirname(ifort)
             intel_root = os.path.dirname(intel_bin)
-            libfortran = LibraryList('{0}/lib/intel64/libifcoremt.{1}'
-                                     .format(intel_root, dso_suffix))
+            libfortran = find_libraries('libifcoremt',
+                                        root=intel_root, recursive=True)
         elif self.spec.satisfies('%gcc'):
             # see <stage_folder>/debian/rules as an example:
             mpif77 = Executable(spec['mpi'].mpif77)
             libfortran = LibraryList(mpif77('--print-file-name',
                                             'libgfortran.%s' % dso_suffix,
-                                            output=str))
+                                            output=str).strip())
         elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
             xl_fort = env['SPACK_F77']
             xl_bin = os.path.dirname(xl_fort)
             xl_root = os.path.dirname(xl_bin)
-            libfortran = LibraryList('{0}/lib/libxlf90_r.{1}.1'
-                                     .format(xl_root, dso_suffix))
+            libfortran = find_libraries('libxlf90_r',
+                                        root=xl_root, recursive=True)
         else:
             libfortran = None
 
@@ -189,53 +186,5 @@ class Elemental(CMakePackage):
         if '+python' in spec:
             args.extend([
                 '-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
-
-        return args
-
-    @when('@:0.87.6')
-    def cmake_args(self):
-        spec = self.spec
-
-        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
-            raise UnsupportedCompilerError(
-                "Elemental {0} has a known bug with compiler: {1} {2}".format(
-                    spec.version, spec.compiler.name, spec.compiler.version))
-
-        args = [
-            '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
-            '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+hybrid' in spec),
-            '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
-            '-DHydrogen_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
-            '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
-            '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
-            '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
-        ]
-
-        # Add support for OS X to find OpenMP
-        if (self.spec.satisfies('%clang')):
-            if (sys.platform == 'darwin'):
-                clang = self.compiler.cc
-                clang_bin = os.path.dirname(clang)
-                clang_root = os.path.dirname(clang_bin)
-                args.extend([
-                    '-DOpenMP_DIR={0}'.format(clang_root)])
-
-        if 'blas=openblas' in spec:
-            args.extend([
-                '-DHydrogen_USE_OpenBLAS:BOOL=%s' % ('blas=openblas' in spec),
-                '-DOpenBLAS_DIR:STRING={0}'.format(
-                    spec['elemental'].prefix)])
-        elif 'blas=mkl' in spec:
-            args.extend([
-                '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
-        elif 'blas=accelerate' in spec:
-            args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
-        elif 'blas=essl' in spec:
-            args.extend([
-                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
 
         return args

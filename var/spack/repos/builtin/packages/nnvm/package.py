@@ -30,11 +30,10 @@ class Nnvm(CMakePackage):
     part to help build deep learning libraries."""
 
     homepage = "https://github.com/dmlc/nnvm"
-    url      = "https://github.com/dmlc/nnvm.git"
+    git      = "https://github.com/dmlc/nnvm.git"
 
-    version('master', git='https://github.com/dmlc/nnvm.git', branch='master')
-    version('20170418', git='https://github.com/dmlc/nnvm.git',
-            commit='b279286304ac954098d94a2695bca599e832effb')
+    version('master', branch='master')
+    version('20170418', commit='b279286304ac954098d94a2695bca599e832effb')
 
     variant('shared', default=True, description='Build a shared NNVM lib.')
 

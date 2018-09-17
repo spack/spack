@@ -49,37 +49,6 @@ if sys.version_info[:2] == (2, 6):
 
 sys.path.insert(0, spack_external_libs)
 
-# Handle vendoring of YAML specially, as it has two versions.
-if sys.version_info[0] == 2:
-    spack_yaml_libs = os.path.join(spack_external_libs, "yaml/lib")
-else:
-    spack_yaml_libs = os.path.join(spack_external_libs, "yaml/lib3")
-sys.path.insert(0, spack_yaml_libs)
-
-# Quick and dirty check to clean orphaned .pyc files left over from
-# previous revisions.  These files were present in earlier versions of
-# Spack, were removed, but shadow system modules that Spack still
-# imports.  If we leave them, Spack will fail in mysterious ways.
-# TODO: more elegant solution for orphaned pyc files.
-orphaned_pyc_files = [
-    os.path.join(spack_external_libs, 'functools.pyc'),
-    os.path.join(spack_external_libs, 'ordereddict.pyc'),
-    os.path.join(spack_lib_path, 'spack', 'platforms', 'cray_xc.pyc'),
-    os.path.join(spack_lib_path, 'spack', 'cmd', 'package-list.pyc'),
-    os.path.join(spack_lib_path, 'spack', 'cmd', 'test-install.pyc'),
-    os.path.join(spack_lib_path, 'spack', 'cmd', 'url-parse.pyc'),
-    os.path.join(spack_lib_path, 'spack', 'test', 'yaml.pyc')
-]
-
-for pyc_file in orphaned_pyc_files:
-    if not os.path.exists(pyc_file):
-        continue
-    try:
-        os.remove(pyc_file)
-    except OSError as e:
-        print("WARNING: Spack may fail mysteriously. "
-              "Couldn't remove orphaned .pyc file: %s" % pyc_file)
-
 # Once we've set up the system path, run the spack main method
 import spack.main  # noqa
 sys.exit(spack.main.main())
