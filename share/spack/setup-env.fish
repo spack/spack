@@ -362,7 +362,23 @@ end
 
 
 #
-# Figure out where this file is.  Below code needs to be portable to
-# bash and zsh.
+# Figure out where this file is. Below code only needs to work in fish
 #
-set sp_source_file (status -f)  # name of current file
+set -l sp_source_file (status -f)  # name of current file
+
+
+
+#
+# Find root directory and add bin to path.
+#
+set -l sp_share_dir (cd (dirname $sp_source_file) & pwd)
+set -l sp_prefix (cd (dirname (dirname $sp_share_dir)) & pwd)
+spack_pathadd fish_user_paths "$sp_prefix/bin"
+set -g SPACK_ROOT $sp_prefix
+
+
+
+#
+# No need to determine which shell is being used (obviously it's fish)
+#
+set -g SPACK_SHELL "fish"
