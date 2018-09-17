@@ -24,7 +24,6 @@ class NcbiRmblastn(AutotoolsPackage):
     configure_directory = 'c++'
     build_directory = 'c++'
 
-    @when('@2.6.0')
     def configure_args(self):
         options = [
             '--without-internal',
@@ -39,10 +38,8 @@ class NcbiRmblastn(AutotoolsPackage):
             '--without-ncbi-c',
             '--without-sss',
             '--without-sssdb',
-            '--without-vdb',
             '--without-pcre',
             '--without-gcrypt',
-            '--without-nettle',
             '--without-gnutls',
             '--without-openssl',
             '--without-sybase',
@@ -80,14 +77,6 @@ class NcbiRmblastn(AutotoolsPackage):
             '--without-magic',
             '--without-curl',
             '--without-mimetic',
-            '--without-gsoap',
-            '--without-avro',
-            '--without-cereal',
-            '--without-sasl2',
-            '--without-mongodb',
-            '--without-gmock',
-            '--without-lapack',
-            '--without-lmdb',
             '--without-3psw',
             '--without-local-lbsm',
             '--without-ncbi-crypt',
@@ -97,6 +86,19 @@ class NcbiRmblastn(AutotoolsPackage):
             '--without-gui',
             '--without-gbench'
         ]
+        if self.spec.version == Version('2.6.0'):
+            options += [
+                        '--without-vdb',
+                        '--without-nettle',
+                        '--without-gsoap',
+                        '--without-avro',
+                        '--without-cereal',
+                        '--without-sasl2',
+                        '--without-mongodb',
+                        '--without-gmock',
+                        '--without-lapack',
+                        '--without-lmdb'
+                       ]
         return options
 
     @when('@2.6.0')
