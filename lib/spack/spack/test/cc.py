@@ -145,43 +145,52 @@ def wrapper_flags():
         yield
 
 
-"""
-dep1/
-  include/
-  lib/
-dep2/
-  lib64/
-dep3/
-  include/
-  lib64/
-dep4/
-  include/
-"""
+class Dependencies(object):
+    """
+    dep1/
+      include/
+      lib/
+    dep2/
+      lib64/
+    dep3/
+      include/
+      lib64/
+    dep4/
+      include/
+    """
+    def __init__(self):
+        self.lib_dirs = list()
+        self.link_args = list()
+        self.rpath_dirs = list()
+        self.ccld_rpath_args = list()
+        self.ld_rpath_args = list()
+        self.include_dirs = list()
+        self.include_args = list()
 
-INCLUDE, LIB, LIB64 = 1, 2, 3
-dep_paths = {
-    1: [INCLUDE, LIB],
-    2: [LIB64],
-    3: [INCLUDE, LIB64],
-    4: [INCLUDE],
-}
-dir_types = {
-    INCLUDE: 'include',
-    LIB: 'lib',
-    LIB64: 'lib64',
-}
+    def add_lib(self, dep, rpath=True, dirname=None):
+        prefix = 'dep{0}'.format(str(dep))
+        dirname = dirname or 'lib'
+        lib_dir = os.path.join(prefix, dirname)
+        self.lib_dirs.append(lib_dir)
+        self.link_args.append('-L' + lib_dir)
+        if rpath:
+            self.rpath_dirs.append(lib_dir)
+            self.ccld_rpath_args.append('-Wl,-rpath,' + lib_dir)
+            self.ld_rpath_args.append('' + lib_dir)
 
-def dep_path(dep, type):
-    prefix = 'dep{0}'.format(str(dep))
-    if type in dep_paths[dep]:
-        return dir_types[type]
+    def add_include(self, dep, dirname=None):
+        prefix = 'dep{0}'.format(str(dep))
+        dirname = dirname or 'include'
+        include_dir = os.path.join(prefix, dirname)
+        self.include_dirs.append(include_dir)
+        self.include_args.append('-I' + include_dir)
 
-def deps_paths(deps, type):
-    paths = list(dep_path(dep, type) for dep in deps)
-    return list(p for p in paths if p)
-
-def spack_env_var(values):
-    return ':'.join(str(x) for x in values)
+    def spack_env_vars(self):
+        return {
+            'SPACK_INCLUDE_DIRS': ':'.join(self.include_dirs),
+            'SPACK_LINK_DIRS': ':'.join(self.lib_dirs),
+            'SPACK_RPATH_DIRS': ':'.join(self.rpath_dirs)
+        }
 
 pytestmark = pytest.mark.usefixtures('wrapper_environment')
 
@@ -318,64 +327,71 @@ def test_dep_rpath():
 
 def test_dep_include():
     """Ensure a single dependency include directory is added."""
-    lib_dirs = deps_paths([4], LIB)
-    include_dirs = deps_paths([4], INCLUDE)
+    deps = Dependencies()
+    deps.add_include(4)
 
-    expected_include_args = list('-I{0}'.format(x) for x in include_dirs)
-
-    include_env = spack_env_var(include_dirs)
-    lib_env = spack_env_var(lib_dirs)
-
-    with set_env(SPACK_RPATH_DIRS=lib_env,
-                 SPACK_INCLUDE_DIRS=include_env,
-                 SPACK_LINK_DIRS=lib_env):
+    with set_env(**deps.spack_env_vars()):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
-            expected_include_args +
+            deps.include_args +
             test_library_paths +
             test_wl_rpaths +
             pkg_wl_rpaths +
             test_args_without_paths)
 
 
-def test_dep_lib(dep2):
+def test_dep_lib():
     """Ensure a single dependency RPATH is added."""
-    with set_env(SPACK_DEPENDENCIES=dep2,
-                 SPACK_RPATH_DEPS=dep2,
-                 SPACK_LINK_DEPS=dep2):
+
+    deps = Dependencies()
+    deps.add_lib(2, rpath=True, dirname='lib64')
+
+    with set_env(**deps.spack_env_vars()):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep2 + '/lib64'] +
+            deps.link_args +
             test_wl_rpaths +
             pkg_wl_rpaths +
-            ['-Wl,-rpath,' + dep2 + '/lib64'] +
+            deps.ccld_rpath_args +
             test_args_without_paths)
 
 
-def test_dep_lib_no_rpath(dep2):
+def test_dep_lib_no_rpath():
     """Ensure a single dependency link flag is added with no dep RPATH."""
-    with set_env(SPACK_DEPENDENCIES=dep2,
-                 SPACK_LINK_DEPS=dep2):
+
+    deps = Dependencies()
+    deps.add_lib(2, dirname='lib64')
+
+    spack_env_vars = deps.spack_env_vars()
+    del spack_env_vars['SPACK_RPATH_DIRS']
+
+    with set_env(**spack_env_vars):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep2 + '/lib64'] +
+            deps.link_args +
             test_wl_rpaths +
             pkg_wl_rpaths +
             test_args_without_paths)
 
 
-def test_dep_lib_no_lib(dep2):
+def test_dep_lib_no_lib():
     """Ensure a single dependency RPATH is added with no -L."""
-    with set_env(SPACK_DEPENDENCIES=dep2,
-                 SPACK_RPATH_DEPS=dep2):
+
+    deps = Dependencies()
+    deps.add_lib(2, rpath=False, dirname='lib64')
+
+    spack_env_vars = deps.spack_env_vars()
+    del spack_env_vars['SPACK_LINK_DIRS']
+
+    with set_env(**spack_env_vars):
         check_args(
             cc, test_args,
             [real_cc] +
@@ -383,7 +399,7 @@ def test_dep_lib_no_lib(dep2):
             test_library_paths +
             test_wl_rpaths +
             pkg_wl_rpaths +
-            ['-Wl,-rpath,' + dep2 + '/lib64'] +
+            deps.ccld_rpath_args +
             test_args_without_paths)
 
 
