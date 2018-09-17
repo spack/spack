@@ -34,7 +34,7 @@ class Cistem(AutotoolsPackage):
     homepage = "https://cistem.org/"
     url      = "https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0"
 
-    version('1.0.0', '479f395b30ad630df3cbba9c56eb29c2')
+    version('1.0.0-beta', '479f395b30ad630df3cbba9c56eb29c2')
 
     depends_on('wx@3.0.2')
     depends_on('fftw')
