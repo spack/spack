@@ -90,6 +90,8 @@ class Qt(Package):
     patch('qt4-pcre-include-conflict.patch', when='@4')
     patch('qt4-el-capitan.patch', when='@4')
 
+    patch('qt4-gcc-and-webkit.patch', when='@4')
+
     # Use system openssl for security.
     depends_on("openssl")
     depends_on("glib", when='@4:')
