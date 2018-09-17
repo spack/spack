@@ -26,12 +26,12 @@ from spack import *
 
 
 class SstMacro(AutotoolsPackage):
-    """The SST Macro software package Simulates large-scale
-    parallel computer architectures for the coarse-grained study of
-    distributed-memory applications. The simulator is driven from either a
+    """The Structural Simulation Toolkit Macroscale Element Library simulates
+    large-scale parallel computer architectures for the coarse-grained study
+    of distributed-memory applications. The simulator is driven from either a
     trace file or skeletoned application. SST/macro's modular architecture can
-    be extended with additional network models, trace file formats,
-    software services, and processor models.
+    be extended with additional network models, trace file formats, software
+    services, and processor models.
     """
 
     homepage = "http://sst.sandia.gov/about_sstmacro.html"
