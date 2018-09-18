@@ -89,6 +89,7 @@ if [[ $? -ne 0 ]]; then
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
     # is implemented
+    spack wip-upload-spec --base-dir "${LOCAL_MIRROR}" --spec "${SPEC_NAME}"
 
     # TODO: Build/send POST request to update CDash job status
 else
