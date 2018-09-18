@@ -34,8 +34,8 @@ class Openmc(CMakePackage):
        Group at MIT."""
 
     homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/mit-crpg/openmc/tarball/v0.10.0"
-    git = "https://github.com/mit-crpg/openmc.git"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
+    git = "https://github.com/openmc-dev/openmc.git"
 
     version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
     version('develop')
