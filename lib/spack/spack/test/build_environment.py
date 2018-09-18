@@ -34,13 +34,6 @@ from spack.util.spack_yaml import syaml_dict, syaml_str
 
 
 @pytest.fixture
-def working_env():
-    saved_env = os.environ.copy()
-    yield
-    os.environ = saved_env
-
-
-@pytest.fixture
 def build_environment(working_env):
     cc = Executable(os.path.join(build_env_path, "cc"))
     cxx = Executable(os.path.join(build_env_path, "c++"))
