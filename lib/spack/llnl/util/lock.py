@@ -80,18 +80,22 @@ class Lock(object):
         self.host = self.old_host = None
 
     @staticmethod
-    def _poll_interval_generator():
+    def _poll_interval_generator(_wait_times=None):
         # Poll interval of .1s until 2 seconds have passed
         # Then poll interval of .2s until 10 seconds have passed
         # Then poll interval of .5s
-        wait_time = 1e-1
-        total = 0
+        # This doesn't actually track elapsed time, it estimates the waiting
+        # time as though the caller always waits for the full length of time
+        # suggested by this function.
+        num_requests = 0
+        stage1, stage2, stage3 = _wait_times or (1e-1, 2e-1, 5e-1)
+        wait_time = stage1
         while True:
-            if total > 2:
-                wait_time = 2e-1
-            elif total > 10:
-                wait_time = 5e-1
-            total += wait_time
+            if num_requests >= 60:  # 40 * .2 = 8
+                wait_time = stage3
+            elif num_requests >= 20:  # 20 * .1 = 2
+                wait_time = stage2
+            num_requests += 1
             yield wait_time
 
     def _lock(self, op, timeout=None):
