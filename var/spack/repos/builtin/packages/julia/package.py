@@ -212,8 +212,11 @@ class Julia(Package):
 
         # Install MPI
         if "+mpi" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
-                      "a") as juliarc:
+            if self.spec.version >= Version('1.0.0'):
+                julia_config = join_path(prefix, "etc", "julia", "startup.jl")
+            else:
+                julia_config = join_path(prefix, "etc", "julia", "juliarc.jl")
+            with open(julia_config, "a") as juliarc:
                 juliarc.write('# MPI\n')
                 juliarc.write('ENV["JULIA_MPI_C_COMPILER"] = "%s"\n' %
                               join_path(spec["mpi"].prefix.bin, "mpicc"))
