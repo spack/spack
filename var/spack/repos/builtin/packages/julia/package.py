@@ -190,7 +190,7 @@ class Julia(Package):
         julia = spec['julia'].command
         # As of Julia 1.0, Pkg is no longer imported by default
         # and Pkg.init is deprecated
-        if version >= Version('1.0.0'):
+        if self.spec.version >= Version('1.0.0'):
             julia("-e", 'using Pkg; Pkg.update()')
         else:
             julia("-e", 'Pkg.init(); Pkg.update()')
@@ -203,7 +203,7 @@ class Julia(Package):
                 juliarc.write('push!(Libdl.DL_LOAD_PATH, "%s")\n' %
                               spec["hdf5"].prefix.lib)
                 juliarc.write('\n')
-            if version >= Version('1.0.0'):
+            if self.spec.version >= Version('1.0.0'):
                 julia("-e", 'using Pkg; Pkg.add("HDF5"); using HDF5')
                 julia("-e", 'using Pkg; Pkg.add("JLD"); using JLD')
             else:
@@ -220,7 +220,7 @@ class Julia(Package):
                 juliarc.write('ENV["JULIA_MPI_Fortran_COMPILER"] = "%s"\n' %
                               join_path(spec["mpi"].prefix.bin, "mpifort"))
                 juliarc.write('\n')
-            if version >= Version('1.0.0'):
+            if self.spec.version >= Version('1.0.0'):
                 julia("-e", 'using Pkg; Pkg.add("MPI"); using MPI')
             else:
                 julia("-e", 'Pkg.add("MPI"); using MPI')
@@ -235,13 +235,13 @@ class Julia(Package):
             # Python's OpenSSL package installer complains:
             # Error: PREFIX too long: 166 characters, but only 128 allowed
             # Error: post-link failed for: openssl-1.0.2g-0
-            if version >= Version('1.0.0'):
+            if self.spec.version >= Version('1.0.0'):
                 julia("-e", 'using Pkg; Pkg.add("PyCall"); using PyCall')
             else:
                 julia("-e", 'Pkg.add("PyCall"); using PyCall')
 
         if "+plot" in spec:
-            if version >= Version('1.0.0'):
+            if self.spec.version >= Version('1.0.0'):
                 julia("-e", 'using Pkg; Pkg.add("PyPlot"); using PyPlot')
                 julia("-e", 'using Pkg; Pkg.add("Colors"); using Colors')
                 # These require maybe gtk and image-magick
@@ -266,11 +266,11 @@ plot(x->sin(x)*cos(x), linspace(0, 2pi))
 
         # Install SIMD
         if "+simd" in spec:
-            if version >= Version('1.0.0'):
+            if self.spec.version >= Version('1.0.0'):
                 julia("-e", 'using Pkg; Pkg.add("SIMD"); using SIMD')
             else:
                 julia("-e", 'Pkg.add("SIMD"); using SIMD')
-        if version >= Version('1.0.0'):
+        if self.spec.version >= Version('1.0.0'):
             julia("-e", 'using Pkg; Pkg.status()')
         else:
             julia("-e", 'Pkg.status()')
