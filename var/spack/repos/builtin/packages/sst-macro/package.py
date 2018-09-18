@@ -76,9 +76,9 @@ class SstMacro(AutotoolsPackage):
 
         spec = self.spec
         args.append(
-            '--enable-static=' % ('yes' if '+static' in spec else 'no'))
+            '--enable-static=%s' % ('yes' if '+static' in spec else 'no'))
         args.append(
-            '--enable-shared=' % ('yes' if '+shared' in spec else 'no'))
+            '--enable-shared=%s' % ('yes' if '+shared' in spec else 'no'))
 
         if spec.satisfies("@8.0.0:"):
             args.extend([
