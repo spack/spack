@@ -371,8 +371,8 @@ set -l sp_source_file (status -f)  # name of current file
 #
 # Find root directory and add bin to path.
 #
-set -l sp_share_dir (cd (dirname $sp_source_file) & pwd)
-set -l sp_prefix (cd (dirname (dirname $sp_share_dir)) & pwd)
+set -l sp_share_dir (realpath (dirname $sp_source_file))
+set -l sp_prefix (realpath (dirname (dirname $sp_share_dir)))
 spack_pathadd fish_user_paths "$sp_prefix/bin"
 set -g SPACK_ROOT $sp_prefix
 
@@ -382,3 +382,32 @@ set -g SPACK_ROOT $sp_prefix
 # No need to determine which shell is being used (obviously it's fish)
 #
 set -g SPACK_SHELL "fish"
+
+
+
+#
+# Check whether we need environment-variables (module) <= `use` is not available
+#
+set -l need_module "no"
+if not functions -q use and not functions -q module
+    set need_module "yes"
+end
+
+
+
+#
+# Make environment-modules available to shell
+#
+function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
+    set -l expr_token (string trim -c "'" (string split "=" $argv))
+    set -g $expr_token[1] $expr_token[2]
+end
+
+if test "x$need_module" = "xyes"
+    set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
+
+    for sp_var_expr in $sp_shell_vars
+        sp_apply_shell_vars $sp_var_expr
+    end
+end
+
