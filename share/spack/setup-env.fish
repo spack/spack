@@ -41,6 +41,12 @@
 
 
 
+function stream_args
+    for elt in $argv
+        echo $elt
+    end
+end
+
 
 
 function shift_args -d "simulates bash shift"
@@ -59,9 +65,12 @@ function shift_args -d "simulates bash shift"
         #     $x)`, we return these one-at-a-time using echo... this means that
         #     the sub-command stream will correctly concatenate the output into
         #     an array
-        for elt in $argv[2..-1]
-            echo $elt
-        end
+
+        #for elt in $argv[2..-1]
+        #    echo $elt
+        #end
+        echo (stream_args $argv[2..-1])
+
     end
 
 end
@@ -76,7 +85,7 @@ function get_sp_flags -d "return leading flags"
     #
 
     # initialize argument counter
-    set -l i 0
+    set -l i 1
 
     # iterate over elements (`elt`) in `argv` array
     for elt in $argv
@@ -92,7 +101,7 @@ function get_sp_flags -d "return leading flags"
             # bash compatibility: stop when the match first fails. Upon failure,
             # we pack the remainder of `argv` into a global `remaining_args`
             # array (`i` tracks the index of the next element).
-            set remaining_args (shift_args $argv[$i..-1])
+            set remaining_args (stream_args $argv[$i..-1])
             return
         end
 
@@ -187,7 +196,7 @@ function spack -d "wrapper for the `spack` command"
     # accumulate initial flags for main spack command
     #
 
-    set remaining_args "" # remaining (unparsed) arguments
+    set -g remaining_args "" # remaining (unparsed) arguments
     set -l sp_flags (get_sp_flags $argv)
 
 
@@ -217,7 +226,8 @@ function spack -d "wrapper for the `spack` command"
     end
 
     set -l sp_spec $remaining_args
-
+    echo "sp_subcommand = $sp_subcommand"
+    echo "sp_spec = $sp_spec"
 
 
     #
@@ -244,12 +254,15 @@ function spack -d "wrapper for the `spack` command"
                 set remaining_args (shift_args $remaining_args)     # simulates bash shift
             end
 
+            echo $sp_arg
+
             if test "x$sp_arg" = "x-h"
                 # nothing more needs to be done for `-h`
                 command spack cd -h
             else
                 # extract location using the subcommand (fish `(...)`)
-                set -l LOC (spack location $sp_arg $remaining_args)
+                set -l LOC (command spack location $sp_arg $remaining_args)
+                echo $LOC
 
                 # test location and cd if exists:
                 if test -d "$LOC"
@@ -403,11 +416,37 @@ function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set
     set -g $expr_token[1] $expr_token[2]
 end
 
-if test "x$need_module" = "xyes"
+if test "$need_module" = "yes"
     set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
 
     for sp_var_expr in $sp_shell_vars
         sp_apply_shell_vars $sp_var_expr
     end
+
+    # _sp_module_prefix is set by spack --print-sh-vars
+    if test "$_sp_module_prefix" != "not_installed"
+        set -g MODULE_PREFIX $_sp_module_prefix
+        set -g fish_user_paths "$MODULE_PREFIX/bin" $fish_user_paths
+    end
+
+else
+    set -l sp_shell_vars (command spack --print-shell-vars sh)
+
+    for sp_var_expr in $sp_shell_vars
+        sp_apply_shell_vars $sp_var_expr
+    end
+
 end
+
+function module -d "wrapper for the `module` command to point at Spack's modules instance"
+    eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+end
+
+
+
+#
+# set module system roots
+#
+spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
+spack_pathadd MODULEPATH "$_sp_tcl_root%/$_sp_sys_type"
 
