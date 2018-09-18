@@ -65,11 +65,9 @@ function shift_args -d "simulates bash shift"
         #     $x)`, we return these one-at-a-time using echo... this means that
         #     the sub-command stream will correctly concatenate the output into
         #     an array
-
-        #for elt in $argv[2..-1]
-        #    echo $elt
-        #end
-        echo (stream_args $argv[2..-1])
+        for elt in $argv[2..-1]
+            echo $elt
+        end
 
     end
 
@@ -123,7 +121,7 @@ function get_mod_args -d "return submodule flags"
     set sp_module_args ""
 
     # initialize argument counter
-    set -l i 0
+    set -l i 1
 
     for elt in $argv
 
@@ -141,7 +139,7 @@ function get_mod_args -d "return submodule flags"
             # bash compatibility: stop when the match first fails. Upon failure,
             # we pack the remainder of `argv` into a global `remaining_args`
             # array (`i` tracks the index of the next element).
-            set remaining_args (shift_args $argv[$i..-1])
+            set remaining_args (stream_args $argv[$i..-1])
             return
         end
 
@@ -226,8 +224,6 @@ function spack -d "wrapper for the `spack` command"
     end
 
     set -l sp_spec $remaining_args
-    echo "sp_subcommand = $sp_subcommand"
-    echo "sp_spec = $sp_spec"
 
 
     #
@@ -254,7 +250,7 @@ function spack -d "wrapper for the `spack` command"
                 set remaining_args (shift_args $remaining_args)     # simulates bash shift
             end
 
-            echo $sp_arg
+
 
             if test "x$sp_arg" = "x-h"
                 # nothing more needs to be done for `-h`
@@ -262,18 +258,17 @@ function spack -d "wrapper for the `spack` command"
             else
                 # extract location using the subcommand (fish `(...)`)
                 set -l LOC (command spack location $sp_arg $remaining_args)
-                echo $LOC
 
                 # test location and cd if exists:
                 if test -d "$LOC"
                     cd $LOC
                 else
-                    exit 1
+                    return 1
                 end
 
             end
 
-            exit 0
+            return
 
 
             # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
