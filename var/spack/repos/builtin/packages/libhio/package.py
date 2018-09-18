@@ -64,6 +64,7 @@ class Libhio(AutotoolsPackage):
     #
     patch('0001-configury-fix-a-problem-with-bz2-configury.patch', when="@1.4.1.0")
     patch('0001-hdf5-make-docs-optional.patch', when="@1.4.1.0")
+    patch('0001-spack-fix-for-spack-to-work-on-non-cray-systems.patch', when="@1.4.1.2")
 
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
@@ -76,4 +77,5 @@ class Libhio(AutotoolsPackage):
         args.append('--with-external_bz2={0}'.format(spec['bzip2'].prefix))
         if '+hdf5' in spec:
             args.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
+
         return args
