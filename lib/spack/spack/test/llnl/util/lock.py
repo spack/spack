@@ -223,7 +223,7 @@ def lock_path(lock_dir):
 def test_poll_interval_generator():
     interval_iter = iter(
         lk.Lock._poll_interval_generator(_wait_times=[1, 2, 3]))
-    intervals = list(next(interval_iter) for i in xrange(100))
+    intervals = list(next(interval_iter) for i in range(100))
     assert intervals == [1] * 20 + [2] * 40 + [3] * 40
 
 
