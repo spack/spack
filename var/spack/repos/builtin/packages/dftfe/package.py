@@ -71,8 +71,8 @@ class Dftfe(CMakePackage):
             args.append('-DWITH_INTEL_MKL=OFF')
 
         if spec.satisfies('%gcc'):
-            args.append('-DCMAKE_C_FLAGS_RELEASE=-fpermissive')
-            args.append('-DCMAKE_CXX_FLAGS_RELEASE=-fpermissive')
+            args.append('-DCMAKE_C_FLAGS=-fpermissive')
+            args.append('-DCMAKE_CXX_FLAGS=-fpermissive')
 
         return args
 
