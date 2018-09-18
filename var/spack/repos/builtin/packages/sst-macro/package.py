@@ -29,7 +29,7 @@ class SstMacro(AutotoolsPackage):
     """The Structural Simulation Toolkit Macroscale Element Library simulates
     large-scale parallel computer architectures for the coarse-grained study
     of distributed-memory applications. The simulator is driven from either a
-    trace file or skeletoned application. SST/macro's modular architecture can
+    trace file or skeleton application. SST/macro's modular architecture can
     be extended with additional network models, trace file formats, software
     services, and processor models.
     """
@@ -38,7 +38,6 @@ class SstMacro(AutotoolsPackage):
     url      = "https://github.com/sstsimulator/sst-macro/releases/download/v6.1.0_Final/sstmacro-6.1.0.tar.gz"
     git      = "https://github.com/sstsimulator/sst-macro.git"
 
-    version('master', branch='master')
     version('develop', branch='devel')
     version('8.0.0', sha256='8618a259e98ede9a1a2ce854edd4930628c7c5a770c3915858fa840556c1861f')
     version('6.1.0', '98b737be6326b8bd711de832ccd94d14')
@@ -49,11 +48,6 @@ class SstMacro(AutotoolsPackage):
     depends_on('automake@1.11.1:', type='build', when='@develop')
     depends_on('libtool@1.2.4:', type='build', when='@develop')
     depends_on('m4', type='build', when='@develop')
-
-    depends_on('autoconf@1.68:', type='build', when='@master')
-    depends_on('automake@1.11.1:', type='build', when='@master')
-    depends_on('libtool@1.2.4:', type='build', when='@master')
-    depends_on('m4', type='build', when='@master')
 
     depends_on('binutils', type='build')
     depends_on('zlib', type=('build', 'link'))
@@ -70,7 +64,7 @@ class SstMacro(AutotoolsPackage):
 
     @run_before('autoreconf')
     def bootstrap(self):
-        if '@master' in self.spec or '@develop' in self.spec:
+        if '@develop' in self.spec:
             Executable('./bootstrap.sh')()
 
     def configure_args(self):
@@ -96,10 +90,11 @@ class SstMacro(AutotoolsPackage):
             if '+skeletonizer' in spec:
                 args.append('--with-clang=' + spec['llvm'].prefix)
 
-            if '+mpi' in spec:
-                env['CC'] = spec['mpi'].mpicc
-                env['CXX'] = spec['mpi'].mpicxx
-                env['F77'] = spec['mpi'].mpif77
-                env['FC'] = spec['mpi'].mpifc
+        # Optional MPI support
+        if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
 
         return args
