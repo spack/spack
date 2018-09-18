@@ -245,8 +245,8 @@ if [ "${need_module}" = "yes" ]; then
     if [ "${_sp_module_prefix}" != "not_installed" ]; then
         #activate it!
         export MODULE_PREFIX=${_sp_module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        _spack_pathadd PATH "${MODULE_PREFIX}/bin"
+        module() { eval `${MODULE_PREFIX}/bin/modulecmd ${SPACK_SHELL} $*`; }
     fi;
 else
     eval `spack --print-shell-vars sh`

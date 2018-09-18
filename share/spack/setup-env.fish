@@ -298,7 +298,7 @@ function spack -d "wrapper for the `spack` command"
                     if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
                         use $sp_module_args $sp_full_spec
                     else
-                        exit 1
+                        return 1
                     end
 
                 case "unuse"
@@ -306,23 +306,25 @@ function spack -d "wrapper for the `spack` command"
                     if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
                         unuse $sp_module_args $sp_full_spec
                     else
-                        exit 1
+                        return 1
                     end
 
                 case "load"
                     set -l tcl_args $sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
-                        module load $sp_module_args $sp_full_spec
+                        set load_cmd (module load $sp_module_args $sp_full_spec)
+                        eval $load_cmd
                     else
-                        exit 1
+                        return 1
                     end
 
                 case "unload"
                     set -l tcl_args $sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
-                        module unload $sp_module_args $sp_full_spec
+                        set unload_cmd (module unload $sp_module_args $sp_full_spec)
+                        eval $unload_cmd
                     else
-                        exit 1
+                        return 1
                     end
             end
 
@@ -359,9 +361,9 @@ function spack_pathadd
         if string match -q "$pa_new_path" $pa_oldvalue
         else
             if test -n "$pa_oldvalue"
-                set -g $pa_varname $pa_new_path $pa_oldvalue
+                set -xg $pa_varname $pa_new_path $pa_oldvalue
             else
-                set -g $pa_varname $pa_new_path
+                set -xg $pa_varname $pa_new_path
             end
         end
     end
@@ -443,5 +445,5 @@ end
 # set module system roots
 #
 spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
-spack_pathadd MODULEPATH "$_sp_tcl_root%/$_sp_sys_type"
+spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
 
