@@ -63,7 +63,8 @@ class LibjpegTurbo(Package):
     @when('@1.3.1:1.5.3')
     def install(self, spec, prefix):
         autoreconf('-ifv')
-        configure('--prefix=%s' % prefix)
+        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        configure(*options)
         make()
         make('install')
 
