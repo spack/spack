@@ -27,7 +27,6 @@ from spack import *
 
 
 class Pacvim(MakefilePackage):
-    """FIXME: Put a proper description of your package here."""
 
     homepage = "https://github.com/jmoon018/PacVim"
     url      = "https://github.com/jmoon018/PacVim/archive/v1.1.1.tar.gz"
