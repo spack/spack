@@ -273,7 +273,7 @@ function spack -d "wrapper for the `spack` command"
     #     Instead, encapsulate `argv` in a string, and test the string instead.
     #
 
-    set -l sp_subcommand
+    set -l sp_subcommand ""
 
     if test -n "$__sp_remaining_args[1]"
         set sp_subcommand $__sp_remaining_args[1]
@@ -351,7 +351,7 @@ function spack -d "wrapper for the `spack` command"
             # commands to add/remove the result from the environment. If spack
             # module command comes back with an error, do nothing.
 
-            switch $sp_subcommand
+            switch $__sp_subcommand
 
                 case "use"
                     set -l dotkit_args $__sp_subcommand_args $sp_spec
