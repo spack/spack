@@ -38,8 +38,7 @@ class Ember(MakefilePackage):
     git      = "https://github.com/sstsimulator/ember.git"
     url      = "https://github.com/sstsimulator/ember/archive/v1.0.0.tar.gz"
 
-    version('1.0.0',
-	sha256='5b2a6b8055b46ab3ea2c7baabaf4d280d837bb7c21eba0c9f59e092c6fc1c4a6')
+    version('1.0.0', sha256='5b2a6b8055b46ab3ea2c7baabaf4d280d837bb7c21eba0c9f59e092c6fc1c4a6')
 
     variant('halo3d', default=True, description='Halo3d motif')
     variant('halo3d-26', default=False, description='Halo3d-26 motif')
