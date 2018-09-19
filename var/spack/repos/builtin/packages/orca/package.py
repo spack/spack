@@ -31,7 +31,7 @@ class Orca(Package):
     """An ab initio, DFT and semiempirical SCF-MO package
 
        Downloading orca requires accepting a license agreement,
-       so spack wil search the working directory for the package"""
+       so spack will search the working directory for the package"""
 
     homepage = "https://cec.mpg.de"
     url      = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
