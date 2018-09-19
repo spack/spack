@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,9 +29,11 @@ class Lcms(AutotoolsPackage):
     """Little cms is a color management library. Implements fast
        transforms between ICC profiles. It is focused on speed, and is
        portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
 
+    homepage = "http://www.littlecms.com"
+    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.9/lcms2-2.9.tar.gz"
+
+    version('2.9', '8de1b7724f578d2995c8fdfa35c3ad0e')
     version('2.8', '87a5913f1a52464190bb655ad230539c')
     version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,6 +37,7 @@ class Xrandr(AutotoolsPackage):
     depends_on('libxrandr@1.5:')
     depends_on('libxrender')
     depends_on('libx11')
+    depends_on('randrproto')
 
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkgconfig', type='build')

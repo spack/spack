@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -114,11 +114,12 @@ from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
-import spack
 import spack.architecture
+import spack.compiler
 import spack.compilers as compilers
 import spack.error
 import spack.parse
+import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -138,7 +139,7 @@ from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
 from spack.version import VersionList, VersionRange, Version, ver
-from yaml.error import MarkedYAMLError
+from ruamel.yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
@@ -183,7 +184,7 @@ hash_color = '@K'              #: color for highlighting package hashes
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
-#: See spack.color for descriptions of the color codes.
+#: See llnl.util.tty.color for descriptions of the color codes.
 color_formats = {'%': compiler_color,
                  '@': version_color,
                  '=': architecture_color,
@@ -689,7 +690,7 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If no headers are found
     """
-    headers = find_headers('*', root=spec.prefix.include, recurse=True)
+    headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
     if headers:
         return headers
@@ -702,7 +703,8 @@ def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
-    ``spec.prefix``.
+    ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
+    ``{spec.name}`` instead.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -727,33 +729,34 @@ def _libs_default_handler(descriptor, spec, cls):
     # depending on which one exists (there is a possibility, of course, to
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
-    name = 'lib' + spec.name.replace('-', '?')
+    name = spec.name.replace('-', '?')
 
-    if '+shared' in spec:
-        libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
-        )
-    elif '~shared' in spec:
-        libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
-        )
-    else:
-        # Prefer shared
-        libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
-        )
-        if libs:
-            return libs
+    # Avoid double 'lib' for packages whose names already start with lib
+    if not name.startswith('lib'):
+        name = 'lib' + name
 
-        libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
-        )
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in prefix.lib then in prefix.lib64 and
+    # finally search all of prefix recursively. The search stops when the first
+    # match is found.
+    prefix = spec.prefix
+    search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
 
-    if libs:
-        return libs
-    else:
-        msg = 'Unable to recursively locate {0} libraries in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix))
+    # If '+shared' search only for shared library; if '~shared' search only for
+    # static library; otherwise, first search for shared and then for static.
+    search_shared = [True] if ('+shared' in spec) else \
+        ([False] if ('~shared' in spec) else [True, False])
+
+    for shared in search_shared:
+        for path, recursive in search_paths:
+            libs = find_libraries(
+                name, root=path, shared=shared, recursive=recursive
+            )
+            if libs:
+                return libs
+
+    msg = 'Unable to recursively locate {0} libraries in {1}'
+    raise RuntimeError(msg.format(spec.name, prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -770,10 +773,6 @@ class ForwardQueryToPackage(object):
                 instance
         """
         self.attribute_name = attribute_name
-        # Turn the default handler into a function with the right
-        # signature that always returns None
-        if default_handler is None:
-            default_handler = lambda descriptor, spec, cls: None
         self.default = default_handler
 
     def __get__(self, instance, cls):
@@ -792,8 +791,11 @@ class ForwardQueryToPackage(object):
 
         The first call that produces a value will stop the chain.
 
-        If no call can handle the request or a None value is produced,
-        then AttributeError is raised.
+        If no call can handle the request then AttributeError is raised with a
+        message indicating that no relevant attribute exists.
+        If a call returns None, an AttributeError is raised with a message
+        indicating a query failure, e.g. that library files were not found in a
+        'libs' query.
         """
         pkg = instance.package
         try:
@@ -814,34 +816,53 @@ class ForwardQueryToPackage(object):
         # Try to get the generic method from Package
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
         # Final resort : default callback
-        callbacks_chain.append(lambda: self.default(self, instance, cls))
+        if self.default is not None:
+            callbacks_chain.append(lambda: self.default(self, instance, cls))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
         value = None
+        message = None
         for f in callbacks_chain:
             try:
                 value = f()
+                # A callback can return None to trigger an error indicating
+                # that the query failed.
+                if value is None:
+                    msg  = "Query of package '{name}' for '{attrib}' failed\n"
+                    msg += "\tprefix : {spec.prefix}\n"
+                    msg += "\tspec : {spec}\n"
+                    msg += "\tqueried as : {query.name}\n"
+                    msg += "\textra parameters : {query.extra_parameters}"
+                    message = msg.format(
+                        name=pkg.name, attrib=self.attribute_name,
+                        spec=instance, query=instance.last_query)
+                else:
+                    return value
                 break
             except AttributeError:
                 pass
-        # 'None' value raises AttributeError : this permits to 'disable'
-        # the call in a particular package by returning None from the
-        # queried attribute, or will trigger an exception if  things
-        # searched for were not found
-        if value is None:
-            fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
-            fmt += '\tspec : \'{spec}\'\n'
-            fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
-            fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
-            message = fmt.format(
-                name=pkg.name,
-                query=self.attribute_name,
-                spec=instance
-            )
+        # value is 'None'
+        if message is not None:
+            # Here we can use another type of exception. If we do that, the
+            # unit test 'test_getitem_exceptional_paths' in the file
+            # lib/spack/spack/test/spec_dag.py will need to be updated to match
+            # the type.
             raise AttributeError(message)
-
-        return value
+        # 'None' value at this point means that there are no appropriate
+        # properties defined and no default handler, or that all callbacks
+        # raised AttributeError. In this case, we raise AttributeError with an
+        # appropriate message.
+        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+        fmt += '\tspec : \'{spec}\'\n'
+        fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
+        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+        message = fmt.format(
+            name=pkg.name,
+            query=self.attribute_name,
+            spec=instance
+        )
+        raise AttributeError(message)
 
     def __set__(self, instance, value):
         cls_name = type(instance).__name__
@@ -1067,6 +1088,8 @@ class Spec(object):
         self.external_path = kwargs.get('external_path', None)
         self.external_module = kwargs.get('external_module', None)
 
+        self._full_hash = kwargs.get('full_hash', None)
+
     @property
     def external(self):
         return bool(self.external_path) or bool(self.external_module)
@@ -1197,14 +1220,16 @@ class Spec(object):
 
     @property
     def package(self):
-        return spack.repo.get(self)
+        if not self._package:
+            self._package = spack.repo.get(self)
+        return self._package
 
     @property
     def package_class(self):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.get_pkg_class(self.fullname)
+        return spack.repo.path.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -1220,7 +1245,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return (name is not None) and (not spack.repo.exists(name))
+        return (name is not None) and (not spack.repo.path.exists(name))
 
     @property
     def concrete(self):
@@ -1406,7 +1431,26 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return base32_prefix_bits(self.dag_hash(), bits)
 
-    def to_node_dict(self):
+    def full_hash(self, length=None):
+        if not self.concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
+        if not self._full_hash:
+            yaml_text = syaml.dump(
+                self.to_node_dict(hash_function=lambda s: s.full_hash()),
+                default_flow_style=True, width=maxint)
+            package_hash = self.package.content_hash()
+            sha = hashlib.sha1(yaml_text.encode('utf-8') + package_hash)
+
+            b32_hash = base64.b32encode(sha.digest()).lower()
+            if sys.version_info[0] >= 3:
+                b32_hash = b32_hash.decode('utf-8')
+
+            self._full_hash = b32_hash
+
+        return self._full_hash[:length]
+
+    def to_node_dict(self, hash_function=None):
         d = syaml_dict()
 
         if self.versions:
@@ -1426,6 +1470,7 @@ class Spec(object):
                 v.yaml_entry() for _, v in self.variants.items()
             )
         )
+
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d['parameters'] = params
@@ -1433,17 +1478,19 @@ class Spec(object):
         if self.external:
             d['external'] = {
                 'path': self.external_path,
-                'module': bool(self.external_module)
+                'module': self.external_module
             }
 
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
         if deps:
+            if hash_function is None:
+                hash_function = lambda s: s.dag_hash()
             d['dependencies'] = syaml_dict([
                 (name,
                  syaml_dict([
-                     ('hash', dspec.spec.dag_hash()),
+                     ('hash', hash_function(dspec.spec)),
                      ('type', sorted(str(s) for s in dspec.deptypes))])
                  ) for name, dspec in sorted(deps.items())
             ])
@@ -1471,7 +1518,7 @@ class Spec(object):
         name = next(iter(node))
         node = node[name]
 
-        spec = Spec(name)
+        spec = Spec(name, full_hash=node.get('full_hash', None))
         spec.namespace = node.get('namespace', None)
         spec._hash = node.get('hash', None)
 
@@ -1634,13 +1681,15 @@ class Spec(object):
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
             if not self.virtual:
+                import spack.concretize
+                concretizer = spack.concretize.concretizer
                 changed |= any(
-                    (spack.concretizer.concretize_architecture(self),
-                     spack.concretizer.concretize_compiler(self),
-                     spack.concretizer.concretize_compiler_flags(
-                         self),  # has to be concretized after compiler
-                     spack.concretizer.concretize_version(self),
-                     spack.concretizer.concretize_variants(self)))
+                    (concretizer.concretize_architecture(self),
+                     concretizer.concretize_compiler(self),
+                     # flags must be concretized after compiler
+                     concretizer.concretize_compiler_flags(self),
+                     concretizer.concretize_version(self),
+                     concretizer.concretize_variants(self)))
             presets[self.name] = self
 
         visited.add(self.name)
@@ -1701,8 +1750,9 @@ class Spec(object):
                 if not replacement:
                     # Get a list of possible replacements in order of
                     # preference.
-                    candidates = spack.concretizer.choose_virtual_or_external(
-                        spec)
+                    import spack.concretize
+                    concretizer = spack.concretize.concretizer
+                    candidates = concretizer.choose_virtual_or_external(spec)
 
                     # Try the replacements in order, skipping any that cause
                     # satisfiability problems.
@@ -1764,26 +1814,21 @@ class Spec(object):
 
         return changed
 
-    def concretize(self):
+    def concretize(self, tests=False):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
+
+        Args:
+            tests (list or bool): list of packages that will need test
+                dependencies, or True/False for test all/none
 
         If this spec could describe more than one version, variant, or build
         of a package, this will add constraints to make it concrete.
 
         Some rigorous validation and checks are also performed on the spec.
         Concretizing ensures that it is self-consistent and that it's
-        consistent with requirements of its pacakges. See flatten() and
+        consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
-
-        It also ensures that:
-
-        .. code-block:: python
-
-            for x in self.traverse():
-                assert x.package.spec == x
-
-        which may not be true *during* the concretization step.
         """
         if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
@@ -1794,12 +1839,25 @@ class Spec(object):
         changed = True
         force = False
 
+        user_spec_deps = self.flat_dependencies(copy=False)
+
         while changed:
-            changes = (self.normalize(force),
+            changes = (self.normalize(force, tests=tests,
+                                      user_spec_deps=user_spec_deps),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
             changed = any(changes)
             force = True
+
+        visited_user_specs = set()
+        for dep in self.traverse():
+            visited_user_specs.add(dep.name)
+            visited_user_specs.update(x.name for x in dep.package.provided)
+
+        extra = set(user_spec_deps.keys()).difference(visited_user_specs)
+        if extra:
+            raise InvalidDependencyError(
+                self.name + " does not depend on " + comma_or(extra))
 
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
@@ -1811,7 +1869,7 @@ class Spec(object):
             # we can do it as late as possible to allow as much
             # compatibility across repositories as possible.
             if s.namespace is None:
-                s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+                s.namespace = spack.repo.path.repo_for_pkg(s.name).namespace
 
             if s.concrete:
                 continue
@@ -1854,10 +1912,11 @@ class Spec(object):
                 mvar.value = mvar.value + tuple(patches)
                 # FIXME: Monkey patches mvar to store patches order
                 p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = dedupe(p + patches)
+                mvar._patches_in_order_of_appearance = list(
+                    dedupe(p + patches))
 
         for s in self.traverse():
-            if s.external_module:
+            if s.external_module and not s.external_path:
                 compiler = spack.compilers.compiler_for_spec(
                     s.compiler, s.architecture)
                 for mod in compiler.modules:
@@ -1872,18 +1931,13 @@ class Spec(object):
         # there are declared conflicts
         matches = []
         for x in self.traverse():
-            for conflict_spec, when_list in x.package.conflicts.items():
+            for conflict_spec, when_list in x.package_class.conflicts.items():
                 if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
                         if x.satisfies(when_spec, strict=True):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
-
-        # At this point the spec-package mutual references should
-        # be self-consistent
-        for x in self.traverse():
-            x.package.spec = x
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -1968,8 +2022,7 @@ class Spec(object):
         If no conditions are True (and we don't depend on it), return
         ``(None, None)``.
         """
-        pkg = spack.repo.get(self.fullname)
-        conditions = pkg.dependencies[name]
+        conditions = self.package_class.dependencies[name]
 
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
@@ -2021,7 +2074,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(
-            self, dependency, visited, spec_deps, provider_index):
+            self, dependency, visited, spec_deps, provider_index, tests):
         """Merge dependency information from a Package into this Spec.
 
         Args:
@@ -2117,10 +2170,10 @@ class Spec(object):
             self._add_dependency(spec_dependency, dependency.type)
 
         changed |= spec_dependency._normalize_helper(
-            visited, spec_deps, provider_index)
+            visited, spec_deps, provider_index, tests)
         return changed
 
-    def _normalize_helper(self, visited, spec_deps, provider_index):
+    def _normalize_helper(self, visited, spec_deps, provider_index, tests):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return False
@@ -2136,22 +2189,28 @@ class Spec(object):
         any_change = False
         changed = True
 
-        pkg = spack.repo.get(self.fullname)
         while changed:
             changed = False
-            for dep_name in pkg.dependencies:
+            for dep_name in self.package_class.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
+
                 # If dep is a needed dependency, merge it.
-                if dep and (spack.package_testing.check(self.name) or
-                            set(dep.type) - set(['test'])):
-                    changed |= self._merge_dependency(
-                        dep, visited, spec_deps, provider_index)
+                if dep:
+                    merge = (
+                        # caller requested test dependencies
+                        tests is True or (tests and self.name in tests) or
+                        # this is not a test-only dependency
+                        dep.type - set(['test']))
+
+                    if merge:
+                        changed |= self._merge_dependency(
+                            dep, visited, spec_deps, provider_index, tests)
             any_change |= changed
 
         return any_change
 
-    def normalize(self, force=False):
+    def normalize(self, force=False, tests=False, user_spec_deps=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2180,26 +2239,34 @@ class Spec(object):
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
-        # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False)
+        # Clear the DAG and collect all dependencies in the DAG, which will be
+        # reapplied as constraints. All dependencies collected this way will
+        # have been created by a previous execution of 'normalize'.
+        # A dependency extracted here will only be reintegrated if it is
+        # discovered to apply according to _normalize_helper, so
+        # user-specified dependencies are recorded separately in case they
+        # refer to specs which take several normalization passes to
+        # materialize.
+        all_spec_deps = self.flat_dependencies(copy=False)
+
+        if user_spec_deps:
+            for name, spec in user_spec_deps.items():
+                if name not in all_spec_deps:
+                    all_spec_deps[name] = spec
+                else:
+                    all_spec_deps[name].constrain(spec)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            [s for s in spec_deps.values()], restrict=True)
+            [s for s in all_spec_deps.values()], restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
 
-        any_change = self._normalize_helper(visited, spec_deps, provider_index)
-
-        # If there are deps specified but not visited, they're not
-        # actually deps of this package.  Raise an error.
-        extra = set(spec_deps.keys()).difference(visited)
-        if extra:
-            raise InvalidDependencyError(
-                self.name + " does not depend on " + comma_or(extra))
+        any_change = self._normalize_helper(
+            visited, all_spec_deps, provider_index, tests)
 
         # Mark the spec as normal once done.
         self._normal = True
@@ -2416,7 +2483,7 @@ class Spec(object):
         if not self.virtual and other.virtual:
             try:
                 pkg = spack.repo.get(self.fullname)
-            except spack.repository.UnknownEntityError:
+            except spack.repo.UnknownEntityError:
                 # If we can't get package info on this spec, don't treat
                 # it as a provider of this vdep.
                 return False
@@ -2556,7 +2623,7 @@ class Spec(object):
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            patch = self.package.lookup_patch(sha256)
+            patch = self.package_class.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
                 continue
@@ -2564,7 +2631,7 @@ class Spec(object):
             # if not found in this package, check immediate dependents
             # for dependency patches
             for dep_spec in self._dependents.values():
-                patch = dep_spec.parent.package.lookup_patch(sha256)
+                patch = dep_spec.parent.package_class.lookup_patch(sha256)
 
                 if patch:
                     patches.append(patch)
@@ -2610,6 +2677,8 @@ class Spec(object):
                        self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
 
+        self._package = None
+
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
@@ -2647,11 +2716,13 @@ class Spec(object):
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
             self._concrete = other._concrete
+            self._full_hash = other._full_hash
         else:
             self._hash = None
             self._cmp_key_cache = None
             self._normal = False
             self._concrete = False
+            self._full_hash = None
 
         return changed
 
@@ -2882,6 +2953,9 @@ class Spec(object):
             ${COMPILERFLAGS} Compiler flags
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
+            ${PLATFORM}      Platform
+            ${OS}            Operating System
+            ${TARGET}        Target
             ${SHA1}          Dependencies 8-char sha1 prefix
             ${HASH:len}      DAG hash with optional length specifier
 
@@ -3039,17 +3113,27 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % token_transform(str(self.variants)), '+')
-                elif named_str == 'ARCHITECTURE':
+                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
-                        write(
-                            fmt % token_transform(str(self.architecture)),
-                            '='
-                        )
+                        if named_str == "ARCHITECTURE":
+                            write(
+                                fmt % token_transform(str(self.architecture)),
+                                '='
+                            )
+                        elif named_str == "PLATFORM":
+                            platform = str(self.architecture.platform)
+                            write(fmt % token_transform(platform), '=')
+                        elif named_str == "OS":
+                            operating_sys = str(self.architecture.platform_os)
+                            write(fmt % token_transform(operating_sys), '=')
+                        elif named_str == "TARGET":
+                            target = str(self.architecture.target)
+                            write(fmt % token_transform(target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))
                 elif named_str == 'SPACK_ROOT':
-                    out.write(fmt % token_transform(spack.prefix))
+                    out.write(fmt % token_transform(spack.paths.prefix))
                 elif named_str == 'SPACK_INSTALL':
                     out.write(fmt % token_transform(spack.store.root))
                 elif named_str == 'PREFIX':
@@ -3082,7 +3166,7 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def dep_string(self):
-        return ''.join("^" + dep.format() for dep in self.sorted_deps())
+        return ''.join(" ^" + dep.format() for dep in self.sorted_deps())
 
     def __str__(self):
         ret = self.format() + self.dep_string()
@@ -3121,7 +3205,7 @@ class Spec(object):
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
-        deptypes = kwargs.pop('deptypes', ('build', 'link'))
+        deptypes = kwargs.pop('deptypes', 'all')
         check_kwargs(kwargs, self.tree)
 
         out = ""
@@ -3149,12 +3233,21 @@ class Spec(object):
                 out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
 
             if show_types:
+                types = set()
+                if cover == 'nodes':
+                    # when only covering nodes, we merge dependency types
+                    # from all dependents before showing them.
+                    for name, ds in node.dependents_dict().items():
+                        if ds.deptypes:
+                            types.update(set(ds.deptypes))
+                elif dep_spec.deptypes:
+                    # when covering edges or paths, we show dependency
+                    # types only for the edge through which we visited
+                    types = set(dep_spec.deptypes)
+
                 out += '['
-                if dep_spec.deptypes:
-                    for t in all_deptypes:
-                        out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
-                else:
-                    out += ' ' * len(all_deptypes)
+                for t in all_deptypes:
+                    out += ''.join(t[0] if t in types else ' ')
                 out += ']  '
 
             out += ("    " * d)
@@ -3374,8 +3467,10 @@ class SpecParser(spack.parse.Parser):
         spec._hash = None
         spec._cmp_key_cache = None
 
+        spec._package = None
         spec._normal = False
         spec._concrete = False
+        spec._full_hash = None
 
         # record this so that we know whether version is
         # unspecified or not.

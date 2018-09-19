@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,7 @@ class Tcsh(AutotoolsPackage):
 
     version('6.20.00', '59d40ef40a68e790d95e182069431834')
 
-    def fedora_patch(commit, file, **kwargs):
+    def fedora_patch(commit, file, **kwargs):  # noqa
         prefix = 'https://src.fedoraproject.org/rpms/tcsh/raw/{0}/f/'.format(commit)
         patch('{0}{1}'.format(prefix, file), **kwargs)
 

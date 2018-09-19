@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,11 +25,9 @@
 import re
 
 import llnl.util.tty as tty
+import llnl.util.multiproc as mp
 
-import spack.spec
-import spack.compilers
 from spack.architecture import OperatingSystem
-from spack.util.multiproc import parmap
 from spack.util.module_cmd import get_module_cmd
 
 
@@ -42,16 +40,27 @@ class Cnl(OperatingSystem):
     """
 
     def __init__(self):
-        name = 'CNL'
-        version = '10'
+        name = 'cnl'
+        version = self._detect_crayos_version()
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
-        return self.name
+        return self.name + str(self.version)
+
+    def _detect_crayos_version(self):
+        modulecmd = get_module_cmd()
+        output = modulecmd("avail", "PrgEnv-", output=str, error=str)
+        matches = re.findall(r'PrgEnv-\w+/(\d+).\d+.\d+', output)
+        major_versions = set(matches)
+        latest_version = max(major_versions)
+        return latest_version
 
     def find_compilers(self, *paths):
+        # function-local so that cnl doesn't depend on spack.config
+        import spack.compilers
+
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(
+        compiler_lists = mp.parmap(
             lambda cmp_cls: self.find_compiler(cmp_cls, *paths), types)
 
         # ensure all the version calls we made are cached in the parent
@@ -60,6 +69,9 @@ class Cnl(OperatingSystem):
         return clist
 
     def find_compiler(self, cmp_cls, *paths):
+        # function-local so that cnl doesn't depend on spack.config
+        import spack.spec
+
         compilers = []
         if cmp_cls.PrgEnv:
             if not cmp_cls.PrgEnv_compiler:

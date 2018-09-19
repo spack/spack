@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,12 +33,9 @@ class Vtkh(Package):
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
 
     homepage = "https://github.com/Alpine-DAV/vtk-h"
-    url      = "https://github.com/Alpine-DAV/vtk-h"
+    git      = "https://github.com/Alpine-DAV/vtk-h.git"
 
-    version('master',
-            git='https://github.com/Alpine-DAV/vtk-h.git',
-            branch='master',
-            submodules=True)
+    version('master', branch='master', submodules=True)
 
     maintainers = ['cyrush']
 

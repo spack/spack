@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,8 +29,8 @@ class RAgilp(RPackage):
     """Agilent expression array processing package."""
 
     homepage = "http://bioconductor.org/packages/agilp/"
-    url      = "https://git.bioconductor.org/packages/agilp"
+    git      = "https://git.bioconductor.org/packages/agilp.git"
 
-    version('3.8.0', git='https://git.bioconductor.org/packages/agilp', commit='c772a802af1b4c0741f2edd78053a0425160ea53')
+    version('3.8.0', commit='c772a802af1b4c0741f2edd78053a0425160ea53')
 
     depends_on('r@3.4.0:3.4.9', when='@3.8.0')

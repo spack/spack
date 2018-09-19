@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,9 +34,9 @@ class RKegggraph(RPackage):
     etc."""
 
     homepage = "https://www.bioconductor.org/packages/KEGGgraph/"
-    url      = "https://git.bioconductor.org/packages/KEGGgraph"
+    git      = "https://git.bioconductor.org/packages/KEGGgraph.git"
 
-    version('1.38.1', git='https://git.bioconductor.org/packages/KEGGgraph', commit='dd31665beb36d5aad8ed09ed56c603633b6b2292')
+    version('1.38.1', commit='dd31665beb36d5aad8ed09ed56c603633b6b2292')
 
     depends_on('r-graph', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))

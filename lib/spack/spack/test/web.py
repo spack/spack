@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,12 +25,12 @@
 """Tests for web.py."""
 import os
 
-import spack
+import spack.paths
 from spack.util.web import spider, find_versions_of_archive
 from spack.version import ver
 
 
-web_data_path = os.path.join(spack.test_path, 'data', 'web')
+web_data_path = os.path.join(spack.paths.test_path, 'data', 'web')
 
 root = 'file://' + web_data_path + '/index.html'
 root_tarball = 'file://' + web_data_path + '/foo-0.0.0.tar.gz'

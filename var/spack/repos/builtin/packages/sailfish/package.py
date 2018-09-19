@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Sailfish(CMakePackage):
     """Sailfish is a tool for transcript quantification from RNA-seq data."""
 
     homepage = "http://www.cs.cmu.edu/~ckingsf/software/sailfish"
-    url      = "https://github.com/kingsfordgroup/sailfish/archive/v0.10.0.tar.gz"
+    url      = "https://github.com/kingsfordgroup/sailfish/archive/v0.10.1.tar.gz"
 
     version('0.10.1', 'e6dab4cf3a39f346df7c28f40eb58cad')
 

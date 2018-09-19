@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,9 @@ class RAnalysispageserver(RPackage):
     of customizable R analyses via the web."""
 
     homepage = "https://www.bioconductor.org/packages/AnalysisPageServer/"
-    url      = "https://git.bioconductor.org/packages/AnalysisPageServer"
+    git      = "https://git.bioconductor.org/packages/AnalysisPageServer.git"
 
-    version('1.10.0', git='https://git.bioconductor.org/packages/AnalysisPageServer', commit='876c87073be116fa15a1afdd407e21152eb80d50')
+    version('1.10.0', commit='876c87073be116fa15a1afdd407e21152eb80d50')
 
     depends_on('r@3.4.0:3.4.9', when='@1.10.0')
     depends_on('r-log4r', type=('build', 'run'))

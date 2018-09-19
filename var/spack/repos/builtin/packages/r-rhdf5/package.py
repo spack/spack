@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,9 +35,9 @@ class RRhdf5(RPackage):
     applications work on datasets that are larger than the available RAM."""
 
     homepage = "https://www.bioconductor.org/packages/rhdf5/"
-    url      = "https://git.bioconductor.org/packages/rhdf5"
+    git      = "https://git.bioconductor.org/packages/rhdf5.git"
 
-    version('2.20.0', git='https://git.bioconductor.org/packages/rhdf5', commit='37b5165325062728bbec9167f89f5f4b794f30bc')
+    version('2.20.0', commit='37b5165325062728bbec9167f89f5f4b794f30bc')
 
     depends_on('r@3.4.0:3.4.9', when='@2.20.0')
     depends_on('r-zlibbioc', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,10 +29,11 @@ class PySymengine(PythonPackage):
     """Python wrappers for SymEngine, a symbolic manipulation library."""
 
     homepage = "https://github.com/symengine/symengine.py"
-    url = "https://github.com/symengine/symengine.py/archive/v0.2.0.tar.gz"
+    url      = "https://github.com/symengine/symengine.py/archive/v0.2.0.tar.gz"
+    git      = "https://github.com/symengine/symengine.py.git"
 
+    version('develop', branch='master')
     version('0.2.0', 'e1d114fa12be4c8c7e9f24007e07718c')
-    version('develop', git='https://github.com/symengine/symengine.py.git')
 
     # Build dependencies
     depends_on('python@2.7:2.8,3.3:')

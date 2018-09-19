@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,3 +38,8 @@ class Emboss(AutotoolsPackage):
     depends_on('libxpm')
     depends_on('libgd')
     depends_on('postgresql')
+
+    @run_after('configure')
+    def skip_update_checks(self):
+        # Delete $(bindir)/embossupdate to skip update checks
+        filter_file('$(bindir)/embossupdate', '', 'Makefile', string=True)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,19 +39,58 @@ class Elfutils(AutotoolsPackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.173', '35decb1ebfb90d565e4c411bee4185cc')
     version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
     version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
+    version('0.163', '77ce87f259987d2e54e4d87b86cbee41')
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
+    # Libraries for reading compressed DWARF sections.
+    variant('bzip2', default=False,
+            description='Support bzip2 compressed sections.')
+    variant('xz', default=False,
+            description='Support xz compressed sections.')
+
+    # Native language support from libintl.
+    variant('nls', default=True,
+            description='Enable Native Language Support.')
+
+    depends_on('bzip2', type='link', when='+bzip2')
+    depends_on('xz',    type='link', when='+xz')
+    depends_on('zlib',  type='link')
+    depends_on('gettext', when='+nls')
+
+    conflicts('%gcc@7.2.0:', when='@0.163')
 
     provides('elf@1')
 
+    # Elfutils uses nested functions in C code, which is implemented
+    # in gcc, but not in clang. C code compiled with gcc is
+    # binary-compatible with clang, so it should be possible to build
+    # elfutils with gcc, and then link it to clang-built libraries.
+    conflicts('%clang')
+
     def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+        spec = self.spec
+        args = []
+
+        if '+bzip2' in spec:
+            args.append('--with-bzlib=%s' % spec['bzip2'].prefix)
+        else:
+            args.append('--without-bzlib')
+
+        if '+xz' in spec:
+            args.append('--with-lzma=%s' % spec['xz'].prefix)
+        else:
+            args.append('--without-lzma')
+
+        # zlib is required
+        args.append('--with-zlib=%s' % spec['zlib'].prefix)
+
+        if '+nls' in spec:
+            # configure doesn't use LIBS correctly
+            args.append('LDFLAGS=-Wl,--no-as-needed -L%s -lintl' %
+                        spec['gettext'].prefix.lib)
+        else:
+            args.append('--disable-nls')
+
+        return args

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,8 +32,9 @@ class Cntk(Package):
 
     homepage = "https://www.microsoft.com/en-us/research/product/cognitive-toolkit"
     url      = "https://github.com/Microsoft/CNTK/archive/v2.0.tar.gz"
+    git      = "https://github.com/Microsoft/CNTK.git"
 
-    version('master', git='https://github.com/Microsoft/CNTK.git', branch='master')
+    version('master', branch='master')
     version('2.0', '8038780f1169ceea578e5ef4d69e4c6f')
 
     variant('opencv', default=False, description="Enable OpenCV support.")

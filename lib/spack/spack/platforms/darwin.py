@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -45,5 +45,5 @@ class Darwin(Platform):
         self.add_operating_system(str(mac_os), mac_os)
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return 'darwin' in platform.system().lower()

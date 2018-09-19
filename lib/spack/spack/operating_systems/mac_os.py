@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ from spack.version import Version
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
-def macOS_version():
+def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
     return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))

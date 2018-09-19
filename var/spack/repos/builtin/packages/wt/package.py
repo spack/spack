@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,11 +31,11 @@ class Wt(CMakePackage):
     Wt is a C++ library for developing web applications."""
 
     homepage = "http://www.webtoolkit.eu/wt"
-    url = "https://github.com/emweb/wt/archive/3.3.7.tar.gz"
+    url      = "https://github.com/emweb/wt/archive/3.3.7.tar.gz"
+    git      = "https://github.com/emweb/wt.git"
 
+    version('master', branch='master')
     version('3.3.7', '09858901f2dcf5c3d36a9237daba3e3f')
-    version('master', branch='master',
-            git='https://github.com/emweb/wt.git')
 
     # wt builds in parallel, but requires more than 5 GByte RAM per -j <njob>
     # which most machines do not provide and crash the build

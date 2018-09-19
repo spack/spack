@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,11 +30,10 @@ class PsLite(CMakePackage):
     of the parameter server framework."""
 
     homepage = "https://github.com/dmlc/ps-lite"
-    url      = "https://github.com/dmlc/ps-lite.git"
+    git      = "https://github.com/dmlc/ps-lite.git"
 
-    version('master', git='https://github.com/dmlc/ps-lite.git', branch='master')
-    version('20170328', git='https://github.com/dmlc/ps-lite.git',
-            commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
+    version('master', branch='master')
+    version('20170328', commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
 
     depends_on('protobuf@3:')
     depends_on('zeromq')

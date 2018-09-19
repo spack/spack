@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,9 @@ class Pbmpi(MakefilePackage):
     """
 
     homepage = "http://megasun.bch.umontreal.ca/People/lartillot/www/index.htm"
-    url      = "https://github.com/bayesiancook/pbmpi"
+    git      = "https://github.com/bayesiancook/pbmpi.git"
 
-    version('partition', git='https://github.com/bayesiancook/pbmpi.git', branch='partition')
+    version('partition', branch='partition')
 
     depends_on('mpi')
     depends_on('libfabric')

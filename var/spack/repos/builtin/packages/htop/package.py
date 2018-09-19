@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Htop(AutotoolsPackage):
     list_url = "https://hisham.hm/htop/releases"
     list_depth = 1
 
+    version('2.2.0', '0d816b6beed31edc75babcfbf863ffa8')
     version('2.0.2', '7d354d904bad591a931ad57e99fea84a')
 
     depends_on('ncurses')

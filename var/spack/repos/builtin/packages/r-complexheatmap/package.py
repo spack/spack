@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,10 +32,9 @@ class RComplexheatmap(RPackage):
        multiple heatmaps and supports self-defined annotation graphics."""
 
     homepage = "https://bioconductor.org/packages/ComplexHeatmap/"
-    url      = "https://git.bioconductor.org/packages/ComplexHeatmap"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/ComplexHeatmap.git"
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/ComplexHeatmap', commit='0acd8974fb5cedde8cd96efea6dfa39324d25b34')
+    version('1.14.0', commit='0acd8974fb5cedde8cd96efea6dfa39324d25b34')
 
     depends_on('r-circlize', type=('build', 'run'))
     depends_on('r-getoptlong', type=('build', 'run'))

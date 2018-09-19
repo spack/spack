@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,9 +31,9 @@ class ROligoclasses(RPackage):
     crlmm packages."""
 
     homepage = "https://www.bioconductor.org/packages/oligoClasses/"
-    url      = "https://git.bioconductor.org/packages/oligoClasses"
+    git      = "https://git.bioconductor.org/packages/oligoClasses.git"
 
-    version('1.38.0', git='https://git.bioconductor.org/packages/oligoClasses', commit='fe2bb7f02c7ed3cbd338254c27ceba6ff829a962')
+    version('1.38.0', commit='fe2bb7f02c7ed3cbd338254c27ceba6ff829a962')
 
     depends_on('r@3.4.0:3.4.9', when='@1.38.0')
     depends_on('r-biocgenerics', type=('build', 'run'))

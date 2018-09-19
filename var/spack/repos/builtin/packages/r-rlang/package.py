@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,8 +30,9 @@ class RRlang(RPackage):
        condition system, and core 'Tidyverse' features like tidy evaluation."""
 
     homepage = "https://cran.r-project.org/web/packages/rlang/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rlang_0.1.2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rlang_0.1.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rlang"
 
+    version('0.1.4', 'daed5104d557c0cbfb4a654ec8ffb579')
     version('0.1.2', '170f8cf7b61898040643515a1746a53a')
     version('0.1.1', '38a51a0b8f8487eb52b4f3d986313682')

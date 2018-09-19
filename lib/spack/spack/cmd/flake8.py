@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,7 +33,7 @@ import argparse
 
 from llnl.util.filesystem import working_dir, mkdirp
 
-import spack
+import spack.paths
 from spack.util.executable import which
 
 
@@ -53,7 +53,7 @@ def is_package(f):
 
 
 #: List of directories to exclude from checks.
-exclude_directories = [spack.external_path]
+exclude_directories = [spack.paths.external_path]
 
 
 #: This is a dict that maps:
@@ -226,7 +226,7 @@ def setup_parser(subparser):
         help="send filtered files to stdout as well as temp files")
     subparser.add_argument(
         '-r', '--root-relative', action='store_true', default=False,
-        help="print root-relative paths (default is cwd-relative)")
+        help="print root-relative paths (default: cwd-relative)")
     subparser.add_argument(
         '-U', '--no-untracked', dest='untracked', action='store_false',
         default=True, help="exclude untracked files from checks")
@@ -243,11 +243,12 @@ def flake8(parser, args):
         if file_list:
             def prefix_relative(path):
                 return os.path.relpath(
-                    os.path.abspath(os.path.realpath(path)), spack.prefix)
+                    os.path.abspath(os.path.realpath(path)),
+                    spack.paths.prefix)
 
             file_list = [prefix_relative(p) for p in file_list]
 
-        with working_dir(spack.prefix):
+        with working_dir(spack.paths.prefix):
             if not file_list:
                 file_list = changed_files(args)
 
@@ -261,7 +262,7 @@ def flake8(parser, args):
 
         # filter files into a temporary directory with exemptions added.
         for filename in file_list:
-            src_path = os.path.join(spack.prefix, filename)
+            src_path = os.path.join(spack.paths.prefix, filename)
             dest_path = os.path.join(temp, filename)
             filter_file(src_path, dest_path, args.output)
 
@@ -275,13 +276,14 @@ def flake8(parser, args):
             if file_list:
                 output += flake8(
                     '--format', 'pylint',
-                    '--config=%s' % os.path.join(spack.prefix, '.flake8'),
+                    '--config=%s' % os.path.join(spack.paths.prefix,
+                                                 '.flake8'),
                     *file_list, fail_on_error=False, output=str)
                 returncode |= flake8.returncode
             if package_file_list:
                 output += flake8(
                     '--format', 'pylint',
-                    '--config=%s' % os.path.join(spack.prefix,
+                    '--config=%s' % os.path.join(spack.paths.prefix,
                                                  '.flake8_packages'),
                     *package_file_list, fail_on_error=False, output=str)
                 returncode |= flake8.returncode
@@ -293,7 +295,8 @@ def flake8(parser, args):
             # print results relative to current working directory
             def cwd_relative(path):
                 return '{0}: ['.format(os.path.relpath(
-                    os.path.join(spack.prefix, path.group(1)), os.getcwd()))
+                    os.path.join(
+                        spack.paths.prefix, path.group(1)), os.getcwd()))
 
             for line in output.split('\n'):
                 print(re.sub(r'^(.*): \[', cwd_relative, line))

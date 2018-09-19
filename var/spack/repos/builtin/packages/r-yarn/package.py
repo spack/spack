@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,11 +33,10 @@ class RYarn(RPackage):
        and statistical techniques to account for the large heterogeneity and
        sparsity found in very large RNA-seq experiments."""
 
-    homepage = "http://www.example.co://www.bioconductor.org/packages/yarn/"
-    url      = "https://git.bioconductor.org/packages/yarn"
-    list_url = homepage
+    homepage = "https://bioconductor.org/packages/yarn/"
+    git      = "https://git.bioconductor.org/packages/yarn.git"
 
-    version('1.2.0', git='https://git.bioconductor.org/packages/yarn', commit='28af616ef8c27dcadf6568e276dea8465486a697')
+    version('1.2.0', commit='28af616ef8c27dcadf6568e276dea8465486a697')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biomart', type=('build', 'run'))

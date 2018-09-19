@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,10 +30,13 @@ class PyTheano(PythonPackage):
     and GPUs."""
 
     homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    url      = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    git      = "https://github.com/Theano/Theano.git"
 
+    version('master', branch='master')
+    version('1.0.2', 'fcae24dfa76babe15f5f3c556d67c9f2')
+    version('1.0.1', 'a38b36c0fdc3126c574163db0a253e69')
     version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
-    version('master', git='https://github.com/Theano/Theano.git', branch='master')
 
     variant('gpu', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
@@ -48,8 +51,9 @@ class PyTheano(PythonPackage):
     depends_on('blas')
 
     depends_on('cuda', when='+gpu')
+    depends_on('cudnn', when='+gpu')
+    depends_on('py-pygpu', when='+gpu', type=('build', 'run'))
     depends_on('libgpuarray', when='+gpu')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.3.0:', type='test')
-    # depends_on('py-nose-parameterized@0.5.0:', type='test')
+    depends_on('py-nose@1.3.0:', type='test')
+    depends_on('py-nose-parameterized@0.5.0:', type='test')

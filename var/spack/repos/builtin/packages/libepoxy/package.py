@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,6 +29,11 @@ class Libepoxy(AutotoolsPackage):
     """Epoxy is a library for handling OpenGL function pointer management for
     you."""
     homepage = "https://github.com/anholt/libepoxy"
-    url      = "https://github.com/anholt/libepoxy/releases/download/v1.3.1/libepoxy-1.3.1.tar.bz2"
+    url      = "https://github.com/anholt/libepoxy/releases/download/1.4.3/libepoxy-1.4.3.tar.xz"
+    list_url = "https://github.com/anholt/libepoxy/releases"
 
+    version('1.4.3', 'af4c3ce0fb1143bdc4e43f85695a9bed')
     version('1.3.1', '96f6620a9b005a503e7b44b0b528287d')
+
+    depends_on('meson')
+    depends_on('mesa')

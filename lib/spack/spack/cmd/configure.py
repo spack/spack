@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.intel import IntelPackage
+from spack.build_systems.meson import MesonPackage
 
 description = 'stage and configure a package but do not install'
 section = "build"
@@ -47,6 +48,7 @@ build_system_to_phase = {
     WafPackage: 'configure',
     PerlPackage: 'configure',
     IntelPackage: 'configure',
+    MesonPackage: 'meson',
 }
 
 

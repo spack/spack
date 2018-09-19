@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,3 +32,5 @@ class PerlExtutilsPkgconfig(PerlPackage):
     url      = "http://search.cpan.org/CPAN/authors/id/X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz"
 
     version('1.16', 'b86318f2b6ac6af3ee985299e1e38fe5')
+
+    depends_on('pkgconfig', type=('build', 'run'))

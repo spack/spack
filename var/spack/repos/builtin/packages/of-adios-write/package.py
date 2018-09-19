@@ -56,11 +56,11 @@ class OfAdiosWrite(Package):
     # Currently only via git, but with some branches corresponding to main
     # OpenFOAM releases.
     homepage = "https://develop.openfoam.com/Community/feature-adiosWrite/"
-    gitrepo  = "https://develop.openfoam.com/Community/feature-adiosWrite.git"
+    git      = "https://develop.openfoam.com/Community/feature-adiosWrite.git"
 
-    version('develop', branch='develop', git=gitrepo)
-    version('1706', branch='v1706', git=gitrepo)
-    version('1612', branch='v1612', git=gitrepo)
+    version('develop', branch='develop')
+    version('1706', branch='v1706')
+    version('1612', branch='v1612')
 
     variant('source', default=True, description='Install library source')
 

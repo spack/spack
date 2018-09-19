@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,5 +30,6 @@ class RFutileOptions(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/futile.options/index.html"
     url      = "https://cran.rstudio.com/src/contrib/futile.options_1.0.0.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/futile.options"
 
     version('1.0.0', '8fd845774bbce56f41f7c43c3b4c13ba')

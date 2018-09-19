@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Libsigsegv(AutotoolsPackage):
     """GNU libsigsegv is a library for handling page faults in user mode."""
 
     homepage = "https://www.gnu.org/software/libsigsegv/"
-    url      = "https://ftp.gnu.org/gnu/libsigsegv/libsigsegv-2.11.tar.gz"
+    url      = "https://ftpmirror.gnu.org/libsigsegv/libsigsegv-2.11.tar.gz"
 
     patch('patch.new_config_guess', when='@2.10')
 

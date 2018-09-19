@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class SvnTest(Package):
     """Mock package that uses svn for fetching."""
     url      = "http://www.example.com/svn-test-1.0.tar.gz"
 
-    version('svn', 'to-be-filled-in-by-test')
+    version('svn', svn='to-be-filled-in-by-test')
 
     def install(self, spec, prefix):
         pass

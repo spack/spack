@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,7 @@ class Nag(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['nagfor']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
         'cc': 'cc',
@@ -72,8 +72,8 @@ class Nag(Compiler):
         return '-Wl,-Wl,,-rpath,,'
 
     @classmethod
-    def default_version(self, comp):
-        """The '-V' option works for nag compilers.
+    def default_version(cls, comp):
+        """The ``-V`` option works for nag compilers.
         Output looks like this::
 
             NAG Fortran Compiler Release 6.0(Hibiya) Build 1037

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,11 +31,9 @@ class PacbioDazzDb(MakefilePackage):
        required for some pacbio utilities."""
 
     homepage = "https://github.com/PacificBiosciences/DAZZ_DB"
-    url      = "https://github.com/PacificBiosciences/DAZZ_DB"
+    git      = "https://github.com/PacificBiosciences/DAZZ_DB.git"
 
-    version('2017-04-10',
-            git='https://github.com/PacificBiosciences/DAZZ_DB.git',
-            commit='f29d27d51f460563481cd227d17f4bdc5e288365')
+    version('2017-04-10', commit='f29d27d51f460563481cd227d17f4bdc5e288365')
 
     depends_on('gmake', type='build')
 

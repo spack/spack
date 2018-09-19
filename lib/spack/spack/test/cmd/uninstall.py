@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,19 +39,25 @@ class MockArgs(object):
         self.yes_to_all = True
 
 
-def test_multiple_matches(database):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_multiple_matches():
     """Test unable to uninstall when multiple matches."""
     with pytest.raises(SpackCommandError):
         uninstall('-y', 'mpileaks')
 
 
-def test_installed_dependents(database):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_installed_dependents():
     """Test can't uninstall when ther are installed dependents."""
     with pytest.raises(SpackCommandError):
         uninstall('-y', 'libelf')
 
 
-def test_recursive_uninstall(database):
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_recursive_uninstall():
     """Test recursive uninstall."""
     uninstall('-y', '-a', '--dependents', 'callpath')
 

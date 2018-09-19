@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,9 +34,11 @@ class RLubridate(RPackage):
     fun."""
 
     homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lubridate_1.5.6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/lubridate_1.7.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
 
+    version('1.7.1', '17dcb4c6a95189941bbdcffecf61b83b')
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 
+    depends_on('r-rcpp@0.11:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))

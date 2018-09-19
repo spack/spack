@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,8 @@ class Gearshifft(CMakePackage):
     """Benchmark Suite for Heterogenuous FFT Implementations"""
 
     homepage = "https://github.com/mpicbg-scicomp/gearshifft"
-    url      = "https://github.com/mpicbg-scicomp/gearshifft/archive/v0.2.0.tar.gz"
+    url      = "https://github.com/mpicbg-scicomp/gearshifft/archive/v0.2.1-lw.tar.gz"
+
     maintainers = ['ax3l']
 
     version('0.2.1-lw', 'c3208b767b24255b488a83e5d9e517ea')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,12 +30,11 @@ class PySpefile(PythonPackage):
        analysis of x-ray scattering experiments"""
 
     homepage = "https://github.com/conda-forge/spefile-feedstock"
-    url      = "https://github.com/conda-forge/spefile-feedstock.git"
+    git      = "https://github.com/conda-forge/spefile-feedstock.git"
 
     import_modules = ['spefile']
 
-    version('1.6', git='https://github.com/conda-forge/spefile-feedstock.git',
-            commit='24394e066da8dee5e7608f556ca0203c9db217f9')
+    version('1.6', commit='24394e066da8dee5e7608f556ca0203c9db217f9')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

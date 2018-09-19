@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,8 +40,8 @@ class RGdsfmt(RPackage):
        processes supported by the package parallel."""
 
     homepage = "http://bioconductor.org/packages/gdsfmt/"
-    url      = "https://git.bioconductor.org/packages/gdsfmt"
+    git      = "https://git.bioconductor.org/packages/gdsfmt.git"
 
-    version('1.14.1', git='https://git.bioconductor.org/packages/gdsfmt', commit='15743647b7eea5b82d3284858b4591fb6e59959d')
+    version('1.14.1', commit='15743647b7eea5b82d3284858b4591fb6e59959d')
 
     depends_on('r@3.4.0:3.4.9', when='@1.14.1')

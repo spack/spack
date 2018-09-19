@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,13 +28,14 @@ from spack import *
 
 class Simulationio(CMakePackage):
     """SimulationIO: Efficient and convenient I/O for large PDE simulations"""
+
     homepage = "https://github.com/eschnett/SimulationIO"
     url      = "https://github.com/eschnett/SimulationIO/archive/version/0.1.0.tar.gz"
+    git      = "https://github.com/eschnett/SimulationIO.git"
 
+    version('develop', branch='master')
     version('1.0.0', '5cbf1d0084eb436d861ffcdd297eaa08')
     version('0.1.0', '00f7dabc08ed1ab77858785ce0809f50')
-    version('develop',
-            git='https://github.com/eschnett/SimulationIO.git', branch='master')
 
     variant('julia', default=False)
     variant('python', default=True)

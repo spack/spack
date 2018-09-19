@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import shutil
-import glob
 import llnl.util.tty as tty
 from spack import *
 
@@ -52,19 +50,24 @@ from spack import *
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
-    url = 'https://storage.googleapis.com/golang/go1.7.4.src.tar.gz'
+    url = 'https://dl.google.com/go/go1.10.1.src.tar.gz'
 
     extendable = True
 
-    version('1.9.2', '44105c865a1a810464df79233a05a568')
-    version('1.9.1', '27bce1ffb05f4f6bd90d90081e5d4169')
-    version('1.9',   'da2d44ea384076efec43ee1f8b7d45d2')
-    version('1.8.3', '64e9380e07bba907e26a00cf5fcbe77e')
-    version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')
-    version('1.8',   '7743960c968760437b6e39093cfe6f67')
-    version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
-    version('1.7.4', '49c1076428a5d3b5ad7ac65233fcca2f')
-    version('1.6.4', 'b023240be707b34059d2c114d3465c92')
+    version('1.11',   'afc1e12f5fe49a471e3aae7d906c73e9d5b1fdd36d52d72652dde8f6250152fb')
+    version('1.10.3', '567b1cc66c9704d1c019c50bef946272e911ec6baf244310f87f4e678be155f2')
+    version('1.10.2', '6264609c6b9cd8ed8e02ca84605d727ce1898d74efa79841660b2e3e985a98bd')
+    version('1.10.1', '589449ff6c3ccbff1d391d4e7ab5bb5d5643a5a41a04c99315e55c16bbf73ddc')
+    version('1.9.5',  'f1c2bb7f32bbd8fa7a19cc1608e0d06582df32ff5f0340967d83fb0017c49fbc')
+    version('1.9.2',  '44105c865a1a810464df79233a05a568')
+    version('1.9.1',  '27bce1ffb05f4f6bd90d90081e5d4169')
+    version('1.9',    'da2d44ea384076efec43ee1f8b7d45d2')
+    version('1.8.3',  '64e9380e07bba907e26a00cf5fcbe77e')
+    version('1.8.1',  '409dd21e7347dd1ea9efe64a700073cc')
+    version('1.8',    '7743960c968760437b6e39093cfe6f67')
+    version('1.7.5',  '506de2d870409e9003e1440bcfeb3a65')
+    version('1.7.4',  '49c1076428a5d3b5ad7ac65233fcca2f')
+    version('1.6.4',  'b023240be707b34059d2c114d3465c92')
 
     provides('golang')
 
@@ -97,15 +100,7 @@ class Go(Package):
         with working_dir('src'):
             bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
-        try:
-            os.makedirs(prefix)
-        except OSError:
-            pass
-        for f in glob.glob('*'):
-            if os.path.isdir(f):
-                shutil.copytree(f, os.path.join(prefix, f))
-            else:
-                shutil.copy2(f, os.path.join(prefix, f))
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
@@ -119,10 +114,9 @@ class Go(Package):
 
         In most cases, extensions will only need to set GOPATH and use go::
 
-        env = os.environ
         env['GOPATH'] = self.source_path + ':' + env['GOPATH']
         go('get', '<package>', env=env)
-        shutil.copytree('bin', os.path.join(prefix, '/bin'))
+        install_tree('bin', prefix.bin)
         """
         #  Add a go command/compiler for extensions
         module.go = self.spec['go'].command

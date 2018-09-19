@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,19 +32,14 @@ class LlvmOpenmpOmpt(CMakePackage):
        changes for OMPT, the OpenMP Tools interface"""
 
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
+    git      = "https://github.com/OpenMPToolsInterface/LLVM-openmp.git"
 
-    # towards_tr4 branch
-    version('towards_tr4', branch='towards_tr4',
-            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git')
-
-    version('3.9.2b2',
-            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
-            commit='5cdca5dd3c0c336d42a335ca7cff622e270c9d47')
+    # tr6_forwards branch
+    version('tr6_forwards', branch='tr6_forwards')
+    version('3.9.2b2', commit='5cdca5dd3c0c336d42a335ca7cff622e270c9d47')
 
     # align-to-tr-rebased branch
-    version('3.9.2b',
-            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
-            commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
+    version('3.9.2b', commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
 
     # variant for building llvm-openmp-ompt as a stand alone library
     variant('standalone', default=False,
@@ -79,9 +74,9 @@ class LlvmOpenmpOmpt(CMakePackage):
                      '-DCMAKE_BUILD_WITH_INSTALL_RPATH=true',
                      '-DLIBOMP_USE_DEBUGGER=false'])
 
-        # Build llvm-openmp-ompt using the toward_tr4 branch
+        # Build llvm-openmp-ompt using the tr6_forwards branch
         # This requires the version to be 5.0 (50)
-        if '@towards_tr4' in self.spec:
+        if '@tr6_forwards' in self.spec:
                 cmake_args.extend(
                     ['-DLIBOMP_OMP_VERSION=50'])
 

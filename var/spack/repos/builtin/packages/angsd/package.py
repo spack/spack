@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,9 +35,11 @@ class Angsd(MakefilePackage):
     homepage = "https://github.com/ANGSD/angsd"
     url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
 
+    version('0.921', '3702db035396db602c7f74728b1a5a1f')
     version('0.919', '79d342f49c24ac00d35934f2617048d4')
 
     depends_on('htslib')
+    conflicts('^htslib@1.6:', when='@0.919')
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('R_LIBS', prefix.R)

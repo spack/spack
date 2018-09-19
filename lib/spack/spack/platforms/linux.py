@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -49,5 +49,5 @@ class Linux(Platform):
         self.add_operating_system(str(linux_dist), linux_dist)
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return 'linux' in platform.system().lower()

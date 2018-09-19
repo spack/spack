@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,15 +30,14 @@ class Gotcha(CMakePackage):
     enables tools to intercept calls into shared libraries"""
 
     homepage = "http://github.com/LLNL/gotcha"
-    url = "http://github.com/LLNL/gotcha"
+    git      = "https://github.com/LLNL/gotcha.git"
+
+    version('develop', branch='develop')
+    version('master', branch='master')
+    version('1.0.2', tag='1.0.2')
+    version('0.0.2', tag='0.0.2')
 
     variant('test', default=False, description='Build tests for Gotcha')
-
-    version('develop', git='https://github.com/LLNL/gotcha.git',
-            branch="develop")
-    version('master', git='https://github.com/LLNL/gotcha.git',
-            branch="master")
-    version('0.0.2', git='https://github.com/LLNL/gotcha.git', tag="0.0.2")
 
     def configure_args(self):
         spec = self.spec

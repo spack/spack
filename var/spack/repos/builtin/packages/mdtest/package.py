@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,9 @@ class Mdtest(Package):
        and directories and then reports the performance."""
 
     homepage = "https://github.com/LLNL/mdtest"
+    git      = "https://github.com/LLNL/mdtest.git"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('1.9.3', commit='49f3f0')
 
     depends_on('mpi')
 

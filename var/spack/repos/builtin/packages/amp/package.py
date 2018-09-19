@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,14 +41,11 @@ class Amp(CMakePackage):
     to allow application domain scientists, computer scientists and
     mathematicians to simulate, collaborate, and conduct research on
     various aspects of massively parallel simulation algorithms."""
+
     homepage = "https://bitbucket.org/AdvancedMultiPhysics/amp"
+    hg       = homepage
 
-    # ###################### Versions ##########################
-    version("develop", hg="https://bitbucket.org/AdvancedMultiPhysics/amp")
-
-    # ###################### Variants ##########################
-
-    # ###################### Dependencies ##########################
+    version('develop')
 
     # Everything should be compiled position independent (-fpic)
     depends_on('blas')

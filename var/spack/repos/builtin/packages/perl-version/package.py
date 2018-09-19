@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class PerlVersion(PerlPackage):
     """Parse and manipulate Perl version strings"""
 
     homepage = "http://search.cpan.org/~bdfoy/Perl-Version-1.013/lib/Perl/Version.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/B/BD/BDFOY/Perl-Version-1.013.tar.gz"
+    url      = "http://search.cpan.org/CPAN/authors/id/B/BD/BDFOY/Perl-Version-1.013_03.tar.gz"
 
     version('1.013_03', 'b2c94c8b33ccfa1635c760fcfa1c5358')
 

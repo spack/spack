@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,7 +33,7 @@ class Zoltan(Package):
     """The Zoltan library is a toolkit of parallel combinatorial algorithms
        for parallel, unstructured, and/or adaptive scientific
        applications.  Zoltan's largest component is a suite of dynamic
-       load-balancing and paritioning algorithms that increase
+       load-balancing and partitioning algorithms that increase
        applications' parallel performance by reducing idle time.  Zoltan
        also has graph coloring and graph ordering algorithms, which are
        useful in task schedulers and parallel preconditioners.
@@ -58,6 +58,7 @@ class Zoltan(Package):
     depends_on('mpi', when='+mpi')
 
     depends_on('parmetis@4:', when='+parmetis')
+    depends_on('metis', when='+parmetis')
 
     conflicts('+parmetis', when='~mpi')
 
@@ -75,7 +76,7 @@ class Zoltan(Package):
         ]
         config_cflags = [
             '-O0' if '+debug' in spec else '-O3',
-            '-g' if '+debug' in spec else '-g0',
+            '-g' if '+debug' in spec else '',
         ]
 
         if '+shared' in spec:
@@ -83,7 +84,9 @@ class Zoltan(Package):
             config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
             config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
-                config_args.append('--with-libs={0}'.format('-lgfortran'))
+                config_args.append('--with-libs=-lgfortran')
+            if spec.satisfies('%intel'):
+                config_args.append('--with-libs=-lifcore')
 
         if '+parmetis' in spec:
             config_args.append('--with-parmetis')
@@ -91,6 +94,10 @@ class Zoltan(Package):
                                .format(spec['parmetis'].prefix.lib))
             config_args.append('--with-parmetis-incdir={0}'
                                .format(spec['parmetis'].prefix.include))
+            config_args.append('--with-incdirs=-I{0}'
+                               .format(spec['metis'].prefix.include))
+            config_args.append('--with-ldflags=-L{0}'
+                               .format(spec['metis'].prefix.lib))
 
         if '+mpi' in spec:
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))

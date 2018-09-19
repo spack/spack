@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -62,7 +62,9 @@ def test_query_arguments():
         missing=False,
         unknown=False,
         explicit=False,
-        implicit=False
+        implicit=False,
+        start_date="2018-02-23",
+        end_date=None
     )
 
     q_args = query_arguments(args)
@@ -72,6 +74,8 @@ def test_query_arguments():
     assert q_args['installed'] is True
     assert q_args['known'] is any
     assert q_args['explicit'] is any
+    assert 'start_date' in q_args
+    assert 'end_date' not in q_args
 
     # Check that explicit works correctly
     args.explicit = True
@@ -84,27 +88,32 @@ def test_query_arguments():
     assert q_args['explicit'] is False
 
 
+@pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
-class TestFindWithTags(object):
+def test_tag1(parser, specs):
 
-    def test_tag1(self, parser, specs):
+    args = parser.parse_args(['--tags', 'tag1'])
+    spack.cmd.find.find(parser, args)
 
-        args = parser.parse_args(['--tags', 'tag1'])
-        spack.cmd.find.find(parser, args)
+    assert len(specs) == 2
+    assert 'mpich' in [x.name for x in specs]
+    assert 'mpich2' in [x.name for x in specs]
 
-        assert len(specs) == 2
-        assert 'mpich' in [x.name for x in specs]
-        assert 'mpich2' in [x.name for x in specs]
 
-    def test_tag2(self, parser, specs):
-        args = parser.parse_args(['--tags', 'tag2'])
-        spack.cmd.find.find(parser, args)
+@pytest.mark.db
+@pytest.mark.usefixtures('database', 'mock_display')
+def test_tag2(parser, specs):
+    args = parser.parse_args(['--tags', 'tag2'])
+    spack.cmd.find.find(parser, args)
 
-        assert len(specs) == 1
-        assert 'mpich' in [x.name for x in specs]
+    assert len(specs) == 1
+    assert 'mpich' in [x.name for x in specs]
 
-    def test_tag2_tag3(self, parser, specs):
-        args = parser.parse_args(['--tags', 'tag2', '--tags', 'tag3'])
-        spack.cmd.find.find(parser, args)
 
-        assert len(specs) == 0
+@pytest.mark.db
+@pytest.mark.usefixtures('database', 'mock_display')
+def test_tag2_tag3(parser, specs):
+    args = parser.parse_args(['--tags', 'tag2', '--tags', 'tag3'])
+    spack.cmd.find.find(parser, args)
+
+    assert len(specs) == 0

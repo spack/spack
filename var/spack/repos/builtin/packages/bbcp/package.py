@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,10 +27,11 @@ from spack import *
 
 class Bbcp(Package):
     """Securely and quickly copy data from source to target"""
-    homepage = "http://www.slac.stanford.edu/~abh/bbcp/"
 
-    version('git', git='http://www.slac.stanford.edu/~abh/bbcp/bbcp.git',
-            branch="master")
+    homepage = "http://www.slac.stanford.edu/~abh/bbcp/"
+    git      = "http://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
+
+    version('git', branch='master')
 
     depends_on('zlib')
     depends_on('openssl')

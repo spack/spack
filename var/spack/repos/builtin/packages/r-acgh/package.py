@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,9 +32,9 @@ class RAcgh(RPackage):
     printing and plotting aCGH objects."""
 
     homepage = "https://www.bioconductor.org/packages/aCGH/"
-    url      = "https://git.bioconductor.org/packages/aCGH"
+    git      = "https://git.bioconductor.org/packages/aCGH.git"
 
-    version('1.54.0', git='https://git.bioconductor.org/packages/aCGH', commit='be2ed339449f55c8d218e10c435e4ad356683693')
+    version('1.54.0', commit='be2ed339449f55c8d218e10c435e4ad356683693')
 
     depends_on('r@3.4.0:3.4.9', when='@1.54.0')
     depends_on('r-cluster', type=('build', 'run'))

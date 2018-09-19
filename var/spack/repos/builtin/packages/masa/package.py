@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,12 +31,11 @@ class Masa(AutotoolsPackage):
        provides a suite of manufactured solutions for the software
        verification of partial differential equation solvers in multiple
        dimensions."""
-    homepage = "https://github.com/manufactured-solutions/MASA"
-    url      = "https://github.com/manufactured-solutions/MASA.git"
 
-    version('master',
-            git='https://github.com/manufactured-solutions/MASA.git',
-            tag='master')
+    homepage = "https://github.com/manufactured-solutions/MASA"
+    git      = "https://github.com/manufactured-solutions/MASA.git"
+
+    version('master', tag='master')
 
     variant('fortran', default=True,
             description='Compile with Fortran interfaces')

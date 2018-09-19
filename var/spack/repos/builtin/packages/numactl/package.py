@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,8 @@ class Numactl(AutotoolsPackage):
     url      = "https://github.com/numactl/numactl/archive/v2.0.11.tar.gz"
 
     version('2.0.11',     'b56d2367217cde390b4d8087e00773b8')
+
+    patch('numactl-2.0.11-sysmacros.patch', when="@2.0.11")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

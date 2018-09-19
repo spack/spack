@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,7 +28,7 @@ from spack import *
 class PyEditdistance(PythonPackage):
     """Fast implementation of the edit distance (Levenshtein distance)."""
 
-    homepage = "http://www.example.com://github.com/aflc/editdistance"
+    homepage = "https://github.com/aflc/editdistance"
     url      = "https://pypi.io/packages/source/e/editdistance/editdistance-0.4.tar.gz"
 
     version('0.4', '27434720ca0930a9b6974b182b6237bc')

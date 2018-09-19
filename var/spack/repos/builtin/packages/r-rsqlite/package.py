@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,9 @@ class RRsqlite(RPackage):
     (version 3.8.6) is included."""
 
     homepage = "https://cran.rstudio.com/web/packages/RSQLite/index.html"
-    url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/RSQLite_2.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
+
     version('2.0', '63842410e78ccdfc52d4ee97992521d5')
 
     depends_on('r-dbi', type=('build', 'run'))

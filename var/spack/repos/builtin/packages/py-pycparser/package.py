@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class PyPycparser(PythonPackage):
 
     import_modules = ['pycparser', 'pycparser.ply']
 
+    version('2.18', '72370da54358202a60130e223d488136')
     version('2.17', 'ca98dcb50bc1276f230118f6af5a40c7')
     version('2.13', 'e4fe1a2d341b22e25da0d22f034ef32f')
 

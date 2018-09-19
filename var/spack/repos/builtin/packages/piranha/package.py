@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,9 +32,10 @@ class Piranha(CMakePackage):
 
     homepage = "https://bluescarni.github.io/piranha/sphinx/"
     url      = "https://github.com/bluescarni/piranha/archive/v0.5.tar.gz"
+    git      = "https://github.com/bluescarni/piranha.git"
 
+    version('develop', branch='master')
     version('0.5', '99546bae2be115737b6316751eb0b84d')
-    version('develop', git='https://github.com/bluescarni/piranha.git')
 
     variant('python',   default=True,
             description='Build the Python bindings')

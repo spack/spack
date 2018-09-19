@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,17 +32,21 @@ class Qmcpack(CMakePackage):
 
     # Package information
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack.git"
+    git      = "https://github.com/QMCPACK/qmcpack.git"
+
+    tags = ['ecp', 'ecp-apps']
 
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
-    version('3.3.0', git=url, tag='v3.3.0')
-    version('3.2.0', git=url, tag='v3.2.0')
-    version('3.1.1', git=url, tag='v3.1.1')
-    version('3.1.0', git=url, tag='v3.1.0')
-    version('develop', git=url)
+    version('develop')
+    version('3.5.0', tag='v3.5.0')
+    version('3.4.0', tag='v3.4.0')
+    version('3.3.0', tag='v3.3.0')
+    version('3.2.0', tag='v3.2.0')
+    version('3.1.1', tag='v3.1.1')
+    version('3.1.0', tag='v3.1.0')
 
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
@@ -64,6 +68,8 @@ class Qmcpack(CMakePackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
+    variant('qe', default=True,
+            description='Install with patched Quantum Espresso 6.3.0')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -94,27 +100,41 @@ class Qmcpack(CMakePackage):
     # qmcpack data analysis tools
     # basic command line tool based on Python and NumPy
     # blas and lapack patching fails often and so are disabled at this time
-    depends_on('py-numpy~blas~lapack', type='run', when='+da')
+    depends_on('py-numpy~blas~lapack', when='+da', type='run')
 
     # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
-    depends_on('py-matplotlib', type='run', when='+gui')
+    depends_on('py-matplotlib', when='+gui', type='run')
 
     # B-spline basis calculation require a patched version of
-    # Quantum Espresso 5.3.0 (see QMCPACK manual)
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_espresso-5.3.0.diff'
-    patch_checksum = '0d8d7ba805313ddd4c02ee32c96d2f12e7091e9e82e22671d3ad5a24247860c4'
-    depends_on('espresso@5.3.0~elpa',
-               patches=patch(patch_url, sha256=patch_checksum),
-               when='+mpi')
+    # Quantum Espresso 6.3 (see QMCPACK manual)
+    # Building explicitly without ELPA due to issues in Quantum Espresso
+    # Spack package
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
+    patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
+    depends_on('quantum-espresso@6.3~elpa+hdf5',
+               patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
+                   when='+qe+mpi', type='run')
 
-    depends_on('espresso@5.3.0~elpa~scalapack~mpi',
-               patches=patch(patch_url, sha256=patch_checksum),
-               when='~mpi')
+    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi+hdf5',
+               patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
+                   when='+qe~mpi', type='run')
 
-    # This is Spack specific patch, we may need to enhance QMCPACK's CMake
-    # in the near future.
-    patch('cmake.diff')
+    # Backport several patches from recent versions of QMCPACK
+    # The test_numerics unit test is broken prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/621.patch'
+    patch_checksum = 'e2ff7a6f0f006856085d4aab6d31f32f16353e41f760a33a7ef75f3ecce6a5d6'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
+
+    # FindMKL.cmake has an issues prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/623.patch'
+    patch_checksum = '3eb9dec05fd1a544318ff84cd8b5926cfc6b46b375c7f3b012ccf0b50cf617b7'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
+
+    # git-rev files for not git builds issues prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/643.patch'
+    patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
@@ -204,17 +224,27 @@ class Qmcpack(CMakePackage):
         ])
 
         # Additionally, we need to pass the BLAS+LAPACK include directory for
-        # header files. Intel MKL requires special case due to differences in
-        # Darwin vs. Linux $MKLROOT naming schemes
+        # header files. This is to insure vectorized math and FFT libraries
+        # get properly detected. Intel MKL requires special case due to
+        # differences in Darwin vs. Linux $MKLROOT naming schemes. This section
+        # of code is intentionally redundant for backwards compatibility.
         if 'intel-mkl' in self.spec:
-            args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s' %
-                format(join_path(env['MKLROOT'], 'include')))
+            lapack_dir = format(join_path(env['MKLROOT'], 'include'))
+            # Next two lines were introduced in QMCPACK 3.5.0 and later.
+            # Prior to v3.5.0, these lines should be benign.
+            args.append('-DENABLE_MKL=1')
+            args.append('-DMKL_ROOT=%s' % env['MKLROOT'])
         else:
-            args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                    self.spec['lapack'].prefix.include,
-                    self.spec['blas'].prefix.include))
+            lapack_dir = ':'.join((
+                spec['lapack'].prefix.include,
+                spec['blas'].prefix.include
+            ))
+
+        args.extend([
+            '-DCMAKE_CXX_FLAGS=-I%s' % lapack_dir,
+            '-DCMAKE_C_FLAGS=-I%s' % lapack_dir
+        ])
+
         return args
 
     def install(self, spec, prefix):

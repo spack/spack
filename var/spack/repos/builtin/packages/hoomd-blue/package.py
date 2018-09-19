@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,20 +37,17 @@ class HoomdBlue(CMakePackage):
     and perform in situ analysis."""
 
     homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
-    git      = "https://bitbucket.org/glotzer/hoomd-blue"
+    git      = "https://bitbucket.org/glotzer/hoomd-blue.git"
 
-    # TODO: There is a bug in Spack that requires a url to be defined
-    # even if it isn't used. This URL can hopefully be removed someday.
-    url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v2.1.6.tar.bz2"
-
-    version('develop', git=git, submodules=True)
+    version('develop', submodules=True)
 
     # Bitbucket has tarballs for each release, but they cannot be built.
     # The tarball doesn't come with the git submodules, nor does it come
     # with a .git directory, causing the build to fail. As a workaround,
     # clone a specific tag from Bitbucket instead of using the tarballs.
     # https://bitbucket.org/glotzer/hoomd-blue/issues/238
-    version('2.1.6', git=git, tag='v2.1.6', submodules=True)
+    version('2.2.2', tag='v2.2.2', submodules=True)
+    version('2.1.6', tag='v2.1.6', submodules=True)
 
     variant('mpi',  default=True,  description='Compile with MPI enabled')
     variant('cuda', default=True,  description='Compile with CUDA Toolkit')
@@ -61,11 +58,14 @@ class HoomdBlue(CMakePackage):
     # https://gcc.gnu.org/projects/cxx-status.html
     conflicts('%gcc@:4.6')
 
-    # HOOMD-blue uses hexadecimal floats, which are not technically part of
-    # the C++11 standard. GCC 6.0+ produces an error when this happens.
+    # HOOMD-blue 2.1.6 uses hexadecimal floats, which are not technically
+    # part of the C++11 standard. GCC 6.0+ produces an error when this happens.
     # https://bitbucket.org/glotzer/hoomd-blue/issues/239
     # https://bugzilla.redhat.com/show_bug.cgi?id=1321986
-    conflicts('%gcc@6.0:')
+    conflicts('%gcc@6.0:', when='@2.1.6')
+
+    # HOOMD-blue GCC 7+ is not yet supported
+    conflicts('%gcc@7.0:')
 
     extends('python')
     depends_on('python@2.7:')

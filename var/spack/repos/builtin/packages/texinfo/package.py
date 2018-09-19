@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Texinfo(AutotoolsPackage):
     of the time. It is used by many non-GNU projects as well."""
 
     homepage = "https://www.gnu.org/software/texinfo/"
-    url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.gz"
+    url      = "https://ftpmirror.gnu.org/texinfo/texinfo-6.0.tar.gz"
 
     version('6.5', '94e8f7149876793030e5518dd8d6e956')
     version('6.3', '9b08daca9bf8eccae9b0f884aba41f9e')

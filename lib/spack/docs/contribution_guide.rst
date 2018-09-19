@@ -56,7 +56,7 @@ locally to speed up the review process.
 
 
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6, 2.7, and 3.3-3.6 on both macOS and Linux. We currently
+against Python 2.6, 2.7, and 3.4-3.7 on both macOS and Linux. We currently
 perform 3 types of tests:
 
 ^^^^^^^^^^
@@ -96,6 +96,13 @@ tests, run:
 
 A more detailed list of available unit tests can be found by running
 ``spack test --long-list``.
+
+By default, ``pytest`` captures the output of all unit tests. If you add print
+statements to a unit test and want to see the output, simply run:
+
+.. code-block:: console
+
+   $ spack test -s -k architecture
 
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider
@@ -182,11 +189,16 @@ to update them.
 
 .. warning::
 
-   Flake8 requires setuptools in order to run. If you installed ``py-flake8``
-   with Spack, make sure to add ``py-setuptools`` to your ``PYTHONPATH``.
-   The easiest way to do this is to run ``spack activate py-flake8`` so that
-   all of the dependencies are symlinked to a central location. If you see an
-   error message like:
+   Flake8 and ``pep8-naming`` require a number of dependencies in order
+   to run.  If you installed ``py-flake8`` and ``py-pep8-naming``, the
+   easiest way to ensure the right packages are on your ``PYTHONPATH`` is
+   to run::
+
+     spack activate py-flake8
+     spack activate pep8-naming
+
+   so that all of the dependencies are symlinked to a central
+   location. If you see an error message like:
 
    .. code-block:: console
 
@@ -211,6 +223,7 @@ installed with Spack:
 
 * sphinx
 * sphinxcontrib-programoutput
+* sphinx-rtd-theme
 * graphviz
 * git
 * mercurial
@@ -225,6 +238,7 @@ installed with Spack:
    .. code-block:: console
 
       $ spack activate py-sphinx
+      $ spack activate py-sphinx-rtd-theme
       $ spack activate py-sphinxcontrib-programoutput
 
    so that all of the dependencies are symlinked to a central location.

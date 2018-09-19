@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,11 +31,12 @@ class RBiocparallel(RPackage):
        objects."""
 
     homepage = "https://bioconductor.org/packages/BiocParallel/"
-    url      = "https://git.bioconductor.org/packages/BiocParallel"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/BiocParallel.git"
 
-    version('1.10.1', git='https://git.bioconductor.org/packages/BiocParallel', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
+    version('1.14.2', commit='1d5a44960b19e9dbbca04c7290c8c58b0a7fc299')
+    version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
 
     depends_on('r-futile-logger', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1')
+    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@1.14.2', type=('build', 'run'))

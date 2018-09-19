@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,10 +32,9 @@ class Delly2(MakefilePackage):
        short-read massively parallel sequencing data.."""
 
     homepage = "https://github.com/dellytools/delly"
-    url      = "https://github.com/dellytools/delly"
+    git      = "https://github.com/dellytools/delly.git"
 
-    version('2017-08-03', commit='e32a9cd55c7e3df5a6ae4a91f31a0deb354529fc',
-            git='https://github.com/dellytools/delly.git')
+    version('2017-08-03', commit='e32a9cd55c7e3df5a6ae4a91f31a0deb354529fc')
 
     depends_on('htslib')
     depends_on('boost')

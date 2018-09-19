@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,9 +29,9 @@ class RAltcdfenvs(RPackage):
     """Convenience data structures and functions to handle cdfenvs."""
 
     homepage = "https://www.bioconductor.org/packages/altcdfenvs/"
-    url      = "https://git.bioconductor.org/packages/altcdfenvs"
+    git      = "https://git.bioconductor.org/packages/altcdfenvs.git"
 
-    version('2.38.0', git='https://git.bioconductor.org/packages/altcdfenvs', commit='2e92b9da76dbe50af4bf33c525134e29e9809291')
+    version('2.38.0', commit='2e92b9da76dbe50af4bf33c525134e29e9809291')
 
     depends_on('r@3.4.0:3.4.9', when='@2.38.0')
     depends_on('r-biocgenerics', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,10 +31,9 @@ class Mitos(CMakePackage):
 
     homepage = "https://github.com/llnl/Mitos"
     url      = "https://github.com/LLNL/Mitos/archive/v0.9.1.tar.gz"
+    git      = "https://github.com/llnl/Mitos.git"
 
-    version('0.9.2',
-            git='https://github.com/llnl/Mitos.git',
-            commit='8cb143a2e8c00353ff531a781a9ca0992b0aaa3d')
+    version('0.9.2', commit='8cb143a2e8c00353ff531a781a9ca0992b0aaa3d')
     version('0.9.1', 'c6cb57f3cae54f5157affd97ef7ef79e')
 
     depends_on('dyninst@8.2.1:')

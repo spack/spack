@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,11 +34,12 @@ import argparse
 
 from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
+from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
@@ -73,7 +74,7 @@ def fake_fetchify(url, pkg):
 
 
 @pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
-def test_packaging(mock_archive, tmpdir):
+def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
     spec = Spec("patchelf")
     spec.concretize()
@@ -93,7 +94,7 @@ echo $PATH"""
     spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
     pkghash = '/' + spec.dag_hash(7)
@@ -107,14 +108,13 @@ echo $PATH"""
     # put it directly into the mirror
 
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
-    specs = [spec]
     spack.mirror.create(
-        mirror_path, specs, no_checksum=True
+        mirror_path, specs=[], no_checksum=True
     )
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
 
     stage = spack.stage.Stage(
         mirrors['spack-mirror-test'], name="build_cache", keep=True)
@@ -158,34 +158,34 @@ echo $PATH"""
     else:
         # create build cache without signing
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-y', str(spec)])
+            ['create', '-d', mirror_path, '-u', str(spec)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
 
         # install build cache without verification
-        args = parser.parse_args(['install', '-y', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
+        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-y', str(pkghash)])
+            ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
         pkg.do_uninstall(force=True)
 
         # install build cache
-        args = parser.parse_args(['install', '-y', str(spec)])
+        args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
+        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     # Validate the relocation information
@@ -202,7 +202,7 @@ echo $PATH"""
     buildcache.buildcache(parser, args)
 
     # Copy a key to the mirror to have something to download
-    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+    shutil.copyfile(mock_gpg_keys_path + '/external.key',
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
@@ -213,28 +213,26 @@ echo $PATH"""
 
     # unregister mirror with spack config
     mirrors = {}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
     shutil.rmtree(mirror_path)
     stage.destroy()
 
 
 def test_relocate_text(tmpdir):
-    # Validate the text path replacement
-    old_dir = '/home/spack/opt/spack'
-    filename = str(tmpdir) + '/dummy.txt'
-    with open(filename, "w") as script:
-        script.write(old_dir)
-        script.close()
-
-    filenames = [filename]
-    new_dir = '/opt/rh/devtoolset/'
-    relocate_text(filenames, old_dir, new_dir)
-
-    assert(strings_contains_installroot(filename) is False)
-
-    with open(filename, "r") as script:
-        for line in script:
-            assert(new_dir in line)
+    with tmpdir.as_cwd():
+        # Validate the text path replacement
+        old_dir = '/home/spack/opt/spack'
+        filename = 'dummy.txt'
+        with open(filename, "w") as script:
+            script.write(old_dir)
+            script.close()
+        filenames = [filename]
+        new_dir = '/opt/rh/devtoolset/'
+        relocate_text(filenames, old_dir, new_dir)
+        with open(filename, "r")as script:
+            for line in script:
+                assert(new_dir in line)
+        assert(strings_contains_installroot(filename, old_dir) is False)
 
 
 def test_needs_relocation():

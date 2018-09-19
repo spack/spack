@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class PerlGdGraph(PerlPackage):
     """Graph Plotting Module for Perl 5"""
 
     homepage = "http://search.cpan.org/~bwarfield/GDGraph/Graph.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.44.tar.gz"
+    url      = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.4308.tar.gz"
 
     version('1.4308', 'fcdd34d5e09ae917b5d264887734b3b1')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,8 +27,10 @@ from spack import *
 
 class Cnmem(CMakePackage):
     """CNMem mempool for CUDA devices"""
-    homepage = "https://github.com/NVIDIA/cnmem"
 
-    version('git', git='https://github.com/NVIDIA/cnmem.git', branch="master")
+    homepage = "https://github.com/NVIDIA/cnmem"
+    git      = "https://github.com/NVIDIA/cnmem.git"
+
+    version('git', branch='master')
 
     depends_on('cmake@2.8.8:', type='build')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,3 +44,5 @@ class Trf(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('trf409.linux64', prefix.bin.trf)
+        chmod = which('chmod')
+        chmod('+x', prefix.bin.trf)

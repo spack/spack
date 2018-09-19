@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,10 @@ class RDplyr(RPackage):
     in memory and out of memory."""
 
     homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/dplyr_0.7.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
+    version('0.7.4', '9edee9b2db9831c2438054d0d2c1647d')
     version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 

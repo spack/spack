@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,14 +37,22 @@ class Mpifileutils(AutotoolsPackage):
 
     homepage = "https://github.com/hpc/mpifileutils"
     url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
+    git      = "https://github.com/hpc/mpifileutils.git"
 
+    version('develop', branch='master')
+    version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 
     depends_on('mpi')
     depends_on('libcircle')
     depends_on('lwgrp')
-    depends_on('dtcmp')
+
+    # need precise version of dtcmp, since DTCMP_Segmented_exscan added
+    # in v1.0.3 but renamed in v1.1.0 and later
+    depends_on('dtcmp@1.0.3',  when='@:0.7')
+    depends_on('dtcmp@1.1.0:', when='@0.8:')
+
     depends_on('libarchive')
 
     variant('xattr', default=True,

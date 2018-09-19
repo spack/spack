@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import os.path
 
 
@@ -35,10 +34,17 @@ class Tinyxml(CMakePackage):
 
     version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764')
 
+    variant('shared', default=True, description='Build a shared library')
+
     def url_for_version(self, version):
         url = "https://sourceforge.net/projects/tinyxml/files/tinyxml/{0}/tinyxml_{1}.tar.gz"
         return url.format(version.dotted, version.underscored)
 
     def patch(self):
-        copyfile(join_path(os.path.dirname(__file__),
-                           "CMakeLists.txt"), "CMakeLists.txt")
+        copy(join_path(os.path.dirname(__file__),
+             "CMakeLists.txt"), "CMakeLists.txt")
+
+    def cmake_args(self):
+        spec = self.spec
+        return [
+            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,9 @@ class RAmpliqueso(RPackage):
     amplicon sequencing panels, such as AmpliSeq."""
 
     homepage = "https://www.bioconductor.org/packages/ampliQueso/"
-    url      = "https://git.bioconductor.org/packages/ampliQueso"
+    git      = "https://git.bioconductor.org/packages/ampliQueso.git"
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/ampliQueso', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
+    version('1.14.0', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
 
     depends_on('r@3.4.0:3.4.9', when='@1.14.0')
     depends_on('r-samr', type=('build', 'run'))

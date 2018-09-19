@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 import glob
 import os
-import shutil
+import sys
 
 
 class Alglib(MakefilePackage):
@@ -47,7 +47,7 @@ class Alglib(MakefilePackage):
         make_file_src = join_path(os.path.dirname(self.module.__file__),
                                   'Makefile')
         make_file = join_path(self.stage.source_path, 'src', 'Makefile')
-        shutil.copy(make_file_src, make_file)
+        copy(make_file_src, make_file)
         filter_file(r'so', dso_suffix, make_file)
 
     def install(self, spec, prefix):
@@ -59,3 +59,9 @@ class Alglib(MakefilePackage):
             headers = glob.glob('*.h')
             for h in headers:
                 install(h, prefix.include)
+
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared libraries are not installed correctly on Darwin:
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.spec.prefix.lib)

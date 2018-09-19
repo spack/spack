@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,9 +29,9 @@ class Tabix(MakefilePackage):
     """Generic indexer for TAB-delimited genome position files"""
 
     homepage = "https://github.com/samtools/tabix"
-    url      = "https://github.com/samtools/tabix"
+    git      = "https://github.com/samtools/tabix.git"
 
-    version('2013-12-16', git='https://github.com/samtools/tabix.git', commit='1ae158ac79b459f5feeed7490c67519b14ce9f35')
+    version('2013-12-16', commit='1ae158ac79b459f5feeed7490c67519b14ce9f35')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))

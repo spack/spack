@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,10 +32,10 @@ class Clamr(CMakePackage):
     """
 
     homepage = "https://github.com/lanl/CLAMR"
-    url      = "https://github.com/lanl/CLAMR.git"
+    git      = "https://github.com/lanl/CLAMR.git"
     tags     = ['proxy-app']
 
-    version('master', git='https://github.com/lanl/CLAMR.git')
+    version('master')
 
     variant(
         'graphics', default='opengl',
@@ -46,6 +46,7 @@ class Clamr(CMakePackage):
         values=('single', 'mixed', 'full'),
         description='single, mixed, or full double precision values')
 
+    depends_on('cmake@3.1:')
     depends_on('mpi')
     depends_on('mpe', when='graphics=mpe')
 

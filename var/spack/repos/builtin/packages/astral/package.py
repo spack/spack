@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,6 +36,7 @@ class Astral(Package):
     version('4.10.7', '38c81020570254e3f5c75d6c3c27fc6d')
 
     depends_on('java', type=('build', 'run'))
+    depends_on('zip', type='build')
 
     phases = ['build', 'install']
 

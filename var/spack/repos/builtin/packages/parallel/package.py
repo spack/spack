@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,7 +32,7 @@ class Parallel(AutotoolsPackage):
     """
 
     homepage = "http://www.gnu.org/software/parallel/"
-    url      = "http://ftp.gnu.org/gnu/parallel/parallel-20170122.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/parallel/parallel-20170122.tar.bz2"
 
     version('20170322', '4fe1b8d2e3974d26c77f0b514988214d')
     version('20170122', 'c9f0ec01463dc75dbbf292fd8be5f1eb')

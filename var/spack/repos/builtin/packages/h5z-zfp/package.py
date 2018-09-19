@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,14 +30,16 @@ class H5zZfp(MakefilePackage):
        HDF5 library using ZFP compression."""
 
     homepage = "http://h5z-zfp.readthedocs.io/en/latest"
-    url      = "https://github.com/LLNL/H5Z-ZFP"
+    git      = "https://github.com/LLNL/H5Z-ZFP.git"
 
-    version('develop', git='https://github.com/LLNL/H5Z-ZFP.git', tag='master')
-    version('0.7.0', git='https://github.com/LLNL/H5Z-ZFP.git', commit='58ac811')
+    version('develop', tag='master')
+    version('0.8.0', commit='af165c4')
+    version('0.7.0', commit='58ac811')
 
     variant('fortran', default=True, description='Enable Fortran support')
 
-    depends_on('hdf5')
+    depends_on('hdf5+fortran', when='+fortran')
+    depends_on('hdf5',         when='~fortran')
     depends_on('zfp bsws=8')
 
     @property

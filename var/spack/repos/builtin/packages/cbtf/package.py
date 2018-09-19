@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -51,22 +51,39 @@ class Cbtf(CMakePackage):
 
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
+    git      = "https://github.com/OpenSpeedShop/cbtf.git"
 
-    # Use when the git repository is available
-    version('1.8', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf.git')
+    version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
+    version('1.9.1.1', branch='1.9.1.1')
+    version('1.9.1.0', branch='1.9.1.0')
+
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
+
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("xerces-c@3.1.1:")
-    # Work around for spack libxml2 package bug, take off python when fixed
-    depends_on("libxml2+python")
+
+    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
+    depends_on("boost@1.50.0:", when='@develop')
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
+
+    # For Xerces-C
+    depends_on("xerces-c@3.1.1:", when='@develop')
+    depends_on("xerces-c@3.1.4:", when='@1.9.1.0:9999')
+
+    # For XML2
+    depends_on("libxml2")
 
     parallel = False
 
@@ -83,7 +100,8 @@ class Cbtf(CMakePackage):
 
         compile_flags = "-O2 -g"
 
-        if '+runtime' in spec:
+        if spec.satisfies('+runtime'):
+
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME

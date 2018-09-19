@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -91,7 +91,7 @@ class TestTengineEnvironment(object):
     def test_template_retrieval(self):
         """Tests the template retrieval mechanism hooked into config files"""
         # Check the directories are correct
-        template_dirs = spack.config.get_config('config')['template_dirs']
+        template_dirs = spack.config.get('config:template_dirs')
         template_dirs = [canonicalize_path(x) for x in template_dirs]
         assert len(template_dirs) == 3
 

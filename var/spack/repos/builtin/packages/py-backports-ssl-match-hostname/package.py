@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,5 +30,7 @@ class PyBackportsSslMatchHostname(PythonPackage):
 
     homepage = "https://pypi.python.org/pypi/backports.ssl_match_hostname"
     url      = "https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
+
+    py_namespace = 'backports'
 
     version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')

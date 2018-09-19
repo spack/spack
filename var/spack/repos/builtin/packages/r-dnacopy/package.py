@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,6 @@ class RDnacopy(RPackage):
     with abnormal copy number."""
 
     homepage = "https://www.bioconductor.org/packages/DNAcopy/"
-    url      = "https://git.bioconductor.org/packages/DNAcopy"
+    git      = "https://git.bioconductor.org/packages/DNAcopy.git"
 
-    version('1.50.1', git='https://git.bioconductor.org/packages/DNAcopy', commit='a20153029e28c009df813dbaf13d9f519fafa4e8')
+    version('1.50.1', commit='a20153029e28c009df813dbaf13d9f519fafa4e8')

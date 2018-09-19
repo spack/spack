@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,4 +38,4 @@ class RSom(RPackage):
     version('0.3-3', 'd4ac444be24f71d08b99974c2f4b96e5')
     version('0.3-2', '4ce28f46df68fbb73905711ba2416fac')
 
-    depends_on('r@3.4.0:3.4.9')
+    depends_on('r@2.10:', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,5 +33,7 @@ class GmapGsnap(AutotoolsPackage):
     homepage = "http://research-pub.gene.com/gmap/"
     url      = "http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-06-16.tar.gz"
 
+    version('2018-03-25', 'f08e65c1e4d9574a3eb7f15f8ca6af16')
+    version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
     version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
     version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')

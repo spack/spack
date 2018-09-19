@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,11 +29,10 @@ class Tioga(CMakePackage):
     """Topology Independent Overset Grid Assembly (TIOGA)"""
 
     homepage = "https://github.com/jsitaraman/tioga"
-    url      = "https://github.com/jsitaraman/tioga.git"
+    git      = "https://github.com/jsitaraman/tioga.git"
 
     # The master branch doesn't support CMake
-    version('develop', git="https://github.com/jsitaraman/tioga.git",
-            branch='nalu-api')
+    version('develop', branch='nalu-api')
 
     variant('shared', default=False,
             description="Enable building shared libraries")

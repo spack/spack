@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,6 +24,8 @@
 ##############################################################################
 import re
 import pytest
+
+import spack.repo
 from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
 from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
@@ -44,8 +46,9 @@ def test_name_parsed_correctly():
     assert name_parsed_correctly(MyPackage('r-devtools',     []), 'devtools')
     assert name_parsed_correctly(MyPackage('py-numpy',       []), 'numpy')
     assert name_parsed_correctly(MyPackage('octave-splines', []), 'splines')
-    assert name_parsed_correctly(MyPackage('imagemagick',    []), 'ImageMagick')  # noqa
     assert name_parsed_correctly(MyPackage('th-data',        []), 'TH.data')
+    assert name_parsed_correctly(
+        MyPackage('imagemagick',    []), 'ImageMagick')
 
     # Expected False
     assert not name_parsed_correctly(MyPackage('',            []), 'hdf5')
@@ -53,7 +56,8 @@ def test_name_parsed_correctly():
     assert not name_parsed_correctly(MyPackage('yaml-cpp',    []), 'yamlcpp')
     assert not name_parsed_correctly(MyPackage('yamlcpp',     []), 'yaml-cpp')
     assert not name_parsed_correctly(MyPackage('r-py-parser', []), 'parser')
-    assert not name_parsed_correctly(MyPackage('oce',         []), 'oce-0.18.0')   # noqa
+    assert not name_parsed_correctly(
+        MyPackage('oce',         []), 'oce-0.18.0')
 
 
 def test_version_parsed_correctly():
@@ -70,7 +74,8 @@ def test_version_parsed_correctly():
     assert not version_parsed_correctly(MyPackage('', ['1.2.3']),  '1.2.4')
     assert not version_parsed_correctly(MyPackage('', ['3.4a']),   '3.4')
     assert not version_parsed_correctly(MyPackage('', ['3.4']),    '3.4b')
-    assert not version_parsed_correctly(MyPackage('', ['0.18.0']), 'oce-0.18.0')   # noqa
+    assert not version_parsed_correctly(
+        MyPackage('', ['0.18.0']), 'oce-0.18.0')
 
 
 def test_url_parse():
@@ -83,6 +88,7 @@ def test_url_with_no_version_fails():
         url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
 
 
+@pytest.mark.network
 def test_url_list():
     out = url('list')
     total_urls = len(out.split('\n'))
@@ -112,14 +118,17 @@ def test_url_list():
     assert 0 < correct_version_urls < total_urls
 
 
+@pytest.mark.network
 def test_url_summary():
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work
     (total_urls, correct_names, correct_versions,
      name_count_dict, version_count_dict) = url_summary(None)
 
-    assert 0 < correct_names    <= sum(name_count_dict.values())    <= total_urls  # noqa
-    assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa
+    assert (0 < correct_names <=
+            sum(name_count_dict.values()) <= total_urls)
+    assert (0 < correct_versions <=
+            sum(version_count_dict.values()) <= total_urls)
 
     # make sure it agrees with the actual command.
     out = url('summary')
@@ -134,3 +143,11 @@ def test_url_summary():
     out_correct_versions = int(
         re.search(r'Versions correctly parsed:\s*(\d+)', out).group(1))
     assert out_correct_versions == correct_versions
+
+
+def test_url_stats(capfd):
+    with capfd.disabled():
+        output = url('stats')
+        npkgs = '%d packages' % len(spack.repo.all_package_names())
+        assert npkgs in output
+        assert 'total versions' in output

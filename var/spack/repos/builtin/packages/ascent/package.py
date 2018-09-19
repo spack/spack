@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -47,14 +47,11 @@ class Ascent(Package):
     simulations."""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
-    url      = "https://github.com/Alpine-DAV/ascent"
+    git      = "https://github.com/Alpine-DAV/ascent.git"
 
     maintainers = ['cyrush']
 
-    version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            branch='develop',
-            submodules=True)
+    version('develop', branch='develop', submodules=True)
 
     ###########################################################################
     # package variants
@@ -97,9 +94,7 @@ class Ascent(Package):
     # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared")
     extends("python", when="+python")
-    # TODO: blas and lapack are disabled due to build
-    # issues Cyrus experienced on OSX 10.11.6
-    depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
+    depends_on("py-numpy", when="+python", type=('build', 'run'))
 
     #######################
     # MPI
@@ -298,8 +293,14 @@ class Ascent(Package):
                                         spec['mpi'].mpifc))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
-                cfg.write(cmake_cache_entry("MPIEXEC",
-                                            mpiexe_bin))
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 

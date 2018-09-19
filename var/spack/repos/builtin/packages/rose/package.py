@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,11 +35,11 @@ class Rose(Package):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
+    url      = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
+    git      = "https://github.com/rose-compiler/rose.git"
 
+    version('master', branch='master')
     version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
-    version('master', branch='master',
-            git='https://github.com/rose-compiler/rose.git')
 
     patch('add_spack_compiler_recognition.patch')
 

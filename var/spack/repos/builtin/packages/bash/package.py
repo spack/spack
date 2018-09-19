@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Bash(AutotoolsPackage):
     """The GNU Project's Bourne Again SHell."""
 
     homepage = "https://www.gnu.org/software/bash/"
-    url      = "https://ftp.gnu.org/gnu/bash/bash-4.4.tar.gz"
+    url      = "https://ftpmirror.gnu.org/bash/bash-4.4.tar.gz"
 
     version('4.4.12', '7c112970cbdcadfc331e10eeb5f6aa41')
     version('4.4', '148888a7c95ac23705559b6f477dfe25')

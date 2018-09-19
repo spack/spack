@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,11 +33,9 @@ class Mothur(MakefilePackage):
     homepage = "https://github.com/mothur/mothur"
     url      = "https://github.com/mothur/mothur/archive/v1.39.5.tar.gz"
 
+    version('1.40.5', 'd57847849fdb961c3f66c9b9fdf3057b')
     version('1.39.5', '1f826ea4420e6822fc0db002c5940b92')
 
-    variant('mpi', default=True, description='Enable MPI parallel support')
-
-    depends_on('mpi', when='+mpi')
     depends_on('boost')
     depends_on('readline')
 

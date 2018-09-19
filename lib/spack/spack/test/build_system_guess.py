@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -45,6 +45,7 @@ import spack.stage
         ('GNUmakefile',    'makefile'),
         ('makefile',       'makefile'),
         ('Makefile',       'makefile'),
+        ('meson.build',    'meson'),
         ('foobar',         'generic')
     ]
 )

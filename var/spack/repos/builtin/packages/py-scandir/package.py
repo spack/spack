@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,9 +29,11 @@ class PyScandir(PythonPackage):
     """scandir, a better directory iterator and faster os.walk()."""
 
     homepage = "https://github.com/benhoyt/scandir"
-    url      = "https://pypi.io/packages/source/s/scandir/scandir-1.6.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scandir/scandir-1.9.0.tar.gz"
 
-    version('1.6', '0180ddb97c96cbb2d4f25d2ae11c64ac')
+    import_modules = ['scandir']
 
-    depends_on('python@2.7:')
+    version('1.9.0', '506c4cc5f38c00b301642a9cb0433910')
+    version('1.6',   '0180ddb97c96cbb2d4f25d2ae11c64ac')
+
     depends_on('py-setuptools', type=('build'))

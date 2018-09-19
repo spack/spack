@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,6 +30,7 @@ class RRda(RPackage):
     classification purpose in high dimensional data."""
 
     homepage = "https://cran.r-project.org/web/packages/rda/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rda_1.0.2-2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rda_1.0.2-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rda"
+
     version('1.0.2-1', '78060c5e054a63a2df4ae4002d7247bc')

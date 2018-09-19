@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,10 +31,9 @@ class ROrganismdbi(RPackage):
        fact that each of these packages implements a select methods."""
 
     homepage = "https://bioconductor.org/packages/OrganismDbi/"
-    url      = "https://git.bioconductor.org/packages/OrganismDbi"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/OrganismDbi.git"
 
-    version('1.18.1', git='https://git.bioconductor.org/packages/OrganismDbi', commit='ba2d1237256805e935d9534a0c6f1ded07b42e95')
+    version('1.18.1', commit='ba2d1237256805e935d9534a0c6f1ded07b42e95')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))

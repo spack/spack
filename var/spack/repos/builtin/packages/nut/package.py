@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,16 +32,14 @@ class Nut(CMakePackage):
     and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
-    url      = "https://github.com/lanl/NuT.git"
-    tags     = ['proxy-app']
+    git      = "https://github.com/lanl/NuT.git"
 
-    version(
-        'serial', git='https://github.com/lanl/NuT.git',
-        branch='master')
-    version(
-        'openmp', git='https://github.com/lanl/NuT.git',
-        branch='openmp')
+    tags = ['proxy-app']
 
+    version('serial', branch='master')
+    version('openmp', branch='openmp')
+
+    depends_on('cmake@3.0:')
     depends_on('random123')
 
     conflicts('%intel', when='@serial')

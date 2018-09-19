@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,9 +33,9 @@ class Satsuma2(CMakePackage):
     """
 
     homepage = "https://github.com/bioinfologics/satsuma2"
-    url      = "https://github.com/bioinfologics/satsuma2"
+    git      = "https://github.com/bioinfologics/satsuma2.git"
 
-    version('2016-11-22', git='https://github.com/bioinfologics/satsuma2.git', commit='da694aeecf352e344b790bea4a7aaa529f5b69e6')
+    version('2016-11-22', commit='da694aeecf352e344b790bea4a7aaa529f5b69e6')
 
     def install(self, spec, prefix):
         install_tree(join_path('spack-build', 'bin'), prefix.bin)

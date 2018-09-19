@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,15 +27,13 @@ from spack import *
 
 
 class Brigand(Package):
-    """
-    Brigand Meta-programming library
-    """
+    """Brigand Meta-programming library"""
 
     homepage = "https://github.com/edouarda/brigand"
     url      = "https://github.com/edouarda/brigand/archive/1.0.0.tar.gz"
+    git      = "https://github.com/edouarda/brigand.git"
 
-    version('master', git='https://github.com/edouarda/brigand.git',
-            branch='master')
+    version('master', branch='master')
     version('1.3.0', '0bea9713b3b712229aed289e218d577b')
     version('1.2.0', '32c0f73e7e666d33ff123334f5c9c92f')
     version('1.1.0', '073b7c8e2cbda3a81bbeb1ea5b9ca0eb')

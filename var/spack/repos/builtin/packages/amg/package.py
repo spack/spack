@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,11 +32,12 @@ class Amg(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://codesign.llnl.gov/amg2013.php"
-    git      = "https://github.com/LLNL/AMG"
+    homepage = "https://computation.llnl.gov/projects/co-design/amg2013"
+    git      = "https://github.com/LLNL/AMG.git"
 
-    version('1.0', git=git, tag='1.0')
-    version('develop', git=git, branch='master')
+    version('develop', branch='master')
+    version('1.1', tag='1.1')
+    version('1.0', tag='1.0')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('optflags', default=False, description='Additional optimizations')

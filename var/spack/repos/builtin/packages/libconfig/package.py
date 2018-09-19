@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Libconfig(AutotoolsPackage):
     """C/C++ Configuration File Library"""
 
     homepage = "http://www.hyperrealm.com/libconfig/"
-    url      = "https://github.com/hyperrealm/libconfig/archive/v1.6.tar.gz"
+    url      = "https://github.com/hyperrealm/libconfig/archive/v1.5.tar.gz"
 
     force_autoreconf = True
     # there is currently a build error with version 1.6, see:

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,8 @@ class PyPygtk(AutotoolsPackage):
     version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
 
     extends('python')
+
+    depends_on('pkgconfig', type=('build'))
     depends_on("libffi")
     depends_on('cairo')
     depends_on('glib')

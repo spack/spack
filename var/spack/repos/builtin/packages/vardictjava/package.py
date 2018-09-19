@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ class Vardictjava(Package):
     url      = "https://github.com/AstraZeneca-NGS/VarDictJava/releases/download/v1.5.1/VarDict-1.5.1.tar"
 
     version('1.5.1', '8c0387bcc1f7dc696b04e926c48b27e6')
+    version('1.4.4', '6b2d7e1e5502b875760fc9938a0fe5e0')
 
     depends_on('java@8:', type='run')
 

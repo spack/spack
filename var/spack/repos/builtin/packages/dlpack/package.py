@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,8 +30,9 @@ class Dlpack(Package):
     in deep learning systems."""
 
     homepage = "https://github.com/sjtuhpcc/dlpack"
+    git      = "https://github.com/dmlc/dlpack.git"
 
-    version('master', git='https://github.com/dmlc/dlpack.git', branch='master')
+    version('master', branch='master')
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)

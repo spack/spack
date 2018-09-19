@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,9 +33,9 @@ class Pidx(CMakePackage):
     """
 
     homepage = "http://www.cedmav.com/pidx"
+    git      = "https://github.com/sci-visus/PIDX.git"
 
-    version('1.0', git='https://github.com/sci-visus/PIDX.git',
-            commit='6afa1cf71d1c41263296dc049c8fabaf73c296da')
+    version('1.0', commit='6afa1cf71d1c41263296dc049c8fabaf73c296da')
 
     depends_on('cmake@2.8.4:', type='build')
     depends_on('mpi')

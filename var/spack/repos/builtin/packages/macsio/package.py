@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,16 +26,16 @@ from spack import *
 
 
 class Macsio(CMakePackage):
-    """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application
-    """
+    """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application."""
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://llnl.github.io/MACSio"
-    url = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
+    url      = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
+    git      = "https://github.com/LLNL/MACSio.git"
 
+    version('develop', branch='master')
     version('1.0', '90e8e00ea84af2a47bee387ad331dbde')
-    version('develop', git='https://github.com/LLNL/MACSio.git',
-            branch='master')
 
     variant('mpi', default=True, description="Build MPI plugin")
     variant('silo', default=True, description="Build with SILO plugin")
@@ -52,7 +52,7 @@ class Macsio(CMakePackage):
     depends_on('json-cwx')
     depends_on('mpi', when="+mpi")
     depends_on('silo', when="+silo")
-    depends_on('hdf5', when="+hdf5")
+    depends_on('hdf5+hl', when="+hdf5")
     # depends_on('hdf5+szip', when="+szip")
     depends_on('exodusii', when="+exodus")
     # pdb is packaged with silo

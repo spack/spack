@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,12 +30,10 @@ class Phasta(CMakePackage):
        (PHASTA) of compressible and incompressible Navier Stokes equations."""
 
     homepage = "https://www.scorec.rpi.edu/software.php"
-    url      = "https://github.com/PHASTA/phasta.git"
+    git      = "https://github.com/PHASTA/phasta.git"
 
-    version('0.0.1', git='https://github.com/PHASTA/phasta.git',
-        commit='11f431f2d1a53a529dab4b0f079ab8aab7ca1109')
-    version('develop', git='https://github.com/PHASTA/phasta.git',
-        branch='master')
+    version('develop', branch='master')
+    version('0.0.1', commit='11f431f2d1a53a529dab4b0f079ab8aab7ca1109')
 
     depends_on('mpi')
 

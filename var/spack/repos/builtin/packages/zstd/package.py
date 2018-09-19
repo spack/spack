@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,6 +35,12 @@ class Zstd(MakefilePackage):
 
     version('1.3.0', '888660a850e33c2dcc7c4f9d0b04d347')
     version('1.1.2', '4c57a080d194bdaac83f2d3251fc7ffc')
+
+    variant('pic', default=True, description='Build position independent code')
+
+    def setup_environment(self, spack_env, run_env):
+        if '+pic' in self.spec:
+            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
 
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix))

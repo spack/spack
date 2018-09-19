@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -46,4 +46,5 @@ class RStanheaders(RPackage):
     url      = "https://cran.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/StanHeaders"
 
+    version('2.17.1', '11d8770277dd18e563852852633c6c25')
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')

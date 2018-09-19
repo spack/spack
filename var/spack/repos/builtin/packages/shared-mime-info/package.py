@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class SharedMimeInfo(AutotoolsPackage):
     homepage = "https://freedesktop.org/wiki/Software/shared-mime-info"
     url      = "http://freedesktop.org/~hadess/shared-mime-info-1.8.tar.xz"
 
+    version('1.9', '45103889b91242850aa47f09325e798b')
     version('1.8', 'f6dcadce764605552fc956563efa058c')
 
     parallel = False

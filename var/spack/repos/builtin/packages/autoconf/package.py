@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
 
     homepage = 'https://www.gnu.org/software/autoconf/'
-    url = 'http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
+    url      = 'https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz'
 
     version('2.69', '82d05e03b93e45f5a39b828dc9c6c29b')
     version('2.62', '6c1f3b3734999035d77da5024aab4fbd')

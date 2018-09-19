@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -49,8 +49,7 @@ class PyRequests(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest@2.8.0:',        type='test')
-    # depends_on('py-pytest-cov',           type='test')
-    # depends_on('py-pytest-httpbin@0.0.7', type='test')
-    # depends_on('py-pytest-mock',          type='test')
+    depends_on('py-pytest@2.8.0:',        type='test')
+    depends_on('py-pytest-cov',           type='test')
+    depends_on('py-pytest-httpbin@0.0.7', type='test')
+    depends_on('py-pytest-mock',          type='test')

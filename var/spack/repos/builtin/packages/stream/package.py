@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,9 @@ class Stream(MakefilePackage):
     computation rate for simple vector kernels."""
 
     homepage = "https://www.cs.virginia.edu/stream/ref.html"
+    git      = "https://github.com/jeffhammond/STREAM.git"
 
-    version('5.10', git='https://github.com/jeffhammond/STREAM.git')
+    version('5.10')
 
     variant('openmp', default=False, description='Build with OpenMP support')
 

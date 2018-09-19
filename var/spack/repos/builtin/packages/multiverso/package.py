@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,11 +31,10 @@ class Multiverso(CMakePackage):
 
     homepage = "https://github.com/Microsoft/Multiverso"
     url      = "https://github.com/Microsoft/Multiverso/archive/v0.2.tar.gz"
+    git      = "https://github.com/Microsoft/Multiverso.git"
 
-    version('master', git='https://github.com/Microsoft/Multiverso.git',
-            branch='master')
-    version('143187', git='https://github.com/Microsoft/Multiverso.git',
-            commit='143187575d1cfa410100037b8aea2e767e0af637')
+    version('master', branch='master')
+    version('143187', commit='143187575d1cfa410100037b8aea2e767e0af637')
     version('0.2', '483ca7524fea14a311389e421f2bc098')
 
     depends_on('mpi')

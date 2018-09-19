@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,9 @@ class RRbgl(RPackage):
     algorithms contained in the BOOST library."""
 
     homepage = "https://www.bioconductor.org/packages/RBGL/"
-    url      = "https://git.bioconductor.org/packages/RBGL"
+    git      = "https://git.bioconductor.org/packages/RBGL.git"
 
-    version('1.52.0', git='https://git.bioconductor.org/packages/RBGL', commit='93e8fcfafec8f1cd5638fe30dc0f9506d15b49c0')
+    version('1.52.0', commit='93e8fcfafec8f1cd5638fe30dc0f9506d15b49c0')
 
     depends_on('r@3.4.0:3.4.9', when='@1.52.0')
     depends_on('r-graph', type=('build', 'run'))

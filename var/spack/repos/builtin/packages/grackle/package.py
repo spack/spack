@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os.path
-import shutil
 import inspect
 
 from spack import *
@@ -35,12 +34,15 @@ class Grackle(Package):
     generalized and trimmed down version of the chemistry network of the Enzo
     simulation code
     """
-    homepage = 'http://grackle.readthedocs.io/en/grackle-3.0/'
-    url = 'https://bitbucket.org/grackle/grackle/get/grackle-3.0.tar.bz2'
+    homepage = 'http://grackle.readthedocs.io/en/grackle-3.1/'
+    url = 'https://bitbucket.org/grackle/grackle/get/grackle-3.1.tar.bz2'
 
+    version('3.1', 'cee7799dc505010e2e875950561bbbe1')
     version('3.0', 'dc85e664da7e70b65b3ef7164477a959')
     version('2.2', 'ec49ed1db5a42db21f478285150c2ba3')
     version('2.0.1', 'a9624ad13a60c592c1a0a4ea8e1ae86d')
+
+    variant('float', default=False, description='Build with float')
 
     depends_on('libtool', when='@2.2')
 
@@ -75,7 +77,7 @@ class Grackle(Package):
             'clib',
             'Make.mach.{0}'.format(grackle_architecture)
         )
-        shutil.copy(template, makefile)
+        copy(template, makefile)
         for key, value in substitutions.items():
             filter_file(key, value, makefile)
 
@@ -84,6 +86,8 @@ class Grackle(Package):
             make('clean')
             make('machine-{0}'.format(grackle_architecture))
             make('opt-high')
+            if spec.satisfies("+float"):
+                make('precision-32')
             make('show-config')
             make()
             mkdirp(prefix.lib)

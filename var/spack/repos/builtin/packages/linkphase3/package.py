@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,10 +29,9 @@ class Linkphase3(Package):
     """Haplotype reconstruction in pedigreed populations."""
 
     homepage = "https://github.com/tdruet/LINKPHASE3"
-    url      = "https://github.com/tdruet/LINKPHASE3"
+    git      = "https://github.com/tdruet/LINKPHASE3.git"
 
-    version('2017-06-14', commit='559913593fc818bb1adb29796a548cf5bf323827',
-            git='https://github.com/tdruet/LINKPHASE3.git')
+    version('2017-06-14', commit='559913593fc818bb1adb29796a548cf5bf323827')
 
     def install(self, spec, prefix):
         fortran = Executable(self.compiler.fc)

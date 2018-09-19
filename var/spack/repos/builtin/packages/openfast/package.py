@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,16 +29,12 @@ class Openfast(CMakePackage):
     """Wind turbine simulation package from NREL"""
 
     homepage = "http://openfast.readthedocs.io/en/latest/"
-    url      = "https://github.com/OpenFAST/openfast.git"
+    git      = "https://github.com/OpenFAST/openfast.git"
 
     maintainers = ['jrood-nrel']
 
-    version('develop',
-            git='https://github.com/OpenFAST/openfast.git',
-            branch='dev')
-    version('master',
-            git='https://github.com/OpenFAST/openfast.git',
-            branch='master')
+    version('develop', branch='dev')
+    version('master', branch='master')
 
     variant('shared', default=False,
             description="Build shared libraries")

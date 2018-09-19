@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,8 +30,9 @@ class Isl(AutotoolsPackage):
     sets and relations of integer points bounded by affine constraints."""
 
     homepage = "http://isl.gforge.inria.fr"
-    url      = "http://isl.gforge.inria.fr/isl-0.18.tar.bz2"
+    url      = "http://isl.gforge.inria.fr/isl-0.19.tar.bz2"
 
+    version('0.19', '7850d46a96e5ea31e34913190895e154')
     version('0.18', '11436d6b205e516635b666090b94ab32')
     version('0.14', 'acd347243fca5609e3df37dba47fd0bb')
 

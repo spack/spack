@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,10 +34,9 @@ class RYapsa(RPackage):
        catalogue) are provided."""
 
     homepage = "http://bioconductor.org/packages/YAPSA/"
-    url      = "https://git.bioconductor.org/packages/YAPSA"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/YAPSA.git"
 
-    version('1.2.0', git='https://git.bioconductor.org/packages/YAPSA', commit='320809b69e470e30a777a383f8341f93064ec24d')
+    version('1.2.0', commit='320809b69e470e30a777a383f8341f93064ec24d')
 
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))

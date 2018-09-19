@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,9 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -41,7 +40,7 @@ class Intel(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ifort']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'intel/icc',
                   'cxx': 'intel/icpc',
                   'f77': 'intel/ifort',
@@ -60,7 +59,11 @@ class Intel(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('11.1'):
-            tty.die("Only intel 11.1 and above support c++11.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          "< 11.1")
+
         elif self.version < ver('13'):
             return "-std=c++0x"
         else:
@@ -70,7 +73,10 @@ class Intel(Compiler):
     def cxx14_flag(self):
         # Adapted from CMake's Intel-CXX rules.
         if self.version < ver('15'):
-            tty.die("Only intel 15.0 and above support c++14.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++14 standard",
+                                          "cxx14_flag",
+                                          "< 15")
         elif self.version < ver('15.0.2'):
             return "-std=c++1y"
         else:
@@ -82,7 +88,7 @@ class Intel(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        """The '--version' option seems to be the most consistent one
+        """The ``--version`` option seems to be the most consistent one
         for intel compilers.  Output looks like this::
 
             icpc (ICC) 12.1.5 20120612

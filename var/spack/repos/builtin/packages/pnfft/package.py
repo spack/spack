@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,6 +35,7 @@ class Pnfft(AutotoolsPackage):
     version('1.0.7-alpha', '5caa7f214eed99de2281043ca2367e9e')
 
     depends_on('pfft')
+    depends_on('gsl')
 
     def configure(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,14 +30,11 @@ class XcbUtilXrm(AutotoolsPackage):
     for the X resource manager."""
 
     homepage = "https://github.com/Airblader/xcb-util-xrm"
-    url      = "https://github.com/Airblader/xcb-util-xrm/archive/v1.2.tar.gz"
+    git      = "https://github.com/Airblader/xcb-util-xrm.git"
 
     # This GitHub project includes some git submodules, which must be fetched
     # in order to build it.
-    version('1.2',
-            git='https://github.com/Airblader/xcb-util-xrm',
-            tag='v1.2',
-            submodules=True)
+    version('1.2', tag='v1.2', submodules=True)
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,10 +29,11 @@ class PyPackaging(PythonPackage):
     """Core utilities for Python packages."""
 
     homepage = "https://github.com/pypa/packaging"
-    url      = "https://pypi.io/packages/source/p/packaging/packaging-16.8.tar.gz"
+    url      = "https://pypi.io/packages/source/p/packaging/packaging-17.1.tar.gz"
 
     import_modules = ['packaging']
 
+    version('17.1', '8baf8241d1b6b0a5fae9b00f359976a8')
     version('16.8', '53895cdca04ecff80b54128e475b5d3b')
 
     # Not needed for the installation, but used at runtime

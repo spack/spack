@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,10 +30,10 @@ class HpctoolkitExternals(Package):
     HpctoolkitExternals package provides all these prerequisites."""
 
     homepage = "http://hpctoolkit.org"
-    url = "https://github.com/HPCToolkit/hpctoolkit-externals"
+    git      = "https://github.com/HPCToolkit/hpctoolkit-externals.git"
 
-    version('2017.06', git=url, tag='release-2017.06')
-    version('master', git=url)
+    version('master')
+    version('2017.06', tag='release-2017.06')
 
     parallel = False
 

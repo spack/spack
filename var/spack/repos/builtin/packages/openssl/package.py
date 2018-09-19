@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,6 +27,8 @@ import llnl.util.tty as tty
 from spack import *
 import spack.architecture
 
+import os
+
 
 class Openssl(Package):
     """OpenSSL is an open source project that provides a robust,
@@ -46,7 +48,8 @@ class Openssl(Package):
     version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
     # Note: Version 1.0.2 is the "long-term support" version that will
     # remain supported until 2019.
-    version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4', preferred=True)
+    version('1.0.2o', '44279b8557c3247cbe324e2322ecd114', preferred=True)
+    version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4')
     version('1.0.2m', '10e9e37f492094b9ef296f68f24a7666')
     version('1.0.2k', 'f965fc0bf01bf882b31314b61391ae65')
     version('1.0.2j', '96322138f0b69e61b7212bc53d5e912b')
@@ -61,14 +64,17 @@ class Openssl(Package):
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
+    variant('systemcerts', default=True, description='Use system certificates')
+
     depends_on('zlib')
 
-    # TODO: 'make test' requires Perl module Test::More version 0.96
-    # TODO: uncomment when test dependency types are supported.
-    # TODO: This is commented in the meantime to avoid dependnecy bloat.
-    # depends_on('perl@5.14.0:', type='build', when='+tests')
+    depends_on('perl@5.14.0:', type='test')
 
     parallel = False
+
+    @property
+    def libs(self):
+        return find_libraries(['libssl', 'libcrypto'], root=self.prefix.lib)
 
     def handle_fetch_error(self, error):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
@@ -107,7 +113,37 @@ class Openssl(Package):
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
-        # TODO: add this back when we have a 'test' dependency type. See above.
-        # if self.run_tests:
-        #     make('test')            # 'VERBOSE=1'
+        if self.run_tests:
+            make('test')            # 'VERBOSE=1'
         make('install')
+
+    @run_after('install')
+    def link_system_certs(self):
+        if '+systemcerts' not in self.spec:
+            return
+
+        system_dirs = [
+            # CentOS, Fedora, RHEL
+            '/etc/pki/tls',
+            # Ubuntu
+            '/usr/lib/ssl'
+        ]
+
+        pkg_dir = join_path(self.prefix, 'etc', 'openssl')
+
+        for directory in system_dirs:
+            sys_cert = join_path(directory, 'cert.pem')
+            pkg_cert = join_path(pkg_dir, 'cert.pem')
+            # If a bundle exists, use it. This is the preferred way on Fedora,
+            # where the certs directory does not work.
+            if os.path.exists(sys_cert) and not os.path.exists(pkg_cert):
+                os.symlink(sys_cert, pkg_cert)
+
+            sys_certs = join_path(directory, 'certs')
+            pkg_certs = join_path(pkg_dir, 'certs')
+            # If the certs directory exists, symlink it into the package.
+            # We symlink the whole directory instead of all files because
+            # the directory contents might change without Spack noticing.
+            if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
+                os.rmdir(pkg_certs)
+                os.symlink(sys_certs, pkg_certs)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,7 +28,7 @@ from itertools import product
 from spack.util.executable import which
 
 # Supported archive extensions.
-PRE_EXTS = ["tar"]
+PRE_EXTS = ["tar", "TAR"]
 EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz

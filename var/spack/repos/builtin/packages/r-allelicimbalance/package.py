@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,9 @@ class RAllelicimbalance(RPackage):
     investigation using RNA-seq data."""
 
     homepage = "http://bioconductor.org/packages/AllelicImbalance/"
-    url      = "https://git.bioconductor.org/packages/AllelicImbalance"
+    git      = "https://git.bioconductor.org/packages/AllelicImbalance.git"
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/AllelicImbalance', commit='35958534945819baafde0e13d1eb4d05a514142c')
+    version('1.14.0', commit='35958534945819baafde0e13d1eb4d05a514142c')
 
     depends_on('r@3.4.0:3.4.9', when='@1.14.0')
     depends_on('r-genomicranges', type=('build', 'run'))

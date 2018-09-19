@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,6 @@
 from spack import *
 from spack.environment import EnvironmentModifications
 import os
-import distutils.dir_util
 
 
 class Fsl(Package):
@@ -68,7 +67,7 @@ class Fsl(Package):
         build = Executable('./build')
         build()
 
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         if not self.stage.source_path:

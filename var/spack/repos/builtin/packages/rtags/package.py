@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,9 +29,10 @@ class Rtags(CMakePackage):
     """RTags is a client/server application that indexes C/C++ code"""
 
     homepage = "https://github.com/Andersbakken/rtags/"
-    url      = "https://andersbakken.github.io/rtags-releases/rtags-2.12.tar.gz"
+    url      = "https://andersbakken.github.io/rtags-releases/rtags-2.17.tar.gz"
 
-    version('2.12', '84988aaff27915a79d4b4b57299f9a51')
+    version('2.17', '95b24d7729678645a027d83be114d624')
+    # version('2.12', '84988aaff27915a79d4b4b57299f9a51')  # no available
 
     depends_on("llvm@3.3: +clang")
     depends_on("zlib")

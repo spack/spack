@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,8 @@ class PySympy(PythonPackage):
     homepage = "https://pypi.python.org/pypi/sympy"
     url      = "https://pypi.io/packages/source/s/sympy/sympy-0.7.6.tar.gz"
 
-    version('0.7.6', '3d04753974306d8a13830008e17babca')
+    version('1.1.1', 'c410a9c2346878716d16ec873d72e72a')
     version('1.0', '43e797de799f00f9e8fd2307dba9fab1')
+    version('0.7.6', '3d04753974306d8a13830008e17babca')
 
     depends_on('py-mpmath', when='@1.0:', type=('build', 'run'))

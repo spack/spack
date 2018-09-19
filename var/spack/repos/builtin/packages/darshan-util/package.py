@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,10 +34,13 @@ class DarshanUtil(Package):
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
     url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
 
+    version('3.1.6', 'ce5b8f1e69d602edd4753b57258b57c1')
     version('3.1.0', '439d717323e6265b2612ed127886ae52')
     version('3.0.0', '732577fe94238936268d74d7d74ebd08')
 
+    variant('bzip2', default=False, description="Enable bzip2 compression")
     depends_on('zlib')
+    depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
 
     def install(self, spec, prefix):
 

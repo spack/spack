@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,9 @@ class PySpectra(PythonPackage):
     homepage = "https://pypi.python.org/pypi/spectra/0.0.8"
     url      = "https://pypi.io/packages/source/s/spectra/spectra-0.0.8.tar.gz"
 
+    version('0.0.11', sha256='8eb362a5187cb63cee13cd01186799c0c791a3ad3bec57b279132e12521762b8')
     version('0.0.8', '83020b29e584389f24c7720f38f0136c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-colormath', type=('build', 'run'))
+    depends_on('py-colormath@3.0.0:', type=('build', 'run'), when='@0.0.11:')

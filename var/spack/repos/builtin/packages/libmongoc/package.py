@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -51,6 +51,7 @@ class Libmongoc(AutotoolsPackage):
     depends_on('automake', type='build', when='@1.8.1')
     depends_on('libtool', type='build', when='@1.8.1')
     depends_on('m4', type='build', when='@1.8.1')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libbson')
 

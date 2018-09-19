@@ -1,5 +1,5 @@
 #############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,13 +37,13 @@ class Ebms(MakefilePackage):
     """
 
     homepage = "https://github.com/ANL-CESAR/EBMS"
-    url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
+    git      = "https://github.com/ANL-CESAR/EBMS.git"
 
-    version('develop', git='https://github.com/ANL-CESAR/EBMS.git')
+    version('develop')
 
     variant('mpi', default=True, description='Build with MPI support')
 
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi@2:', when='+mpi')
 
     tags = ['proxy-app']
 

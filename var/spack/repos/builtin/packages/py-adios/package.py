@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,10 +30,11 @@ class PyAdios(PythonPackage):
 
     homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
+    git      = "https://github.com/ornladios/ADIOS.git"
+
     maintainers = ['ax3l']
 
-    version('develop', git='https://github.com/ornladios/ADIOS.git',
-            branch='master')
+    version('develop', branch='master')
     version('1.13.0', '68af36b821debbdf4748b20320a990ce')
     version('1.12.0', '84a1c71b6698009224f6f748c5257fc9')
     version('1.11.1', '5639bfc235e50bf17ba9dafb14ea4185')

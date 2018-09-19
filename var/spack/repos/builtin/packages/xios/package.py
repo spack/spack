@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,9 +31,8 @@ class Xios(Package):
     """XML-IO-SERVER library for IO management of climate models."""
 
     homepage = "https://forge.ipsl.jussieu.fr/ioserver/wiki"
-    url = "https://forge.ipsl.jussieu.fr/ioserver"
 
-    version('1.0', revision=910, 
+    version('1.0', revision=910,
             svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
     version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
 

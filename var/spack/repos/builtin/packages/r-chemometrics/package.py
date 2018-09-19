@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,7 +39,7 @@ class RChemometrics(RPackage):
     version('1.3.8', '7fad828bd094b5485fbf20bdf7d3d0d1')
     version('1.3.7', 'a9e2f32efb1545421dd96185fd849184')
 
-    depends_on('r@3.4.0:3.4.9')
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-mclust', type=('build', 'run'))
     depends_on('r-lars', type=('build', 'run'))

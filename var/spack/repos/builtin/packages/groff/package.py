@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,7 +32,7 @@ class Groff(AutotoolsPackage):
     ASCII/UTF8 for display at the terminal."""
 
     homepage = "https://www.gnu.org/software/groff/"
-    url      = "http://ftp.gnu.org/gnu/groff/groff-1.22.3.tar.gz"
+    url      = "https://ftpmirror.gnu.org/groff/groff-1.22.3.tar.gz"
 
     # TODO: add html variant, spack doesn't have netpbm and its too
     # complicated for me to find out at this point in time.

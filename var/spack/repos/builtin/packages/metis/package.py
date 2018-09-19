@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -100,7 +100,9 @@ class Metis(Package):
     @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
-        options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
+        options = []
+        if '+shared' in spec:
+            options.append('COPTIONS={0}'.format(self.compiler.pic_flag))
         if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
         make(*options)
@@ -144,8 +146,8 @@ class Metis(Package):
 
         # Set up and run tests on installation
         ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
-                 self.compiler.cc_rpath_arg +
-                 '%s' % (prefix.lib if '+shared' in spec else ''),
+                 (self.compiler.cc_rpath_arg + prefix.lib
+                  if '+shared' in spec else ''),
                  join_path('Programs', 'io.o'), join_path('Test', 'mtest.c'),
                  '-o', '%s/mtest' % prefix.bin, '-lmetis', '-lm')
 
@@ -219,11 +221,11 @@ class Metis(Package):
             make('install')
 
             # install GKlib headers, which will be needed for ParMETIS
-            GKlib_dist = join_path(prefix.include, 'GKlib')
-            mkdirp(GKlib_dist)
+            gklib_dist = join_path(prefix.include, 'GKlib')
+            mkdirp(gklib_dist)
             hfiles = glob.glob(join_path(source_directory, 'GKlib', '*.h'))
             for hfile in hfiles:
-                install(hfile, GKlib_dist)
+                install(hfile, gklib_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot

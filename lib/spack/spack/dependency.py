@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,7 +26,7 @@
 """
 from six import string_types
 
-import spack
+import spack.spec
 
 
 #: The types of dependency relationships that Spack understands.
@@ -72,7 +72,7 @@ class Dependency(object):
     This class differs from ``spack.spec.DependencySpec`` because it
     represents metadata at the ``Package`` level.
     ``spack.spec.DependencySpec`` is a descriptor for an actual package
-    confiuguration, while ``Dependency`` is a descriptor for a package's
+    configuration, while ``Dependency`` is a descriptor for a package's
     dependency *requirements*.
 
     A dependency is a requirement for a configuration of another package

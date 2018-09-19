@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,7 +32,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, join_path, force_remove
+from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -94,15 +94,20 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
+    @property
+    def archive_files(self):
+        """Files to archive for packages based on autotools"""
+        return [os.path.join(self.build_directory, 'config.log')]
+
     @run_after('autoreconf')
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
         this updated when installed on a newer architecture. In particular,
         config.guess fails for PPC64LE for version prior to a 2013-06-10
-        build date (automake 1.13.4)."""
+        build date (automake 1.13.4) and for ARM (aarch64)."""
 
-        if not self.patch_config_guess or not self.spec.satisfies(
-                'target=ppc64le'
+        if not self.patch_config_guess or (not self.spec.satisfies(
+                'target=ppc64le') and not self.spec.satisfies('target=aarch64')
         ):
             return
         my_config_guess = None
@@ -172,7 +177,7 @@ class AutotoolsPackage(PackageBase):
     @property
     def configure_abs_path(self):
         # Absolute path to configure
-        configure_abs_path = join_path(
+        configure_abs_path = os.path.join(
             os.path.abspath(self.configure_directory), 'configure'
         )
         return configure_abs_path
@@ -215,7 +220,7 @@ class AutotoolsPackage(PackageBase):
             if 'pkgconfig' in spec:
                 autoreconf_args += [
                     '-I',
-                    join_path(spec['pkgconfig'].prefix, 'share', 'aclocal'),
+                    os.path.join(spec['pkgconfig'].prefix, 'share', 'aclocal'),
                 ]
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)

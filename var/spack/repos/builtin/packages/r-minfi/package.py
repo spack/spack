@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,10 +29,9 @@ class RMinfi(RPackage):
     """Tools to analyze & visualize Illumina Infinium methylation arrays."""
 
     homepage = "https://bioconductor.org/packages/minfi/"
-    url      = "https://git.bioconductor.org/packages/minfi"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/minfi.git"
 
-    version('1.22.1', git='https://git.bioconductor.org/packages/minfi', commit='b2faf84bcbb291e32d470a0e029450093527545b')
+    version('1.22.1', commit='b2faf84bcbb291e32d470a0e029450093527545b')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))

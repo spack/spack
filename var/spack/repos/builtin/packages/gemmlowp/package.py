@@ -1,5 +1,5 @@
 #############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,8 +29,9 @@ class Gemmlowp(Package):
     """Google low-precision matrix multiplication library"""
 
     homepage = "https://github.com/google/gemmlowp"
-    version('a6f29d9ac', git='https://github.com/google/gemmlowp.git',
-            commit='a6f29d8ac48d63293f845f2253eccbf86bc28321')
+    git      = "https://github.com/google/gemmlowp.git"
+
+    version('a6f29d9ac', commit='a6f29d8ac48d63293f845f2253eccbf86bc28321')
 
     def install(self, spec, prefix):
         header_directories = ('eight_bit_int_gemm', 'fixedpoint',

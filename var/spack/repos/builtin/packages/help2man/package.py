@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class Help2man(AutotoolsPackage):
     output of other commands."""
 
     homepage = "https://www.gnu.org/software/help2man/"
-    url      = "http://gnu.askapache.com/help2man/help2man-1.47.4.tar.xz"
+    url      = "https://ftpmirror.gnu.org/help2man/help2man-1.47.4.tar.xz"
 
     version('1.47.4', '544aca496a7d89de3e5d99e56a2f03d3')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,11 +30,9 @@ class PyPypeflow(PythonPackage):
     library written in Python."""
 
     homepage = "https://github.com/PacificBiosciences/pypeFLOW"
-    url      = "https://github.com/PacificBiosciences/pypeFLOW"
+    git      = "https://github.com/PacificBiosciences/pypeFLOW.git"
 
-    version('2017-05-04',
-            git='https://github.com/PacificBiosciences/pypeFLOW.git',
-            commit='f23a1b290876bbdf130611000934ae4247158073')
+    version('2017-05-04', commit='f23a1b290876bbdf130611000934ae4247158073')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-networkx@1.7:1.11', type=['build', 'run'])

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,12 +43,13 @@ class Netgen(AutotoolsPackage):
     variant("gui", default=False, description='enable gui')
     variant("metis", default=False, description='use metis for partitioning')
 
+    depends_on('zlib')
     depends_on('mpi', when='+mpi')
     depends_on('oce+X11', when='+oce')
     depends_on('metis', when='+metis')
 
     def url_for_version(self, version):
-        url = "https://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/{0}/netgen-{1}.tar.gz"
+        url = "http://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/{0}/netgen-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):

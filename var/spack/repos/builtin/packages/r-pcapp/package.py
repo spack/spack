@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,5 +38,4 @@ class RPcapp(RPackage):
         version('1.9-60', '23dd468abb9fedc11e40166446df1017')
         version('1.9-50', 'be44f173404fd6e86ba0a5515711bfa3')
 
-        depends_on('r@3.4.0:3.4.9')
         depends_on('r-mvtnorm', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,7 +35,6 @@ class PyQtconsole(PythonPackage):
 
     variant('doc', default=False, description='Build documentation')
 
-    depends_on('py-setuptools',          type='build')
     depends_on('py-ipykernel@4.1:',      type=('build', 'run'))
     depends_on('py-jupyter-client@4.1:', type=('build', 'run'))
     depends_on('py-jupyter-core',        type=('build', 'run'))
@@ -43,5 +42,4 @@ class PyQtconsole(PythonPackage):
     depends_on('py-traitlets',           type=('build', 'run'))
     depends_on('py-sphinx@1.3:',         type=('build', 'run'), when='+docs')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-mock', type='test', when='^python@2.7:2.8')
+    depends_on('py-mock', type='test', when='^python@2.7:2.8')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,10 +34,11 @@ class Snap(MakefilePackage):
     It is modeled off the Los Alamos National Laboratory code PARTISN."""
 
     homepage = "https://github.com/lanl/SNAP"
-    url      = ""
-    tags     = ['proxy-app']
+    git      = "https://github.com/lanl/SNAP.git"
 
-    version('master', git='https://github.com/lanl/SNAP.git')
+    tags = ['proxy-app']
+
+    version('master')
 
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('opt', default=True, description='Build with debugging')

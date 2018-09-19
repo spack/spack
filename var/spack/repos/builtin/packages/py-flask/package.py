@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,7 @@ class PyFlask(PythonPackage):
     homepage = "http://github.com/pallets/flask"
     url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
 
+    version('0.12.2', '97278dfdafda98ba7902e890b0289177')
     version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
     version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
 

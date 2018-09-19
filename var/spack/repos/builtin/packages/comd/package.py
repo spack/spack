@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,9 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-import shutil
 
 
 class Comd(MakefilePackage):
@@ -37,18 +35,19 @@ class Comd(MakefilePackage):
     versions of CoMD will be released to incorporate the lessons learned from
     the co-design process."""
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/comd.html"
     url      = "https://github.com/ECP-copa/CoMD/archive/v1.1.tar.gz"
+    git      = "https://github.com/ECP-copa/CoMD.git"
 
+    version('develop', branch='master')
     version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
-    version('develop', git='https://github.com/ECP-copa/CoMD', branch='master')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('precision', default=True, description='Toggle Precesion Options')
-    variant('graphs', default=True, description='Enable graph visuals')
+    variant('graphs', default=False, description='Enable graph visuals')
 
     depends_on('mpi', when='+mpi')
     depends_on('graphviz', when='+graphs')
@@ -57,7 +56,7 @@ class Comd(MakefilePackage):
 
     def edit(self, spec, prefix):
         with working_dir('src-mpi') or working_dir('src-openmp'):
-            shutil.copy('Makefile.vanilla', 'Makefile')
+            copy('Makefile.vanilla', 'Makefile')
 
     @property
     def build_targets(self):

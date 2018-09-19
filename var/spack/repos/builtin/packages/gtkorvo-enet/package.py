@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,4 +35,5 @@ class GtkorvoEnet(AutotoolsPackage):
     homepage = "http://www.github.com/GTkorvo/enet"
     url = "https://github.com/GTkorvo/enet/archive/v1.3.13.tar.gz"
 
+    version('1.3.14', '05272cac1a8cb0500995eeca310e7fac')
     version('1.3.13', '3490f924a4d421e4832e45850e6ec142')

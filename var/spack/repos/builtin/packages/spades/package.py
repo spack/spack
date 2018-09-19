@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,6 @@ class Spades(CMakePackage):
     depends_on('zlib')
     depends_on('bzip2')
 
-    conflicts('%gcc@7.1.0:')
+    conflicts('%gcc@7.1.0:', when='@:3.10.1')
 
     root_cmakelists_dir = 'src'

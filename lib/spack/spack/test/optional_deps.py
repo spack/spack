@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -107,14 +107,14 @@ def spec_and_expected(request):
     return spec, Spec.from_literal(d)
 
 
-def test_normalize(spec_and_expected, config, builtin_mock):
+def test_normalize(spec_and_expected, config, mock_packages):
     spec, expected = spec_and_expected
     spec = Spec(spec)
     spec.normalize()
     assert spec.eq_dag(expected, deptypes=False)
 
 
-def test_default_variant(config, builtin_mock):
+def test_default_variant(config, mock_packages):
     spec = Spec('optional-dep-test-3')
     spec.concretize()
     assert 'a' in spec

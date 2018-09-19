@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,7 +40,7 @@ class Glog(Package):
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
-        make
+        make()
         make('install')
 
     @when('@0.3.5:')
@@ -50,5 +50,5 @@ class Glog(Package):
 
         with working_dir('spack-build', create=True):
             cmake('..', *cmake_args)
-            make
+            make()
             make('install')

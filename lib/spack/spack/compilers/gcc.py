@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,10 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-
-import spack
-from spack.compiler import Compiler, get_compiler_version
+import spack.compilers.clang
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -47,7 +46,7 @@ class Gcc(Compiler):
     # Old compatibility versions may contain XY suffixes.
     suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
                   'cxx': 'gcc/g++',
                   'f77': 'gcc/gfortran',
@@ -61,9 +60,19 @@ class Gcc(Compiler):
         return "-fopenmp"
 
     @property
+    def cxx98_flag(self):
+        if self.version < ver('6.0'):
+            return ""
+        else:
+            return "-std=c++98"
+
+    @property
     def cxx11_flag(self):
         if self.version < ver('4.3'):
-            tty.die("Only gcc 4.3 and above support c++11.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          " < 4.3")
         elif self.version < ver('4.7'):
             return "-std=c++0x"
         else:
@@ -72,18 +81,28 @@ class Gcc(Compiler):
     @property
     def cxx14_flag(self):
         if self.version < ver('4.8'):
-            tty.die("Only gcc 4.8 and above support c++14.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++14 standard",
+                                          "cxx14_flag",
+                                          "< 4.8")
         elif self.version < ver('4.9'):
             return "-std=c++1y"
-        else:
+        elif self.version < ver('6.0'):
             return "-std=c++14"
+        else:
+            return ""
 
     @property
     def cxx17_flag(self):
         if self.version < ver('5.0'):
-            tty.die("Only gcc 5.0 and above support c++17.")
-        else:
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++17 standard",
+                                          "cxx17_flag",
+                                          "< 5.0")
+        elif self.version < ver('6.0'):
             return "-std=c++1z"
+        else:
+            return "-std=c++17"
 
     @property
     def pic_flag(self):
@@ -91,6 +110,21 @@ class Gcc(Compiler):
 
     @classmethod
     def default_version(cls, cc):
+        """Older versions of gcc use the ``-dumpversion`` option.
+        Output looks like this::
+
+            4.4.7
+
+        In GCC 7, this option was changed to only return the major
+        version of the compiler::
+
+            7
+
+        A new ``-dumpfullversion`` option was added that gives us
+        what we want::
+
+            7.2.0
+        """
         # Skip any gcc versions that are actually clang, like Apple's gcc.
         # Returning "unknown" makes them not detected by default.
         # Users can add these manually to compilers.yaml at their own risk.
@@ -98,16 +132,38 @@ class Gcc(Compiler):
             return 'unknown'
 
         version = super(Gcc, cls).default_version(cc)
-        if version in ['7']:
+        if ver(version) >= ver('7'):
             version = get_compiler_version(cc, '-dumpfullversion')
         return version
 
     @classmethod
     def fc_version(cls, fc):
-        return get_compiler_version(
+        """Older versions of gfortran use the ``-dumpversion`` option.
+        Output looks like this::
+
+            GNU Fortran (GCC) 4.4.7 20120313 (Red Hat 4.4.7-18)
+            Copyright (C) 2010 Free Software Foundation, Inc.
+
+        or::
+
+            4.8.5
+
+        In GCC 7, this option was changed to only return the major
+        version of the compiler::
+
+            7
+
+        A new ``-dumpfullversion`` option was added that gives us
+        what we want::
+
+            7.2.0
+        """
+        version = get_compiler_version(
             fc, '-dumpversion',
-            # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
+            r'(?:GNU Fortran \(GCC\) )?([\d.]+)')
+        if ver(version) >= ver('7'):
+            version = get_compiler_version(fc, '-dumpfullversion')
+        return version
 
     @classmethod
     def f77_version(cls, f77):

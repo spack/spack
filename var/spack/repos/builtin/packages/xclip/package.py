@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,9 +34,9 @@ class Xclip(AutotoolsPackage):
        which can then be redirected to a file or another program."""
 
     homepage = "https://github.com/astrand/xclip"
-    url      = "https://github.com/astrand/xclip"
+    git      = "https://github.com/astrand/xclip.git"
 
-    version('0.13', git='https://github.com/astrand/xclip', commit='9aa7090c3b8b437c6489edca32ae43d82e0c1281')
+    version('0.13', commit='9aa7090c3b8b437c6489edca32ae43d82e0c1281')
 
     depends_on('libxmu')
     depends_on('libx11')

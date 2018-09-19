@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,15 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
-import spack
+
+from llnl.util.lang import memoized
+
 import spack.spec
 from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 from spack.compilers.clang import Clang
-from llnl.util.lang import memoized
 
 
 class ABI(object):
@@ -74,7 +74,7 @@ class ABI(object):
             return None
         if not output:
             return None
-        libpath = os.readlink(output.strip())
+        libpath = os.path.realpath(output.strip())
         if not libpath:
             return None
         return os.path.basename(libpath)

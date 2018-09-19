@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,10 +37,9 @@ class REnsembldb(RPackage):
        region or transcript models of lincRNA genes."""
 
     homepage = "https://bioconductor.org/packages/ensembldb/"
-    url      = "https://git.bioconductor.org/packages/ensembldb"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/ensembldb.git"
 
-    version('2.0.4', git='https://git.bioconductor.org/packages/ensembldb', commit='514623d71e3cca7a4e547adb579b5a958702ef86')
+    version('2.0.4', commit='514623d71e3cca7a4e547adb579b5a958702ef86')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))

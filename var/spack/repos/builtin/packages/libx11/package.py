@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,3 +44,12 @@ class Libx11(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
     depends_on('perl', type='build')
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libX11', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs
+        return None

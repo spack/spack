@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import shutil
 
 
 class Gaussian(Package):
@@ -36,7 +35,7 @@ class Gaussian(Package):
     version('09', '7d4c95b535e68e48af183920df427e4e')
 
     def install(self, spec, prefix):
-        shutil.copytree(os.getcwd(), prefix.bin)
+        install_tree('.', prefix.bin)
         patch_install_files = ['flc',
                                'linda8.2/opteron-linux/bin/flc',
                                'linda8.2/opteron-linux/bin/LindaLauncher',

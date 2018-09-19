@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,10 +31,11 @@ class Raft(CMakePackage):
        Toolbox under development at Brazilian Synchrotron Light Source."""
 
     homepage = "https://bitbucket.org/gill_martinez/raft_aps"
-    url = "https://bitbucket.org/gill_martinez/raft_aps/get/1.2.3.tar.gz"
+    url      = "https://bitbucket.org/gill_martinez/raft_aps/get/1.2.3.tar.gz"
+    git      = "https://bitbucket.org/gill_martinez/raft_aps.git"
 
+    version('develop', branch='master')
     version('1.2.3', '4d1b106d9b3493e63dde96f7dd44b834')
-    version('develop', git='https://bitbucket.org/gill_martinez/raft_aps.git')
 
     depends_on('mpi')
     depends_on('cmake', type='build')

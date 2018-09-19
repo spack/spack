@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,6 +29,6 @@ class Aspell6Es(AspellDictPackage):
     """Spanish (es) dictionary for aspell."""
 
     homepage = "http://aspell.net/"
-    url      = "ftp://ftp.gnu.org/gnu/aspell/dict/es/aspell6-es-1.11-2.tar.bz2"
+    url      = "https://ftpmirror.gnu.org/aspell/dict/es/aspell6-es-1.11-2.tar.bz2"
 
     version('1.11-2', '8406336a89c64e47e96f4153d0af70c4')

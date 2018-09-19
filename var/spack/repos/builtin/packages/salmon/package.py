@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,7 +36,7 @@ class Salmon(CMakePackage):
     version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
 
     depends_on('tbb')
-    depends_on('boost')
+    depends_on('boost@:1.66.0')
 
     def cmake_args(self):
         args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]

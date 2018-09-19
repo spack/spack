@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,25 +22,43 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.main import SpackCommand
+import pytest
 
+from spack.main import SpackCommand
 
 versions = SpackCommand('versions')
 
 
+@pytest.mark.network
 def test_remote_versions():
     """Test a package for which remote versions should be available."""
 
     versions('zlib')
 
 
+@pytest.mark.network
 def test_no_versions():
     """Test a package for which no remote versions are available."""
 
     versions('converge')
 
 
+@pytest.mark.network
 def test_no_unchecksummed_versions():
     """Test a package for which no unchecksummed versions are available."""
 
     versions('bzip2')
+
+
+@pytest.mark.network
+def test_versions_no_url():
+    """Test a package with versions but without a ``url`` attribute."""
+
+    versions('graphviz')
+
+
+@pytest.mark.network
+def test_no_versions_no_url():
+    """Test a package without versions or a ``url`` attribute."""
+
+    versions('opengl')

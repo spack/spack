@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Readline(AutotoolsPackage):
     csh-like history expansion on previous commands."""
 
     homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
-    url      = "https://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz"
+    url      = "https://ftpmirror.gnu.org/readline/readline-7.0.tar.gz"
 
     version('7.0', '205b03a87fc83dab653b628c59b9fc91')
     version('6.3', '33c8fb279e981274f485fd91da77e94a')

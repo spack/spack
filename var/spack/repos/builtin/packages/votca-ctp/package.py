@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright (c) 2017-2018, The VOTCA Development Team (http://www.votca.org)
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -34,12 +34,11 @@ class VotcaCtp(CMakePackage):
        This package contains the VOTCA charge transport engine.
     """
     homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/ctp/tarball/v1.4"
+    git      = "https://github.com/votca/ctp.git"
 
-    version('develop', git='https://github.com/votca/ctp', branch='master')
+    version('develop', branch='master')
 
     depends_on("cmake@2.8:", type='build')
     depends_on("votca-tools@develop", when='@develop')
     depends_on("votca-csg@develop", when='@develop')
-    depends_on("votca-moo@develop", when='@develop')
+    depends_on("gsl")

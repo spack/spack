@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,9 +35,9 @@ class RGviz(RPackage):
     together with your data."""
 
     homepage = "http://bioconductor.org/packages/Gviz/"
-    url      = "https://git.bioconductor.org/packages/Gviz"
+    git      = "https://git.bioconductor.org/packages/Gviz.git"
 
-    version('1.20.0', git='https://git.bioconductor.org/packages/Gviz', commit='299b8255e1b03932cebe287c3690d58c88f5ba5c')
+    version('1.20.0', commit='299b8255e1b03932cebe287c3690d58c88f5ba5c')
 
     depends_on('r@3.4.0:3.4.9', when='@1.20.0')
     depends_on('r-s4vectors', type=('build', 'run'))

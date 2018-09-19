@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.15.1.zip"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -45,9 +45,11 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
-    # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
-    # FIXME: Is this expected?
-
+    version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
+    version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
+    version('1.14.2', '080f01a19707cf467393e426382c7619')
+    version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
+    version('1.14.0', 'c12d4bf380ac925fcdc8a59ada6c3298')
     version('1.13.3', '300a6f0528122128ac07c6deb5c95917')
     version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
     version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
@@ -63,25 +65,21 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.0.0:', type='test')
+    depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
+    depends_on('py-pytest', when='@1.15:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
-        arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
         self.spec.include = join_path(
             self.prefix.lib,
             'python{0}'.format(python_version),
             'site-packages',
-            'numpy-{0}-py{1}-{2}.egg'.format(
-                self.spec.version, python_version, arch),
             'numpy/core/include')
 
     def patch(self):
@@ -146,11 +144,26 @@ class PyNumpy(PythonPackage):
     def build_args(self, spec, prefix):
         args = []
 
-        # From NumPy 1.10.0 on it's possible to do a parallel build
+        # From NumPy 1.10.0 on it's possible to do a parallel build.
         if self.version >= Version('1.10.0'):
-            args = ['-j', str(make_jobs)]
+            # But Parallel build in Python 3.5+ is broken.  See:
+            # https://github.com/spack/spack/issues/7927
+            # https://github.com/scipy/scipy/issues/7112
+            if spec['python'].version < Version('3.5'):
+                args = ['-j', str(make_jobs)]
 
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        python_version = self.spec['python'].version.up_to(2)
+
+        include_path = join_path(
+            self.prefix.lib,
+            'python{0}'.format(python_version),
+            'site-packages',
+            'numpy/core/include')
+
+        run_env.prepend_path('CPATH', include_path)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
@@ -168,5 +181,5 @@ class PyNumpy(PythonPackage):
         # ImportError: Error importing numpy: you should not try to import
         #       numpy from its source directory; please exit the numpy
         #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

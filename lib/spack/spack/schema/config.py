@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,7 @@
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack module file configuration file schema',
+    'title': 'Spack core configuration file schema',
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
@@ -64,9 +64,12 @@ schema = {
                 'source_cache': {'type': 'string'},
                 'misc_cache': {'type': 'string'},
                 'verify_ssl': {'type': 'boolean'},
+                'debug': {'type': 'boolean'},
                 'checksum': {'type': 'boolean'},
+                'locks': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
                 'build_jobs': {'type': 'integer', 'minimum': 1},
+                'ccache': {'type': 'boolean'},
             }
         },
     },

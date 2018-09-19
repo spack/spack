@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -142,7 +142,7 @@ class Atlas(Package):
             to_find = ['liblapack'] + interfaces + ['libatlas']
             shared = False
         return find_libraries(
-            to_find, root=self.prefix, shared=shared, recurse=True
+            to_find, root=self.prefix, shared=shared, recursive=True
         )
 
     def install_test(self):

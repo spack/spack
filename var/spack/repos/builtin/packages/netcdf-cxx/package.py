@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,5 +42,5 @@ class NetcdfCxx(AutotoolsPackage):
     def libs(self):
         shared = True
         return find_libraries(
-            'libnetcdf_c++', root=self.prefix, shared=shared, recurse=True
+            'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
         )

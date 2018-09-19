@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Arlecore(Package):
@@ -37,4 +36,4 @@ class Arlecore(Package):
     depends_on('r', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)

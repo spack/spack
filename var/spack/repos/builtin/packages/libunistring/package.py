@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class Libunistring(AutotoolsPackage):
     and for manipulating C strings according to the Unicode standard."""
 
     homepage = "https://www.gnu.org/software/libunistring/"
-    url      = "http://ftp.gnu.org/gnu/libunistring/libunistring-0.9.7.tar.xz"
+    url      = "https://ftpmirror.gnu.org/libunistring/libunistring-0.9.7.tar.xz"
 
     version('0.9.7', '82e0545363d111bfdfec2ddbfe62ffd3')
     version('0.9.6', 'cb09c398020c27edac10ca590e9e9ef3')

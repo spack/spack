@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,11 +30,10 @@ class Mshadow(Package):
     in C++/CUDA."""
 
     homepage = "https://github.com/dmlc/mshadow"
-    url      = "https://github.com/dmlc/mshadow/archive/v1.1.tar.gz"
+    git      = "https://github.com/dmlc/mshadow.git"
 
-    version('master', git='https://github.com/dmlc/mshadow.git', branch='master')
-    version('20170721', git='https://github.com/dmlc/mshadow.git',
-            commit='20b54f068c1035f0319fa5e5bbfb129c450a5256')
+    version('master', branch='master')
+    version('20170721', commit='20b54f068c1035f0319fa5e5bbfb129c450a5256')
 
     def install(self, spec, prefix):
         install_tree('mshadow', prefix.include.mshadow)

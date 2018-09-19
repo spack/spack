@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,9 +30,9 @@ class KvasirMpl(Package):
     """Kvasir metaprogramming library"""
 
     homepage = "https://github.com/kvasir-io/mpl"
+    git      = "https://github.com/kvasir-io/mpl.git"
 
-    version('develop', git='https://github.com/kvasir-io/mpl.git',
-            branch='development')
+    version('develop', branch='development')
 
     def install(self, spec, prefix):
         install_tree('src', prefix.include)

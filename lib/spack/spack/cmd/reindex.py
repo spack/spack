@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,13 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
 import spack.store
-description = "rebuild Spack's package database"
 
+description = "rebuild Spack's package database"
 section = "admin"
 level = "long"
 
 
 def reindex(parser, args):
-    spack.store.db.reindex(spack.store.layout)
+    spack.store.store.reindex()

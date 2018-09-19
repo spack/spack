@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,9 +29,9 @@ class EverytraceExample(CMakePackage):
     """Get stack trace EVERY time a program exits."""
 
     homepage = "https://github.com/citibeth/everytrace-example"
-    version('develop',
-            git='https://github.com/citibeth/everytrace-example.git',
-            branch='develop')
+    git      = "https://github.com/citibeth/everytrace-example.git"
+
+    version('develop', branch='develop')
 
     depends_on('everytrace+mpi+fortran')
 

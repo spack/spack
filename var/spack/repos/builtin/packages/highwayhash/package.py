@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,9 +34,9 @@ class Highwayhash(MakefilePackage):
     """
 
     homepage = "https://github.com/google/highwayhash"
+    git      = "https://github.com/google/highwayhash.git"
 
-    version('dfcb97', git='https://github.com/google/highwayhash.git',
-            commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')
+    version('dfcb97', commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')
 
     build_targets = ['all', 'libhighwayhash.a']
 

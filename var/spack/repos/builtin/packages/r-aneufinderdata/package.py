@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,8 +30,8 @@ class RAneufinderdata(RPackage):
     purposes in the AneuFinder package."""
 
     homepage = "https://www.bioconductor.org/packages/AneuFinderData/"
-    url      = "https://git.bioconductor.org/packages/AneuFinderData"
+    git      = "https://git.bioconductor.org/packages/AneuFinderData.git"
 
-    version('1.4.0', git='https://git.bioconductor.org/packages/AneuFinderData', commit='55c8807ee4a37a2eb6d0defafaf843f980b22c40')
+    version('1.4.0', commit='55c8807ee4a37a2eb6d0defafaf843f980b22c40')
 
     depends_on('r@3.4.0:3.4.9', when='@1.4.0')
