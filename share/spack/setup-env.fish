@@ -427,7 +427,10 @@ function spack_pathadd
         set pa_varname $argv[1]
         set pa_new_path $argv[2]
     else
-        true
+        true # this is a bit of a strange hack! when the test in the if
+             # statement fails, the `status` flag is set to 1. `true` resets
+             # this. since `set` passes `status` along, we thus avoid the
+             # function returning 1 by mistake.
         set pa_varname PATH
         set pa_new_path $argv[1]
     end
@@ -439,7 +442,10 @@ function spack_pathadd
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
-                true
+                true # this is a bit of a strange hack! when the test in the if
+                     # statement fails, the `status` flag is set to 1. `true`
+                     # resets this. since `set` passes `status` along, we thus
+                     # avoid the function returning 1 by mistake.
                 set $pa_varname $pa_new_path
             end
         end
