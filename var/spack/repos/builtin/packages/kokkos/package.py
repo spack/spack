@@ -78,7 +78,8 @@ class Kokkos(Package):
 
     gpu_values = ('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
                   'Maxwell50', 'Maxwell52', 'Maxwell53',
-                  'Pascal60', 'Pascal61')
+                  'Pascal60', 'Pascal61',
+                  'Volta70', 'Volta72')
 
     cuda_options = ('force_uvm', 'use_ldg', 'rdc', 'enable_lambda')
 
@@ -126,6 +127,11 @@ class Kokkos(Package):
     conflicts('+enable_lambda', when='~cuda',
         msg='Must enable CUDA to use enable_lambda.')
 
+    # Check that we haven't asked for a GPU architecture that
+    # the revision of kokkos does not support
+    conflicts('gpu_arch=Volta70', when='@:2.5.99')
+    conflicts('gpu_arch=Volta72', when='@:2.5.99')
+    
     # conflicts on kokkos version and cuda enabled
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
