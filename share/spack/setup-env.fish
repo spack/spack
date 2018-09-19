@@ -339,9 +339,9 @@ function spack -d "wrapper for the `spack` command"
         case "use" or "unuse" or "load" or "unload"
 
             # Shift any other args for use off before parsing spec.
-            get_mod_args $__sp_remaining_args # sets: __sp_remaining_args
-                                              #       __sp_subcommand_args
-                                              #       __sp_module_args
+            set __sp_subcommand_args          # sets: __sp_remaining_args
+            set __sp_module_args              #       __sp_subcommand_args
+            get_mod_args $__sp_remaining_args #       __sp_module_args
 
             set sp_spec $__sp_remaining_args
 
@@ -351,7 +351,7 @@ function spack -d "wrapper for the `spack` command"
             # commands to add/remove the result from the environment. If spack
             # module command comes back with an error, do nothing.
 
-            switch $__sp_subcommand
+            switch $sp_subcommand
 
                 case "use"
                     set -l dotkit_args $__sp_subcommand_args $sp_spec
