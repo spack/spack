@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Los Alamos National Security, LLC.
+# Copyright (c) 2018, Los Alamos National Security, LLC.
 # Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
@@ -27,11 +27,11 @@ from spack import *
 
 class Ember(MakefilePackage):    
     """
-    Ember is an end -point model for network communications. It currently
-    has teh ability ro generate MPI events from models of application called 
-    motifs. Motifs are condensed, efficient generators for communications 
-    which are able to represent target, size, and data type of messafes in 
-    larger applications, libraries and mini-apps.
+    Ember is an end-point model for network communications. It currently
+    has the ability to generate MPI events from models of application called 
+    motifs. Motifs are condensed, efficient generators for communications, 
+    which are able to represent target, size, and data type of messages in 
+    larger applications, libraries, and mini-apps.
     """
     
     homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
