@@ -220,6 +220,22 @@ def release_jobs(parser, args):
 
         stage += 1
 
+    final_stage = 'stage-rebuild-index'
+
+    final_job = {
+        'stage': final_stage,
+        'variables': {
+            'MIRROR_URL': mirror_url,
+        },
+        'image': build_image,
+        'script': './rebuild-index.sh',
+    }
+
+    if args.shared_runner_tag:
+        final_job['tags'] = [args.shared_runner_tag]
+
+    output_object['rebuild-index'] = final_job
+    stage_names.append(final_stage)
     output_object['stages'] = stage_names
 
     with open(args.output_file, 'w') as outf:
