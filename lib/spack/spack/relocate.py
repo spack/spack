@@ -541,7 +541,7 @@ def file_is_relocatable(file):
     m_type, m_subtype = mime_type(file)
     if m_type == 'application' and m_subtype != 'x-archive':
         rpaths = patchelf('--print-rpath', file, output=str).strip()
-        set_of_strings.remove(rpaths.strip())
+        set_of_strings.discard(rpaths.strip())
 
     if any(spack.store.layout.root in x for x in set_of_strings):
         # One binary has the root folder not in the RPATH,

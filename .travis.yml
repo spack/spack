@@ -55,6 +55,22 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=unit
+      addons:
+        apt:
+          packages:
+          - gfortran
+          - mercurial
+          - graphviz
+          - gnupg2
+          - cmake
+          - ninja-build
+          - r-base
+          - r-base-core
+          - r-base-dev
+          - perl
+          - perl-base
+          - patchelf
+
     - python: '3.6'
       sudo: required
       os: linux
