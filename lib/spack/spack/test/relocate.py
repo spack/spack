@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import platform
 import shutil
 
 import pytest
 
+import llnl.util.filesystem
 import spack.paths
 import spack.relocate
 import spack.store
@@ -69,4 +71,25 @@ def test_file_is_relocatable(source_file, is_relocatable):
     }
     compiler(str(source_file), '-o', executable, env=compiler_env)
 
+    assert spack.relocate.is_binary(executable)
     assert spack.relocate.file_is_relocatable(executable) is is_relocatable
+
+
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
+def test_file_is_relocatable_errors(tmpdir):
+    # The file passed in as argument must exist...
+    with pytest.raises(ValueError) as exc_info:
+        spack.relocate.file_is_relocatable('/usr/bin/does_not_exist')
+    assert 'does not exist' in str(exc_info.value)
+
+    # ...and the argument must be an absolute path to it
+    file = tmpdir.join('delete.me')
+    file.write('foo')
+
+    with llnl.util.filesystem.working_dir(str(tmpdir)):
+        with pytest.raises(ValueError) as exc_info:
+            spack.relocate.file_is_relocatable('delete.me')
+        assert 'is not an absolute path' in str(exc_info.value)
