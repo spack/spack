@@ -25,20 +25,20 @@
 from spack import *
 
 
-class Ember(MakefilePackage):    
+class Ember(MakefilePackage):
     """
     Ember is an end-point model for network communications. It currently
-    has the ability to generate MPI events from models of application called 
-    motifs. Motifs are condensed, efficient generators for communications, 
-    which are able to represent target, size, and data type of messages in 
+    has the ability to generate MPI events from models of application called
+    motifs. Motifs are condensed, efficient generators for communications,
+    which are able to represent target, size, and data type of messages in
     larger applications, libraries, and mini-apps.
     """
-    
+
     homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
     git      = "https://github.com/sstsimulator/ember.git"
     url      = "https://github.com/sstsimulator/ember/archive/v1.0.0.tar.gz"
 
-    version('1.0.0', 
+    version('1.0.0',
 	sha256='5b2a6b8055b46ab3ea2c7baabaf4d280d837bb7c21eba0c9f59e092c6fc1c4a6')
 
     variant('halo3d', default=True, description='Halo3d motif')
@@ -63,7 +63,7 @@ class Ember(MakefilePackage):
         cflags = '-O3 -std=c99'
         oshmem_cc = 'cc'
         oshmem_c_flags = '-O3 -g'
-        
+
         if '+halo3d' in self.spec:
             targets.append('--directory=mpi/halo3d')
             targets.append('CC = {0}'.format(cc))
