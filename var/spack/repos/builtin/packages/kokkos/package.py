@@ -116,7 +116,7 @@ class Kokkos(Package):
             msg='Must specify CUDA backend to use a GPU architecture.')
 
     # Check that we haven't specified a Kokkos CUDA option
-    # witout specifying CUDA
+    # without specifying CUDA
     conflicts('+force_uvm', when='~cuda',
         msg='Must enable CUDA to use force_uvm.')
     conflicts('+use_ldg', when='~cuda',
