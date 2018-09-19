@@ -22,21 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+from os import symlink
 
 
-class PyPicrust(PythonPackage):
-    """bioinformatics software package designed to predict metagenome
-        functional content from marker gene surveys and full genomes."""
+class Rmats(Package):
+    """MATS is a computational tool to detect differential alternative
+       splicing events from RNA-Seq data."""
 
-    homepage = "http://picrust.github.io/picrust/index.html"
-    url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
+    homepage = "https://rnaseq-mats.sourceforge.net/index.html"
+    url      = "https://downloads.sourceforge.net/project/rnaseq-mats/MATS/rMATS.4.0.2.tgz"
 
-    version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
+    version('4.0.2', sha256='afab002a9ae836d396909aede96318f6dab6e5818078246419dd563624bf26d1')
 
-    depends_on('python@2.7:2.999', type=('build', 'run'))
-    depends_on('py-cogent@1.5.3', type=('build', 'run'))
-    depends_on('py-biom-format@2.1.4:2.1.999', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.16.0', type=('build', 'run'))
-    depends_on('py-numpy@1.5.1:', type=('build', 'run'))
+    depends_on('python@2.7:', type='run')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('openblas')
+
+    def install(self, spec, prefix):
+        # since the tool is a python script we install it to /usr/lib
+        install_tree('rMATS-turbo-Linux-UCS4', join_path(prefix.lib, 'rmats'))
+
+        # the script has an appropriate shebang so a quick symlink will do
+        set_executable(join_path(prefix.lib, 'rmats/rmats.py'))
+        mkdirp(prefix.bin)
+        symlink(join_path(prefix.lib, 'rmats/rmats.py'),
+                join_path(prefix.bin, 'rmats'))

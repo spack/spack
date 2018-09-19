@@ -25,18 +25,16 @@
 from spack import *
 
 
-class PyPicrust(PythonPackage):
-    """bioinformatics software package designed to predict metagenome
-        functional content from marker gene surveys and full genomes."""
+class Kibana(Package):
+    """Kibana lets you visualize your Elasticsearch data and navigate the
+    Elastic Stack"""
 
-    homepage = "http://picrust.github.io/picrust/index.html"
-    url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
+    homepage = "https://www.elastic.co/products/kibana"
+    url      = "https://artifacts.elastic.co/downloads/kibana/kibana-6.4.0-linux-x86_64.tar.gz"
 
-    version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
+    version('6.4.0', sha256='df2056105a08c206a1adf9caed09a152a53429a0f1efc1ba3ccd616092d78aee')
 
-    depends_on('python@2.7:2.999', type=('build', 'run'))
-    depends_on('py-cogent@1.5.3', type=('build', 'run'))
-    depends_on('py-biom-format@2.1.4:2.1.999', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.16.0', type=('build', 'run'))
-    depends_on('py-numpy@1.5.1:', type=('build', 'run'))
+    depends_on('jdk', type='run')
+
+    def install(self, spec, prefix):
+        install_tree('.', join_path(prefix, '.'))

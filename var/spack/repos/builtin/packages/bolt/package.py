@@ -25,18 +25,26 @@
 from spack import *
 
 
-class PyPicrust(PythonPackage):
-    """bioinformatics software package designed to predict metagenome
-        functional content from marker gene surveys and full genomes."""
+class Bolt(CMakePackage):
+    """BOLT targets a high-performing OpenMP implementation,
+    especially specialized for fine-grain parallelism. Unlike other
+    OpenMP implementations, BOLT utilizes a lightweight threading
+    model for its underlying threading mechanism. It currently adopts
+    Argobots, a new holistic, low-level threading and tasking runtime,
+    in order to overcome shortcomings of conventional OS-level
+    threads. The current BOLT implementation is based on the OpenMP
+    runtime in LLVM, and thus it can be used with LLVM/Clang, Intel
+    OpenMP compiler, and GCC."""
 
-    homepage = "http://picrust.github.io/picrust/index.html"
-    url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
+    homepage = "http://www.bolt-omp.org/"
+    url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
 
-    version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
+    version("1.0b1", "df76beb3a7f13ae2dcaf9ab099eea87b")
 
-    depends_on('python@2.7:2.999', type=('build', 'run'))
-    depends_on('py-cogent@1.5.3', type=('build', 'run'))
-    depends_on('py-biom-format@2.1.4:2.1.999', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.16.0', type=('build', 'run'))
-    depends_on('py-numpy@1.5.1:', type=('build', 'run'))
+    def cmake_args(self):
+        options = [
+            '-DLIBOMP_USE_ITT_NOTIFY=off',
+            '-DLIBOMP_USE_ARGOBOTS=on'
+        ]
+
+        return options

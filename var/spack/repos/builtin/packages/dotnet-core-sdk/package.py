@@ -22,21 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from os import symlink
 from spack import *
 
 
-class PyPicrust(PythonPackage):
-    """bioinformatics software package designed to predict metagenome
-        functional content from marker gene surveys and full genomes."""
+class DotnetCoreSdk(Package):
+    """The .NET Core SDK is a powerful development environment to write
+    applications for all types of infrastructure."""
 
-    homepage = "http://picrust.github.io/picrust/index.html"
-    url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
+    homepage = "https://www.microsoft.com/net/"
+    url      = "https://github.com/dotnet/core/"
 
-    version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
+    version('2.1.300',
+            url='https://download.microsoft.com/download/8/8/5/88544F33-836A'
+                '-49A5-8B67-451C24709A8F/dotnet-sdk-2.1.300-linux-x64.tar.gz',
+            sha224='80a6bfb1db5862804e90f819c1adeebe3d624eae0d6147e5d6694333'
+                'f0458afd7d34ce73623964752971495a310ff7fcc266030ce5aef82d5de'
+                '7293d94d13770')
 
-    depends_on('python@2.7:2.999', type=('build', 'run'))
-    depends_on('py-cogent@1.5.3', type=('build', 'run'))
-    depends_on('py-biom-format@2.1.4:2.1.999', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.16.0', type=('build', 'run'))
-    depends_on('py-numpy@1.5.1:', type=('build', 'run'))
+    variant('telemetry', default=False,
+            description='allow collection of telemetry data')
+
+    def setup_environment(self, spack_env, run_env):
+        if '-telemetry' in self.spec:
+            spack_env.set('DOTNET_CLI_TELEMETRY_OPTOUT', 1)
+
+    def install(self, spec, prefix):
+        mkdirp('bin')
+        symlink('../dotnet', 'bin/dotnet')
+        install_tree(".", prefix)

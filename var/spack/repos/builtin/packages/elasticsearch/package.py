@@ -34,6 +34,7 @@ class Elasticsearch(Package):
     homepage = "https://www.elastic.co/"
     url      = "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.4.tar.gz"
 
+    version('6.4.0', '5c23c99a52600b250a6871bf6a744e8b')
     version('6.2.4', '692d01956fe7aee2d08ac0fbf7b7a19e')
 
     depends_on('jdk', type='run')
