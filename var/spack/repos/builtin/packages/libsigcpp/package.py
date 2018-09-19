@@ -28,7 +28,7 @@ from spack import *
 class Libsigcpp(AutotoolsPackage):
     """Libsigc++ is a C++ library for typesafe callbacks"""
 
-    homepage = "http://www.example.com"
+    homepage = "https://libsigcplusplus.github.io/libsigcplusplus/index.html"
     url      = "https://ftp.acc.umu.se/pub/GNOME/sources/libsigc++/2.0/libsigc++-2.0.3.tar.gz"
 
     version('2.9.3', '0e5630fd0557ee80b5e5cbbcebaa2594')
