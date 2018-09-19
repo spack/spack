@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ember(MakefilePackage):    
     """
     Ember is an end -point model for network communications. It currently
@@ -32,6 +33,7 @@ class Ember(MakefilePackage):
     which are able to represent target, size, and data type of messafes in 
     larger applications, libraries and mini-apps.
     """
+    
     homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
     git      = "https://github.com/sstsimulator/ember.git"
     url      = "https://github.com/sstsimulator/ember/archive/v1.0.0.tar.gz"
