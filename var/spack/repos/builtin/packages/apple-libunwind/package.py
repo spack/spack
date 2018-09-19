@@ -66,10 +66,24 @@ class AppleLibunwind(Package):
 
     @property
     def libs(self):
-        """ Export the Apple libunwind library
+        """Export the Apple libunwind library. The Apple libunwind library
+        cannot be linked to directly using an absolute path; doing so
+        will cause the linker to throw an error 'cannot link directly
+        with /usr/lib/system/libunwind.dylib' and the linker will
+        suggest linking with System.framework instead. Linking to this
+        framework is equivalent to linking with libSystem.dylib, which
+        can be confirmed on a macOS system by executing at a terminal
+        the command `ls -l
+        /System/Library/Frameworks/System.Framework` -- the file
+        "System" is a symlink to `/usr/lib/libSystem.B.dylib`, and
+        `/usr/lib/libSystem.dylib` also symlinks to this file.
+
+        Running `otool -L /usr/lib/libSystem.dylib` confirms that
+        it will link dynamically to `/usr/lib/system/libunwind.dylib`.
+
         """
-        libs = find_libraries('libunwind',
-                              join_path(self.prefix.lib, 'system'),
+        libs = find_libraries('libSystem',
+                              self.prefix.lib,
                               shared=True, recursive=False)
         if libs:
             return libs
