@@ -81,10 +81,12 @@ def test_package_version_consistency():
 
 
 def test_no_fixme():
-    """Packages should not contain any boilerplate FIXME or example.com text."""
+    """Packages should not contain any boilerplate such as
+       FIXME or example.com."""
     errors = []
     for name in spack.repo.all_package_names():
-        filename = spack.repo.Repo(spack.paths.packages_path).filename_for_package_name(name)
+        repo = spack.repo.Repo(spack.paths.packages_path)
+        filename = repo.filename_for_package_name(name)
         with open(filename, 'r') as package_file:
             for line in package_file:
                 if (re.search(r'remove this boilerplate', line) or
