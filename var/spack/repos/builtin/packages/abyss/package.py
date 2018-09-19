@@ -40,7 +40,6 @@ class Abyss(AutotoolsPackage):
         description='''set the maximum k-mer length. 
 	This value must be a multiple of 32''')
 
-
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
 
