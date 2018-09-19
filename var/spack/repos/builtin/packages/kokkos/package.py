@@ -102,13 +102,13 @@ class Kokkos(Package):
     )
 
     # Checks on Kokkos version and Kokkos options
-    conflicts('+aggressive_vectorization', when='@0:2.0.99',)
-    conflicts('+disable_profiling', when='@0:2.0.99',)
-    conflicts('+disable_dualview_modify_check', when='@0:2.03.04',)
-    conflicts('+enable_profile_load_print', when='@0:2.03.04',)
-    conflicts('+compiler_warnings', when='@0:2.03.14',)
-    conflicts('+disable_deprecated_code', when='@0:2.5.99',)
-    conflicts('+enable_eti', when='@0:2.6.99',)
+    conflicts('+aggressive_vectorization', when='@:2.0.99',)
+    conflicts('+disable_profiling', when='@:2.0.99',)
+    conflicts('+disable_dualview_modify_check', when='@:2.03.04',)
+    conflicts('+enable_profile_load_print', when='@:2.03.04',)
+    conflicts('+compiler_warnings', when='@:2.03.14',)
+    conflicts('+disable_deprecated_code', when='@:2.5.99',)
+    conflicts('+enable_eti', when='@:2.6.99',)
 
     # Check that we haven't specified a gpu architecture
     # without specifying CUDA
@@ -131,7 +131,7 @@ class Kokkos(Package):
     # the revision of kokkos does not support
     conflicts('gpu_arch=Volta70', when='@:2.5.99')
     conflicts('gpu_arch=Volta72', when='@:2.5.99')
-    
+
     # conflicts on kokkos version and cuda enabled
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
