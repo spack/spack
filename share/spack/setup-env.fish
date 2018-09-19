@@ -41,6 +41,30 @@
 
 
 
+
+#
+# ALLOCATE_SP_SHARED, and DELETE_SP_SHARED allocate (and delete) temporary
+# global variables
+#
+
+
+function allocate_sp_shared -d "allocate shared (global variables)"
+    set -gx __sp_remaining_args
+    set -gx __sp_subcommand_args
+    set -gx __sp_module_args
+end
+
+
+
+function delete_sp_shared -d "deallocate shared (global variables)"
+    set -e __sp_remaining_args
+    set -e __sp_subcommand_args
+    set -e __sp_module_args
+end
+
+
+
+
 #
 # STREAM_ARGS and SHIFT_ARGS: helper functions manipulating the `argv` array:
 #   -> STREAM_ARGS: echos the `argv` array element-by-element
@@ -93,14 +117,14 @@ end
 #
 # GET_SP_FLAGS, GET_MOD_ARGS, and CHECK_SP_FLAGS: support functions for
 # extracting and checking arguments and flags. Note bash's `shift` operation is
-# simulated by tracking the `remaining_args` array.
+# simulated by tracking the `__sp_remaining_args` array.
 #
 
 
 function get_sp_flags -d "return leading flags"
     #
     # Accumulate initial flags for main spack command. NOTE: Sets the external
-    # array: `remaining_args` containing all unprocessed arguments.
+    # array: `__sp_remaining_args` containing all unprocessed arguments.
     #
 
     # initialize argument counter
@@ -118,9 +142,9 @@ function get_sp_flags -d "return leading flags"
             echo $elt
         else
             # bash compatibility: stop when the match first fails. Upon failure,
-            # we pack the remainder of `argv` into a global `remaining_args`
+            # we pack the remainder of `argv` into a global `__sp_remaining_args`
             # array (`i` tracks the index of the next element).
-            set remaining_args (stream_args $argv[$i..-1])
+            set __sp_remaining_args (stream_args $argv[$i..-1])
             return
         end
 
@@ -129,9 +153,10 @@ function get_sp_flags -d "return leading flags"
 
     end
 
-    # if all elements in `argv` are matched, make sure that `remaining_args` is
-    # initialized to an empty array (this might be overkill...).
-    set remaining_args ""
+    # if all elements in `argv` are matched, make sure that
+    # `__sp_remaining_args` is initialized to an empty array (this might be
+    # overkill...).
+    set __sp_remaining_args
 end
 
 
@@ -139,12 +164,13 @@ end
 function get_mod_args -d "return submodule flags"
     #
     # Accumulate subcommand and submodule arguments. These are accumulated into
-    # the external arrays `sp_subcommand_args`, and `sp_module_args`. NOTE: Sets
-    # the external array: `remaining_args` containing all unprocessed arguments.
+    # the external arrays `__sp_subcommand_args`, and `__sp_module_args`. NOTE:
+    # Sets the external array: `__sp_remaining_args` containing all unprocessed
+    # arguments.
     #
 
-    set sp_subcommand_args ""
-    set sp_module_args ""
+    set __sp_subcommand_args
+    set __sp_module_args
 
     # initialize argument counter
     set -l i 1
@@ -154,18 +180,18 @@ function get_mod_args -d "return submodule flags"
         if echo $elt | string match -r -q "^-"
 
             if test "x$elt" = "x-r"
-                set sp_subcommand_args $sp_subcommand_args $elt
+                set __sp_subcommand_args $__sp_subcommand_args $elt
             else if test "x$elt" = "x--dependencies"
-                set sp_subcommand_args $sp_subcommand_args $elt
+                set __sp_subcommand_args $__sp_subcommand_args $elt
             else
-                set sp_module_args $sp_module_args $elt
+                set __sp_module_args $__sp_module_args $elt
             end
 
         else
             # bash compatibility: stop when the match first fails. Upon failure,
-            # we pack the remainder of `argv` into a global `remaining_args`
+            # we pack the remainder of `argv` into a global `__sp_remaining_args`
             # array (`i` tracks the index of the next element).
-            set remaining_args (stream_args $argv[$i..-1])
+            set __sp_remaining_args (stream_args $argv[$i..-1])
             return
         end
 
@@ -174,9 +200,10 @@ function get_mod_args -d "return submodule flags"
 
     end
 
-    # if all elements in `argv` are matched, make sure that `remaining_args` is
-    # initialized to an empty array (this might be overkill...).
-    set remaining_args ""
+    # if all elements in `argv` are matched, make sure that
+    # `__sp_remaining_args` is initialized to an empty array (this might be
+    # overkill...).
+    set __sp_remaining_args
 end
 
 
@@ -203,7 +230,6 @@ end
 
 
 
-
 #
 # SPACK wrapper function, preprocessing arguments and flags.
 #
@@ -212,11 +238,21 @@ end
 function spack -d "wrapper for the `spack` command"
 
     #
-    # accumulate initial flags for main spack command
+    # Allocate temporary global variables used for return extra arguments from
+    # functions. NOTE: remember to call delete_sp_shared whenever returning from
+    # this function.
     #
 
-    set -g remaining_args "" # remaining (unparsed) arguments
-    set -l sp_flags (get_sp_flags $argv)
+    allocate_sp_shared
+
+
+
+    #
+    # Accumulate initial flags for main spack command
+    #
+
+    set __sp_remaining_args # remaining (unparsed) arguments
+    set -l sp_flags (get_sp_flags $argv) # sets __sp_remaining_args
 
 
 
@@ -225,26 +261,26 @@ function spack -d "wrapper for the `spack` command"
     #
 
     if check_sp_flags $sp_flags
-        command spack $sp_flags $remaining_args
+        command spack $sp_flags $__sp_remaining_args
     end
 
 
 
     #
-    # isolate subcommand and subcommand specs
+    # Isolate subcommand and subcommand specs
     #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
     #     undefined, or if it is an array, `test -n $argv` is unpredictable.
     #     Instead, encapsulate `argv` in a string, and test the string instead.
     #
 
-    set sp_subcommand ""
+    set -l sp_subcommand
 
-    if test -n "$remaining_args[1]"
-        set sp_subcommand $remaining_args[1]
-        set remaining_args (shift_args $remaining_args)     # simulates bash shift
+    if test -n "$__sp_remaining_args[1]"
+        set sp_subcommand $__sp_remaining_args[1]
+        set __sp_remaining_args (shift_args $__sp_remaining_args)  # simulates bash shift
     end
 
-    set -l sp_spec $remaining_args
+    set -l sp_spec $__sp_remaining_args
 
 
     #
@@ -267,9 +303,9 @@ function spack -d "wrapper for the `spack` command"
             #    undefined, or if it is an array, `test -n $argv` is unpredictable.
             #    Instead, encapsulate `argv` in a string, and test the string
             #    instead.
-            if test -n "$remaining_args[1]"
-                set sp_arg $remaining_args[1]
-                set remaining_args (shift_args $remaining_args)     # simulates bash shift
+            if test -n "$__sp_remaining_args[1]"
+                set sp_arg $__sp_remaining_args[1]
+                set __sp_remaining_args (shift_args $__sp_remaining_args) # simulates bash shift
             end
 
 
@@ -279,18 +315,20 @@ function spack -d "wrapper for the `spack` command"
                 command spack cd -h
             else
                 # extract location using the subcommand (fish `(...)`)
-                set -l LOC (command spack location $sp_arg $remaining_args)
+                set -l LOC (command spack location $sp_arg $__sp_remaining_args)
 
                 # test location and cd if exists:
                 if test -d "$LOC"
                     cd $LOC
                 else
+                    delete_sp_shared
                     return 1
                 end
 
             end
 
-            return
+            delete_sp_shared
+            return 0
 
 
         # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
@@ -301,12 +339,11 @@ function spack -d "wrapper for the `spack` command"
         case "use" or "unuse" or "load" or "unload"
 
             # Shift any other args for use off before parsing spec.
-            set sp_subcommand_args ""
-            set sp_module_args ""
+            get_mod_args $__sp_remaining_args # sets: __sp_remaining_args
+                                              #       __sp_subcommand_args
+                                              #       __sp_module_args
 
-            get_mod_args $remaining_args
-
-            set sp_spec $remaining_args
+            set sp_spec $__sp_remaining_args
 
 
             # Here the user has run use or unuse with a spec. Find a matching spec
@@ -317,46 +354,62 @@ function spack -d "wrapper for the `spack` command"
             switch $sp_subcommand
 
                 case "use"
-                    set -l dotkit_args $sp_subcommand_args $sp_spec
+                    set -l dotkit_args $__sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
-                        use $sp_module_args $sp_full_spec
+                        use $__sp_module_args $sp_full_spec
                     else
+                        delete_sp_shared
                         return 1
                     end
 
                 case "unuse"
-                    set -l dotkit_args $sp_subcommand_args $sp_spec
+                    set -l dotkit_args $__sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
-                        unuse $sp_module_args $sp_full_spec
+                        unuse $__sp_module_args $sp_full_spec
                     else
+                        delete_sp_shared
                         return 1
                     end
 
                 case "load"
-                    set -l tcl_args $sp_subcommand_args $sp_spec
+                    set -l tcl_args $__sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
-                        set load_cmd (module load $sp_module_args $sp_full_spec)
+                        # This is a strange behavior of `modulecmd fish load
+                        # $args`. In fish, `load` returns a list of `set`
+                        # imperatives rather than applying them outright. So
+                        # what we'll do is to dump them into a `load_cmd` array
+                        # and then evaluate the contents.
+                        set load_cmd (module load $__sp_module_args $sp_full_spec)
                         eval $load_cmd
                     else
+                        delete_sp_shared
                         return 1
                     end
 
                 case "unload"
-                    set -l tcl_args $sp_subcommand_args $sp_spec
+                    set -l tcl_args $__sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
-                        set unload_cmd (module unload $sp_module_args $sp_full_spec)
+                        # This is a strange behavior of `modulecmd fish load
+                        # $args`. In fish, `unload` returns a list of `set`
+                        # imperatives rather than applying them outright. So
+                        # what we'll do is to dump them into a `load_cmd` array
+                        # and then evaluate the contents.
+                        set unload_cmd (module unload $__sp_module_args $sp_full_spec)
                         eval $unload_cmd
                     else
+                        delete_sp_shared
                         return 1
                     end
             end
 
 
-            # CASE: Catch-all
+        # CASE: Catch-all
         case "*"
             command spack $argv
 
     end
+
+    delete_sp_shared
 end
 
 
@@ -370,27 +423,31 @@ function spack_pathadd
     # If no variable name is supplied, just append to PATH otherwise append to
     # that variable.
 
-    set -l pa_varname PATH
-    set -l pa_new_path $argv[1]
-
     if test -n "$argv[2]"
         set pa_varname $argv[1]
         set pa_new_path $argv[2]
+    else
+        true
+        set pa_varname PATH
+        set pa_new_path $argv[1]
     end
 
-    set -l pa_oldvalue $$pa_varname
+    set pa_oldvalue $$pa_varname
 
     if test -d "$pa_new_path"
-        if string match -q "$pa_new_path" $pa_oldvalue
-        else
+        if not string match -q "$pa_new_path" $pa_oldvalue
             if test -n "$pa_oldvalue"
-                set -xg $pa_varname $pa_new_path $pa_oldvalue
+                set $pa_varname $pa_new_path $pa_oldvalue
             else
-                set -xg $pa_varname $pa_new_path
+                true
+                set $pa_varname $pa_new_path
             end
         end
     end
 end
+
+
+
 
 
 
@@ -407,14 +464,14 @@ set -l sp_source_file (status -f)  # name of current file
 set -l sp_share_dir (realpath (dirname $sp_source_file))
 set -l sp_prefix (realpath (dirname (dirname $sp_share_dir)))
 spack_pathadd fish_user_paths "$sp_prefix/bin"
-set -g SPACK_ROOT $sp_prefix
+set -xg SPACK_ROOT $sp_prefix
 
 
 
 #
 # No need to determine which shell is being used (obviously it's fish)
 #
-set -g SPACK_SHELL "fish"
+set -xg SPACK_SHELL "fish"
 
 
 
@@ -433,7 +490,7 @@ end
 #
 function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
     set -l expr_token (string trim -c "'" (string split "=" $argv))
-    set -g $expr_token[1] $expr_token[2]
+    set -xg $expr_token[1] $expr_token[2]
 end
 
 if test "$need_module" = "yes"
@@ -445,11 +502,12 @@ if test "$need_module" = "yes"
 
     # _sp_module_prefix is set by spack --print-sh-vars
     if test "$_sp_module_prefix" != "not_installed"
-        set -g MODULE_PREFIX $_sp_module_prefix
-        set -g fish_user_paths "$MODULE_PREFIX/bin" $fish_user_paths
+        set -xg MODULE_PREFIX $_sp_module_prefix
+        set -xg fish_user_paths "$MODULE_PREFIX/bin" $fish_user_paths
     end
 
 else
+
     set -l sp_shell_vars (command spack --print-shell-vars sh)
 
     for sp_var_expr in $sp_shell_vars
@@ -467,6 +525,7 @@ end
 #
 # set module system roots
 #
-spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
+set -xg DK_NODE
+set -xg MODULEPATH
+spack_pathadd DK_NODE "$_sp_dotkit_root/$_sp_sys_type"
 spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-
