@@ -26,21 +26,8 @@ from spack import *
 
 
 class Picsarlite(MakefilePackage):
-    """
-    The Particle-In-Cell Scalable Application Resource (PICSAR) is a high
-    performance repository intended to help scientists porting their
-    Particle-In-Cell (PIC) codes to the next generation of exascale computers.
-    PICSAR exploits the three levels of parallelism that will be required to
-    achieve good performances on future architectures: distributed memory
-    parallelization (internode), shared memory parallelization (intranode)
-    and vectorization.
-    PICSAR includes:
-    A high performance library of highly optimized versions of the key
-    functionalities of the PIC loop. A compact "mini-app" standalone code,
-    which serves as a self-contained proxy that adequately portrays the
-    computational loads and dataflow of more complex PIC codes.
-    A Python wrapper for using PICSAR optimized routines with Python-driven
-    codes.
+    """PICSARlite is a self-contained proxy that adequately portrays the
+       computational loads and dataflow of more complex PIC codes.
     """
 
     tags = ['proxy-app', 'ecp-proxy-app']
