@@ -44,9 +44,11 @@ class Root(CMakePackage):
     version('6.13.08', '2b4546fc4b712ba1d672401bee07f5b3')
 
     # Production version
-    version('6.14.00', '3613c930589734531ac8995486d41af5', preferred=True)
+    version('6.14.04', '58d78513abdcba3f12f0c838d00987bb', preferred=True)
 
     # Old versions
+    version('6.14.02', 'f27351828e2f28137eca3d5302ad0376')
+    version('6.14.00', '3613c930589734531ac8995486d41af5')
     version('6.12.06', 'bef6535a5d0cdf471b550da45a10f605')
     version('6.10.08', '88532f68e9e14691f530c60b55beb698')
     version('6.09.02', '4188dfeafb72df339a3d688fe92f57ec')
@@ -213,7 +215,7 @@ class Root(CMakePackage):
 
     # Qt4
     depends_on('qt', when='+qt4')
- 
+
     # TMVA
     depends_on('py-numpy', when='+tmva')
 
