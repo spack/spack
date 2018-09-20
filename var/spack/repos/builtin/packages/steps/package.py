@@ -30,6 +30,12 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("py-cython")
     depends_on("py-gcovr", when="+coverage", type="build")
+    depends_on("py-nose", type="test", when="~coverage")
+    depends_on("py-nose", type=("build", "test"), when="+coverage")
+    depends_on("py-numpy", type="test", when="~coverage")
+    depends_on("py-numpy", type=("build", "test"), when="+coverage")
+    depends_on("py-unittest2", type="test", when="~coverage")
+    depends_on("py-unittest2", type=("build", "test"), when="+coverage")
     depends_on("python")
 
     def cmake_args(self):
