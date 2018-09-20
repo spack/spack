@@ -40,4 +40,3 @@ class Davix(CMakePackage):
     depends_on('libxml2')
     depends_on('libuuid')
     depends_on('openssl')
-
