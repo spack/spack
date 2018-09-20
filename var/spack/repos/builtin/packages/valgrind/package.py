@@ -73,7 +73,7 @@ class Valgrind(AutotoolsPackage):
         if not (spec.satisfies('%clang') and sys.platform == 'darwin'):
             # Otherwise with (Apple's) clang there is a linker error:
             # clang: error: unknown argument: '-static-libubsan'
-            if spec.satisfies('+ubsan'): 
+            if spec.satisfies('+ubsan'):
                 options.append('--enable-ubsan')
         if spec.satisfies('+only64bit'):
             options.append('--enable-only64bit')
