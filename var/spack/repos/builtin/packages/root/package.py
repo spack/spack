@@ -120,7 +120,7 @@ class Root(CMakePackage):
         description='Enable Qt graphics backend')
     variant('r', default=False,
         description='Enable R ROOT bindings')
-    variant('rpath', default=False,
+    variant('rpath', default=True,
         description='Enable RPATH')
     variant('rootfit', default=True,
         description='Build the libRooFit advanced fitting package')
@@ -142,7 +142,7 @@ class Root(CMakePackage):
         description='Enable using thread library')
     variant('tiff', default=True,
         description='Include Tiff support in image processing')
-    variant('tvma', default=True,
+    variant('tmva', default=True,
         description='Build TMVA multi variate analysis library')
     variant('unuran', default=True,
         description='Use UNURAN for random number generation')
@@ -213,6 +213,9 @@ class Root(CMakePackage):
 
     # Qt4
     depends_on('qt', when='+qt4')
+ 
+    # TMVA
+    depends_on('py-numpy', when='+tmva')
 
     # TODO
     # Asimage needs one of these two
@@ -235,6 +238,7 @@ class Root(CMakePackage):
     # depends_on('mysql',    when='+mysql')  - not supported
     depends_on('odbc',      when='+odbc')
     # depends_on('oracle',   when='+oracle')
+    depends_on('openssl',  when='+ssl')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia@6:6.999',  when='+pythia6')
     depends_on('pythia@8:8.999',  when='+pythia8')
@@ -244,7 +248,6 @@ class Root(CMakePackage):
     depends_on('r-inside',  when='+r', type=('build', 'run'))
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
-    depends_on('ssl',       when='+ssl')
     depends_on('tbb',       when='+tbb')
     depends_on('unuran',    when='+unuran')
     depends_on('vc',        when='+vc')
@@ -413,7 +416,7 @@ class Root(CMakePackage):
             '-Droot7:BOOL=%s' % (
                 'ON' if '+root7' in spec else 'OFF'),  # requires C++14
             '-Drpath:BOOL=%s' % (
-                'ON' if '+prefix' in spec else 'OFF'),
+                'ON' if '+rpath' in spec else 'OFF'),
             '-Dshadowpw:BOOL=%s' % (
                 'ON' if '+shadow' in spec else 'OFF'),
             '-Dsqlite:BOOL=%s' % (
