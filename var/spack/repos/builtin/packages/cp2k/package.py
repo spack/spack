@@ -33,7 +33,7 @@ class Cp2k(Package):
     depends_on('blas')
     depends_on('fftw@3:')
     depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
-    depends_on('libxsmm', when='smm=libxsmm')
+    depends_on('libxsmm~header-only', when='smm=libxsmm')
     depends_on('libxc@2.2.2:')
 
     depends_on('mpi@2:', when='+mpi')
