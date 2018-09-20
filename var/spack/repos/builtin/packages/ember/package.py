@@ -32,6 +32,16 @@ class Ember(MakefilePackage):
        (simplified by the removal of application calculations, control flow
        etc.).
     """
+<<<<<<< HEAD
+    tags = ['proxy-app', 'ecp-proxy-app']
+=======
+    Ember Communication Pattern Library
+    The Ember suite provides communication patterns in a simplified setting
+    (simplified by the removal of application calculations, control flow,
+    etc.).
+    """
+>>>>>>> Ember spackage with MPI support only
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
@@ -40,20 +50,39 @@ class Ember(MakefilePackage):
 
     version('1.0.0', sha256='5b2a6b8055b46ab3ea2c7baabaf4d280d837bb7c21eba0c9f59e092c6fc1c4a6')
 
-    variant('halo3d', default=True, description='Halo3d motif')
-    variant('halo3d-26', default=False, description='Halo3d-26 motif')
-    variant('incast', default=False, description='Incast motif')
-    variant('pingpong', default=False, description='Pingpong motif')
-    variant('sweep3d', default=False, description='Sweep3d motif')
+    depends_on('mpi')
 
-    variant('hotspotinc', default=False, description='Hotspotinc motif')
-    variant('randominc', default=False, description='Randominc motif')
+    # TODO: shmem variant disabled due to lack of shmem spackage
+    def edit(self, spec, prefix):
+        file = open('Makefile', 'w')
 
-    depends_on('mpi', when='+halo3d')
-    depends_on('mpi', when='+halo3d-26')
-    depends_on('mpi', when='+incast')
-    depends_on('mpi', when='+pingpong')
-    depends_on('mpi', when='+sweep3d')
+        file.write('CC = mpicc\n')
+        file.write('CFLAGS = -O3 -std=c99\n')
+        file.write('OSHMEM_CC=cc\n')
+        file.write('OSHMEM_C_FLAGS=-O3 -g\n')
+
+        file.write('export CC CFLAGS OSHMEM_CC OSHMEM_C_FLAGS\n')
+
+        file.write('all:\n')
+        file.write('\t@$(MAKE) -C mpi/halo3d -f Makefile\n')
+        file.write('\t@$(MAKE) -C mpi/halo3d-26 -f Makefile\n')
+        file.write('\t@$(MAKE) -C mpi/incast -f Makefile\n')
+        file.write('\t@$(MAKE) -C mpi/pingpong -f Makefile\n')
+        file.write('\t@$(MAKE) -C mpi/sweep3d -f Makefile\n')
+        # file.write('\t@$(MAKE) -C shmem/hotspotinc -f Makefile\n')
+        # file.write('\t@$(MAKE) -C shmem/randominc -f Makefile\n')
+
+        file.write('.PHONY: clean\n')
+        file.write('clean:\n')
+        file.write('\t@$(MAKE) -C mpi/halo3d -f Makefile clean\n')
+        file.write('\t@$(MAKE) -C mpi/halo3d-26 -f Makefile clean\n')
+        file.write('\t@$(MAKE) -C mpi/incast -f Makefile clean\n')
+        file.write('\t@$(MAKE) -C mpi/pingpong -f Makefile clean\n')
+        file.write('\t@$(MAKE) -C mpi/sweep3d -f Makefile clean\n')
+        # file.write('\t@$(MAKE) -C shmem/hotspotinc -f Makefile clean\n')
+        # file.write('\t@$(MAKE) -C shmem/randominc -f Makefile clean\n')
+
+        file.close()
 
     @property
     def build_targets(self):
@@ -63,34 +92,10 @@ class Ember(MakefilePackage):
         oshmem_cc = 'cc'
         oshmem_c_flags = '-O3 -g'
 
-        if '+halo3d' in self.spec:
-            targets.append('--directory=mpi/halo3d')
-            targets.append('CC = {0}'.format(cc))
-            targets.append('CFLAGS = {0}'.format(cflags))
-        elif '+halo3d-26' in self.spec:
-            targets.append('--directory=mpi/halo3d-26')
-            targets.append('CC = {0}'.format(cc))
-            targets.append('CFLAGS = {0}'.format(cflags))
-        elif '+incast' in self.spec:
-            targets.append('--directory=mpi/incast')
-            targets.append('CC = {0}'.format(cc))
-            targets.append('CFLAGS = {0}'.format(cflags))
-        elif '+pingpong' in self.spec:
-            targets.append('--directory=mpi/pingpong')
-            targets.append('CC = {0}'.format(cc))
-            targets.append('CFLAGS = {0}'.format(cflags))
-        elif '+sweep3d' in self.spec:
-            targets.append('--directory=mpi/sweep3d')
-            targets.append('CC = {0}'.format(cc))
-            targets.append('CFLAGS = {0}'.format(cflags))
-        elif '+hotspotinc' in self.spec:
-            targets.append('--directory=shmem/hotspotinc')
-            targets.append('OSHMEM_CC = {0}'.format(oshmem_cc))
-            targets.append('OSHMEM_C_FLAGS = {0}'.format(oshmem_c_flags))
-        elif '+randominc' in self.spec:
-            targets.append('--directory=shmem/randominc')
-            targets.append('OSHMEM_CC = {0}'.format(oshmem_cc))
-            targets.append('OSHMEM_C_FLAGS = {0}'.format(oshmem_c_flags))
+        targets.append('CC = {0}'.format(cc))
+        targets.append('CFLAGS = {0}'.format(cflags))
+        targets.append('OSHMEM_CC = {0}'.format(oshmem_cc))
+        targets.append('OSHMEM_C_FLAGS = {0}'.format(oshmem_c_flags))
 
         return targets
 
