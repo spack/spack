@@ -45,9 +45,9 @@ class Vecgeom(CMakePackage):
             description='Use the specified C++ standard when building.')
     variant('vector',
              default='native',
-             values=('sse3','sse4.2','native'),
+             values=('sse3', 'sse4.2', 'native'),
              multi=False,
-             description='Use the specified instruction set for vectorization.')
+             description='Specify the instruction set for vectorization.')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -59,13 +59,13 @@ class Vecgeom(CMakePackage):
             '-DUSOLIDS_VECGEOM=ON',
             '-DROOT=OFF',
             '-DNO_SPECIALIZATION=ON',
-            '-DCMAKE_VERBOSE_MAKEFILE=TRUE'] 
+            '-DCMAKE_VERBOSE_MAKEFILE=TRUE']
         options.append('-DCMAKE_CXX_STANDARD={0}'.
-            format(self.spec.variants['cxxstd'].value))
+                       format(self.spec.variants['cxxstd'].value))
         arch = platform.machine()
         if arch == 'x86_64':
             options.append('-DVECGEOM_VECTOR={0}'.
-            format(self.spec.variants['vector'].value))
+                           format(self.spec.variants['vector'].value))
         else:
             options.append('-DVECGEOM_VECTOR=' + arch)
         return options
