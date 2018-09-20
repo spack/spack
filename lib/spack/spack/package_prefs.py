@@ -274,7 +274,7 @@ def get_package_permissions(spec):
                                         '')
             if readable:
                 break
-        except:
+        except AttributeError:
             readable = 'world'
 
     # Get write permissions level
@@ -284,7 +284,7 @@ def get_package_permissions(spec):
                                         '')
             if writable:
                 break
-        except:
+        except AttributeError:
             writable = 'user'
 
     perms = stat.S_IRWXU
@@ -317,7 +317,7 @@ def get_package_group(spec):
                                      '')
             if group:
                 break
-        except:
+        except AttributeError:
             group = ''
     return group
 
