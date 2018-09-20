@@ -266,37 +266,33 @@ def get_package_dir_permissions(spec):
 
 def get_package_permissions(spec):
     """Return the permissions configured for the spec"""
-    allpkgs = get_packages_config()
 
-    # Get readable permissions level
-    if spec.name in allpkgs and 'readable' in allpkgs[spec.name]:
-        readable = allpkgs[spec.name]['readable']
-    elif 'all' in allpkgs and 'readable' in allpkgs['all']:
-        readable = allpkgs['all']['readable']
-    else:
-        readable = 'world'
-    if readable not in ('user', 'group', 'world'):
-        raise ConfigError("Invalid 'readable' permissions %s.\n" % spec.name +
-                          "      Valid values are 'user', 'group', 'world'")
+    # Get read permissions level
+    for name in (spec.name, 'all'):
+        try:
+            readable = spack.config.get('packages:%s:permissions:read' % name,
+                                        '')
+            if readable:
+                break
+        except:
+            readable = 'world'
 
-    # Get writable permissions level
-    if spec.name in allpkgs and 'writable' in allpkgs[spec.name]:
-        writable = allpkgs[spec.name]['writable']
-    elif 'all' in allpkgs and 'writable' in allpkgs['all']:
-        writable = allpkgs['all']['writable']
-    else:
-        writable = 'user'
-    if readable not in ('user', 'group', 'world'):
-        raise ConfigError("Invalid 'readable' permissions %s.\n" % spec.name +
-                          "      Valid values are 'user', 'group', 'world'")
+    # Get write permissions level
+    for name in (spec.name, 'all'):
+        try:
+            writable = spack.config.get('packages:%s:permissions:write' % name,
+                                        '')
+            if writable:
+                break
+        except:
+            writable = 'user'
 
-    # rwx permissions set by build_system
-    # Only ugo granularity configurable
     perms = stat.S_IRWXU
     if readable in ('world', 'group'):  # world includes group
         perms |= stat.S_IRGRP | stat.S_IXGRP
     if readable == 'world':
         perms |= stat.S_IROTH | stat.S_IXOTH
+
     if writable in ('world', 'group'):
         if readable == 'user':
             raise ConfigError('Writable permissions may not be more' +
@@ -315,13 +311,15 @@ def get_package_permissions(spec):
 
 def get_package_group(spec):
     """Return the unix group associated with the spec"""
-    allpkgs = get_packages_config()
-    if spec.name in allpkgs and 'group' in allpkgs[spec.name]:
-        return allpkgs[spec.name]['group']
-    elif 'all' in allpkgs and 'group' in allpkgs['all']:
-        return allpkgs['all']['group']
-    else:
-        return ''
+    for name in (spec.name, 'all'):
+        try:
+            group = spack.config.get('packages:%s:permissions:group' % name,
+                                     '')
+            if group:
+                break
+        except:
+            group = ''
+    return group
 
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):

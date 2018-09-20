@@ -59,14 +59,22 @@ schema = {
                             'type':  'boolean',
                             'default': True,
                         },
-                        'readable': {
-                            'type':  'string',
-                        },
-                        'writable': {
-                            'type':  'string',
-                        },
-                        'group': {
-                            'type':  'string',
+                        'permissions': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
+                                'read': {
+                                    'type':  'string',
+                                    'enum': ['user', 'group', 'world'],
+                                },
+                                'write': {
+                                    'type':  'string',
+                                    'enum': ['user', 'group', 'world'],
+                                },
+                                'group': {
+                                    'type':  'string',
+                                },
+                            },
                         },
                         'modules': {
                             'type': 'object',

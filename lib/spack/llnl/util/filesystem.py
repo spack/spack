@@ -249,14 +249,15 @@ def chgrp(path, group):
 
 
 def chmod_x(entry, perms):
-    """Implements the uppercase X version of the executable permissions as
-    default for chmod.
+    """Implements chmod, treating all executable bits as set using the chmod
+    utility's `+X` option.
     """
     mode = os.stat(entry).st_mode
-    if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
-        perms &= ~stat.S_IXUSR
-        perms &= ~stat.S_IXGRP
-        perms &= ~stat.S_IXOTH
+    if os.path.isfile(entry):
+        if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            perms &= ~stat.S_IXUSR
+            perms &= ~stat.S_IXGRP
+            perms &= ~stat.S_IXOTH
     os.chmod(entry, perms)
 
 

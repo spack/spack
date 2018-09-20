@@ -173,20 +173,40 @@ dependency.
 Package Permissions
 -------------------
 
-Spack can be configured to assign file permissions to the files
-installed by a package.
+Spack can be configured to assign permissions to the files installed
+by a package.
 
-In the ``packages.yaml`` file, the attributes ``readable``,
-``writable``, and ``group`` control the package permissions. These
-attributes can be set under a package name or under ``all``.
+In the ``packages.yaml`` file under ``permissions``, the attributes
+``read``, ``write``, and ``group`` control the package
+permissions. These attributes can be set per-package, or for all
+packages under ``all``. If permissions are set under ``all`` and for a
+specific package, the package settings take precedence.
 
-The ``readable`` and ``writable`` attributes take the strings
-``user``, ``group``, and ``world``. Those strings describe the
-broadest level of access available for reading or writing the files
-installed by that package, respectively. The execute permissions of
+The ``read`` and ``write`` attributes take one of ``user``, ``group``,
+and ``world``.
+
+.. code-block:: yaml
+
+  packages:
+    all:
+      permissions:
+        write: group
+        group: spack
+    my_app:
+      permissions:
+        read: group
+        group: my_team
+
+The permissions settings describe the broadest level of access to
+installations of the specified packages. The execute permissions of
 the file are set to the same level as read permissions for those files
-that are executable. The default setting for ``readable`` is
-``world``, and for ``writable`` is ``user``.
+that are executable. The default setting for ``read`` is ``world``,
+and for ``write`` is ``user``. In the example above, installations of
+``my_app`` will be installed with user and group permissions but no
+world permissions, and owned by the group ``my_team``. All other
+packages will be installed with user and group write privileges, and
+world read privileges. Those packages will be owned by the group
+``spack``.
 
 The ``group`` attribute assigns a unix-style group to a package. All
 files installed by the package will be owned by the assigned group,

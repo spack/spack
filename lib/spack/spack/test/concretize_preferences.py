@@ -46,6 +46,31 @@ def concretize_scope(config, tmpdir):
     spack.repo.path._provider_index = None
 
 
+@pytest.fixture()
+def configure_permissions():
+    conf = syaml.load("""\
+all:
+  permissions:
+    read: group
+    write: group
+    group: all
+mpich:
+  permissions:
+    read: user
+    write: user
+mpileaks:
+  permissions:
+    write: user
+    group: mpileaks
+callpath:
+  permissions:
+    write: world
+""")
+    spack.config.set('packages', conf, scope='concretize')
+
+    yield
+
+
 def concretize(abstract_spec):
     return Spec(abstract_spec).concretized()
 
@@ -176,27 +201,10 @@ mpich:
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
 
-    def test_config_permissions(self):
+    def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are
         # configured in the same file and therefore convenient to test here.
         # Make sure we can configure readable and writable
-        conf = syaml.load("""\
-all:
-    readable: group
-    writable: group
-    group: all
-mpich:
-    readable: user
-    writable: user
-mpileaks:
-    writable: user
-    group: mpileaks
-callpath:
-    writable: world
-zlib:
-    readable: test
-""")
-        spack.config.set('packages', conf, scope='concretize')
 
         # Test inheriting from 'all'
         spec = Spec('zmpi')
@@ -209,6 +217,7 @@ zlib:
         group = spack.package_prefs.get_package_group(spec)
         assert group == 'all'
 
+    def test_config_permissions_from_package(self, configure_permissions):
         # Test overriding 'all'
         spec = Spec('mpich')
         perms = spack.package_prefs.get_package_permissions(spec)
@@ -220,6 +229,7 @@ zlib:
         group = spack.package_prefs.get_package_group(spec)
         assert group == 'all'
 
+    def test_config_permissions_differ_read_write(self, configure_permissions):
         # Test overriding group from 'all' and different readable/writable
         spec = Spec('mpileaks')
         perms = spack.package_prefs.get_package_permissions(spec)
@@ -232,12 +242,8 @@ zlib:
         group = spack.package_prefs.get_package_group(spec)
         assert group == 'mpileaks'
 
+    def test_config_perms_fail_write_gt_read(self, configure_permissions):
         # Test failure for writable more permissive than readable
         spec = Spec('callpath')
-        with pytest.raises(ConfigError):
-            spack.package_prefs.get_package_permissions(spec)
-
-        # Test failure for readable/writable not in (user, group, world)
-        spec = Spec('zlib')
         with pytest.raises(ConfigError):
             spack.package_prefs.get_package_permissions(spec)
