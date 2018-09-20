@@ -51,8 +51,6 @@ class Cp2k(Package):
 
     # TODO : add dependency on CUDA
 
-    parallel = False
-
     def install(self, spec, prefix):
         # Construct a proper filename for the architecture file
         cp2k_architecture = '{0.architecture}-{0.compiler.name}'.format(spec)
