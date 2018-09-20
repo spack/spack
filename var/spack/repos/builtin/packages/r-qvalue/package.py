@@ -41,10 +41,12 @@ class RQvalue(RPackage):
     and data mining."""
 
     homepage = "https://www.bioconductor.org/packages/qvalue/"
-    url      = "https://git.bioconductor.org/packages/qvalue"
+    git      = "https://git.bioconductor.org/packages/qvalue.git"
 
-    version('2.8.0', git='https://git.bioconductor.org/packages/qvalue', commit='c7bf3315619d42d800f57a36670c25a7495ded72')
+    version('2.12.0', commit='7df64ebfcbe69dcbf8b88cb6ef0068bf16979673')
+    version('2.8.0', commit='c7bf3315619d42d800f57a36670c25a7495ded72')
 
-    depends_on('r@3.4.0:3.4.9', when='@2.8.0')
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.8.0', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@2.12.0', type=('build', 'run'))

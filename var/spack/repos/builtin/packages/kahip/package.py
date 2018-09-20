@@ -44,8 +44,9 @@ class Kahip(SConsPackage):
 
     homepage  = 'http://algo2.iti.kit.edu/documents/kahip/index.html'
     url       = 'http://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz'
+    git       = 'https://github.com/schulzchristian/KaHIP.git'
 
-    version('develop', git='https://github.com/schulzchristian/KaHIP.git')
+    version('develop', branch='master')
     version('2.00', '0a66b0a604ad72cfb7e3dce00e2c9fdfac82b855')
 
     depends_on('argtable')

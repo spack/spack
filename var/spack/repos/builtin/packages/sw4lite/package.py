@@ -34,9 +34,10 @@ class Sw4lite(MakefilePackage):
 
     homepage = "https://geodynamics.org/cig/software/sw4"
     url      = "https://github.com/geodynamics/sw4lite/archive/v1.0.zip"
+    git      = "https://github.com/geodynamics/sw4lite.git"
 
-    version('develop', git='https://github.com/geodynamics/sw4lite',
-            branch='master')
+    version('develop', branch='master')
+    version('1.1', sha256='34b5f7b56f9e40474c14abebcaa024192de018de6beb6dafee53d3db5b07c6d3')
     version('1.0', '3d911165f4f2ff6d5f9c1bd56ab6723f')
 
     variant('openmp', default=True, description='Build with OpenMP support')

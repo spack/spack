@@ -22,7 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import contextlib
 import os
+
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -86,3 +88,30 @@ def dump_environment(path):
     with open(path, 'w') as env_file:
         for key, val in sorted(os.environ.items()):
             env_file.write('export %s="%s"\n' % (key, val))
+
+
+@contextlib.contextmanager
+def set_env(**kwargs):
+    """Temporarily sets and restores environment variables.
+
+    Variables can be set as keyword arguments to this function.
+    """
+    saved = {}
+    for var, value in kwargs.items():
+        if var in os.environ:
+            saved[var] = os.environ[var]
+
+        if value is None:
+            if var in os.environ:
+                del os.environ[var]
+        else:
+            os.environ[var] = value
+
+    yield
+
+    for var, value in kwargs.items():
+        if var in saved:
+            os.environ[var] = saved[var]
+        else:
+            if var in os.environ:
+                del os.environ[var]

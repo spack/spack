@@ -31,10 +31,12 @@ class Mpich(AutotoolsPackage):
     the Message Passing Interface (MPI) standard."""
 
     homepage = "http://www.mpich.org"
-    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    git      = "https://github.com/pmodels/mpich.git"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
+    version('develop', submodules=True)
     version('3.2.1', 'e175452f4d61646a52c73031683fc375')
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
@@ -43,7 +45,6 @@ class Mpich(AutotoolsPackage):
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
-    version('develop', git='git://github.com/pmodels/mpich', submodules=True)
 
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('pmi',   default=True,  description='Build with PMI support')

@@ -40,6 +40,7 @@
 # Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Qtgraph(QMakePackage):
@@ -49,13 +50,10 @@ class Qtgraph(QMakePackage):
        libgvc within the Qt Graphics View Framework."""
 
     homepage = "https://github.com/OpenSpeedShop/QtGraph"
-    url      = "https://github.com/OpenSpeedShop/QtGraph.git"
+    git      = "https://github.com/OpenSpeedShop/QtGraph.git"
 
-    version('1.0.0.0', branch='1.0.0.0',
-            git='https://github.com/OpenSpeedShop/QtGraph.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/QtGraph.git')
+    version('develop', branch='master')
+    version('1.0.0.0', branch='1.0.0.0')
 
     # qtgraph depends on these packages
     depends_on('qt@4.8.6:', when='@develop')
@@ -69,11 +67,17 @@ class Qtgraph(QMakePackage):
         spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
         spack_env.set('INSTALL_ROOT', self.prefix)
 
+        # What library suffix should be used based on library existence
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+
         # The implementor has set up the library and include paths in
         # a non-conventional way.  We reflect that here.
         run_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
-                self.prefix.lib64,
+                lib_dir,
                 '{0}'.format(self.spec['qt'].version.up_to(3))))
 
         run_env.prepend_path('CPATH', self.prefix.include.QtGraph)

@@ -29,9 +29,9 @@ class RA4preproc(RPackage):
     """Automated Affymetrix Array Analysis Preprocessing Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4Preproc/"
-    url      = "https://git.bioconductor.org/packages/a4Preproc"
+    git      = "https://git.bioconductor.org/packages/a4Preproc.git"
 
-    version('1.24.0', git='https://git.bioconductor.org/packages/a4Preproc', commit='651014b8102807aea4f1274e34e083e70b5e7ee7')
+    version('1.24.0', commit='651014b8102807aea4f1274e34e083e70b5e7ee7')
 
     depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-annotationdbi', type=('build', 'run'))

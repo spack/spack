@@ -31,15 +31,17 @@ class Camellia(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/nateroberts/Camellia"
-    url      = "https://bitbucket.org/nateroberts/camellia.git"
+    git      = "https://bitbucket.org/nateroberts/camellia.git"
 
     maintainers = ['CamelliaDPG']
-    version('master', git='https://bitbucket.org/nateroberts/camellia.git', branch='master')
+
+    version('master', branch='master')
 
     variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
 
     depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
     depends_on('moab@:4', when='+moab')
+    depends_on('hdf5@:1.8')
     depends_on('mpi')
 
     def cmake_args(self):

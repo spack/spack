@@ -32,10 +32,12 @@ class QmdProgress(CMakePackage):
     commonly used in quantum chemistry packages."""
 
     homepage = "https://github.com/lanl/qmd-progress"
-    url      = "https://github.com/lanl/qmd-progress"
+    url      = "https://github.com/lanl/qmd-progress/tarball/v1.1.0"
+    git      = "https://github.com/lanl/qmd-progress.git"
 
-    version('develop', git='https://github.com/lanl/qmd-progress', branch='master')
-    version('1.0.0', git='https://github.com/lanl/qmd-progress', tag='v1.0.0')
+    version('develop', branch='master')
+    version('1.1.0', 'dda155134f0925629bf116e562c0a4bd')
+    version('1.0.0', 'c950bead2719a47a78864e3376ba143e')
 
     variant('graphlib', default=False, description='Build with Metis Suppport')
     variant('mpi', default=True, description='Build with MPI Support')

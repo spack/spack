@@ -29,9 +29,9 @@ class RA4core(RPackage):
     """Automated Affymetrix Array Analysis Core Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4Core/"
-    url      = "https://git.bioconductor.org/packages/a4Core"
+    git      = "https://git.bioconductor.org/packages/a4Core.git"
 
-    version('1.24.0', git='https://git.bioconductor.org/packages/a4Core', commit='c871faa3e1ab6be38a9ea3018816cf31b58b0ed3')
+    version('1.24.0', commit='c871faa3e1ab6be38a9ea3018816cf31b58b0ed3')
 
     depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-biobase', type=('build', 'run'))

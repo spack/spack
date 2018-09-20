@@ -40,20 +40,26 @@ class EcpProxyApps(Package):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('1.0', '5a26b184f506afeb7d221f15c0e8f153')
+    version('1.1', '15825c318acd3726fd8e72803b1c1090')
+    version('1.0', '8b3f00f05e6cde88d8d913da4293ee62')
 
-    depends_on('amg@1.0', when='@1.0')
-    depends_on('candle-benchmarks@1.0', when='@1.0')
+    # Added with release 1.1
+    depends_on('examinimd@1.0', when='@1.1:')
+
+    depends_on('amg@1.0', when='@1.0:')
+    depends_on('candle-benchmarks@0.0', when='@1.0:')
+    depends_on('laghos@1.0', when='@1.0:')
+    depends_on('macsio@1.0', when='@1.0:')
+    depends_on('miniamr@1.4.0', when='@1.0:')
+    depends_on('minife@2.1.0', when='@1.0:')
+    depends_on('minitri@1.0', when='@1.0:')
+    depends_on('nekbone@17.0', when='@1.0:')
+    depends_on('sw4lite@1.0', when='@1.0:')
+    depends_on('swfft@1.0', when='@1.0:')
+    depends_on('xsbench@14', when='@1.0:')
+
+    # Removed after release 1.0
     depends_on('comd@1.1', when='@1.0')
-    depends_on('laghos@1.0', when='@1.0')
-    depends_on('macsio@1.0', when='@1.0')
-    depends_on('miniamr@1.4.0', when='@1.0')
-    depends_on('minife@2.1.0', when='@1.0')
-    depends_on('minitri@1.0', when='@1.0')
-    depends_on('nekbone@17.0', when='@1.0')
-    depends_on('sw4lite@1.0', when='@1.0')
-    depends_on('swfft@1.0', when='@1.0')
-    depends_on('xsbench@14', when='@1.0')
 
     # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):

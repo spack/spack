@@ -32,10 +32,11 @@ class Nlopt(CMakePackage):
     other algorithms."""
 
     homepage = "https://nlopt.readthedocs.io"
-    url      = "https://github.com/stevengj/nlopt/releases/download/nlopt-2.4.2/nlopt-2.4.2.tar.gz"
+    url      = "https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz"
+    git      = "https://github.com/stevengj/nlopt.git"
 
-    version('develop', git='https://github.com/stevengj/nlopt.git', branch='master')
-    version('2.4.2', 'd0b8f139a4acf29b76dbae69ade8ac54')
+    version('develop', branch='master')
+    version('2.5.0', 'ada08c648bf9b52faf8729412ff6dd6d')
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('python', default=True, description='Build python wrappers')

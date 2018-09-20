@@ -34,6 +34,7 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://pypi.python.org/pypi/matplotlib"
     url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-2.0.2.tar.gz"
 
+    version('2.2.3', '403b0bddd751d71187416f20d4cff100')
     version('2.2.2', 'dd1e49e041309a7fd4e32be8bf17c3b6')
     version('2.0.2', '061111784278bde89b5d4987014be4ca')
     version('2.0.0', '7aa54b06327f0e1c4f3877fc2f7d6b17')
@@ -68,6 +69,7 @@ class PyMatplotlib(PythonPackage):
 
     depends_on('libpng@1.2:')
     depends_on('freetype@2.3:')
+    patch('freetype-include-path.patch', when='@2.2.2:2.9.9')  # Patch to pick up correct freetype headers
 
     depends_on('py-numpy@1.6:', type=('build', 'run'))
     depends_on('py-dateutil@1.1:', type=('build', 'run'))
@@ -95,9 +97,8 @@ class PyMatplotlib(PythonPackage):
     depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-    # depends_on('py-mock', type='test')
+    depends_on('py-nose', type='test')
+    depends_on('py-mock', type='test')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')

@@ -31,9 +31,9 @@ class ScorecCore(CMakePackage):
     """
 
     homepage = 'https://www.scorec.rpi.edu/'
-    url = 'https://github.com/SCOREC/core.git'
+    git      = 'https://github.com/SCOREC/core.git'
 
-    version('develop', git=url)
+    version('develop')
 
     depends_on('mpi')
     depends_on('zoltan')

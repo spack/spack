@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import glob
 
 
@@ -34,12 +33,13 @@ class Chombo(MakefilePackage):
        logically rectangular (i.e. Cartesian) grids."""
 
     homepage = "https://commons.lbl.gov/display/chombo"
-    url      = "http://bitbucket.org/drhansj/chombo-xsdk.git"
+    git      = "http://bitbucket.org/drhansj/chombo-xsdk.git"
+
+    tags = ['ecp', 'ecp-apps']
 
     # Use whatever path Brian V. and Terry L. agreed upon, but preserve version
-    version('3.2', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
-    version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
-#    version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
+    version('3.2', commit='71d856c')
+    version('develop', tag='master')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('hdf5', default=True, description='Enable HDF5 support')
@@ -70,8 +70,8 @@ class Chombo(MakefilePackage):
         # Set remaining variables in Make.defs.local
         # Make.defs.local.template.patch ensures lines for USE_TIMER,
         # USE_LAPACK and lapackincflags are present
-        copyfile('./lib/mk/Make.defs.local.template',
-                 './lib/mk/Make.defs.local')
+        copy('./lib/mk/Make.defs.local.template',
+             './lib/mk/Make.defs.local')
 
         defs_file = FileFilter('./lib/mk/Make.defs.local')
 

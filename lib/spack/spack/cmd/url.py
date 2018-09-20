@@ -23,10 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from __future__ import division, print_function
-
 from collections import defaultdict
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
+import spack.fetch_strategy as fs
 import spack.repo
+import spack.util.crypto as crypto
 
 from llnl.util import tty
 from spack.url import parse_version_offset, parse_name_offset
@@ -87,12 +92,18 @@ def setup_parser(subparser):
         'summary',
         help='print a summary of how well we are parsing package urls')
 
+    # Stats
+    sp.add_parser(
+        'stats',
+        help='print statistics on versions and checksums for all packages')
+
 
 def url(parser, args):
     action = {
         'parse':   url_parse,
         'list':    url_list,
-        'summary': url_summary
+        'summary': url_summary,
+        'stats':   url_stats,
     }
 
     action[args.subcommand](args)
@@ -227,7 +238,7 @@ def url_summary(args):
 
     print()
     print('    Index  Count  Regular Expression')
-    for ni in name_regex_dict:
+    for ni in sorted(name_regex_dict.keys()):
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             ni, name_count_dict[ni], name_regex_dict[ni]))
     print()
@@ -236,7 +247,7 @@ def url_summary(args):
 
     print()
     print('    Index  Count  Regular Expression')
-    for vi in version_regex_dict:
+    for vi in sorted(version_regex_dict.keys()):
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             vi, version_count_dict[vi], version_regex_dict[vi]))
     print()
@@ -244,6 +255,77 @@ def url_summary(args):
     # Return statistics, only for testing purposes
     return (total_urls, correct_names, correct_versions,
             name_count_dict, version_count_dict)
+
+
+def url_stats(args):
+    stats = {}  # stats about fetchers in packages.
+    nvers = 0   # total number of versions
+    npkgs = 0   # total number of packages
+
+    def inc(fstype, category, attr=None):
+        """Increment statistics in the stats dict."""
+        categories = stats.setdefault(fstype, {})
+        if attr:
+            cat_stats = categories.setdefault(category, {})
+            val = cat_stats.setdefault(attr, 0)
+            stats[fstype][category][attr] = val + 1
+        else:
+            val = categories.setdefault(category, 0)
+            stats[fstype][category] = val + 1
+
+    # over all packages
+    for pkg in spack.repo.path.all_packages():
+        npkgs += 1
+
+        # look at each version
+        for v, args in pkg.versions.items():
+            # figure out what type of fetcher it is
+            fetcher = fs.for_package_version(pkg, v)
+            nvers += 1
+
+            fstype = fetcher.url_attr
+            inc(fstype, 'total')
+
+            # put some special stats in for particular types of fetchers.
+            if fstype == 'git':
+                if 'commit' in args:
+                    inc('git', 'security', 'commit')
+                else:
+                    inc('git', 'security', 'no commit')
+            elif fstype == 'url':
+                for h in crypto.hashes:
+                    if h in args:
+                        inc('url', 'checksums', h)
+                        break
+                else:
+                    if 'checksum' in args:
+                        h = crypto.hash_algo_for_digest(args['checksum'])
+                        inc('url', 'checksums', h)
+                    else:
+                        inc('url', 'checksums', 'no checksum')
+
+                # parse out the URL scheme (https/http/ftp/etc.)
+                urlinfo = urlparse(fetcher.url)
+                inc('url', 'schemes', urlinfo.scheme)
+
+    # print a nice summary table
+    tty.msg("%d total versions for %d packages:" % (nvers, npkgs))
+    line_width = 36
+    print("-" * line_width)
+    for fetcher, fetcher_stats in sorted(stats.items(), reverse=True):
+        fs_total = fetcher_stats['total']
+        fs_pct = float(fs_total) / nvers * 100
+        print("%-22s%5d%8.1f%%" % (fetcher, fs_total, fs_pct))
+
+        for category, cat_stats in sorted(fetcher_stats.items(), reverse=True):
+            if category == 'total':
+                continue
+            print("  %s" % category)
+
+            for name, number in sorted(cat_stats.items(), reverse=True):
+                pct = float(number) / fs_total * 100
+                print("    %-18s%5d%8.1f%%" % (name, number, pct))
+        print("-" * line_width)
 
 
 def print_name_and_version(url):

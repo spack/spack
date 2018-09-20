@@ -32,15 +32,12 @@ class PyPsyclone(PythonPackage):
 
     homepage = "https://github.com/stfc/PSyclone"
     url      = "https://github.com/stfc/PSyclone/archive/1.5.1.tar.gz"
-    giturl   = "https://github.com/stfc/PSyclone.git"
+    git      = "https://github.com/stfc/PSyclone.git"
 
-    version('1.5.1', git=giturl,
-            commit='eba7a097175b02f75dec70616cf267b7b3170d78')
-    version('develop', git=giturl, branch='master')
+    version('develop', branch='master')
+    version('1.5.1', commit='eba7a097175b02f75dec70616cf267b7b3170d78')
 
     depends_on('py-setuptools', type='build')
-
-    depends_on('python', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
 
     # Test cases fail without compatible versions of py-fparser:
@@ -48,8 +45,8 @@ class PyPsyclone(PythonPackage):
     depends_on('py-fparser', type=('build', 'run'), when='@1.5.2:')
 
     # Dependencies only required for tests:
-    depends_on('py-numpy', type='test')
-    depends_on('py-nose', type='test')
+    depends_on('py-numpy',  type='test')
+    depends_on('py-nose',   type='test')
     depends_on('py-pytest', type='test')
 
     @run_after('install')

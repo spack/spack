@@ -22,9 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-import shutil
 
 
 class Libgridxc(Package):
@@ -42,7 +40,7 @@ class Libgridxc(Package):
         sh = which('sh')
         with working_dir('build', create=True):
             sh('../src/config.sh')
-            shutil.copyfile('../extra/fortran.mk', 'fortran.mk')
+            copy('../extra/fortran.mk', 'fortran.mk')
 
     def install(self, spec, prefix):
         with working_dir('build'):

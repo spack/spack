@@ -35,9 +35,9 @@ class LibjpegTurbo(Package):
     url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
 
     version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
-    version('1.5.3', '7c82f0f6a3130ec06b8a4d0b321cbca3')
-    version('1.5.0', '3fc5d9b6a8bce96161659ae7a9939257')
-    version('1.3.1', '2c3a68129dac443a72815ff5bb374b05')
+    version('1.5.3', '5b7549d440b86c98a517355c102d155e')
+    version('1.5.0', 'eff98ac84de05eafc65ae96caa6e23e9')
+    version('1.3.1', '5e4bc19c3cb602bcab1296b9bee5124c')
 
     provides('jpeg')
 
@@ -47,14 +47,18 @@ class LibjpegTurbo(Package):
     # TODO: Implement the selection between two supported assemblers.
     # depends_on("yasm", type='build')
     depends_on("nasm", type='build')
+    depends_on('autoconf', type='build', when="@1.3.1:1.5.3")
+    depends_on('automake', type='build', when="@1.3.1:1.5.3")
+    depends_on('libtool', type='build', when="@1.3.1:1.5.3")
     depends_on('cmake', type='build', when="@1.5.90:")
 
     @property
     def libs(self):
         return find_libraries("libjpeg*", root=self.prefix, recursive=True)
 
-    @when('@:1.5.3')
+    @when('@1.3.1:1.5.3')
     def install(self, spec, prefix):
+        autoreconf('-ifv')
         configure('--prefix=%s' % prefix)
         make()
         make('install')

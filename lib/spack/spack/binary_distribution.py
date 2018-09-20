@@ -31,10 +31,10 @@ import tempfile
 import hashlib
 from contextlib import closing
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree
+from llnl.util.filesystem import mkdirp, install_tree, get_filetype
 
 import spack.cmd
 import spack.fetch_strategy as fs
@@ -148,7 +148,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  of files potentially needing relocation
             if relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
-                filetype = relocate.get_filetype(path_name)
+                filetype = get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
@@ -203,13 +203,13 @@ def tarball_path_name(spec, ext):
 
 def checksum_tarball(file):
     # calculate sha256 hash of tar file
-    BLOCKSIZE = 65536
+    block_size = 65536
     hasher = hashlib.sha256()
     with open(file, 'rb') as tfile:
-        buf = tfile.read(BLOCKSIZE)
+        buf = tfile.read(block_size)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = tfile.read(BLOCKSIZE)
+            buf = tfile.read(block_size)
     return hasher.hexdigest()
 
 

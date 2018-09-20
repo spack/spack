@@ -30,10 +30,9 @@ class Tassel(Package):
        evolutionary patterns, and linkage disequilibrium."""
 
     homepage = "http://www.maizegenetics.net/tassel"
-    url      = "https://bitbucket.org/tasseladmin/tassel-5-source/get/master.tar.gz"
+    git      = "https://bitbucket.org/tasseladmin/tassel-5-standalone.git"
 
-    version('2017-07-22', git='https://bitbucket.org/tasseladmin/tassel-5-standalone.git',
-            commit='ae96ae75c3c9a9e8026140b6c775fa4685bdf531')
+    version('2017-07-22', commit='ae96ae75c3c9a9e8026140b6c775fa4685bdf531')
 
     depends_on('java', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))

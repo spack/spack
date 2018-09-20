@@ -22,17 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Rockstar(MakefilePackage):
     """The Rockstar Halo Finder"""
 
     homepage = "https://bitbucket.org/gfcstanford/rockstar"
-    url      = "https://bitbucket.org/gfcstanford/rockstar"
 
     version('develop', git='https://bitbucket.org/gfcstanford/rockstar.git')
     version('yt', hg='https://bitbucket.org/MatthewTurk/rockstar')
@@ -60,7 +57,7 @@ class Rockstar(MakefilePackage):
 
     def install(self, spec, prefix):
         # Install all files and directories
-        copy_tree(".", prefix)
+        install_tree('.', prefix)
 
         mkdir(prefix.bin)
         mkdir(prefix.lib)

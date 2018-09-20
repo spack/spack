@@ -36,9 +36,9 @@ class PyPybind11(CMakePackage):
 
     homepage = "https://pybind11.readthedocs.io"
     url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
+    git      = "https://github.com/pybind/pybind11.git"
 
-    version('develop', branch='master',
-            git='https://github.com/pybind/pybind11.git')
+    version('develop', branch='master')
     version('2.2.3', '55b637945bbf47d99d2c906bf0c13f49')
     version('2.2.2', 'fc174e1bbfe7ec069af7eea86ec37b5c')
     version('2.2.1', 'bab1d46bbc465af5af3a4129b12bfa3b')
@@ -46,7 +46,8 @@ class PyPybind11(CMakePackage):
     version('2.1.1', '5518988698df937ccee53fb6ba91d12a')
     version('2.1.0', '3cf07043d677d200720c928569635e12')
 
-    depends_on('py-pytest', type=('build'))
+    depends_on('py-pytest', type='test')
+    depends_on('py-setuptools', type='build')
 
     extends('python')
 
@@ -59,4 +60,16 @@ class PyPybind11(CMakePackage):
         args = []
         args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                     % self.spec['python'].command.path)
+        args += [
+            '-DPYBIND11_TEST:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF')
+        ]
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PYBIND11_USE_CMAKE', 1)
+
+    def install(self, spec, prefix):
+        super(PyPybind11, self).install(spec, prefix)
+        setup_py('install', '--single-version-externally-managed', '--root=/',
+                 '--prefix={0}'.format(prefix))

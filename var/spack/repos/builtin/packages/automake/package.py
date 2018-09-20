@@ -29,7 +29,7 @@ class Automake(AutotoolsPackage):
     """Automake -- make file builder part of autotools"""
 
     homepage = 'http://www.gnu.org/software/automake/'
-    url      = 'http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz'
+    url      = 'https://ftpmirror.gnu.org/automake/automake-1.15.tar.gz'
 
     version('1.16.1', '83cc2463a4080efd46a72ba2c9f6b8f5')
     version('1.15.1', '95df3f2d6eb8f81e70b8cb63a93c8853')

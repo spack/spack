@@ -73,6 +73,7 @@ or refer to the full manual below.
 
    contribution_guide
    packaging_guide
+   build_systems
    developer_guide
    docker_for_developers
    Spack API Docs <spack>

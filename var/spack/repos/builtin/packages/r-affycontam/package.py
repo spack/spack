@@ -30,9 +30,9 @@ class RAffycontam(RPackage):
     effectiveness."""
 
     homepage = "https://www.bioconductor.org/packages/affyContam/"
-    url      = "https://git.bioconductor.org/packages/affyContam"
+    git      = "https://git.bioconductor.org/packages/affyContam.git"
 
-    version('1.34.0', git='https://git.bioconductor.org/packages/affyContam', commit='03529f26d059c19e069cdda358dbf7789b6d4c40')
+    version('1.34.0', commit='03529f26d059c19e069cdda358dbf7789b6d4c40')
 
     depends_on('r@3.4.0:3.4.9', when=('@1.34.0'))
     depends_on('r-biobase', type=('build', 'run'))

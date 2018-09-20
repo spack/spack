@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPyserial(Package):
+class PyPyserial(PythonPackage):
     """Python Serial Port Extension"""
 
     homepage = "https://github.com/pyserial/pyserial"

@@ -30,9 +30,9 @@ class Sortmerna(CMakePackage):
        reads in metatranscriptomic and metagenomic data"""
 
     homepage = "https://github.com/biocore/sortmerna"
-    url      = "https://github.com/biocore/sortmerna"
+    git      = "https://github.com/biocore/sortmerna.git"
 
-    version('2017-07-13', git='https://github.com/biocore/sortmerna.git', commit='8bde6fa113a5d99a23ae81b48eeea6760e966094')
+    version('2017-07-13', commit='8bde6fa113a5d99a23ae81b48eeea6760e966094')
 
     depends_on('zlib')
 

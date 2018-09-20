@@ -60,7 +60,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *
@@ -74,8 +73,8 @@ __all__ = [
     'write_environ',
     'rewrite_environ_files',
     'mplib_content',
-    'foamAddPath',
-    'foamAddLib',
+    'foam_add_path',
+    'foam_add_lib',
     'OpenfoamArch',
 ]
 
@@ -204,12 +203,12 @@ def rewrite_environ_files(environ, **kwargs):
             filter_file(regex, replace, rcfile, backup=False)
 
 
-def foamAddPath(*args):
+def foam_add_path(*args):
     """A string with args prepended to 'PATH'"""
     return '"' + ':'.join(args) + ':${PATH}"'
 
 
-def foamAddLib(*args):
+def foam_add_lib(*args):
     """A string with args prepended to 'LD_LIBRARY_PATH'"""
     return '"' + ':'.join(args) + ':${LD_LIBRARY_PATH}"'
 
@@ -276,15 +275,16 @@ class OpenfoamCom(Package):
 
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
-    gitrepo  = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
     url      = "https://sourceforge.net/projects/openfoamplus/files/v1706/OpenFOAM-v1706.tgz"
+    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
     list_url = "https://sourceforge.net/projects/openfoamplus/files/"
     list_depth = 2
 
+    version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
-    version('develop', branch='develop', git=gitrepo)  # Needs credentials
 
     variant('float32', default=False,
             description='Use single-precision')
@@ -303,8 +303,10 @@ class OpenfoamCom(Package):
     # TODO?# variant('scalasca', default=False,
     # TODO?#         description='With scalasca profiling')
     variant('mgridgen', default=False, description='With mgridgen support')
-    variant('paraview', default=True,
+    variant('paraview', default=False,
             description='Build paraview plugins and runtime post-processing')
+    variant('vtk', default=False,
+            description='With VTK runTimePostProcessing')
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
@@ -319,7 +321,9 @@ class OpenfoamCom(Package):
     depends_on('fftw')
     depends_on('boost')
     depends_on('cgal')
-    depends_on('flex',  type='build')
+    # The flex restriction is ONLY to deal with a spec resolution clash
+    # introduced by the restriction within scotch!
+    depends_on('flex@:2.6.1,2.6.4:', type='build')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
@@ -331,6 +335,8 @@ class OpenfoamCom(Package):
     # mgridgen is statically linked
     depends_on('parmgridgen',  when='+mgridgen', type='build')
     depends_on('zoltan',       when='+zoltan')
+    depends_on('vtk',          when='+vtk')
+
     # TODO?# depends_on('scalasca',     when='+scalasca')
 
     # For OpenFOAM plugins and run-time post-processing this should just be
@@ -349,6 +355,7 @@ class OpenfoamCom(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
+    patch('1806-have-kahip.patch', when='@1806')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -546,21 +553,21 @@ class OpenfoamCom(Package):
                 ('BOOST_ARCH_PATH', spec['boost'].prefix),
                 ('CGAL_ARCH_PATH',  spec['cgal'].prefix),
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(
+                 foam_add_lib(
                      pkglib(spec['boost'], '${BOOST_ARCH_PATH}'),
                      pkglib(spec['cgal'], '${CGAL_ARCH_PATH}'))),
             ],
             'FFTW': [
                 ('FFTW_ARCH_PATH', spec['fftw'].prefix),  # Absolute
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(
+                 foam_add_lib(
                      pkglib(spec['fftw'], '${BOOST_ARCH_PATH}'))),
             ],
             # User-defined MPI
             'mpi-user': [
                 ('MPI_ARCH_PATH', spec['mpi'].prefix),  # Absolute
-                ('LD_LIBRARY_PATH', foamAddLib(user_mpi['libdir'])),
-                ('PATH', foamAddPath(user_mpi['bindir'])),
+                ('LD_LIBRARY_PATH', foam_add_lib(user_mpi['libdir'])),
+                ('PATH', foam_add_path(user_mpi['bindir'])),
             ],
             'scotch': {},
             'kahip': {},
@@ -568,6 +575,7 @@ class OpenfoamCom(Package):
             'ensight': {},     # Disable settings
             'paraview': [],
             'gperftools': [],  # Currently unused
+            'vtk': [],
         }
 
         if '+scotch' in spec:
@@ -588,12 +596,19 @@ class OpenfoamCom(Package):
             }
 
         if '+paraview' in spec:
-            pvMajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
+            pvmajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
             self.etc_config['paraview'] = [
                 ('ParaView_DIR', spec['paraview'].prefix),
-                ('ParaView_INCLUDE_DIR', '${ParaView_DIR}/include/' + pvMajor),
-                ('PV_PLUGIN_PATH', '$FOAM_LIBBIN/' + pvMajor),
-                ('PATH', foamAddPath('${ParaView_DIR}/bin')),
+                ('ParaView_INCLUDE_DIR', '${ParaView_DIR}/include/' + pvmajor),
+                ('PV_PLUGIN_PATH', '$FOAM_LIBBIN/' + pvmajor),
+                ('PATH', foam_add_path('${ParaView_DIR}/bin')),
+            ]
+
+        if '+vtk' in spec:
+            self.etc_config['vtk'] = [
+                ('VTK_DIR', spec['vtk'].prefix),
+                ('LD_LIBRARY_PATH',
+                 foam_add_lib(pkglib(spec['vtk'], '${VTK_DIR}'))),
             ]
 
         # Optional
@@ -677,12 +692,13 @@ class OpenfoamCom(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')
