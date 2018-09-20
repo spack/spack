@@ -85,11 +85,12 @@ class Concretizer(object):
         candidates = [spec]
         pref_key = lambda spec: 0  # no-op pref key
 
+        # We need to sort by repos only if spec is virtual
+        # and there are more than one repos.
+        repo_key = lambda spec: 0
+
         if spec.virtual:
             candidates = spack.repo.path.providers_for(spec)
-            if not candidates:
-                raise spack.spec.UnsatisfiableProviderSpecError(
-                    candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
             spec_w_prefs = find_spec(
@@ -99,6 +100,12 @@ class Concretizer(object):
 
             # Create a key to sort candidates by the prefs we found
             pref_key = PackagePrefs(spec_w_prefs.name, 'providers', spec.name)
+
+            # Map the namespaces to their index in the list of repos
+            if len(spack.repo.path.repos) > 1:
+                repo_priority = dict((repo.namespace, idx) for idx, repo
+                                     in enumerate(spack.repo.path.repos))
+                repo_key = lambda spec: repo_priority[spec.namespace]
 
         # For each candidate package, if it has externals, add those
         # to the usable list.  if it's not buildable, then *only* add
@@ -120,11 +127,12 @@ class Concretizer(object):
 
         # Use a sort key to order the results
         return sorted(usable, key=lambda spec: (
-            not spec.external,                            # prefer externals
-            pref_key(spec),                               # respect prefs
-            spec.name,                                    # group by name
-            reverse_order(spec.versions),                 # latest version
-            spec                                          # natural order
+            not spec.external,                      # prefer externals
+            pref_key(spec),                         # respect prefs
+            spec.name,                              # group by name
+            repo_key(spec),                         # respect repo priority
+            reverse_order(spec.versions),           # latest version
+            spec                                    # natural order
         ))
 
     def choose_virtual_or_external(self, spec):
