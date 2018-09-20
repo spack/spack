@@ -26,21 +26,12 @@ from spack import *
 
 
 class Ember(MakefilePackage):
-    """Ember Communication Pattern Library
-
-       The Ember suite provides communication patterns in a simplified setting
-       (simplified by the removal of application calculations, control flow
-       etc.).
     """
-<<<<<<< HEAD
-    tags = ['proxy-app', 'ecp-proxy-app']
-=======
     Ember Communication Pattern Library
     The Ember suite provides communication patterns in a simplified setting
     (simplified by the removal of application calculations, control flow,
     etc.).
     """
->>>>>>> Ember spackage with MPI support only
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
