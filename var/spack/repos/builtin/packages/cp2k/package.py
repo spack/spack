@@ -115,9 +115,9 @@ class Cp2k(Package):
                 ldflags = ['-Wl,--allow-multiple-definition'] + ldflags
 
             libs = [
-                join_path(spec['libint'].prefix.lib, 'libint.so'),
-                join_path(spec['libint'].prefix.lib, 'libderiv.so'),
-                join_path(spec['libint'].prefix.lib, 'libr12.so')
+                join_path(spec['libint'].libs.directories[0], 'libint.so'),
+                join_path(spec['libint'].libs.directories[0], 'libderiv.so'),
+                join_path(spec['libint'].libs.directories[0], 'libr12.so')
             ]
 
             if '+plumed' in self.spec:
@@ -207,7 +207,7 @@ class Cp2k(Package):
                 scalapack = spec['scalapack'].libs
                 ldflags.append(scalapack.search_flags)
                 libs.extend([
-                    join_path(elpa.prefix.lib,
+                    join_path(elpa.libs.directories[0],
                               'libelpa.{0}'.format(dso_suffix)),
                     join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
                     join_path(spec['superlu-dist'].prefix.lib,
