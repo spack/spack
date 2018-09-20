@@ -26,13 +26,13 @@ from spack import *
 
 
 class Ember(MakefilePackage):
+    """Ember Communication Pattern Library
+
+       The Ember suite provides communication patterns in a simplified setting
+       (simplified by the removal of application calculations, control flow
+       etc.).
     """
-    Ember is an end-point model for network communications. It currently
-    has the ability to generate MPI events from models of application called
-    motifs. Motifs are condensed, efficient generators for communications,
-    which are able to represent target, size, and data type of messages in
-    larger applications, libraries, and mini-apps.
-    """
+    tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
     git      = "https://github.com/sstsimulator/ember.git"
