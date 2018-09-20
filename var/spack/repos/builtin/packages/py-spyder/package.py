@@ -44,11 +44,19 @@ class PySpyder(PythonPackage):
     depends_on('py-qtconsole@4.2.0:', type=('build', 'run'))
     depends_on('py-nbconvert',        type=('build', 'run'))
     depends_on('py-sphinx',           type=('build', 'run'))
-    depends_on('py-pycodestyle',      type=('build', 'run'))
+    # The pycodestyle dependency is split in two, because internally it
+    # changes its name from pep8 to pycodestyle, and spyder does not cope
+    # with this change until @3.2.0
+    # https://github.com/PyCQA/pycodestyle/issues/466
+    # https://github.com/spyder-ide/spyder/blob/master/CHANGELOG.md#version-32-2017-07-24
+    depends_on('py-pycodestyle@:1.7.1', when='@:3.1.99', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.1.0:', when='@3.2.0:',  type=('build', 'run'))
     depends_on('py-pylint',           type=('build', 'run'))
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
     depends_on('py-qtpy@1.1.0:',      type=('build', 'run'))
+    # not sure whether this should be here or whether it should be declared
+    # in some intermediate dependency
     depends_on('qt+webkit',           type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
     depends_on('py-zmq',              type=('build', 'run'))
