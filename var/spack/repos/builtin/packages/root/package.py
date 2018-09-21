@@ -105,7 +105,10 @@ class Root(CMakePackage):
         description='Build the new libMathMore extended math library')
     variant('memstat', default=True,
         description='Enable a memory stats utility to detect memory leaks')
-    # variant('minuit', default=True) - not supported by Spack
+    # Minuit must not be installed as a dependency of root
+    # otherwise it crashes with the internal minuit library
+    variant('minuit', default=True,
+        description='Automatically search for support libraries')
     # variant('mysql', default=False) - not supported by spack
     variant('odbc', default=False,
         description='Enable ODBC support')
@@ -223,18 +226,17 @@ class Root(CMakePackage):
     depends_on('davix',     when='+davix')
     depends_on('cfitsio',   when='+fits')
     depends_on('fftw',      when='+fftw')
-    depends_on('graphviz', when='+graphviz')
+    depends_on('graphviz',  when='+graphviz')
     depends_on('gsl',       when='+gsl')
     depends_on('http',      when='+http')
     depends_on('jemalloc',  when='+jemalloc')
     depends_on('kerberos',  when='+kerberos')
     depends_on('ldap',      when='+ldap')
     depends_on('libcxx',    when='+libcxx')
-    # depends_on('minuit',   when='+minuit') - not supported
     # depends_on('mysql',    when='+mysql')  - not supported
     depends_on('odbc',      when='+odbc')
     # depends_on('oracle',   when='+oracle')
-    depends_on('openssl',  when='+ssl')
+    depends_on('openssl',   when='+ssl')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia@6:6.999',  when='+pythia6')
     depends_on('pythia@8:8.999',  when='+pythia8')
