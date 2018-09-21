@@ -30,8 +30,11 @@ import os
 class Orca(Package):
     """An ab initio, DFT and semiempirical SCF-MO package
 
-       Downloading orca requires accepting a license agreement,
-       so spack will search the working directory for the package"""
+       Note: Orca is licensed software. You will need to create an account
+       on the Orca homepage and download Orca yourself. Spack will search
+       your current directory for the download file. Alternatively, add this
+       file to a mirror so that Spack can find it. For instructions on how to
+       set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://cec.mpg.de"
     url      = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
