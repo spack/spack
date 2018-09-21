@@ -50,7 +50,7 @@ class OpenpmdApi(CMakePackage):
 
     depends_on('cmake@3.10.0:', type='build')
     depends_on('mpark-variant@1.3.0:')
-    depends_on('catch@2.2.1: ~single_header', type='test')
+    depends_on('catch@2.3.0: ~single_header', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')

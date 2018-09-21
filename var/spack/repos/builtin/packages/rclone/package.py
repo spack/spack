@@ -25,29 +25,18 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Rclone(Package):
+    """Rclone is a command line program to sync files and directories
+       to and from various cloud storage providers"""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz"
+    homepage = "http://rclone.org"
+    url      = "https://github.com/ncw/rclone/releases/download/v1.43/rclone-v1.43.tar.gz"
 
-    version('3.1.1', '0b6ab06b59ae75f433de387783f19011')
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('1.43', sha256='d30527b00cecb4e5e7188dddb78e5cec62d67cf2422dab82190db58512b5a4e3')
 
-    depends_on('java', type='run')
+    depends_on("go", type='build')
 
     def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+        go('build')
+        mkdirp(prefix.bin)
+        install('rclone', prefix.bin)
