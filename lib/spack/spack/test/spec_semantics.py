@@ -105,8 +105,6 @@ def check_invalid_constraint(spec, constraint):
 
 @pytest.mark.usefixtures('config')
 def test_satisfies_nonstrict_mixed_versions():
-    default = ('build', 'link')
-
     test_versions = [Version('2.1'),
                      Version('2.1.1'),
                      Version('2.2.1')]
