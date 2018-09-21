@@ -51,4 +51,4 @@ class Autofact(Package):
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', join_path(self.prefix, 'scripts'))
-        run_env.set('PATH2AUTOFACT', join_paht(self.prefix, 'scripts'))
+        run_env.set('PATH2AUTOFACT', join_path(self.prefix, 'scripts'))
