@@ -26,7 +26,10 @@ from spack import *
 
 class RAnimation(RPackage):
     """Provides functions for animations in statistics, covering topics
-    in probability theory, mathematical statistics, multivariate statistics,	    non-parametric statistics, sampling survey, linear models, time series, comp    utational statistics, data mining and machine learning. These functions may     be helpful in teaching statistics and data analysis."""
+    in probability theory, mathematical statistics, multivariate statistics,
+    non-parametric statistics, sampling survey, linear models, time series, 
+    computational statistics, data mining and machine learning. 
+    These functions maybe helpful in teaching statistics and data analysis."""
 
     homepage = "https://cran.r-project.org/package=animation"
     url      = "https://cran.r-project.org/src/contrib/animation_2.5.tar.gz"
