@@ -10,7 +10,7 @@ class Steps(CMakePackage):
     """STochastic Engine for Pathway Simulation"""
 
     homepage = "https://groups.oist.jp/cnu/software"
-    git      = "https://github.com/CNS-OIST/STEPS.git"
+    git      = "git@github.com:CNS-OIST/HBP_STEPS.git"
 
     version("3.3.0", submodules=True)
     version("3.2.0", submodules=True)
