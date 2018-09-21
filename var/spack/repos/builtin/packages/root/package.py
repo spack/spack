@@ -69,6 +69,8 @@ class Root(CMakePackage):
         description='Compile with avahi')
     variant('aqua', default=False,
         description='Enable Aqua interface')
+    # No need for a specific variant: libafterimage is not provided by spack
+    # By default always true, we get the builtin included in the source
     # variant('asimage', default=True,
     #    description='Enable image processing support')
     variant('davix', default=True,
@@ -219,8 +221,8 @@ class Root(CMakePackage):
     # TMVA
     depends_on('py-numpy', when='+tmva')
 
-    # TODO
-    # Asimage needs one of these two
+    # Asimage variant would need one of these two
+    # For the moment, we use the libafterimage provided by the root sources
     # depends_on('libafterimage',    when='+asimage') - not supported
     # depends_on('afterstep@2.2.11', when='+asimage') - not supported
 
@@ -300,7 +302,9 @@ class Root(CMakePackage):
             '-Dshared=ON',
             '-Dsoversion=ON',
             '-Dbuiltin_llvm=ON',
-            '-Dbuiltin_afterimage=OFF',
+            '-Dbuiltin_afterimage=ON',
+            '-Dasimage:BOOL=ON',  # if afterimage is taken from builtin
+            '-Dastiff:BOOL=ON',   # asimage and astiff must be ON too
             '-Dbuiltin_cfitsio=OFF',
             '-Dbuiltin_davix=OFF',
             '-Dbuiltin_fftw3=OFF',
@@ -336,10 +340,6 @@ class Root(CMakePackage):
                 'ON' if '+x' in spec else 'OFF'),
             '-Dxft:BOOL=%s' % (
                 'ON' if '+x' in spec else 'OFF'),
-            # '-Dasimage:BOOL=%s' % (
-            #    'ON' if '+asimage' in spec else 'OFF'),
-            '-Dastiff:BOOL=%s' % (
-                'ON' if '+tiff' in spec else 'OFF'),
             '-Dbonjour:BOOL=%s' % (
                 'ON' if '+avahi' in spec else 'OFF'),
             '-Dcocoa:BOOL=%s' % (
