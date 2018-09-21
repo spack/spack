@@ -156,7 +156,7 @@ class Root(CMakePackage):
         description='Enable set of fast and vectorisable math functions')
     variant('x', default=True,
         description='Enable set of graphical options')
-    # variant('xinetd', default=False,
+    # variant('xinetd', default=False,  - not supported by spack
     #    description='Enable a daemon process manager')
     variant('xml', default=True,
         description='Enable XML parser interface')
@@ -165,18 +165,10 @@ class Root(CMakePackage):
 
     # ################# Variants dependencies ##########################
 
-    # TODO
     # Davix variant also requires openssl support
     depends_on('openssl', when='+davix')
 
-    # TODO
-    # TMVA variant also requires
-    #   GSL variant
-    #   math variant
-    # depends_on('??')
-
-    # TODO
-    # if not x variant, then asimage,opengl,qt4 and tiff are not needed either
+    # If not x variant, then asimage,opengl,qt4 and tiff are not needed either
     # or: if ~x then ~asimage~opengl~qt4~tiff
 
     # ###################### Compiler variants ########################
@@ -259,28 +251,27 @@ class Root(CMakePackage):
     depends_on('vdt',       when='+vdt')
     depends_on('libxml2',   when='+xml')
     depends_on('xrootd',    when='+xrootd')
+    # depends_on('hdfs') - supported (TODO)
 
-    # Old dependencies -  to be checked
+    # Old dependencies
 
-    # depends_on('binutils') - ??
-    # depends_on('libsm') - ??
-    # depends_on('libice') ??
-    # depends_on('gif') ??
-    # depends_on('jpeg') ??
-
+    # depends_on('binutils')
+    # depends_on('gif')  - provided by builtin afterimage
+    # depends_on('jpeg') - provided by builtin afterimage
+    # depends_on('libice')
+    # depends_on('libsm')
     # depends_on('libxml2+python')
 
+    # Not supported
     # depends_on('monalisa')
 
-    # Grid packages - not supported yet
+    # Grid packages - not supported yet by Spack
     # depends_on('castor')
-    # depends_on('rfio')
-    # depends_on('gfal')
-    # depends_on('dcap')
-    # depends_on('ldap')
     # depends_on('chirp')
-
-    # depends_on('hdfs') - supported (TODO)
+    # depends_on('dcap')
+    # depends_on('gfal')
+    # depends_on('ldap')
+    # depends_on('rfio')
 
     # I was unable to build root with any Intel compiler
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
