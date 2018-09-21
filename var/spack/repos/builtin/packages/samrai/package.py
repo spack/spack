@@ -60,6 +60,8 @@ class Samrai(AutotoolsPackage):
     # and more print statements
     variant('debug', default=False,
             description='Compile with reduced optimization and debugging on')
+    variant('silo', default=False,
+            description='Compile with support for silo')
 
     depends_on('mpi')
     depends_on('zlib')
@@ -70,6 +72,7 @@ class Samrai(AutotoolsPackage):
     # version 3.11.5 or earlier can only work with boost version
     # 1.64.0 or earlier.
     depends_on('boost@:1.64.0', when='@0:3.11.99', type='build')
+    depends_on('silo+mpi', when='+silo')
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
@@ -104,6 +107,8 @@ class Samrai(AutotoolsPackage):
             # cannot build with either gcc or intel compilers.
             if 'CXXFLAGS' in env and env['CXXFLAGS']:
                 env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+        if '+silo' in self.spec:
+            options.append('--with-silo=%s' % self.spec['silo'].prefix)
             else:
                 env['CXXFLAGS'] = self.compiler.cxx11_flag
         else:
