@@ -2510,6 +2510,18 @@ class Spec(object):
                 return False
         elif strict and (self.versions or other.versions):
             return False
+        if (not self.virtual) and self.versions.concrete and not strict:
+            version_satisfies = False
+            for v in other.versions:
+                if v in self.package.versions:
+                    if self.version == v:
+                        version_satisfies = True
+                        break
+                elif self.version.satisfies(v):
+                    version_satisfies = True
+                    break
+            if not version_satisfies:
+                return False
 
         # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
