@@ -37,6 +37,8 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    version('10.0.130', '9375304c8dc8d42e7f9a9ae37e80b42b', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux")
     version('9.2.88', 'dd6e33e10d32a29914b7700c7b3d1ca0', expand=False,
             url="https://developer.nvidia.com/compute/cuda/9.2/Prod/local_installers/cuda_9.2.88_396.26_linux")
     version('9.1.85', '67a5c3933109507df6b68f80650b4b4a', expand=False,
