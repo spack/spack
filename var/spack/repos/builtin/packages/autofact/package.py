@@ -34,10 +34,11 @@ class Autofact(Package):
 
     version('3_4', sha256='1465d263b19adb42f01f6e636ac40ef1c2e3dbd63461f977b89da9493fe9c6f4')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('perl-bio-perl', type=('build', 'run'))
-    depends_on('perl-io-string', type=('build', 'run'))
-    depends_on('blast-plus', type=('build', 'run'))
+    depends_on('perl', type='run')
+    depends_on('perl-bio-perl', type='run')
+    depends_on('perl-io-string', type='run')
+    depends_on('perl-lwp', type='run')
+    depends_on('blast-plus', type='run')
 
     def edit(self):
         with working_dir('scripts'):
