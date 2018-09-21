@@ -286,6 +286,9 @@ class Root(CMakePackage):
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
     conflicts('%intel')
 
+    # Incompatible variants
+    conflicts('+tmva', when='~gsl', msg="TVMA requires GSL")
+
     def cmake_args(self):
 
         spec = self.spec
