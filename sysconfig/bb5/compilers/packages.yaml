@@ -27,10 +27,6 @@ packages:
         paths:
             gettext@0.19.8: /usr
         version: [0.19.8]
-    libedit:
-        paths:
-            libedit@3.0-12: /usr
-        version: [3.0-12]
     libtool:
         paths:
             libtool@2.4.2: /usr
@@ -55,10 +51,6 @@ packages:
         paths:
             pkg-config@0.27.1: /usr
         version: [0.27.1]
-    python:
-        paths:
-            python@2.7.13: /usr
-        version: [2.7.13]
     sqlite:
         paths:
             sqlite@3.7.17: /usr

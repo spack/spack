@@ -105,3 +105,16 @@ compilers:
       fc: /gpfs/bbp.cscs.ch/apps/compilers/install/pgi-18.4/linux86-64/18.4/bin/pgf90
     spec: pgi@18.4
     target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: rhel7
+    paths:
+      cc: /gpfs/bbp.cscs.ch/apps/compilers/install/llvm-6.0.1/bin/clang
+      cxx: /gpfs/bbp.cscs.ch/apps/compilers/install/llvm-6.0.1/bin/clang++
+      f77: /usr/bin/gfortran
+      fc: /usr/bin/gfortran
+    spec: clang@6.0.1
+    target: x86_64

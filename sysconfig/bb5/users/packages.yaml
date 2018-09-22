@@ -77,10 +77,6 @@ packages:
             intel-parallel-studio@cluster.2018.1: intel-parallel-studio/cluster.2018.1
         buildable: False
         version: [cluster.2018.1]
-    libedit:
-        paths:
-            libedit@3.0-12: /usr
-        version: [3.0-12]
     libjpeg:
         paths:
             libjpeg@1.2.90: /usr
