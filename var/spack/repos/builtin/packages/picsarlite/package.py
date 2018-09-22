@@ -36,7 +36,7 @@ class Picsarlite(MakefilePackage):
     git      = "https://bitbucket.org/berkeleylab/picsar.git"
 
     version('develop', branch='PICSARlite')
-    version('1.0')
+    version('0.1', tag='PICSARlite-0.1')
 
     variant('prod', default=False, 
             description='Production mode (without FFTW)')
