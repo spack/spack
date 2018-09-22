@@ -167,7 +167,7 @@ class Llvm(CMakePackage):
     }
     releases = [
         {
-            'version': 'trunk',
+            'version': 'develop',
             'repo': 'http://llvm.org/svn/llvm-project/llvm/trunk',
             'resources': {
                 'compiler-rt': 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
@@ -462,7 +462,7 @@ class Llvm(CMakePackage):
     ]
 
     for release in releases:
-        if release['version'] == 'trunk':
+        if release['version'] == 'develop':
             version(release['version'], svn=release['repo'])
 
             for name, repo in release['resources'].items():
