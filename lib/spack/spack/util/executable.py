@@ -186,18 +186,28 @@ class Executable(object):
                 env=env)
             out, err = proc.communicate()
 
-            rc = self.returncode = proc.returncode
-            if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                raise ProcessError('Command exited with status %d:' %
-                                   proc.returncode, cmd_line)
-
+            result = None
             if output is str or error is str:
                 result = ''
                 if output is str:
                     result += to_str(out)
                 if error is str:
                     result += to_str(err)
-                return result
+
+            rc = self.returncode = proc.returncode
+            if fail_on_error and rc != 0 and (rc not in ignore_errors):
+                long_msg = cmd_line
+                if result:
+                    # If the output is not captured in the result, it will have
+                    # been stored either in the specified files (e.g. if
+                    # 'output' specifies a file) or written to the parent's
+                    # stdout/stderr (e.g. if 'output' is not specified)
+                    long_msg += '\n' + result
+
+                raise ProcessError('Command exited with status %d:' %
+                                   proc.returncode, long_msg)
+
+            return result
 
         except OSError as e:
             raise ProcessError(
