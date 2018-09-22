@@ -53,10 +53,10 @@ class PyH5py(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
 
     # Link dependencies
-    depends_on('hdf5@1.8.4:+hl')
+    depends_on('hdf5@1.8.4:+hl~mpi', when='~mpi')
 
     # MPI dependencies
-    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5@1.8.4:+hl+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
