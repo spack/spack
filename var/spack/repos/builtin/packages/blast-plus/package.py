@@ -44,6 +44,7 @@ class BlastPlus(AutotoolsPackage):
 
     version('2.6.0',  'c8ce8055b10c4d774d995f88c7cc6225')
     version('2.2.30', 'f8e9a5eb368173142fe6867208b73715')
+    version('2.7.1',  '48b37565cf5f3d17388daaf0f17b95bc')
 
     # homebrew sez: Fixed upstream in future version > 2.6
     # But this bug sez that it will be fixed in 2.6
@@ -110,7 +111,7 @@ class BlastPlus(AutotoolsPackage):
     configure_directory = 'c++'
 
     def configure_args(self):
-        spec   = self.spec
+        spec = self.spec
 
         config_args = [
             '--with-bin-release',
@@ -122,6 +123,7 @@ class BlastPlus(AutotoolsPackage):
 
         if '+static' in spec:
             config_args.append('--with-static')
+            
             # FIXME
             # args << "--with-static-exe" unless OS.linux?
             # args << "--with-dll" if build.with? "dll"
