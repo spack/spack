@@ -27,11 +27,11 @@ from spack import *
 
 class Talass(CMakePackage):
     """TALASS: Topological Analysis of Large-Scale Simulations
-This package compiles the talass tool chain thar implements
-various topological algorithms to analyze large scale data.
-The package is organized hierarchical FileFormat < Statistics
-< StreamingTopology and any of the subsets can be build stand-
-alone."""
+    This package compiles the talass tool chain thar implements
+    various topological algorithms to analyze large scale data.
+    The package is organized hierarchical FileFormat < Statistics
+    < StreamingTopology and any of the subsets can be build stand-
+    alone."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.cedmav.org/research/project/16-talass.html"
