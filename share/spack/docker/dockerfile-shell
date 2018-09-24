@@ -1,0 +1,102 @@
+#! /usr/bin/env bash
+
+if [ x$DOCKERFILE_DISTRO '=' x ] ; then
+    echo "Error: DOCKERFILE_DISTRO is not set." >&2
+    exit 1
+fi
+
+has_tri_dash() {
+    (
+        ( echo "$*" | grep -q '^ *--- .*' ) ||
+        ( echo "$*" | grep -q '^ *---$' )
+    ) && echo 1 || echo 0
+}
+
+pop_tri_dash() {
+    echo "$*" | sed 's/^\( *--- \).*/\1/g'
+}
+
+has_pattern() {
+    (
+        ( echo "$*" | grep -q $'^ *[^ \t:][^ \t:]*: .*' ) ||
+        ( echo "$*" | grep -q $'^ *[^ \t:][^ \t:]*:$' )
+    ) && echo 1 || echo 0
+}
+
+pop_pattern() {
+    echo "$*" | sed $'s/^\( *[^ \t:][^ \t:]*\):.*/\\1/g'
+}
+
+pop_command() {
+    echo "$*" | sed 's/---.*//g'
+}
+
+main() {
+    current_pattern='*'
+    do_run=1
+
+    script="$*"
+    first_iter=1
+
+    until echo "$script" | grep -q '^\s*$' ; do
+
+        has_tri_dash="$( has_tri_dash "$script" )"
+
+        if [ "$has_tri_dash" '=' 1 ] ; then
+            tmp="$( pop_tri_dash "$script" )"
+            script="${script:${#tmp}}"
+        fi
+
+        has_pattern=0
+
+        if [ "$first_iter" '=' 1 -o "$has_tri_dash" '=' 1 ] ; then
+            has_pattern="$( has_pattern "$script" )"
+
+            if [ "$has_pattern" '=' 1 ] ; then
+                current_pattern="$( pop_pattern "$script" )"
+                script="${script:$(( ${#current_pattern} + 2 ))}"
+                x="$DOCKERFILE_DISTRO"
+                bash -c "case \"$x\" in $current_pattern) exit 1 ;; esac ; exit"
+                do_run="$?"
+            fi
+        fi
+
+        com="$( pop_command "$script" )"
+        script="${script:${#com}}"
+
+        if [ "$do_run" '=' 1 ] ; then
+            echo "$com" >&3
+        fi
+
+        first_iter=0
+    done
+}
+
+tmpdir="$( mktemp -d )"
+coshell_in="$tmpdir/in"
+coshell_stat="$tmpdir/stat"
+
+trap_script='[ -n "$coshell" ] && kill "$coshell" >&- 2>&-'
+trap_script="$trap_script"' ; wait "$coshell" >&- 2>&-'
+trap_script="$trap_script"' ; rm -rf "$tmpdir"'
+trap_script="$trap_script"' ; exit'
+trap "$trap_script" INT TERM QUIT EXIT
+
+mkfifo "$coshell_in"
+mkfifo "$coshell_stat"
+
+( bash -e < "$coshell_in" ; echo "$?" > "$coshell_stat" ) &
+coshell="$!"
+
+eval "exec 3<>$coshell_in"
+eval "exec 4<>$coshell_stat"
+
+main "$*"
+
+( echo && echo 'exit' ) >&3
+status=1
+read -u 4 status >&- 2>&-
+
+exec 3>&-
+exec 4>&-
+exit $status

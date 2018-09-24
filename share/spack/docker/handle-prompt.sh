@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+if [ x$SPACK_PROMPT '!=' x0 ] ; then
+
 __tmp="`mktemp -d`"
 
 __trylock() {
@@ -83,7 +85,7 @@ __git_head() {
 __update_prompt() {
     local prompt
     prompt=''
-    linux_distro="$DISTRO"
+    linux_distro="$DOCKERFILE_DISTRO"
     if [ -n "$linux_distro" ] ; then
         linux_distro='\[\e[1;34m\][\[\e[0;34m\]'"$linux_distro"'\[\e[1;34m\]]'
         if [ -n "$prompt" ] ; then
@@ -163,3 +165,5 @@ __update_prompt_main() {
 }
 
 PROMPT_COMMAND=__update_prompt_main
+
+fi # [ x$SPACK_PROMPT '!=' x0 ]
