@@ -91,8 +91,11 @@ class CombinatorialSpecSet:
                 # iteration if the specified compilers can't be found.
                 return CombinatorialSpecSet(specs_yaml, ignore_invalid=False)
         except Exception as e:
+            emsg = e.message
+            if not emsg:
+                emsg = e.problem
             msg = ('Unable to create CombinatorialSpecSet from file ({0})'
-                   'due to {1}'.format(path, e.message))
+                   ' due to {1}'.format(path, emsg))
             raise SpackError(msg)
 
     def all_package_versions(self):

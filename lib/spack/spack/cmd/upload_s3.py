@@ -151,7 +151,8 @@ def upload_spec(args):
 
     s3, bucket_name = get_s3_session(args.endpoint_url)
 
-    build_cache_dir = bindist.build_cache_relative_path()
+    build_cache_dir = os.path.join(
+        'mirror', bindist.build_cache_relative_path())
 
     tarball_key = os.path.join(
         build_cache_dir, bindist.tarball_path_name(spec, '.spack'))
