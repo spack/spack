@@ -115,7 +115,8 @@ class CMakePackage(PackageBase):
         if primary_generator not in valid_generators:
             msg  = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
-            msg += "primary generators: '{0}'".format("', '".join(valid_generators))
+            msg += "primary generators: '{0}'".\
+                   format("', '".join(valid_generators))
             raise InstallError(msg)
 
         try:
