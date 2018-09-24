@@ -32,7 +32,7 @@ class Picsarlite(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "http://picsar.net"
+    homepage = "https://picsar.net"
     git      = "https://bitbucket.org/berkeleylab/picsar.git"
 
     version('develop', branch='PICSARlite')
@@ -72,6 +72,7 @@ class Picsarlite(MakefilePackage):
             description='Build for the host architecture')
 
     depends_on('mpi')
+    depends_on('fftw@3.0: +mpi', when='+prod_spectral')
 
     @property
     def build_targets(self):
