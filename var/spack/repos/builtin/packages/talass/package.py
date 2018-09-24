@@ -45,40 +45,42 @@ alone."""
     # depends_on('foo')
 
     # The default precision and index space sizes
-    variant('precision', default='32', values=('32','64'),
+    variant('precision', default='32', values=('32', '64'),
             description='Precision of the function values [32 (default) | 64]')
-    variant('global', default='32',values=('16','32','64'),
-            description='Number of bits used for the global index space [16 | 32 (default) | 64]')
-    variant('local', default='32', values=('16','32','64'),
-            description='Number of bits used for the local index space [16 | 32 (default) | 64]')
-    
+    variant('global', default='32', values=('16', '32', '64'),
+            description='Number of bits used for the global index space\
+ [16 | 32 (default) | 64]')
+    variant('local', default='32', values=('16', '32', '64'),
+            description='Number of bits used for the local index space\
+ [16 | 32 (default) | 64]')
+
     root_cmakelists_dir = 'StreamingTopology'
-    
+
     def cmake_args(self):
         variants = self.spec.variants
-        
+
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
         # FIXME: If not needed delete this function
         args = []
 
         if int(variants['local'].value) > int(variants['global'].value):
-            raise InstallError('The global index space ({} bits) must be at least as large as the local index space ({} bits)'.format(variants['global'].value,variants['local'].value))
+            raise InstallError('The global index space ({} bits) must be at least as large\
+ as the local index space ({} bits)'.format(variants['global'].value,
+                                            variants['local'].value))
 
         if variants['precision'].value == '32':
             args.append('-DFUNCTION_TYPE=float')
         elif variants['precision'].value == '64':
             args.append('-DFUNCTION_TYPE=double')
 
-        
-                    
         if variants['global'].value == '16':
             args.append('-DGLOBAL_INDEX_TYPE=uint16_t')
         elif variants['global'].value == '32':
             args.append('-DGLOBAL_INDEX_TYPE=uint32_t')
         elif variants['global'].value == '64':
             args.append('-DGLOBAL_INDEX_TYPE=uint64_t')
-            
+
         if variants['local'].value == '16':
             args.append('-DLOCAL_INDEX_TYPE=uint16_t')
         elif variants['local'].value == '32':
@@ -86,9 +88,7 @@ alone."""
         elif variants['local'].value == '64':
             args.append('-DLOCAL_INDEX_TYPE=uint64_t')
 
-
         # Deal with the PROJECT_INSTALL_PREFIX to enable Talass super builds
-        args.append('-DPROJECT_INSTALL_PREFIX={}'.format(self.prefix)) 
-            
-             
+        args.append('-DPROJECT_INSTALL_PREFIX={}'.format(self.prefix))
+
         return args
