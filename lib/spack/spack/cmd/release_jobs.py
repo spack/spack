@@ -27,6 +27,8 @@ import os
 from jsonschema import validate
 from six import iteritems
 
+import llnl.util.tty as tty
+
 from spack.dependency import all_deptypes
 from spack.error import SpackError
 from spack.schema.os_container_mapping import schema
@@ -150,6 +152,7 @@ def release_jobs(parser, args):
     spec_labels, dependencies, stages = stage_spec_jobs(release_spec_set)
 
     output_object = {}
+    job_count = 0
 
     stage_names = ['stage-{0}'.format(i) for i in range(len(stages))]
     stage = 0
@@ -217,8 +220,12 @@ def release_jobs(parser, args):
                     job_object['variables']['SIGN_KEY_HASH'] = args.signing_key
 
                 output_object[job_name] = job_object
+                job_count += 1
 
         stage += 1
+
+    tty.msg('{0} build jobs generated in {1} stages'.format(
+        job_count, len(stages)))
 
     final_stage = 'stage-rebuild-index'
 
