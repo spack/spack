@@ -528,7 +528,7 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(self.name, libdir))
+                raise RuntimeError(msg.format(ldlibrary, libdir))
         else:
             library = self.get_config_var('LIBRARY')
 
@@ -538,7 +538,7 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(frameworkprefix, library))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(self.name, libdir))
+                raise RuntimeError(msg.format(library, libdir))
 
     @property
     def headers(self):
