@@ -23,37 +23,44 @@ jobs:
   include:
     - stage: 'style checks'
       python: '2.7'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '2.7'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.4'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.5'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.7'
+      sudo: required
       os: linux
       dist: xenial
-      sudo: true
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=doc
