@@ -80,6 +80,14 @@ class FileCache(object):
             self._locks[key] = Lock(self._lock_path(key))
         return self._locks[key]
 
+    def _lock_files(self):
+        lock_files = []
+        for root, dirs, files in os.walk(self.root):
+            for fname in files:
+                if fname.endswith('.lock'):
+                    lock_files.append(os.path.join(root, fname))
+        return lock_files
+
     def init_entry(self, key):
         """Ensure we can access a cache file. Create a lock for it if needed.
 

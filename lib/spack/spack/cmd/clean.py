@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
+import itertools
 import os
 import shutil
 
@@ -59,6 +60,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-p', '--python-cache', action='store_true',
         help="remove .pyc, .pyo files and __pycache__ folders")
+    subparser.add_argument(
+        '-l', '--locks', action='store_true',
+        help="remove lock files (typically unnecessary)")
     subparser.add_argument(
         '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
     )
@@ -112,6 +116,10 @@ def clean(parser, args):
                         shutil.rmtree(dname)
 
     if args.locks:
-        itertools.chain(spack.db._lock_files(),
-                        spack.caches.misc_cache._lock_files(),
-                        [os.path.join(spack.paths.stage_path, '.lock')])
+        lock_files = itertools.chain(
+            spack.store.db._lock_files(),
+            spack.caches.misc_cache._lock_files(),
+            [spack.stage.Stage.lock_path()])
+        for lock_file in lock_files:
+            tty.debug('Removing lock file: ' + lock_file)
+            os.remove(lock_file)
