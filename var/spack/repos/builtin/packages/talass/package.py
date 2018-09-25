@@ -64,11 +64,13 @@ class Talass(CMakePackage):
             args.append('-DFUNCTION_TYPE=double')
 
         # Set global index space
-        args.append('-DGLOBAL_INDEX_TYPE=uint{0}_t'.format(variants['global'].value))
+        args.append('-DGLOBAL_INDEX_TYPE=uint{0}_t'.format(
+            variants['global'].value))
 
         # Set local index space
-        args.append('-DLOCAL_INDEX_TYPE=uint{0}_t'.format(variants['local'].value))
-  
+        args.append('-DLOCAL_INDEX_TYPE=uint{0}_t'.format(
+            variants['local'].value))
+
         # Deal with the PROJECT_INSTALL_PREFIX to enable Talass super builds
         args.append('-DPROJECT_INSTALL_PREFIX=%s' % self.prefix)
 
