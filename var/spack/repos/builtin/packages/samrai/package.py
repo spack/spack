@@ -67,15 +67,16 @@ class Samrai(AutotoolsPackage):
     depends_on('zlib')
     depends_on('hdf5+mpi')
     depends_on('m4', type='build')
-
-    # Starting with 3.12.0, samrai no longer depends on boost.
-    # version 3.11.5 or earlier can only work with boost version
-    # 1.64.0 or earlier.
-    depends_on('boost@:1.64.0', when='@0:3.11.99', type='build')
+    depends_on('boost@:1.64.0', when='@3.0.0:3.11.99', type='build')
     depends_on('silo+mpi', when='+silo')
 
-    # don't build tools with gcc
-    patch('no-tool-build.patch', when='%gcc')
+    # don't build SAMRAI 3+ with tools with gcc
+    patch('no-tool-build.patch', when='@3.0.0:%gcc')
+
+    # 2.4.4 needs a lot of patches to fix ADL and performance problems
+    patch('https://github.com/IBAMR/IBAMR/releases/download/v0.3.0/ibamr-samrai-fixes.patch',
+          sha256='1d088b6cca41377747fa0ae8970440c20cb68988bbc34f9032d5a4e6aceede47',
+          when='@2.4.4')
 
     def configure_args(self):
         options = []
@@ -92,6 +93,10 @@ class Samrai(AutotoolsPackage):
             '--with-hypre=no',
             '--with-petsc=no'])
 
+        # SAMRAI 2 used templates; enable implicit instantiation
+        if self.spec.satisfies('@:3'):
+            options.append('--enable-implicit-template-instantiation')
+
         if '+debug' in self.spec:
             options.extend([
                 '--disable-opt',
@@ -101,18 +106,14 @@ class Samrai(AutotoolsPackage):
                 '--enable-opt',
                 '--disable-debug'])
 
-        if self.version >= Version('3.12.0'):
-            # only version 3.12.0 and above, samrai does not use
-            # boost, but needs c++11. Without c++11 flags, samrai
-            # cannot build with either gcc or intel compilers.
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
         if '+silo' in self.spec:
             options.append('--with-silo=%s' % self.spec['silo'].prefix)
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx11_flag
-        else:
-            # boost 1.64.0 or earlier works with samrai 2.4.4~3.11.5
+
+        if self.spec.satisfies('@3.0:3.11.99'):
             options.append('--with-boost=%s' % self.spec['boost'].prefix)
 
         return options
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        if self.spec.satisfies('@3.12:'):
+            spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
