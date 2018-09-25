@@ -261,6 +261,8 @@ class Database(object):
         try:
             yield self
         except LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
             raise
         except (Exception, KeyboardInterrupt):
             prefix_lock.release_read()
@@ -276,6 +278,8 @@ class Database(object):
         try:
             yield self
         except LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
             raise
         except (Exception, KeyboardInterrupt):
             prefix_lock.release_write()
