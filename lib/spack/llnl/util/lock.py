@@ -81,12 +81,17 @@ class Lock(object):
 
     @staticmethod
     def _poll_interval_generator(_wait_times=None):
-        # Poll interval of .1s until 2 seconds have passed
-        # Then poll interval of .2s until 10 seconds have passed
-        # Then poll interval of .5s
-        # This doesn't actually track elapsed time, it estimates the waiting
-        # time as though the caller always waits for the full length of time
-        # suggested by this function.
+        """This implements a backoff scheme for polling a contended resource
+        by suggesting a succession of wait times between polls.
+
+        It suggests a poll interval of .1s until 2 seconds have passed,
+        then a poll interval of .2s until 10 seconds have passed, and finally
+        (for all requests after 10s) suggests a poll interval of .5s.
+
+        This doesn't actually track elapsed time, it estimates the waiting
+        time as though the caller always waits for the full length of time
+        suggested by this function.
+        """
         num_requests = 0
         stage1, stage2, stage3 = _wait_times or (1e-1, 2e-1, 5e-1)
         wait_time = stage1
