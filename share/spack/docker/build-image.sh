@@ -55,7 +55,13 @@ else
         tag_options="${tag_options} -t spack/${BASE_NAME}:${tag}"
     done
 
+    cache_options=""
+    if docker pull "${TAG}" ; then
+        cache_options="--cache-from ${TAG}"
+    fi
+
     exec docker build -f ./Dockerfile                             \
+                      ${cache_options}                            \
                       ${tag_options}                              \
                       --build-arg BASE="${BASE_IMAGE}${BASE_TAG}" \
                       --build-arg DISTRO="${DISTRO}"              \
