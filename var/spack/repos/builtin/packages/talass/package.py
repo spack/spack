@@ -40,13 +40,11 @@ class Talass(CMakePackage):
 
     # The default precision and index space sizes
     variant('precision', default='32', values=('32', '64'),
-            description='Precision of the function values [32 (default) | 64]')
+            description='Precision of the function values')
     variant('global', default='32', values=('16', '32', '64'),
-            description='Number of bits used for the global index space\
- [16 | 32 (default) | 64]')
+            description='Number of bits used for the global index space')
     variant('local', default='32', values=('16', '32', '64'),
-            description='Number of bits used for the local index space\
- [16 | 32 (default) | 64]')
+            description='Number of bits used for the local index space')
 
     root_cmakelists_dir = 'StreamingTopology'
 
@@ -65,20 +63,12 @@ class Talass(CMakePackage):
         elif variants['precision'].value == '64':
             args.append('-DFUNCTION_TYPE=double')
 
-        if variants['global'].value == '16':
-            args.append('-DGLOBAL_INDEX_TYPE=uint16_t')
-        elif variants['global'].value == '32':
-            args.append('-DGLOBAL_INDEX_TYPE=uint32_t')
-        elif variants['global'].value == '64':
-            args.append('-DGLOBAL_INDEX_TYPE=uint64_t')
+        # Set global index space
+        args.append('-DGLOBAL_INDEX_TYPE=uint{0}_t'.format(variants['global'].value))
 
-        if variants['local'].value == '16':
-            args.append('-DLOCAL_INDEX_TYPE=uint16_t')
-        elif variants['local'].value == '32':
-            args.append('-DLOCAL_INDEX_TYPE=uint32_t')
-        elif variants['local'].value == '64':
-            args.append('-DLOCAL_INDEX_TYPE=uint64_t')
-
+        # Set local index space
+        args.append('-DLOCAL_INDEX_TYPE=uint{0}_t'.format(variants['local'].value))
+  
         # Deal with the PROJECT_INSTALL_PREFIX to enable Talass super builds
         args.append('-DPROJECT_INSTALL_PREFIX=%s' % self.prefix)
 
