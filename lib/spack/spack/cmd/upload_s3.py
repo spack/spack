@@ -96,7 +96,8 @@ def update_index(args):
         tty.error('S3 bucket "{0}" does not exist'.format(bucket_name))
         sys.exit(1)
 
-    build_cache_dir = bindist.build_cache_relative_path()
+    build_cache_dir = os.path.join(
+        'mirror', bindist.build_cache_relative_path())
 
     spec_yaml_regex = re.compile('{0}/(.+\\.spec\\.yaml)$'.format(build_cache_dir))
     spack_regex = re.compile('{0}/([^/]+)/.+\\.spack$'.format(build_cache_dir))
@@ -151,8 +152,7 @@ def upload_spec(args):
 
     s3, bucket_name = get_s3_session(args.endpoint_url)
 
-    build_cache_dir = os.path.join(
-        'mirror', bindist.build_cache_relative_path())
+    build_cache_dir = bindist.build_cache_relative_path()
 
     tarball_key = os.path.join(
         build_cache_dir, bindist.tarball_path_name(spec, '.spack'))
@@ -165,8 +165,15 @@ def upload_spec(args):
     print(tarball_key)
     print(specfile_key)
 
-    s3.meta.client.upload_file(tarball_path, bucket_name, tarball_key, ExtraArgs={'ACL':'public-read'})
-    s3.meta.client.upload_file(specfile_path, bucket_name, specfile_key, ExtraArgs={'ACL':'public-read'})
+    s3.meta.client.upload_file(
+            tarball_path, bucket_name,
+            os.path.join('mirror', tarball_key),
+            ExtraArgs={'ACL':'public-read'})
+
+    s3.meta.client.upload_file(
+            specfile_path, bucket_name,
+            os.path.join('mirror', specfile_key),
+            ExtraArgs={'ACL':'public-read'})
 
 
 def upload_s3(parser, args):
