@@ -46,7 +46,8 @@ class Lock(object):
 
     Note that this is for managing contention over resources *between*
     processes and not for managing contention between threads in a process: the
-    functions of this object are not thread-safe.
+    functions of this object are not thread-safe. A process also must not
+    maintain multiple locks on the same file.
     """
 
     def __init__(self, path, start=0, length=0, debug=False,
@@ -352,10 +353,11 @@ class Lock(object):
         tty.debug(*args)
 
     def _acquired_debug(self, lock_type, wait_time, nattempts):
+        attempts_format = 'attempt' if nattempts == 1 else 'attempt'
         self._debug(
             '{0}: {1.path}[{1._start}:{1._length}]'
-            ' [Acquired after {2:0.2f}s and {3:d} attempts]'
-            .format(lock_type, self, wait_time, nattempts))
+            ' [Acquired after {2:0.2f}s and {3:d} {4}]'
+            .format(lock_type, self, wait_time, nattempts, attempts_format))
 
 
 class LockTransaction(object):
