@@ -145,7 +145,8 @@ class Openblas(MakefilePackage):
         if self.spec.variants['virtual_machine'].value:
             make_defs += [
                 'DYNAMIC_ARCH=1',
-                'NO_AVX2=1'
+                'NO_AVX2=1',
+                'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
         if self.spec.variants['cpu_target'].value:
