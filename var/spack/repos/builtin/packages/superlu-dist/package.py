@@ -77,6 +77,11 @@ class SuperluDist(Package):
             'ARCH         = ar',
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
+            'CXX          = {0}'.format(self.spec['mpi'].mpicxx),
+            'CXXFLAGS     = {0} {1} {2}'.format(
+                ' '.join(self.spec.compiler_flags['cxxflags']),
+                self.compiler.pic_flag,
+                self.compiler.cxx11_flag),
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
             'CFLAGS       = %s %s -O2 %s %s %s' % (
                 self.compiler.pic_flag,
