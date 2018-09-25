@@ -33,4 +33,7 @@ class RRcolorbrewer(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RColorBrewer_1.1-2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RColorBrewer"
 
-    version('1.1-2', '66054d83eade4dff8a43ad4732691182')
+    version('1.1.2', '66054d83eade4dff8a43ad4732691182')
+
+    def url_for_version(self, v):
+        return "https://cran.r-project.org/src/contrib/RColorBrewer_%s.%s-%s.tar.gz" % tuple(str(v).split("."))
