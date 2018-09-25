@@ -110,3 +110,8 @@ def clean(parser, args):
                         dname = os.path.join(root, d)
                         tty.debug('Removing {0}'.format(dname))
                         shutil.rmtree(dname)
+
+    if args.locks:
+        itertools.chain(spack.db._lock_files(),
+                        spack.caches.misc_cache._lock_files(),
+                        [os.path.join(spack.paths.stage_path, '.lock')])
