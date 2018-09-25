@@ -119,34 +119,34 @@ class Lock(object):
 
         timeout = timeout or self.default_timeout
 
+        # Create file and parent directories if they don't exist.
+        if self._file is None:
+            parent = self._ensure_parent_directory()
+
+            # Open writable files as 'r+' so we can upgrade to write later
+            os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
+            if os.path.exists(self.path):
+                if not os.access(self.path, os.W_OK):
+                    if op == fcntl.LOCK_SH:
+                        # can still lock read-only files if we open 'r'
+                        os_mode, fd_mode = os.O_RDONLY, 'r'
+                    else:
+                        raise LockROFileError(self.path)
+
+            elif not os.access(parent, os.W_OK):
+                raise CantCreateLockError(self.path)
+
+            fd = os.open(self.path, os_mode)
+            self._file = os.fdopen(fd, fd_mode)
+
+        elif op == fcntl.LOCK_EX and self._file.mode == 'r':
+            # Attempt to upgrade to write lock w/a read-only file.
+            # If the file were writable, we'd have opened it 'r+'
+            raise LockROFileError(self.path)
+
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         while (not timeout) or (time.time() - start_time) < timeout:
-            # Create file and parent directories if they don't exist.
-            if self._file is None:
-                parent = self._ensure_parent_directory()
-
-                # Open writable files as 'r+' so we can upgrade to write later
-                os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
-                if os.path.exists(self.path):
-                    if not os.access(self.path, os.W_OK):
-                        if op == fcntl.LOCK_SH:
-                            # can still lock read-only files if we open 'r'
-                            os_mode, fd_mode = os.O_RDONLY, 'r'
-                        else:
-                            raise LockROFileError(self.path)
-
-                elif not os.access(parent, os.W_OK):
-                    raise CantCreateLockError(self.path)
-
-                fd = os.open(self.path, os_mode)
-                self._file = os.fdopen(fd, fd_mode)
-
-            elif op == fcntl.LOCK_EX and self._file.mode == 'r':
-                # Attempt to upgrade to write lock w/a read-only file.
-                # If the file were writable, we'd have opened it 'r+'
-                raise LockROFileError(self.path)
-
             try:
                 # Try to get the lock (will raise if not available.)
                 fcntl.lockf(self._file, op | fcntl.LOCK_NB,
