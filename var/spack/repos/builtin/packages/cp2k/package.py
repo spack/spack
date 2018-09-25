@@ -285,6 +285,7 @@ class Cp2k(Package):
                     ' '.join(ldflags) + ' -nofor_main')
                 )
             mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
+            mkf.write('DATA_DIR = {0}\n\n'.format(self.prefix.share.data))
 
         with working_dir('makefiles'):
             # Apparently the Makefile bases its paths on PWD
@@ -296,3 +297,4 @@ class Cp2k(Package):
             env['PWD'] = pwd_backup
         exe_dir = join_path('exe', cp2k_architecture)
         install_tree(exe_dir, self.prefix.bin)
+        install_tree('data', self.prefix.share.data)
