@@ -32,6 +32,8 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2019.0.117', 'd9e1b6b96fbffd4b306c7e8291f141a2',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13575/l_mkl_2019.0.117.tgz")
     version('2018.3.222', '3e63646a4306eff95e8d0aafd53a2983',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13005/l_mkl_2018.3.222.tgz")
     version('2018.2.199', 'fd31b656a8eb859c89495b9cc41230b4',
