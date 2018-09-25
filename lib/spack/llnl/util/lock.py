@@ -151,7 +151,6 @@ class Lock(object):
         num_attempts = 0
         while (not timeout) or (time.time() - start_time) < timeout:
             num_attempts += 1
-
             if self._poll_lock(op):
                 total_wait_time = time.time() - start_time
                 return total_wait_time, num_attempts
