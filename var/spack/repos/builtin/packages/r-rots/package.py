@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRots(Package):
+class RRots(RPackage):
     """Calculates the Reproducibility-Optimized Test Statistic (ROTS)
        for differential testing in omics data."""
 
