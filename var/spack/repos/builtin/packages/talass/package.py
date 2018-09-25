@@ -33,16 +33,10 @@ class Talass(CMakePackage):
     < StreamingTopology and any of the subsets can be build stand-
     alone."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.cedmav.org/research/project/16-talass.html"
     git      = "git@bitbucket.org:cedmav/talass.git"
 
     version('2018-09-21', commit='bf7da9bb54a026d8cb575b5be28b9c88095cb307')
-    # FIXME: Add proper versions and checksums here.
-    # version('1.2.3', '0123456789abcdef0123456789abcdef')
-
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
 
     # The default precision and index space sizes
     variant('precision', default='32', values=('32', '64'),
@@ -59,9 +53,6 @@ class Talass(CMakePackage):
     def cmake_args(self):
         variants = self.spec.variants
 
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
         args = []
 
         if int(variants['local'].value) > int(variants['global'].value):
