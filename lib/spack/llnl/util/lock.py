@@ -354,10 +354,15 @@ class Lock(object):
 
     def _acquired_debug(self, lock_type, wait_time, nattempts):
         attempts_format = 'attempt' if nattempts == 1 else 'attempt'
+        if nattempts > 1:
+            acquired_attempts_format = ' after {0:0.2f}s and {1:d} {2}'.format(
+                wait_time, nattempts, attempts_format)
+        else:
+            # Dont print anything if we succeeded immediately
+            acquired_attempts_format = ''
         self._debug(
-            '{0}: {1.path}[{1._start}:{1._length}]'
-            ' [Acquired after {2:0.2f}s and {3:d} {4}]'
-            .format(lock_type, self, wait_time, nattempts, attempts_format))
+            '{0}: {1.path}[{1._start}:{1._length}] [Acquired{2}]'
+            .format(lock_type, self, acquired_attempts_format))
 
 
 class LockTransaction(object):
