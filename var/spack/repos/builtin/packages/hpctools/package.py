@@ -31,6 +31,7 @@ class Hpctools(CMakePackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/HPCTools"
     url      = "ssh://bbpcode.epfl.ch/hpc/HPCTools"
 
+    version('develop', git=url)
     version('3.5.1', tag='3.5.1', git=url, preferred=True)
     version('3.1.0', tag='3.1.0', git=url)
 
@@ -44,7 +45,7 @@ class Hpctools(CMakePackage):
     def cmake_args(self):
         args = [
             '-DUSE_OPENMP:BOOL={}'.format('+openmp' in self.spec),
-            '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
+            '-DMPI_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
+            '-DMPI_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
         ]
         return args
