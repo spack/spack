@@ -65,9 +65,9 @@ class Talass(CMakePackage):
         args = []
 
         if int(variants['local'].value) > int(variants['global'].value):
-            raise InstallError('The global index space ({} bits) must be at least as large\
- as the local index space ({} bits)'.format(variants['global'].value,
-                                            variants['local'].value))
+            raise InstallError('The global index space (%d bits) must be at least as large\
+ as the local index space (% bits)' % (variants['global'].value,
+                                       variants['local'].value))
 
         if variants['precision'].value == '32':
             args.append('-DFUNCTION_TYPE=float')
@@ -89,6 +89,6 @@ class Talass(CMakePackage):
             args.append('-DLOCAL_INDEX_TYPE=uint64_t')
 
         # Deal with the PROJECT_INSTALL_PREFIX to enable Talass super builds
-        args.append('-DPROJECT_INSTALL_PREFIX={}'.format(self.prefix))
+        args.append('-DPROJECT_INSTALL_PREFIX=%s' % self.prefix)
 
         return args
