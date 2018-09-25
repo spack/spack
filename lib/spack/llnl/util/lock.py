@@ -43,6 +43,10 @@ class Lock(object):
     any filesystem implementation that supports locking through the fcntl
     calls.  This includes distributed filesystems like Lustre (when flock
     is enabled) and recent NFS versions.
+
+    Note that this is for managing contention over resources *between*
+    processes and not for managing contention between threads in a process: the
+    functions of this object are not thread-safe.
     """
 
     def __init__(self, path, start=0, length=0, debug=False,
