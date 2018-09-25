@@ -121,26 +121,6 @@ class Lock(object):
 
         timeout = timeout or self.default_timeout
 
-        poll_intervals = iter(Lock._poll_interval_generator())
-        start_time = time.time()
-        num_attempts = 0
-        while (not timeout) or (time.time() - start_time) < timeout:
-            num_attempts += 1
-
-            if self._poll_lock(op):
-                total_wait_time = time.time() - start_time
-                return total_wait_time, num_attempts
-
-            time.sleep(next(poll_intervals))
-
-        num_attempts += 1
-        if self._poll_lock(op):
-            total_wait_time = time.time() - start_time
-            return total_wait_time, num_attempts
-
-        raise LockTimeoutError("Timed out waiting for lock.")
-
-    def _ensure_lockfile(self, op):
         # Create file and parent directories if they don't exist.
         if self._file is None:
             parent = self._ensure_parent_directory()
@@ -166,12 +146,29 @@ class Lock(object):
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
+        poll_intervals = iter(Lock._poll_interval_generator())
+        start_time = time.time()
+        num_attempts = 0
+        while (not timeout) or (time.time() - start_time) < timeout:
+            num_attempts += 1
+
+            if self._poll_lock(op):
+                total_wait_time = time.time() - start_time
+                return total_wait_time, num_attempts
+
+            time.sleep(next(poll_intervals))
+
+        num_attempts += 1
+        if self._poll_lock(op):
+            total_wait_time = time.time() - start_time
+            return total_wait_time, num_attempts
+
+        raise LockTimeoutError("Timed out waiting for lock.")
+
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
-        self._ensure_lockfile(op)
-
         try:
             # Try to get the lock (will raise if not available.)
             fcntl.lockf(self._file, op | fcntl.LOCK_NB,
