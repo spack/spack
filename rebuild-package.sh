@@ -2,6 +2,8 @@
 
 set -x
 
+export FORCE_UNSAFE_CONFIGURE=1
+
 echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 
 CURRENT_WORKING_DIR=`pwd`
