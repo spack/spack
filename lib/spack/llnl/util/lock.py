@@ -113,7 +113,9 @@ class Lock(object):
         pid and host to the lock file, in case the holding process needs
         to be killed later.
 
-        If the lock times out, it raises a ``LockError``.
+        If the lock times out, it raises a ``LockError``. If the lock is
+        successfully acquired, the total wait time and the number of attempts
+        is returned.
         """
         assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
 
@@ -146,33 +148,49 @@ class Lock(object):
 
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
+        num_attempts = 0
         while (not timeout) or (time.time() - start_time) < timeout:
-            try:
-                # Try to get the lock (will raise if not available.)
-                fcntl.lockf(self._file, op | fcntl.LOCK_NB,
-                            self._length, self._start, os.SEEK_SET)
+            num_attempts += 1
 
-                # help for debugging distributed locking
-                if self.debug:
-                    # All locks read the owner PID and host
-                    self._read_debug_data()
-
-                    # Exclusive locks write their PID/host
-                    if op == fcntl.LOCK_EX:
-                        self._write_debug_data()
-
-                return
-
-            except IOError as e:
-                if e.errno in (errno.EAGAIN, errno.EACCES):
-                    # EAGAIN and EACCES == locked by another process
-                    pass
-                else:
-                    raise
+            if self._poll_lock(op):
+                total_wait_time = time.time() - start_time
+                return total_wait_time, num_attempts
 
             time.sleep(next(poll_intervals))
 
+        num_attempts += 1
+        if self._poll_lock(op):
+            total_wait_time = time.time() - start_time
+            return total_wait_time, num_attempts
+
         raise LockTimeoutError("Timed out waiting for lock.")
+
+    def _poll_lock(self, op):
+        """Attempt to acquire the lock in a non-blocking manner. Return whether
+        the locking attempt succeeds
+        """
+        try:
+            # Try to get the lock (will raise if not available.)
+            fcntl.lockf(self._file, op | fcntl.LOCK_NB,
+                        self._length, self._start, os.SEEK_SET)
+
+            # help for debugging distributed locking
+            if self.debug:
+                # All locks read the owner PID and host
+                self._read_debug_data()
+
+                # Exclusive locks write their PID/host
+                if op == fcntl.LOCK_EX:
+                    self._write_debug_data()
+
+            return True
+
+        except IOError as e:
+            if e.errno in (errno.EAGAIN, errno.EACCES):
+                # EAGAIN and EACCES == locked by another process
+                pass
+            else:
+                raise
 
     def _ensure_parent_directory(self):
         parent = os.path.dirname(self.path)
@@ -246,10 +264,9 @@ class Lock(object):
             self._debug(
                 'READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
                 .format(self))
-            self._lock(fcntl.LOCK_SH, timeout=timeout)   # can raise LockError.
-            self._debug(
-                'READ LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
-                .format(self))
+            # can raise LockError.
+            wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
+            self._acquired_debug('READ LOCK', wait_time, nattempts)
             self._reads += 1
             return True
         else:
@@ -273,10 +290,9 @@ class Lock(object):
             self._debug(
                 'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
                 .format(self))
-            self._lock(fcntl.LOCK_EX, timeout=timeout)   # can raise LockError.
-            self._debug(
-                'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
-                .format(self))
+            # can raise LockError.
+            wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
+            self._acquired_debug('WRITE LOCK', wait_time, nattempts)
             self._writes += 1
             return True
         else:
@@ -331,6 +347,12 @@ class Lock(object):
 
     def _debug(self, *args):
         tty.debug(*args)
+
+    def _acquired_debug(self, lock_type, wait_time, nattempts):
+        self._debug(
+            '{0}: {1.path}[{1._start}:{1._length}]'
+            ' [Acquired after {2:0.2f}s and {3:d} attempts]'
+            .format(lock_type, self, wait_time, nattempts))
 
 
 class LockTransaction(object):
