@@ -34,3 +34,4 @@ class RProto(RPackage):
     list_url = "https://cran.r-project.org/src/contrib/Archive/proto"
 
     version('0.3-10', 'd5523943a5be6ca2f0ab557c900f8212')
+    version('1.0.0', sha256='9294d9a3b2b680bb6fac17000bfc97453d77c87ef68cfd609b4c4eb6d11d04d1')
