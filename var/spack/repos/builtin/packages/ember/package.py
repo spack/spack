@@ -91,12 +91,17 @@ class Ember(MakefilePackage):
         return targets
 
     def install(self, spec, prefix):
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('LICENSE', prefix.doc)
-        install('README.MPI.halo3d', prefix.doc)
-        install('README.MPI.halo3d-26', prefix.doc)
-        install('README.MPI.incast', prefix.doc)
-        install('README.MPI.sweep3d', prefix.doc)
-        install('README.SHMEM.hotspotinc', prefix.doc)
-        install('README.SHMEM.randominc', prefix.doc)
+        mkdirp(prefix.docs)
+        install('README.md', prefix.docs)
+        install('README.MPI.halo3d', prefix.docs)
+        install('README.MPI.halo3d-26', prefix.docs)
+        install('README.MPI.incast', prefix.docs)
+        install('README.MPI.sweep3d', prefix.docs)
+
+        mkdirp(prefix.bin)
+        install('mpi/halo3d/halo3d', prefix.bin)
+        install('mpi/halo3d-26/halo3d-26', prefix.bin)
+        install('mpi/incast/incast', prefix.bin)
+        install('mpi/pingpong/pingpong', prefix.bin)
+        install('mpi/sweep3d/sweep3d', prefix.bin)
+
