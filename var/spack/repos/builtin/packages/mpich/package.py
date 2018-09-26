@@ -38,12 +38,12 @@ class Mpich(AutotoolsPackage):
 
     version('develop', submodules=True)
     version('3.2.1', 'e175452f4d61646a52c73031683fc375')
-    version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
+    version('3.2.0', 'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
     version('3.1.3', '93cb17f91ac758cbf9174ecb03563778')
     version('3.1.2', '7fbf4b81dcb74b07ae85939d1ceee7f1')
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
-    version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
+    version('3.1.0', '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
     variant('hydra', default=True,  description='Build the hydra process manager')
@@ -80,7 +80,7 @@ spack package at this time.''',
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch('mpich32_clang.patch', when='@3.2%clang')
+    patch('mpich32_clang.patch', when='@3.2.0%clang')
 
     depends_on('libfabric', when='netmod=ofi')
 
@@ -175,3 +175,17 @@ spack package at this time.''',
         config_args.append(device_config)
 
         return config_args
+
+    def url_for_version(self, version):
+        # There is uncertainty when comparing version tuples of different
+        # length. For example, mpich has official versions 3.2 and 3.2.1.
+        # We also have a patch that needs to be applied for the version 3.2
+        # but not for the version 3.2.1. Thus, we introduce a condition for
+        # that patch: when='@3.2%clang'. The problem is that the version 3.2.1
+        # also satisfies this condition. To work around this issue, we made
+        # all version to have the same length and introduced this method to
+        # map the versions 'x.y.0' that we have for mpich in Spack to the
+        # urls of the official versions 'x.y'.
+        if len(version) == 3 and version[2] == 0:
+            version = version.up_to(2)
+        return super(Mpich, self).url_for_version(version)
