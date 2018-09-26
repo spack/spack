@@ -28,4 +28,8 @@ ${coverage_run} bin/spack help -a
 ${coverage_run} bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
 
 # Run unit tests with code coverage
-${coverage_run} bin/spack test "$@"
+extra_args=""
+if [[ -n "$@" ]]; then
+    extra_args="-k $@"
+fi
+${coverage_run} bin/spack test --verbose "$extra_args"

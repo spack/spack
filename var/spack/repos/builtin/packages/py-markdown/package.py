@@ -34,18 +34,20 @@ class PyMarkdown(PythonPackage):
     """
 
     homepage = "https://pythonhosted.org/Markdown/"
-    url      = "https://github.com/waylan/Python-Markdown/archive/2.6.7-final.tar.gz"
+    url      = "https://pypi.io/packages/source/m/markdown/Markdown-2.6.11.tar.gz"
 
-    version('2.6.7', 'fd27044042e197ad99249b3d60215d97')
-    version('2.6.6', '2b47a0ff7eb19ef34453fe198a0cccc4')
-    version('2.6.5', 'e4b6b65b2d6bcac07176fb209bc55614')
-    version('2.6.4', '5fb3cd9945eb534e71af597f8ee3622b')
-    version('2.6.3', 'ec7a50ce9fd4a5fd0b24555d47e9d7d1')
-    version('2.6.2', '6ce86913e9bf5bb34d9ee394ac71f044')
-    version('2.6.1', '0ae69693c5adb27caf0160941d7dcbdf')
-    version('2.6', '9acdde43d99847d0c4ef03ea56b1d2c5')
-    version('2.5.2', 'ed2a662d22799186c1ef85d173d38b8a')
-    version('2.5.1', 'be6f6ba65a8fb843d2aaf1fcdd68c755')
-    version('2.5', '8393ceab9c6e33357fb8a7be063a4849')
+    version('2.6.11', sha256='a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81')
+    version('2.6.7', sha256='daebf24846efa7ff269cfde8c41a48bb2303920c7b2c7c5e04fa82e6282d05c0')
+    version('2.6.6', sha256='9a292bb40d6d29abac8024887bcfc1159d7a32dc1d6f1f6e8d6d8e293666c504')
+    version('2.6.5', sha256='8d94cf6273606f76753fcb1324623792b3738c7612c2b180c85cc5e88642e560')
+    version('2.6.4', sha256='e436eee7aaf2a230ca3315034dd39e8a0fc27036708acaa3dd70625ec62a94ce')
+    version('2.6.3', sha256='ad75fc03c45492eba3bc63645e1e6465f65523a05fff0abf36910f810465a9af')
+    version('2.6.2', sha256='ee17d0d7dc091e645dd48302a2e21301cc68f188505c2069d8635f94554170bf')
+    version('2.6.1', sha256='b5879b87e8e5c125c92ab8c8f3babce78ad4e840446eed73c5b6e2984648d2b1')
+    version('2.6', sha256='e1c8a489bb7c7154bc5a8c14f0fd1fc356ee36c8b9988f9fd8febff22dd435da')
+    version('2.5.2', sha256='284e97e56db9ada03ede9c0ed2870ca6590ce7869f3119104d53510debf1533d')
+    version('2.5.1', sha256='8f81ed12c18608a502828acb7d318f362c42f4eca97d01e93cadfc52c1e40b73')
+    version('2.5', sha256='6ba74a1e7141c9603750d80711b639a7577bffb785708e6260090239ee5bc76d')
 
     depends_on('python@2.7:2.8,3.2:3.4')
+    depends_on('py-setuptools', type='build', when='@2.6.11:')

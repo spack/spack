@@ -220,6 +220,13 @@ def lock_path(lock_dir):
         os.unlink(lock_file)
 
 
+def test_poll_interval_generator():
+    interval_iter = iter(
+        lk.Lock._poll_interval_generator(_wait_times=[1, 2, 3]))
+    intervals = list(next(interval_iter) for i in range(100))
+    assert intervals == [1] * 20 + [2] * 40 + [3] * 40
+
+
 def local_multiproc_test(*functions, **kwargs):
     """Order some processes using simple barrier synchronization."""
     b = mp.Barrier(len(functions), timeout=barrier_timeout)

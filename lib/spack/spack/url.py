@@ -169,6 +169,7 @@ def strip_version_suffixes(path):
         # Download type
         '[Ii]nstall',
         'all',
+        'code',
         'src(_0)?',
         '[Ss]ources?',
         'file',
