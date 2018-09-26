@@ -40,7 +40,7 @@ class Autofact(Package):
     depends_on('perl-lwp', type='run')
     depends_on('blast-plus', type='run')
 
-    def edit(self):
+    def patch(self):
         with working_dir('scripts'):
             files = glob.iglob("*.pl")
             for file in files:
@@ -51,5 +51,5 @@ class Autofact(Package):
         install_tree(self.stage.source_path, prefix)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'scripts'))
+        run_env.prepend_path('PATH', self.prefix.scripts)
         run_env.set('PATH2AUTOFACT', self.prefix)
