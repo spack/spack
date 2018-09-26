@@ -39,8 +39,9 @@ class Cp2k(Package):
     # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
-    depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
-    depends_on('libxc@2.2.2:', when='+libxc')
+    # libint & libxc are always statically linked
+    depends_on('libint@1.1.4:1.2', when='@3.0:5.999', type='build')
+    depends_on('libxc@2.2.2:', when='+libxc', type='build')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
