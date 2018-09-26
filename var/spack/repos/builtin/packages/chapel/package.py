@@ -26,12 +26,11 @@ from spack import *
 
 
 class Chapel(AutotoolsPackage):
-    """Chapel is a modern programming language that is...
-
-    parallel: contains first-class concepts for concurrent and parallel computation
-    productive: designed with programmability and performance in mind
-    portable: runs on laptops, clusters, the cloud, and HPC systems
-    scalable: supports locality-oriented features for distributed memory systems
+    """Chapel is a modern programming language that is:
+    parallel: contains first-class concepts for concurrent and parallel computation,
+    productive: designed with programmability and performance in mind,
+    portable: runs on laptops, clusters, the cloud, and HPC systems,
+    scalable: supports locality-oriented features for distributed memory systems,
     open-source: hosted on GitHub, permissively licensed"""
 
     homepage = "https://chapel-lang.org/"
@@ -43,9 +42,6 @@ class Chapel(AutotoolsPackage):
     depends_on('perl', type='build')
     depends_on('python', type='build')
     depends_on('m4', type='build')
-
-    variant('llvm', default=False, description='build with llvm support')
-    variant('mason', default=False, description='build chapel package manager')
 
     platforms = ('cygwin32',
                  'cygwin64',
