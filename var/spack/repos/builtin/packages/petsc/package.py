@@ -43,6 +43,8 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
+    version('3.9.4', 'c98eb67573efb2f91c6f239368259e44')
     version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
     version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
     version('3.9.1', 'd3a229a188dbeef9b3f29b9a63622fad')
@@ -149,6 +151,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
