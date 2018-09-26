@@ -37,3 +37,33 @@ class GmapGsnap(AutotoolsPackage):
     version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
     version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
     version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
+
+    variant(
+        'simd',
+        description='CPU support.',
+        values=('avx2', 'sse42', 'avx512', 'sse2'),
+        multi=True
+    )
+
+    def configure(self, spec, prefix):
+        configure = Executable('../configure')
+
+        for simd in spec.variants['simd'].value:
+            with working_dir(simd, create=True):
+                configure('--with-simd-level={0}'.format(simd),
+                          '--prefix={0}'.format(prefix))
+
+    def build(self, spec, prefix):
+        for simd in spec.variants['simd'].value:
+            with working_dir(simd):
+                make()
+
+    def check(self):
+        for simd in self.spec.variants['simd'].value:
+            with working_dir(simd):
+                make('check')
+
+    def install(self, spec, prefix):
+        for simd in spec.variants['simd'].value:
+            with working_dir(simd):
+                make('install')
