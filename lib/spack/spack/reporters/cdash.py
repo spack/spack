@@ -58,7 +58,17 @@ cdash_phases = set(map_phases_to_cdash.values())
 
 
 class CDash(Reporter):
-    """Generate reports of spec installations for CDash."""
+    """Generate reports of spec installations for CDash.
+
+    To use this reporter, pass the ``--cdash-upload-url`` argument to
+    ``spack install``::
+
+        spack install --cdash-upload-url=\\
+            https://mydomain.com/cdash/submit.php?project=Spack <spec>
+
+    In this example, results will be uploaded to the *Spack* project on the
+    CDash instance hosted at https://mydomain.com/cdash.
+    """
 
     def __init__(self, install_command, cdash_upload_url):
         Reporter.__init__(self, install_command, cdash_upload_url)
