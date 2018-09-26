@@ -43,26 +43,5 @@ class Chapel(AutotoolsPackage):
     depends_on('python', type='build')
     depends_on('m4', type='build')
 
-    platforms = ('cygwin32',
-                 'cygwin64',
-                 'darwin',
-                 'linux32',
-                 'linux64',
-                 'netbsd32',
-                 'netbsd64',
-                 'pwr6',
-                 'sunos',
-                 'cray-cs',
-                 'cray-xc',
-                 'cray-xe',
-                 'cray-xk')
-
-    variant('chpl_host_platform', 
-            default=None, 
-            description='platform type',
-            values=platforms)
-
     def setup_environment(self, spack_env, run_env):
-        spack_env.set('CHPL_HOST_PLATFORM', self.spec.variants['chpl_host_platform'].value)
-        run_env.prepend_path('PATH', join_path(prefix.bin, self.spec.variants['chpl_host_platform'].value))
         run_env.prepend_path('MANPATH', join_path(prefix, 'man'))
