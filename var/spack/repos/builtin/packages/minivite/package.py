@@ -35,6 +35,7 @@ class Minivite(MakefilePackage):
     git      = "https://github.com/Exa-Graph/miniVite.git"
 
     version('develop', branch='master')
+    version('1.0', tag='v1.0')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('opt', default=True, description='Optimization flags')
