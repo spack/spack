@@ -39,6 +39,7 @@ class PyPybind11(CMakePackage):
     git      = "https://github.com/pybind/pybind11.git"
 
     version('develop', branch='master')
+    version('2.2.4', 'c533a107bc95bd0c5525ff650b11bfa1')
     version('2.2.3', '55b637945bbf47d99d2c906bf0c13f49')
     version('2.2.2', 'fc174e1bbfe7ec069af7eea86ec37b5c')
     version('2.2.1', 'bab1d46bbc465af5af3a4129b12bfa3b')
