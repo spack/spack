@@ -26,6 +26,8 @@ class Cp2k(Package):
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'none'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
+    variant('libxc', default=True,
+            description='Support additional functionals via libxc')
 
     depends_on('python', type='build')
 
@@ -38,7 +40,7 @@ class Cp2k(Package):
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
     depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
-    depends_on('libxc@2.2.2:')
+    depends_on('libxc@2.2.2:', when='+libxc')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -81,17 +83,20 @@ class Cp2k(Package):
 
             dflags = ['-DNDEBUG']
 
-            libxc = spec['libxc:fortran,static']
-
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
                 '-D__LIBINT_MAX_AM=6',
                 '-D__LIBDERIV_MAX_AM1=5',
-                '-D__LIBXC',
                 spec['fftw'].headers.cpp_flags,
-                libxc.headers.cpp_flags
             ]
+
+            if '+libxc' in spec:
+                libxc = spec['libxc:fortran,static']
+                cppflags += [
+                    '-D__LIBXC',
+                    libxc.headers.cpp_flags
+                ]
 
             if '^mpi@3:' in spec:
                 cppflags.append('-D__MPI_VERSION=3')
@@ -240,9 +245,11 @@ class Cp2k(Package):
             blas = spec['blas'].libs
             ldflags.append((lapack + blas).search_flags)
 
-            ldflags.append(libxc.libs.search_flags)
+            libs.extend([str(x) for x in (fftw, lapack, blas)])
 
-            libs.extend([str(x) for x in (fftw, lapack, blas, libxc.libs)])
+            if '+libxc' in spec:
+                ldflags.append(libxc.libs.search_flags)
+                libs.append(str(libxc.libs))
 
             if 'smm=libsmm' in spec:
                 lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
