@@ -40,6 +40,8 @@ class Parquet(CMakePackage):
     depends_on('pkgconfig', type='build')
     depends_on('thrift+pic')
 
+    variant('pic', default=True,
+            description='Build position independent code')
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'FastDebug', 'Release'))
@@ -50,3 +52,9 @@ class Parquet(CMakePackage):
             args.append("-D{0}_HOME={1}".format(dep.upper(),
                                                 self.spec[dep].prefix))
         return args
+
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
+            flags.append(self.compiler.pic_flag)
+        return (None, None, flags)
