@@ -39,11 +39,11 @@ class Orca(Package):
     homepage = "https://cec.mpg.de"
     url      = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
 
-    # required for extracting tar.zst archives
-    depends_on('zstd', type='build')
-
     version('4.0.1.2', sha256='cea442aa99ec0d7ffde65014932196b62343f7a6191b4bfc438bfb38c03942f7',
             expand=False)
+
+    depends_on('zstd', type='build')
+    depends_on('openmpi@2.0.0:2.1.5', type='run')
 
     def url_for_version(self, version):
         out = "file://{0}/orca_{1}_linux_x86-64_openmpi202.tar.zst"
