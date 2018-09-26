@@ -32,6 +32,7 @@ class PyHtseq(PythonPackage):
     homepage = "http://htseq.readthedocs.io/en/release_0.9.1/overview.html"
     url      = "https://github.com/simon-anders/htseq/archive/release_0.9.1.tar.gz"
 
+    version('0.10.0', 'e6365221089383c51ebce3ca89dc623b')
     version('0.9.1', '269e7de5d39fc31f609cccd4a4740e61')
 
     depends_on('py-setuptools', type='build')
