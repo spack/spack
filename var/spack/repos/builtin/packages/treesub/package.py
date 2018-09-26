@@ -1,5 +1,6 @@
 ##############################################################################
 from spack import *
+import os
 
 
 class Treesub(Package):
@@ -22,11 +23,15 @@ class Treesub(Package):
     depends_on('figtree', type='run')
 
     def install(self, spec, prefix):
-        ant = self.spec['ant'].comand
-        ant('all')
+        ant = self.spec['ant'].command
+        ant('jar')
 
         mkdirp(prefix.bin)
         install_tree('dist', prefix.bin)
 
         mkdirp(prefix.lib)
         install_tree('lib', prefix.lib)
+
+        execscript = join_path(self.package_dir, 'treesub')
+        os.chmod(execscript, 0775)
+        install(execscript, prefix.bin)
