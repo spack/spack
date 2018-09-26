@@ -123,10 +123,13 @@ class Cp2k(Package):
             if 'superlu-dist@4.3' in spec:
                 ldflags = ['-Wl,--allow-multiple-definition'] + ldflags
 
+            # libint-1.x.y has to be linked statically to work around
+            # inconsistencies in its Fortran interface definition
+            # (short-int vs int) which otherwise causes segfaults at runtime
+            # due to wrong offsets into the shared library symbols.
             libs = [
-                join_path(spec['libint'].libs.directories[0], 'libint.so'),
-                join_path(spec['libint'].libs.directories[0], 'libderiv.so'),
-                join_path(spec['libint'].libs.directories[0], 'libr12.so')
+                join_path(spec['libint'].libs.directories[0], 'libderiv.a'),
+                join_path(spec['libint'].libs.directories[0], 'libint.a'),
             ]
 
             if '+plumed' in self.spec:
