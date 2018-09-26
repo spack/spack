@@ -53,6 +53,8 @@ class Figtree(Package):
 
     version('1.4.3', sha256='f497d4dd3a6d220f6b62495b6f47a12ade50d87dbd8d6089f168e94d202f937b')
 
+    depends_on('java', type='run')
+
     def patch(self):
         # we have to change up the executable to point to the right program
         filter_file('lib/figtree.jar',
