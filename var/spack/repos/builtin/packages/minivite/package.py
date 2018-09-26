@@ -37,18 +37,21 @@ class Minivite(MakefilePackage):
     version('develop', branch='master')
 
     variant('openmp', default=True, description='Build with OpenMP support')
+    variant('opt', default=True, description='Optimization flags')
 
     depends_on('mpi')
 
     @property
     def build_targets(self):
         targets = []
-        cxxflags = ['-std=c++11 -g -O3 -DCHECK_NUM_EDGES -DPRINT_EXTRA_NEDGES']
+        cxxflags = ['-std=c++11 -g -DCHECK_NUM_EDGES -DPRINT_EXTRA_NEDGES']
         ldflags = []
 
         if '+openmp' in self.spec:
             cxxflags.append(self.compiler.openmp_flag)
             ldflags.append(self.compiler.openmp_flag)
+        if '+opt' in self.spec:
+            cxxflags.append(' -O3 ')
 
         targets.append('CXXFLAGS={0}'.format(' '.join(cxxflags)))
         targets.append('OPTFLAGS={0}'.format(' '.join(ldflags)))
