@@ -37,6 +37,7 @@ class Xsbench(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
+    version('18', sha256='a9a544eeacd1be8d687080d2df4eeb701c04eda31d3806e7c3ea1ff36c26f4b0')
     version('14', '94d5d28eb031fd4ef35507c9c1862169')
     version('13', '72a92232d2f5777fb52f5ea4082aff37')
 

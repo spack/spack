@@ -26,8 +26,8 @@ from spack import *
 
 
 class Breakdancer(CMakePackage):
-    """BreakDancer-1.3.6, released under GPLv3, is a Cpp package that provides
-    genome-wide detection of structural variants from next generation
+    """BreakDancer-1.3.6, released under GPLv3, is a perl/Cpp package that
+    provides genome-wide detection of structural variants from next generation
     paired-end sequencing reads. It includes two complementary programs.
     BreakDancerMax predicts five types of structural variants: insertions,
     deletions, inversions, inter- and intra-chromosomal translocations from
@@ -37,11 +37,35 @@ class Breakdancer(CMakePackage):
     100bp) using normally mapped read pairs.."""
 
     homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
-    url      = "https://github.com/genome/breakdancer.git"
+    url      = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
 
-    version('master', git='https://github.com/genome/breakdancer.git',
-            submodules='true')
+    version('1.4.5', sha256='5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6')
+    version('master', submodules='true', 
+            git='https://github.com/genome/breakdancer.git', preferred=True)
+
+    phases = ['edit', 'cmake', 'build', 'install']
 
     depends_on('zlib')
 
+    depends_on('perl-statistics-descriptive', type='run')
+    depends_on('perl-math-cdf', type='run')
+    depends_on('perl-gd-graph', type='run')
+    depends_on('perl-gdgraph-histogram', type='run')
+    depends_on('perl-list-moreutils', type='run')
+    depends_on('perl-exporter-tiny', type='run')
+
+    # TODO: remove git submodules, and depend on boost & samtools
+
     parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        # get the perl tools in the path
+        run_env.prepend_path('PATH', self.prefix.lib)
+
+    def edit(self, spec, prefix):
+        # perl tools end up in a silly lib subdirectory, fixing that
+        filter_file(r'set\(SUPPORT_LIBDIR lib\/breakdancer-max\$ \
+                    \{EXE_VERSION_SUFFIX\}\)',
+                    'set(SUPPORT_LIBDIR lib)',
+                    join_path(self.stage.source_path,
+                              'perl', 'CMakeLists.txt'))

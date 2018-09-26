@@ -30,6 +30,7 @@ class Externaltool(Package):
     url      = "http://somewhere.com/tool-1.0.tar.gz"
 
     version('1.0', '1234567890abcdef1234567890abcdef')
+    version('0.9', '1234567890abcdef1234567890abcdef')
 
     depends_on('externalprereq')
 

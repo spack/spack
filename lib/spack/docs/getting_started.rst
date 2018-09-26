@@ -11,7 +11,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2 (2.6 or 2.7) or 3 (3.3 - 3.6)
+1. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7)
 2. A C/C++ compiler
 3. The ``git`` and ``curl`` commands.
 4. If using the ``gpg`` subcommand, ``gnupg2`` is required.
@@ -484,6 +484,9 @@ simple package.  For example:
 
    $ spack install zlib%gcc@5.3.0
 
+
+.. _vendor-specific-compiler-configuration:
+
 --------------------------------------
 Vendor-Specific Compiler Configuration
 --------------------------------------
@@ -805,7 +808,7 @@ encountered on a Macintosh during ``spack install julia-master``:
 
 .. code-block:: console
 
-   ==> Trying to clone git repository:
+   ==> Cloning git repository:
      https://github.com/JuliaLang/julia.git
      on branch master
    Cloning into 'julia'...
@@ -816,7 +819,7 @@ This problem is related to OpenSSL, and in some cases might be solved
 by installing a new version of ``git`` and ``openssl``:
 
 #. Run ``spack install git``
-#. Add the output of ``spack module loads git`` to your ``.bashrc``.
+#. Add the output of ``spack module tcl loads git`` to your ``.bashrc``.
 
 If this doesn't work, it is also possible to disable checking of SSL
 certificates by using:
@@ -861,7 +864,7 @@ or alternately:
 
 .. code-block:: console
 
-    $ spack module loads curl >>~/.bashrc
+    $ spack module tcl loads curl >>~/.bashrc
 
 or if environment modules don't work:
 
@@ -1218,13 +1221,13 @@ Here's an example of an external configuration for cray modules:
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
 environment variables, libraries, etc, that are brought into the environment
-via module load.  
+via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:`` 
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
-    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the 
+    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).
 
 You can set the default compiler that Spack can use for each compiler type.

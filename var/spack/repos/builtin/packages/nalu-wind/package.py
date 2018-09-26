@@ -28,9 +28,11 @@ class NaluWind(CMakePackage):
     """Nalu-Wind: Wind energy focused variant of Nalu."""
 
     homepage = "https://github.com/exawind/nalu-wind"
-    url      = "https://github.com/exawind/nalu-wind.git"
+    git      = "https://github.com/exawind/nalu-wind.git"
 
     maintainers = ['jrood-nrel']
+
+    version('master', branch='master')
 
     variant('openfast', default=False,
             description='Compile with OpenFAST support')
@@ -38,9 +40,6 @@ class NaluWind(CMakePackage):
             description='Compile with Tioga support')
     variant('hypre', default=False,
             description='Compile with Hypre support')
-
-    version('master',
-            git='https://github.com/exawind/nalu-wind.git', branch='master')
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')

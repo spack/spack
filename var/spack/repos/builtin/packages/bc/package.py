@@ -31,7 +31,7 @@ class Bc(AutotoolsPackage):
     interactive execution of statements."""
 
     homepage = "https://www.gnu.org/software/bc"
-    url = "https://ftp.gnu.org/gnu/bc/bc-1.07.tar.gz"
+    url      = "https://ftpmirror.gnu.org/bc/bc-1.07.tar.gz"
 
     version('1.07', 'e91638a947beadabf4d7770bdbb3d512')
 

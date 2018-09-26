@@ -22,10 +22,10 @@ class Plasma(MakefilePackage):
 
     homepage = "https://bitbucket.org/icl/plasma/"
     url      = "https://bitbucket.org/icl/plasma/downloads/plasma-17.1.tar.gz"
+    hg       = "https://luszczek@bitbucket.org/icl/plasma"
 
+    version("develop", hg=hg)
     version("17.1", "64b410b76023a41b3f07a5f0dca554e1")
-
-    version("develop", hg="https://luszczek@bitbucket.org/icl/plasma")
 
     variant('shared', default=True, description="Build shared library (disables static library)")
 

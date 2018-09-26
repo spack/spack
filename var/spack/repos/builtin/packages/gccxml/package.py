@@ -27,11 +27,11 @@ class Gccxml(CMakePackage):
     the GCC C++ compiler."""
 
     homepage = "http://gccxml.github.io"
-    url      = "https://github.com/gccxml/gccxml/archive/v0.6.x.tar.gz"
+    git      = "https://github.com/gccxml/gccxml.git"
 
-    version('develop', git='https://github.com/gccxml/gccxml.git', branch='master')
-    version('latest', git='https://github.com/gccxml/gccxml.git',
-            commit='3afa8ba5be6866e603dcabe80aff79856b558e24', preferred=True)
+    version('develop', branch='master')
+    version('latest', commit='3afa8ba5be6866e603dcabe80aff79856b558e24',
+            preferred=True)
 
     patch('darwin-gcc.patch', when='%gcc platform=darwin')
     # taken from https://github.com/gccxml/gccxml/issues/11#issuecomment-140334118

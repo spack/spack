@@ -31,7 +31,7 @@
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack module file configuration file schema',
+    'title': 'Spack core configuration file schema',
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
@@ -69,6 +69,14 @@ schema = {
                 'locks': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
                 'build_jobs': {'type': 'integer', 'minimum': 1},
+                'ccache': {'type': 'boolean'},
+                'db_lock_timeout': {'type': 'integer', 'minimum': 1},
+                'package_lock_timeout': {
+                    'anyOf': [
+                        {'type': 'integer', 'minimum': 1},
+                        {'type': 'null'}
+                    ],
+                },
             }
         },
     },

@@ -44,8 +44,25 @@ class Coinhsl(AutotoolsPackage):
     homepage = "http://www.hsl.rl.ac.uk/ipopt/"
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
 
-    version('2014.01.17', '9eb3dd40ed034814ed8dfee75b281180c1d9d2ae')
-    version('2014.01.10', '7c2be60a3913b406904c66ee83acdbd0709f229b652c4e39ee5d0876f6b2e907',
+    # CoinHSL has a few versions that vary with respect to stability/features
+    # and licensing terms.
+
+    # Version 2015.06.23 is a full-featured "release candidate"
+    # version available via an "academic license" that can be used for
+    # personal teaching and research purposes only. For a full list of
+    # conditions, see http://www.hsl.rl.ac.uk/academic.html.
+    version('2015.06.23', sha256='3e955a2072f669b8f357ae746531b37aea921552e415dc219a5dd13577575fb3')
+
+    # Version 2014.01.17 is a full-featured "stable" version available
+    # via an "academic license" that can be used for personal teaching
+    # and research purposes only.
+    version('2014.01.17', sha256='ed49fea62692c5d2f928d4007988930da9ff9a2e944e4c559d028671d122437b')
+
+    # Version 2014.01.10 only has MA27, MA28, and MC19, and is
+    # available as a "personal license" that is free to all, and
+    # permits commercial use, but *not redistribution* (emphasis from
+    # original source).
+    version('2014.01.10', sha256='7c2be60a3913b406904c66ee83acdbd0709f229b652c4e39ee5d0876f6b2e907',
             preferred=True)
 
     # CoinHSL fails to build in parallel

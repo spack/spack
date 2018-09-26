@@ -31,7 +31,7 @@ import tempfile
 import hashlib
 from contextlib import closing
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install_tree, get_filetype
@@ -203,13 +203,13 @@ def tarball_path_name(spec, ext):
 
 def checksum_tarball(file):
     # calculate sha256 hash of tar file
-    BLOCKSIZE = 65536
+    block_size = 65536
     hasher = hashlib.sha256()
     with open(file, 'rb') as tfile:
-        buf = tfile.read(BLOCKSIZE)
+        buf = tfile.read(block_size)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = tfile.read(BLOCKSIZE)
+            buf = tfile.read(block_size)
     return hasher.hexdigest()
 
 

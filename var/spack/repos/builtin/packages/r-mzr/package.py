@@ -34,9 +34,9 @@ class RMzr(RPackage):
        reading code has previously been used in XCMS."""
 
     homepage = "https://www.bioconductor.org/packages/mzR/"
-    url      = "https://git.bioconductor.org/packages/mzR"
+    git      = "https://git.bioconductor.org/packages/mzR.git"
 
-    version('2.10.0', git='https://git.bioconductor.org/packages/mzR', commit='a6168b68e48c281e88de9647254a8db1e21df388')
+    version('2.10.0', commit='a6168b68e48c281e88de9647254a8db1e21df388')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import distutils.dir_util
 
 
 class Mefit(Package):
@@ -31,9 +30,9 @@ class Mefit(Package):
     merge statistics, and filter reads for quality."""
 
     homepage = "https://github.com/nisheth/MeFiT"
-    url      = "https://github.com/nisheth/MeFiT.git"
+    git      = "https://github.com/nisheth/MeFiT.git"
 
-    version('1.0', git='https://github.com/nisheth/MeFiT.git', commit='0733326d8917570bbf70ff5c0f710bf66c13db09')
+    version('1.0', commit='0733326d8917570bbf70ff5c0f710bf66c13db09')
 
     depends_on('py-numpy')
     depends_on('py-htseq')
@@ -41,7 +40,7 @@ class Mefit(Package):
     depends_on('casper %gcc@4.8.5')
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix)

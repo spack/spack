@@ -26,15 +26,14 @@ from spack import *
 
 
 class Rmlab(CMakePackage):
-    """C++ File API for the reMarkable tablet
-    """
+    """C++ File API for the reMarkable tablet"""
 
     homepage = "https://github.com/ax3l/lines-are-beautiful"
-    url      = "https://plasma.ninja/blog/devices/remarkable/binary/format/2017/12/26/reMarkable-lines-file-format.html"
+    git      = "https://github.com/ax3l/lines-are-beautiful.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='develop',
-            git='https://github.com/ax3l/lines-are-beautiful.git')
+    version('develop', branch='develop')
 
     variant('png', default=True,
             description='Enable PNG conversion support')

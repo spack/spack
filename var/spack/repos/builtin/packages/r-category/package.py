@@ -29,9 +29,9 @@ class RCategory(RPackage):
     """A collection of tools for performing category analysis."""
 
     homepage = "https://www.bioconductor.org/packages/Category/"
-    url      = "https://git.bioconductor.org/packages/Category"
+    git      = "https://git.bioconductor.org/packages/Category.git"
 
-    version('2.42.1', git='https://git.bioconductor.org/packages/Category', commit='382c817a2371671a72f8f949dfb4050361ebabcd')
+    version('2.42.1', commit='382c817a2371671a72f8f949dfb4050361ebabcd')
 
     depends_on('r@3.4.0:3.4.9', when='@2.42.1')
     depends_on('r-biocgenerics', type=('build', 'run'))

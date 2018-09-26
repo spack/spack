@@ -46,19 +46,14 @@ from spack import *
 class CbtfArgonavis(CMakePackage):
     """CBTF Argo Navis project contains the CUDA collector and supporting
        libraries that was done as a result of a DOE SBIR grant.
-
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
-    url = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
+    git      = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
-    version('1.9.1.1', branch='1.9.1.1',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
-
-    version('1.9.1.0', branch='1.9.1.0',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
+    version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
+    version('1.9.1.1', branch='1.9.1.1')
+    version('1.9.1.0', branch='1.9.1.0')
 
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")
@@ -100,7 +95,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # For libmonitor
-    depends_on("libmonitor+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch")
 
     # For PAPI
     depends_on("papi", when='@develop')

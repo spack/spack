@@ -32,10 +32,9 @@ class Amrvis(MakefilePackage):
     """
 
     homepage = "https://github.com/AMReX-Codes/Amrvis"
-    url      = "https://github.com/AMReX-Codes/Amrvis.git"
+    git      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('master',
-            git='https://github.com/AMReX-Codes/Amrvis.git', tag='master')
+    version('master', tag='master')
 
     variant(
         'dims',
@@ -53,6 +52,8 @@ class Amrvis(MakefilePackage):
     )
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('debug', default=False, description='Enable debugging features')
+    variant('profiling', default=False,
+            description='Enable AMReX profiling features')
 
     depends_on('gmake', type='build')
     depends_on('mpi', when='+mpi')
@@ -63,6 +64,17 @@ class Amrvis(MakefilePackage):
     depends_on('libxt')
     depends_on('libxext')
     depends_on('motif')
+    depends_on('flex')
+    depends_on('bison')
+
+    conflicts(
+        '+profiling', when='dims=1',
+        msg='Amrvis profiling support requires a 2D build'
+    )
+    conflicts(
+        '+profiling', when='dims=3',
+        msg='Amrvis profiling support requires a 2D build'
+    )
 
     # Only doing gcc and clang at the moment.
     # Intel currently fails searching for mpiicc, mpiicpc, etc.
@@ -82,7 +94,7 @@ class Amrvis(MakefilePackage):
         # Set all available makefile options to values we want
         makefile = FileFilter('GNUmakefile')
         makefile.filter(
-            r'^AMREX_HOME\s*=.*',
+            r'^AMREX_HOME\s*\?=.*',
             'AMREX_HOME = {0}'.format('./amrex')
         )
         makefile.filter(
@@ -95,15 +107,21 @@ class Amrvis(MakefilePackage):
         )
         makefile.filter(
             r'^PROFILE\s*=.*',
-            'PROFILE = FALSE'
+            'PROFILE = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
         makefile.filter(
             r'^TRACE_PROFILE\s*=.*',
-            'TRACE_PROFILE = FALSE'
+            'TRACE_PROFILE = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
         makefile.filter(
             r'^COMM_PROFILE\s*=.*',
-            'COMM_PROFILE = FALSE'
+            'COMM_PROFILE = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
         makefile.filter(
             r'^COMP\s*=.*',
@@ -135,7 +153,9 @@ class Amrvis(MakefilePackage):
         )
         makefile.filter(
             r'^USE_PROFPARSER\s*=.*',
-            'USE_PROFPARSER = FALSE'
+            'USE_PROFPARSER = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
 
         # A bit risky here deleting all /usr and /opt X
@@ -172,13 +192,15 @@ class Amrvis(MakefilePackage):
             file.writelines(contents)
 
     def setup_environment(self, spack_env, run_env):
+        # We don't want an AMREX_HOME the user may have set already
+        spack_env.unset('AMREX_HOME')
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
             spack_env.set('MPI_HOME', self.spec['mpi'].prefix)
-            spack_env.set('CC', spec['mpi'].mpicc)
-            spack_env.set('CXX', spec['mpi'].mpicxx)
-            spack_env.set('F77', spec['mpi'].mpif77)
-            spack_env.set('FC', spec['mpi'].mpifc)
+            spack_env.set('CC', self.spec['mpi'].mpicc)
+            spack_env.set('CXX', self.spec['mpi'].mpicxx)
+            spack_env.set('F77', self.spec['mpi'].mpif77)
+            spack_env.set('FC', self.spec['mpi'].mpifc)
 
     def install(self, spec, prefix):
         # Install exe manually

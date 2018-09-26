@@ -32,8 +32,9 @@ class Gdb(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
+    url      = "https://ftpmirror.gnu.org/gdb/gdb-7.10.tar.gz"
 
+    version('8.2', '0783c6d86775c5aff06cccc8a3d7cad8')
     version('8.1', '0c85ecbb43569ec43b1c9230622e84ab')
     version('8.0.1', 'bb45869f8126a84ea2ba13a8c0e7c90e')
     version('8.0', '9bb49d134916e73b2c01d01bf20363df')
@@ -46,7 +47,7 @@ class Gdb(AutotoolsPackage):
     version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
 
     variant('python', default=True, description='Compile with Python support')
-    variant('xz', default=False, description='Compile with lzma support')
+    variant('xz', default=True, description='Compile with lzma support')
 
     # Required dependency
     depends_on('texinfo', type='build')

@@ -30,9 +30,9 @@ class Parsimonator(MakefilePackage):
        starting trees under parsimony for RAxML"""
 
     homepage = "http://www.exelixis-lab.org/"
-    url      = "https://github.com/stamatak/Parsimonator-1.0.2"
+    git      = "https://github.com/stamatak/Parsimonator-1.0.2.git"
 
-    version('1.0.2', git='https://github.com/stamatak/Parsimonator-1.0.2.git', commit='78368c6ab1e9adc7e9c6ec9256dd7ff2a5bb1b0a')
+    version('1.0.2', commit='78368c6ab1e9adc7e9c6ec9256dd7ff2a5bb1b0a')
 
     variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
     variant('avx', default=False, description='Enable AVX in order to substantially speed up execution')
