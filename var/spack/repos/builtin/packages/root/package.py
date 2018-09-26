@@ -238,7 +238,7 @@ class Root(CMakePackage):
     # depends_on('oracle',   when='+oracle')
     depends_on('openssl',   when='+ssl')
     depends_on('postgresql', when='+postgres')
-    depends_on('pythia@6:6.999',  when='+pythia6')
+    depends_on('pythia6@6:6.999+root',  when='+pythia6')
     depends_on('pythia@8:8.999',  when='+pythia8')
     depends_on('python@2.7:',     when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
