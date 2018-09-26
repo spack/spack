@@ -42,7 +42,8 @@ class GmapGsnap(AutotoolsPackage):
         'simd',
         description='CPU support.',
         values=('avx2', 'sse42', 'avx512', 'sse2'),
-        multi=True
+        multi=True,
+        default='sse2'
     )
 
     def configure(self, spec, prefix):
