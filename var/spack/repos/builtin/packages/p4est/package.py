@@ -45,9 +45,22 @@ class P4est(AutotoolsPackage):
     depends_on('mpi')
     depends_on('zlib')
 
+    # from sc upstream, correct the default libraries
+    patch('https://github.com/cburstedde/libsc/commit/b506aab224b988fec210cc212469f2c4f58b2d04.patch',
+          sha256='e9418b1a9347a409be241cd185519b31950e42a7f55b6fb80ce53097657098ee',
+          working_dir='sc')
+    patch('https://github.com/cburstedde/libsc/commit/b45a51a7ef97883a3d4dcbd05cb2c77890a76f75.patch',
+          sha256='8fb829e34e3a1e28afdd6e56e0bdc1d377af569b7ccb9e9d8da0eeb5829ed27e',
+          working_dir='sc')
+
+    def autoreconf(self, spec, prefix):
+        bootstrap = Executable('./bootstrap')
+        bootstrap()
+
     def configure_args(self):
         return [
             '--enable-mpi',
+            '--enable-openmp={0}'.format(self.compiler.openmp_flag),
             '--enable-shared',
             '--disable-vtk-binary',
             '--without-blas',
