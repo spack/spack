@@ -104,4 +104,3 @@ class Ember(MakefilePackage):
         install('mpi/incast/incast', prefix.bin)
         install('mpi/pingpong/pingpong', prefix.bin)
         install('mpi/sweep3d/sweep3d', prefix.bin)
-
