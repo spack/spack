@@ -75,11 +75,15 @@ class Cp2k(Package):
                     '-funroll-loops',
                     '-ffast-math',
                     '-ftree-vectorize',
-                ], 'intel': [
+                ],
+                'intel': [
                     '-O2',
                     '-pc64',
                     '-unroll',
-                ]
+                ],
+                'pgi': [
+                    '-fast',
+                ],
             }
 
             dflags = ['-DNDEBUG']
@@ -117,6 +121,8 @@ class Cp2k(Package):
                 fcflags.extend(['-fp-model source', '-heap-arrays 64'])
             elif '%gcc' in spec:
                 fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
+            elif '%pgi' in spec:
+                fcflags.extend(['-Mfreeform', '-Mextend'])
 
             fftw = spec['fftw'].libs
             ldflags = [fftw.search_flags]
