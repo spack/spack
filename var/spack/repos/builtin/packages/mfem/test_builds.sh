@@ -6,7 +6,7 @@ builds=(
     'mfem~mpi~metis~gzstream'
     'mfem+mpi+superlu-dist+suite-sparse+petsc \
         +sundials+pumi+mpfr+netcdf+gzstream+gnutls+libunwind \
-        ^hypre~internal-superlu ^petsc~boost+suite-sparse+mumps'
+        ^hypre~internal-superlu ^petsc+suite-sparse+mumps'
     'mfem~mpi+suite-sparse+sundials+mpfr+netcdf \
         +gzstream+gnutls+libunwind'
     # develop version:
@@ -18,7 +18,7 @@ builds=(
     'mfem@develop+shared~static+mpi \
         +superlu-dist+suite-sparse+petsc+sundials+mpfr+netcdf+gzstream \
         +gnutls+libunwind+conduit ^hypre~internal-superlu \
-        ^petsc~boost+suite-sparse+mumps ^conduit~python~hdf5'
+        ^petsc+suite-sparse+mumps ^conduit~python~hdf5'
     # TODO: The options '^netcdf~mpi ^hdf5@1.8.19~mpi' are added just to make
     # conduit happy.
     'mfem@develop+shared~static~mpi \
@@ -38,7 +38,7 @@ builds2=(
     'mfem+netcdf'
     'mfem+mpfr'
     'mfem+gnutls'
-    'mfem+petsc+mpi ^hypre~internal-superlu ^petsc~boost+suite-sparse+mumps'
+    'mfem+petsc+mpi ^hypre~internal-superlu ^petsc+suite-sparse+mumps'
     # develop version
     'mfem@develop+superlu-dist'
     'mfem@develop+suite-sparse~mpi'
@@ -53,7 +53,7 @@ builds2=(
     'mfem@develop+conduit~mpi ^conduit~python'
     'mfem@develop+conduit ^conduit~python'
     'mfem@develop+petsc+mpi ^hypre~internal-superlu \
-        ^petsc~boost+suite-sparse+mumps'
+        ^petsc+suite-sparse+mumps'
 )
 
 trap 'printf "\nScript interrupted.\n"; exit 33' INT

@@ -33,7 +33,8 @@ class CandleBenchmarks(Package):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('1.0', '6eced30dc15374bc9f90a86d0396e470')
+    version('0.1', sha256='767f74f43ee3a5d4e0f26750f2a96b8433e25a9cd4f2d29938ac8acf263ab58d')
+    version('0.0', '6eced30dc15374bc9f90a86d0396e470')
 
     variant('mpi', default=True, description='Build with MPI support')
 

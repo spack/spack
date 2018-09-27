@@ -32,7 +32,8 @@ import spack.caches
 import spack.cmd
 import spack.repo
 import spack.stage
-from spack.paths import spack_root
+from spack.paths import lib_path, var_path
+
 
 description = "remove temporary build files and/or downloaded archives"
 section = "build"
@@ -59,7 +60,7 @@ def setup_parser(subparser):
         '-p', '--python-cache', action='store_true',
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdm", nargs=0
+        '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
     )
     subparser.add_argument(
         'specs',
@@ -97,14 +98,15 @@ def clean(parser, args):
 
     if args.python_cache:
         tty.msg('Removing python cache files')
-        for root, dirs, files in os.walk(spack_root):
-            for f in files:
-                if f.endswith('.pyc') or f.endswith('.pyo'):
-                    fname = os.path.join(root, f)
-                    tty.debug('Removing {0}'.format(fname))
-                    os.remove(fname)
-            for d in dirs:
-                if d == '__pycache__':
-                    dname = os.path.join(root, d)
-                    tty.debug('Removing {0}'.format(dname))
-                    shutil.rmtree(dname)
+        for directory in [lib_path, var_path]:
+            for root, dirs, files in os.walk(directory):
+                for f in files:
+                    if f.endswith('.pyc') or f.endswith('.pyo'):
+                        fname = os.path.join(root, f)
+                        tty.debug('Removing {0}'.format(fname))
+                        os.remove(fname)
+                for d in dirs:
+                    if d == '__pycache__':
+                        dname = os.path.join(root, d)
+                        tty.debug('Removing {0}'.format(dname))
+                        shutil.rmtree(dname)

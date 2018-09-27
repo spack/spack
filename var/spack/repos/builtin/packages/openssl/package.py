@@ -72,6 +72,10 @@ class Openssl(Package):
 
     parallel = False
 
+    @property
+    def libs(self):
+        return find_libraries(['libssl', 'libcrypto'], root=self.prefix.lib)
+
     def handle_fetch_error(self, error):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
                  "been updated, and the version in your instance of Spack is "

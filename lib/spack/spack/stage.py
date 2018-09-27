@@ -432,9 +432,9 @@ class Stage(object):
                 tty.debug(e)
                 continue
         else:
-            errMessage = "All fetchers failed for %s" % self.name
+            err_msg = "All fetchers failed for %s" % self.name
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(errMessage, None)
+            raise fs.FetchError(err_msg, None)
 
     def check(self):
         """Check the downloaded archive against a checksum digest.

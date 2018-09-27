@@ -37,12 +37,12 @@ class Pngwriter(CMakePackage):
 
     homepage = "http://pngwriter.sourceforge.net/"
     url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    git      = "https://github.com/pngwriter/pngwriter.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
+    version('develop', branch='dev')
+    version('master', branch='master')
     version('0.7.0', 'a68aa0889f120f5bb07848afce278a95')
     version('0.6.0', '0a19bc55c5f6379fea7343752fd3ffae')
     version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')

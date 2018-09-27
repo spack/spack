@@ -30,17 +30,16 @@ class Dyninst(Package):
     are executing without recompiling, re-linking, or re-executing."""
 
     homepage = "https://paradyn.org"
-    url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
-    list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
+    git      = "https://github.com/dyninst/dyninst.git"
 
-    version('develop', git="https://github.com/dyninst/dyninst.git", branch='master')
-    version('9.3.2', git="https://github.com/dyninst/dyninst.git", tag='v9.3.2')
-    version('9.3.0', git="https://github.com/dyninst/dyninst.git", tag='v9.3.0')
-    version('9.2.0', git="https://github.com/dyninst/dyninst.git", tag='v9.2.0')
-    version('9.1.0', git="https://github.com/dyninst/dyninst.git", tag='v9.1.0')
-    version('8.2.1', git="https://github.com/dyninst/dyninst.git", tag='v8.2.1')
-    version('8.1.2', git="https://github.com/dyninst/dyninst.git", tag='v8.1.2')
-    version('8.1.1', git="https://github.com/dyninst/dyninst.git", tag='v8.1.1')
+    version('develop', branch='master')
+    version('9.3.2', tag='v9.3.2')
+    version('9.3.0', tag='v9.3.0')
+    version('9.2.0', tag='v9.2.0')
+    version('9.1.0', tag='v9.1.0')
+    version('8.2.1', tag='v8.2.1')
+    version('8.1.2', tag='v8.1.2')
+    version('8.1.1', tag='v8.1.1')
 
     variant('stat_dysect', default=False,
             description="patch for STAT's DySectAPI")
@@ -59,6 +58,7 @@ class Dyninst(Package):
     depends_on("elf@1", type='link', when='@9.3.0:')
     depends_on("libdwarf", when='@:9')
     depends_on("boost@1.42:")
+    depends_on('libiberty+pic')
     depends_on('cmake', type='build')
 
     patch('stat_dysect.patch', when='+stat_dysect')

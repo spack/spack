@@ -29,7 +29,7 @@ from spack.version import Version
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
-def macOS_version():
+def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
     return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))
@@ -54,7 +54,8 @@ class MacOs(OperatingSystem):
                         "10.10": "yosemite",
                         "10.11": "elcapitan",
                         "10.12": "sierra",
-                        "10.13": "highsierra"}
+                        "10.13": "highsierra",
+                        "10.14": "mojave"}
 
         mac_ver = '.'.join(py_platform.mac_ver()[0].split('.')[:2])
         name = mac_releases.get(mac_ver, "macos")

@@ -29,11 +29,10 @@ class Tioga(CMakePackage):
     """Topology Independent Overset Grid Assembly (TIOGA)"""
 
     homepage = "https://github.com/jsitaraman/tioga"
-    url      = "https://github.com/jsitaraman/tioga.git"
+    git      = "https://github.com/jsitaraman/tioga.git"
 
     # The master branch doesn't support CMake
-    version('develop', git="https://github.com/jsitaraman/tioga.git",
-            branch='nalu-api')
+    version('develop', branch='nalu-api')
 
     variant('shared', default=False,
             description="Enable building shared libraries")

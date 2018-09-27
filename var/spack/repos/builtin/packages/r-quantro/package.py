@@ -34,10 +34,9 @@ class RQuantro(RPackage):
        user-defined groups."""
 
     homepage = "https://www.bioconductor.org/packages/quantro/"
-    url      = "https://git.bioconductor.org/packages/quantro"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/quantro.git"
 
-    version('1.10.0', git='https://git.bioconductor.org/packages/quantro', commit='111337c0aba052aa49c3d2e2d3042794b28858c9')
+    version('1.10.0', commit='111337c0aba052aa49c3d2e2d3042794b28858c9')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-minfi', type=('build', 'run'))

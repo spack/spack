@@ -51,17 +51,12 @@ class Cbtf(CMakePackage):
 
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
-    url = "https://github.com/OpenSpeedShop/cbtf.git"
+    git      = "https://github.com/OpenSpeedShop/cbtf.git"
 
-    # Use when the git repository is available
-    version('1.9.1.1', branch='1.9.1.1',
-            git='https://github.com/OpenSpeedShop/cbtf.git')
-
-    version('1.9.1.0', branch='1.9.1.0',
-            git='https://github.com/OpenSpeedShop/cbtf.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf.git')
+    version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
+    version('1.9.1.1', branch='1.9.1.1')
+    version('1.9.1.0', branch='1.9.1.0')
 
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")

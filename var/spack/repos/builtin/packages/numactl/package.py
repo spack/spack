@@ -33,6 +33,8 @@ class Numactl(AutotoolsPackage):
 
     version('2.0.11',     'b56d2367217cde390b4d8087e00773b8')
 
+    patch('numactl-2.0.11-sysmacros.patch', when="@2.0.11")
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')

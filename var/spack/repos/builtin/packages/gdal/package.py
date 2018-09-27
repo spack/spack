@@ -37,19 +37,22 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/2.3.0/gdal-2.3.0.tar.xz"
+    url        = "http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
+
+    maintainers = ['adamjstewart']
 
     import_modules = [
         'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
-    version('2.3.0',  '2fe9d64fcd9dc37645940df020d3e200')
-    version('2.1.2',  'ae85b78888514c75e813d658cac9478e')
-    version('2.0.2',  '940208e737c87d31a90eaae43d0efd65')
-    version('1.11.5', '5fcee5622430fbeb25556a4d07c06dd7')
+    version('2.3.1',  sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
+    version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
+    version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
+    version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -83,17 +86,20 @@ class Gdal(AutotoolsPackage):
     variant('perl',      default=False, description='Enable perl bindings')
     variant('python',    default=False, description='Enable python bindings')
     variant('java',      default=False, description='Include Java support')
+    variant('mdb',       default=False, description='Include MDB driver')
     variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
 
-    extends('perl', when='+perl')
+    # FIXME: Allow packages to extend multiple packages
+    # See https://github.com/spack/spack/issues/987
+    # extends('perl', when='+perl')
     extends('python', when='+python')
 
     # GDAL depends on GNUmake on Unix platforms.
     # https://trac.osgeo.org/gdal/wiki/BuildingOnUnix
     depends_on('gmake', type='build')
-    depends_on('pkg-config@0.25:', type='build')
+    depends_on('pkgconfig', type='build')
 
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
@@ -117,7 +123,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf', when='+netcdf')
-    depends_on('jasper@1.900.1', patches=patch('uuid.patch'), when='+jasper')
+    depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
     depends_on('expat', when='+expat')
@@ -130,13 +136,15 @@ class Gdal(AutotoolsPackage):
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
+    depends_on('poppler@:0.63', when='@:2.3.0 +poppler')
     depends_on('proj', when='+proj @2.3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
-    depends_on('python', type=('build', 'run'), when='+python')
+    depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java', type=('build', 'run'), when='+java')
+    depends_on('java', type=('build', 'link', 'run'), when='+java')
+    depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
@@ -148,6 +156,8 @@ class Gdal(AutotoolsPackage):
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
+
+    conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     def setup_environment(self, spack_env, run_env):
         # Needed to install Python bindings to GDAL installation
@@ -355,10 +365,23 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-python=no')
 
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
         if '+java' in spec:
-            args.append('--with-java={0}'.format(spec['java'].prefix))
+            args.extend([
+                '--with-java={0}'.format(spec['java'].home),
+                '--with-jvm-lib={0}'.format(
+                    spec['java'].libs.directories[0]),
+                '--with-jvm-lib-add-rpath'
+            ])
         else:
             args.append('--with-java=no')
+
+        # https://trac.osgeo.org/gdal/wiki/mdbtools
+        # http://www.gdal.org/drv_mdb.html
+        if '+mdb' in spec:
+            args.append('--with-mdb=yes')
+        else:
+            args.append('--with-mdb=no')
 
         if '+armadillo' in spec:
             args.append('--with-armadillo={0}'.format(
@@ -410,8 +433,6 @@ class Gdal(AutotoolsPackage):
             '--with-pam=no',
             '--with-podofo=no',
             '--with-php=no',
-            # https://trac.osgeo.org/gdal/wiki/mdbtools
-            '--with-mdb=no',
             '--with-rasdaman=no',
         ])
 
@@ -440,7 +461,7 @@ class Gdal(AutotoolsPackage):
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
         if '+python' in self.spec:
-            with working_dir('..'):
+            with working_dir('spack-test', create=True):
                 for module in self.import_modules:
                     python('-c', 'import {0}'.format(module))
 

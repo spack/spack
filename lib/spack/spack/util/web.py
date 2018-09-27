@@ -404,7 +404,7 @@ def get_checksums_for_versions(
 
                 # Checksum the archive and add it to the list
                 version_hashes.append((version, spack.util.crypto.checksum(
-                    hashlib.md5, stage.archive_file)))
+                    hashlib.sha256, stage.archive_file)))
                 i += 1
         except spack.stage.FailedDownloadError:
             tty.msg("Failed to fetch {0}".format(url))
@@ -420,7 +420,7 @@ def get_checksums_for_versions(
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}'{2}')".format(
+        "    version('{0}', {1}sha256='{2}')".format(
             v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
     ])
 

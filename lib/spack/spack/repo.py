@@ -29,10 +29,8 @@ import shutil
 import errno
 import sys
 import inspect
-import imp
 import re
 import traceback
-import tempfile
 import json
 from contextlib import contextmanager
 from six import string_types
@@ -44,7 +42,7 @@ except ImportError:
 
 from types import ModuleType
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -54,10 +52,12 @@ import spack.config
 import spack.caches
 import spack.error
 import spack.spec
+import spack.util.imp as simp
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
 from spack.util.naming import NamespaceTrie, valid_module_name
 from spack.util.naming import mod_to_class, possible_spack_module_names
+
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -831,7 +831,12 @@ class Repo(object):
         package_class = self.get_pkg_class(spec.name)
         try:
             return package_class(spec)
+        except spack.error.SpackError:
+            # pass these through as their error messages will be fine.
+            raise
         except Exception:
+            # make sure other errors in constructors hit the error
+            # handler by wrapping them
             if spack.config.get('config:debug'):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
@@ -989,9 +994,8 @@ class Repo(object):
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
             try:
-                with import_lock():
-                    with prepend_open(file_path, text=_package_prepend) as f:
-                        module = imp.load_source(fullname, file_path, f)
+                module = simp.load_source(fullname, file_path,
+                                          prepend=_package_prepend)
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename so we need to
                 # manually construct the error message in order to give the
@@ -1139,31 +1143,6 @@ def set_path(repo):
     if append:
         sys.meta_path.append(repo)
     return append
-
-
-@contextmanager
-def import_lock():
-    imp.acquire_lock()
-    yield
-    imp.release_lock()
-
-
-@contextmanager
-def prepend_open(f, *args, **kwargs):
-    """Open a file for reading, but prepend with some text prepended
-
-    Arguments are same as for ``open()``, with one keyword argument,
-    ``text``, specifying the text to prepend.
-    """
-    text = kwargs.get('text', None)
-
-    with open(f, *args) as f:
-        with tempfile.NamedTemporaryFile(mode='w+') as tf:
-            if text:
-                tf.write(text + '\n')
-            tf.write(f.read())
-            tf.seek(0)
-            yield tf.file
 
 
 @contextmanager

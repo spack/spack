@@ -29,10 +29,9 @@ class RGcrma(RPackage):
     """Background adjustment using sequence information"""
 
     homepage = "https://bioconductor.org/packages/gcrma/"
-    url      = "https://git.bioconductor.org/packages/gcrma"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/gcrma.git"
 
-    version('2.48.0', git='https://git.bioconductor.org/packages/gcrma', commit='3ea0eb0b5c15ffb24df76620667ae7996ed715b4')
+    version('2.48.0', commit='3ea0eb0b5c15ffb24df76620667ae7996ed715b4')
 
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

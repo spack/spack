@@ -30,9 +30,9 @@ class RHypergraph(RPackage):
     representing and manipulating hypergraphs."""
 
     homepage = "https://www.bioconductor.org/packages/hypergraph/"
-    url      = "https://git.bioconductor.org/packages/hypergraph"
+    git      = "https://git.bioconductor.org/packages/hypergraph.git"
 
-    version('1.48.0', git='https://git.bioconductor.org/packages/hypergraph', commit='a4c19ea0b5f15204f706a7bfdea5363706382820')
+    version('1.48.0', commit='a4c19ea0b5f15204f706a7bfdea5363706382820')
 
     depends_on('r@3.4.0:3.4.9', when='@1.48.0')
     depends_on('r-graph', type=('build', 'run'))

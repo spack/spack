@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 import os
 
 
@@ -62,4 +61,4 @@ class Supernova(Package):
         # remove the broken symlinks
         rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
             'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
-        copy_tree('.', prefix, preserve_symlinks=1)
+        install_tree('.', prefix)

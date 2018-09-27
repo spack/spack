@@ -35,13 +35,17 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
+    url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
+    git      = "https://bitbucket.org/petsc/petsc.git"
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    version('develop', git='https://bitbucket.org/petsc/petsc.git', branch='master')
-    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
+    version('develop', branch='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
+    version('3.9.4', 'c98eb67573efb2f91c6f239368259e44')
+    version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
     version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
     version('3.9.1', 'd3a229a188dbeef9b3f29b9a63622fad')
     version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
@@ -74,7 +78,6 @@ class Petsc(Package):
             description='Activates support for metis and parmetis')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
-    variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     # Mumps is disabled by default, because it depends on Scalapack
@@ -104,8 +107,6 @@ class Petsc(Package):
         patch('macos-clang-8.1.0.diff',
               when='@3.7.5%clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
-    patch('xlc-test-3.9.0.diff', when='@3.9: %xl')
-    patch('xlc-test-3.9.0.diff', when='@3.9: %xl_r')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -121,7 +122,6 @@ class Petsc(Package):
     depends_on('python@2.6:2.8', type='build')
 
     # Other dependencies
-    depends_on('boost', when='@:3.5+boost')
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
     depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
     depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
@@ -151,6 +151,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -188,8 +190,12 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc
+                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if self.spec.satisfies('%intel'):
+                # mpiifort needs some help to automatically link
+                # all necessary run-time libraries
+                compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -197,7 +203,10 @@ class Petsc(Package):
                    '--with-x=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0']
+                   '--download-hwloc=0',
+                   'COPTFLAGS=',
+                   'FOPTFLAGS=',
+                   'CXXOPTFLAGS=']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -217,14 +226,17 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
+            if spec.satisfies('^trilinos+boost'):
+                options.append('--with-boost=1')
 
         if self.spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL:
-        if 'scalapack' in spec:
+        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # help PETSc pick up Scalapack from MKL
+        if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
@@ -236,7 +248,7 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
+        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(

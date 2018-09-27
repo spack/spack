@@ -46,17 +46,14 @@ from spack import *
 class CbtfLanl(CMakePackage):
     """CBTF LANL project contains a memory tool and data center type system
        command monitoring tool."""
+
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
-    url = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
+    git      = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
 
-    version('1.9.1.1', branch='1.9.1.1',
-            git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
-
-    version('1.9.1.0', branch='1.9.1.0',
-            git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf-lanl.git')
+    version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
+    version('1.9.1.1', branch='1.9.1.1')
+    version('1.9.1.0', branch='1.9.1.0')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')

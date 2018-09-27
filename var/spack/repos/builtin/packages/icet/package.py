@@ -31,9 +31,9 @@ class Icet(CMakePackage):
 
     homepage = "http://icet.sandia.gov"
     url      = "https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1"
+    git      = "https://gitlab.kitware.com/icet/icet.git"
 
-    version('develop', branch='master',
-            git='https://gitlab.kitware.com/icet/icet.git')
+    version('develop', branch='master')
     version('2.1.1', '4f971c51105a64937460d482adca2a6c')
 
     depends_on('mpi')

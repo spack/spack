@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import os
 
 
@@ -47,13 +46,13 @@ class Igvtools(Package):
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "igvtools.sh")
-        script = join_path(prefix.bin, "igvtools")
-        copyfile(script_sh, script)
+        script = prefix.bin.igvtools
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
+        java = spec['jdk'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file(jar_file, join_path(prefix.bin, jar_file),

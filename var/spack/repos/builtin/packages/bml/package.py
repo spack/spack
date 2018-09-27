@@ -32,11 +32,13 @@ class Bml(CMakePackage):
 
     homepage = "http://lanl.github.io/bml/"
     url      = "https://github.com/lanl/bml/tarball/v1.2.2"
+    git      = "https://github.com/lanl/bml.git"
 
+    version('develop', branch='master')
+    version('1.3.0', '2bf8546b27a89666dab3e8f4873cd117')
     version('1.2.3', '8133137fb56a27fade44d1588449c2ac')
     version('1.2.2', 'c86959cb0188e9d0a9a2cbad03b2782d')
     version('1.1.0', '271adecee08aee678be9eeceee06b6fb')
-    version('develop', git='https://github.com/lanl/bml', branch='master')
 
     variant('shared', default=True, description='Build shared libs')
     variant('mpi', default=True, description='Build with MPI Support')

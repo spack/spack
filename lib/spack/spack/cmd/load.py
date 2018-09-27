@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-from spack.cmd.common import print_module_placeholder_help
+from spack.cmd.common import print_module_placeholder_help, arguments
 
 description = "add package to environment using `module load`"
 section = "environment"
@@ -36,7 +36,8 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="spec of package to load with modules "
-             "(if -, read specs from STDIN)")
+    )
+    arguments.add_common_arguments(subparser, ['recurse_dependencies'])
 
 
 def load(parser, args):

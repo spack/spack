@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import shutil
 import copy
 
 from spack import *
@@ -266,8 +265,7 @@ class Cp2k(Package):
                 lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
                 mkdirp(lib_dir)
                 try:
-                    shutil.copy(env['LIBSMM_PATH'],
-                                join_path(lib_dir, 'libsmm.a'))
+                    copy(env['LIBSMM_PATH'], join_path(lib_dir, 'libsmm.a'))
                 except KeyError:
                     raise KeyError('Point environment variable LIBSMM_PATH to '
                                    'the absolute path of the libsmm.a file')
@@ -315,4 +313,4 @@ class Cp2k(Package):
                  'VERSION={0}'.format(cp2k_version))
             env['PWD'] = pwd_backup
         exe_dir = join_path('exe', cp2k_architecture)
-        shutil.copytree(exe_dir, self.prefix.bin)
+        install_tree(exe_dir, self.prefix.bin)

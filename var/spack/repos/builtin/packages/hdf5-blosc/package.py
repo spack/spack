@@ -34,13 +34,13 @@ def _install_shlib(name, src, dst):
     if sys.platform == "darwin":
         shlib0 = name + ".0.dylib"
         shlib = name + ".dylib"
-        shutil.copyfile(join_path(src, shlib0), join_path(dst, shlib0))
+        install(join_path(src, shlib0), join_path(dst, shlib0))
         os.symlink(shlib0, join_path(dst, shlib))
     else:
         shlib000 = name + ".so.0.0.0"
         shlib0 = name + ".so.0"
         shlib = name + ".dylib"
-        shutil.copyfile(join_path(src, shlib000), join_path(dst, shlib000))
+        install(join_path(src, shlib000), join_path(dst, shlib000))
         os.symlink(shlib000, join_path(dst, shlib0))
         os.symlink(shlib0, join_path(dst, shlib))
 
@@ -48,10 +48,9 @@ def _install_shlib(name, src, dst):
 class Hdf5Blosc(Package):
     """Blosc filter for HDF5"""
     homepage = "https://github.com/Blosc/hdf5-blosc"
-    url      = "https://github.com/Blosc/hdf5-blosc"
+    git      = "https://github.com/Blosc/hdf5-blosc.git"
 
-    version('master', git='https://github.com/Blosc/hdf5-blosc',
-            branch='master')
+    version('master', branch='master')
 
     depends_on("c-blosc")
     depends_on("hdf5")

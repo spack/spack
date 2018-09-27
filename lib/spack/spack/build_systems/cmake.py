@@ -255,10 +255,12 @@ class CMakePackage(PackageBase):
         """
         with working_dir(self.build_directory):
             if self.generator == 'Unix Makefiles':
-                self._if_make_target_execute('test')
+                self._if_make_target_execute('test',
+                                             jobs_env='CTEST_PARALLEL_LEVEL')
                 self._if_make_target_execute('check')
             elif self.generator == 'Ninja':
-                self._if_ninja_target_execute('test')
+                self._if_ninja_target_execute('test',
+                                              jobs_env='CTEST_PARALLEL_LEVEL')
                 self._if_ninja_target_execute('check')
 
     # Check that self.prefix is there after installation

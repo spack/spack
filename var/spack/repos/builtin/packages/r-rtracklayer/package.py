@@ -34,20 +34,31 @@ class RRtracklayer(RPackage):
        current viewport."""
 
     homepage = "http://bioconductor.org/packages/rtracklayer/"
-    url      = "https://git.bioconductor.org/packages/rtracklayer"
-    list_url = homepage
+    git      = "https://git.bioconductor.org/packages/rtracklayer.git"
 
-    version('1.36.6', git='https://git.bioconductor.org/packages/rtracklayer', commit='8c0ac7230f94e0c5a981acbb178c8de70e968131')
+    version('1.40.5', commit='4e5b06daccd0bca1ddcd93052deca896ade58fd6')
+    version('1.36.6', commit='8c0ac7230f94e0c5a981acbb178c8de70e968131')
 
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.25.1:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.25:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-iranges@2.13.13:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
+    depends_on('r-xvector@0.19.7:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r-genomeinfodb@1.15.2:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r-biostrings@2.47.6:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
+    depends_on('r-rsamtools@1.31.2:', when='@1.40.5', type=('build', 'run'))
     depends_on('r-genomicalignments', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.36.6')
+    depends_on('r-genomicalignments@1.15.6:', when='@1.40.5', type=('build', 'run'))
+    depends_on('r-genomicranges@1.21.20:', when='@1.36.3', type=('build', 'run'))
+    depends_on('r-genomicranges@1.31.8:', when='@1.40.5', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.36.6', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@1.40.5', type=('build', 'run'))
