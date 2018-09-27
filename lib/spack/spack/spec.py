@@ -1403,7 +1403,10 @@ class Spec(object):
     @property
     def prefix(self):
         if self._prefix is None:
-            self.prefix = spack.store.layout.path_for_spec(self)
+            if self.external:
+                self.prefix = self.external_path
+            else:
+                self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
