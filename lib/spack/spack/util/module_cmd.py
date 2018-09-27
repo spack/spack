@@ -185,6 +185,15 @@ def get_path_from_module(mod):
 
 
 def get_path_from_module_contents(text, module_name):
+    tty.debug("Original module name: " + module_name)
+
+    module_name = module_name.replace('-', '_').upper()
+    components = module_name.split('/')
+    if len(components) > 1:
+        module_name = components[-2]
+
+    tty.debug("Formatted module name: " + module_name)
+
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
         pattern = r'\WLD_LIBRARY_PATH'
