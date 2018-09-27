@@ -62,7 +62,7 @@ class Figtree(Package):
                     'bin/figtree', string=True)
 
         # also set proper executable flags
-        os.chmod('bin/figtree', 0775)
+        os.chmod('bin/figtree', 0o775)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
