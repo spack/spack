@@ -33,5 +33,5 @@ class Treesub(Package):
         install_tree('lib', prefix.lib)
 
         execscript = join_path(self.package_dir, 'treesub')
-        os.chmod(execscript, 0775)
+        os.chmod(execscript, 0o775)
         install(execscript, prefix.bin)
