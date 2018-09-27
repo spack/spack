@@ -43,6 +43,8 @@ class Slurm(AutotoolsPackage):
     homepage = 'https://slurm.schedmd.com'
     url = 'https://github.com/SchedMD/slurm/archive/slurm-17-02-6-1.tar.gz'
 
+    version('18-08-0-1', sha256='62129d0f2949bc8a68ef86fe6f12e0715cbbf42f05b8da6ef7c3e7e7240b50d9')
+    version('17-11-9-2', sha256='6e34328ed68262e776f524f59cca79ac75bcd18030951d45ea545a7ba4c45906')
     version('17-02-6-1', '8edbb9ad41819464350d9de013367020')
 
     variant('gtk', default=False, description='Enable GTK+ support')
