@@ -40,7 +40,12 @@ class RdmaCore(CMakePackage):
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
     conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
 
+# NOTE: specify CMAKE_INSTALL_RUNDIR explicitly to prevent rdma-core from
+#       using the spack staging build dir (which may be a very long file
+#       system path) as a component in compile-time static strings such as
+#       IBACM_SERVER_PATH.
     def cmake_args(self):
         cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
-                      self.spec.prefix.etc]
+                      self.spec.prefix.etc,
+                      "-DCMAKE_INSTALL_RUNDIR=/var/run"]
         return cmake_args
