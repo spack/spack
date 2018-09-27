@@ -38,8 +38,11 @@ class QuantumEspresso(Package):
     homepage = 'http://quantum-espresso.org'
     url      = 'https://github.com/QEF/q-e/archive/qe-6.2.0.tar.gz'
 
+    version('6.3',   '1b67687d90d1d16781d566d44d14634c')
+    version('6.2.1', '769cc973382156bffd35254c3dbaf453')
     version('6.2.0', '972176a58d16ae8cf0c9a308479e2b97')
     version('6.1.0', '3fe861dcb5f6ec3d15f802319d5d801b')
+    version('6.0.0', 'd915f2faf69d0e499f8e1681c42cbfc9')
     version('5.4',   '085f7e4de0952e266957bbc79563c54e')
     version('5.3',   'be3f8778e302cffb89258a5f936a7592')
 
