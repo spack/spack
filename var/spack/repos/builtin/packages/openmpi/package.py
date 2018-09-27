@@ -469,7 +469,7 @@ class Openmpi(AutotoolsPackage):
         # applications via mpirun or mpiexec, and leaves srun as the
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
-        if '@1.6: ~legacylauncers schedulers=slurm' in self.spec:
+        if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
             os.remove(self.prefix.bin.mpirun)
             os.remove(self.prefix.bin.mpiexec)
             os.remove(self.prefix.bin.shmemrun)
