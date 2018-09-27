@@ -43,7 +43,7 @@ class YamlCpp(CMakePackage):
 
     depends_on('boost@:1.66.99', when='@:0.5.3')
 
-    conflicts('%gcc@:4.8', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%gcc@:4.7', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%clang@:3.3.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     # currently we can't check for apple-clang's version
     # conflicts('%clang@:4.0.0-apple', when='@0.6.0:',
