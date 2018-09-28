@@ -77,7 +77,7 @@ class Dftfe(CMakePackage):
 
         return args
 
-    @when('@:0.5.1')
+    @when('@:0.5.2')
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.lib64)
