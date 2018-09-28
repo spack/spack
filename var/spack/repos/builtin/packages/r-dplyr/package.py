@@ -30,7 +30,11 @@ class RDplyr(RPackage):
     in memory and out of memory."""
 
     homepage = "https://github.com/hadley/dplyr"
+<<<<<<< HEAD
     url      = "https://cran.r-project.org/src/contrib/dplyr_0.7.4.tar.gz"
+=======
+    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
     list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
     version('0.7.4', '9edee9b2db9831c2438054d0d2c1647d')

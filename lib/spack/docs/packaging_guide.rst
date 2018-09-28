@@ -2709,10 +2709,17 @@ the built-in flag handlers,
 .. code-block:: python
 
    flag_handler = <PackageClass>.env_flags
+<<<<<<< HEAD
 
 where ``<PackageClass>`` can be any of the subclasses of PackageBase
 discussed in :ref:`installation_procedure`,
 
+=======
+
+where ``<PackageClass>`` can be any of the subclasses of PackageBase
+discussed in :ref:`installation_procedure`,
+
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
 or by implementing the flag_handler method. Suppose for a package
 ``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
 through the environment, the rest of the flags through compiler

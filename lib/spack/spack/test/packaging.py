@@ -43,7 +43,10 @@ from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
+<<<<<<< HEAD
 from spack.relocate import strings_contains_installroot
+=======
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
 from spack.relocate import get_patchelf, relocate_text
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
@@ -218,6 +221,7 @@ echo $PATH"""
     stage.destroy()
 
 
+<<<<<<< HEAD
 def test_relocate_text(tmpdir):
     with tmpdir.as_cwd():
         # Validate the text path replacement
@@ -233,6 +237,23 @@ def test_relocate_text(tmpdir):
             for line in script:
                 assert(new_dir in line)
         assert(strings_contains_installroot(filename, old_dir) is False)
+=======
+def test_relocate_text():
+    # Validate the text path replacement
+    old_dir = '/home/spack/opt/spack'
+    filename = 'dummy.txt'
+    with open(filename, "w") as script:
+        script.write(old_dir)
+        script.close()
+
+    filenames = [filename]
+    new_dir = '/opt/rh/devtoolset/'
+    relocate_text(filenames, old_dir, new_dir)
+
+    with open(filename, "r")as script:
+        for line in script:
+            assert(new_dir in line)
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
 
 
 def test_needs_relocation():
