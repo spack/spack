@@ -23,7 +23,7 @@ class Cp2k(Package):
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'none'),
+    variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('libxc', default=True,
