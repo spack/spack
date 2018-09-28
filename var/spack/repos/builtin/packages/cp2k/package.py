@@ -54,7 +54,7 @@ class Cp2k(Package):
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
     # in the stage of cp2k@4.1
-    depends_on('wannier90', when='@3.0+mpi')
+    depends_on('wannier90', when='@3.0+mpi', type='build')
 
     # TODO : add dependency on CUDA
 
@@ -217,6 +217,10 @@ class Cp2k(Package):
 
                 if 'wannier90' in spec:
                     cppflags.append('-D__WANNIER90')
+                    wannier = join_path(
+                        spec['wannier90'].libs.directories[0], 'libwannier.a'
+                    )
+                    libs.append(wannier)
 
                 fcflags.extend([
                     # spec['elpa:fortran'].headers.cpp_flags
@@ -246,12 +250,6 @@ class Cp2k(Package):
                         'libmetis.{0}'.format(dso_suffix)
                     ),
                 ])
-
-                if 'wannier90' in spec:
-                    wannier = join_path(
-                        spec['wannier90'].prefix.lib, 'libwannier.a'
-                    )
-                    libs.append(wannier)
 
                 libs.extend(scalapack)
                 libs.extend(self.spec['mpi:cxx'].libs)
