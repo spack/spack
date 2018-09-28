@@ -36,6 +36,7 @@ class PerlModuleBuild(PerlPackage):
     """
 
     homepage = "http://search.cpan.org/perldoc/Module::Build"
-    url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/Module-Build-0.4220.tar.gz"
-
+    url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/Module-Build-0.4224.tar.gz"
+    
+    version('0.4224', 'b74c2f6e84b60aad3a3defd30b6f0f4d')
     version('0.4220', '9df204e188462a4410d496f316c2c531')
