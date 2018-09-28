@@ -58,6 +58,7 @@ def save_env():
 
 def test_get_path_from_module(save_env):
     lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
+             'prepend-path CRAY_LD_LIBRARY_PATH /path/to/lib',
              'setenv MOD_DIR /path/to',
              'setenv LDFLAGS -Wl,-rpath/path/to/lib',
              'setenv LDFLAGS -L/path/to/lib',
@@ -67,7 +68,6 @@ def test_get_path_from_module(save_env):
         module_func = '() { eval `echo ' + line + ' bash filler`\n}'
         os.environ['BASH_FUNC_module()'] = module_func
         path = get_path_from_module('mod')
-
         assert path == '/path/to'
 
     os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
@@ -77,6 +77,8 @@ def test_get_path_from_module(save_env):
 
 
 def test_get_path_from_module_contents():
+    # A line with "MODULEPATH" appears early on, and the test confirms that it
+    # is not extracted as the package's path
     module_show_output = """
 os.environ["MODULEPATH"] = "/path/to/modules1:/path/to/modules2";
 ----------------------------------------------------------------------------
@@ -94,6 +96,16 @@ prepend_path("MANPATH","/path/to/cmake/cmake-3.9.2/share/man")
     module_show_lines = module_show_output.split('\n')
     assert (get_path_from_module_contents(module_show_lines, 'cmake-3.9.2') ==
             '/path/to/cmake-3.9.2')
+
+
+def test_pkg_dir_from_module_name():
+    module_show_lines = ['setenv FOO_BAR_DIR /path/to/foo-bar']
+
+    assert (get_path_from_module_contents(module_show_lines, 'foo-bar') ==
+            '/path/to/foo-bar')
+
+    assert (get_path_from_module_contents(module_show_lines, 'foo-bar/1.0') ==
+            '/path/to/foo-bar')
 
 
 def test_get_argument_from_module_line():
