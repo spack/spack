@@ -51,7 +51,9 @@ class Libpfm4(MakefilePackage):
 
         return (flags, None, None)
 
-    # Remove -Werror from CFLAGS (too risky).
+    # Remove -Werror from CFLAGS.  Given the large space of platform,
+    # compiler, version, we don't want to fail the build over a stray
+    # warning.
     def patch(self):
         filter_file('-Werror', '', 'config.mk')
 
