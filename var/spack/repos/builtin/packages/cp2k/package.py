@@ -58,6 +58,12 @@ class Cp2k(Package):
 
     # TODO : add dependency on CUDA
 
+    # CP2K needs compiler specific compilation flags, e.g. optflags
+    conflicts('%clang')
+    conflicts('%cray')
+    conflicts('%nag')
+    conflicts('%xl')
+
     def install(self, spec, prefix):
         # Construct a proper filename for the architecture file
         cp2k_architecture = '{0.architecture}-{0.compiler.name}'.format(spec)
