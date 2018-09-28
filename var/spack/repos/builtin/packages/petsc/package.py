@@ -43,6 +43,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
     version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
     version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
     version('3.9.1', 'd3a229a188dbeef9b3f29b9a63622fad')
