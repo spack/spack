@@ -41,11 +41,15 @@ class Pfunit(CMakePackage):
     variant('shared', default=True,
             description='Build shared library in addition to static')
     variant('mpi', default=False, description='Enable MPI')
+    variant('mpi-test', default=False, description='Enable MPI test patch')
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
+
+    conflicts("mpi-test", when="~mpi")
+    patch("mpi-test.patch", when="+mpi-test")
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;
