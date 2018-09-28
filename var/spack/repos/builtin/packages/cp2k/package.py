@@ -18,6 +18,7 @@ class Cp2k(Package):
     url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
     list_url = 'https://sourceforge.net/projects/cp2k/files/'
 
+    version('6.1', '573a4de5a0ee2aaabb213e04543cb10f')
     version('5.1', 'f25cf301aec471d7059179de4dac3ee7')
     version('4.1', 'b0534b530592de15ac89828b1541185e')
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
@@ -45,12 +46,14 @@ class Cp2k(Package):
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
     # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='@3.0:5.999', type='build')
-    depends_on('libxc@2.2.2:', when='+libxc', type='build')
+    depends_on('libint@1.1.4:1.2', when='@3.0:6.999', type='build')
+    depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
+    depends_on('libxc@4.0.3:', when='+libxc@6.0:', type='build')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
-    depends_on('elpa@2011.12:2016.13', when='+elpa')
+    depends_on('elpa@2011.12:2016.13', when='+elpa@:5.999')
+    depends_on('elpa@2011.12:2017.11', when='+elpa@6.0:')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
 
