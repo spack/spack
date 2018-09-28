@@ -30,7 +30,7 @@ class Macsio(CMakePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "http://llnl.github.io/MACSio"
+    homepage = "https://computation.llnl.gov/projects/co-design/macsio"
     url      = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
     git      = "https://github.com/LLNL/MACSio.git"
 

@@ -25,14 +25,12 @@
 from spack import *
 
 
-class RPlogr(RPackage):
-    """A simple header-only logging library for C++. Add
-    'LinkingTo: plogr' to 'DESCRIPTION', and '#include <plogr.h>'
-    in your C++ modules to use it."""
+class RPs(RPackage):
+    """Manipulate processes on Windows, Linux and MacOS"""
 
-    homepage = "https://cran.r-project.org/package=plogr"
-    url      = "https://cran.r-project.org/src/contrib/plogr_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plogr"
+    homepage = "https://github.com/r-lib/ps"
+    url      = "https://cran.r-project.org/src/contrib/ps_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ps/ps_1.0.0.tar.gz"
 
-    version('0.2.0', sha256='0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29')
-    version('0.1-1', '5ee46ed21b5c571d02900219098517c0')
+    version('1.1.0', sha256='5d5240d5bf1d48c721b3fdf47cfc9dbf878e388ea1f057b764db05bffdc4a9fe')
+    version('1.0.0', sha256='9bdaf64aaa44ae11866868402eb75bf56c2e3022100476d9b9dcd16ca784ffd8')

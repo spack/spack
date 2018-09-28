@@ -22,17 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class RPlogr(RPackage):
-    """A simple header-only logging library for C++. Add
-    'LinkingTo: plogr' to 'DESCRIPTION', and '#include <plogr.h>'
-    in your C++ modules to use it."""
+class Lighttpd(CMakePackage):
+    """a secure, fast, compliant and very flexible web-server"""
 
-    homepage = "https://cran.r-project.org/package=plogr"
-    url      = "https://cran.r-project.org/src/contrib/plogr_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plogr"
+    homepage = "https://www.lighttpd.net"
+    url      = "https://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-1.4.50.tar.gz"
 
-    version('0.2.0', sha256='0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29')
-    version('0.1-1', '5ee46ed21b5c571d02900219098517c0')
+    version('1.4.50', sha256='c9a9f175aca6db22ebebbc47de52c54a99bbd1dce8d61bb75103609a3d798235')
+    version('1.4.49', sha256='8b744baf9f29c386fff1a6d2e435491e726cb8d29cfdb1fe20ab782ee2fc2ac7')

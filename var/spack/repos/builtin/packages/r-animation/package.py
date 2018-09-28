@@ -25,14 +25,17 @@
 from spack import *
 
 
-class RPlogr(RPackage):
-    """A simple header-only logging library for C++. Add
-    'LinkingTo: plogr' to 'DESCRIPTION', and '#include <plogr.h>'
-    in your C++ modules to use it."""
+class RAnimation(RPackage):
+    """Provides functions for animations in statistics, covering topics
+    in probability theory, mathematical statistics, multivariate statistics,
+    non-parametric statistics, sampling survey, linear models, time series,
+    computational statistics, data mining and machine learning.
+    These functions maybe helpful in teaching statistics and data analysis."""
 
-    homepage = "https://cran.r-project.org/package=plogr"
-    url      = "https://cran.r-project.org/src/contrib/plogr_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plogr"
+    homepage = "https://cran.r-project.org/package=animation"
+    url = "https://cran.r-project.org/src/contrib/animation_2.5.tar.gz"
 
-    version('0.2.0', sha256='0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29')
-    version('0.1-1', '5ee46ed21b5c571d02900219098517c0')
+    version('2.5', sha256='b232fef1b318c79710e5e1923d87baba4c85ffe2c77ddb188130e0911d8cb55f')
+
+    extends('r')
+    depends_on('r', type=('build', 'run'))
