@@ -223,6 +223,12 @@ class Openmpi(AutotoolsPackage):
         description='Memchecker support for debugging [degrades performance]'
     )
 
+    variant(
+        'legacylaunchers',
+        default=False,
+        description='Do not remove mpirun/mpiexec when building with slurm'
+    )
+
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
@@ -463,7 +469,7 @@ class Openmpi(AutotoolsPackage):
         # applications via mpirun or mpiexec, and leaves srun as the
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
-        if '@1.6: schedulers=slurm' in self.spec:
+        if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
             os.remove(self.prefix.bin.mpirun)
             os.remove(self.prefix.bin.mpiexec)
             os.remove(self.prefix.bin.shmemrun)
