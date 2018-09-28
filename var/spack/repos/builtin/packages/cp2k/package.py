@@ -28,6 +28,11 @@ class Cp2k(Package):
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('libxc', default=True,
             description='Support additional functionals via libxc')
+    variant('pexsi', default=False,
+            description=('Enable the alternative PEXSI method'
+                         'for density matrix evaluation'))
+    variant('elpa', default=False,
+            description='Enable optimised diagonalisation routines from ELPA')
 
     depends_on('python', type='build')
 
@@ -45,11 +50,18 @@ class Cp2k(Package):
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
-    depends_on('elpa@2011.12:2016.13', when='+mpi')
-    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+mpi@:4.999')
-    depends_on('pexsi+fortran@0.10.0:', when='+mpi@5.0:')
+    depends_on('elpa@2011.12:2016.13', when='+elpa')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
+
+    # while we link statically against PEXSI, its own deps may be linked in
+    # dynamically, therefore can't set this as pure build-type dependency.
+    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+pexsi@:4.999')
+    depends_on('pexsi+fortran@0.10.0:', when='+pexsi@5.0:')
+
+    # PEXSI and ELPA need MPI in CP2K
+    conflicts('~mpi', '+pexsi')
+    conflicts('~mpi', '+elpa')
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
@@ -102,13 +114,6 @@ class Cp2k(Package):
                 spec['fftw'].headers.cpp_flags,
             ]
 
-            if '+libxc' in spec:
-                libxc = spec['libxc:fortran,static']
-                cppflags += [
-                    '-D__LIBXC',
-                    libxc.headers.cpp_flags
-                ]
-
             if '^mpi@3:' in spec:
                 cppflags.append('-D__MPI_VERSION=3')
             elif '^mpi@2:' in spec:
@@ -134,7 +139,7 @@ class Cp2k(Package):
             ldflags = [fftw.search_flags]
 
             if 'superlu-dist@4.3' in spec:
-                ldflags = ['-Wl,--allow-multiple-definition'] + ldflags
+                ldflags.insert(0, '-Wl,--allow-multiple-definition')
 
             # libint-1.x.y has to be linked statically to work around
             # inconsistencies in its Fortran interface definition
@@ -178,6 +183,7 @@ class Cp2k(Package):
             fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
             mkf.write('FC = {0}\n'.format(fc))
             mkf.write('LD = {0}\n'.format(fc))
+
             # Intel
             if '%intel' in self.spec:
                 cppflags.extend([
@@ -191,29 +197,26 @@ class Cp2k(Package):
                     '-free',
                     '-fpp'
                 ])
+
+            # FFTW, LAPACK, BLAS
+            lapack = spec['lapack'].libs
+            blas = spec['blas'].libs
+            ldflags.append((lapack + blas).search_flags)
+            libs.extend([str(x) for x in (fftw, lapack, blas)])
+
             # MPI
             if '+mpi' in self.spec:
                 cppflags.extend([
                     '-D__parallel',
-                    '-D__LIBPEXSI',
                     '-D__SCALAPACK'
                 ])
 
-                elpa = spec['elpa']
-                if spec.satisfies('@:4.999'):
-                    if elpa.satisfies('@:2014.5.999'):
-                        cppflags.append('-D__ELPA')
-                    elif elpa.satisfies('@2014.6:2015.10.999'):
-                        cppflags.append('-D__ELPA2')
-                    else:
-                        cppflags.append('-D__ELPA3')
-                else:
-                    cppflags.append('-D__ELPA={0}{1:02d}'.format(
-                        elpa.version[0], int(elpa.version[1])))
-                    fcflags.append('-I' + join_path(
-                        elpa.prefix, 'include',
-                        'elpa-{0}'.format(str(elpa.version)), 'elpa'
-                    ))
+                scalapack = spec['scalapack'].libs
+                ldflags.append(scalapack.search_flags)
+
+                libs.extend(scalapack)
+                libs.extend(self.spec['mpi:cxx'].libs)
+                libs.extend(self.compiler.stdcxx_libs)
 
                 if 'wannier90' in spec:
                     cppflags.append('-D__WANNIER90')
@@ -222,48 +225,58 @@ class Cp2k(Package):
                     )
                     libs.append(wannier)
 
-                fcflags.extend([
-                    # spec['elpa:fortran'].headers.cpp_flags
-                    '-I' + join_path(
-                        elpa.prefix,
-                        'include',
-                        'elpa-{0}'.format(str(elpa.version)),
-                        'modules'
-                    ),
-                    # spec[pexsi:fortran].headers.cpp_flags
-                    '-I' + join_path(spec['pexsi'].prefix, 'fortran')
-                ])
-                scalapack = spec['scalapack'].libs
-                ldflags.append(scalapack.search_flags)
+            if '+libxc' in spec:
+                libxc = spec['libxc:fortran,static']
+                cppflags += [
+                    '-D__LIBXC',
+                    libxc.headers.cpp_flags
+                ]
+
+                ldflags.append(libxc.libs.search_flags)
+                libs.append(str(libxc.libs))
+
+            if '+pexsi' in self.spec:
+                cppflags.append('-D__LIBPEXSI')
+                fcflags.append('-I' + join_path(
+                    spec['pexsi'].prefix, 'fortran'))
                 libs.extend([
-                    join_path(elpa.libs.directories[0],
-                              'libelpa.{0}'.format(dso_suffix)),
-                    join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
-                    join_path(spec['superlu-dist'].prefix.lib,
+                    join_path(spec['pexsi'].libs.directories[0],
+                              'libpexsi.a'),
+                    join_path(spec['superlu-dist'].libs.directories[0],
                               'libsuperlu_dist.a'),
                     join_path(
-                        spec['parmetis'].prefix.lib,
+                        spec['parmetis'].libs.directories[0],
                         'libparmetis.{0}'.format(dso_suffix)
                     ),
                     join_path(
-                        spec['metis'].prefix.lib,
+                        spec['metis'].libs.directories[0],
                         'libmetis.{0}'.format(dso_suffix)
                     ),
                 ])
 
-                libs.extend(scalapack)
-                libs.extend(self.spec['mpi:cxx'].libs)
-                libs.extend(self.compiler.stdcxx_libs)
-            # LAPACK / BLAS
-            lapack = spec['lapack'].libs
-            blas = spec['blas'].libs
-            ldflags.append((lapack + blas).search_flags)
+            if '+elpa' in self.spec:
+                elpa = spec['elpa']
+                elpa_base_path = join_path(
+                    elpa.prefix,
+                    'include',
+                    'elpa-{0}'.format(str(elpa.version)))
 
-            libs.extend([str(x) for x in (fftw, lapack, blas)])
+                fcflags.append('-I' + join_path(elpa_base_path, 'modules'))
+                libs.append(join_path(elpa.libs.directories[0],
+                                      'libelpa.{0}'.format(dso_suffix)))
 
-            if '+libxc' in spec:
-                ldflags.append(libxc.libs.search_flags)
-                libs.append(str(libxc.libs))
+                if spec.satisfies('@:4.999'):
+                    if elpa.satisfies('@:2014.5.999'):
+                        cppflags.append('-D__ELPA')
+                    elif elpa.satisfies('@2014.6:2015.10.999'):
+                        cppflags.append('-D__ELPA2')
+                    else:
+                        cppflags.append('-D__ELPA3')
+                else:
+                    cppflags.append('-D__ELPA={0}{1:02d}'
+                                    .format(elpa.version[0],
+                                            int(elpa.version[1])))
+                    fcflags.append('-I' + join_path(elpa_base_path, 'elpa'))
 
             if 'smm=libsmm' in spec:
                 lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
