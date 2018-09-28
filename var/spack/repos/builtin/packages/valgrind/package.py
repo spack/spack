@@ -53,9 +53,15 @@ class Valgrind(AutotoolsPackage):
             description='Activates boost support for valgrind')
     variant('only64bit', default=True,
             description='Sets --enable-only64bit option for valgrind')
-    variant('ubsan', default=False,
+    variant('ubsan', default=True,
             description='Activates ubsan support for valgrind')
 
+    conflicts('+ubsan', when='platform=darwin %clang',
+              msg="""
+Cannot build libubsan with clang on macOS.
+Otherwise with (Apple's) clang there is a linker error:
+clang: error: unknown argument: '-static-libubsan'
+""")
     depends_on('mpi', when='+mpi')
     depends_on('boost', when='+boost')
 
@@ -70,11 +76,8 @@ class Valgrind(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         options = []
-        if not (spec.satisfies('%clang') and sys.platform == 'darwin'):
-            # Otherwise with (Apple's) clang there is a linker error:
-            # clang: error: unknown argument: '-static-libubsan'
-            if spec.satisfies('+ubsan'):
-                options.append('--enable-ubsan')
+        if spec.satisfies('+ubsan'):
+            options.append('--enable-ubsan')
         if spec.satisfies('+only64bit'):
             options.append('--enable-only64bit')
 
