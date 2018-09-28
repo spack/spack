@@ -27,6 +27,7 @@ jobs:
     - stage: 'flake8 + documentation'
 >>>>>>> 041aa143db6964575625f1849de639541efb83a5
       python: '2.7'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=flake8
@@ -37,33 +38,39 @@ jobs:
       env: TEST_SUITE=doc
     - stage: 'unit tests'
       python: '2.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '2.7'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.4'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.5'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
+      sudo: required
       os: linux
       language: python
 <<<<<<< HEAD
       env: TEST_SUITE=unit
     - python: '3.7'
+      sudo: required
       os: linux
       dist: xenial
-      sudo: true
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=doc

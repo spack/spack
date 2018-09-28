@@ -42,17 +42,24 @@ class FileCache(object):
 
     """
 
-    def __init__(self, root):
+    def __init__(self, root, timeout=120):
         """Create a file cache object.
 
         This will create the cache directory if it does not exist yet.
 
+        Args:
+            root: specifies the root directory where the cache stores files
+
+            timeout: when there is contention among multiple Spack processes
+                for cache files, this specifies how long Spack should wait
+                before assuming that there is a deadlock.
         """
         self.root = root.rstrip(os.path.sep)
         if not os.path.exists(self.root):
             mkdirp(self.root)
 
         self._locks = {}
+        self.lock_timeout = timeout
 
     def destroy(self):
         """Remove all files under the cache root."""
@@ -77,7 +84,8 @@ class FileCache(object):
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""
         if key not in self._locks:
-            self._locks[key] = Lock(self._lock_path(key))
+            self._locks[key] = Lock(self._lock_path(key),
+                                    default_timeout=self.lock_timeout)
         return self._locks[key]
 
     def init_entry(self, key):

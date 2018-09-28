@@ -62,8 +62,9 @@ class Vtk(CMakePackage):
     # drivers is faster, but it must be done externally.
     depends_on('opengl', when='~osmesa')
 
-    # mesa default is software rendering, make it faster with llvm
-    depends_on('mesa+llvm', when='+osmesa')
+    # Note: it is recommended to use mesa+llvm, if possible.
+    # mesa default is software rendering, llvm makes it faster
+    depends_on('mesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
