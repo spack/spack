@@ -62,7 +62,8 @@ def setup_parser(subparser):
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
         '-l', '--locks', action='store_true',
-        help="remove lock files (typically unnecessary)")
+        help="remove lock files (WARNING: this is only safe if no other"
+             " Spack process is running)")
     subparser.add_argument(
         '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
     )
@@ -76,7 +77,7 @@ def setup_parser(subparser):
 def clean(parser, args):
     # If nothing was set, activate the default
     if not any([args.specs, args.stage, args.downloads, args.misc_cache,
-                args.python_cache]):
+                args.python_cache, args.locks]):
         args.stage = True
 
     # Then do the cleaning falling through the cases
