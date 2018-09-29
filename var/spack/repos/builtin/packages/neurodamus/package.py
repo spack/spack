@@ -85,6 +85,7 @@ class Neurodamus(NeurodamusBase):
 
     def install(self, spec, prefix):
         with working_dir(prefix):
+            env['MAKEFLAGS'] = '-j{0}'.format(make_jobs)
             modlib = os.path.relpath(self.spec['neurodamus-base'].prefix.lib.modlib)
             profile_flag = '-DENABLE_TAU_PROFILER' if '+profile' in spec else ''
             include_flag = ''
