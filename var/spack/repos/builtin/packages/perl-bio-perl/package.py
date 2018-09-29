@@ -30,8 +30,9 @@ class PerlBioPerl(PerlPackage):
     """Functional access to BioPerl for people who don't know objects"""
 
     homepage = "http://search.cpan.org/~cjfields/BioPerl-1.007002/Bio/Perl.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/C/CJ/CJFIELDS/BioPerl-1.007002.tar.gz"
+    url      = "http://search.cpan.org/CPAN/authors/id/C/CJ/CJFIELDS/BioPerl-1.7.0._2.tar.gz"
 
+    version('1.7.0._2', 'fe618f1b3a7b69c6bd369559d01b233b')
     version('1.007002', 'a912c92b56d009198f1786b4cf560d5c')
 
     depends_on('perl-module-build', type='build')

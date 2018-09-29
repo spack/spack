@@ -72,7 +72,11 @@ class Nag(Compiler):
         return '-Wl,-Wl,,-rpath,,'
 
     @classmethod
+<<<<<<< HEAD
     def default_version(cls, comp):
+=======
+    def default_version(self, comp):
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
         """The ``-V`` option works for nag compilers.
         Output looks like this::
 
