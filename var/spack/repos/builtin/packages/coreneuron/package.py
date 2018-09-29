@@ -79,7 +79,7 @@ class Coreneuron(CMakePackage):
         if 'bgq' in spec.architecture and '%xl' in spec:
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
         if '%intel' in spec:
-            flags = '-g -xHost -O2 -qopt-report=5'
+            flags = '-g -O2 -qopt-report=5'
             if '+knl' in spec:
                 flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
         if '+gpu' in spec:

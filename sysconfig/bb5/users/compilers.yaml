@@ -41,6 +41,22 @@ compilers:
 - compiler:
     environment: {}
     extra_rpaths: []
+    flags:
+      cflags: -xMIC-AVX512
+      cxxflags: -xMIC-AVX512
+      cppflags: -xMIC-AVX512
+    modules: []
+    operating_system: rhel7
+    paths:
+      cc: /gpfs/bbp.cscs.ch/apps/compilers/install/intel-18.0.1/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc
+      cxx: /gpfs/bbp.cscs.ch/apps/compilers/install/intel-18.0.1/compilers_and_libraries_2018.1.163/linux/bin/intel64/icpc
+      f77: /gpfs/bbp.cscs.ch/apps/compilers/install/intel-18.0.1/compilers_and_libraries_2018.1.163/linux/bin/intel64/ifort
+      fc: /gpfs/bbp.cscs.ch/apps/compilers/install/intel-18.0.1/compilers_and_libraries_2018.1.163/linux/bin/intel64/ifort
+    spec: intel@18.0.1
+    target: x86_64_knl
+- compiler:
+    environment: {}
+    extra_rpaths: []
     flags: {}
     modules: []
     operating_system: rhel7
