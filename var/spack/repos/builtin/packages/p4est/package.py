@@ -58,9 +58,8 @@ class P4est(AutotoolsPackage):
         bootstrap()
 
     def configure_args(self):
-        return [
+        args = [
             '--enable-mpi',
-            '--enable-openmp={0}'.format(self.compiler.openmp_flag),
             '--enable-shared',
             '--disable-vtk-binary',
             '--without-blas',
@@ -71,3 +70,11 @@ class P4est(AutotoolsPackage):
             'FC=%s'  % self.spec['mpi'].mpifc,
             'F77=%s' % self.spec['mpi'].mpif77
         ]
+
+        try:
+            args.append(
+                '--enable-openmp={0}'.format(self.compiler.openmp_flag))
+        except UnsupportedCompilerFlag:
+            pass
+
+        return args
