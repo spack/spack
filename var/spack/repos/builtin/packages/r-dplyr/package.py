@@ -29,8 +29,17 @@ class RDplyr(RPackage):
     """A fast, consistent tool for working with data frame like objects, both
     in memory and out of memory."""
 
+<<<<<<< HEAD
+    homepage = "https://github.com/hadley/dplyr"
+<<<<<<< HEAD
+    url      = "https://cran.r-project.org/src/contrib/dplyr_0.7.4.tar.gz"
+=======
+    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
+=======
     homepage = "https://cran.r-project.org/package=dplyr"
     url      = "https://cran.r-project.org/src/contrib/dplyr_0.7.6.tar.gz"
+>>>>>>> upstream/develop
     list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
     version('0.7.5', sha256='2fbd8f316a59670076d43a0fe854654621941ee5f621ea5f0185a3f5daafda50')

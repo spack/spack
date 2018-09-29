@@ -161,7 +161,11 @@ class Gcc(Compiler):
         version = get_compiler_version(
             fc, '-dumpversion',
             r'(?:GNU Fortran \(GCC\) )?([\d.]+)')
+<<<<<<< HEAD
         if ver(version) >= ver('7'):
+=======
+        if version in ['7']:
+>>>>>>> 041aa143db6964575625f1849de639541efb83a5
             version = get_compiler_version(fc, '-dumpfullversion')
         return version
 
