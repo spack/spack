@@ -65,6 +65,5 @@ class Cubegui(AutotoolsPackage):
 
         return configure_args
 
-
     def install(self, spec, prefix):
         make('install', parallel=False)

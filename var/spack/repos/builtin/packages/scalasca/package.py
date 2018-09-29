@@ -50,12 +50,13 @@ class Scalasca(AutotoolsPackage):
 
         config_args = ["--enable-shared"]
 
+        config_args.append("--with-otf2=%s" % spec['otf2'].prefix.bin)
+
         if spec.satisfies('@:2.3.999'):
             config_args.append("--with-cube=%s" % spec['cube'].prefix.bin)
         elif spec.satisfies('@2.4:'):
             config_args.append("--with-cubew=%s" % spec['cubew'].prefix.bin)
 
-        config_args.append("--with-otf2=%s" % spec['otf2'].prefix.bin)
 
         if spec['mpi'].name == 'openmpi':
             config_args.append("--with-mpi=openmpi")
