@@ -158,6 +158,8 @@ packages:
         paths:
             sqlite@3.7.17: /usr
         version: [3.7.17]
+    steps:
+        variants: +lapack+petsc+mpi^python@2.7.15
     tar:
         paths:
             tar@1.26: /usr
