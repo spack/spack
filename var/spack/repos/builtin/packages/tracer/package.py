@@ -31,6 +31,8 @@ class Tracer(MakefilePackage):
     homepage = "https://tracer-codes.readthedocs.io"
     git      = "https://github.com/LLNL/tracer.git"
 
+    maintainers = ['bhatele']
+
     version('develop', branch='master')
 
     variant('otf2', default=True, description='Use OTF2 traces for simulation')
