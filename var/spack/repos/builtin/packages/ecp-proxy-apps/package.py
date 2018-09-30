@@ -33,12 +33,12 @@ class EcpProxyApps(Package):
        installs the ECP proxy application suite.
     """
 
-    homepage = "https://exascaleproject.github.io/proxy-apps"
+    tags = ['proxy-app', 'ecp-proxy-app']
+    maintainers = ['bhatele']
 
+    homepage = "https://exascaleproject.github.io/proxy-apps"
     # Dummy url
     url = 'https://github.com/exascaleproject/proxy-apps/archive/v1.0.tar.gz'
-
-    tags = ['proxy-app', 'ecp-proxy-app']
 
     version('2.0', sha256='5f3cb3a772224e738c1dab42fb34d40f6b313af51ab1c575fb334e573e41e09a')
     version('1.1', '15825c318acd3726fd8e72803b1c1090')
@@ -53,6 +53,7 @@ class EcpProxyApps(Package):
 
     depends_on('amg@1.1', when='@2.0:')
     depends_on('candle-benchmarks@0.1', when='@2.0:')
+    depends_on('laghos@1.1', when='@2.0:')
     depends_on('miniamr@1.4.1', when='@2.0:')
     depends_on('sw4lite@1.1', when='@2.0:')
     depends_on('xsbench@18', when='@2.0:')
@@ -62,7 +63,7 @@ class EcpProxyApps(Package):
 
     depends_on('amg@1.0', when='@1.0:1.1')
     depends_on('candle-benchmarks@0.0', when='@1.0:1.1')
-    depends_on('laghos@1.0', when='@1.0:')
+    depends_on('laghos@1.0', when='@1.0:1.1')
     depends_on('macsio@1.0', when='@1.0:')
     depends_on('miniamr@1.4.0', when='@1.0:1.1')
     depends_on('nekbone@17.0', when='@1.0:')
