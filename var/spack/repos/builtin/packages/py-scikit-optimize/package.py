@@ -41,9 +41,9 @@ from spack import *
 
 
 class PyScikitOptimize(PythonPackage):
-    """Scikit-Optimize, or skopt, is a simple and efficient library to minimize (very) expensive 
-    and noisy black-box functions. It implements several methods for sequential model-based optimization."""
-
+    """Scikit-Optimize, or skopt, is a simple and efficient library to minimize 
+    (very) expensive and noisy black-box functions. It implements several methods 
+    for sequential model-based optimization."""
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://scikit-optimize.github.io/"
     url      = "https://github.com/scikit-optimize/scikit-optimize/archive/v0.5.2.tar.gz"
