@@ -39,6 +39,11 @@ class Icu4c(AutotoolsPackage):
     version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
     version('57.1', '976734806026a4ef8bdd17937c8898b9')
 
+    # The --enable-rpath option is needed on MacOS, but it breaks the
+    # build for xerces-c on Linux.
+    variant('rpath', default=True,
+            description='Configure with --enable-rpath')
+
     configure_directory = 'source'
 
     def url_for_version(self, version):
@@ -46,4 +51,9 @@ class Icu4c(AutotoolsPackage):
         return url.format(version.dotted, version.underscored)
 
     def configure_args(self):
-        return ['--enable-rpath']
+        args = []
+
+        if '+rpath' in self.spec:
+            args.append('--enable-rpath')
+
+        return args
