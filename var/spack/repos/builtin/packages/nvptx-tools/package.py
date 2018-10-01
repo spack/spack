@@ -34,8 +34,9 @@ class NvptxTools(AutotoolsPackage):
     homepage = "https://github.com/MentorEmbedded/nvptx-tools"
     git      = "https://github.com/MentorEmbedded/nvptx-tools"
 
-    version('master', branch='master')
+    version('2018-03-01', commit='5f6f343a302d620b0868edab376c00b15741e39e')
 
+    depends_on('binutils')
     depends_on('cuda')
 
     def configure_args(self):
