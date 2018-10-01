@@ -295,7 +295,7 @@ class Gcc(AutotoolsPackage):
 
         # nvptx-none offloading
         if spec.satisfies('+nvptx'):
-            options.append('--with-build-time-tools={0}'.format(spec['nvptx-tools'].prefix.nvptx-none.bin))
+            options.append('--with-build-time-tools={0}'.format(join_path(spec['nvptx-tools'].prefix,'nvptx-none','bin')))
             options.append('--enable-as-accelerator-for=x86_64-pc-linux-gnu')
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
