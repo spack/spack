@@ -87,6 +87,9 @@ class Gcc(AutotoolsPackage):
     variant('strip',
             default=False,
             description='Strip executables to reduce installation size')
+    variant('nvptx',
+            default=False,
+            description='Configure to target nvptx for offloading')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -98,6 +101,8 @@ class Gcc(AutotoolsPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
+    depends_on('nvptx-tools', when='+nvptx')
+    depends_on('newlib+nvptx', when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -153,6 +158,15 @@ class Gcc(AutotoolsPackage):
     # GCC 5 added the ability to build GCC as a Just-In-Time compiler.
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
+
+    # NVPTX offloading supported by limited languages
+    conflicts('languages=ada', when='+nvptx')
+    conflicts('languages=brig', when='+nvptx')
+    conflicts('languages=go', when='+nvptx')
+    conflicts('languages=java', when='+nvptx')
+    conflicts('languages=jit', when='+nvptx')
+    conflicts('languages=objc', when='+nvptx')
+    conflicts('languages=obj-c++', when='+nvptx')
 
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
@@ -220,6 +234,16 @@ class Gcc(AutotoolsPackage):
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
 
+        if spec.satisfies('+nvptx'):
+            resource(
+                name='newlib',
+                url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+                destination='newlib-source'
+            )
+
+            symlink('newlib-source/newlib', 'newlib')
+
+
     def configure_args(self):
         spec = self.spec
 
@@ -269,6 +293,13 @@ class Gcc(AutotoolsPackage):
         # macOS
         if sys.platform == 'darwin':
             options.append('--with-build-config=bootstrap-debug')
+
+        # nvptx-none offloading
+        if spec.satisfies('+nvptx'):
+            options.append('--with-build-time-tools={0}'.format(spec['nvptx-tools'].prefix.nvptx-none.bin))
+            options.append('--enable-as-accelerator-for=x86_64-pc-linux-gnu')
+            options.append('--disable-sjlj-exceptions')
+            options.append('--enable-newlib-io-long-long')
 
         return options
 
