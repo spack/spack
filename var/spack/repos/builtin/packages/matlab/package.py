@@ -42,8 +42,10 @@ class Matlab(Package):
     mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.mathworks.com/products/matlab.html"
+    
 
     version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
+    version('R2018b', '2dc9e0224a93a99ae6d514d0330c4ec9')
 
     variant(
         'mode',
