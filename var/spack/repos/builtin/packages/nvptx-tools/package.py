@@ -27,7 +27,9 @@ from spack import *
 
 class NvptxTools(AutotoolsPackage):
     """nvptx-tools: A collection of tools for use with nvptx-none GCC
-    toolchains."""
+    toolchains. These tools are necessary when building a version
+    of GCC that enables offloading of OpenMP/OpenACC code to NVIDIA
+    GPUs."""
 
     homepage = "https://github.com/MentorEmbedded/nvptx-tools"
     git      = "https://github.com/MentorEmbedded/nvptx-tools"
@@ -40,8 +42,8 @@ class NvptxTools(AutotoolsPackage):
         cuda_dir = self.spec['cuda'].prefix
 
         config_args = [
-            "--with-cuda-driver-include=%s" % cuda_dir.include,
-            "--with-cuda-driver-lib=%s" % cuda_dir.lib64
+            "--with-cuda-driver-include={0}".format(cuda_dir.include),
+            "--with-cuda-driver-lib={0}".format(cuda_dir.lib64)
         ]
 
         return config_args
