@@ -20,52 +20,46 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 0s2111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Xsbench(MakefilePackage):
-    """XSBench is a mini-app representing a key computational
-       kernel of the Monte Carlo neutronics application OpenMC.
-       A full explanation of the theory and purpose of XSBench
-       is provided in docs/XSBench_Theory.pdf."""
-
-    homepage = "https://github.com/ANL-CESAR/XSBench/"
-    url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
-
+class Minivite(MakefilePackage):
+    """miniVite is a proxy application that implements a single phase of
+       Louvain method in distributed memory for graph community detection.
+    """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('18', sha256='a9a544eeacd1be8d687080d2df4eeb701c04eda31d3806e7c3ea1ff36c26f4b0')
-    version('14', '94d5d28eb031fd4ef35507c9c1862169')
-    version('13', '72a92232d2f5777fb52f5ea4082aff37')
+    homepage = "http://hpc.pnl.gov/people/hala/grappolo.html"
+    git      = "https://github.com/Exa-Graph/miniVite.git"
 
-    variant('mpi', default=True, description='Build with MPI support')
+    version('develop', branch='master')
+    version('1.0', tag='v1.0')
+
     variant('openmp', default=True, description='Build with OpenMP support')
+    variant('opt', default=True, description='Optimization flags')
 
-    depends_on('mpi', when='+mpi')
-
-    build_directory = 'src'
+    depends_on('mpi')
 
     @property
     def build_targets(self):
-
         targets = []
-
-        cflags = '-std=gnu99'
-        if '+mpi' in self.spec:
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-        else:
-            targets.append('CC={0}'.format(self.compiler.cxx))
+        cxxflags = ['-std=c++11 -g -DCHECK_NUM_EDGES -DPRINT_EXTRA_NEDGES']
+        ldflags = []
 
         if '+openmp' in self.spec:
-            cflags += ' ' + self.compiler.openmp_flag
-        targets.append('CFLAGS={0}'.format(cflags))
-        targets.append('LDFLAGS=-lm')
+            cxxflags.append(self.compiler.openmp_flag)
+            ldflags.append(self.compiler.openmp_flag)
+        if '+opt' in self.spec:
+            cxxflags.append(' -O3 ')
+
+        targets.append('CXXFLAGS={0}'.format(' '.join(cxxflags)))
+        targets.append('OPTFLAGS={0}'.format(' '.join(ldflags)))
+        targets.append('CXX={0}'.format(self.spec['mpi'].mpicxx))
 
         return targets
 
     def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('src/XSBench', prefix.bin)
+        mkdirp(prefix.bin)
+        install('dspl', prefix.bin)

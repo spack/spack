@@ -25,19 +25,15 @@
 from spack import *
 
 
-class RBiocparallel(RPackage):
-    """This package provides modified versions and novel implementation of
-       functions for parallel evaluation, tailored to use with Bioconductor
-       objects."""
+class PerlDbdSqlite(PerlPackage):
+    """DBD::SQLite - Self-contained RDBMS in a DBI Driver"""
 
-    homepage = "https://bioconductor.org/packages/BiocParallel/"
-    git      = "https://git.bioconductor.org/packages/BiocParallel.git"
+    homepage = "https://metacpan.org/pod/DBD::SQLite"
+    url      = "https://cpan.metacpan.org/authors/id/I/IS/ISHIGAKI/DBD-SQLite-1.58.tar.gz"
 
-    version('1.14.2', commit='1d5a44960b19e9dbbca04c7290c8c58b0a7fc299')
-    version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
+    version('1.59_01', sha256='b6f331e4054688572c2010e72c355f7ba3f30d86051e50d9925d34d9df1001e2')
+    version('1.58',    sha256='7120dd99d0338dea2802fda8bfe3fbf10077d5af559f6c67ae35e9270d1a1d3b')
+    version('1.57_01', sha256='fa7fb111fa8bfc257c3208f8980ac802a9cac4531ab98afc1988b88929672184')
+    version('1.56',    sha256='c5f831a67a94f9bb2fb3c44051f309fc7994b2725d1896c018ad5d4cd865e991')
 
-    depends_on('r-futile-logger', type=('build', 'run'))
-    depends_on('r-snow', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'link', 'run'), when='@1.14.2:')
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.2', type=('build', 'run'))
+    depends_on('perl-dbi', type=('build', 'run'))

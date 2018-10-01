@@ -93,6 +93,11 @@ class Tcl(AutotoolsPackage):
     # ========================================================================
     # Set up environment to make install easy for tcl extensions.
     # ========================================================================
+
+    @property
+    def libs(self):
+        return LibraryList([])
+
     @property
     def command(self):
         """Returns the tclsh command.

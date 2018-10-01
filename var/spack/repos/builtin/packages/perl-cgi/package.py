@@ -25,19 +25,18 @@
 from spack import *
 
 
-class RBiocparallel(RPackage):
-    """This package provides modified versions and novel implementation of
-       functions for parallel evaluation, tailored to use with Bioconductor
-       objects."""
+class PerlCgi(PerlPackage):
+    """CGI - Handle Common Gateway Interface requests and responses
 
-    homepage = "https://bioconductor.org/packages/BiocParallel/"
-    git      = "https://git.bioconductor.org/packages/BiocParallel.git"
+       CGI was included in the Perl distribution from 5.4 to 5.20 but
+       has since been removed."""
 
-    version('1.14.2', commit='1d5a44960b19e9dbbca04c7290c8c58b0a7fc299')
-    version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
+    homepage = "https://metacpan.org/pod/CGI"
+    url      = "https://cpan.metacpan.org/authors/id/L/LE/LEEJO/CGI-4.40.tar.gz"
 
-    depends_on('r-futile-logger', type=('build', 'run'))
-    depends_on('r-snow', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'link', 'run'), when='@1.14.2:')
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.2', type=('build', 'run'))
+    version('4.40', sha256='10efff3061b3c31a33b3cc59f955aef9c88d57d12dbac46389758cef92f24f56')
+    version('4.39', sha256='7e73417072445f24e03d63802ed3a9e368c9b103ddc96e2a9bcb6a251215fb76')
+    version('4.38', sha256='8c58f4a529bb92a914b22b7e64c5e31185c9854a4070a6dfad44fe5cc248e7d4')
+    version('4.37', sha256='7a14eee5df640f7141848f653cf48d99bfc9b5c68e18167338ee01b91cdfb883')
+
+    depends_on('perl-html-parser', type=('build', 'run'))

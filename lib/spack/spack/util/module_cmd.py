@@ -185,16 +185,25 @@ def get_path_from_module(mod):
 
 
 def get_path_from_module_contents(text, module_name):
+    tty.debug("Module name: " + module_name)
+    pkg_var_prefix = module_name.replace('-', '_').upper()
+    components = pkg_var_prefix.split('/')
+    # For modules with multiple components like foo/1.0.1, retrieve the package
+    # name "foo" from the module name
+    if len(components) > 1:
+        pkg_var_prefix = components[-2]
+    tty.debug("Package directory variable prefix: " + pkg_var_prefix)
+
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
-        pattern = r'\WLD_LIBRARY_PATH'
+        pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
         if re.search(pattern, line):
             path = get_path_arg_from_module_line(line)
             return path[:path.find('/lib')]
 
     # If it lists its package directory, return that
     for line in text:
-        pattern = r'\W{0}_DIR'.format(module_name.upper())
+        pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
         if re.search(pattern, line):
             return get_path_arg_from_module_line(line)
 

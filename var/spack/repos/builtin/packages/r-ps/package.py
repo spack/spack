@@ -25,19 +25,12 @@
 from spack import *
 
 
-class RBiocparallel(RPackage):
-    """This package provides modified versions and novel implementation of
-       functions for parallel evaluation, tailored to use with Bioconductor
-       objects."""
+class RPs(RPackage):
+    """Manipulate processes on Windows, Linux and MacOS"""
 
-    homepage = "https://bioconductor.org/packages/BiocParallel/"
-    git      = "https://git.bioconductor.org/packages/BiocParallel.git"
+    homepage = "https://github.com/r-lib/ps"
+    url      = "https://cran.r-project.org/src/contrib/ps_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ps/ps_1.0.0.tar.gz"
 
-    version('1.14.2', commit='1d5a44960b19e9dbbca04c7290c8c58b0a7fc299')
-    version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
-
-    depends_on('r-futile-logger', type=('build', 'run'))
-    depends_on('r-snow', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'link', 'run'), when='@1.14.2:')
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.2', type=('build', 'run'))
+    version('1.1.0', sha256='5d5240d5bf1d48c721b3fdf47cfc9dbf878e388ea1f057b764db05bffdc4a9fe')
+    version('1.0.0', sha256='9bdaf64aaa44ae11866868402eb75bf56c2e3022100476d9b9dcd16ca784ffd8')
