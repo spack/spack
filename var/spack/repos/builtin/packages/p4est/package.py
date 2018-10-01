@@ -36,6 +36,8 @@ class P4est(AutotoolsPackage):
     version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
 
+    variant('openmp', default=False, description='Enable OpenMP')
+
     # build dependencies
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
@@ -71,10 +73,13 @@ class P4est(AutotoolsPackage):
             'F77=%s' % self.spec['mpi'].mpif77
         ]
 
-        try:
-            args.append(
-                '--enable-openmp={0}'.format(self.compiler.openmp_flag))
-        except UnsupportedCompilerFlag:
-            pass
+        if '+openmp' in self.spec:
+            try:
+                args.append(
+                    '--enable-openmp={0}'.format(self.compiler.openmp_flag))
+            except UnsupportedCompilerFlag:
+                args.append('--enable-openmp')
+        else:
+            args.append('--disable-openmp')
 
         return args
