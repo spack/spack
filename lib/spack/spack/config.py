@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 """This module implements Spack's configuration file handling.
 
 This implements Spack's configuration system, which handles merging
@@ -109,6 +107,14 @@ config_defaults = {
 scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
 
 
+def first_existing(dictionary, keys):
+    """Get the value of the first key in keys that is in the dictionary."""
+    try:
+        return next(k for k in keys if k in dictionary)
+    except StopIteration:
+        raise KeyError("None of %s is in dict!" % keys)
+
+
 def _extend_with_default(validator_class):
     """Add support for the 'default' attr for properties and patternProperties.
 
@@ -204,7 +210,10 @@ class SingleFileScope(ConfigScope):
         Arguments:
             schema (dict): jsonschema for the file to read
             yaml_path (list): list of dict keys in the schema where
-                config data can be found.
+                config data can be found;
+
+        Elements of ``yaml_path`` can be tuples or lists to represent an
+        "or" of keys (e.g. "env" or "spack" is ``('env', 'spack')``)
 
         """
         super(SingleFileScope, self).__init__(name, path)
@@ -231,6 +240,13 @@ class SingleFileScope(ConfigScope):
                 return None
 
             for key in self.yaml_path:
+                if self._raw_data is None:
+                    return None
+
+                # support tuples as "or" in the yaml path
+                if isinstance(key, (list, tuple)):
+                    key = first_existing(self._raw_data, key)
+
                 self._raw_data = self._raw_data[key]
 
         # data in self.sections looks (awkwardly) like this:
@@ -246,8 +262,16 @@ class SingleFileScope(ConfigScope):
         #      }
         #   }
         # }
-        return self.sections.setdefault(
-            section, {section: self._raw_data.get(section)})
+        #
+        # UNLESS there is no section, in which case it is stored as:
+        # {
+        #   'config': None,
+        #   ...
+        # }
+        value = self._raw_data.get(section)
+        self.sections.setdefault(
+            section, None if value is None else {section: value})
+        return self.sections[section]
 
     def write_section(self, section):
         _validate(self.sections, self.schema)
@@ -663,14 +687,20 @@ def _validate_section_name(section):
             % (section, " ".join(section_schemas.keys())))
 
 
-def _validate(data, schema):
+def _validate(data, schema, set_defaults=True):
     """Validate data read in from a Spack YAML file.
+
+    Arguments:
+        data (dict or list): data read from a Spack YAML file
+        schema (dict or list): jsonschema to validate data
+        set_defaults (bool): whether to set defaults based on the schema
 
     This leverages the line information (start_mark, end_mark) stored
     on Spack YAML structures.
 
     """
     import jsonschema
+
     if not hasattr(_validate, 'validator'):
         default_setting_validator = _extend_with_default(
             jsonschema.Draft4Validator)
@@ -856,13 +886,22 @@ class ConfigFileError(ConfigError):
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
 
-    def __init__(self, validation_error, data):
+    def __init__(self, validation_error, data, filename=None, line=None):
+        self.filename = filename  # record this for ruamel.yaml
+
         location = '<unknown file>'
-        mark = self._get_mark(validation_error, data)
-        if mark:
-            location = '%s' % mark.name
-            if mark.line is not None:
-                location += ':%d' % (mark.line + 1)
+
+        # spack yaml has its own file/line marks -- try to find them
+        if not filename and not line:
+            mark = self._get_mark(validation_error, data)
+            if mark:
+                filename = mark.name
+                line = mark.line + 1
+
+        if filename:
+            location = '%s' % filename
+        if line is not None:
+            location += ':%d' % line
 
         message = '%s: %s' % (location, validation_error.message)
         super(ConfigError, self).__init__(message)
