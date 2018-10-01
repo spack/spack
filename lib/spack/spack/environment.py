@@ -4,10 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import sys
 import shutil
-import tempfile
+from contextlib import contextmanager
 from six.moves import zip_longest
+
+import jsonschema
+import ruamel.yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -15,8 +19,9 @@ import llnl.util.tty as tty
 import spack.error
 import spack.repo
 import spack.schema.env
+import spack.spec
 import spack.util.spack_json as sjson
-from spack.config import ConfigScope
+import spack.config
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.version import VersionList
 
@@ -26,7 +31,51 @@ active = None
 
 
 #: path where environments are stored in the spack tree
-env_path = fs.join_path(spack.paths.var_path, 'environments')
+env_path = os.path.join(spack.paths.var_path, 'environments')
+
+
+#: Name of the input yaml file in an environment
+env_yaml_name = 'env.yaml'
+
+
+#: Name of the lock file with concrete specs
+env_lock_name = 'env.lock'
+
+
+#: default env.yaml file to put in new environments
+default_env_yaml = """\
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+env:
+  # add package specs to the `specs` list
+  specs:
+  -
+"""
+#: regex for validating enviroment names
+valid_environment_name_re = r'^\w[\w-]*$'
+
+#: version of the lockfile format. Must increase monotonically.
+lockfile_format_version = 1
+
+#: legal first keys in an environment.yaml file
+env_schema_keys = ('env', 'spack')
+
+#: jsonschema validator for environments
+_validator = None
+
+
+def valid_env_name(name):
+    return re.match(valid_environment_name_re, name)
+
+
+def validate_env_name(name):
+    if not valid_env_name(name):
+        raise ValueError((
+            "'%s': names must start with a letter, and only contain "
+            "letters, numbers, _, and -.") % name)
+    return name
 
 
 def activate(name, exact=False):
@@ -48,9 +97,10 @@ def activate(name, exact=False):
 
     active = read(name)
     prepare_config_scope(active)
-    prepare_repository(active, use_repo=exact)
+    if exact:
+        spack.repo.path.put_first(active.repo)
 
-    tty.msg("Using environmennt '%s'" % active.name)
+    tty.debug("Using environmennt '%s'" % active.name)
 
 
 def deactivate():
@@ -68,21 +118,50 @@ def deactivate():
 
 def root(name):
     """Get the root directory for an environment by name."""
-    return fs.join_path(env_path, name)
+    return os.path.join(env_path, name)
 
 
-def get_dotenv_dir(env_root):
+def exists(name):
+    """Whether an environment exists or not."""
+    return os.path.exists(root(name))
+
+
+def manifest_path(name):
+    return os.path.join(root(name), env_yaml_name)
+
+
+def lockfile_path(name):
+    return os.path.join(root(name), env_lock_name)
+
+
+def dotenv_path(env_root):
     """@return Directory in an environment that is owned by Spack"""
-    return fs.join_path(env_root, '.env')
+    return os.path.join(env_root, '.env')
 
 
-def get_write_paths(env_root):
-    """Determines the names of temporary and permanent directories to
-    write machine-generated environment info."""
-    tmp_new = fs.join_path(env_root, '.env.new')
-    dest = get_dotenv_dir(env_root)
-    tmp_old = fs.join_path(env_root, '.env.old')
-    return tmp_new, dest, tmp_old
+def repos_path(dotenv_path):
+    return os.path.join(dotenv_path, 'repos')
+
+
+def log_path(dotenv_path):
+    return os.path.join(dotenv_path, 'logs')
+
+
+def config_dict(yaml_data):
+    """Get the configuration scope section out of an env.yaml"""
+    key = spack.config.first_existing(yaml_data, env_schema_keys)
+    return yaml_data[key]
+
+
+def list_environments():
+    """List the names of environments that currently exist."""
+    candidates = sorted(os.listdir(env_path))
+    names = []
+    for candidate in candidates:
+        yaml_path = os.path.join(env_path, candidate, env_yaml_name)
+        if valid_env_name(candidate) and os.path.exists(yaml_path):
+            names.append(candidate)
+    return names
 
 
 def _reset_os_and_compiler(spec, compiler=None):
@@ -110,94 +189,231 @@ def _upgrade_dependency_version(spec, dep_name):
     return spec
 
 
-class Environment(object):
-    def clear(self):
-        self.user_specs = list()
-        self.concretized_order = list()
-        self.specs_by_hash = dict()
+def validate(data, filename=None):
+    global _validator
+    if _validator is None:
+        _validator = jsonschema.Draft4Validator(spack.schema.env.schema)
+    try:
+        _validator.validate(data)
+    except jsonschema.ValidationError as e:
+        raise spack.config.ConfigFormatError(
+            e, data, filename, e.instance.lc.line + 1)
 
-    def __init__(self, name):
-        self.name = name
+
+def _read_yaml(str_or_file):
+    """Read YAML from a file for round-trip parsing."""
+    data = ruamel.yaml.load(str_or_file, ruamel.yaml.RoundTripLoader)
+    filename = getattr(str_or_file, 'name', None)
+    validate(data, filename)
+    return data
+
+
+def _write_yaml(data, str_or_file):
+    """Write YAML to a file preserving comments and dict order."""
+    filename = getattr(str_or_file, 'name', None)
+    validate(data, filename)
+    ruamel.yaml.dump(data, str_or_file, Dumper=ruamel.yaml.RoundTripDumper,
+                     default_flow_style=False)
+
+
+class Environment(object):
+    def __init__(self, name, env_yaml=None):
+        """Create a new environment, optionally with an initialization file.
+
+        Arguments:
+            name (str): name for this environment
+            env_yaml (str or file): raw YAML or a file to initialize the
+                environment
+        """
+        self.name = validate_env_name(name)
         self.clear()
 
-        # Default config
-        self.yaml = {
-            'configs': ['<env>'],
-            'specs': []
-        }
+        # use read_yaml to preserve comments
+        if env_yaml is None:
+            env_yaml = default_env_yaml
+        self.yaml = _read_yaml(env_yaml)
+
+        # initialize user specs from the YAML
+        spec_list = config_dict(self.yaml).get('specs')
+        if spec_list:
+            self.user_specs = [Spec(s) for s in spec_list if s is not None]
+
+    def clear(self):
+        self.user_specs = []              # current user specs
+        self.concretized_user_specs = []  # user specs from last concretize
+        self.concretized_order = []       # roots of last concretize, in order
+        self.specs_by_hash = {}           # concretized specs by hash
+        self._repo = None                 # RepoPath for this env (memoized)
 
     @property
     def path(self):
         return root(self.name)
 
-    def repo_path(self):
-        return fs.join_path(get_dotenv_dir(self.path), 'repo')
+    @property
+    def manifest_path(self):
+        return manifest_path(self.name)
+
+    @property
+    def lock_path(self):
+        return lockfile_path(self.name)
+
+    @property
+    def dotenv_path(self):
+        return dotenv_path(self.path)
+
+    @property
+    def repos_path(self):
+        return repos_path(self.dotenv_path)
+
+    @property
+    def repo(self):
+        if self._repo is None:
+            self._repo = make_repo_path(self.repos_path)
+        return self._repo
+
+    def included_config_scopes(self):
+        """List of included configuration scopes from the environment.
+
+        Scopes are in order from lowest to highest precedence, i.e., the
+        order they should be pushed on the stack, but the opposite of the
+        order they appaer in the env.yaml file.
+        """
+        scopes = []
+
+        # load config scopes added via 'include:', in reverse so that
+        # highest-precedence scopes are last.
+        includes = config_dict(self.yaml).get('include', [])
+        for i, config_path in enumerate(reversed(includes)):
+            # allow paths to contain environment variables
+            config_path = config_path.format(**os.environ)
+
+            # treat relative paths as relative to the environment
+            if not os.path.isabs(config_path):
+                config_path = os.path.join(self.path, config_path)
+                config_path = os.path.normpath(os.path.realpath(config_path))
+
+            if os.path.isdir(config_path):
+                # directories are treated as regular ConfigScopes
+                config_name = 'env:%s:%s' % (
+                    self.name, os.path.basename(config_path))
+                scope = spack.config.ConfigScope(config_name, config_path)
+            else:
+                # files are assumed to be SingleFileScopes
+                base, ext = os.path.splitext(os.path.basename(config_path))
+                config_name = 'env:%s:%s' % (self.name, base)
+                scope = spack.config.SingleFileScope(
+                    config_name, config_path, spack.schema.merged.schema)
+
+            scopes.append(scope)
+
+        return scopes
+
+    def env_file_config_scope(self):
+        """Get the configuration scope for the environment's manifest file."""
+        config_name = 'env:%s' % self.name
+        return spack.config.SingleFileScope(config_name,
+                                            self.manifest_path,
+                                            spack.schema.env.schema,
+                                            [env_schema_keys])
+
+    def config_scopes(self):
+        """A list of all configuration scopes for this environment."""
+        return self.included_config_scopes() + [self.env_file_config_scope()]
+
+    def destroy(self):
+        """Remove this environment from Spack entirely."""
+        shutil.rmtree(self.path)
 
     def add(self, user_spec, report_existing=True):
-        """Add a single user_spec (non-concretized) to the Environment"""
-        query_spec = Spec(user_spec)
-        existing = set(x for x in self.user_specs
-                       if Spec(x).name == query_spec.name)
-        if existing:
-            if report_existing:
-                tty.die("Package {0} was already added to {1}"
-                        .format(query_spec.name, self.name))
-            else:
-                tty.msg("Package {0} was already added to {1}"
-                        .format(query_spec.name, self.name))
-        else:
-            tty.msg('Adding %s to environment %s' % (user_spec, self.name))
-            self.user_specs.append(user_spec)
+        """Add a single user_spec (non-concretized) to the Environment
+
+        Returns:
+            (bool): True if the spec was added, False if it was already
+                present and did not need to be added
+
+        """
+        spec = Spec(user_spec)
+
+        existing = set(s for s in self.user_specs if s.name == spec.name)
+        if not existing:
+            self.user_specs.append(spec)
+        return bool(not existing)
 
     def remove(self, query_spec):
         """Remove specs from an environment that match a query_spec"""
         query_spec = Spec(query_spec)
-        match_index = -1
-        for i, spec in enumerate(self.user_specs):
-            if Spec(spec).name == query_spec.name:
-                match_index = i
-                break
+        matches = [s for s in self.user_specs if s.satisfies(query_spec)]
 
-        if match_index < 0:
-            tty.die("Not found: {0}".format(query_spec))
+        if not matches:
+            raise EnvError("Not found: {0}".format(query_spec))
 
-        del self.user_specs[match_index]
-        if match_index < len(self.concretized_order):
-            spec_hash = self.concretized_order[match_index]
-            del self.concretized_order[match_index]
-            del self.specs_by_hash[spec_hash]
+        for spec in matches:
+            self.user_specs.remove(spec)
+            if spec in self.concretized_user_specs:
+                i = self.concretized_user_specs.index(spec)
+                del self.concretized_user_specs[i]
+
+                dag_hash = self.concretized_order[i]
+                del self.concretized_order[i]
+                del self.specs_by_hash[dag_hash]
 
     def concretize(self, force=False):
-        """Concretize user_specs in an Environment, creating (fully
-        concretized) specs.
+        """Concretize user_specs in this environment.
 
-        force: bool
-           If set, re-concretize ALL specs, even those that were
-           already concretized.
+        Only concretizes specs that haven't been concretized yet unless
+        force is ``True``.
+
+        This only modifies the environment in memory. ``write()`` will
+        write out a lockfile containing concretized specs.
+
+        Arguments:
+            force (bool): re-concretize ALL specs, even those that were
+               already concretized
+
+        Return:
+            (list): list of newly concretized specs
+
         """
-
         if force:
             # Clear previously concretized specs
-            self.specs_by_hash = dict()
-            self.concretized_order = list()
+            self.concretized_user_specs = []
+            self.concretized_order = []
+            self.specs_by_hash = {}
 
-        num_concretized = len(self.concretized_order)
-        new_specs = list()
-        for user_spec in self.user_specs[num_concretized:]:
-            tty.msg('Concretizing %s' % user_spec)
+        # keep any concretized specs whose user specs are still in the manifest
+        new_concretized_user_specs = []
+        new_concretized_order = []
+        new_specs_by_hash = {}
+        for s, h in zip(self.concretized_user_specs, self.concretized_order):
+            if s in self.user_specs:
+                new_concretized_user_specs.append(s)
+                new_concretized_order.append(h)
+                new_specs_by_hash[h] = self.specs_by_hash[h]
 
-            spec = spack.cmd.parse_specs(user_spec)[0]
-            spec.concretize()
-            new_specs.append(spec)
-            dag_hash = spec.dag_hash()
-            self.specs_by_hash[dag_hash] = spec
-            self.concretized_order.append(spec.dag_hash())
+        # concretize any new user specs that we haven't concretized yet
+        new_specs = []
+        for uspec in self.user_specs:
+            if uspec not in new_concretized_user_specs:
+                tty.msg('Concretizing %s' % uspec)
+                cspec = uspec.concretized()
+                dag_hash = cspec.dag_hash()
 
-            # Display concretized spec to the user
-            sys.stdout.write(spec.tree(
-                recurse_dependencies=True, install_status=True,
-                hashlen=7, hashes=True))
+                new_concretized_user_specs.append(uspec)
+                new_concretized_order.append(dag_hash)
+                new_specs_by_hash[dag_hash] = cspec
+                new_specs.append(cspec)
 
+                # Display concretized spec to the user
+                sys.stdout.write(cspec.tree(
+                    recurse_dependencies=True, install_status=True,
+                    hashlen=7, hashes=True))
+
+        # save the new concretized state
+        self.concretized_user_specs = new_concretized_user_specs
+        self.concretized_order = new_concretized_order
+        self.specs_by_hash = new_specs_by_hash
+
+        # return only the newly concretized specs
         return new_specs
 
     def install(self, install_args=None):
@@ -205,12 +421,8 @@ class Environment(object):
            specs in an Environment."""
 
         # Make sure log directory exists
-        logs = fs.join_path(self.path, 'logs')
-        try:
-            os.makedirs(logs)
-        except OSError:
-            if not os.path.isdir(logs):
-                raise
+        logs_dir = log_path(self.dotenv_path)
+        fs.mkdirp(logs_dir)
 
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
@@ -224,13 +436,11 @@ class Environment(object):
                 spec.package.do_install(**kwargs)
 
                 # Link the resulting log file into logs dir
-                logname = '%s-%s.log' % (spec.name, spec.dag_hash(7))
-                logpath = fs.join_path(logs, logname)
-                try:
-                    os.remove(logpath)
-                except OSError:
-                    pass
-                os.symlink(spec.package.build_log_path, logpath)
+                build_log_link = os.path.join(
+                    logs_dir, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+                if os.path.exists(build_log_link):
+                    os.remove(build_log_link)
+                os.symlink(spec.package.build_log_path, build_log_link)
 
     def uninstall(self, args):
         """Uninstall all the specs in an Environment."""
@@ -238,7 +448,7 @@ class Environment(object):
         args.all = False
         spack.cmd.uninstall.uninstall_specs(args, specs)
 
-    def list(self, stream, **kwargs):
+    def status(self, stream, **kwargs):
         """List the specs in an environment."""
         for user_spec, concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
@@ -310,181 +520,181 @@ class Environment(object):
 
         return spec_list
 
-    def to_dict(self):
-        """Used in serializing to JSON"""
-        concretized_order = list(self.concretized_order)
-        concrete_specs = dict()
+    def _to_lockfile_dict(self):
+        """Create a dictionary to store a lockfile for this environment."""
+        concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                if s.dag_hash() not in concrete_specs:
-                    concrete_specs[s.dag_hash()] = (
-                        s.to_node_dict(all_deps=True))
-        format = {
-            'user_specs': self.user_specs,
-            'concretized_order': concretized_order,
+                dag_hash = s.dag_hash()
+                if dag_hash not in concrete_specs:
+                    concrete_specs[dag_hash] = s.to_node_dict(all_deps=True)
+
+        hash_spec_list = zip(
+            self.concretized_order, self.concretized_user_specs)
+
+        # this is the lockfile we'll write out
+        data = {
+            # metadata about the format
+            '_meta': {
+                'file-type': 'spack-lockfile',
+                'lockfile-version': lockfile_format_version,
+            },
+
+            # users specs + hashes are the 'roots' of the environment
+            'roots': [{
+                'hash': h,
+                'spec': str(s)
+            } for h, s in hash_spec_list],
+
+            # Concrete specs by hash, including dependencies
             'concrete_specs': concrete_specs,
         }
-        return format
 
-    @staticmethod
-    def from_dict(name, d):
-        """Used in deserializing from JSON"""
-        env = Environment(name)
-        env.user_specs = list(d['user_specs'])
-        env.concretized_order = list(d['concretized_order'])
-        specs_dict = d['concrete_specs']
+        return data
 
-        hash_to_node_dict = specs_dict
-        root_hashes = set(env.concretized_order)
+    def _read_lockfile_dict(self, d):
+        """Read a lockfile dictionary into this environment."""
+        roots = d['roots']
+        self.concretized_user_specs = [Spec(r['spec']) for r in roots]
+        self.concretized_order = [r['hash'] for r in roots]
+
+        json_specs_by_hash = d['concrete_specs']
+        root_hashes = set(self.concretized_order)
 
         specs_by_hash = {}
-        for dag_hash, node_dict in hash_to_node_dict.items():
+        for dag_hash, node_dict in json_specs_by_hash.items():
             specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
 
-        for dag_hash, node_dict in hash_to_node_dict.items():
+        for dag_hash, node_dict in json_specs_by_hash.items():
             for dep_name, dep_hash, deptypes in (
                     Spec.dependencies_from_node_dict(node_dict)):
                 specs_by_hash[dag_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
-        env.specs_by_hash = dict(
+        self.specs_by_hash = dict(
             (x, y) for x, y in specs_by_hash.items() if x in root_hashes)
 
-        return env
+    def write(self, dump_packages=None):
+        """Writes an in-memory environment to its location on disk.
 
+        Arguments:
+            dump_packages (list of Spec): specs of packages whose
+                package.py files should be written to the env's repo
+        """
+        # ensure path in var/spack/environments
+        fs.mkdirp(self.path)
 
-def check_consistency(name):
-    """check whether an environment directory is consistent"""
-    env_root = root(name)
-    tmp_new, dest, tmp_old = get_write_paths(env_root)
-    if os.path.exists(tmp_new) or os.path.exists(tmp_old):
-        tty.die("Partial write state, run 'spack env repair'")
+        if self.specs_by_hash:
+            # ensure the prefix/.env directory exists
+            tmp_env = '%s.tmp' % self.dotenv_path
+            fs.mkdirp(tmp_env)
 
+            # dump package.py files for specified specs
+            tmp_repos_path = repos_path(tmp_env)
+            dump_packages = dump_packages or []
+            for spec in dump_packages:
+                for dep in spec.traverse():
+                    if not dep.concrete:
+                        raise ValueError('specs passed to environment.write() '
+                                         'must be concrete!')
 
-def write(environment, new_repo=None):
-    """Writes an in-memory environment back to its location on disk,
-    in an atomic manner."""
+                    root = os.path.join(tmp_repos_path, dep.namespace)
+                    repo = spack.repo.create_or_construct(root, dep.namespace)
+                    pkg_dir = repo.dirname_for_package_name(dep.name)
 
-    tmp_new, dest, tmp_old = get_write_paths(root(environment.name))
+                    fs.mkdirp(pkg_dir)
+                    spack.repo.path.dump_provenance(dep, pkg_dir)
 
-    # Write the machine-generated stuff
-    fs.mkdirp(tmp_new)
-    # create one file for the environment object
-    with open(fs.join_path(tmp_new, 'environment.json'), 'w') as f:
-        sjson.dump(environment.to_dict(), stream=f)
+            # move the new .env directory into place.
+            move_move_rm(tmp_env, self.dotenv_path)
 
-    dest_repo_dir = fs.join_path(tmp_new, 'repo')
-    if new_repo:
-        shutil.copytree(new_repo.root, dest_repo_dir)
-    elif os.path.exists(environment.repo_path()):
-        shutil.copytree(environment.repo_path(), dest_repo_dir)
-
-    # Swap in new directory atomically
-    if os.path.exists(dest):
-        shutil.move(dest, tmp_old)
-    shutil.move(tmp_new, dest)
-    if os.path.exists(tmp_old):
-        shutil.rmtree(tmp_old)
-
-
-def repair(environment_name):
-    """Recovers from crash during critical section of write().
-    Possibilities:
-
-        tmp_new, dest
-        tmp_new, tmp_old
-        tmp_old, dest
-    """
-    tmp_new, dest, tmp_old = get_write_paths(root(environment_name))
-    if os.path.exists(tmp_old):
-        if not os.path.exists(dest):
-            shutil.move(tmp_new, dest)
+            # write the lock file last
+            with write_tmp_and_move(self.lock_path) as f:
+                sjson.dump(self._to_lockfile_dict(), stream=f)
         else:
-            shutil.rmtree(tmp_old)
-        tty.info("Previous update completed")
-    elif os.path.exists(tmp_new):
-        tty.info("Previous update did not complete")
-    else:
-        tty.info("Previous update may have completed")
+            if os.path.exists(self.lock_path):
+                os.unlink(self.lock_path)
 
-    if os.path.exists(tmp_new):
-        shutil.rmtree(tmp_new)
+        # invalidate _repo cache
+        self._repo = None
+
+        # put the new user specs in the YAML
+        yaml_spec_list = config_dict(self.yaml).setdefault('specs', [])
+        yaml_spec_list[:] = [str(s) for s in self.user_specs]
+
+        # if all that worked, write out the manifest file at the top level
+        with write_tmp_and_move(self.manifest_path) as f:
+            _write_yaml(self.yaml, f)
 
 
-def read(environment_name):
+def read(env_name):
     """Read environment state from disk."""
-    # Check that env is in a consistent state on disk
-    env_root = root(environment_name)
-
+    env_root = root(env_name)
     if not os.path.isdir(env_root):
-        raise EnvError("no such environment '%s'" % environment_name)
+        raise EnvError("no such environment '%s'" % env_name)
     if not os.access(env_root, os.R_OK):
-        raise EnvError("can't read environment '%s'" % environment_name)
+        raise EnvError("can't read environment '%s'" % env_name)
 
-    # Read env.yaml file
-    env_yaml = spack.config._read_config_file(
-        fs.join_path(env_root, 'env.yaml'),
-        spack.schema.env.schema)
+    # read yaml file
+    with open(manifest_path(env_name)) as f:
+        env = Environment(env_name, f.read())
 
-    dotenv_dir = get_dotenv_dir(env_root)
-    with open(fs.join_path(dotenv_dir, 'environment.json'), 'r') as f:
-        environment_dict = sjson.load(f)
-    environment = Environment.from_dict(environment_name, environment_dict)
-    if env_yaml:
-        environment.yaml = env_yaml['env']
+    # read lockfile, if it exists
+    lock_path = lockfile_path(env_name)
+    if os.path.exists(lock_path):
+        with open(lock_path) as f:
+            lockfile_dict = sjson.load(f)
+        env._read_lockfile_dict(lockfile_dict)
 
-    return environment
-
-
-def dump_to_environment_repo(spec, repo):
-    dest_pkg_dir = repo.dirname_for_package_name(spec.name)
-    if not os.path.exists(dest_pkg_dir):
-        spack.repo.path.dump_provenance(spec, dest_pkg_dir)
+    return env
 
 
-def prepare_repository(environment, remove=None, use_repo=False):
-    """Adds environment's repository to the global search path of repos"""
-    repo_stage = tempfile.mkdtemp()
-    new_repo_dir = fs.join_path(repo_stage, 'repo')
-    if os.path.exists(environment.repo_path()):
-        shutil.copytree(environment.repo_path(), new_repo_dir)
-    else:
-        spack.repo.create_repo(new_repo_dir, environment.name)
-    if remove:
-        remove_dirs = []
-        repo = spack.repo.Repo(new_repo_dir)
-        for pkg_name in remove:
-            remove_dirs.append(repo.dirname_for_package_name(pkg_name))
-        for d in remove_dirs:
-            shutil.rmtree(d)
-    repo = spack.repo.Repo(new_repo_dir)
-    if use_repo:
-        spack.repo.put_first(repo)
-    return repo
+def move_move_rm(src, dest):
+    """Move dest out of the way, put src in its place."""
+
+    dirname = os.path.dirname(dest)
+    basename = os.path.basename(dest)
+    old = os.path.join(dirname, '.%s.old' % basename)
+
+    if os.path.exists(dest):
+        shutil.move(dest, old)
+    shutil.move(src, dest)
+    if os.path.exists(old):
+        shutil.rmtree(old)
 
 
-def prepare_config_scope(environment):
-    """Adds environment's scope to the global search path
-    of configuration scopes"""
+@contextmanager
+def write_tmp_and_move(filename):
+    """Write to a temporary file, then move into place."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    tmp = os.path.join(dirname, '.%s.tmp' % basename)
+    with open(tmp, 'w') as f:
+        yield f
+    shutil.move(tmp, filename)
 
-    # Load up configs
-    for config_spec in environment.yaml['configs']:
-        config_name = os.path.split(config_spec)[1]
-        if config_name == '<env>':
-            # Use default config for the environment; doesn't have to exist
-            config_dir = fs.join_path(environment.path, 'config')
-            if not os.path.isdir(config_dir):
+
+def make_repo_path(root):
+    """Make a RepoPath from the repo subdirectories in an environment."""
+    path = spack.repo.RepoPath()
+
+    if os.path.isdir(root):
+        for repo_root in os.listdir(root):
+            repo_root = os.path.join(root, repo_root)
+
+            if not os.path.isdir(repo_root):
                 continue
-            config_name = environment.name
-        else:
-            # Use external user-provided config
-            config_dir = os.path.normpath(os.path.join(
-                environment.path, config_spec.format(**os.environ)))
-            if not os.path.isdir(config_dir):
-                tty.die('Spack config %s (%s) not found' %
-                        (config_name, config_dir))
 
-        spack.config.config.push_scope(ConfigScope(config_name, config_dir))
+            repo = spack.repo.Repo(repo_root)
+            path.put_last(repo)
+
+    return path
+
+
+def prepare_config_scope(env):
+    """Add env's scope to the global configuration search path."""
+    for scope in env.config_scopes():
+        spack.config.config.push_scope(scope)
 
 
 class EnvError(spack.error.SpackError):
