@@ -316,7 +316,9 @@ class Gcc(AutotoolsPackage):
             if files:
                 symlink(join_path(files[0], 'newlib'), 'newlib')
 
-            self.build_directory = 'spack-build-nvptx'
+            # self.build_directory = 'spack-build-nvptx'
+            mkdir('spack-build-nvptx')
+            cd('spack-build-nvptx')
 
             options = ['--prefix={0}'.format(prefix),
                        '--disable-multilib',
