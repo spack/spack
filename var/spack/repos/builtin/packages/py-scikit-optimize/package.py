@@ -44,20 +44,17 @@ class PyScikitOptimize(PythonPackage):
     """Scikit-Optimize, or skopt, is a simple and efficient library to minimize
        (very) expensive and noisy black-box functions. It implements several
        methods for sequential model-based optimization."""
-    # FIXME: Add a proper url for your package's homepage here.
+
     homepage = "http://scikit-optimize.github.io/"
     url      = "https://github.com/scikit-optimize/scikit-optimize/archive/v0.5.2.tar.gz"
 
     version('0.5.2', sha256='f2cba57e20787a24c6d18d8ae1505838f0e9ea7594f1f3b12cdf8e97348752a7')
 
-    # FIXME: Add dependencies if required.
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-nose', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
         args = []
         return args
