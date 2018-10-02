@@ -61,14 +61,16 @@ class EcpProxyApps(Package):
     # Added with release 1.1
     depends_on('examinimd@1.0', when='@1.1:')
 
+    depends_on('macsio@1.0', when='@1.0:')
+    depends_on('nekbone@17.0', when='@1.0:')
+    depends_on('swfft@1.0', when='@1.0:')
+
+    # Dependence for versions 1.0:1.1
     depends_on('amg@1.0', when='@1.0:1.1')
     depends_on('candle-benchmarks@0.0', when='@1.0:1.1')
     depends_on('laghos@1.0', when='@1.0:1.1')
-    depends_on('macsio@1.0', when='@1.0:')
     depends_on('miniamr@1.4.0', when='@1.0:1.1')
-    depends_on('nekbone@17.0', when='@1.0:')
     depends_on('sw4lite@1.0', when='@1.0:1.1')
-    depends_on('swfft@1.0', when='@1.0:')
     depends_on('xsbench@14', when='@1.0:1.1')
 
     # Removed after release 1.1
