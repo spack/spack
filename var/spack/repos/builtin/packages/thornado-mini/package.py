@@ -86,7 +86,8 @@ class ThornadoMini(MakefilePackage):
         return targets
 
     def install(self, spec, prefix):
-        install_tree('Workflow', prefix.Workflow)
-        install_tree('Documents', prefix.Documents)
-        install_tree('DeleptonizationProblem', prefix.DeleptonizationProblem)
-        install('README.md', prefix.Documents)
+        install_tree('Documents', prefix.docs)
+        install('README.md', prefix.docs)
+
+        mkdirp(prefix.bin)
+        install('DeleptonizationProblem/Executables/DeleptonizationProblem1D_%s' % os.environ['THORNADO_MACHINE'], prefix.bin)
