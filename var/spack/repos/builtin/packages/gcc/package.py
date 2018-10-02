@@ -104,6 +104,15 @@ class Gcc(AutotoolsPackage):
     depends_on('nvptx-tools', when='+nvptx')
     depends_on('cuda', when='+nvptx')
 
+    resource(
+             name='newlib',
+             url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+             sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
+             destination='newlibsource',
+             when='+nvptx'
+            )
+
+
     # TODO: integrate these libraries.
     # depends_on('ppl')
     # depends_on('cloog')
@@ -301,14 +310,11 @@ class Gcc(AutotoolsPackage):
 
         if spec.satisfies('+nvptx'):
 
-            resource(
-                name='newlib',
-                url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
-                destination='newlib-source'
-            )
+            pattern = join_path(self.stage.source_path, 'newlibsource', '*')
+            files = glob.glob(pattern)
 
-            symlink('newlib-source/newlib', 'newlib')
-
+            if files:
+                symlink(join_path(files[0], 'newlib'), 'newlib')
 
             self.build_directory = 'spack-build-nvptx'
 
