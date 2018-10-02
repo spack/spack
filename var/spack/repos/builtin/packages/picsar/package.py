@@ -48,6 +48,8 @@ class Picsar(MakefilePackage):
     depends_on('mpi')
     depends_on('fftw@3.0: +mpi', when='+prod_spectral')
 
+    parallel = False
+
     @property
     def build_targets(self):
         targets = []
@@ -83,9 +85,6 @@ class Picsar(MakefilePackage):
         targets.append('SYS = default')
 
         return targets
-
-    def build(self, spec, prefix):
-        make(parallel=False)
 
     def install(self, spec, prefix):
         mkdirp(prefix.docs)
