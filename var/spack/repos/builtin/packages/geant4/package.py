@@ -50,6 +50,7 @@ class Geant4(CMakePackage):
     variant('opengl', default=False, description='Optional OpenGL support')
     variant('x11', default=False, description='Optional X11 support')
     variant('motif', default=False, description='Optional motif support')
+    variant('threads', default=True, description='Build with multithreading')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -86,7 +87,6 @@ class Geant4(CMakePackage):
             '-DGEANT4_USE_G3TOG4=ON',
             '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
-            '-DGEANT4_BUILD_MULTITHREADED=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
@@ -116,6 +116,9 @@ class Geant4(CMakePackage):
             options.append('-DGEANT4_USE_USOLIDS=ON')
             options.append('-DUSolids_DIR=%s' % spec[
                 'vecgeom'].prefix.lib.CMake.USolids)
+
+        if '+threads' in spec:
+            options.append('-DGEANT4_BUILD_MULTITHREADED=ON')
 
         return options
 
