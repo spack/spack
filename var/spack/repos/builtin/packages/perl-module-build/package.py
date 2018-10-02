@@ -34,7 +34,7 @@ class PerlModuleBuild(PerlPackage):
     require a make on your system - most of the Module::Build code is
     pure-perl and written in a very cross-platform way.
     """
-
+    
     homepage = "http://search.cpan.org/perldoc/Module::Build"
     url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/Module-Build-0.4224.tar.gz"
     
