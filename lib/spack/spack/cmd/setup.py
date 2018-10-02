@@ -84,7 +84,8 @@ def write_spconfig(package, dirty):
     env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
     env['CC'] = os.environ['SPACK_CC']
     env['CXX'] = os.environ['SPACK_CXX']
-    env['FC'] = os.environ['SPACK_FC']
+    if 'SPACK_FC' in os.environ:
+        env['FC'] = os.environ['SPACK_FC']
 
     setup_fname = 'spconfig.py'
     with open(setup_fname, 'w') as fout:
