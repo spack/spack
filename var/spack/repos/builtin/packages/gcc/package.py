@@ -102,6 +102,7 @@ class Gcc(AutotoolsPackage):
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
     depends_on('nvptx-tools', when='+nvptx')
+    depends_on('cuda', when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -293,16 +294,36 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             options.append('--with-build-config=bootstrap-debug')
 
-        # nvptx-none offloading
+        # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
+            options.append('--enable-offload-targets=nvptx-none')
+            options.append('--with-cuda-driver-include={0}'.format(spec['cuda'].prefix.include))
+            options.append('--with-cuda-driver-lib={0}'.format(spec['cuda'].prefix.lib64))
+	    options.append('--disable-bootstrap')
+            options.append('--disable-multilib')
+        return options
+
+    # run configure/make/make(install) for the nvptx-none target
+    # before running the host compiler phases
+    @run_before('configure')
+    def nvptx_install(self):
+
+        spec = self.spec        
+
+        if spec.satisfies('+nvptx'):
+
+            options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+
             options.append('--target=nvptx-none')
             options.append('--with-build-time-tools={0}'.format(join_path(spec['nvptx-tools'].prefix,'nvptx-none','bin')))
             options.append('--enable-as-accelerator-for=x86_64-pc-linux-gnu')
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
             options.append('--disable-lto')
-
-        return options
+    
+            configure()
+            make()
+            make(install)
 
     @property
     def build_targets(self):
