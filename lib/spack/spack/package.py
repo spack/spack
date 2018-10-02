@@ -308,31 +308,6 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
-def inject_flags(pkg, name, flags):
-    """
-    flag_handler that injects all flags through the compiler wrapper.
-    """
-    return (flags, None, None)
-
-
-def env_flags(pkg, name, flags):
-    """
-    flag_handler that adds all flags to canonical environment variables.
-    """
-    return (None, flags, None)
-
-
-def build_system_flags(pkg, name, flags):
-    """
-    flag_handler that passes flags to the build system arguments.  Any
-    package using `build_system_flags` must also implement
-    `flags_to_build_system_args`, or derive from a class that
-    implements it.  Currently, AutotoolsPackage and CMakePackage
-    implement it.
-    """
-    return (None, None, flags)
-
-
 class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
@@ -1839,6 +1814,31 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
+    @classmethod
+    def inject_flags(pkg, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
+        return (flags, None, None)
+
+    @classmethod
+    def env_flags(pkg, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
+        return (None, flags, None)
+
+    @classmethod
+    def build_system_flags(pkg, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.  Any
+        package using `build_system_flags` must also implement
+        `flags_to_build_system_args`, or derive from a class that
+        implements it.  Currently, AutotoolsPackage and CMakePackage
+        implement it.
+        """
+        return (None, None, flags)
+
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package.
 
@@ -2262,6 +2262,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+
+
+inject_flags = PackageBase.inject_flags
+env_flags = PackageBase.env_flags
+build_system_flags = PackageBase.build_system_flags
 
 
 class Package(PackageBase):
