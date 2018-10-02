@@ -335,7 +335,7 @@ class Gcc(AutotoolsPackage):
             
             configure(*options)
             make()
-            make(install)
+            make('install')
 
     @property
     def build_targets(self):
