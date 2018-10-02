@@ -51,10 +51,9 @@ class PyYtopt(PythonPackage):
 
     # FIXME: Add dependencies if required.
     # depends_on('py-setuptools', type='build')
-    depends_on('py-scikit-learn',type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
     depends_on('py-scikit-optimize', type=('build', 'run'))	
+
     def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
         args = []
         return args
