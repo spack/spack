@@ -314,6 +314,8 @@ class Gcc(AutotoolsPackage):
 
         if spec.satisfies('+nvptx'):
 
+            self.build_directory = 'spack-build-nvptx'
+
             options = ['--prefix={0}'.format(prefix),
                        '--disable-multilib',
                        '--enable-languages={0}'.format(
