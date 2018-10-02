@@ -8,6 +8,7 @@ class Claw(CMakePackage):
 
     homepage = 'https://claw-project.github.io/'
     git      = 'https://github.com/claw-project/claw-compiler.git'
+    maintainers = ['clementval']
 
     version('1.1.0', tag='v1.1.0', submodules=True)
 
