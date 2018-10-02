@@ -16,6 +16,7 @@ class Claw(CMakePackage):
     depends_on('java@7:')
     depends_on('ant@1.9:')
     depends_on('libxml2')
+    depends_on('bison')
 
     def cmake_args(self):
         args = []
