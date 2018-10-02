@@ -103,6 +103,7 @@ class Gcc(AutotoolsPackage):
     depends_on('zip', type='build', when='languages=java')
     depends_on('nvptx-tools', when='+nvptx')
     depends_on('cuda', when='+nvptx')
+    depends_on('gettext', when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -307,12 +308,20 @@ class Gcc(AutotoolsPackage):
     # before running the host compiler phases
     @run_before('configure')
     def nvptx_install(self):
-
+        print 'in nvptx_install phase'
+        # print self.configure_args()
         spec = self.spec        
 
         if spec.satisfies('+nvptx'):
 
-            options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+            options = ['--prefix={0}'.format(prefix),
+                       '--disable-multilib',
+                       '--enable-languages={0}'.format(
+                       ','.join(spec.variants['languages'].value)),
+                       '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+                       '--with-gmp={0}'.format(spec['gmp'].prefix),
+                       '--with-quad'
+           ]
 
             options.append('--target=nvptx-none')
             options.append('--with-build-time-tools={0}'.format(join_path(spec['nvptx-tools'].prefix,'nvptx-none','bin')))
@@ -320,8 +329,8 @@ class Gcc(AutotoolsPackage):
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
             options.append('--disable-lto')
-    
-            configure()
+            
+            configure(*options)
             make()
             make(install)
 
