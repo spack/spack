@@ -103,7 +103,6 @@ class Gcc(AutotoolsPackage):
     depends_on('zip', type='build', when='languages=java')
     depends_on('nvptx-tools', when='+nvptx')
     depends_on('cuda', when='+nvptx')
-    depends_on('gettext', when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -235,16 +234,6 @@ class Gcc(AutotoolsPackage):
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
 
-        if spec.satisfies('+nvptx'):
-            resource(
-                name='newlib',
-                url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
-                destination='newlib-source'
-            )
-
-            symlink('newlib-source/newlib', 'newlib')
-
-
     def configure_args(self):
         spec = self.spec
 
@@ -308,11 +297,18 @@ class Gcc(AutotoolsPackage):
     # before running the host compiler phases
     @run_before('configure')
     def nvptx_install(self):
-        print 'in nvptx_install phase'
-        # print self.configure_args()
         spec = self.spec        
 
         if spec.satisfies('+nvptx'):
+
+            resource(
+                name='newlib',
+                url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+                destination='newlib-source'
+            )
+
+            symlink('newlib-source/newlib', 'newlib')
+
 
             self.build_directory = 'spack-build-nvptx'
 
@@ -320,9 +316,6 @@ class Gcc(AutotoolsPackage):
                        '--disable-multilib',
                        '--enable-languages={0}'.format(
                        ','.join(spec.variants['languages'].value)),
-                       '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-                       '--with-gmp={0}'.format(spec['gmp'].prefix),
-                       '--with-quad'
            ]
 
             options.append('--target=nvptx-none')
