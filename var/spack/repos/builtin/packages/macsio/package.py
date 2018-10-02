@@ -114,3 +114,7 @@ class Macsio(CMakePackage):
                               .format(spec['netcdf'].prefix))
 
         return cmake_args
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('spack-build/macsio/macsio', prefix.bin)

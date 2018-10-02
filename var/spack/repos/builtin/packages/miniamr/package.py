@@ -60,8 +60,8 @@ class Miniamr(MakefilePackage):
     def install(self, spec, prefix):
         # Manual installation
         mkdir(prefix.bin)
-        mkdir(prefix.doc)
+        mkdir(prefix.docs)
 
         install('ref/ma.x', prefix.bin)
         # Install Support Documents
-        install('ref/README', prefix.doc)
+        install('ref/README', prefix.docs)
