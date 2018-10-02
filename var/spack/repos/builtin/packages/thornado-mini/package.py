@@ -33,7 +33,7 @@ class ThornadoMini(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://github.com/ECP-Astro/thornado_mini"
+    homepage = "https://sites.google.com/lbl.gov/exastar/home"
     url      = "https://github.com/ECP-Astro/thornado_mini/archive/v1.0.tar.gz"
     git      = "https://github.com/ECP-Astro/thornado_mini.git"
 
