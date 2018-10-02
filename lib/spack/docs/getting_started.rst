@@ -11,7 +11,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2 (2.6 or 2.7) or 3 (3.3 - 3.6)
+1. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7)
 2. A C/C++ compiler
 3. The ``git`` and ``curl`` commands.
 4. If using the ``gpg`` subcommand, ``gnupg2`` is required.
@@ -483,6 +483,9 @@ simple package.  For example:
 .. code-block:: console
 
    $ spack install zlib%gcc@5.3.0
+
+
+.. _vendor-specific-compiler-configuration:
 
 --------------------------------------
 Vendor-Specific Compiler Configuration
@@ -1218,13 +1221,13 @@ Here's an example of an external configuration for cray modules:
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
 environment variables, libraries, etc, that are brought into the environment
-via module load.  
+via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:`` 
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
-    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the 
+    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).
 
 You can set the default compiler that Spack can use for each compiler type.

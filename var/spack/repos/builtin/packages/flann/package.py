@@ -95,6 +95,9 @@ class Flann(CMakePackage):
     depends_on('hdf5', type='test')
     depends_on('gtest', type='test')
 
+    # See: https://github.com/mariusmuja/flann/issues/369
+    patch('linux-gcc-cmakev3.11-plus.patch', when='%gcc^cmake@3.11:')
+
     def patch(self):
         # Fix up the python setup.py call inside the install(CODE
         filter_file("setup.py install",

@@ -51,6 +51,7 @@ class CbtfArgonavis(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
     version('develop', branch='master')
+    version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
 
@@ -94,7 +95,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # For libmonitor
-    depends_on("libmonitor+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch")
 
     # For PAPI
     depends_on("papi", when='@develop')

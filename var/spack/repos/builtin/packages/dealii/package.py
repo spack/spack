@@ -98,21 +98,32 @@ class Dealii(CMakePackage, CudaPackage):
     # https://github.com/dealii/dealii/issues/5262
     # we take the patch from https://github.com/boostorg/serialization/pull/79
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
+    # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
+    # adopt https://github.com/boostorg/serialization/pull/105 as a fix
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='~python')
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
     depends_on('muparser')
     depends_on('suite-sparse')
+    depends_on('suite-sparse@:5.1.0', when='%gcc@:4.8.99')
     depends_on('tbb')
     depends_on('zlib')
 
@@ -149,8 +160,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials~pthread', when='@9.0:+sundials')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
+    # do not require +rol to make concretization of xsdk possible
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
     # FIXME: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')

@@ -100,6 +100,8 @@ class Llvm(CMakePackage):
 
     base_url = 'http://llvm.org/releases/%%(version)s/%(pkg)s-%%(version)s.src.tar.xz'
     llvm_url = base_url % {'pkg': 'llvm'}
+    # Flang uses its own fork of llvm.
+    flang_llvm_url = 'https://github.com/flang-compiler/llvm.git'
 
     resources = {
         'compiler-rt': {
@@ -178,6 +180,22 @@ class Llvm(CMakePackage):
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '7.0.0',
+            'md5': 'e0140354db83cdeb8668531b431398f0',
+            'resources': {
+                'compiler-rt': '3b759c47076298363f4443395e0e51c1',
+                'openmp': '8800aac08f2f9dad0ebf66e0e152bd63',
+                'polly': 'ff689bbfdca3ea812d195f60e63d8346',
+                'libcxx': '5ef835bf8c9f49611af4d5f3362d9658',
+                'libcxxabi': 'f04adafa019f4f5cce9550007da251c1',
+                'cfe': '2ac5d8d78be681e31611c5e546e11174',
+                'clang-tools-extra': 'e98b37a5911cd556775cba0868a56981',
+                'lldb': '76338963b3ccc4f9dccc923716207310',
+                'lld': '5eb148c3064acff71d8e5856163c8323',
+                'libunwind': 'e585a3e4ae6045f2561bc8a8fcd0bfbb'
             }
         },
         {
@@ -402,6 +420,47 @@ class Llvm(CMakePackage):
         },
     ]
 
+    # Flang uses its own fork of clang (renamed flang-driver).
+    flang_resources = {
+        'flang-driver': {
+            'git': 'https://github.com/flang-compiler/flang-driver.git',
+            'destination': 'tools',
+            'placement': 'clang'
+        },
+        'openmp': {
+            'git': 'https://github.com/llvm-mirror/openmp.git',
+            'destination': 'projects',
+            'placement': 'openmp'
+        }
+    }
+
+    flang_releases = [
+        {
+            'version': 'develop',
+            'branch': 'release_60',
+            'resources': {
+                'flang-driver': 'release_60',
+                'openmp': 'release_60',
+            }
+        },
+        {
+            'version': '20180612',
+            'commit': 'f26a3ece4ccd68a52f5aa970ec42837ee0743296',
+            'resources': {
+                'flang-driver': 'e079fa68cb35a53c88c41a1939f90b94d539e984',
+                'openmp': 'd5aa29cb3bcf51289d326b4e565613db8aff65ef'
+            }
+        },
+        {
+            'version': 'ppc64le-20180612',
+            'commit': '4158932a46eb2f06a166f22a4a52ae48c7d2949e',
+            'resources': {
+                'flang-driver': '50c1828a134d5a0f1553b355bf0946db48b0aa6d',
+                'openmp': '29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d'
+            }
+        }
+    ]
+
     for release in releases:
         if release['version'] == 'trunk':
             version(release['version'], svn=release['repo'])
@@ -425,6 +484,31 @@ class Llvm(CMakePackage):
                                          resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
+    for release in flang_releases:
+        if release['version'] == 'develop':
+            version('flang-' + release['version'], git=flang_llvm_url, branch=release['branch'])
+
+            for name, branch in release['resources'].items():
+                flang_resource = flang_resources[name]
+                resource(name=name,
+                         git=flang_resource['git'],
+                         branch=branch,
+                         destination=flang_resource['destination'],
+                         placement=flang_resource['placement'],
+                         when='@flang-' + release['version'])
+
+        else:
+            version('flang-' + release['version'], git=flang_llvm_url, commit=release['commit'])
+
+            for name, commit in release['resources'].items():
+                flang_resource = flang_resources[name]
+                resource(name=name,
+                         git=flang_resource['git'],
+                         commit=commit,
+                         destination=flang_resource['destination'],
+                         placement=flang_resource['placement'],
+                         when='@flang-' + release['version'])
+
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
@@ -436,10 +520,9 @@ class Llvm(CMakePackage):
         if not self.spec.satisfies('+lldb platform=darwin'):
             return
         codesign = which('codesign')
-        cp = which('cp')
         mkdir('tmp')
         llvm_check_file = join_path('tmp', 'llvm_check')
-        cp('/usr/bin/false', llvm_check_file)
+        copy('/usr/bin/false', llvm_check_file)
 
         try:
             codesign('-f', '-s', 'lldb_codesign', '--dryrun',

@@ -1148,7 +1148,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
-    def _if_make_target_execute(self, target):
+    def _has_make_target(self, target):
+        """Checks to see if 'target' is a valid target in a Makefile.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
         make = inspect.getmodule(self).make
 
         # Check if we have a Makefile
@@ -1157,49 +1165,70 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 break
         else:
             tty.msg('No Makefile found in the build directory')
-            return
+            return False
 
-        # Check if 'target' is a valid target
+        # Check if 'target' is a valid target.
         #
-        # -q, --question
-        #       ``Question mode''. Do not run any commands, or print anything;
-        #       just return an exit status that is zero if the specified
-        #       targets are already up to date, nonzero otherwise.
+        # `make -n target` performs a "dry run". It prints the commands that
+        # would be run but doesn't actually run them. If the target does not
+        # exist, you will see one of the following error messages:
         #
-        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        # GNU Make:
+        #     make: *** No rule to make target `test'.  Stop.
+        #           *** No rule to make target 'test'.  Stop.
         #
-        # The exit status of make is always one of three values:
-        #
-        # 0     The exit status is zero if make is successful.
-        #
-        # 2     The exit status is two if make encounters any errors.
-        #       It will print messages describing the particular errors.
-        #
-        # 1     The exit status is one if you use the '-q' flag and make
-        #       determines that some target is not already up to date.
-        #
-        # https://www.gnu.org/software/make/manual/html_node/Running.html
-        #
-        # NOTE: This only works for GNU Make, not NetBSD Make.
-        make('-q', target, fail_on_error=False)
-        if make.returncode == 2:
-            tty.msg("Target '" + target + "' not found in " + makefile)
-            return
+        # BSD Make:
+        #     make: don't know how to make test. Stop
+        missing_target_msgs = [
+            "No rule to make target `{0}'.  Stop.",
+            "No rule to make target '{0}'.  Stop.",
+            "don't know how to make {0}. Stop",
+        ]
 
-        # Execute target
-        make(target)
+        kwargs = {
+            'fail_on_error': False,
+            'output': os.devnull,
+            'error': str,
+        }
 
-    def _if_ninja_target_execute(self, target):
+        stderr = make('-n', target, **kwargs)
+
+        for missing_target_msg in missing_target_msgs:
+            if missing_target_msg.format(target) in stderr:
+                tty.msg("Target '" + target + "' not found in " + makefile)
+                return False
+
+        return True
+
+    def _if_make_target_execute(self, target, *args, **kwargs):
+        """Runs ``make target`` if 'target' is a valid target in the Makefile.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
+        if self._has_make_target(target):
+            # Execute target
+            inspect.getmodule(self).make(target, *args, **kwargs)
+
+    def _has_ninja_target(self, target):
+        """Checks to see if 'target' is a valid target in a Ninja build script.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No Ninja build script found in the build directory')
-            return
+            return False
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
-        all_targets = ninja('-t', 'targets', output=str).split('\n')
+        all_targets = ninja('-t', 'targets', 'all', output=str).split('\n')
 
         # Check if 'target' is a valid target
         matches = [line for line in all_targets
@@ -1207,10 +1236,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not matches:
             tty.msg("Target '" + target + "' not found in build.ninja")
-            return
+            return False
 
-        # Execute target
-        ninja(target)
+        return True
+
+    def _if_ninja_target_execute(self, target, *args, **kwargs):
+        """Runs ``ninja target`` if 'target' is a valid target in the Ninja
+        build script.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
+        if self._has_ninja_target(target):
+            # Execute target
+            inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         resources = []
@@ -1935,8 +1974,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         activate() directly.
         """
         if verbose:
-            tty.msg("Activating extension %s for %s" %
-                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.msg('Activating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         self._sanity_check_extension()
         if not view:
@@ -1962,10 +2001,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Activated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Activated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1993,8 +2030,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         self._sanity_check_extension()
         force = kwargs.get('force', False)
-        verbose = kwargs.get("verbose", True)
-        remove_dependents = kwargs.get("remove_dependents", False)
+        verbose = kwargs.get('verbose', True)
+        remove_dependents = kwargs.get('remove_dependents', False)
+
+        if verbose:
+            tty.msg('Deactivating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         if not view:
             view = YamlFilesystemView(
@@ -2017,11 +2058,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         if remove_dependents:
                             aspec.package.do_deactivate(**kwargs)
                         else:
-                            msg = ("Cannot deactivate %s because %s is "
-                                   "activated and depends on it.")
-                            raise ActivationError(
-                                msg % (self.spec.cshort_spec,
-                                       aspec.cshort_spec))
+                            msg = ('Cannot deactivate {0} because {1} is '
+                                   'activated and depends on it')
+                            raise ActivationError(msg.format(
+                                self.spec.cshort_spec, aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
             self, view, **self.extendee_args)
@@ -2033,10 +2073,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Deactivated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Deactivated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def deactivate(self, extension, view, **kwargs):
         """
@@ -2080,8 +2118,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def all_urls(self):
+        """A list of all URLs in a package.
+
+        Check both class-level and version-specific URLs.
+
+        Returns:
+            list: a list of URLs
+        """
         urls = []
-        if self.url:
+        if hasattr(self, 'url') and self.url:
             urls.append(self.url)
 
         for args in self.versions.values():
@@ -2090,10 +2135,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return urls
 
     def fetch_remote_versions(self):
-        """Try to find remote versions of this package using the
-           list_url and any other URLs described in the package file."""
+        """Find remote versions of this package.
+
+        Uses ``list_url`` and any other URLs listed in the package file.
+
+        Returns:
+            dict: a dictionary mapping versions to URLs
+        """
         if not self.all_urls:
-            raise spack.util.web.VersionFetchError(self.__class__)
+            return {}
 
         try:
             return spack.util.web.find_versions_of_archive(

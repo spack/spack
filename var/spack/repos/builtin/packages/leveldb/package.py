@@ -26,7 +26,7 @@ import glob
 from spack import *
 
 
-class Leveldb(Package):
+class Leveldb(MakefilePackage):
     """LevelDB is a fast key-value storage library written at Google
     that provides an ordered mapping from string keys to string values."""
 
@@ -39,21 +39,14 @@ class Leveldb(Package):
     depends_on("snappy")
 
     def install(self, spec, prefix):
-        make()
+        mkdirp(prefix.lib.pkgconfig)
 
-        mkdirp(prefix.include)
-        mkdirp(prefix.lib)
-        mkdirp(join_path(prefix.lib, 'pkgconfig'))
+        libraries  = glob.glob('out-shared/libleveldb.*')
+        libraries += glob.glob('out-static/libleveldb.*')
+        for library in libraries:
+            install(library, prefix.lib)
 
-        cp = which('cp')
-
-        # cp --preserve=links libleveldb.* prefix/lib
-        args = glob.glob('out-shared/libleveldb.*') \
-            + glob.glob('out-static/libleveldb.*')
-        args.append(prefix.lib)
-        cp('--preserve=links', *args)
-
-        cp('-r', 'include/leveldb', prefix.include)
+        install_tree('include', prefix.include)
 
         with open(join_path(prefix.lib, 'pkgconfig', 'leveldb.pc'), 'w') as f:
             f.write('prefix={0}\n'.format(prefix))

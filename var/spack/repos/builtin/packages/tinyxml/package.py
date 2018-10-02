@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copyfile
 import os.path
 
 
@@ -42,8 +41,8 @@ class Tinyxml(CMakePackage):
         return url.format(version.dotted, version.underscored)
 
     def patch(self):
-        copyfile(join_path(os.path.dirname(__file__),
-                           "CMakeLists.txt"), "CMakeLists.txt")
+        copy(join_path(os.path.dirname(__file__),
+             "CMakeLists.txt"), "CMakeLists.txt")
 
     def cmake_args(self):
         spec = self.spec

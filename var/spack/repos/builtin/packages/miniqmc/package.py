@@ -33,9 +33,11 @@ class Miniqmc(CMakePackage):
     homepage = "https://github.com/QMCPACK/miniqmc"
     url      = "https://github.com/QMCPACK/miniqmc/archive/0.2.0.tar.gz"
 
+    version('0.4.0', sha256='41ddb5de6dcc85404344c80dc7538aedf5e1f1eb0f2a67ebac069209f7dd11e4')
+    version('0.3.0', sha256='3ba494ba1055df91e157cb426d1fbe4192aa3f04b019277d9e571d057664d5a9')
     version('0.2.0', 'b96bacaf48b8e9c0de05d04a95066bc1')
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
     depends_on('mpi')
     depends_on('lapack')

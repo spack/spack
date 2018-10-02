@@ -25,7 +25,6 @@
 
 import inspect
 import os.path
-import shutil
 
 from spack import *
 
@@ -54,7 +53,7 @@ class Pexsi(MakefilePackage):
     depends_on('parmetis')
     depends_on('superlu-dist@3.3:3.999', when='@:0.9.0')
     depends_on('superlu-dist@4.3:4.999', when='@0.9.2')
-    depends_on('superlu-dist@5.1.2:', when='@0.10.2:')
+    depends_on('superlu-dist@5.1.2:5.3.999', when='@0.10.2:')
 
     variant(
         'fortran', default=False, description='Builds the Fortran interface'
@@ -64,27 +63,32 @@ class Pexsi(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        substitutions = {
-            '@MPICC': self.spec['mpi'].mpicc,
-            '@MPICXX': self.spec['mpi'].mpicxx,
-            '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPICXX_LIB': self.spec['mpi:cxx'].libs.joined(),
-            '@RANLIB': 'ranlib',
-            '@PEXSI_STAGE': self.stage.source_path,
-            '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,
-            '@METIS_PREFIX': self.spec['metis'].prefix,
-            '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
-            '@LAPACK_PREFIX': self.spec['lapack'].prefix,
-            '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].libs.joined(),
-            '@BLAS_LIBS': self.spec['blas'].libs.joined(),
+        substitutions = [
+            ('@MPICC', self.spec['mpi'].mpicc),
+            ('@MPICXX_LIB', self.spec['mpi:cxx'].libs.joined()),
+            ('@MPICXX', self.spec['mpi'].mpicxx),
+            ('@MPIFC', self.spec['mpi'].mpifc),
+            ('@RANLIB', 'ranlib'),
+            ('@PEXSI_STAGE', self.stage.source_path),
+            ('@SUPERLU_PREFIX', self.spec['superlu-dist'].prefix),
+            ('@METIS_PREFIX', self.spec['metis'].prefix),
+            ('@PARMETIS_PREFIX', self.spec['parmetis'].prefix),
+            ('@LAPACK_PREFIX', self.spec['lapack'].prefix),
+            ('@BLAS_PREFIX', self.spec['blas'].prefix),
+            ('@LAPACK_LIBS', self.spec['lapack'].libs.joined()),
+            ('@BLAS_LIBS', self.spec['blas'].libs.joined()),
             # FIXME : what to do with compiler provided libraries ?
-            '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs),
-            '@FLDFLAGS': ''
-        }
+            ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs))
+        ]
 
         if '@0.9.2' in self.spec:
-            substitutions['@FLDFLAGS'] = '-Wl,--allow-multiple-definition'
+            substitutions.append(
+                ('@FLDFLAGS', '-Wl,--allow-multiple-definition')
+            )
+        else:
+            substitutions.append(
+                ('@FLDFLAGS', '')
+            )
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
@@ -94,8 +98,8 @@ class Pexsi(MakefilePackage):
             self.stage.source_path,
             'make.inc'
         )
-        shutil.copy(template, makefile)
-        for key, value in substitutions.items():
+        copy(template, makefile)
+        for key, value in substitutions:
             filter_file(key, value, makefile)
 
     def build(self, spec, prefix):

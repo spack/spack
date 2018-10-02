@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
 
 
 class Libiconv(AutotoolsPackage):
@@ -31,7 +30,7 @@ class Libiconv(AutotoolsPackage):
     and the iconv program for character set conversion."""
 
     homepage = "https://www.gnu.org/software/libiconv/"
-    url      = "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz"
+    url      = "https://ftpmirror.gnu.org/libiconv/libiconv-1.15.tar.gz"
 
     version('1.15', 'ace8b5f2db42f7b3b3057585e80d9808')
     version('1.14', 'e34509b1623cec449dfeb73d7ce9c6c6')
@@ -46,6 +45,6 @@ class Libiconv(AutotoolsPackage):
         args = ['--enable-extra-encodings']
 
         # A hack to patch config.guess in the libcharset sub directory
-        shutil.copyfile('./build-aux/config.guess',
-                        'libcharset/build-aux/config.guess')
+        copy('./build-aux/config.guess',
+             'libcharset/build-aux/config.guess')
         return args

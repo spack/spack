@@ -43,6 +43,8 @@ from spack.version import Version
     ('jpegsrc.v9b', 'jpegsrc.v9b'),
     ('turbolinux702', 'turbolinux702'),
     ('converge_install_2.3.16', 'converge_install_2.3.16'),
+    # Download type - code, source
+    ('cistem-1.0.0-beta-source-code', 'cistem-1.0.0-beta'),
     # Download type - src
     ('apache-ant-1.9.7-src', 'apache-ant-1.9.7'),
     ('go1.7.4.src', 'go1.7.4'),

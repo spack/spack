@@ -33,19 +33,21 @@ class Laghos(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://codesign.llnl.gov/laghos.php"
+    homepage = "https://computation.llnl.gov/projects/co-design/laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
     git      = "https://github.com/CEED/Laghos.git"
 
     version('develop', branch='master')
+    version('1.1', sha256='53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f')
     version('1.0', '4c091e115883c79bed81c557ef16baff')
 
     variant('metis', default=True, description='Enable/disable METIS support')
 
     depends_on('mfem@develop+mpi+metis', when='@develop+metis')
     depends_on('mfem@develop+mpi~metis', when='@develop~metis')
-    depends_on('mfem@laghos-v1.0,3.3.2:+mpi+metis', when='@1.0+metis')
-    depends_on('mfem@laghos-v1.0,3.3.2:+mpi~metis', when='@1.0~metis')
+
+    depends_on('mfem@laghos-v1.0,3.3.2:+mpi+metis', when='@1.0:+metis')
+    depends_on('mfem@laghos-v1.0,3.3.2:+mpi~metis', when='@1.0:~metis')
 
     @property
     def build_targets(self):

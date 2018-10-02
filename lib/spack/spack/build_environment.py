@@ -66,13 +66,16 @@ from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
 import spack.build_systems.cmake
+import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
 import spack.store
+from spack.util.string import plural
 from spack.environment import EnvironmentModifications, validate
 from spack.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
+from spack.util.environment import system_dirs
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
 from spack.util.log_parse import parse_log_events, make_log_context
@@ -99,6 +102,7 @@ SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
+SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 
 
 # Platform-specific library suffix.
@@ -106,11 +110,14 @@ dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
 class MakeExecutable(Executable):
-    """Special callable executable object for make so the user can
-       specify parallel or not on a per-invocation basis.  Using
-       'parallel' as a kwarg will override whatever the package's
-       global setting is, so you can either default to true or false
-       and override particular calls.
+    """Special callable executable object for make so the user can specify
+       parallelism options on a per-invocation basis.  Specifying
+       'parallel' to the call will override whatever the package's
+       global setting is, so you can either default to true or false and
+       override particular calls. Specifying 'jobs_env' to a particular
+       call will name an environment variable which will be set to the
+       parallelism level (without affecting the normal invocation with
+       -j).
 
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
@@ -121,14 +128,49 @@ class MakeExecutable(Executable):
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
+        """parallel, and jobs_env from kwargs are swallowed and used here;
+        remaining arguments are passed through to the superclass.
+        """
+
         disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-        parallel = not disable and kwargs.get('parallel', self.jobs > 1)
+        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
-            jobs = "-j%d" % self.jobs
-            args = (jobs,) + args
+            args = ('-j{0}'.format(self.jobs),) + args
+            jobs_env = kwargs.pop('jobs_env', None)
+            if jobs_env:
+                # Caller wants us to set an environment variable to
+                # control the parallelism.
+                kwargs['extra_env'] = {jobs_env: str(self.jobs)}
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
+def clean_environment():
+    # Stuff in here sanitizes the build environment to eliminate
+    # anything the user has set that may interfere. We apply it immediately
+    # unlike the other functions so it doesn't overwrite what the modules load.
+    env = EnvironmentModifications()
+
+    # Remove these vars from the environment during build because they
+    # can affect how some packages find libraries.  We want to make
+    # sure that builds never pull in unintended external dependencies.
+    env.unset('LD_LIBRARY_PATH')
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('LD_RUN_PATH')
+    env.unset('DYLD_LIBRARY_PATH')
+
+    # Remove any macports installs from the PATH.  The macports ld can
+    # cause conflicts with the built-in linker on el capitan.  Solves
+    # assembler issues, e.g.:
+    #    suffix or operands invalid for `movq'"
+    path = get_path('PATH')
+    for p in path:
+        if '/macports/' in p:
+            env.remove_path('PATH', p)
+
+    env.apply_modifications()
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -202,6 +244,8 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
+    env.set('SPACK_SYSTEM_DIRS', ':'.join(system_dirs))
+
     compiler.setup_custom_environment(pkg, env)
 
     return env
@@ -261,39 +305,24 @@ def set_build_environment_variables(pkg, env, dirty):
     # Install root prefix
     env.set(SPACK_INSTALL, spack.store.root)
 
-    # Stuff in here sanitizes the build environment to eliminate
-    # anything the user has set that may interfere.
-    if not dirty:
-        # Remove these vars from the environment during build because they
-        # can affect how some packages find libraries.  We want to make
-        # sure that builds never pull in unintended external dependencies.
-        env.unset('LD_LIBRARY_PATH')
-        env.unset('LIBRARY_PATH')
-        env.unset('CPATH')
-        env.unset('LD_RUN_PATH')
-        env.unset('DYLD_LIBRARY_PATH')
-
-        # Remove any macports installs from the PATH.  The macports ld can
-        # cause conflicts with the built-in linker on el capitan.  Solves
-        # assembler issues, e.g.:
-        #    suffix or operands invalid for `movq'"
-        path = get_path('PATH')
-        for p in path:
-            if '/macports/' in p:
-                env.remove_path('PATH', p)
-
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
     environment = compiler.environment
-    if 'set' in environment:
-        env_to_set = environment['set']
-        for key, value in iteritems(env_to_set):
-            env.set('SPACK_ENV_SET_%s' % key, value)
-            env.set('%s' % key, value)
-        # Let shell know which variables to set
-        env_variables = ":".join(env_to_set.keys())
-        env.set('SPACK_ENV_TO_SET', env_variables)
+
+    for command, variable in iteritems(environment):
+        if command == 'set':
+            for name, value in iteritems(variable):
+                env.set(name, value)
+        elif command == 'unset':
+            for name, _ in iteritems(variable):
+                env.unset(name)
+        elif command == 'prepend-path':
+            for name, value in iteritems(variable):
+                env.prepend_path(name, value)
+        elif command == 'append-path':
+            for name, value in iteritems(variable):
+                env.append_path(name, value)
 
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
@@ -380,11 +409,13 @@ def set_module_variables_for_package(pkg, module):
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable('./configure')
 
+    m.meson = Executable('meson')
     m.cmake = Executable('cmake')
-    m.ctest = Executable('ctest')
+    m.ctest = MakeExecutable('ctest', jobs)
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
+    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -553,6 +584,22 @@ def get_std_cmake_args(pkg):
     return spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
 
+def get_std_meson_args(pkg):
+    """List of standard arguments used if a package is a MesonPackage.
+
+    Returns:
+        list of str: standard arguments that would be used if this
+        package were a MesonPackage instance.
+
+    Args:
+        pkg (PackageBase): package under consideration
+
+    Returns:
+        list of str: arguments for meson
+    """
+    return spack.build_systems.meson.MesonPackage._std_args(pkg)
+
+
 def parent_class_modules(cls):
     """
     Get list of superclass modules that descend from spack.package.PackageBase
@@ -588,6 +635,9 @@ def setup_package(pkg, dirty):
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
 
+    if not dirty:
+        clean_environment()
+
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
@@ -615,14 +665,12 @@ def setup_package(pkg, dirty):
     set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
 
-    # Make sure nothing's strange about the Spack environment.
-    validate(spack_env, tty.warn)
-    spack_env.apply_modifications()
-
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
     # build of packages. To avoid a polluted environment, preserve the
     # value of a few, selected, environment variables
+    # With the current ordering of environment modifications, this is strictly
+    # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
         # functions have to occur after the spack_env object has its
@@ -639,6 +687,10 @@ def setup_package(pkg, dirty):
             load_module(pkg.architecture.target.module_name)
 
         load_external_modules(pkg)
+
+    # Make sure nothing's strange about the Spack environment.
+    validate(spack_env, tty.warn)
+    spack_env.apply_modifications()
 
 
 def fork(pkg, function, dirty, fake):
@@ -884,16 +936,21 @@ class ChildError(InstallError):
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
-            # the build log with errors highlighted.
-            if self.build_log:
+            # the build log with errors or warnings highlighted.
+            if self.build_log and os.path.exists(self.build_log):
                 errors, warnings = parse_log_events(self.build_log)
                 nerr = len(errors)
+                nwar = len(warnings)
                 if nerr > 0:
-                    if nerr == 1:
-                        out.write("\n1 error found in build log:\n")
-                    else:
-                        out.write("\n%d errors found in build log:\n" % nerr)
+                    # If errors are found, only display errors
+                    out.write(
+                        "\n%s found in build log:\n" % plural(nerr, 'error'))
                     out.write(make_log_context(errors))
+                elif nwar > 0:
+                    # If no errors are found but warnings are, display warnings
+                    out.write(
+                        "\n%s found in build log:\n" % plural(nwar, 'warning'))
+                    out.write(make_log_context(warnings))
 
         else:
             # The error happened in in the Python code, so try to show
@@ -906,7 +963,7 @@ class ChildError(InstallError):
         if out.getvalue():
             out.write('\n')
 
-        if self.build_log:
+        if self.build_log and os.path.exists(self.build_log):
             out.write('See build log for details:\n')
             out.write('  %s' % self.build_log)
 

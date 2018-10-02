@@ -65,6 +65,11 @@ class NetlibLapack(CMakePackage):
     # containing the fix is released and added to Spack.
     patch('undefined_declarations.patch', when='@3.8.0:')
 
+    # https://github.com/Reference-LAPACK/lapack/pull/268
+    # TODO: update 'when' once the version of lapack
+    # containing the fix is released and added to Spack.
+    patch('testing.patch', when='@3.7.0:')
+
     # virtual dependency
     provides('blas', when='~external-blas')
     provides('lapack')

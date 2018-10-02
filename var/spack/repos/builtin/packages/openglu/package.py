@@ -76,9 +76,6 @@ class Openglu(Package):
 
         raise InstallError(msg)
 
-    def install(self, spec, prefix):
-        pass
-
     @property
     def libs(self):
         for dir in ['lib64', 'lib']:
@@ -86,4 +83,3 @@ class Openglu(Package):
                                   shared=True, recursive=False)
             if libs:
                 return libs
-        return None

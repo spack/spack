@@ -31,6 +31,7 @@ class Ipopt(AutotoolsPackage):
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
+    version('3.12.10', 'e1a3ad09e41edbfe41948555ece0bdc78757a5ca764b6be5a9a127af2e202d2e')
     version('3.12.9', '8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
     version('3.12.8', '62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
     version('3.12.7', '2a36e4a04717a8ed7012ac7d1253ae4ffbc1a8fd')
@@ -46,6 +47,8 @@ class Ipopt(AutotoolsPackage):
             description="Build with Coin Harwell Subroutine Libraries")
     variant('metis', default=False,
             description="Build with METIS partitioning support")
+    variant('debug', default=False,
+            description="Build debug instead of optimized version")
 
     depends_on("blas")
     depends_on("lapack")
@@ -98,5 +101,13 @@ class Ipopt(AutotoolsPackage):
             args.extend([
                 '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
                 '--with-metis-incdir=%s' % spec['metis'].prefix.include])
+
+        # The IPOPT configure file states that '--enable-debug' implies
+        # '--disable-shared', but adding '--enable-shared' overrides
+        # '--disable-shared' and builds a shared library with debug symbols
+        if '+debug' in spec:
+            args.append('--enable-debug')
+        else:
+            args.append('--disable-debug')
 
         return args

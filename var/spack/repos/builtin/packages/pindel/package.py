@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from shutil import copytree, copyfile
 
 
 class Pindel(MakefilePackage):
@@ -51,9 +50,8 @@ class Pindel(MakefilePackage):
     #
 
     def edit(self, spec, prefix):
-        makefile2 = join_path(self.build_directory, 'Makefile2')
-        copyfile(join_path(self.build_directory, 'Makefile'), makefile2)
-        myedit = FileFilter(makefile2)
+        copy('Makefile', 'Makefile2')
+        myedit = FileFilter('Makefile2')
         myedit.filter('-include Makefile.local', '#removed include')
         myedit.filter('@false', '#removed autofailure')
 
@@ -69,6 +67,4 @@ class Pindel(MakefilePackage):
         install('src/pindel2vcf', prefix.bin)
         install('src/sam2pindel', prefix.bin)
         install('src/pindel2vcf4tcga', prefix.bin)
-        copytree(join_path(self.build_directory, 'demo'),
-                 prefix.doc,
-                 symlinks=True)
+        install_tree('demo', prefix.doc)

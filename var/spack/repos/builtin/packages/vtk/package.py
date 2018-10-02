@@ -62,8 +62,9 @@ class Vtk(CMakePackage):
     # drivers is faster, but it must be done externally.
     depends_on('opengl', when='~osmesa')
 
-    # mesa default is software rendering, make it faster with llvm
-    depends_on('mesa+llvm', when='+osmesa')
+    # Note: it is recommended to use mesa+llvm, if possible.
+    # mesa default is software rendering, llvm makes it faster
+    depends_on('mesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
@@ -116,14 +117,19 @@ class Vtk(CMakePackage):
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
             '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
-            # Enable/Disable wrappers for Python.
-            '-DVTK_WRAP_PYTHON={0}'.format(
-                'ON' if '+python' in spec else 'OFF'),
-
             # Disable wrappers for other languages.
             '-DVTK_WRAP_JAVA=OFF',
             '-DVTK_WRAP_TCL=OFF',
         ]
+
+        # Enable/Disable wrappers for Python.
+        if '+python' in spec:
+            cmake_args.extend([
+                '-DVTK_WRAP_PYTHON=ON',
+                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path)
+            ])
+        else:
+            cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([

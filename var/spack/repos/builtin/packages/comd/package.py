@@ -22,9 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-import shutil
 
 
 class Comd(MakefilePackage):
@@ -37,7 +35,7 @@ class Comd(MakefilePackage):
     versions of CoMD will be released to incorporate the lessons learned from
     the co-design process."""
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/comd.html"
     url      = "https://github.com/ECP-copa/CoMD/archive/v1.1.tar.gz"
@@ -58,7 +56,7 @@ class Comd(MakefilePackage):
 
     def edit(self, spec, prefix):
         with working_dir('src-mpi') or working_dir('src-openmp'):
-            shutil.copy('Makefile.vanilla', 'Makefile')
+            copy('Makefile.vanilla', 'Makefile')
 
     @property
     def build_targets(self):

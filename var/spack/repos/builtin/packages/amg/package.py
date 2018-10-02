@@ -32,10 +32,11 @@ class Amg(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://codesign.llnl.gov/amg2013.php"
+    homepage = "https://computation.llnl.gov/projects/co-design/amg2013"
     git      = "https://github.com/LLNL/AMG.git"
 
     version('develop', branch='master')
+    version('1.1', tag='1.1')
     version('1.0', tag='1.0')
 
     variant('openmp', default=True, description='Build with OpenMP support')

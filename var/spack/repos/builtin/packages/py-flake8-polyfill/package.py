@@ -37,9 +37,3 @@ class PyFlake8Polyfill(PythonPackage):
 
     extends('python', ignore='bin/(flake8|pyflakes|pycodestyle)')
     depends_on('py-flake8', type='run')
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args

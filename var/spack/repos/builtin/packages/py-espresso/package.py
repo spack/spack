@@ -39,8 +39,13 @@ class PyEspresso(CMakePackage):
     """
     homepage = "http://espressomd.org/"
     git      = "https://github.com/espressomd/espresso.git"
+    url      = "https://github.com/espressomd/espresso/releases/download/4.0.0/espresso-4.0.0.tar.gz"
 
     version('develop', branch='python')
+    version('4.0.0', sha256='8e128847447eebd843de24be9b4ad14aa19c028ae48879a5a4535a9683836e6b')
+
+    # espressomd/espresso#2244 merge upstream
+    patch('2244.patch', when="@4.0.0")
 
     depends_on("cmake@3.0:", type='build')
     depends_on("mpi")
@@ -49,3 +54,4 @@ class PyEspresso(CMakePackage):
     depends_on("py-cython@0.23:", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("fftw")
+    depends_on("hdf5+hl+mpi")

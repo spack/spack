@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import inspect
-import distutils.dir_util
 
 
 class Repeatmasker(Package):
@@ -78,4 +77,4 @@ class Repeatmasker(Package):
         with open(config_answers_filename, 'r') as f:
             inspect.getmodule(self).perl('configure', input=f)
 
-        distutils.dir_util.copy_tree(".", prefix.bin)
+        install_tree('.', prefix.bin)
