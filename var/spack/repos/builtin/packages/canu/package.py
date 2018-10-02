@@ -32,7 +32,8 @@ class Canu(MakefilePackage):
     homepage = "http://canu.readthedocs.io/"
     url      = "https://github.com/marbl/canu/archive/v1.5.tar.gz"
 
-    version('1.5', '65df275baa28ecf11b15dfd7343361e3')
+    version('1.5',   '65df275baa28ecf11b15dfd7343361e3')
+    version('1.7.1', '5721feec9553d5aa221749308d4fb11d')
 
     depends_on('gnuplot', type='run')
     depends_on('jdk', type='run')
