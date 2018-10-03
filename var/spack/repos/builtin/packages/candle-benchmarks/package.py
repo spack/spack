@@ -41,7 +41,7 @@ class CandleBenchmarks(Package):
     extends('python@2.7:')
     depends_on('py-theano +gpu', type=('build', 'run'))
     depends_on('py-keras', type=('build', 'run'))
-    depends_on('py-matplotlib +image', type=('build', 'run'))
+    depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
     depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib +python -dnn ~eigen')
