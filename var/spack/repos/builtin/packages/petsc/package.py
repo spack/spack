@@ -205,6 +205,9 @@ class Petsc(Package):
                    '--download-c2html=0',
                    '--download-sowing=0',
                    '--download-hwloc=0',
+                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
+                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags']),
                    'COPTFLAGS=',
                    'FOPTFLAGS=',
                    'CXXOPTFLAGS=']
