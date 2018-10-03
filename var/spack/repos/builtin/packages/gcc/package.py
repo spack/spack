@@ -296,8 +296,8 @@ class Gcc(AutotoolsPackage):
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
             options.append('--enable-offload-targets=nvptx-none')
-            options.append('--with-cuda-driver-include=/usr/local/cuda/include') #{0}'.format(spec['cuda'].prefix.include))
-            options.append('--with-cuda-driver-lib=/usr/local/cuda/lib64') #{0}'.format(spec['cuda'].prefix.lib64))
+            options.append('--with-cuda-driver-include={0}'.format(spec['cuda'].prefix.include))
+            options.append('--with-cuda-driver-lib={0}'.format(spec['cuda'].prefix.lib64))
 	    options.append('--disable-bootstrap')
             options.append('--disable-multilib')
             options.append('--disable-lto')
