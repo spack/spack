@@ -34,6 +34,7 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
@@ -44,7 +45,7 @@ class Paraview(CMakePackage):
 
     variant('plugins', default=True,
             description='Install include files for plugins support')
-    variant('python', default=False, description='Enable Python support')
+    variant('python', default=True, description='Enable Python support')
     variant('mpi', default=True, description='Enable MPI support')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
@@ -52,7 +53,10 @@ class Paraview(CMakePackage):
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
 
-    depends_on('python@2:2.8', when='+python')
+    depends_on('python@:2.99', when='@:5.4.1+python')
+
+    # python 3 support is experimental from @5.5, should be complete in @5.6:
+    depends_on('python', when='@5.5.2:+python')
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('mpi', when='+mpi')
@@ -74,6 +78,7 @@ class Paraview(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
+    depends_on('expat')
     # depends_on('netcdf')
     # depends_on('netcdf-cxx')
     # depends_on('protobuf') # version mismatches?
@@ -145,6 +150,7 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
             '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
         ]
 
@@ -158,7 +164,10 @@ class Paraview(CMakePackage):
         if '+python' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path
+                '-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
+                    spec['python'].command.path),
+                '-DVTK_PYTHON_VERSION:STRING={0}'.format(
+                    spec['python'].version.up_to(1))
             ])
 
         if '+mpi' in spec:
