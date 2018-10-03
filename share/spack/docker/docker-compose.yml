@@ -40,12 +40,6 @@ services:
       - '../../..:/spack'
     environment:
       PROMPT: "${PROMPT:-0}"
-  scilinux:
-    build: ./spack_scilinux
-    volumes:
-      - '../../..:/spack'
-    environment:
-      PROMPT: "${PROMPT:-0}"
   ubuntu:
     build:
       context: build
