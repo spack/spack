@@ -112,7 +112,6 @@ class Gcc(AutotoolsPackage):
              when='+nvptx'
             )
 
-
     # TODO: integrate these libraries.
     # depends_on('ppl')
     # depends_on('cloog')
@@ -296,18 +295,21 @@ class Gcc(AutotoolsPackage):
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
             options.append('--enable-offload-targets=nvptx-none')
-            options.append('--with-cuda-driver-include={0}'.format(spec['cuda'].prefix.include))
-            options.append('--with-cuda-driver-lib={0}'.format(spec['cuda'].prefix.lib64))
-	    options.append('--disable-bootstrap')
+            options.append('--with-cuda-driver-include={0}'.format(
+                           spec['cuda'].prefix.include))
+            options.append('--with-cuda-driver-lib={0}'.format(
+                           spec['cuda'].prefix.lib64))
+            options.append('--disable-bootstrap')
             options.append('--disable-multilib')
             options.append('--disable-lto')
+
         return options
 
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before('configure')
     def nvptx_install(self):
-        spec = self.spec        
+        spec = self.spec
 
         if spec.satisfies('+nvptx'):
 
@@ -324,16 +326,19 @@ class Gcc(AutotoolsPackage):
             options = ['--prefix={0}'.format(prefix),
                        '--disable-multilib',
                        '--enable-languages={0}'.format(
-                       ','.join(spec.variants['languages'].value)),
-           ]
+                       ','.join(spec.variants['languages'].value)), ]
 
             options.append('--target=nvptx-none')
-            options.append('--with-build-time-tools={0}'.format(join_path(spec['nvptx-tools'].prefix,'nvptx-none','bin')))
-            options.append('--enable-as-accelerator-for=x86_64-pc-linux-gnu')
+            options.append('--with-build-time-tools={0}'.format(
+                           join_path(spec['nvptx-tools'].prefix,
+                                     'nvptx-none', 'bin')))
+            options.append('--enable-as-accelerator-for={0}'.format(
+                           spec.architecture.target + '-' +
+                           spec.architecture.platform))
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
             options.append('--disable-lto')
-            
+
             configure(*options)
             make()
             make('install')
