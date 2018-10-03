@@ -54,6 +54,9 @@ class Geant4(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
 
+    conflicts('+cxx14', when='+cxx11')
+    conflicts('+cxx11', when='+cxx14')
+
     # C++11 support
     depends_on("clhep@2.4.0.0+cxx11~cxx14", when="@10.04+cxx11~cxx14")
     depends_on("clhep@2.3.4.3+cxx11~cxx14", when="@10.03.p03+cxx11~cxx14")
@@ -103,7 +106,7 @@ class Geant4(CMakePackage):
 
         if '+cxx11' in spec:
             options.append('-DGEANT4_BUILD_CXXSTD=c++11')
-        if '+cxx14' or '+cxx1y' in spec:
+        if '+cxx14' in spec:
             options.append('-DGEANT4_BUILD_CXXSTD=c++14')
 
         if '+qt' in spec:
