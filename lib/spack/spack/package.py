@@ -1815,21 +1815,21 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                           fromlist=[self.__class__.__name__])
 
     @classmethod
-    def inject_flags(pkg, name, flags):
+    def inject_flags(cls, name, flags):
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
         return (flags, None, None)
 
     @classmethod
-    def env_flags(pkg, name, flags):
+    def env_flags(cls, name, flags):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
         return (None, flags, None)
 
     @classmethod
-    def build_system_flags(pkg, name, flags):
+    def build_system_flags(cls, name, flags):
         """
         flag_handler that passes flags to the build system arguments.  Any
         package using `build_system_flags` must also implement
