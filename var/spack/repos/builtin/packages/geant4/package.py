@@ -117,8 +117,8 @@ class Geant4(CMakePackage):
             options.append('-DUSolids_DIR=%s' % spec[
                 'vecgeom'].prefix.lib.CMake.USolids)
 
-        if '+threads' in spec:
-            options.append('-DGEANT4_BUILD_MULTITHREADED=ON')
+        on_or_off = lambda opt: 'ON' if '+' + opt in spec else 'OFF'
+        options.append('-DGEANT4_BUILD_MULTITHREADED=' + on_or_off('threads'))
 
         return options
 
