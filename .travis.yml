@@ -218,6 +218,9 @@ before_script:
         cp share/spack/qa/configuration/*.yaml etc/spack/;
     fi
 
+  # Set up environment modules
+  - source /usr/share/Modules/init/bash
+
 #=============================================================================
 # Building
 #=============================================================================
