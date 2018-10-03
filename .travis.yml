@@ -219,8 +219,7 @@ before_script:
     fi
 
   # Set up environment modules
-  - dpkg -L environment-modules
-  - source /usr/share/Modules/init/bash
+  - source /usr/share/modules/init/bash
 
 #=============================================================================
 # Building
