@@ -22,9 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 from spack import *
+import numbers
 import os
 from six import iteritems
 from six.moves.urllib.parse import urlparse
+
+
+def _is_integral(x):
+    """Accepts only integral values."""
+    try:
+        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
+    except ValueError:
+        return False
 
 
 class Pythia6(CMakePackage):
@@ -46,6 +55,8 @@ class Pythia6(CMakePackage):
 
     variant('root', default=False,
             description='Build extra (non OEM) code to allow use by Root.')
+
+    variant('nmxhep', default=4000, values=_is_integral, description='Extent of particle arrays in the /HEPEVT/ COMMON block.')
 
     # In the unlikely event of new versions >6.4.28,
     # pythia6_common_address.c should be checked for accuracy against
@@ -138,6 +149,9 @@ class Pythia6(CMakePackage):
         llnl.util.filesystem.copy(os.path.join(os.path.dirname(__file__),
                                                'CMakeLists.txt'),
                                   self.stage.source_path)
+        filter_file(r'^(\s+PARAMETER\s*\(\s*NMXHEP\s*=\s*)\d+',
+                    r'\1{0}'.format(self.spec.variants['nmxhep'].value),
+                    'pyhepc.f')
 
     def cmake_args(self):
         args = ['-DPYTHIA6_VERSION={0}'.format(self.version.dotted)]
