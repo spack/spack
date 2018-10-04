@@ -144,26 +144,10 @@ def simmodsuite_releases():
     return releases
 
 
-def simmetrix_getKernel():
-    """only supporting the linux libraries"""
-    return "linux"
-
-
-def simmetrix_getWordSz():
-    """only supporting 64b libraries"""
-    return "64"
-
-
-def simmetrix_getLibDir(os):
-    osLibDir = {'rhel6': 'x64_rhel6_gcc44',
-                'rhel7': 'x64_rhel7_gcc48'}
-    return osLibDir[os]
-
-
 def simmetrix_makeComponentUrl(name):
     """only supporting the linux libraries"""
     prefix = "file://{0}/".format(os.getcwd())
-    suffix = "-" + simmetrix_getKernel() + simmetrix_getWordSz() + '.tgz'
+    suffix = "-" + "linux64.tgz"
     return prefix + name + suffix
 
 
@@ -196,10 +180,6 @@ def simmetrix_resource(name, url, md5, condition):
     )
 
 
-def simmetrix_copytree(src, dst):
-    dir_util.copy_tree(src, dst)
-
-
 class SimmetrixSimmodsuite(Package):
     """Simmetrix' Simulation Modeling Suite is a set of component software
     toolkits that allow developers to easily implement geometry-based
@@ -217,8 +197,6 @@ class SimmetrixSimmodsuite(Package):
     license_required = True
     license_vars     = ['SIM_LICENSE_FILE']
 
-    variant('sim_os', default='rhel7', values=('rhel7', 'rhel6'),
-      description='installs libraries built on RedHat 6 or 7 Enterprise Linux')
     variant('base', default=True, description='enable the base components')
     variant('advmodel', default=False, description='enable advaced modeling')
     variant('abstract', default=False, description='enable abstract modeling')
@@ -233,6 +211,8 @@ class SimmetrixSimmodsuite(Package):
     variant('paralleladapt', default=False, description='enable parallel adaptation')
 
     depends_on('mpi')
+    
+    oslib = 'x64_rhel7_gcc48'
 
     releases = simmodsuite_releases()
     for release in releases:
@@ -261,30 +241,18 @@ class SimmetrixSimmodsuite(Package):
             simmetrix_resource(name, url, md5, condition)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if self.spec.satisfies('sim_os=rhel7'):
-            oslib = simmetrix_getLibDir('rhel7')
-            archlib = join_path(prefix.lib, oslib)
-            spack_env.append_path('CMAKE_PREFIX_PATH', archlib)
-            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, spack_env)
-        elif self.spec.satisfies('sim_os=rhel6'):
-            oslib = simmetrix_getLibDir('rhel6')
-            archlib = join_path(prefix.lib, oslib)
-            spack_env.append_path('CMAKE_PREFIX_PATH', archlib)
-            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, spack_env)
+        archlib = join_path(prefix.lib, self.oslib)
+        spack_env.append_path('CMAKE_PREFIX_PATH', archlib)
+        simmetrix_setKernelCMakePrefixPath(self.spec, archlib, spack_env)
 
     def setup_environment(self, spack_env, run_env):
-        if self.spec.satisfies('sim_os=rhel7'):
-            oslib = simmetrix_getLibDir('rhel7')
-            archlib = join_path(prefix.lib, oslib)
-            run_env.append_path('CMAKE_PREFIX_PATH', archlib)
-            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, run_env)
-        elif self.spec.satisfies('sim_os=rhel6'):
-            oslib = simmetrix_getLibDir('rhel6')
-            archlib = join_path(prefix.lib, oslib)
-            run_env.append_path('CMAKE_PREFIX_PATH', archlib)
-            simmetrix_setKernelCMakePrefixPath(self.spec, archlib, run_env)
+        archlib = join_path(prefix.lib, self.oslib)
+        run_env.append_path('CMAKE_PREFIX_PATH', archlib)
+        simmetrix_setKernelCMakePrefixPath(self.spec, archlib, run_env)
 
     def install(self, spec, prefix):
+        if not spec.satisfies('platform=linux'):
+            raise InstallError('Only the linux platform is supported')
         source_path = self.stage.source_path
         for release in simmodsuite_releases():
             simVersion = release['version']
@@ -294,18 +262,16 @@ class SimmetrixSimmodsuite(Package):
                 feature = atts[1]
                 if '+' + feature in spec:
                     if name is 'mscore':
-                        simmetrix_copytree(
-                            join_path(source_path, 'lib'),
+                        install_tree(join_path(source_path, 'lib'),
                             prefix.lib)
-                        simmetrix_copytree(
-                            join_path(source_path, 'include'),
+                        install_tree(join_path(source_path, 'include'),
                             prefix.include)
                     else:
                         path = join_path(
                             source_path,
                             name,
                             self.version.string)
-                        simmetrix_copytree(path, prefix)
+                        install_tree(path, prefix)
             for name, atts in release['docs'].items():
                 feature = atts[1]
                 if '+' + feature in spec:
@@ -313,9 +279,9 @@ class SimmetrixSimmodsuite(Package):
                         source_path,
                         name,
                         self.version.string)
-                    simmetrix_copytree(path, prefix)
+                    install_tree(path, prefix)
 
-        workdir = join_path(prefix, 'code', 'PartitionWrapper')
+        workdir = prefix.code.PartitionWrapper
         if '+parallelmesh' in spec:
             with working_dir(workdir):
                 mpi_id = spec['mpi'].name + spec['mpi'].version.string
@@ -325,12 +291,7 @@ class SimmetrixSimmodsuite(Package):
                      "CXX=%s" % spec['mpi'].mpicxx,
                      "PARALLEL=%s" % mpi_id,
                      "PQUAL=-%s" % mpi_id,
-                     "OPTFLAGS=-O2 -DNDEBUG -fPIC")
+                     "OPTFLAGS=-O2 -DNDEBUG " + self.compiler.pic_flag)
                 libname = 'libSimPartitionWrapper-' + mpi_id + '.a'
                 wrapperLibPath = join_path(workdir, 'lib', libname)
-                if spec.satisfies('sim_os=rhel7'):
-                    osdir = simmetrix_getLibDir('rhel7')
-                    install(wrapperLibPath, join_path(prefix.lib, osdir))
-                elif spec.satisfies('sim_os=rhel6'):
-                    osdir = simmetrix_getLibDir('rhel6')
-                    install(wrapperLibPath, join_path(prefix.lib, osdir))
+                install(wrapperLibPath, join_path(prefix.lib, oslib))
