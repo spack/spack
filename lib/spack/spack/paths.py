@@ -23,7 +23,7 @@ spack_root = prefix
 bin_path = os.path.join(prefix, "bin")
 
 #: The spack script itself
-spack_script = os.path.join(bin_path, "spack")
+spack_script = os.path.join(bin_path, "spack.py")
 
 # spack directory hierarchy
 lib_path              = os.path.join(prefix, "lib", "spack")

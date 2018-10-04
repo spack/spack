@@ -1,36 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env bash
 #
 # Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
-import os
-import sys
-
-if sys.version_info[:2] < (2, 6):
-    v_info = sys.version_info[:3]
-    sys.exit("Spack requires Python 2.6 or higher."
-             "This is Python %d.%d.%d." % v_info)
-
-# Find spack's location and its prefix.
-spack_file = os.path.realpath(os.path.expanduser(__file__))
-spack_prefix = os.path.dirname(os.path.dirname(spack_file))
-
-# Allow spack libs to be imported in our scripts
-spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
-sys.path.insert(0, spack_lib_path)
-
-# Add external libs
-spack_external_libs = os.path.join(spack_lib_path, "external")
-
-if sys.version_info[:2] == (2, 6):
-    sys.path.insert(0, os.path.join(spack_external_libs, 'py26'))
-
-sys.path.insert(0, spack_external_libs)
-
-# Once we've set up the system path, run the spack main method
-import spack.main  # noqa
-sys.exit(spack.main.main())
+exec /usr/bin/env python -S $0.py "$@"

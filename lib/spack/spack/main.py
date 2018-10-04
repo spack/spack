@@ -290,6 +290,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
 def make_argument_parser(**kwargs):
     """Create an basic argument parser without any subcommands added."""
     parser = SpackArgumentParser(
+        prog='spack',
         formatter_class=SpackHelpFormatter, add_help=False,
         description=(
             "A flexible package manager that supports multiple versions,\n"
