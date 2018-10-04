@@ -111,6 +111,14 @@ ruamel.yaml
   compatibility -- some ``{}`` format strings were replaced, and the
   import for ``OrderedDict`` was tweaked.
 
+setuptools
+----------
+
+* Homepage: https://setuptools.readthedocs.io/en/latest/
+* Usage: Needed by pytest.
+* Version: 36.8.0 (latest supporting python 2.6)
+* Note: pkg_resources is part of setuptools and has been vendored too
+
 six
 ---
 

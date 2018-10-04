@@ -41,6 +41,8 @@ if sys.version_info[0] < 3:
         # by pyqver.py
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncfilters.py'),
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncsupport.py'),
+        os.path.join(spack_lib_path, 'external', 'setuptools'),
+        os.path.join(spack_lib_path, 'external', 'pkg_resources'),
         os.path.join(spack_lib_path, 'external', 'yaml', 'lib3'),
         os.path.join(spack_lib_path, 'external', 'pyqver3.py')]
 
@@ -54,6 +56,8 @@ else:
         # by pyqver.py
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncfilters.py'),
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncsupport.py'),
+        os.path.join(spack_lib_path, 'external', 'setuptools'),
+        os.path.join(spack_lib_path, 'external', 'pkg_resources'),
         os.path.join(spack_lib_path, 'external', 'yaml', 'lib'),
         os.path.join(spack_lib_path, 'external', 'pyqver2.py')]
 
