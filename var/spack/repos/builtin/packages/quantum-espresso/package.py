@@ -65,7 +65,8 @@ class QuantumEspresso(Package):
     depends_on('fftw~mpi', when='~mpi')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
-    depends_on('hdf5+fortran', when='+hdf5')
+    # Versions of HDF5 prior to 1.8.16 lead to QE runtim errors
+    depends_on('hdf5@1.8.16:+fortran', when='+hdf5')
 
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
