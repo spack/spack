@@ -33,11 +33,10 @@ class Davix(CMakePackage):
     list_url = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/"
     list_depth = 1
 
-    version('0.6.7', 'f811647d924a6dc5852c92110359ed91')
+    version('0.6.8', 'e1820f4cc3fc44858ae97197a3922cce2a1130ff553b080ba19e06eb8383ddf7',
+            url='http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/0.6.8/davix-0.6.8.tar.gz')
 
     depends_on('pkgconfig', type='build')
     depends_on('libxml2')
     depends_on('libuuid')
     depends_on('openssl')
-
-    patch('davix-0.6.7-uuid.patch', when="@0.6.7")
