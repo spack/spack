@@ -55,9 +55,14 @@ class Pythia6(CMakePackage):
     version('6.4.28',
             sha256='01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020')
 
+    # Root's TPythia6 interface requires extra sources to be built into
+    # the Pythia6 library.
     variant('root', default=False,
             description='Build extra (non OEM) code to allow use by Root.')
 
+    # The maximum number of particles (NMXHEP) supported by the arrays
+    # in the /HEPEVT/ COMMON block may need tweaking if pythia6 is
+    # intended to be used with other code with different requirements.
     variant('nmxhep', default=4000, values=_is_integral, description='Extent of particle arrays in the /HEPEVT/ COMMON block.')
 
     # In the unlikely event of new versions >6.4.28,
@@ -144,13 +149,20 @@ class Pythia6(CMakePackage):
                  placement={doc: doc}
              )
 
+    # The included patch customizes some routines provided in dummy form
+    # by the original source to be useful out of the box in the vast
+    # majority of cases. If your case is different, platform- or
+    # variant-based adjustments should be made.
     patch('pythia6.patch', level=0)
 
     def patch(self):
-        # Use our provided CMakeLists.txt
+        # Use our provided CMakeLists.txt. The Makefile provided with
+        # the source is GCC (gfortran) specific, and would have required
+        # additional patching for the +root variant.
         llnl.util.filesystem.copy(os.path.join(os.path.dirname(__file__),
                                                'CMakeLists.txt'),
                                   self.stage.source_path)
+        # Apply the variant value at the relevant place in the source.
         filter_file(r'^(\s+PARAMETER\s*\(\s*NMXHEP\s*=\s*)\d+',
                     r'\1{0}'.format(self.spec.variants['nmxhep'].value),
                     'pyhepc.f')
