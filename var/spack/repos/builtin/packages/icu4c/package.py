@@ -41,8 +41,12 @@ class Icu4c(AutotoolsPackage):
 
     # The --enable-rpath option is needed on MacOS, but it breaks the
     # build for xerces-c on Linux.
-    variant('rpath', default=True,
-            description='Configure with --enable-rpath')
+    variant('rpath', default=False,
+            description='Configure with --enable-rpath. This is '
+            'needed for Darwin but should be avoided on Linux.')
+
+    conflicts('~rpath', when='platform=darwin')
+    conflicts('+rpath', when='platform=linux')
 
     configure_directory = 'source'
 
