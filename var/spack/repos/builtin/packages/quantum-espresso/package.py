@@ -45,6 +45,7 @@ class QuantumEspresso(Package):
     version('6.0.0', 'd915f2faf69d0e499f8e1681c42cbfc9')
     version('5.4',   '085f7e4de0952e266957bbc79563c54e')
     version('5.3',   'be3f8778e302cffb89258a5f936a7592')
+    version('develop', git='https://github.com/QEF/q-e.git')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
