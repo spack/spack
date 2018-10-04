@@ -44,7 +44,7 @@ class Dftfe(CMakePackage):
 
     depends_on('mpi')
     depends_on('dealii+p4est+petsc+slepc+int64+scalapack+mpi')
-    depends_on('dealii@9.0.0:', when='@0.5.1:')
+    depends_on('dealii+p4est+petsc+slepc+int64+scalapack+mpi@9.0.0:', when='@0.5.1:')
     depends_on('scalapack', when='+scalapack')
     depends_on('alglib')
     depends_on('libxc')
