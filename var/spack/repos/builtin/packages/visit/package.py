@@ -53,6 +53,9 @@ class Visit(CMakePackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('mpi', when='+parallel')
 
+    conflicts('+hdf5', when='~gui')
+    conflicts('+silo', when='~gui')
+
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
