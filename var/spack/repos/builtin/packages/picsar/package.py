@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2018, Los Alamos National Security, LLC.
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,18 +25,15 @@
 from spack import *
 
 
-class Picsarlite(MakefilePackage):
-    """PICSARlite is a self-contained proxy that adequately portrays the
-       computational loads and dataflow of more complex PIC codes.
+class Picsar(MakefilePackage):
+    """PICSAR is a high performance library of optimized versions of the key
+       functionalities of the PIC loop.
     """
-
-    tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "https://picsar.net"
     git      = "https://bitbucket.org/berkeleylab/picsar.git"
 
-    version('develop', branch='PICSARlite')
-    version('0.1', tag='PICSARlite-0.1')
+    version('develop', branch='master')
 
     variant('prod', default=True, description='Production mode (without FFTW)')
     variant('prod_spectral', default=False,
@@ -50,6 +47,8 @@ class Picsarlite(MakefilePackage):
 
     depends_on('mpi')
     depends_on('fftw@3.0: +mpi', when='+prod_spectral')
+
+    parallel = False
 
     @property
     def build_targets(self):
@@ -87,13 +86,9 @@ class Picsarlite(MakefilePackage):
 
         return targets
 
-    def build(self, spec, prefix):
-        with working_dir('PICSARlite'):
-            make(parallel=False)
-
     def install(self, spec, prefix):
         mkdirp(prefix.docs)
-        install('PICSARlite/README.md', prefix.docs)
+        install('README.md', prefix.docs)
 
         mkdirp(prefix.bin)
-        install('PICSARlite/bin/picsar', prefix.bin)
+        install('fortran_bin/picsar', prefix.bin)
