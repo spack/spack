@@ -25,11 +25,10 @@
 from spack import *
 
 
-class Tldd(Package):
+class Tldd(MakefilePackage):
     """A program similar to ldd(1) but showing the output as a tree."""
 
     homepage = "https://gitlab.com/miscripts/tldd"
-    url      = "https://gitlab.com/miscripts/tldd"
     git      = "https://gitlab.com/miscripts/tldd.git"
 
     version('2018-10-05', commit='61cb512cc992ea6cbb7239e99ec7ac92ea072507')
@@ -37,12 +36,12 @@ class Tldd(Package):
 
     depends_on('pstreams@0.8.0:')
 
-    def install(self, spec, prefix):
-        make()
-        make('install', 'PREFIX={0}'.format(prefix))
-
     def patch(self):
         filter_file(
             r'#include <pstreams/pstream.h>',
             r'#include <pstream.h>',
             'tldd.cc')
+
+    @property
+    def install_targets(self):
+        return ['install', 'PREFIX={0}'.format(self.prefix)]
