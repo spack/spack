@@ -51,6 +51,9 @@ class Raxml(Package):
     conflicts('%xl')
     conflicts('%xl_r')
 
+    # can't build multiple binaries in parallel without things breaking
+    parallel = False
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         files = glob.iglob("Makefile.*")
@@ -62,46 +65,45 @@ class Raxml(Package):
             make('-f', 'Makefile.AVX.HYBRID.gcc')
             install('raxmlHPC-HYBRID-AVX', prefix.bin)
 
-        elif '+mpi' and '+sse' and '+pthreads' in spec:
+        if '+mpi' and '+sse' and '+pthreads' in spec:
             make('-f', 'Makefile.SSE3.HYBRID.gcc')
             install('raxmlHPC-HYBRID-SSE3', prefix.bin)
 
-        elif '+mpi' and '+pthreads' in spec:
+        if '+mpi' and '+pthreads' in spec:
             make('-f', 'Makefile.HYBRID.gcc')
             install('raxmlHPC-HYBRID', prefix.bin)
 
-        elif '+mpi' and '+avx' in spec:
+        if '+mpi' and '+avx' in spec:
             make('-f', 'Makefile.AVX.MPI.gcc')
             install('raxmlHPC-MPI-AVX', prefix.bin)
 
-        elif '+mpi' and '+sse' in spec:
+        if '+mpi' and '+sse' in spec:
             make('-f', 'Makefile.SSE3.MPI.gcc')
             install('raxmlHPC-MPI-SSE3', prefix.bin)
 
-        elif '+mpi' in spec:
+        if '+mpi' in spec:
             make('-f', 'Makefile.MPI.gcc')
             install('raxmlHPC-MPI', prefix.bin)
 
-        elif '+pthreads' and '+avx' in spec:
+        if '+pthreads' and '+avx' in spec:
             make('-f', 'Makefile.AVX.PTHREADS.gcc')
             install('raxmlHPC-PTHREADS-AVX', prefix.bin)
 
-        elif '+pthreads' and '+sse' in spec:
+        if '+pthreads' and '+sse' in spec:
             make('-f', 'Makefile.SSE3.PTHREADS.gcc')
             install('raxmlHPC-PTHREADS-SSE3', prefix.bin)
 
-        elif '+pthreads' in spec:
+        if '+pthreads' in spec:
             make('-f', 'Makefile.PTHREADS.gcc')
             install('raxmlHPC-PTHREADS', prefix.bin)
 
-        elif '+sse' in spec:
+        if '+sse' in spec:
             make('-f', 'Makefile.SSE3.gcc')
             install('raxmlHPC-SSE3', prefix.bin)
 
-        elif '+avx' in spec:
+        if '+avx' in spec:
             make('-f', 'Makefile.AVX.gcc')
             install('raxmlHPC-AVX', prefix.bin)
 
-        else:
-            make('-f', 'Makefile.gcc')
-            install('raxmlHPC', prefix.bin)
+        make('-f', 'Makefile.gcc')
+        install('raxmlHPC', prefix.bin)

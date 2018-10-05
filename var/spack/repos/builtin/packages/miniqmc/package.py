@@ -26,7 +26,7 @@ from spack import *
 
 
 class Miniqmc(CMakePackage):
-    """a simplified real space QMC code for algorithm development,
+    """A simplified real space QMC code for algorithm development,
        performance portability testing, and computer science experiments
     """
 

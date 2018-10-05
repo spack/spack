@@ -81,6 +81,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxfixes')
     depends_on('libxv')
     depends_on('libxvmc')
+    depends_on('zlib@1.2.3:')
 
     # For DRI and hardware acceleration
     depends_on('dri2proto@2.6:', type='build', when='+hwrender')

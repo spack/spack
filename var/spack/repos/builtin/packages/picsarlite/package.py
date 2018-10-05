@@ -38,38 +38,15 @@ class Picsarlite(MakefilePackage):
     version('develop', branch='PICSARlite')
     version('0.1', tag='PICSARlite-0.1')
 
-    variant('prod', default=False, 
-            description='Production mode (without FFTW)')
-    variant('prod_spectral', default=False, 
+    variant('prod', default=True, description='Production mode (without FFTW)')
+    variant('prod_spectral', default=False,
             description='Production mode with spectral solver and FFTW')
-    variant('debug', default=True, 
-            description='Debug mode')
-    variant('vtune', default=False, 
-            description='Vtune profiling')
-    variant('sde', default=False, 
-            description='sde profiling')
-    variant('map', default=False, 
-            description='Allinea Map profiling')
+    variant('debug', default=False, description='Debug mode')
+    variant('vtune', default=False, description='Vtune profiling')
+    variant('sde', default=False, description='sde profiling')
+    variant('map', default=False, description='Allinea Map profiling')
     variant('library', default=False, 
             description='Create static and dynamic library')
-
-    variant('cori2', default=False, 
-            description='Build for cori2')
-    variant('cori1', default=False, 
-            description='Build for cori1')
-    variant('edison', default=False, 
-            description='Build for edison')
-    variant('default', default=True, 
-            description='Default build')
-
-    variant('knl', default=False, 
-            description='Build for knl architecture')
-    variant('ivy', default=False, 
-            description='Build for ivy bridge architecture')
-    variant('hsw', default=False, 
-            description='Build for haswell architecture')
-    variant('host', default=True, 
-            description='Build for the host architecture')
 
     depends_on('mpi')
     depends_on('fftw@3.0: +mpi', when='+prod_spectral')
@@ -77,10 +54,8 @@ class Picsarlite(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        serial = '-j1'
         targets.append('FC={0}'.format(self.spec['mpi'].mpifc))
         targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-        targets.append(format(serial))
 
         comp = 'user'
         vendors = {'%gcc': 'gnu', '%intel': 'intel'}
@@ -88,6 +63,9 @@ class Picsarlite(MakefilePackage):
             if self.spec.satisfies(key):
                 comp = value
         targets.append('COMP={0}'.format(comp))
+        if comp is 'user':
+            targets.append('FARGS={0}{1}'.format('-g -O3 ',
+                           self.compiler.openmp_flag))
 
         if '+prod' in self.spec:
             mode = 'prod'
@@ -105,34 +83,17 @@ class Picsarlite(MakefilePackage):
             mode = 'library'
         targets.append('MODE = {0}'.format(mode))
 
-        if '+cori2' in self.spec:
-            sys = 'cori2'
-        elif '+cori1' in self.spec:
-            sys = 'cori1'
-        elif '+edison' in self.spec:
-            sys = 'edison'
-        elif '+default' in self.spec:
-            sys = 'default'
-        targets.append('SYS = {0}'.format(sys))
-
-        if '+knl' in self.spec:
-            arch = 'knl'
-        elif '+ivy' in self.spec:
-            arch = 'ivy'
-        elif '+hsw' in self.spec:
-            arch = 'hsw'
-        elif '+host' in self .spec:
-            arch = 'host'
-        targets.append('ARCH = {0}'.format(arch))
+        targets.append('SYS = default')
 
         return targets
 
+    def build(self, spec, prefix):
+        with working_dir('PICSARlite'):
+            make(parallel=False)
+
     def install(self, spec, prefix):
-        install_tree('Acceptance_testing', prefix.Acceptance_testing)
-        install_tree('performance_tests', prefix.performance_tests)
-        install_tree('examples', prefix.examples)
-        install_tree('python_module', prefix.python_module)
-        install_tree('utils', prefix.utils)
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('license.txt', prefix.doc)
+        mkdirp(prefix.docs)
+        install('PICSARlite/README.md', prefix.docs)
+
+        mkdirp(prefix.bin)
+        install('PICSARlite/bin/picsar', prefix.bin)

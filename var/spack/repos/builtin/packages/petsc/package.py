@@ -43,6 +43,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
     version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
     version('3.9.4', 'c98eb67573efb2f91c6f239368259e44')
     version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
@@ -204,6 +205,9 @@ class Petsc(Package):
                    '--download-c2html=0',
                    '--download-sowing=0',
                    '--download-hwloc=0',
+                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
+                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags']),
                    'COPTFLAGS=',
                    'FOPTFLAGS=',
                    'CXXOPTFLAGS=']
