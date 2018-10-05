@@ -27,9 +27,9 @@ from spack import *
 
 
 class Pacvim(MakefilePackage):
-    """Pacvim is a command-line-based game based off of Pacman. The main purpose of this
-    software is to familiarize individuals with Vim although it may also help individuals
-    learn Spack, Linux and Git"""
+    """Pacvim is a command-line-based game based off of Pacman.
+       The main purpose of this software is to familiarize individuals
+       with Vim."""
 
     homepage = "https://github.com/jmoon018/PacVim"
     url      = "https://github.com/jmoon018/PacVim/archive/v1.1.1.tar.gz"
