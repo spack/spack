@@ -32,13 +32,14 @@ class Tldd(Package):
     url      = "https://gitlab.com/miscripts/tldd"
     git      = "https://gitlab.com/miscripts/tldd.git"
 
+    version('2018-10-05', commit='61cb512cc992ea6cbb7239e99ec7ac92ea072507')
     version('master', branch='master')
 
-    depends_on('pstreams')
+    depends_on('pstreams@0.8.0:')
 
     def install(self, spec, prefix):
         make()
-        make('PREFIX={0}'.format(prefix), 'install')
+        make('install', 'PREFIX={0}'.format(prefix))
 
     def patch(self):
         filter_file(
