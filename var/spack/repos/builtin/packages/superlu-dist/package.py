@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,21 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import glob
-import os
 from spack import *
 
 
-class SuperluDist(Package):
+class SuperluDist(CMakePackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
     homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
-    url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
+    url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('6.0.0', '2e3ce927fa5786470dacbdf8c41afb08')
     version('5.4.0', 'e64645c5be352ae2c88327af2cac66e1')
     version('5.3.0', '35d5aa8e0a246efaf327988b20106714')
     version('5.2.2', 'a685ef7fb7859b24c8c9d5d5f121a8a5')
@@ -51,8 +50,8 @@ class SuperluDist(Package):
     version('4.0', 'c0b98b611df227ae050bc1635c6940e0')
     version('3.3', 'f4805659157d93a962500902c219046b')
 
-    variant('int64', default=False,
-            description="Use 64bit integers")
+    variant('int64', default=False, description='Build with 64 bit integers')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on('mpi')
     depends_on('blas')
@@ -60,69 +59,31 @@ class SuperluDist(Package):
     depends_on('parmetis')
     depends_on('metis@5:')
 
-    def install(self, spec, prefix):
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        makefile_inc = []
-        makefile_inc.extend([
-            'PLAT         = _mac_x',
-            'DSuperLUroot = %s' % self.stage.source_path,
-            'DSUPERLULIB  = $(DSuperLUroot)/lib/libsuperlu_dist.a',
-            'BLASDEF      = -DUSE_VENDOR_BLAS',
-            'BLASLIB      = %s' % lapack_blas.ld_flags,
-            'METISLIB     = %s' % spec['metis'].libs.ld_flags,
-            'PARMETISLIB  = %s' % spec['parmetis'].libs.ld_flags,
-            'HAVE_PARMETIS= TRUE',
-            'FLIBS        =',
-            'LIBS         = $(DSUPERLULIB) $(BLASLIB) $(PARMETISLIB) $(METISLIB)',  # noqa
-            'ARCH         = ar',
-            'ARCHFLAGS    = cr',
-            'RANLIB       = true',
-            'CXX          = {0}'.format(self.spec['mpi'].mpicxx),
-            'CXXFLAGS     = {0} {1} {2}'.format(
-                ' '.join(self.spec.compiler_flags['cxxflags']),
-                self.compiler.pic_flag,
-                self.compiler.cxx11_flag),
-            'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = %s %s -O2 %s %s %s' % (
-                self.compiler.pic_flag,
-                '' if '%pgi' in spec else '-std=c99',
-                spec['parmetis'].headers.cpp_flags,
-                spec['metis'].headers.cpp_flags,
-                '-D_LONGINT' if '+int64' in spec and not
-                self.spec.satisfies('@5.2.0:') else ''),
-            'XSDK_INDEX_SIZE = %s' % ('64' if '+int64' in spec else '32'),
-            'NOOPTS       = %s -std=c99' % (
-                self.compiler.pic_flag),
-            'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
-            'F90FLAGS     = -O2',
-            'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
-            'INCLUDEDIR   = $(SuperLUroot)/include',
-            'LOADOPTS     =',
-            'CDEFS        = %s' % ("-DNoChange"
-                                       if spack_f77.endswith('xlf') or
-                                          spack_f77.endswith('xlf_r')
-                                       else "-DAdd_")
-        ])
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
+            ';' + spec['metis'].libs.ld_flags,
+            '-DTPL_PARMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
+        ]
 
-        with open('make.inc', 'w') as fh:
-            fh.write('\n'.join(makefile_inc))
+        if '+int64' in spec:
+            args.append('-DXSDK_INDEX_SIZE=64')
+        else:
+            args.append('-DXSDK_INDEX_SIZE=32')
 
-        mkdirp(os.path.join(self.stage.source_path, 'lib'))
-        make("lib", parallel=False)
+        if '+shared' in spec:
+            args.append('-DBUILD_SHARED_LIBS:BOOL=ON')
+        else:
+            args.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+        return args
 
-        # FIXME:
-        # cd "EXAMPLE" do
-        # system "make"
-
-        # need to install by hand
-        headers_location = self.prefix.include
-        mkdirp(headers_location)
-        mkdirp(prefix.lib)
-
-        headers = glob.glob(join_path(self.stage.source_path, 'SRC', '*.h'))
-        for h in headers:
-            install(h, headers_location)
-
-        superludist_lib = join_path(self.stage.source_path,
-                                    'lib/libsuperlu_dist.a')
-        install(superludist_lib, self.prefix.lib)
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+        if name == 'cflags' and '%pgi' not in self.spec:
+            flags.append('-std=c99')
+        return (None, None, flags)
