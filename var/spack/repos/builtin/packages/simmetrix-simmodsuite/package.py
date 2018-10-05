@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-from distutils import dir_util
 
 
 def simmodsuite_releases():
@@ -145,21 +144,21 @@ def simmodsuite_releases():
     return releases
 
 
-def simmetrix_makeComponentUrl(name):
+def simmetrix_makecomponenturl(name):
     """only supporting the linux libraries"""
     prefix = "file://{0}/".format(os.getcwd())
     suffix = "-" + "linux64.tgz"
     return prefix + name + suffix
 
 
-def simmetrix_makeDocUrl(name):
+def simmetrix_makedocurl(name):
     """doc zip files are not os/arch specific"""
     prefix = "file://{0}/".format(os.getcwd())
     suffix = '.zip'
     return prefix + name + suffix
 
 
-def simmetrix_setKernelCMakePrefixPath(spec, path, env):
+def simmetrix_setkernelcmakeprefixpath(spec, path, env):
     if '+acis' in spec:
         env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'acisKrnl'))
     if '+parasolid' in spec:
@@ -212,7 +211,7 @@ class SimmetrixSimmodsuite(Package):
     variant('paralleladapt', default=False, description='enable parallel adaptation')
 
     depends_on('mpi')
-    
+
     oslib = 'x64_rhel7_gcc48'
 
     releases = simmodsuite_releases()
@@ -220,7 +219,7 @@ class SimmetrixSimmodsuite(Package):
         # define the version using the mscore tarball
         simVersion = release['version']
         mainPkgName = 'mscore'
-        url = simmetrix_makeComponentUrl(mainPkgName)
+        url = simmetrix_makecomponenturl(mainPkgName)
         md5 = release['components'][mainPkgName][0]
         version(simVersion, md5=md5, url=url)
         # define resources for the other tarballs
@@ -230,42 +229,42 @@ class SimmetrixSimmodsuite(Package):
                 continue
             md5 = atts[0]
             feature = atts[1]
-            url = simmetrix_makeComponentUrl(name)
+            url = simmetrix_makecomponenturl(name)
             condition = "@{0}+{1}".format(simVersion, feature)
             simmetrix_resource(name, url, md5, condition)
         # define resources for the document zip files
         for name, atts in release['docs'].items():
             md5 = atts[0]
             feature = atts[1]
-            url = simmetrix_makeDocUrl(name)
+            url = simmetrix_makedocurl(name)
             condition = "@{0}+{1}".format(simVersion, feature)
             simmetrix_resource(name, url, md5, condition)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         archlib = join_path(prefix.lib, self.oslib)
         spack_env.append_path('CMAKE_PREFIX_PATH', archlib)
-        simmetrix_setKernelCMakePrefixPath(self.spec, archlib, spack_env)
+        simmetrix_setkernelcmakeprefixpath(self.spec, archlib, spack_env)
 
     def setup_environment(self, spack_env, run_env):
         archlib = join_path(prefix.lib, self.oslib)
         run_env.append_path('CMAKE_PREFIX_PATH', archlib)
-        simmetrix_setKernelCMakePrefixPath(self.spec, archlib, run_env)
+        simmetrix_setkernelcmakeprefixpath(self.spec, archlib, run_env)
 
     def install(self, spec, prefix):
         if not spec.satisfies('platform=linux'):
             raise InstallError('Only the linux platform is supported')
         source_path = self.stage.source_path
         for release in simmodsuite_releases():
-            simVersion = release['version']
-            if simVersion != spec.version.string:
+            simversion = release['version']
+            if simversion != spec.version.string:
                 continue
             for name, atts in release['components'].items():
                 feature = atts[1]
                 if '+' + feature in spec:
                     if name is 'mscore':
-                        install_tree(join_path(source_path, 'lib'),
-                            prefix.lib)
-                        install_tree(join_path(source_path, 'include'),
+                        install_tree(join_path(source_path, 'lib'), prefix.lib)
+                        install_tree(
+                            join_path(source_path, 'include'),
                             prefix.include)
                     else:
                         path = join_path(
@@ -294,5 +293,5 @@ class SimmetrixSimmodsuite(Package):
                      "PQUAL=-%s" % mpi_id,
                      "OPTFLAGS=-O2 -DNDEBUG " + self.compiler.pic_flag)
                 libname = 'libSimPartitionWrapper-' + mpi_id + '.a'
-                wrapperLibPath = join_path(workdir, 'lib', libname)
-                install(wrapperLibPath, join_path(prefix.lib, oslib))
+                wrapperlibpath = join_path(workdir, 'lib', libname)
+                install(wrapperlibpath, join_path(prefix.lib, oslib))
