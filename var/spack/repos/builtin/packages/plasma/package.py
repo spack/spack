@@ -1,13 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, Innovative Computing Laboratory
-# Produced at the Innovative Computing Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# Created by Piotr Luszczek, luszczek@icl.utk.edu, All rights reserved.
-#
-# For details, see https://github.com/spack/spack
-#
-##############################################################################
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
