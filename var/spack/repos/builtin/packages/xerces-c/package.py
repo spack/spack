@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class XercesC(AutotoolsPackage):
@@ -39,7 +40,16 @@ class XercesC(AutotoolsPackage):
     version('3.2.1', '8f98a81a3589bbc2dad9837452f7d319')
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 
-    variant('transcoder', default='gnuiconv',
+    # It's best to be explicit about the transcoder or else xerces may
+    # choose another value.
+    if sys.platform == 'darwin':
+        default_transcoder = 'macos'
+    elif sys.platform.startswith('win') or sys.platform == 'cygwin':
+        default_transcoder = 'windows'
+    else:
+        default_transcoder = 'gnuiconv'
+
+    variant('transcoder', default=default_transcoder,
             values=('gnuiconv', 'iconv', 'icu', 'macos', 'windows'),
             multi=False,
             description='Use the specified transcoder')

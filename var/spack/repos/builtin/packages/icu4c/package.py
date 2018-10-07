@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Icu4c(AutotoolsPackage):
@@ -41,7 +42,7 @@ class Icu4c(AutotoolsPackage):
 
     # The --enable-rpath option is needed on MacOS, but it breaks the
     # build for xerces-c on Linux.
-    variant('rpath', default=False,
+    variant('rpath', default=sys.platform == 'darwin',
             description='Configure with --enable-rpath. This is '
             'needed for Darwin but should be avoided on Linux.')
 
