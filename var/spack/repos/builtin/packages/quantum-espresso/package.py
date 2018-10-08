@@ -97,9 +97,9 @@ class QuantumEspresso(Package):
     # branch and future releases will support serial HDF5
     conflicts('+hdf5', when='@:6.0.0')
     conflicts(
-	'+hdf5',
-	when='~mpi@6.1.0:6.3',
-	msg='HDF5 support only available with MPI for QE 6.1:6.3'
+        '+hdf5',
+        when='~mpi@6.1.0:6.3',
+        msg='HDF5 support only available with MPI for QE 6.1:6.3'
     )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
