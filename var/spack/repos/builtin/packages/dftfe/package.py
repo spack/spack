@@ -42,7 +42,6 @@ class Dftfe(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('complex', default=False, description='Build with complex numbers')
 
     depends_on('mpi')
     depends_on('dealii+p4est+petsc+slepc+int64+scalapack+mpi')
@@ -52,9 +51,6 @@ class Dftfe(CMakePackage):
     depends_on('libxc')
     depends_on('spglib')
     depends_on('libxml2')
-
-    conflicts('~complex', when='^dealii^petsc+complex')
-    conflicts('+complex', when='^dealii^petsc~complex')
 
     def cmake_args(self):
         spec = self.spec
