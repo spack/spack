@@ -17,4 +17,8 @@
 . "$(dirname $0)/setup.sh"
 check_dependencies flake8
 
+# verify that the code style is correct
 spack flake8
+
+# verify that the license headers are present
+spack license verify
