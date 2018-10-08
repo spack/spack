@@ -28,7 +28,7 @@ from spack import *
 class RMisc3d(RPackage):
     """A collection of miscellaneous 3d plots, including isosurfaces."""
 
-    homepage = "http://www.example.com"
+    homepage = "https://cran.r-project.org/web/packages/misc3d/index.html"
     url      = "https://cran.r-project.org/src/contrib/misc3d_0.8-4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/misc3d"
 

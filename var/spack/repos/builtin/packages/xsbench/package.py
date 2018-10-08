@@ -41,7 +41,8 @@ class Xsbench(MakefilePackage):
     version('14', '94d5d28eb031fd4ef35507c9c1862169')
     version('13', '72a92232d2f5777fb52f5ea4082aff37')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    variant('mpi', default=True, description='Build with MPI support')
+    variant('openmp', default=True, description='Build with OpenMP support')
 
     depends_on('mpi', when='+mpi')
 
@@ -55,8 +56,11 @@ class Xsbench(MakefilePackage):
         cflags = '-std=gnu99'
         if '+mpi' in self.spec:
             targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+        else:
+            targets.append('CC={0}'.format(self.compiler.cxx))
 
-        cflags += ' ' + self.compiler.openmp_flag
+        if '+openmp' in self.spec:
+            cflags += ' ' + self.compiler.openmp_flag
         targets.append('CFLAGS={0}'.format(cflags))
         targets.append('LDFLAGS=-lm')
 

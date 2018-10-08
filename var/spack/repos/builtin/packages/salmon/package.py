@@ -38,6 +38,10 @@ class Salmon(CMakePackage):
     depends_on('tbb')
     depends_on('boost@:1.66.0')
 
+    def patch(self):
+        # remove static linking to libstdc++
+        filter_file('-static-libstdc++', '', 'CMakeLists.txt', string=True)
+
     def cmake_args(self):
         args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
         return args
