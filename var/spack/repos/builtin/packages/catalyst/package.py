@@ -58,7 +58,8 @@ class Catalyst(CMakePackage):
 
     depends_on('git')
     depends_on('mpi')
-    depends_on('python@2:2.8', when='+python')
+    depends_on('python@2:2.8', when='+python', type=("build", "link", "run"))
+    depends_on('python', when='~python', type=("build"))
     depends_on('mesa', when='+rendering')
     depends_on("libx11", when='+rendering')
     depends_on("libxt", when='+rendering')
