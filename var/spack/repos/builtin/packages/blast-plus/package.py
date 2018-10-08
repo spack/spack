@@ -107,6 +107,7 @@ class BlastPlus(AutotoolsPackage):
 
     depends_on('python', when='+python')
     depends_on('perl', when='+perl')
+    depends_on('lmdb', when='@2.7.1:')
 
     configure_directory = 'c++'
 
