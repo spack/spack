@@ -41,7 +41,7 @@ class SspaceStandard(Package):
 
     version('3.0', '7e171b4861b9d514e80aafc3d9cdf554')
 
-    depends_on('perl', type=('build', 'run'))
+    depends_on('perl+threads', type=('build', 'run'))
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
