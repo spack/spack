@@ -107,10 +107,25 @@ If you are referencing Spack in a publication, please cite the following paper:
    [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
 
-Release
+License
 ----------------
-Spack is released under an LGPL license.  For more details see the
-NOTICE and LICENSE files.
+
+Spack is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0). Users may choose either license, at their
+option.
+
+All new contributions must be made under both the MIT and Apache-2.0
+licenses.
+
+13 of Spack's 2,800 packages are still only only available under LGPL-2.1
+terms.  They will eventually be relicensed, rewritten, or removed as we
+work towards 100% Apache2/MIT.  To see which package files are still
+under the LGPL-2.1 license, run the `spack license list-lgpl` command.
+
+See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
+[LICENSE-APACHE](https://github.com/spack/spack/blob/develop/LICENSE-APACHE),
+[COPYRIGHT](https://github.com/spack/spack/blob/develop/COPYRIGHT), and
+[NOTICE](https://github.com/spack/spack/blob/develop/NOTICE) for details.
 
 ``LLNL-CODE-647188``
 
