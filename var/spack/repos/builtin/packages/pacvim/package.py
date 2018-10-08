@@ -22,26 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class Pacvim(MakefilePackage):
+    """Pacvim is a command-line-based game based off of Pacman.
+       The main purpose of this software is to familiarize individuals
+       with Vim."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://github.com/jmoon018/PacVim"
+    url      = "https://github.com/jmoon018/PacVim/archive/v1.1.1.tar.gz"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('1.1.1', sha256='c869c5450fbafdfe8ba8a8a9bba3718775926f276f0552052dcfa090d21acb28')
 
-    depends_on('tbb')
-    depends_on('boost@:1.66.0')
+    depends_on('ncurses')
 
-    def patch(self):
-        # remove static linking to libstdc++
-        filter_file('-static-libstdc++', '', 'CMakeLists.txt', string=True)
+    def edit(self, stage, prefix):
+        makefile = FileFilter('Makefile')
 
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+        makefile.filter(r'PREFIX = /usr/local',
+                        'PREFIX={0}'.format(self.prefix))

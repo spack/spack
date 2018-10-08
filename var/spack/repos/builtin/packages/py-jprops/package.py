@@ -25,37 +25,12 @@
 from spack import *
 
 
-class Canu(MakefilePackage):
-    """A single molecule sequence assembler for genomes large and
-       small."""
+class PyJprops(PythonPackage):
+    """Java properties file parser for Python"""
 
-    homepage = "http://canu.readthedocs.io/"
-    url      = "https://github.com/marbl/canu/archive/v1.5.tar.gz"
+    homepage = "https://github.com/mgood/jprops/"
+    url      = "https://pypi.org/packages/source/j/jprops/jprops-2.0.2.tar.gz"
 
-    version('1.7.1', sha256='c314659c929ee05fd413274f391463a93f19b8337eabb7ee5de1ecfc061caafa')
-    version('1.5', '65df275baa28ecf11b15dfd7343361e3')
+    version('2.0.2', sha256='d297231833b6cd0a3f982a48fe148a7f9817f2895661743d166b267e4d3d5b2c')
 
-    depends_on('gnuplot', type='run')
-    depends_on('jdk', type='run')
-    depends_on('perl', type='run')
-
-    build_directory = 'src'
-
-    def patch(self):
-        # Use our perl, not whatever is in the environment
-        filter_file(r'^#!/usr/bin/env perl',
-                    '#!{0}'.format(self.spec['perl'].command.path),
-                    'src/pipelines/canu.pl')
-
-    def install(self, spec, prefix):
-        # replicate the Makefile logic here:
-        # https://github.com/marbl/canu/blob/master/src/Makefile#L344
-        uname = which('uname')
-        ostype = uname(output=str).strip()
-        machinetype = uname('-m', output=str).strip()
-        if machinetype == 'x86_64':
-            machinetype = 'amd64'
-        target_dir = '{0}-{1}'.format(ostype, machinetype)
-        bin = join_path(target_dir, 'bin')
-
-        install_tree(bin, prefix.bin)
+    depends_on('py-setuptools', type='build')
