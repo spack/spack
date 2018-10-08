@@ -71,6 +71,15 @@ class QuantumEspresso(Package):
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
 
+    # MKL with 64-bit integers not supported.
+    conflicts('intel-mkl+ilp64')
+
+    # Supporting the FFTW3 interface in old versions of MKL is difficult.
+    conflicts('intel-mkl@:11.3.2.210')
+
+    # External FFTW2 is not supported out of the box.
+    conflicts('fftw@2.1.5')
+
     # We can't ask for scalapack or elpa if we don't want MPI
     conflicts(
         '+scalapack',
