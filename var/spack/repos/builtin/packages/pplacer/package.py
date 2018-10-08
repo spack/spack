@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Pplacer(Package):
     """Pplacer places query sequences on a fixed reference phylogenetic tree
        to maximize phylogenetic likelihood or posterior probability according
@@ -41,5 +42,5 @@ class Pplacer(Package):
         install_tree('scripts', prefix.bin)
         force_remove(join_path(prefix.bin, 'setup.py'))
         install('guppy', prefix.bin)
-        install('pplacer',prefix.bin)
+        install('pplacer', prefix.bin)
         install('rppr', prefix.bin)
