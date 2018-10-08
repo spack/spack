@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,23 +26,20 @@
 from spack import *
 
 
-class Openmc(CMakePackage):
-    """The OpenMC project aims to provide a fully-featured Monte Carlo particle
-       transport code based on modern methods. It is a constructive solid
-       geometry, continuous-energy transport code that uses ACE format cross
-       sections. The project started under the Computational Reactor Physics
-       Group at MIT."""
+class Pacvim(MakefilePackage):
+    """Pacvim is a command-line-based game based off of Pacman.
+       The main purpose of this software is to familiarize individuals
+       with Vim."""
 
-    homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
-    git = "https://github.com/openmc-dev/openmc.git"
+    homepage = "https://github.com/jmoon018/PacVim"
+    url      = "https://github.com/jmoon018/PacVim/archive/v1.1.1.tar.gz"
 
-    version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
-    version('develop')
+    version('1.1.1', sha256='c869c5450fbafdfe8ba8a8a9bba3718775926f276f0552052dcfa090d21acb28')
 
-    depends_on("hdf5+hl")
+    depends_on('ncurses')
 
-    def cmake_args(self):
-        options = ['-DHDF5_ROOT:PATH=%s' % self.spec['hdf5'].prefix]
+    def edit(self, stage, prefix):
+        makefile = FileFilter('Makefile')
 
-        return options
+        makefile.filter(r'PREFIX = /usr/local',
+                        'PREFIX={0}'.format(self.prefix))

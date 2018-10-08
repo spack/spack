@@ -158,13 +158,13 @@ class Kokkos(Package):
             cuda_options_args = []
 
             # Backends
-            if 'serial' in spec:
+            if '+serial' in spec:
                 g_args.append('--with-serial')
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
-            if 'qthreads' in spec:
+            if '+qthreads' in spec:
                 g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
-            if 'cuda' in spec:
+            if '+cuda' in spec:
                 g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
             # Host architectures
             host_arch = spec.variants['host_arch'].value

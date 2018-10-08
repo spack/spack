@@ -37,6 +37,7 @@ class Hypre(Package):
     git      = "https://github.com/LLNL/hypre.git"
 
     version('develop', branch='master')
+    version('2.15.0', '4645acc49141069cae1d53de96107a08')
     version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1')
     version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b')
     version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c')

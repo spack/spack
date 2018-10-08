@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,27 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Openmc(CMakePackage):
-    """The OpenMC project aims to provide a fully-featured Monte Carlo particle
-       transport code based on modern methods. It is a constructive solid
-       geometry, continuous-energy transport code that uses ACE format cross
-       sections. The project started under the Computational Reactor Physics
-       Group at MIT."""
+class PyPyspark(PythonPackage):
+    """Python bindings for Apache Spark"""
 
-    homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
-    git = "https://github.com/openmc-dev/openmc.git"
+    homepage = "http://spark.apache.org"
+    url      = "https://pypi.org/packages/source/p/pyspark/pyspark-2.3.0.tar.gz"
 
-    version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
-    version('develop')
+    version('2.3.0', sha256='0b3536910e154c36a94239f0ba0a201f476aadc72006409e5787198ffd01986e')
 
-    depends_on("hdf5+hl")
-
-    def cmake_args(self):
-        options = ['-DHDF5_ROOT:PATH=%s' % self.spec['hdf5'].prefix]
-
-        return options
+    depends_on('py-setuptools', type='build')
+    depends_on('py-py4j', type=('build', 'run'))

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,27 +22,29 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Openmc(CMakePackage):
-    """The OpenMC project aims to provide a fully-featured Monte Carlo particle
-       transport code based on modern methods. It is a constructive solid
-       geometry, continuous-energy transport code that uses ACE format cross
-       sections. The project started under the Computational Reactor Physics
-       Group at MIT."""
+class NvptxTools(AutotoolsPackage):
+    """nvptx-tools: A collection of tools for use with nvptx-none GCC
+    toolchains. These tools are necessary when building a version
+    of GCC that enables offloading of OpenMP/OpenACC code to NVIDIA
+    GPUs."""
 
-    homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
-    git = "https://github.com/openmc-dev/openmc.git"
+    homepage = "https://github.com/MentorEmbedded/nvptx-tools"
+    git      = "https://github.com/MentorEmbedded/nvptx-tools"
 
-    version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
-    version('develop')
+    version('2018-03-01', commit='5f6f343a302d620b0868edab376c00b15741e39e')
 
-    depends_on("hdf5+hl")
+    depends_on('binutils')
+    depends_on('cuda')
 
-    def cmake_args(self):
-        options = ['-DHDF5_ROOT:PATH=%s' % self.spec['hdf5'].prefix]
+    def configure_args(self):
+        cuda_dir = self.spec['cuda'].prefix
 
-        return options
+        config_args = [
+            "--with-cuda-driver-include={0}".format(cuda_dir.include),
+            "--with-cuda-driver-lib={0}".format(cuda_dir.lib64)
+        ]
+
+        return config_args
