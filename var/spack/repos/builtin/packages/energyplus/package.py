@@ -34,11 +34,9 @@ class Energyplus(Package):
        heating, cooling, ventilation, lighting and plug and process loads
        and water use in buildings"""
 
-    # the version URLs seem to have an embedded hash
     homepage = "https://energyplus.net"
-    url      = "https://github.com/NREL/EnergyPlus/releases/download/v8.9.0-WithIDDFixes/EnergyPlus-8.9.0-eba93e8e1b-Linux-x86_64.tar.gz"
 
-    # seems redundant but each version will need an explicit URL anyway
+    # versions require explicit URLs as they contain hashes
     version('8.9.0', sha256='13a5192b25815eb37b3ffd019ce3b99fd9f854935f8cc4362814f41c56e9ca98',
             url="https://github.com/NREL/EnergyPlus/releases/download/v8.9.0-WithIDDFixes/EnergyPlus-8.9.0-eba93e8e1b-Linux-x86_64.tar.gz")
 
