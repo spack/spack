@@ -180,7 +180,7 @@ In the ``packages.yaml`` file under ``permissions``, the attributes
 ``read``, ``write``, and ``group`` control the package
 permissions. These attributes can be set per-package, or for all
 packages under ``all``. If permissions are set under ``all`` and for a
-specific package, the package settings take precedence.
+specific package, the package-specific settings take precedence.
 
 The ``read`` and ``write`` attributes take one of ``user``, ``group``,
 and ``world``.

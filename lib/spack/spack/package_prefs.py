@@ -257,7 +257,8 @@ def get_package_dir_permissions(spec):
     """Return the permissions configured for the spec.
 
     Include the GID bit if group permissions are on. This makes the group
-    attribute sticky for the directory."""
+    attribute sticky for the directory. Package-specific settings take
+    precedent over settings for ``all``"""
     perms = get_package_permissions(spec)
     if perms & stat.S_IRWXG:
         perms |= stat.S_ISGID
@@ -265,7 +266,9 @@ def get_package_dir_permissions(spec):
 
 
 def get_package_permissions(spec):
-    """Return the permissions configured for the spec"""
+    """Return the permissions configured for the spec.
+
+    Package-specific settings take precedence over settings for ``all``"""
 
     # Get read permissions level
     for name in (spec.name, 'all'):
@@ -310,7 +313,9 @@ def get_package_permissions(spec):
 
 
 def get_package_group(spec):
-    """Return the unix group associated with the spec"""
+    """Return the unix group associated with the spec.
+
+    Package-specific settings take precedence over settings for ``all``"""
     for name in (spec.name, 'all'):
         try:
             group = spack.config.get('packages:%s:permissions:group' % name,
