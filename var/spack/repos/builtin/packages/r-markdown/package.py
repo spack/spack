@@ -40,3 +40,4 @@ class RMarkdown(RPackage):
     version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 
     depends_on('r-mime', type=('build', 'run'))
+    depends_on('r-catools', type=('build', 'run'))
