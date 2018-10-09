@@ -51,7 +51,7 @@ class Vtk(CMakePackage):
 
     # Haru causes trouble on Fedora and Ubuntu in v8.1.1
     # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
-    variant('haru', default='True')
+    variant('haru', default=True, description='Enable libharu')
 
     patch('gcc.patch', when='@6.1.0')
 
