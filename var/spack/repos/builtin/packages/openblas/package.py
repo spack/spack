@@ -98,6 +98,14 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/pull/1703
     patch('openblas-0.3.2-cmake.patch', when='@0.3.1:0.3.2')
 
+    # Disable experimental TLS code that lead to many threading issues
+    # https://github.com/xianyi/OpenBLAS/issues/1735#issuecomment-422954465
+    # https://github.com/xianyi/OpenBLAS/issues/1761#issuecomment-421039174
+    # https://github.com/xianyi/OpenBLAS/pull/1765
+    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch',
+          sha256='714aea33692304a50bd0ccde42590c176c82ded4a8ac7f06e573dc8071929c33',
+          when='@0.3.3')
+
     parallel = False
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
