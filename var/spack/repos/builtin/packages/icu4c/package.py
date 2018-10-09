@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
 class Icu4c(AutotoolsPackage):
@@ -40,15 +39,6 @@ class Icu4c(AutotoolsPackage):
     version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
     version('57.1', '976734806026a4ef8bdd17937c8898b9')
 
-    # The --enable-rpath option is needed on MacOS, but it breaks the
-    # build for xerces-c on Linux.
-    variant('rpath', default=sys.platform == 'darwin',
-            description='Configure with --enable-rpath. This is '
-            'needed for Darwin but should be avoided on Linux.')
-
-    conflicts('~rpath', when='platform=darwin')
-    conflicts('+rpath', when='platform=linux')
-
     configure_directory = 'source'
 
     def url_for_version(self, version):
@@ -58,7 +48,9 @@ class Icu4c(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if '+rpath' in self.spec:
+        # The --enable-rpath option is only needed on MacOS, and it
+        # breaks the build for xerces-c on Linux.
+        if 'platform=darwin' in self.spec:
             args.append('--enable-rpath')
 
         return args

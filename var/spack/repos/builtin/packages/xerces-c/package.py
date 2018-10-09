@@ -54,8 +54,8 @@ class XercesC(AutotoolsPackage):
             multi=False,
             description='Use the specified transcoder')
 
-    depends_on('libiconv',    type='link', when='transcoder=gnuiconv')
-    depends_on('icu4c~rpath', type='link', when='transcoder=icu')
+    depends_on('libiconv', type='link', when='transcoder=gnuiconv')
+    depends_on('icu4c',    type='link', when='transcoder=icu')
 
     # Pass flags to configure.  This is necessary for CXXFLAGS or else
     # the xerces default will override the spack wrapper.
