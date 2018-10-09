@@ -219,7 +219,9 @@ before_script:
     fi
 
   # Set up environment modules
-  - source /usr/share/modules/init/bash
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then
+        source /usr/share/modules/init/bash;
+    fi
 
 #=============================================================================
 # Building
