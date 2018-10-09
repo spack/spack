@@ -31,7 +31,7 @@ class Nektar(CMakePackage):
     homepage = "https://www.nektar.info/"
     url      = "https://gitlab.nektar.info/nektar/nektar/-/archive/v4.4.1/nektar-v4.4.1.tar.bz2"
 
-    version('4.4.1', sha256='9faebae290b28cb1fe083627b9cd078c20a9045ac9ec98ed6c60adc876ed2dcd')
+    version('4.4.1', '1be7d061c3cafd9a0f1eb8d281d99b89')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('fftw', default=True, description='Builds with fftw support')
