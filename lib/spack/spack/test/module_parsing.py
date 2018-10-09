@@ -9,9 +9,10 @@ import os
 import tempfile
 
 from spack.util.module_cmd import (
-    module
+    module,
     get_path_from_module,
-    get_argument_from_module_line
+    get_path_arg_from_module_line,
+    get_path_from_module_contents
 )
 
 env = os.environ.copy()
@@ -122,4 +123,4 @@ def test_get_argument_from_module_line():
     assert all(get_path_arg_from_module_line(l) == '/lib/path' for l in lines)
     for bl in bad_lines:
         with pytest.raises(ValueError):
-            get_argument_from_module_line(bl)
+            get_path_arg_from_module_line(bl)
