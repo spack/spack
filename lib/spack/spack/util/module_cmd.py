@@ -119,8 +119,10 @@ def unload_module(mod):
     """Takes a module name and unloads the module from the environment. It does
     not check whether conflicts arise from the unloaded module"""
     modulecmd = get_module_cmd()
-    exec(compile(modulecmd('unload', mod, output=str, error=str), '<string>',
-                 'exec'))
+    unload_output = modulecmd('unload', mod, output=str, error=str)
+    tty.debug("Module unload output of {0}:\n".format(mod) +
+              unload_output + "\n")
+    exec(compile(unload_output, '<string>', 'exec'))
 
 
 def load_module(mod):
@@ -135,7 +137,9 @@ def load_module(mod):
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
     # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
+    module_content = modulecmd('show', mod, output=str, error=str)
+    tty.debug("Module contents of {0}:\n".format(mod) + module_content + "\n")
+    text = module_content.split()
     for i, word in enumerate(text):
         if word == 'conflict':
             unload_module(text[i + 1])
