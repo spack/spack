@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMacs(PythonPackage):
+class PyMacs2(PythonPackage):
     """MACS Model-based Analysis of ChIP-Seq.
 
     py-macs and py-macs2 are hosted in the same git repository,
@@ -33,10 +33,13 @@ class PyMacs(PythonPackage):
     py-macs (v1) is kept around as the results are different.
     """
 
-    homepage = "http://liulab.dfci.harvard.edu/MACS/index.html"
-    url      = "https://github.com/downloads/taoliu/MACS/MACS-1.4.2-1.tar.gz"
+    homepage = "https://github.com/taoliu/MACS"
+    url      = "https://pypi.io/packages/source/M/MACS2/MACS2-2.1.1.20160309.tar.gz"
 
-    version('1.4.2-1',
-            '950dab09fe1335c8bbb34a896c21e3e2')
+    version('2.1.1.20160309',
+            '2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')           
 
-    depends_on('python@2.6:2.7')
+    depends_on('python@2.7:2.8')
+
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-numpy@1.6:', type=('build', 'run'))
