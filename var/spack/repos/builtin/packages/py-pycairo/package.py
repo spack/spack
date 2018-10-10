@@ -37,6 +37,7 @@ class PyPycairo(PythonPackage):
 
     depends_on('cairo@1.2.0:')
     depends_on('pkgconfig', type='build')
+    depends_on('py-setuptools', type='build')
 
     @run_after('install')
     def post_install(self):
