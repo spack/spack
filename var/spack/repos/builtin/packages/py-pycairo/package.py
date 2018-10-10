@@ -23,36 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
-class AtSpi2Core(MesonPackage):
-    """The At-Spi2 Core package provides a Service Provider Interface for the
-       Assistive Technologies available on the GNOME platform and a library
-       against which applications can be linked."""
+class PyPycairo(PythonPackage):
+    """Pycairo is a set of Python bindings for the cairo graphics library."""
 
-    homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-core.html"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/2.28/at-spi2-core-2.28.0.tar.xz"
-    list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
-    list_depth = 1
+    homepage = "https://www.cairographics.org/pycairo/"
+    url      = "https://github.com/pygobject/pycairo/releases/download/v1.17.1/pycairo-1.17.1.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/68/76/340ff847897296b2c8174dfa5a5ec3406e3ed783a2abac918cf326abad86/pycairo-1.17.1.tar.gz"
 
-    version('2.28.0', '9c42f79636ed1c0e908b7483d789b32e')
+    version('1.17.1', '34c1ee106655b450c4bd57e29371a4a7')
 
-    depends_on('glib@2.56.1:')
-    depends_on('dbus@1.12.8:')
-    depends_on('libx11')
-    depends_on('libxi')
-    depends_on('libxtst', type='build')
-    depends_on('recordproto', type='build')
-    depends_on('inputproto', type='build')
-    depends_on('fixesproto', type='build')
+    depends_on('cairo@1.2.0:')
     depends_on('pkgconfig', type='build')
-    depends_on('python', type='build')
+    depends_on('py-setuptools', type='build')
 
-    def url_for_version(self, version):
-        """Handle gnome's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
-        return url + '/%s/at-spi2-core-%s.tar.xz' % (version.up_to(2), version)
-
-    def setup_environment(self, spack_env, run_env):
-        # this avoids an "import site" error in the build
-        spack_env.unset('PYTHONHOME')
+    @run_after('install')
+    def post_install(self):
+        src = self.prefix.lib + '/pkgconfig/py3cairo.pc'
+        dst = self.prefix.lib + '/pkgconfig/pycairo.pc'
+        if os.path.exists(src) and not os.path.exists(dst):
+            copy(src, dst)
