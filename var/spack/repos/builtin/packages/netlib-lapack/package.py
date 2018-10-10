@@ -178,7 +178,8 @@ class NetlibLapack(CMakePackage):
             # use F77 compiler if IBM XL
             args.extend(['-DCMAKE_Fortran_COMPILER=' + self.compiler.f77,
                          '-DCMAKE_Fortran_FLAGS=' +
-                         (' '.join(self.spec.compiler_flags['fflags']))])
+                         (' '.join(self.spec.compiler_flags['fflags'])) +
+                         " -O3 -qnohot"])
 
         # deprecated routines are commonly needed by, for example, suitesparse
         # Note that OpenBLAS spack is built with deprecated routines
