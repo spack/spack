@@ -486,12 +486,12 @@ def variant(
     if default is None and values == (True, False):
         default = False
 
-    # if default is None:
-    #     def _raise_default_not_set(pkg):
-    #         msg = "the default value in variant '{0}' from package" \
-    #               " '{1}' needs to be set explicitly"
-    #         raise DirectiveError(msg.format(name, pkg.name))
-    #     return _raise_default_not_set
+    if default is None:
+        def _raise_default_not_set(pkg):
+            msg = "the default value in variant '{0}' from package" \
+                  " '{1}' needs to be set explicitly"
+            raise DirectiveError(msg.format(name, pkg.name))
+        return _raise_default_not_set
 
     description = str(description).strip()
 

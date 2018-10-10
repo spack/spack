@@ -47,7 +47,7 @@ class Scr(CMakePackage):
     variant('scr_config', default='scr.conf',
             description='Location for SCR to find its system config file. '
             'May be either absolute or relative to the install prefix')
-    variant('copy_config', default=None,
+    variant('copy_config', default='none',
             description='Location from which to copy SCR system config file. '
             'Must be an absolute path.')
 
