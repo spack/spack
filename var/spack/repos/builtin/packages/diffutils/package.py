@@ -23,30 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.operating_systems.mac_os import macos_version
-import sys
 
 
-class Bison(AutotoolsPackage):
-    """Bison is a general-purpose parser generator that converts
-    an annotated context-free grammar into a deterministic LR or
-    generalized LR (GLR) parser employing LALR(1) parser tables."""
+class Diffutils(AutotoolsPackage):
+    """GNU Diffutils is a package of several programs related to finding
+    differences between files."""
 
-    homepage = "http://www.gnu.org/software/bison/"
-    url      = "https://ftpmirror.gnu.org/bison/bison-3.0.4.tar.gz"
+    homepage = "https://www.gnu.org/software/diffutils/"
+    url      = "https://ftp.gnu.org/gnu/diffutils/diffutils-3.6.tar.xz"
 
-    version('3.0.5', '41ad57813157b61bfa47e33067a9d6f0')
-    version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
-    version('2.7',   'ded660799e76fb1667d594de1f7a0da9')
-
-    depends_on('diffutils', type='build')
-    depends_on('m4', type=('build', 'run'))
-    depends_on('perl', type='build')
-    depends_on('help2man', type='build')
-
-    patch('pgi.patch', when='@3.0.4')
-
-    if sys.platform == 'darwin' and macos_version() >= Version('10.13'):
-        patch('secure_snprintf.patch', level=0, when='@3.0.4')
+    version('3.6', sha256='d621e8bdd4b573918c8145f7ae61817d1be9deb4c8d2328a65cea8e11d783bd6')
 
     build_directory = 'spack-build'

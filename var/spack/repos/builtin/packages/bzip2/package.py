@@ -42,6 +42,8 @@ class Bzip2(Package):
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
 
+    depends_on('diffutils', type='build')
+
     # override default implementation
     @property
     def libs(self):
