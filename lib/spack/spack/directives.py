@@ -429,7 +429,7 @@ def variant(
         default=None,
         description='',
         values=None,
-        multi=False,
+        multi=None,
         validator=None):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
@@ -446,23 +446,53 @@ def variant(
         multi (bool): if False only one value per spec is allowed for
             this variant
         validator (callable): optional group validator to enforce additional
-            logic. It receives a tuple of values and should raise an instance
-            of SpackError if the group doesn't meet the additional constraints
+            logic. It receives the package name, the variant name and a tuple
+            of values and should raise an instance of SpackError if the group
+            doesn't meet the additional constraints
+
+    Raises:
+        DirectiveError: if arguments passed to the directive are invalid
     """
     if name in reserved_names:
-        raise ValueError("The variant name '%s' is reserved by Spack" % name)
+        raise DirectiveError(
+            "The variant name '%s' is reserved by Spack" % name
+        )
 
+    # Ensure we have a sequence of allowed variant values, or a
+    # predicate for it.
     if values is None:
-        if default in (True, False) or (type(default) is str and
-                                        default.upper() in ('TRUE', 'FALSE')):
+        if str(default).upper() in ('TRUE', 'FALSE'):
             values = (True, False)
         else:
             values = lambda x: True
 
-    if default is None:
-        default = False if values == (True, False) else ''
+    # The object defining variant values might supply its own defaults for
+    # all the other arguments. Ensure we have no conflicting definitions
+    # in place.
+    for argument in ('default', 'multi', 'validator'):
+        if hasattr(values, argument) and locals()[argument] is not None:
+            def _raise_argument_error(pkg):
+                msg = "multiple conflicting values for argument '{0}' " \
+                      "in variant '{1}' of package '{2}'"
+                raise DirectiveError(msg.format(argument, name, pkg.name))
+            return _raise_argument_error
 
-    default = default
+    # Allow for the object defining the allowed values to supply its own
+    # default value and group validator, say if it supports multiple values.
+    default = getattr(values, 'default', default)
+    validator = getattr(values, 'validator', validator)
+    multi = getattr(values, 'multi', bool(multi))
+
+    if default is None and values == (True, False):
+        default = False
+
+    # if default is None:
+    #     def _raise_default_not_set(pkg):
+    #         msg = "the default value in variant '{0}' from package" \
+    #               " '{1}' needs to be set explicitly"
+    #         raise DirectiveError(msg.format(name, pkg.name))
+    #     return _raise_default_not_set
+
     description = str(description).strip()
 
     def _execute_variant(pkg):

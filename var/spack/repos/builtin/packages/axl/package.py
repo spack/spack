@@ -7,7 +7,7 @@ from spack import *
 from spack.error import SpackError
 
 
-def async_api_validator(values):
+def async_api_validator(pkg_name, variant_name, values):
     if 'none' in values and len(values) != 1:
         raise SpackError("The value 'none' is not usable"
                          " with other async_api values.")

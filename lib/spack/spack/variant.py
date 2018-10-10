@@ -9,6 +9,7 @@ variants both in packages and in specs.
 
 import functools
 import inspect
+import itertools
 import re
 from six import StringIO
 
@@ -16,6 +17,11 @@ import llnl.util.lang as lang
 
 import spack.directives
 import spack.error as error
+
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
 
 
 class Variant(object):
@@ -118,7 +124,7 @@ class Variant(object):
 
         # Validate the group of values if needed
         if self.group_validator is not None:
-            self.group_validator(value)
+            self.group_validator(pkg.name, self.name, value)
 
     @property
     def allowed_values(self):
@@ -596,6 +602,102 @@ def substitute_abstract_variants(spec):
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
+
+
+class DisjointSetsOfValues(Sequence):
+    """Allows combinations from one of among many mutually exclusive sets.
+
+    Args:
+        *sets (list of tuples): mutually exclusive sets of values
+    """
+    def __init__(self, *sets):
+        self.sets = [set(x) for x in sets]
+        if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
+            raise error.SpecError('sets in input must be disjoint')
+
+        self.feature_values = tuple(itertools.chain.from_iterable(self.sets))
+        self.default = None
+        self.multi = True
+        self.error_fmt = "variant '{0}' in package '{1}' accepts " \
+                         "combinations from a single disjoint set of " \
+                         "values [{2}]"
+
+    def with_default(self, default):
+        """Sets the default value and returns self."""
+        self.default = default
+        return self
+
+    def with_error(self, error_fmt):
+        """Sets the error message format and returns self."""
+        self.error_fmt = error_fmt
+        return self
+
+    def with_non_feature_values(self, *values):
+        """Marks a few values as not being tied to a feature."""
+        self.feature_values = tuple(
+            x for x in self.feature_values if x not in values
+        )
+        return self
+
+    def __contains__(self, item):
+        return item in itertools.chain.from_iterable(self.sets)
+
+    def __getitem__(self, idx):
+        return tuple(self.feature_values)[idx]
+
+    def __len__(self):
+        return len(self.feature_values)
+
+    @property
+    def validator(self):
+        def _disjoint_set_validator(pkg_name, variant_name, values):
+            # If for any of the sets, all the values are in it return True
+            if any(all(x in s for x in values) for s in self.sets):
+                return
+            msg = self.error_fmt.format(variant_name, pkg_name, values)
+            raise error.SpecError(msg)
+        return _disjoint_set_validator
+
+
+def _a_single_value_or_a_combination(single_value, *values):
+    error = "the value '" + single_value + \
+            "' in the variant '{0}' of package '{1}' " \
+            "is mutually exclusive with any of the other values"
+    return DisjointSetsOfValues(
+        (single_value,), values
+    ).with_default(single_value).with_error(error).\
+        with_non_feature_values(single_value)
+
+
+def any_combination_of(*values):
+    """Multi-valued variant that allows any combination of a set of
+    values or 'none'.
+
+    Args:
+        *values: allowed variant values
+
+    Returns:
+        a properly initialized instance of DisjointSetsOfValues
+    """
+    return _a_single_value_or_a_combination('none', *values)
+
+
+def auto_or_any_combination_of(*values):
+    """Multi-valued variant that allows any combination of a set of values
+    or 'auto'.
+
+    Args:
+        *values: allowed variant values
+
+    Returns:
+        a properly initialized instance of DisjointSetsOfValues
+    """
+    return _a_single_value_or_a_combination('auto', *values)
+
+
+#: Multi-valued variant that allows any combination picking
+#: from one of multiple disjoint sets
+disjoint_sets = DisjointSetsOfValues
 
 
 class DuplicateVariantError(error.SpecError):
