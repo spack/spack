@@ -54,13 +54,16 @@ class SstMacro(AutotoolsPackage):
     depends_on('otf2', when='+otf2')
     depends_on('llvm+clang@:5.99.99', when='+skeletonizer')
     depends_on('mpi', when='+mpi')
+    depends_on('sst-core@8.0.0', when='@8.0.0 +core')
+    depends_on('sst-core@develop', when='@develop +core')
 
-    variant('otf2', default=False, description='Enable OTF2 trace emission and replay support')
-    variant('skeletonizer', default=False, description='Enable Clang source-to-source autoskeletonization')
-    variant('threaded', default=False, description='Enable thread-parallel PDES simulation')
+    variant('core', default=False, description='Use SST Core for PDES')
     variant('mpi', default=True, description='Enable distributed PDES simulation')
-    variant('static', default=True, description='Build static libraries')
+    variant('otf2', default=False, description='Enable OTF2 trace emission and replay support')
     variant('shared', default=True, description='Build shared libraries')
+    variant('skeletonizer', default=False, description='Enable Clang source-to-source autoskeletonization')
+    variant('static', default=True, description='Build static libraries')
+    variant('threaded', default=False, description='Enable thread-parallel PDES simulation')
 
     @run_before('autoreconf')
     def bootstrap(self):
@@ -89,6 +92,9 @@ class SstMacro(AutotoolsPackage):
 
             if '+skeletonizer' in spec:
                 args.append('--with-clang=' + spec['llvm'].prefix)
+
+        if '+core' in spec:
+            args.append('--with-sst-core=%s' % spec['sst-core'].prefix)
 
         # Optional MPI support
         if '+mpi' in spec:
