@@ -44,11 +44,6 @@ class SuperluDist(CMakePackage):
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')
     version('5.1.0', '6bb86e630bd4bd8650243aed8fd92eb9')
     version('5.0.0', '2b53baf1b0ddbd9fcf724992577f0670')
-    version('4.3', 'ee66c84e37b4f7cc557771ccc3dc43ae')
-    version('4.2', 'ae9fafae161f775fbac6eba11e530a65')
-    version('4.1', '4edee38cc29f687bd0c8eb361096a455')
-    version('4.0', 'c0b98b611df227ae050bc1635c6940e0')
-    version('3.3', 'f4805659157d93a962500902c219046b')
 
     variant('int64', default=False, description='Build with 64 bit integers')
     variant('shared', default=True, description='Build shared libraries')
@@ -61,9 +56,12 @@ class SuperluDist(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         args = [
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_INSTALL_LIBDIR:STRING=%s' % self.prefix.lib,
+            '-DTPL_BLAS_LIBRARIES=%s' % lapack_blas.ld_flags,
             '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
             ';' + spec['metis'].libs.ld_flags,
             '-DTPL_PARMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
