@@ -483,9 +483,6 @@ def variant(
     validator = getattr(values, 'validator', validator)
     multi = getattr(values, 'multi', bool(multi))
 
-    if default is None and values == (True, False):
-        default = False
-
     if default is None:
         def _raise_default_not_set(pkg):
             msg = "the default value in variant '{0}' from package" \

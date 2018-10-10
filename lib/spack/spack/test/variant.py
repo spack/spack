@@ -13,6 +13,9 @@ from spack.variant import UnsatisfiableVariantSpecError
 from spack.variant import InconsistentValidationError
 from spack.variant import MultipleValuesInExclusiveVariantError
 from spack.variant import InvalidVariantValueError, DuplicateVariantError
+from spack.variant import disjoint_sets
+
+import spack.error
 
 
 class TestMultiValuedVariant(object):
@@ -692,3 +695,10 @@ class TestVariantMapTest(object):
         c['feebar'] = SingleValuedVariant('feebar', 'foo')
         c['shared'] = BoolValuedVariant('shared', True)
         assert str(c) == ' feebar=foo foo=bar,baz foobar=fee +shared'
+
+
+def test_disjoint_set_initialization_errors():
+    # Constructing from non-disjoint sets should raise an exception
+    with pytest.raises(spack.error.SpecError) as exc_info:
+        disjoint_sets(('a', 'b'), ('b', 'c'))
+    assert 'sets in input must be disjoint' in str(exc_info.value)

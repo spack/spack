@@ -3,13 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.architecture
+import sys
 import pytest
 
 from spack.spec import Spec, UnsatisfiableSpecError
 from spack.spec import substitute_abstract_variants, parse_anonymous_spec
 from spack.variant import InvalidVariantValueError
 from spack.variant import MultipleValuesInExclusiveVariantError
+
+import spack.architecture
+import spack.directives
+import spack.error
 
 
 def target_factory(spec_string, target_concrete):
@@ -785,3 +789,40 @@ class TestSpecSematics(object):
                 s.compiler_flags[x] == ['-O0', '-g']
                 for x in ('cflags', 'cxxflags', 'fflags')
             )
+
+    def test_any_combination_of(self):
+        # Test that using 'none' and another value raise during concretization
+        spec = Spec('multivalue_variant foo=none,bar')
+        with pytest.raises(spack.error.SpecError) as exc_info:
+            spec.concretize()
+
+        assert "is mutually exclusive with any of the" in str(exc_info.value)
+
+    @pytest.mark.skipif(
+        sys.version_info[0] == 2, reason='__wrapped__ requires python 3'
+    )
+    def test_errors_in_variant_directive(self):
+        variant = spack.directives.variant.__wrapped__
+
+        # We can't use names that are reserved by Spack
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            variant('patches')
+        assert "The variant name 'patches' is reserved" in str(exc_info.value)
+
+        # We can't have conflicting definitions for arguments
+        class Pkg(object):
+            name = 'PKG'
+
+        fn = variant(
+            'foo', values=spack.variant.any_combination_of('fee', 'foom'),
+            default='bar'
+        )
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "multiple conflicting values for " in str(exc_info.value)
+
+        # We can't leave None as a default value
+        fn = variant('foo', default=None)
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "the default value in variant 'foo' " in str(exc_info.value)
