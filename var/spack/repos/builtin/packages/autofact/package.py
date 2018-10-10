@@ -23,26 +23,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Autofact(Package):
+    """An Automatic Functional Annotation and Classification Tool"""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "http://megasun.bch.umontreal.ca/Software/AutoFACT.htm"
+    url      = "http://megasun.bch.umontreal.ca/Software/AutoFACT_v3_4.tar"
 
-    version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.9',  '22c9d40dabafbec348aaada226581239')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
-    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
+    version('3_4', sha256='1465d263b19adb42f01f6e636ac40ef1c2e3dbd63461f977b89da9493fe9c6f4')
 
-    depends_on('java')
+    depends_on('perl', type='run')
+    depends_on('perl-bio-perl', type='run')
+    depends_on('perl-io-string', type='run')
+    depends_on('perl-lwp', type='run')
+    depends_on('blast-plus', type='run')
+
+    def patch(self):
+        with working_dir('scripts'):
+            files = glob.iglob("*.pl")
+            for file in files:
+                change = FileFilter(file)
+                change.filter('usr/bin/perl', 'usr/bin/env perl')
 
     def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install-lite')
+        install_tree(self.stage.source_path, prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.prefix.scripts)
+        run_env.set('PATH2AUTOFACT', self.prefix)

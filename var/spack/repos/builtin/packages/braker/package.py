@@ -38,6 +38,9 @@ class Braker(Package):
             url='http://bioinf.uni-greifswald.de/augustus/binaries/old/BRAKER1_v1.11.tar.gz')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('perl-scalar-util-numeric', type=('build', 'run'))
+    depends_on('perl-parallel-forkmanager', type=('build', 'run'))
+    depends_on('perl-file-which', type=('build', 'run'))
     depends_on('augustus@3.2.3')
     depends_on('genemark-et')
     depends_on('bamtools')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,24 +25,22 @@
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
+class Pplacer(Package):
+    """Pplacer places query sequences on a fixed reference phylogenetic tree
+       to maximize phylogenetic likelihood or posterior probability according
+       to a reference alignment. Pplacer is designed to be fast, to give
+       useful information about uncertainty, and to offer advanced
+       visualization and downstream analysis.
     """
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "http://matsen.fhcrc.org/pplacer/"
+    url      = "https://github.com/matsen/pplacer/releases/download/v1.1.alpha19/pplacer-linux-v1.1.alpha19.zip"
 
-    version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.9',  '22c9d40dabafbec348aaada226581239')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
-    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
-
-    depends_on('java')
+    version('1.1.alpha19', 'e6b78604882d41d4bf13592c7edebfa2')
 
     def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install-lite')
+        install_tree('scripts', prefix.bin)
+        force_remove(join_path(prefix.bin, 'setup.py'))
+        install('guppy', prefix.bin)
+        install('pplacer', prefix.bin)
+        install('rppr', prefix.bin)

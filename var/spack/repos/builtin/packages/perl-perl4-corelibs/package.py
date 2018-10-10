@@ -22,27 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class PerlPerl4Corelibs(PerlPackage):
+    """Perl4::CoreLibs - libraries historically supplied with Perl 4"""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    # doesn't look like a homepage but it is
+    homepage = "https://metacpan.org/pod/release/ZEFRAM/Perl4-CoreLibs-0.003/lib/Perl4/CoreLibs.pm"
+    url      = "https://cpan.metacpan.org/authors/id/Z/ZE/ZEFRAM/Perl4-CoreLibs-0.003.tar.gz"
 
-    version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.9',  '22c9d40dabafbec348aaada226581239')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
-    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
+    version('0.004', sha256='78887e3365f8935ab00d528832e9b7a426fb684ffc5c03c20e67a217ca4ac64a')
+    version('0.003', sha256='55c9b2b032944406dbaa2fd97aa3692a1ebce558effc457b4e800dabfaad9ade')
+    version('0.002', sha256='c68272e8b0e37268d9fbb93f5ef5708e12e0a13bbb5a6123af3f493ea8852521')
+    version('0.001', sha256='f7479f63e8b0cc344752a59f66fd084a14ee87bcc2a1f67c1a413afab8d0ad37')
+    version('0.000', sha256='d8f2310ad0b0f48c8fc258a75042ebeedf47bcefb231be427761dba77e734875')
 
-    depends_on('java')
-
-    def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install-lite')
+    depends_on('perl-module-build', type='build')

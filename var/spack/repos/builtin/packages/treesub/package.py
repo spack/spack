@@ -22,27 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import os
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Treesub(Package):
+    """A small program (which glues together other programs) that
+       allows a user to input a codon alignment in FASTA format and
+       produce an annotated phylogenetic tree showing which substitutions
+       occurred on a given branch. Originally written for colleagues at
+       the MRC NIMR."""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "https:/github.com/tamuri/treesub"
+    url      = "https://github.com/tamuri/treesub/archive/v0.2.tar.gz"
 
-    version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.9',  '22c9d40dabafbec348aaada226581239')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
-    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
+    version('0.2', sha256='58b0d2638cf9ae1ad8705df26a57c32b52a69f50e7954debbd678c82772fdc56')
+    version('0.1', sha256='c083ecc5f7e9f11645a7e768f6a09fefcbb254b526212003527b4b8dd14723f1')
 
-    depends_on('java')
+    depends_on('jdk', type='run')
+    depends_on('ant', type='build')
+    depends_on('paml', type='run')
+    depends_on('raxml', type='run')
+    depends_on('figtree', type='run')
 
     def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install-lite')
+        ant = self.spec['ant'].command
+        ant('jar')
+
+        mkdirp(prefix.bin)
+        install_tree('dist', prefix.bin)
+
+        mkdirp(prefix.lib)
+        install_tree('lib', prefix.lib)
+
+        execscript = join_path(self.package_dir, 'treesub')
+        os.chmod(execscript, 0o775)
+        install(execscript, prefix.bin)

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import glob
 
 
 class SspaceStandard(Package):
@@ -41,15 +42,26 @@ class SspaceStandard(Package):
 
     version('3.0', '7e171b4861b9d514e80aafc3d9cdf554')
 
-    depends_on('perl', type=('build', 'run'))
+    depends_on('perl+threads', type=('build', 'run'))
+    depends_on('perl-perl4-corelibs', type=('build', 'run'))
 
     def install(self, spec, prefix):
+        rootscript = 'SSPACE_Standard_v{0}.pl'.format(self.version)
+
+        scripts = [rootscript]
+        scripts.extend(glob.glob('tools/*.pl'))
+        scripts.extend(glob.glob('bwa/*.pl'))
+
+        for s in scripts:
+            filter_file('/usr/bin/perl', '/usr/bin/env perl',
+                        s, string=True)
+
         install_tree('bin', prefix.bin)
         install_tree('bowtie', prefix.bowtie)
         install_tree('bwa', prefix.bwa)
         install_tree('dotlib', prefix.dotlib)
         install_tree('tools', prefix.tools)
-        install('SSPACE_Standard_v{0}.pl'.format(self.version), prefix)
+        install(rootscript, prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('SSPACE_HOME', prefix)

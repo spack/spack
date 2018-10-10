@@ -22,27 +22,37 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import os
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Figtree(Package):
+    """FigTree is designed as a graphical viewer of phylogenetic trees and
+       as a program for producing publication-ready figures. As with most of
+       my programs, it was written for my own needs so may not be as polished
+       and feature-complete as a commercial program. In particular it is
+       designed to display summarized and annotated trees produced by BEAST."""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "https://github.com/rambaut/figtree"
+    url      = "https://github.com/rambaut/figtree/releases/download/v1.4.3/FigTree_v1.4.3.tgz"
 
-    version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.9',  '22c9d40dabafbec348aaada226581239')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
-    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
+    version('1.4.3', sha256='f497d4dd3a6d220f6b62495b6f47a12ade50d87dbd8d6089f168e94d202f937b')
 
-    depends_on('java')
+    depends_on('java', type='run')
+
+    def patch(self):
+        # we have to change up the executable to point to the right program
+        filter_file('lib/figtree.jar',
+                    join_path(self.spec.prefix.lib, 'figtree.jar'),
+                    'bin/figtree', string=True)
+
+        # also set proper executable flags
+        os.chmod('bin/figtree', 0o775)
 
     def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install-lite')
+        mkdirp(prefix.bin)
+        install_tree('bin', prefix.bin)
+
+        mkdirp(prefix.lib)
+        install_tree('lib', prefix.lib)

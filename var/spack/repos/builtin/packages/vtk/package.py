@@ -212,7 +212,8 @@ class Vtk(CMakePackage):
             # string. This fix was recommended on the VTK mailing list
             # in March 2014 (see
             # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
-            if (self.compiler.is_apple and
+            if (self.spec.satisfies('%clang') and
+                self.compiler.is_apple and
                 self.compiler.version >= Version('5.1.0')):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
 
