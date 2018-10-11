@@ -132,6 +132,15 @@ class QuantumEspresso(Package):
         if '+openmp' in spec:
             options.append('--enable-openmp')
 
+
+        # For Intel package, lapack.libs = blas.libs, hence it will appear
+        # twice in in link line but this is harmless
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+
+        # Based on the current QE configure scripts, LAPACK_LIBS
+        # is not used for external LAPACK
+        options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
+
         if '+scalapack' in spec:
             scalapack_option = 'intel' if '^intel-mkl' in spec else 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
