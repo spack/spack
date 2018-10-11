@@ -43,8 +43,10 @@ class NlohmannJson(CMakePackage):
     depends_on('cmake@3.8:', type='build')
 
     # requires mature C++11 implementations
-    conflicts('%gcc@:4.8')
-    conflicts('%gcc@:3.3')
+    conflicts('%gcc@:4.7')
+    # v3.3.0 adds support for gcc 4.8
+    # https://github.com/nlohmann/json/releases/tag/v3.3.0
+    conflicts('%gcc@:4.8', when='@:3.2.9')
     conflicts('%intel@:16')
     conflicts('%pgi@:14')
 
