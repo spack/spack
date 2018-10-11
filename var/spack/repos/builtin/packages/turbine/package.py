@@ -30,10 +30,10 @@ class Turbine(AutotoolsPackage):
     """Turbine: The Swift/T runtime"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/turbine-1.1.0.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/turbine-0.0.0.tar.gz'
 
-    version('1.2.2', '3944c3a826fea2efed780d750e4eb4e2', url = 'file:///home/jozik/local_spack2/turbine-1.2.2.tar.gz')
-    version('1.2.1', 'c8976b22849aafe02a8fb4259dfed434', url = 'file:///home/jozik/local_spack/turbine-1.2.1.tar.gz')
+    version('1.2.3', 'f2e393c292c4248b4e77a19f8272ae88')
+    version('1.2.1', 'c8976b22849aafe02a8fb4259dfed434')
     version('1.1.0', '9a347cf16df02707cb529f96c265a082')
 
     variant('python', default=False,

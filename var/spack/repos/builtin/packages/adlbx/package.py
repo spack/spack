@@ -30,9 +30,9 @@ class Adlbx(AutotoolsPackage):
     """ADLB/X: Master-worker library + work stealing and data dependencies"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/adlbx-0.8.0.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.0.0.tar.gz'
 
-    version('0.9.1', 'eed9c619166cb1e980d29a73e9d8a336', url = 'file:///home/jozik/local_spack2/adlbx-0.9.1.tar.gz')
+    version('0.9.1', '07151ddef5fb83d8f4b40700013d9daf')
     version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
 
     depends_on('exmcutils@:0.5.3', when = '@:0.8.0')

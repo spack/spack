@@ -30,8 +30,8 @@ class Exmcutils(AutotoolsPackage):
     """ExM C-Utils: Generic C utility library for ADLB/X and Swift/T"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/exmcutils-0.5.4.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/exmcutils-0.0.0.tar.gz'
 
-    version('0.5.4', 'a08e2c687ba710ab33c2c22f8bf6d127')
+    version('0.5.6', 'b12a8dc163e3369492ec7c1403fe86e4')
 
     # This package has no dependencies.
