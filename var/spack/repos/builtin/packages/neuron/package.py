@@ -48,6 +48,7 @@ class Neuron(Package):
     depends_on('mpi',         when='+mpi')
     depends_on('ncurses',     when='~cross-compile')
     depends_on('python@2.6:', when='+python')
+    depends_on('readline',    when='+python')
     depends_on('tau',         when='+profile')
 
     conflicts('~shared', when='+python')
@@ -118,7 +119,7 @@ class Neuron(Package):
                 py_lib = spec['python'].prefix.lib64
 
             options.extend(['--with-nrnpython=%s' % python_exec,
-                            '--disable-pysetup',
+                            #'--disable-pysetup',
                             'PYINCDIR=%s' % py_inc,
                             'PYLIBDIR=%s' % py_lib])
 
