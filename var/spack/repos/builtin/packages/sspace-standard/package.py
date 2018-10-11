@@ -55,6 +55,9 @@ class SspaceStandard(Package):
         for s in scripts:
             filter_file('/usr/bin/perl', '/usr/bin/env perl',
                         s, string=True)
+            filter_file('require "getopts.pl";', 'use Getopt::Std;',
+                        s, string=True)
+            filter_file('&Getopts(', 'getopts(', s, string=True)
 
         install_tree('bin', prefix.bin)
         install_tree('bowtie', prefix.bowtie)
