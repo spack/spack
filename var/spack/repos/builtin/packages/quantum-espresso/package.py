@@ -123,7 +123,9 @@ class QuantumEspresso(Package):
         options = ['-prefix={0}'.format(prefix_path)]
 
         if '+mpi' in spec:
+            mpi = spec['mpi']
             options.append('--enable-parallel=yes')
+            options.append('MPIF90={0}'.format(mpi.mpifc))
         else:
             options.append('--enable-parallel=no')
 
@@ -166,7 +168,7 @@ class QuantumEspresso(Package):
         search_list = " ".join(search_list)
 
         options.extend([
-            'LIBDIRS={0}'.format(search_list),
+            'F77={0}'.format(env['SPACK_F77']),
             'F90={0}'.format(env['SPACK_FC']),
             'CC={0}'.format(env['SPACK_CC'])
         ])
