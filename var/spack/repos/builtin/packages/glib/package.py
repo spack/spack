@@ -34,10 +34,7 @@ class Glib(AutotoolsPackage):
 
     variant('libmount', default=False, description='Build with libmount support')
     variant(
-        'tracing',
-        default='',
-        values=('dtrace', 'systemtap'),
-        multi=True,
+        'tracing', values=any_combination_of('dtrace', 'systemtap'),
         description='Enable tracing support'
     )
 

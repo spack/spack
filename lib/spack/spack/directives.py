@@ -483,7 +483,11 @@ def variant(
     validator = getattr(values, 'validator', validator)
     multi = getattr(values, 'multi', bool(multi))
 
-    if default is None:
+    # Here we sanitize against a default value being either None
+    # or the empty string, as the former indicates that a default
+    # was not set while the latter will make the variant unparsable
+    # from the command line
+    if default is None or default == '':
         def _raise_default_not_set(pkg):
             msg = "the default value in variant '{0}' from package" \
                   " '{1}' needs to be set explicitly"
