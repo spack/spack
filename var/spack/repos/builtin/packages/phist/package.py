@@ -56,6 +56,7 @@ class Phist(CMakePackage):
                     'petsc',
                     'eigen',
                     'ghost'])
+
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
                         '3: +verbose 4: +extreme 5; +debug')
@@ -66,6 +67,10 @@ class Phist(CMakePackage):
     variant('mpi', default=True,
             description='enable/disable MPI (note that the kernel library may '
             'not support this choice)')
+
+    variant('openmp', default=True,
+            description='enable/disable OpenMP')
+
     variant('parmetis', default=False,
             description='enable/disable ParMETIS partitioning (only actually '
                         'used with kernel_lib=builtin)')
@@ -75,9 +80,11 @@ class Phist(CMakePackage):
                         'iterative solvers. For the Trilinos backends '
                         '(kernel_lib=epetra|tpetra) we can use preconditioner '
                         'packages such as Ifpack, Ifpack2 and ML.')
+
     variant('fortran', default=True,
             description='generate Fortran 2003 bindings (requires Python3 and '
                         'a Fortran compiler)')
+
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
@@ -119,6 +126,8 @@ class Phist(CMakePackage):
                 '-DTPL_LAPACKE_INCLUDE_DIRS=%s' % lapacke_include_dir,
                 '-DPHIST_ENABLE_MPI:BOOL=%s'
                 % ('ON' if '+mpi' in spec else 'OFF'),
+                '-DPHIST_ENABLE_OPENMP=%s'
+                % ('ON' if '+openmp' in spec else 'OFF'),
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
                 % ('ON' if '+shared' in spec else 'OFF'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
