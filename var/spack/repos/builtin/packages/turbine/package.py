@@ -32,16 +32,29 @@ class Turbine(AutotoolsPackage):
     homepage = 'http://swift-lang.org/Swift-T'
     url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/turbine-1.1.0.tar.gz'
 
+    version('1.2.2', '3944c3a826fea2efed780d750e4eb4e2', url = 'file:///home/jozik/local_spack2/turbine-1.2.2.tar.gz')
+    version('1.2.1', 'c8976b22849aafe02a8fb4259dfed434', url = 'file:///home/jozik/local_spack/turbine-1.2.1.tar.gz')
     version('1.1.0', '9a347cf16df02707cb529f96c265a082')
 
     variant('python', default=False,
             description='Enable calling python')
-
+    variant('r', default=False,
+            description='Enable calling R')
+    depends_on('adlbx@:0.8.0', when = '@:1.1.0')
+    depends_on('adlbx', when = '@1.2.1:')
     depends_on('adlbx')
     depends_on('tcl')
     depends_on('zsh')
     depends_on('swig', type='build')
     depends_on('python', when='+python')
+    depends_on('r', when='+r')
+
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+
+        spack_env.set('CC', spec['mpi'].mpicc)
+        spack_env.set('CXX', spec['mpi'].mpicxx)
+        spack_env.set('CXXLD', spec['mpi'].mpicxx)
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,
@@ -50,5 +63,8 @@ class Turbine(AutotoolsPackage):
                 '--with-mpi='     + self.spec['mpi'].prefix]
         if '+python' in self.spec:
             args.append('--with-python-exe={0}'.format(
-                                            self.spec['python'].command.path))
+                        self.spec['python'].command.path))
+        if '+r' in self.spec:
+            args.append('--with-r={0}/rlib/R'.format(
+                        self.spec['r'].prefix))
         return args

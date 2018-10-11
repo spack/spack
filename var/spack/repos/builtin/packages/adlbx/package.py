@@ -30,11 +30,22 @@ class Adlbx(AutotoolsPackage):
     """ADLB/X: Master-worker library + work stealing and data dependencies"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/adlbx-0.8.1.tar.gz'
-    version('0.8.1', 'c63a08315170e80d57816d7af92d27db')
+    url      = 'http://swift-lang.github.io/swift-t-downloads/adlbx-0.8.0.tar.gz'
 
-    depends_on('exmcutils')
-    depends_on('mpich')
+    version('0.9.1', 'eed9c619166cb1e980d29a73e9d8a336', url = 'file:///home/jozik/local_spack2/adlbx-0.9.1.tar.gz')
+    version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
+
+    depends_on('exmcutils@:0.5.3', when = '@:0.8.0')
+    depends_on('exmcutils', when = '@0.9.1:')
+    depends_on('mpi')
+
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+
+        spack_env.set('CC', spec['mpi'].mpicc)
+        spack_env.set('CXX', spec['mpi'].mpicxx)
+        spack_env.set('CXXLD', spec['mpi'].mpicxx)
+
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix]
