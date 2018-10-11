@@ -30,8 +30,8 @@ class RJaspar2018(RPackage):
     please use the package TFBSTools (>= 1.15.6)."""
 
     homepage = "http://jaspar.genereg.net/"
-    url      = "https://git.bioconductor.org/packages/JASPAR2018"
+    git      = "https://git.bioconductor.org/packages/JASPAR2018.git"
 
-    version('1.0.0', git='https://git.bioconductor.org/packages/JASPAR2018', commit='4c84092b3737bb1c57ab56f4321f2f5e4b0efeaa')
+    version('1.0.0', commit='4c84092b3737bb1c57ab56f4321f2f5e4b0efeaa')
 
     depends_on('r@3.4.0:')

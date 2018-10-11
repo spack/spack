@@ -281,7 +281,6 @@ class Qt(Package):
             config_args.append('-I%s/dbus-1.0/include' % dbus.lib)
             config_args.append('-I%s/dbus-1.0' % dbus.include)
             config_args.append('-L%s' % dbus.lib)
-            config_args.append('-ldbus-1')
         else:
             config_args.append('-no-dbus')
 
@@ -377,6 +376,12 @@ class Qt(Package):
             config_args.extend([
                 '-skip', 'webglplugin',
             ])
+
+        if self.version > Version('5.8'):
+            # relies on a system installed wayland, i.e. no spack package yet
+            # https://wayland.freedesktop.org/ubuntu16.04.html
+            # https://wiki.qt.io/QtWayland
+            config_args.extend(['-skip', 'wayland'])
 
         configure('-no-eglfs',
                   '-no-directfb',

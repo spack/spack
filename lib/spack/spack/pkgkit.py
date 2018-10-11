@@ -31,6 +31,7 @@ import llnl.util.filesystem
 from llnl.util.filesystem import *
 
 from spack.package import Package, run_before, run_after, on_package_attributes
+from spack.package import inject_flags, env_flags, build_system_flags
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
@@ -44,6 +45,7 @@ from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.intel import IntelPackage
+from spack.build_systems.meson import MesonPackage
 
 from spack.mixins import filter_compiler_wrappers
 

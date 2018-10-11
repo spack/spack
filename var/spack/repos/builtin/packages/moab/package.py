@@ -60,6 +60,7 @@ class Moab(AutotoolsPackage):
     variant('irel', default=False, description='Enable irel interface')
     variant('fbigeom', default=False, description='Enable fbigeom interface')
     variant('coupler', default=True, description='Enable mbcoupler tool')
+    variant('dagmc', default=False, description='Enable dagmc tool')
 
     variant("debug", default=False, description='enable debug symbols')
     variant('shared', default=False,
@@ -80,6 +81,7 @@ class Moab(AutotoolsPackage):
     # depends_on('vtk', when='+vtk')
 
     depends_on('blas')
+    depends_on('lapack')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -124,6 +126,9 @@ class Moab(AutotoolsPackage):
 #       else:
 #           options.append('--without-mpi')
 
+        options.append('--with-blas=%s' % spec['blas'].libs.ld_flags)
+        options.append('--with-lapack=%s' % spec['lapack'].libs.ld_flags)
+
         if '+hdf5' in spec:
             options.append('--with-hdf5=%s' % spec['hdf5'].prefix)
         else:
@@ -157,6 +162,11 @@ class Moab(AutotoolsPackage):
             options.append('--enable-mbcoupler')
         else:
             options.append('--disable-mbcoupler')
+
+        if '+dagmc' in spec:
+            options.append('--enable-dagmc')
+        else:
+            options.append('--disable-dagmc')
 
         if '+metis' in spec:
             options.append('--with-metis=%s' % spec['metis'].prefix)

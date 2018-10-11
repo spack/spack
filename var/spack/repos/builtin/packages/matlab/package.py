@@ -41,8 +41,8 @@ class Matlab(Package):
     mirror so that Spack can find it. For instructions on how to set up a
     mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "https://www.mathworks.com/products/matlab.html"
-
+    homepage = "https://www.mathworks.com/products/matlab.html" 
+    version('R2018b', sha256='8cfcddd3878d3a69371c4e838773bcabf12aaf0362cc2e1ae7e8820845635cac')
     version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
 
     variant(
@@ -80,15 +80,15 @@ class Matlab(Package):
         }
 
         # Store values requested by the installer in a file
-        with open('spack_installer_input.txt', 'w') as inputFile:
+        with open('spack_installer_input.txt', 'w') as input_file:
             for key in config:
-                inputFile.write('{0}={1}\n'.format(key, config[key]))
+                input_file.write('{0}={1}\n'.format(key, config[key]))
 
     def install(self, spec, prefix):
         self.configure(spec, prefix)
 
         # Run silent installation script
         # Full path required
-        inputFile = join_path(self.stage.source_path,
-                              'spack_installer_input.txt')
-        subprocess.call(['./install', '-inputFile', inputFile])
+        input_file = join_path(
+            self.stage.source_path, 'spack_installer_input.txt')
+        subprocess.call(['./install', '-inputFile', input_file])

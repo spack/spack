@@ -29,7 +29,7 @@ class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
 
     version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
     version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
@@ -84,8 +84,10 @@ class Gettext(AutotoolsPackage):
             config_args.append('--disable-curses')
 
         if '+libxml2' in spec:
-            config_args.append('--with-libxml2-prefix={0}'.format(
+            config_args.append('CPPFLAGS=-I{0}/include'.format(
                 spec['libxml2'].prefix))
+            config_args.append('LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(
+                spec['libxml2'].libs.directories[0]))
         else:
             config_args.append('--with-included-libxml')
 

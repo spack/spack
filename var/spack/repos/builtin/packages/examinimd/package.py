@@ -41,9 +41,10 @@ class Examinimd(MakefilePackage):
 
     homepage = "https://github.com/ECP-copa/ExaMiniMD"
     url      = "https://github.com/ECP-copa/ExaMiniMD/archive/1.0.zip"
+    git      = "https://github.com/ECP-copa/ExaMiniMD.git"
 
+    version('develop', branch='master')
     version('1.0', '5db7679a4b9296c0cc3b2ff3a7e8f38f')
-    version('develop', git='https://github.com/ECP-copa/ExaMiniMD', branch='master')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
@@ -80,6 +81,6 @@ class Examinimd(MakefilePackage):
         mkdirp(prefix.bin)
         install('src/ExaMiniMD', prefix.bin)
         install_tree('input', prefix.input)
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('LICENSE', prefix.doc)
+        mkdirp(prefix.docs)
+        install('README.md', prefix.docs)
+        install('LICENSE', prefix.docs)

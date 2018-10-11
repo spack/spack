@@ -40,9 +40,11 @@ class Opencv(CMakePackage):
     """
 
     homepage = 'http://opencv.org/'
-    url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
+    url      = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
+    git      = 'https://github.com/opencv/opencv.git'
 
-    version('master', git="https://github.com/opencv/opencv.git", branch="master")
+    version('master', branch='master')
+    version('3.4.3',    '712896f5815938c014c199dde142d508')
     version('3.4.1',    'a0b7a47899e67b3490ea31edc4f6e8e6')
     version('3.4.0',    '170732dc760e5f7ddeccbe53ba5d16a6')
     version('3.3.1',    'b1ed9aea030bb5bd9df28524d97de84c')
@@ -104,6 +106,11 @@ class Opencv(CMakePackage):
     variant('tiff', default=True, description='Include TIFF support')
     variant('vtk', default=True, description='Activates support for VTK')
     variant('zlib', default=True, description='Build zlib from source')
+
+    # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
+    # and 3.4.1) header file that have the same name.Problem is fixed in
+    # the current development branch of OpenCV. See #8461 for more information.
+    patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
     depends_on('eigen~mpfr', when='+eigen', type='build')
 
@@ -180,27 +187,29 @@ class Opencv(CMakePackage):
 
         # 3rd party components
         args.extend([
+            '-DBUILD_IPP_IW:BOOL={0}'.format((
+                'ON' if '+ipp_iw' in spec else 'OFF')),
             '-DWITH_CUDA:BOOL={0}'.format((
                 'ON' if '+cuda' in spec else 'OFF')),
-            '-DWITH_EIGEN={0}'.format((
+            '-DWITH_EIGEN:BOOL={0}'.format((
                 'ON' if '+eigen' in spec else 'OFF')),
             '-DWITH_IPP:BOOL={0}'.format((
                 'ON' if '+ipp' in spec else 'OFF')),
-            '-DBUILD_IPP_IW:BOOL={0}'.format((
-                'ON' if '+ipp_iw' in spec else 'OFF')),
+            '-DWITH_JASPER:BOOL={0}'.format((
+                'ON' if '+jasper' in spec else 'OFF')),
             '-DWITH_JPEG:BOOL={0}'.format((
                 'ON' if '+jpeg' in spec else 'OFF')),
-            '-DWITH_OPENCL={0}'.format((
+            '-DWITH_OPENCL:BOOL={0}'.format((
                 'ON' if '+opencl' in spec else 'OFF')),
-            '-DWITH_OPENCL_SVM={0}'.format((
+            '-DWITH_OPENCL_SVM:BOOL={0}'.format((
                 'ON' if '+opencl_svm' in spec else 'OFF')),
-            '-DWITH_OPENCLAMDFFT={0}'.format((
+            '-DWITH_OPENCLAMDFFT:BOOL={0}'.format((
                 'ON' if '+openclamdfft' in spec else 'OFF')),
-            '-DWITH_OPENCLAMDBLAS={0}'.format((
+            '-DWITH_OPENCLAMDBLAS:BOOL={0}'.format((
                 'ON' if '+openclamdblas' in spec else 'OFF')),
             '-DWITH_OPENMP:BOOL={0}'.format((
                 'ON' if '+openmp' in spec else 'OFF')),
-            '-DWITH_PTHREADS_PF={0}'.format((
+            '-DWITH_PTHREADS_PF:BOOL={0}'.format((
                 'ON' if '+pthreads_pf' in spec else 'OFF')),
             '-DWITH_PNG:BOOL={0}'.format((
                 'ON' if '+png' in spec else 'OFF')),
@@ -210,8 +219,6 @@ class Opencv(CMakePackage):
                 'ON' if '+tiff' in spec else 'OFF')),
             '-DWITH_VTK:BOOL={0}'.format((
                 'ON' if '+vtk' in spec else 'OFF')),
-            '-DWITH_ZLIB:BOOL={0}'.format((
-                'ON' if '+zlib' in spec else 'OFF')),
         ])
 
         # Media I/O

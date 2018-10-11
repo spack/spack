@@ -65,6 +65,46 @@ def make_context(spec):
     return LmodContext(conf)
 
 
+def guess_core_compilers(store=False):
+    """Guesses the list of core compilers installed in the system.
+
+    Args:
+        store (bool): if True writes the core compilers to the
+            modules.yaml configuration file
+
+    Returns:
+        List of core compilers, if found, or None
+    """
+    core_compilers = []
+    for compiler_config in spack.compilers.all_compilers_config():
+        try:
+            compiler = compiler_config['compiler']
+            # A compiler is considered to be a core compiler if any of the
+            # C, C++ or Fortran compilers reside in a system directory
+            is_system_compiler = any(
+                os.path.dirname(x) in spack.util.environment.system_dirs
+                for x in compiler['paths'].values() if x is not None
+            )
+            if is_system_compiler:
+                core_compilers.append(str(compiler['spec']))
+        except (KeyError, TypeError, AttributeError):
+            continue
+
+    if store and core_compilers:
+        # If we asked to store core compilers, update the entry
+        # in the default modify scope (i.e. within the directory hierarchy
+        # of Spack itself)
+        modules_cfg = spack.config.get(
+            'modules', scope=spack.config.default_modify_scope()
+        )
+        modules_cfg.setdefault('lmod', {})['core_compilers'] = core_compilers
+        spack.config.set(
+            'modules', modules_cfg, scope=spack.config.default_modify_scope()
+        )
+
+    return core_compilers or None
+
+
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
@@ -77,12 +117,12 @@ class LmodConfiguration(BaseConfiguration):
                 specified in the configuration file or the sequence
                 is empty
         """
-        value = configuration.get('core_compilers')
-        if value is None:
-            msg = "'core_compilers' key not found in configuration file"
-            raise CoreCompilersNotFoundError(msg)
+        value = configuration.get(
+            'core_compilers'
+        ) or guess_core_compilers(store=True)
+
         if not value:
-            msg = "'core_compilers' list cannot be empty"
+            msg = 'the key "core_compilers" must be set in modules.yaml'
             raise CoreCompilersNotFoundError(msg)
         return value
 

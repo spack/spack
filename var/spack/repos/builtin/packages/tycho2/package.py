@@ -31,9 +31,9 @@ class Tycho2(MakefilePackage):
        on unstructured, 3D tetrahedral meshes.
     """
     homepage = "https://github.com/lanl/tycho2"
-    url      = "https://github.com/lanl/tycho2/tarball/v0.1"
+    git      = "https://github.com/lanl/tycho2.git"
 
-    version('develop', git='https://github.com/lanl/tycho2', branch='master')
+    version('develop', branch='master')
 
     depends_on("mpi")
 

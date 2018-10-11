@@ -34,9 +34,9 @@ class PerlStarFusion(Package):
     and spanning reads to a reference annotation set."""
 
     homepage = "https://github.com/STAR-Fusion/STAR-Fusion"
-    url      = "https://github.com/STAR-Fusion/STAR-Fusion.git"
+    git      = "https://github.com/STAR-Fusion/STAR-Fusion.git"
 
-    version('master', git='https://github.com/STAR-Fusion/STAR-Fusion.git', commit='a16a0a8')
+    version('master', commit='8c5a541')
 
     extends('perl')
 

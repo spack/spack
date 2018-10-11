@@ -37,9 +37,9 @@ class Ebms(MakefilePackage):
     """
 
     homepage = "https://github.com/ANL-CESAR/EBMS"
-    url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
+    git      = "https://github.com/ANL-CESAR/EBMS.git"
 
-    version('develop', git='https://github.com/ANL-CESAR/EBMS.git')
+    version('develop')
 
     variant('mpi', default=True, description='Build with MPI support')
 

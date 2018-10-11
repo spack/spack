@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
 
 
 class Cosp2(MakefilePackage):
@@ -37,10 +36,9 @@ class Cosp2(MakefilePackage):
     tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/cosp2.html"
-    url = "https://github.com/exmatex/CoSP2/archive/master.tar.gz"
+    git      = "https://github.com/exmatex/CoSP2.git"
 
-    version('master', git='https://github.com/exmatex/CoSP2.git',
-            description='master')
+    version('master', branch='master')
 
     variant('double', default=True,
             description='Build with double precision.')
@@ -63,7 +61,7 @@ class Cosp2(MakefilePackage):
             if '+double' in spec:
                 filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
                             'Makefile.vanilla')
-            shutil.copy('Makefile.vanilla', 'Makefile')
+            copy('Makefile.vanilla', 'Makefile')
 
     def install(self, spec, prefix):
         install_tree('bin/', prefix.bin)

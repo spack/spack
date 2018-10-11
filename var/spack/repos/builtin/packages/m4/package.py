@@ -29,13 +29,18 @@ class M4(AutotoolsPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"
-    url      = "https://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz"
+    url      = "https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz"
 
     version('1.4.18', 'a077779db287adf4e12a035029002d28')
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
+    # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
+    # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    patch('secure_snprintf.patch', when='platform_os = highsierra')
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1573342
+    patch('https://src.fedoraproject.org/rpms/m4/raw/5d147168d4b93f38a4833f5dd1d650ad88af5a8a/f/m4-1.4.18-glibc-change-work-around.patch', sha256='fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8', when='@1.4.18')
 
     variant('sigsegv', default=True,
             description="Build the libsigsegv dependency")

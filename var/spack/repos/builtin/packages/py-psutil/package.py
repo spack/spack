@@ -31,8 +31,9 @@ class PyPsutil(PythonPackage):
     in Python."""
 
     homepage = "https://pypi.python.org/pypi/psutil"
-    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.0.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.4.5.tar.gz"
 
+    version('5.4.5', '7d3d7954782bba4a400e106e66f10656')
     version('5.0.1', '153dc8be94badc4072016ceeac7808dc')
 
     depends_on('python@2.6:')

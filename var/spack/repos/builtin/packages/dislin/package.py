@@ -70,7 +70,7 @@ class Dislin(Package):
         run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
 
     def install(self, spec, prefix):
-        INSTALL = Executable('./INSTALL')
-        INSTALL()
+        install = Executable('./INSTALL')
+        install()
         with working_dir('examples'):
             install('dislin_d.h', prefix)

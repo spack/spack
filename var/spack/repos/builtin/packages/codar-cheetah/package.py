@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class CodarCheetah(Package):
@@ -32,14 +31,14 @@ class CodarCheetah(Package):
     """
 
     homepage = "https://github.com/CODARcode/cheetah"
-    url = "https://github.com/CODARcode/cheetah/archive/v0.1.tar.gz"
+    url      = "https://github.com/CODARcode/cheetah/archive/v0.1.tar.gz"
+    git      = "https://github.com/CODARcode/cheetah.git"
 
+    version('develop', branch='master')
     version('0.1', '6918021f74fa7a2f1de26c0bb31a63ef')
-    version('develop', git='https://github.com/CODARcode/cheetah.git',
-            branch='master')
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('savanna')
 
     def install(self, spec, prefix):
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

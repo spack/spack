@@ -35,23 +35,33 @@ class Valgrind(AutotoolsPackage):
 
     Valgrind is Open Source / Free Software, and is freely available
     under the GNU General Public License, version 2.
-
     """
     homepage = "http://valgrind.org/"
-    url = "https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2"
+    url      = "https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2"
+    git      = "git://sourceware.org/git/valgrind.git"
 
+    version('develop', branch='master')
     version('3.13.0', '817dd08f1e8a66336b9ff206400a5369')
     version('3.12.0', '6eb03c0c10ea917013a7622e483d61bb')
     version('3.11.0', '4ea62074da73ae82e0162d6550d3f129')
     version('3.10.1', '60ddae962bc79e7c95cfc4667245707f')
     version('3.10.0', '7c311a72a20388aceced1aa5573ce970')
-    version('develop', svn='svn://svn.valgrind.org/valgrind/trunk')
 
     variant('mpi', default=True,
             description='Activates MPI support for valgrind')
     variant('boost', default=True,
             description='Activates boost support for valgrind')
+    variant('only64bit', default=True,
+            description='Sets --enable-only64bit option for valgrind')
+    variant('ubsan', default=True,
+            description='Activates ubsan support for valgrind')
 
+    conflicts('+ubsan', when='platform=darwin %clang',
+              msg="""
+Cannot build libubsan with clang on macOS.
+Otherwise with (Apple's) clang there is a linker error:
+clang: error: unknown argument: '-static-libubsan'
+""")
     depends_on('mpi', when='+mpi')
     depends_on('boost', when='+boost')
 
@@ -66,14 +76,11 @@ class Valgrind(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         options = []
-        if not (spec.satisfies('%clang') and sys.platform == 'darwin'):
-            # Otherwise with (Apple's) clang there is a linker error:
-            # clang: error: unknown argument: '-static-libubsan'
+        if spec.satisfies('+ubsan'):
             options.append('--enable-ubsan')
+        if spec.satisfies('+only64bit'):
+            options.append('--enable-only64bit')
 
         if sys.platform == 'darwin':
-            options.extend([
-                '--build=amd64-darwin',
-                '--enable-only64bit'
-            ])
+            options.append('--build=amd64-darwin')
         return options

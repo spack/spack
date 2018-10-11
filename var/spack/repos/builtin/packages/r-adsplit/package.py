@@ -32,9 +32,9 @@ class RAdsplit(RPackage):
     significance of the supporting gene set is determined."""
 
     homepage = "https://www.bioconductor.org/packages/adSplit/"
-    url      = "https://git.bioconductor.org/packages/adSplit"
+    git      = "https://git.bioconductor.org/packages/adSplit.git"
 
-    version('1.46.0', git='https://git.bioconductor.org/packages/adSplit', commit='7e81a83f34d371447f491b3a146bf6851e260c7c')
+    version('1.46.0', commit='7e81a83f34d371447f491b3a146bf6851e260c7c')
 
     depends_on('r@3.4.0:3.4.9', when='@1.46.0')
     depends_on('r-annotationdbi', type=('build', 'run'))

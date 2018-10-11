@@ -30,12 +30,12 @@ class Ucx(AutotoolsPackage):
     MPI/PGAS frameworks"""
 
     homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
-
+    url      = "https://github.com/openucx/ucx/releases/download/v1.3.1/ucx-1.3.1.tar.gz"
     # Current
-    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
+    version('1.3.1', '443ffdd64dc0e912b672a0ccb37ff666')
 
     # Still supported
+    version('1.3.0', '2fdc3028eac3ef3ee1b1b523d170c071')
     version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
     version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
 

@@ -26,16 +26,18 @@ from spack import *
 
 
 class Macsio(CMakePackage):
-    """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application
-    """
+    """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application."""
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "http://llnl.github.io/MACSio"
-    url = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
+    homepage = "https://computation.llnl.gov/projects/co-design/macsio"
+    url      = "https://github.com/LLNL/MACSio/archive/v1.1.tar.gz"
+    git      = "https://github.com/LLNL/MACSio.git"
 
+    version('develop', branch='master')
+
+    version('1.1', sha256='a86249b0f10647c0b631773db69568388094605ec1a0af149d9e61e95e6961ec')
     version('1.0', '90e8e00ea84af2a47bee387ad331dbde')
-    version('develop', git='https://github.com/LLNL/MACSio.git',
-            branch='master')
 
     variant('mpi', default=True, description="Build MPI plugin")
     variant('silo', default=True, description="Build with SILO plugin")
@@ -52,7 +54,7 @@ class Macsio(CMakePackage):
     depends_on('json-cwx')
     depends_on('mpi', when="+mpi")
     depends_on('silo', when="+silo")
-    depends_on('hdf5', when="+hdf5")
+    depends_on('hdf5+hl', when="+hdf5")
     # depends_on('hdf5+szip', when="+szip")
     depends_on('exodusii', when="+exodus")
     # pdb is packaged with silo
@@ -114,3 +116,7 @@ class Macsio(CMakePackage):
                               .format(spec['netcdf'].prefix))
 
         return cmake_args
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('spack-build/macsio/macsio', prefix.bin)

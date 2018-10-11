@@ -34,7 +34,7 @@ class Texinfo(AutotoolsPackage):
     of the time. It is used by many non-GNU projects as well."""
 
     homepage = "https://www.gnu.org/software/texinfo/"
-    url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.gz"
+    url      = "https://ftpmirror.gnu.org/texinfo/texinfo-6.0.tar.gz"
 
     version('6.5', '94e8f7149876793030e5518dd8d6e956')
     version('6.3', '9b08daca9bf8eccae9b0f884aba41f9e')
@@ -42,3 +42,5 @@ class Texinfo(AutotoolsPackage):
     version('5.2', '1b8f98b80a8e6c50422125e07522e8db')
     version('5.1', '54e250014fe698fb4832016158747c03')
     version('5.0', '918432285abe6fe96c98355594c5656a')
+
+    depends_on('perl')

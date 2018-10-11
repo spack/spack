@@ -256,17 +256,6 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     return
 
 
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable('file')
-    file.add_default_env('LC_ALL', 'C')
-    output = file('-b', '-h', '%s' % path_name,
-                  output=str, error=str)
-    return output.strip()
-
-
 def strings_contains_installroot(path_name, root_dir):
     """
     Check if the file contain the install root string.
@@ -355,6 +344,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
+                old_dir != new_dir and
                 strings_contains_installroot(path_name, old_dir)):
                     raise InstallRootStringException(path_name, old_dir)
 
@@ -373,6 +363,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
+                    old_dir != new_dir and
                     strings_contains_installroot(path_name, old_dir)):
                         raise InstallRootStringException(path_name, old_dir)
     else:

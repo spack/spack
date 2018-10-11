@@ -30,9 +30,10 @@ class Cppad(CMakePackage):
 
     homepage = "https://www.coin-or.org/CppAD/"
     url      = "http://www.coin-or.org/download/source/CppAD/cppad-20170114.gpl.tgz"
+    git      = "https://github.com/coin-or/CppAD.git"
 
+    version('develop', branch='master')
     version('20170114', '565a534dc813fa1289764222cd8c11ea')
-    version('develop', git='https://github.com/coin-or/CppAD.git')
 
     def cmake_args(self):
         # This package does not obey CMAKE_INSTALL_PREFIX

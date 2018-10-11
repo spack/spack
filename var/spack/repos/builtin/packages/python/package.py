@@ -30,7 +30,8 @@ import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import force_remove
+from llnl.util.filesystem import (force_remove, get_filetype,
+                                  path_contains_subdirectory)
 
 import spack.store
 import spack.util.spack_json as sjson
@@ -47,6 +48,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.7.0', '41b6595deb4147a1ed517a7d9a580271')
     version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
     version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
@@ -60,7 +62,8 @@ class Python(AutotoolsPackage):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724', preferred=True)
+    version('2.7.15', '045fb3440219a1f6923fefdabde63342', preferred=True)
+    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
     version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
     version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
@@ -98,6 +101,7 @@ class Python(AutotoolsPackage):
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
+    depends_on("pkgconfig", type="build")
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -108,12 +112,20 @@ class Python(AutotoolsPackage):
     depends_on("tcl", when="+tk")
     depends_on("gdbm", when='+dbm')
 
+    # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+    depends_on("libffi", when="@3.7:")
+    depends_on("openssl@1.0.2:", when="@3.7:")
+
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
     patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
+
+    # Fixes an alignment problem with more aggressive optimization in gcc8
+    # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
+    patch('gcc-8-2.7.14.patch', when="@2.7.14 %gcc@8:")
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -161,12 +173,33 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
-        config_args = [
-            '--with-threads',
-            'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
-            'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
-        ]
+        link_deps = spec.dependencies('link')
+
+        # Header files are often included assuming they reside in a
+        # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
+        # which is why we don't use HeaderList here. The header files of
+        # libffi reside in prefix.lib but the configure script of Python
+        # finds them using pkg-config.
+        cppflags = '-I' + ' -I'.join(dep.prefix.include
+                                     for dep in link_deps
+                                     if dep.name != 'libffi')
+
+        # Currently, the only way to get SpecBuildInterface wrappers of the
+        # dependencies (which we need to get their 'libs') is to get them
+        # using spec.__getitem__.
+        ldflags = ' '.join(spec[dep.name].libs.search_flags
+                           for dep in link_deps)
+
+        config_args = ['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags]
+
+        # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        if spec.satisfies('@:3.6'):
+            config_args.append('--with-threads')
+
+        if '^libffi' in spec:
+            config_args.append('--with-system-ffi')
+        else:
+            config_args.append('--without-system-ffi')
 
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
@@ -391,36 +424,31 @@ class Python(AutotoolsPackage):
         on the version of Python and how it was installed.
 
         In general, Python 2 comes with ``python`` and ``python2`` commands,
-        while Python 3 only comes with a ``python3`` command.
+        while Python 3 only comes with a ``python3`` command. However, some
+        package managers will symlink ``python`` to ``python3``, while others
+        may contain ``python3.6``, ``python3.5``, and ``python3.4`` in the
+        same directory.
 
-        :returns: The Python command
-        :rtype: Executable
+        Returns:
+            Executable: the Python command
         """
         # We need to be careful here. If the user is using an externally
-        # installed python, all 3 commands could be in the same directory.
-
-        # Search for `python2` iff using Python 2
-        if (self.spec.satisfies('@:2') and
-                os.path.exists(os.path.join(self.prefix.bin, 'python2'))):
-            command = 'python2'
-        # Search for `python3` iff using Python 3
-        elif (self.spec.satisfies('@3:') and
-                os.path.exists(os.path.join(self.prefix.bin, 'python3'))):
-            command = 'python3'
-        # If neither were found, try `python`
-        elif os.path.exists(os.path.join(self.prefix.bin, 'python')):
-            command = 'python'
+        # installed python, several different commands could be located
+        # in the same directory. Be as specific as possible. Search for:
+        #
+        # * python3.6
+        # * python3
+        # * python
+        #
+        # in that order if using python@3.6.5, for example.
+        version = self.spec.version
+        for ver in [version.up_to(2), version.up_to(1), '']:
+            path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            if os.path.exists(path):
+                return Executable(path)
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
-
-        # The python command may be a symlink if it was installed
-        # with Homebrew. Since some packages try to determine the
-        # location of libraries and headers based on the path,
-        # return the realpath
-        path = os.path.realpath(os.path.join(self.prefix.bin, command))
-
-        return Executable(path)
 
     def print_string(self, string):
         """Returns the appropriate print string depending on the
@@ -500,7 +528,7 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(self.name, libdir))
+                raise RuntimeError(msg.format(ldlibrary, libdir))
         else:
             library = self.get_config_var('LIBRARY')
 
@@ -510,7 +538,7 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(frameworkprefix, library))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(self.name, libdir))
+                raise RuntimeError(msg.format(library, libdir))
 
     @property
     def headers(self):
@@ -675,33 +703,49 @@ class Python(AutotoolsPackage):
                         "sys.path[p:p]=new; "
                         "sys.__egginsert = p+len(new)\n")
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        super(Python, self).activate(ext_pkg, view, **args)
 
-        super(Python, self).activate(ext_pkg, **args)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-        self.write_easy_install_pth(
-            exts,
-            prefix=extensions_layout.extendee_target_directory(self))
+        self.write_easy_install_pth(exts, prefix=view.root)
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
-        super(Python, self).deactivate(ext_pkg, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        super(Python, self).deactivate(ext_pkg, view, **args)
 
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(
-                exts,
-                prefix=extensions_layout.extendee_target_directory(self))
+            self.write_easy_install_pth(exts, prefix=view.root)
+
+    def add_files_to_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        for src, dst in merge_map.items():
+            if not path_contains_subdirectory(src, bin_dir):
+                view.link(src, dst)
+            elif not os.path.islink(src):
+                copy(src, dst)
+                if 'script' in get_filetype(src):
+                    filter_file(
+                        self.spec.prefix, os.path.abspath(view.root), dst)
+            else:
+                orig_link_target = os.path.realpath(src)
+                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                view.link(new_link_target, dst)
+
+    def remove_files_from_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        for src, dst in merge_map.items():
+            if not path_contains_subdirectory(src, bin_dir):
+                view.remove_file(src, dst)
+            else:
+                os.remove(dst)

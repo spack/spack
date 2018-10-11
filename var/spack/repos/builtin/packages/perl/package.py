@@ -35,7 +35,6 @@ from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
 
-import spack.store
 from spack import *
 
 
@@ -54,6 +53,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
 
     # Maintenance releases (even numbers, recommended)
+    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
     version('5.26.2', 'dc0fea097f3992a8cd53f8ac0810d523', preferred=True)
     version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
 
@@ -75,6 +75,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
+
+    # Fix build on Fedora 28
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
+    patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -98,6 +102,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    # On a lustre filesystem, patch may fail when files
+    # aren't writeable so make pp.c user writeable
+    # before patching. This should probably walk the
+    # source and make everything writeable in the future.
+    def do_stage(self, mirror_only=False):
+        # Do Spack's regular stage
+        super(Perl, self).do_stage(mirror_only)
+        # Add write permissions on file to be patched
+        filename = join_path(self.stage.source_path, 'pp.c')
+        perm = os.stat(filename).st_mode
+        os.chmod(filename, perm | 0o200)
 
     def configure_args(self):
         spec = self.spec
@@ -263,27 +279,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         return match_predicate(ignore_arg, patterns)
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.perl_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Perl, self).activate(ext_pkg, **args)
+        super(Perl, self).activate(ext_pkg, view, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view, **args):
         ignore = self.perl_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Perl, self).deactivate(ext_pkg, **args)
+        super(Perl, self).deactivate(ext_pkg, view, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:

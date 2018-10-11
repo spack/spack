@@ -32,9 +32,9 @@ class RAbsseq(RPackage):
     of dispersion across expression level."""
 
     homepage = "https://www.bioconductor.org/packages/ABSSeq/"
-    url      = "https://git.bioconductor.org/packages/ABSSeq"
+    git      = "https://git.bioconductor.org/packages/ABSSeq.git"
 
-    version('1.22.8', git='https://git.bioconductor.org/packages/ABSSeq', commit='a67ba49bc156a4522092519644f3ec83d58ebd6a')
+    version('1.22.8', commit='a67ba49bc156a4522092519644f3ec83d58ebd6a')
 
     depends_on('r@3.4.0:3.4.9', when='@1.22.8')
     depends_on('r-locfit', type=('build', 'run'))

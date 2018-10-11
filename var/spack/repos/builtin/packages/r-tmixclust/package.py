@@ -33,10 +33,9 @@ class RTmixclust(RPackage):
     series datasets."""
 
     homepage = "https://bioconductor.org/packages/TMixClust/"
-    url      = "https://git.bioconductor.org/packages/TMixClust"
+    git      = "https://git.bioconductor.org/packages/TMixClust.git"
 
-    version('1.0.1', git='https://git.bioconductor.org/packages/TMixClust',
-            commit='0ac800210e3eb9da911767a80fb5582ab33c0cad')
+    version('1.0.1', commit='0ac800210e3eb9da911767a80fb5582ab33c0cad')
 
     depends_on('r-gss', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))

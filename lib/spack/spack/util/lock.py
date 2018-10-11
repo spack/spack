@@ -47,7 +47,9 @@ class Lock(llnl.util.lock.Lock):
 
     def _lock(self, op, timeout=0):
         if self._enable:
-            super(Lock, self)._lock(op, timeout)
+            return super(Lock, self)._lock(op, timeout)
+        else:
+            return 0, 0
 
     def _unlock(self):
         """Unlock call that always succeeds."""

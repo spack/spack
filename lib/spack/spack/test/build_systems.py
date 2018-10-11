@@ -22,11 +22,102 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import glob
+import os
 import pytest
 
 import spack.repo
-from spack.build_environment import get_std_cmake_args
+from llnl.util.filesystem import working_dir
+from spack.build_environment import get_std_cmake_args, setup_package
 from spack.spec import Spec
+from spack.util.executable import which
+
+
+DATA_PATH = os.path.join(spack.paths.test_path, 'data')
+
+
+@pytest.mark.parametrize(
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'make', 'affirmative', '*'))
+)
+def test_affirmative_make_check(directory, config, mock_packages):
+    """Tests that Spack correctly detects targets in a Makefile."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    setup_package(pkg, False)
+
+    with working_dir(directory):
+        assert pkg._has_make_target('check')
+
+        pkg._if_make_target_execute('check')
+
+
+@pytest.mark.parametrize(
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'make', 'negative', '*'))
+)
+@pytest.mark.regression('9067')
+def test_negative_make_check(directory, config, mock_packages):
+    """Tests that Spack correctly ignores false positives in a Makefile."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    setup_package(pkg, False)
+
+    with working_dir(directory):
+        assert not pkg._has_make_target('check')
+
+        pkg._if_make_target_execute('check')
+
+
+@pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
+@pytest.mark.parametrize(
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'ninja', 'affirmative', '*'))
+)
+def test_affirmative_ninja_check(directory, config, mock_packages):
+    """Tests that Spack correctly detects targets in a Ninja build script."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    setup_package(pkg, False)
+
+    with working_dir(directory):
+        assert pkg._has_ninja_target('check')
+
+        pkg._if_ninja_target_execute('check')
+
+        # Clean up Ninja files
+        for filename in glob.iglob('.ninja_*'):
+            os.remove(filename)
+
+
+@pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
+@pytest.mark.parametrize(
+    'directory',
+    glob.iglob(os.path.join(DATA_PATH, 'ninja', 'negative', '*'))
+)
+def test_negative_ninja_check(directory, config, mock_packages):
+    """Tests that Spack correctly ignores false positives in a Ninja
+    build script."""
+
+    # Get a fake package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    setup_package(pkg, False)
+
+    with working_dir(directory):
+        assert not pkg._has_ninja_target('check')
+
+        pkg._if_ninja_target_execute('check')
 
 
 def test_cmake_std_args(config, mock_packages):

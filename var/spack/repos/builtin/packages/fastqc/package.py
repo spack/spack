@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree, mkpath
-from distutils.file_util import copy_file
 
 
 class Fastqc(Package):
@@ -33,6 +31,7 @@ class Fastqc(Package):
     homepage = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
     url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
+    version('0.11.7', '8fead05fa62c5e723f0d2157a9b5fcd4')
     version('0.11.5', '3524f101c0ab0bae77c7595983170a76')
     version('0.11.4', '104ff2e0e9aebf5bee1f6b068a059b0d')
 
@@ -42,15 +41,15 @@ class Fastqc(Package):
     patch('fastqc.patch', level=0)
 
     def install(self, spec, prefix):
-        mkpath(self.prefix.bin)
-        mkpath(self.prefix.lib)
-        copy_file('fastqc', self.prefix.bin)
+        mkdir(prefix.bin)
+        mkdir(prefix.lib)
+        install('fastqc', prefix.bin)
         for j in ['cisd-jhdf5.jar', 'jbzip2-0.9.jar', 'sam-1.103.jar']:
-            copy_file(j, self.prefix.lib)
+            install(j, prefix.lib)
         for d in ['Configuration', 'net', 'org', 'Templates', 'uk']:
-            copy_tree(d, join_path(self.prefix.lib, d))
+            install_tree(d, join_path(prefix.lib, d))
         chmod = which('chmod')
-        chmod('+x', join_path(self.prefix.bin, 'fastqc'))
+        chmod('+x', prefix.bin.fastqc)
 
     # In theory the 'run' dependency on 'jdk' above should take
     # care of this for me. In practice, it does not.
@@ -58,5 +57,4 @@ class Fastqc(Package):
         """Add <prefix> to the path; the package has a script at the
            top level.
         """
-        run_env.prepend_path('PATH', join_path(self.spec['java'].prefix,
-                             'bin'))
+        run_env.prepend_path('PATH', self.spec['java'].prefix.bin)

@@ -78,7 +78,7 @@ def setup_parser(subparser):
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -87,14 +87,14 @@ def setup_parser(subparser):
     remove_parser.add_argument('name')
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_list_scope(),
+        default=spack.config.default_list_scope(),
         help="configuration scope to read from")
 
 
@@ -192,6 +192,14 @@ def mirror_create(args):
                     new_specs.add(s)
             specs = list(new_specs)
 
+        # Skip external specs, as they are already installed
+        external_specs = [s for s in specs if s.external]
+        specs = [s for s in specs if not s.external]
+
+        for spec in external_specs:
+            msg = 'Skipping {0} as it is an external spec.'
+            tty.msg(msg.format(spec.cshort_spec))
+
         # Default name for directory is spack-mirror-<DATESTAMP>
         directory = args.directory
         if not directory:
@@ -199,11 +207,7 @@ def mirror_create(args):
             directory = 'spack-mirror-' + timestamp
 
         # Make sure nothing is in the way.
-        existed = False
-        if os.path.isfile(directory):
-            tty.error("%s already exists and is a file." % directory)
-        elif os.path.isdir(directory):
-            existed = True
+        existed = os.path.isdir(directory)
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(

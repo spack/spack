@@ -30,12 +30,12 @@ class Benchmark(CMakePackage):
 
     homepage = "https://github.com/google/benchmark"
     url      = "https://github.com/google/benchmark/archive/v1.1.0.tar.gz"
-
-    version('develop', branch='master',
-            git='https://github.com/google/benchmark.git')
+    git      = "https://github.com/google/benchmark.git"
 
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
+
+    version('develop', branch='master')
     version('1.4.0', 'ccfaf2cd93ae20191b94f730b945423e')
     version('1.3.0', '19ce86516ab82d6ad3b17173cf307aac')
     version('1.2.0', '48d0b090cd7a84af2c4a28c8dc963c74')

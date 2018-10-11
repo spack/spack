@@ -36,13 +36,14 @@ class Redundans(Package):
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyscaf', type=('build', 'run'))
     depends_on('py-fastaindex', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))
     depends_on('sspace-standard')
     depends_on('bwa')
     depends_on('last')
     depends_on('gapcloser')
     depends_on('parallel')
-    depends_on('snap-berkeley')
+    depends_on('snap-berkeley@1.0beta.18:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

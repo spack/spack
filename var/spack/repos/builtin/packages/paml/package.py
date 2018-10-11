@@ -30,9 +30,9 @@ class Paml(MakefilePackage):
        protein sewuences using maximum likelihood."""
 
     homepage = "http://abacus.gene.ucl.ac.uk/software/paml.html"
-    url      = "http://abacus.gene.ucl.ac.uk/software/paml4.9e.tgz"
+    url      = "http://abacus.gene.ucl.ac.uk/software/paml4.9h.tgz"
 
-    version('4.9e', 'ac5a062bfea1f4eaac79008434030acf')
+    version('4.9h', sha256='623bf6cf4a018a4e7b4dbba189c41d6c0c25fdca3a0ae24703b82965c772edb3')
 
     build_directory = 'src'
 

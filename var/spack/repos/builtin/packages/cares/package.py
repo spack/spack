@@ -30,10 +30,9 @@ class Cares(CMakePackage):
 
     homepage = "https://c-ares.haxx.se"
     url      = "https://github.com/c-ares/c-ares/archive/cares-1_13_0.tar.gz"
+    git      = "https://github.com/c-ares/c-ares.git"
 
-    version('develop', branch='master',
-            git='https://github.com/c-ares/c-ares.git')
-
+    version('develop', branch='master')
     version('1.13.0', 'cdb21052a7eb85261da22f83c0654cfd')
 
     def url_for_version(self, version):

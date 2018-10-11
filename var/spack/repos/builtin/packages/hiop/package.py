@@ -33,10 +33,9 @@ class Hiop(CMakePackage):
     specialized linear algebra kernels."""
 
     homepage = "https://github.com/LLNL/hiop"
-    url      = "https://github.com/LLNL/hiop"
+    git      = "https://github.com/LLNL/hiop.git"
 
-    version('0.1', git='https://github.com/LLNL/hiop',
-            tag='v0.1')
+    version('0.1', tag='v0.1')
 
     variant('mpi', default=True,
             description='Enable/Disable MPI')
@@ -49,7 +48,7 @@ class Hiop(CMakePackage):
     depends_on('lapack')
     depends_on('blas')
 
-    flag_handler = CMakePackage.build_system_flags
+    flag_handler = build_system_flags
 
     def cmake_args(self):
         args = []
