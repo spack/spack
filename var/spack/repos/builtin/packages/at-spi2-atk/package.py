@@ -37,6 +37,7 @@ class AtSpi2Atk(MesonPackage):
     version('2.26.2', '355c7916a69513490cb83ad34016b169')
     version('2.26.1', 'eeec6cead3350dca48a235271c105b3e')
 
+    depends_on('pkgconfig', type='build')
     depends_on('at-spi2-core@2.28.0:')
     depends_on('atk@2.28.1:')
 
