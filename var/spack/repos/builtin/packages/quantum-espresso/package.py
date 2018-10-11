@@ -166,15 +166,6 @@ class QuantumEspresso(Package):
         if '+hdf5' in spec:
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
 
-        # Add a list of directories to search
-        search_list = []
-        for dependency_spec in spec.dependencies():
-            search_list.extend([
-                dependency_spec.prefix.lib,
-                dependency_spec.prefix.lib64
-            ])
-
-        search_list = " ".join(search_list)
 
         options.extend([
             'F77={0}'.format(env['SPACK_F77']),
