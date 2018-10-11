@@ -59,6 +59,23 @@ schema = {
                             'type':  'boolean',
                             'default': True,
                         },
+                        'permissions': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
+                                'read': {
+                                    'type':  'string',
+                                    'enum': ['user', 'group', 'world'],
+                                },
+                                'write': {
+                                    'type':  'string',
+                                    'enum': ['user', 'group', 'world'],
+                                },
+                                'group': {
+                                    'type':  'string',
+                                },
+                            },
+                        },
                         'modules': {
                             'type': 'object',
                             'default': {},
