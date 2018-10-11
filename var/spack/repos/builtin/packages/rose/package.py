@@ -29,24 +29,27 @@
 from spack import *
 
 
-class Rose(Package):
+class Rose(AutotoolsPackage):
     """A compiler infrastructure to build source-to-source program
        transformation and analysis tools.
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url      = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
+    url      = "https://github.com/rose-compiler/rose/archive/v0.9.7.0.tar.gz"
     git      = "https://github.com/rose-compiler/rose.git"
 
     version('master', branch='master')
-    version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
+    version('0.9.9.0', tag='v0.9.9.0')
+    version('0.9.7.0', tag='v0.9.7.0')
 
-    patch('add_spack_compiler_recognition.patch')
+    #patch('add_spack_compiler_recognition.patch')
 
-    depends_on("autoconf@2.69", type='build')
-    depends_on("automake@1.14", type='build')
-    depends_on("libtool@2.4", type='build')
-    depends_on("boost@1.47.0:")
+    depends_on("autoconf@2.69:", type='build')
+    depends_on("automake@1.14:", type='build')
+    depends_on("libtool@2.4:", type='build')
+    depends_on("bison", type='build')
+    depends_on("flex", type='build')
+    depends_on("boost@1.47.0:1.61.0")
 
     variant('tests', default=False, description='Build the tests directory')
 
@@ -68,8 +71,9 @@ class Rose(Package):
     build_directory = 'spack-build'
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('build')
+        with working_dir(self.stage.source_path):
+            bash = which('bash')
+            bash('build')
 
     @property
     def languages(self):
