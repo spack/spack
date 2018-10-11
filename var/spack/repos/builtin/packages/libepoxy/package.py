@@ -35,5 +35,12 @@ class Libepoxy(AutotoolsPackage):
     version('1.4.3', 'af4c3ce0fb1143bdc4e43f85695a9bed')
     version('1.3.1', '96f6620a9b005a503e7b44b0b528287d')
 
+    depends_on('pkgconfig', type='build')
     depends_on('meson')
     depends_on('mesa')
+
+    def configure_args(self):
+        # Disable egl, otherwise configure fails with:
+        # error: Package requirements (egl) were not met
+        # Package 'egl', required by 'virtual:world', not found
+        return ['--enable-egl=no']
