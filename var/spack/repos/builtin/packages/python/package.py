@@ -274,6 +274,30 @@ class Python(AutotoolsPackage):
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
                        os.path.join(prefix.bin, 'python-config'))
 
+        # Check for silent hashlib install problem on Intel compilers.
+        if spec.satisfies('%intel'):
+            # Interestingly, this is an un-catchable exception with an
+            # exit code of 0, so doing something like
+            #
+            #     import sys
+            #     try:
+            #         import hashlib
+            #     except:
+            #         sys.exit(1)
+            #
+            # will not actually exit with `1`, it will be `0`.  The failed
+            # `import hashlib` will print the traceback to stderr though,
+            # so we check that `stderr` is the empty string.  If it is not,
+            # the installation failed.
+            import_error = self.command('-c', 'import hashlib', error=str)
+            if import_error:
+                raise InstallError(
+                    'Could not `import hashlib`:\n\n{0}'.format(import_error) +
+                    '\n\nYou must set `ulimit -s unlimited` and install '     +
+                    'again.  See the bug report for more information: '       +
+                    'https://bugs.python.org/issue33174.'
+                )
+
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
     #
