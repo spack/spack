@@ -38,4 +38,6 @@ class NeurodamusBase(Package):
     version('plasticity',  git=url, branch='sandbox/king/saveupdate_v6support_mask', preferred=True)
 
     def install(self, spec, prefix):
-        shutil.copytree('lib', '%s/lib' % (prefix), symlinks=False)
+        shutil.copytree('lib', prefix.lib)
+        if os.path.isdir('python'):
+            shutil.copytree('python', prefix.python)
