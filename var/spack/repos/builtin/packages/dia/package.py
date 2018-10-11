@@ -34,7 +34,7 @@ class Dia(Package):
 
     depends_on('intltool', type='build')
     depends_on('gettext', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gtkplus@2.6.0:')
     depends_on('libxslt')
     depends_on('python')
