@@ -155,10 +155,15 @@ def config_dict(yaml_data):
 
 def list_environments():
     """List the names of environments that currently exist."""
+    # just return empty if the env path does not exist.  A read-only
+    # operation like list should not try to create a directory.
+    if not os.path.exists(env_path):
+        return []
+
     candidates = sorted(os.listdir(env_path))
     names = []
     for candidate in candidates:
-        yaml_path = os.path.join(env_path, candidate, env_yaml_name)
+        yaml_path = os.path.join(root(candidate), env_yaml_name)
         if valid_env_name(candidate) and os.path.exists(yaml_path):
             names.append(candidate)
     return names
