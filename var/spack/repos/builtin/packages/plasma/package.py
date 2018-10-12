@@ -27,8 +27,8 @@ class Plasma(CMakePackage):
     version("develop", hg=hg)
     version("18.9.0", sha256="753eae28ea48986a2cc7b8204d6eef646584541e59d42c3c94fa9879116b0774")
     version("17.1",
-        sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
-        url="https://bitbucket.org/icl/plasma/downloads/plasma-17.1.tar.gz")
+            sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
+            url="https://bitbucket.org/icl/plasma/downloads/plasma-17.1.tar.gz")
 
     variant("shared", default=True,
             description="Build shared library (disables static library)")
@@ -64,9 +64,6 @@ class Plasma(CMakePackage):
 
     @when("@18.9.0:")
     def cmake_args(self):
-        if self.spec.satisfies('@:17.1'):
-            open("CMakeLists.txt", "w").write("cmake_minimum_required( VERSION 3.0 FATAL_ERROR )\n")
-
         options = list()
 
         options.extend([
@@ -107,10 +104,10 @@ class Plasma(CMakePackage):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^intel-mkl"): # or not env.has_key("MKLROOT"):
+        if not spec.satisfies("^intel-mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
             make_inc.filter("LIBS *= *.*", "LIBS = " +
-                self.spec["blas"].libs.ld_flags + " -lm")
+                            self.spec["blas"].libs.ld_flags + " -lm")
 
         header_flags = ""
         # accumulate CPP flags for headers: <cblas.h> and <lapacke.h>
