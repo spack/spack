@@ -28,9 +28,10 @@ from spack import *
 
 class Homer(MakefilePackage):
     """
-    HOMER (Hypergeometric Optimization of Motif EnRichment) is a suite of tools 
-    for Motif Discovery and ChIP-Seq analysis. It is a collection of command 
-    line programs for unix-style operating systems written in mostly perl and c++.
+    HOMER (Hypergeometric Optimization of Motif EnRichment) is a suite of tools
+    for Motif Discovery and ChIP-Seq analysis. It is a collection of command
+    line programs for unix-style operating systems written in mostly perl and
+    c++.
     """
 
     homepage = "http://homer.ucsd.edu/homer/"
@@ -43,9 +44,10 @@ class Homer(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter(r'PREFIX = /usr/local', 'PREFIX={0}'.format(self.prefix))
+        makefile.filter(r'PREFIX = /usr/local',
+                        'PREFIX={0}'.format(self.prefix))
 
-    def install(self,spec,prefix):
+    def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('homer2', prefix.bin)
-        install_tree('lib',prefix.lib)
+        install_tree('lib', prefix.lib)
