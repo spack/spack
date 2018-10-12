@@ -69,7 +69,7 @@ spack gpg list --signing
 
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt
-spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
+spack -d buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
 
 if [[ $? -ne 0 ]]; then
     # Configure mirror
@@ -77,10 +77,10 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    spack install --use-cache "${SPEC_NAME}"
+    spack -d install --use-cache "${SPEC_NAME}"
 
     # Create buildcache entry for this package
-    spack buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
+    spack -d buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
