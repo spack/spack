@@ -37,6 +37,11 @@ class PyPygtk(AutotoolsPackage):
 
     depends_on('pkgconfig', type=('build'))
     depends_on("libffi")
+    # atk@2.28.1 depends on meson which requires python 3
+    depends_on('atk@:2.20.0')
+    # PyGTK requires python 2
+    # Use py-pygobject@3: for GTK bindings for python 3
+    depends_on('python@2:2.99', type=('build', 'run'))
     depends_on('cairo')
     depends_on('glib')
     # for GTK 3.X use pygobject 3.X instead of pygtk

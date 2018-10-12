@@ -254,7 +254,11 @@ class collect_info(object):
     """
     def __init__(self, format_name, install_command, cdash_upload_url):
         self.filename = None
-        self.format_name = format_name
+        if cdash_upload_url:
+            self.format_name = 'cdash'
+            self.filename = 'cdash_report'
+        else:
+            self.format_name = format_name
         # Check that the format is valid.
         if self.format_name not in valid_formats:
             raise ValueError('invalid report type: {0}'

@@ -25,26 +25,12 @@
 from spack import *
 
 
-class Cubew(AutotoolsPackage):
-    """Component of CubeBundle: High performance C Writer library """
+class PerlScalarUtilNumeric(PerlPackage):
+    """This module exports a number of wrappers around perl's builtin grok_number
+       function, which returns the numeric type of its argument, or 0 if it
+       isn't numeric."""
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
-    url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubew-4.4.tar.gz"
+    homepage = "https://metacpan.org/pod/Scalar::Util::Numeric"
+    url      = "https://cpan.metacpan.org/authors/id/C/CH/CHOCOLATE/Scalar-Util-Numeric-0.40.tar.gz"
 
-    version('4.4.1', 'c09e3f5a3533ebedee2cc7dfaacd7bac4680c14c3fa540669466583a23f04b67')
-    version('4.4',   'e9beb140719c2ad3d971e1efb99e0916')
-
-    depends_on('zlib')
-
-    def url_for_version(self, version):
-        url = 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cubew-{1}.tar.gz'
-
-        return url.format(version.up_to(2), version)
-
-    def configure_args(self):
-        configure_args = ['--enable-shared']
-
-        return configure_args
-
-    def install(self, spec, prefix):
-        make('install', parallel=True)
+    version('0.40', sha256='d7501b6d410703db5b1c1942fbfc41af8964a35525d7f766058acf5ca2cc4440')

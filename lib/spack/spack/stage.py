@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import stat
 import sys
 import errno
 import hashlib
@@ -488,11 +489,13 @@ class Stage(object):
         if self._need_to_create_path():
             tmp_root = get_tmp_root()
             if tmp_root is not None:
+                # tempfile.mkdtemp already sets mode 0700
                 tmp_dir = tempfile.mkdtemp('', _stage_prefix, tmp_root)
                 tty.debug('link %s -> %s' % (self.path, tmp_dir))
                 os.symlink(tmp_dir, self.path)
             else:
-                mkdirp(self.path)
+                # emulate file permissions for tempfile.mkdtemp
+                mkdirp(self.path, mode=stat.S_IRWXU)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
         self.created = True

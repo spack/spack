@@ -82,6 +82,8 @@ spack package at this time.''',
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
 
+    depends_on('findutils', type='build')
+
     depends_on('libfabric', when='netmod=ofi')
 
     conflicts('device=ch4', when='@:3.2')

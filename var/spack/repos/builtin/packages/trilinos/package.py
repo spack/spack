@@ -113,7 +113,7 @@ class Trilinos(CMakePackage):
             description='Compile with parallel-netcdf')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
-    variant('superlu-dist', default=True,
+    variant('superlu-dist', default=False,
             description='Compile with SuperluDist solvers')
     variant('superlu',      default=False,
             description='Compile with SuperLU solvers')

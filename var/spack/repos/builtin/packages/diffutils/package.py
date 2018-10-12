@@ -25,26 +25,13 @@
 from spack import *
 
 
-class Cubew(AutotoolsPackage):
-    """Component of CubeBundle: High performance C Writer library """
+class Diffutils(AutotoolsPackage):
+    """GNU Diffutils is a package of several programs related to finding
+    differences between files."""
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
-    url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubew-4.4.tar.gz"
+    homepage = "https://www.gnu.org/software/diffutils/"
+    url      = "https://ftp.gnu.org/gnu/diffutils/diffutils-3.6.tar.xz"
 
-    version('4.4.1', 'c09e3f5a3533ebedee2cc7dfaacd7bac4680c14c3fa540669466583a23f04b67')
-    version('4.4',   'e9beb140719c2ad3d971e1efb99e0916')
+    version('3.6', sha256='d621e8bdd4b573918c8145f7ae61817d1be9deb4c8d2328a65cea8e11d783bd6')
 
-    depends_on('zlib')
-
-    def url_for_version(self, version):
-        url = 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cubew-{1}.tar.gz'
-
-        return url.format(version.up_to(2), version)
-
-    def configure_args(self):
-        configure_args = ['--enable-shared']
-
-        return configure_args
-
-    def install(self, spec, prefix):
-        make('install', parallel=True)
+    build_directory = 'spack-build'

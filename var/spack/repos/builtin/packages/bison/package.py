@@ -39,7 +39,10 @@ class Bison(AutotoolsPackage):
     version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
     version('2.7',   'ded660799e76fb1667d594de1f7a0da9')
 
+    depends_on('diffutils', type='build')
     depends_on('m4', type=('build', 'run'))
+    depends_on('perl', type='build')
+    depends_on('help2man', type='build')
 
     patch('pgi.patch', when='@3.0.4')
 
