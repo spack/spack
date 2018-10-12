@@ -38,7 +38,7 @@ class Visit(CMakePackage):
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
 
-    variant('gui',    default=True, description="Enable VisIt's GUI")
+    variant('gui',    default=True, description='Enable VisIt\'s GUI')
     variant('hdf5',   default=True, description='Enable HDF5 file format')
     variant('silo',   default=True, description='Enable Silo file format')
     variant('python', default=True, description='Enable Python support')
@@ -51,7 +51,7 @@ class Visit(CMakePackage):
     depends_on('python', when='+python')
     depends_on('silo+shared', when='+silo')
     depends_on('hdf5', when='+hdf5')
-    depends_on('mpi', when='+parallel')
+    depends_on('mpi', when='+mpi')
 
     conflicts('+hdf5', when='~gui')
     conflicts('+silo', when='~gui')
@@ -93,7 +93,7 @@ class Visit(CMakePackage):
             args.append(
                 '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix))
 
-        if(spec.variants['parallel'].value):
+        if(spec.variants['mpi'].value):
             args.append('-DVISIT_PARALLEL=ON')
             args.append('-DVISIT_C_COMPILER={0}'.format(spec['mpi'].mpicc))
             args.append('-DVISIT_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
