@@ -135,6 +135,8 @@ class Phist(CMakePackage):
                 % ('ON' if '+openmp' in spec else 'OFF'),
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
                 % ('ON' if '+shared' in spec else 'OFF'),
+                '-DPHIST_ENABLE_SCAMAC:BOOL=%s'
+                % ('ON' if '+scamac' in spec else 'OFF'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
