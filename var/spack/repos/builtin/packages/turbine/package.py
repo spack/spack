@@ -40,8 +40,8 @@ class Turbine(AutotoolsPackage):
             description='Enable calling python')
     variant('r', default=False,
             description='Enable calling R')
-    depends_on('adlbx@:0.8.0', when = '@:1.1.0')
-    depends_on('adlbx', when = '@1.2.1:')
+    depends_on('adlbx@:0.8.0', when='@:1.1.0')
+    depends_on('adlbx', when='@1.2.1:')
     depends_on('adlbx')
     depends_on('tcl')
     depends_on('zsh')
