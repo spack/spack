@@ -242,6 +242,25 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
+def chgrp(path, group):
+    """Implement the bash chgrp function on a single path"""
+    gid = grp.getgrnam(group).gr_gid
+    os.chown(path, -1, gid)
+
+
+def chmod_x(entry, perms):
+    """Implements chmod, treating all executable bits as set using the chmod
+    utility's `+X` option.
+    """
+    mode = os.stat(entry).st_mode
+    if os.path.isfile(entry):
+        if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            perms &= ~stat.S_IXUSR
+            perms &= ~stat.S_IXGRP
+            perms &= ~stat.S_IXOTH
+    os.chmod(entry, perms)
+
+
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link.
     """
@@ -413,12 +432,14 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def mkdirp(*paths):
+def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed."""
+    mode = kwargs.get('mode', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     for path in paths:
         if not os.path.exists(path):
             try:
-                os.makedirs(path)
+                os.makedirs(path, mode)
+                os.chmod(path, mode)  # For systems that ignore makedirs mode
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e

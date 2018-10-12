@@ -48,6 +48,7 @@ class Vtk(CMakePackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
     variant('qt', default=False, description='Build with support for Qt')
+    variant('mpi', default=True, description='Enable MPI support')
 
     # Haru causes trouble on Fedora and Ubuntu in v8.1.1
     # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
@@ -73,6 +74,8 @@ class Vtk(CMakePackage):
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
+
+    depends_on('mpi', when='+mpi')
 
     depends_on('libharu', when='+haru')
 
@@ -166,6 +169,12 @@ class Vtk(CMakePackage):
                     '-DModule_vtkGUISupportQt:BOOL=ON',
                     '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
                 ])
+
+        if '+mpi' in spec:
+            cmake_args.extend([
+                '-DVTK_Group_MPI:BOOL=ON',
+                '-DVTK_USE_SYSTEM_DIY2=OFF'
+            ])
 
         if '+osmesa' in spec:
             prefix = spec['mesa'].prefix

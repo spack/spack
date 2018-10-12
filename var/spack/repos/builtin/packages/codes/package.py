@@ -42,7 +42,7 @@ class Codes(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
 

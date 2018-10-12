@@ -62,6 +62,7 @@ class SuperluDist(CMakePackage):
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_INSTALL_LIBDIR:STRING=%s' % self.prefix.lib,
             '-DTPL_BLAS_LIBRARIES=%s' % lapack_blas.ld_flags,
+            '-DUSE_XSDK_DEFAULTS=YES',
             '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
             ';' + spec['metis'].libs.ld_flags,
             '-DTPL_PARMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include

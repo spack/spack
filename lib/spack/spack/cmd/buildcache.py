@@ -254,6 +254,7 @@ def install_tarball(spec, args):
             tty.msg('Installing buildcache for spec %s' % spec.format())
             bindist.extract_tarball(spec, tarball, args.allow_root,
                                     args.unsigned, args.force)
+            spack.hooks.post_install(spec)
             spack.store.store.reindex()
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
