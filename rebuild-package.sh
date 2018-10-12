@@ -11,6 +11,7 @@ LOCAL_MIRROR="${CURRENT_WORKING_DIR}/local_mirror"
 BUILD_CACHE_DIR="${LOCAL_MIRROR}/build_cache"
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
 export PATH="${SPACK_BIN_DIR}:${PATH}"
+export GNUPGHOME="${CURRENT_WORKING_DIR}/opt/spack/gpg"
 
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
@@ -52,26 +53,19 @@ for i in "${DEPS[@]}"; do
     fi
 done
 
-#
-# Somehow, we need to:
-#   1) get our hands on a signing key so we can sign the package we build
-#   2) trust a key for verifying packages (so we can use signed dependencies)
-#
+# This should create the directory we referred to as GNUPGHOME earlier
+spack gpg list
 
-# (
-#     ( echo "${SPACK_PUBLIC_KEY}" | tr -d ' \n' | base64 -d ) &&
-#     echo &&
-#     ( echo "${SPACK_PRIVATE_KEY}" | tr -d ' \n' | base64 -d )
-# ) > ./keystuff.key
+# Importing the secret key using gpg2 directly should allow to
+# sign and verify both
+echo ${SPACK_SIGNING_KEY} | base64 --decode | gpg2 --import
 
-# ( echo "${SPACK_PRIVATE_KEY}" | tr -d ' \n' | base64 -d ) > ./keystuff.key
+# This line doesn't seem to add any extra trust levels
+# echo ${SPACK_SIGNING_KEY} | base64 --decode | spack gpg trust /dev/stdin
 
-# spack gpg trust ./keystuff.key
+spack gpg list --trusted
+spack gpg list --signing
 
-# spack gpg list --signing
-# spack gpg list --trusted
-
-# spack gpg trust echo "$SPACK_PUBLIC_KEY" | tr -d ' \n' | base64 -d
 
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt
@@ -86,7 +80,7 @@ if [[ $? -ne 0 ]]; then
     spack install --use-cache "${SPEC_NAME}"
 
     # Create buildcache entry for this package
-    spack buildcache create -u -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
+    spack buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
