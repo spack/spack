@@ -37,6 +37,8 @@ class Lbann(CMakePackage):
     git      = "https://github.com/LLNL/lbann.git"
 
     version('develop', branch='develop')
+    version('0.95', sha256='d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2')
+    version('0.94', sha256='567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf')
     version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
     version('0.92', 'c0eb1595a7c74640e96f280beb497564')
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
@@ -51,25 +53,36 @@ class Lbann(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
+    variant('al', default=True, description='Builds with support for Aluminum Library')
+    variant('conduit', default=False, description='Builds with support for Conduit Library')
 
     # It seems that there is a need for one statement per version bounds
-    depends_on('hydrogen +openmp_blas +shared +int64', when='@0.95:')
-    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90')
+    depends_on('hydrogen +openmp_blas +shared +int64', when=('@:0.90,0.95:' '~al'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +al', when=('@:0.90,0.95:' '+al'))
+
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@0.95:'))
-    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@:0.90'))
+               when=('build_type=Debug' '@:0.90,0.95:' '~al'))
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug +al',
+               when=('build_type=Debug' '@:0.90,0.95:' '+al'))
+
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
-               when=('+gpu' '@0.95:'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
-               when=('+gpu' '@:0.90'))
+               when=('+gpu' '@:0.90,0.95:' '~al'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda +al',
+               when=('+gpu' '@:0.90,0.95:' '+al'))
+
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when=('build_type=Debug' '@0.95:' '+gpu'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when=('build_type=Debug' '@:0.90' '+gpu'))
+               when=('build_type=Debug' '@:0.90,0.95:' '+gpu'))
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug +al',
+               when=('build_type=Debug' '@:0.90,0.95:' '+gpu' '+al'))
+
+    # Older versions depended on Elemental not Hydrogen
     depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug' '@0.91:0.94'))
+
+    depends_on('aluminum', when=('@:0.90,0.95:' '+al' '~gpu'))
+    depends_on('aluminum +gpu +mpi-cuda', when=('@:0.90,0.95:' '+al' '+gpu' '~nccl'))
+    depends_on('aluminum +gpu +nccl +mpi-cuda', when=('@:0.90,0.95:' '+al' '+gpu' '+nccl'))
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
@@ -90,6 +103,8 @@ class Lbann(CMakePackage):
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')
+
+    depends_on('conduit@master +hdf5', when='+conduit')
 
     @property
     def common_config_args(self):
@@ -128,6 +143,8 @@ class Lbann(CMakePackage):
             args.extend([
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
+
+        args.extend(['-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
