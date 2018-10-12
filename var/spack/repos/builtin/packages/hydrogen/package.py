@@ -90,9 +90,9 @@ class Hydrogen(CMakePackage):
     depends_on('essl threads=openmp +ilp64', when=('blas=essl +openmp_blas +int64_blas'))
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
-    depends_on('aluminum', when=('+al' '~gpu'))
-    depends_on('aluminum +gpu +mpi-cuda', when=('+al' '+gpu' '~nccl'))
-    depends_on('aluminum +gpu +nccl +mpi-cuda', when=('+al' '+gpu' '~nccl'))
+    depends_on('aluminum', when=('+al' '~cuda'))
+    depends_on('aluminum +gpu +mpi-cuda', when=('+al' '+cuda' '~nccl'))
+    depends_on('aluminum +gpu +nccl +mpi-cuda', when=('+al' '+cuda' '+nccl'))
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when=('blas=openblas ~openmp_blas'))
