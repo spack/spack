@@ -274,8 +274,10 @@ class Trilinos(CMakePackage):
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@0:12.10.1')
     # https://github.com/trilinos/Trilinos/issues/2994
-    conflicts('+shared', when='+stk platform=darwin',
-              msg='Cannot build Trilinos with STK as a shared library on Darwin.')
+    conflicts(
+        '+shared', when='+stk platform=darwin',
+        msg='Cannot build Trilinos with STK as a shared library on Darwin.'
+    )
 
     # ###################### Dependencies ##########################
 
