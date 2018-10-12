@@ -47,6 +47,7 @@ class Mesa(AutotoolsPackage):
     depends_on('binutils', type='build', when=(sys.platform != 'darwin'))
     depends_on('python@2.6.4:', type='build')
     depends_on('py-mako@0.3.4:', type='build')
+    depends_on('py-argparse', type='build')
     depends_on('gettext')
     depends_on('icu4c')
     depends_on('expat')
