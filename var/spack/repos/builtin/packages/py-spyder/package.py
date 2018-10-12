@@ -55,8 +55,8 @@ class PySpyder(PythonPackage):
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
     depends_on('py-qtpy@1.1.0:',      type=('build', 'run'))
-    # not sure whether this should be here or whether it should be declared
-    # in some intermediate dependency
+    # technically this is a transitive dependency in order for py-pyqt
+    # to pick up webkit, but this is the easier solution
     depends_on('qt+webkit',           type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
     depends_on('py-zmq',              type=('build', 'run'))
