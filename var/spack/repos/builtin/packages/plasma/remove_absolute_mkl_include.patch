@@ -1,0 +1,55 @@
+--- a/compute/zgbtrf.c    2017-01-13 13:59:46.000000000 -0500
++++ b/compute/zgbtrf.c    2017-09-21 17:18:46.550538802 -0400
+@@ -18,7 +18,7 @@
+ #include "plasma_types.h"
+ #include "plasma_workspace.h"
+ 
+-#include "mkl_lapacke.h"
++#include "core_lapack.h"
+ 
+ /***************************************************************************//**
+  *
+--- a/compute/zgetrf.c    2017-01-13 13:59:46.000000000 -0500
++++ b/compute/zgetrf.c    2017-09-21 17:18:46.550538802 -0400
+@@ -18,7 +18,7 @@
+ #include "plasma_types.h"
+ #include "plasma_workspace.h"
+ 
+-#include "mkl_lapacke.h"
++#include "core_lapack.h"
+ 
+ /***************************************************************************//**
+  *
+--- a/compute/zgetrs.c    2017-01-13 13:59:46.000000000 -0500
++++ b/compute/zgetrs.c    2017-09-21 17:18:46.550538802 -0400
+@@ -18,7 +18,7 @@
+ #include "plasma_types.h"
+ #include "plasma_workspace.h"
+ 
+-#include "mkl_lapacke.h"
++#include "core_lapack.h"
+ 
+ /***************************************************************************//**
+  *
+--- a/compute/zgesv.c    2017-01-13 13:59:46.000000000 -0500
++++ b/compute/zgesv.c    2017-09-21 17:18:46.550538802 -0400
+@@ -18,7 +18,7 @@
+ #include "plasma_types.h"
+ #include "plasma_workspace.h"
+ 
+-#include "mkl_lapacke.h"
++#include "core_lapack.h"
+ 
+ /***************************************************************************//**
+  *
+--- a/compute/zgbsv.c    2017-01-13 13:59:46.000000000 -0500
++++ b/compute/zgbsv.c    2017-09-21 17:18:46.550538802 -0400
+@@ -18,7 +18,7 @@
+ #include "plasma_types.h"
+ #include "plasma_workspace.h"
+ 
+-#include "mkl_lapacke.h"
++#include "core_lapack.h"
+ 
+ /***************************************************************************//**
+  *
