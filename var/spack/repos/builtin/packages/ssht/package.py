@@ -27,7 +27,7 @@ from spack import *
 
 
 class Ssht(Package):
-    """The SSHT code provides functionality to perform fast and exact 
+    """The SSHT code provides functionality to perform fast and exact
     spin spherical harmonic transforms."""
 
     homepage = "https://astro-informatics.github.io/ssht/"
@@ -39,6 +39,6 @@ class Ssht(Package):
 
     def install(self, spec, prefix):
         make('default')
-        install_tree('include/c',join_path(prefix,'include'))
-        install_tree('doc/c',join_path(prefix,'doc'))
-        install_tree('lib/c',join_path(prefix,'lib'))
+        install_tree('include/c', join_path(prefix, 'include'))
+        install_tree('doc/c', join_path(prefix, 'doc'))
+        install_tree('lib/c', join_path(prefix, 'lib'))
