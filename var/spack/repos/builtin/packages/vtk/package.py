@@ -31,7 +31,7 @@ class Vtk(CMakePackage):
     variant('qt', default=False, description='Build with support for Qt')
     variant('xdmf', default=False, description='Build XDMF file support')
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
-    variant('mpi', default=False, description='Enable MPI support')
+    variant('mpi', default=True, description='Enable MPI support')
 
     # Haru causes trouble on Fedora and Ubuntu in v8.1.1
     # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
@@ -43,10 +43,11 @@ class Vtk(CMakePackage):
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
 
-    # mpi4py calls seem not to work with py37
-    conflicts('+python', when='^python@3.7')
     depends_on('python', when='+python')
+    depends_on('py-mpi4py', when='+mpi +python', type='run')
     extends('python', when='+python')
+    # python3.7 compatibility patch backported from upstream
+    patch('python3.7-const-char.patch', when='@:8.1.1 ^python@3.7:')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -68,7 +69,7 @@ class Vtk(CMakePackage):
     depends_on('libharu', when='+haru')
 
     depends_on('boost', when='+xdmf')
-    depends_on('boost+mpi', when='+xdmf+mpi')
+    depends_on('boost+mpi', when='+xdmf +mpi')
 
     depends_on('mpi', when='+mpi')
 
@@ -140,7 +141,8 @@ class Vtk(CMakePackage):
         if '+python' in spec:
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
-                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path)
+                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
