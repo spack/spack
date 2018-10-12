@@ -136,7 +136,7 @@ class Phist(CMakePackage):
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
                 % ('ON' if '+trilinos' in spec else 'OFF'),
-                '-DXSDK_BUILD_Fortran:BOOL=%s'
+                '-DXSDK_ENABLE_Fortran:BOOL=%s'
                 % ('ON' if '+fortran' in spec else 'OFF'),
                 ]
 
