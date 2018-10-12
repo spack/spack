@@ -5,6 +5,7 @@
 
 import os
 from spack import *
+from contextlib import contextmanager
 
 
 class Neuron(Package):
@@ -27,16 +28,17 @@ class Neuron(Package):
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
     version('develop', git=git, commit='9f36b132ce1b5e4', preferred=True)
 
-    variant('binary',        default=True, description="Create special as a binary instead of shell script")
-    variant('coreneuron',    default=True, description="Patch hh.mod for CoreNEURON compatibility")
+    variant('binary',        default=True,  description="Create special as a binary instead of shell script")
+    variant('coreneuron',    default=True,  description="Patch hh.mod for CoreNEURON compatibility")
     variant('cross-compile', default=False, description='Build for cross-compile environment')
     variant('debug',         default=False, description='Build debug with O0')
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('multisend',     default=True,  description="Enable multi-send spike exchange")
     variant('profile',       default=False, description="Enable Tau profiling")
     variant('python',        default=True,  description='Enable python')
-    variant('shared',        default=True, description='Build shared libraries')
-    variant('rx3d',          default=False, description="Enable cython translated 3-d rxd")
+    variant('shared',        default=True,  description='Build shared libraries')
+    variant('pysetup',       default=True,  description="Build Python module with setup.py")
+    variant('rx3d',          default=False, description="Enable cython translated 3-d rxd. Depends on pysetup")
 
     depends_on('autoconf',   type='build')
     depends_on('automake',   type='build')
@@ -44,14 +46,32 @@ class Neuron(Package):
     depends_on('flex',       type='build')
     depends_on('libtool',    type='build')
     depends_on('pkgconfig',  type='build')
+    depends_on('readline')
 
     depends_on('mpi',         when='+mpi')
     depends_on('ncurses',     when='~cross-compile')
     depends_on('python@2.6:', when='+python')
-    depends_on('readline',    when='+python')
     depends_on('tau',         when='+profile')
 
-    conflicts('~shared', when='+python')
+    conflicts('~shared',  when='+python')
+    conflicts('+pysetup', when='~python')
+    conflicts('+rx3d',    when='~pysetup')
+
+    _default_options = ['--without-iv',
+                        '--without-x']
+    _specs_to_options = {
+        '+cross-compile': ['cross_compiling=yes',
+                           '--without-memacs',
+                           '--without-nmodl'],
+        '~python':    ['--without-nrnpython'],
+        '~pysetup':   ['--disable-pysetup'],
+        '+multisend': ['--with-multisend'],
+        '~rx3d':      ['--disable-rx3d'],
+        '~mpi':       ['--without-paranrn'],
+        '+mpi':       ['--with-paranrn'],
+        '~shared':    ['--disable-shared'],
+        '+binary':    ['linux_nrnmech=no'],
+    }
 
     filter_compiler_wrappers('*/bin/nrniv_makefile')
 
@@ -83,19 +103,8 @@ class Neuron(Package):
             filter_file(r'GLOBAL minf', r'RANGE minf', 'src/nrnoc/hh.mod')
             filter_file(r'TABLE minf', r':TABLE minf', "src/nrnoc/hh.mod")
 
-    def profiling_wrapper_on(self):
-        os.environ["USE_PROFILER_WRAPPER"] = "1"
-
-    def profiling_wrapper_off(self):
-        del os.environ["USE_PROFILER_WRAPPER"]
-
     def get_arch_options(self, spec):
         options = []
-
-        if spec.satisfies('+cross-compile'):
-            options.extend(['cross_compiling=yes',
-                            '--without-memacs',
-                            '--without-nmodl'])
         # need to enable bg-q arch
         if 'bgq' in self.spec.architecture:
             options.extend(['--enable-bluegeneQ',
@@ -108,6 +117,8 @@ class Neuron(Package):
         return options
 
     def get_python_options(self, spec):
+        """Determine config options for Python
+        """
         options = []
 
         if spec.satisfies('+python'):
@@ -119,19 +130,18 @@ class Neuron(Package):
                 py_lib = spec['python'].prefix.lib64
 
             options.extend(['--with-nrnpython=%s' % python_exec,
-                            #'--disable-pysetup',
                             'PYINCDIR=%s' % py_inc,
                             'PYLIBDIR=%s' % py_lib])
 
             if spec.satisfies('~cross-compile'):
                 options.append('PYTHON_BLD=%s' % python_exec)
 
-        else:
-            options.append('--without-nrnpython')
-
         return options
 
-    def get_compiler_options(self, spec):
+    def get_compilation_options(self, spec):
+        """ Build options setting compilers and compilation flags,
+            using MPIC[XX] and C[XX]FLAGS
+        """
         flags = '-O2 -g'
 
         if 'bgq' in spec.architecture:
@@ -143,8 +153,20 @@ class Neuron(Package):
         if self.spec.satisfies('%pgi'):
             flags += ' ' + self.compiler.pic_flag
 
-        return ['CFLAGS=%s' % flags,
-                'CXXFLAGS=%s' % flags]
+        options = ['CFLAGS=%s' % flags,
+                   'CXXFLAGS=%s' % flags]
+
+        if spec.satisfies('+profile'):
+            options.extend(['--disable-dependency-tracking',
+                            'CC=%s' % 'tau_cc',
+                            'CXX=%s' % 'tau_cxx'])
+            if spec.satisfies('+mpi'):
+                options.extend(['MPICC=%s' % 'tau_cc',
+                                'MPICXX=%s' % 'tau_cxx'])
+        elif spec.satisfies('+mpi'):
+            options.extend(['MPICC=%s' % spec['mpi'].mpicc,
+                            'MPICXX=%s' % spec['mpi'].mpicxx])
+        return options
 
     def build_nmodl(self, spec, prefix):
         # build components for front-end arch in cross compiling environment
@@ -168,41 +190,14 @@ class Neuron(Package):
         make('install')
 
     def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix,
-                   '--without-iv',
-                   '--without-x',
-                   '--without-readline']
-
-        if spec.satisfies('+multisend'):
-            options.append('--with-multisend')
-
-        if spec.satisfies('~rx3d'):
-            options.append('--disable-rx3d')
-
-        if spec.satisfies('+mpi'):
-            options.extend(['MPICC=%s' % spec['mpi'].mpicc,
-                            'MPICXX=%s' % spec['mpi'].mpicxx,
-                            '--with-paranrn'])
-        else:
-            options.append('--without-paranrn')
-
-        if spec.satisfies('~shared'):
-            options.append('--disable-shared')
-
-        if spec.satisfies('+binary'):
-            options.append('linux_nrnmech=no')
+        options = ['--prefix=%s' % prefix] + self._default_options
+        for specname, spec_opts in self._specs_to_options.items():
+            if spec.satisfies(specname):
+                options.extend(spec_opts)
 
         options.extend(self.get_arch_options(spec))
         options.extend(self.get_python_options(spec))
-        options.extend(self.get_compiler_options(spec))
-
-        # -M option to Tau disables instrumentation
-        if spec.satisfies('+profile'):
-            options.extend(['--disable-dependency-tracking',
-                            'CC=%s' % 'tau_cc',
-                            'CXX=%s' % 'tau_cxx',
-                            'MPICC=%s' % 'tau_cc',
-                            'MPICXX=%s' % 'tau_cxx'])
+        options.extend(self.get_compilation_options(spec))
 
         build = Executable('./build.sh')
         build()
@@ -213,10 +208,9 @@ class Neuron(Package):
             srcpath = self.stage.source_path
             configure = Executable(join_path(srcpath, 'configure'))
             configure(*options)
-            self.profiling_wrapper_on()
-            make('VERBOSE=1')
-            make('install')
-            self.profiling_wrapper_off()
+            with profiling_wrapper_on():
+                make('VERBOSE=1')
+                make('install')
 
     @run_after('install')
     def filter_compilers(self):
@@ -249,3 +243,11 @@ class Neuron(Package):
     def setup_dependent_package(self, module, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()
         dependent_spec.package.neuron_archdir = neuron_archdir
+
+
+@contextmanager
+def profiling_wrapper_on():
+    os.environ["USE_PROFILER_WRAPPER"] = "1"
+    yield
+    del os.environ["USE_PROFILER_WRAPPER"]
+
