@@ -804,25 +804,34 @@ class TestSpecSematics(object):
     def test_errors_in_variant_directive(self):
         variant = spack.directives.variant.__wrapped__
 
-        # We can't use names that are reserved by Spack
-        with pytest.raises(spack.directives.DirectiveError) as exc_info:
-            variant('patches')
-        assert "The variant name 'patches' is reserved" in str(exc_info.value)
-
-        # We can't have conflicting definitions for arguments
         class Pkg(object):
             name = 'PKG'
 
+        # We can't use names that are reserved by Spack
+        fn = variant('patches')
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "The name 'patches' is reserved" in str(exc_info.value)
+
+        # We can't have conflicting definitions for arguments
         fn = variant(
             'foo', values=spack.variant.any_combination_of('fee', 'foom'),
             default='bar'
         )
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
-        assert "multiple conflicting values for " in str(exc_info.value)
+        assert "cannot specify 'default' when passing a variant object to " \
+               "the argument" in str(exc_info.value)
 
         # We can't leave None as a default value
         fn = variant('foo', default=None)
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
-        assert "the default value in variant 'foo' " in str(exc_info.value)
+        assert "either a default was not explicitly set, or 'None' was used"\
+               in str(exc_info.value)
+
+        # We can't use an empty string as a default value
+        fn = variant('foo', default='')
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "the default cannot be an empty string" in str(exc_info.value)

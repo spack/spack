@@ -130,7 +130,7 @@ class Scr(CMakePackage):
     @run_after('install')
     def copy_config(self):
         spec = self.spec
-        if spec.variants['copy_config'].value:
+        if spec.variants['copy_config'].value != 'none':
             dest_path = self.get_abs_path_rel_prefix(
                 spec.variants['scr_config'].value)
             install(spec.variants['copy_config'].value, dest_path)

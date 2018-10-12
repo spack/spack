@@ -34,6 +34,7 @@ import re
 from six import string_types
 
 import llnl.util.lang
+import llnl.util.tty.color
 
 import spack.error
 import spack.spec
@@ -453,10 +454,15 @@ def variant(
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
     """
+    def format_error(msg, pkg):
+        msg += " @*r{{[{0}, variant '{1}']}}"
+        return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
+
     if name in reserved_names:
-        raise DirectiveError(
-            "The variant name '%s' is reserved by Spack" % name
-        )
+        def _raise_reserved_name(pkg):
+            msg = "The name '%s' is reserved by Spack" % name
+            raise DirectiveError(format_error(msg, pkg))
+        return _raise_reserved_name
 
     # Ensure we have a sequence of allowed variant values, or a
     # predicate for it.
@@ -472,9 +478,9 @@ def variant(
     for argument in ('default', 'multi', 'validator'):
         if hasattr(values, argument) and locals()[argument] is not None:
             def _raise_argument_error(pkg):
-                msg = "multiple conflicting values for argument '{0}' " \
-                      "in variant '{1}' of package '{2}'"
-                raise DirectiveError(msg.format(argument, name, pkg.name))
+                msg = "cannot specify '{0}' when passing a variant object " \
+                      "to the argument 'values' of a variant directive"
+                raise DirectiveError(format_error(msg.format(argument), pkg))
             return _raise_argument_error
 
     # Allow for the object defining the allowed values to supply its own
@@ -489,9 +495,12 @@ def variant(
     # from the command line
     if default is None or default == '':
         def _raise_default_not_set(pkg):
-            msg = "the default value in variant '{0}' from package" \
-                  " '{1}' needs to be set explicitly"
-            raise DirectiveError(msg.format(name, pkg.name))
+            if default is None:
+                msg = "either a default was not explicitly set, " \
+                      "or 'None' was used"
+            elif default == '':
+                msg = "the default cannot be an empty string"
+            raise DirectiveError(format_error(msg, pkg))
         return _raise_default_not_set
 
     description = str(description).strip()

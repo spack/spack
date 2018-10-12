@@ -13,6 +13,7 @@ import itertools
 import re
 from six import StringIO
 
+import llnl.util.tty.color
 import llnl.util.lang as lang
 
 import spack.directives
@@ -618,9 +619,9 @@ class DisjointSetsOfValues(Sequence):
         self.feature_values = tuple(itertools.chain.from_iterable(self.sets))
         self.default = None
         self.multi = True
-        self.error_fmt = "variant '{0}' in package '{1}' accepts " \
-                         "combinations from a single disjoint set of " \
-                         "values [{2}]"
+        self.error_fmt = "this variant accepts combinations of values from " \
+                         "exactly one of the following sets '{values}' " \
+                         "@*r{{[{package}, variant '{variant}']}}"
 
     def with_default(self, default):
         """Sets the default value and returns self."""
@@ -654,15 +655,20 @@ class DisjointSetsOfValues(Sequence):
             # If for any of the sets, all the values are in it return True
             if any(all(x in s for x in values) for s in self.sets):
                 return
-            msg = self.error_fmt.format(variant_name, pkg_name, values)
+
+            format_args = {
+                'variant': variant_name, 'package': pkg_name, 'values': values
+            }
+            msg = self.error_fmt + \
+                " @*r{{[{package}, variant '{variant}']}}"
+            msg = llnl.util.tty.color.colorize(msg.format(**format_args))
             raise error.SpecError(msg)
         return _disjoint_set_validator
 
 
 def _a_single_value_or_a_combination(single_value, *values):
     error = "the value '" + single_value + \
-            "' in the variant '{0}' of package '{1}' " \
-            "is mutually exclusive with any of the other values"
+            "' is mutually exclusive with any of the other values"
     return DisjointSetsOfValues(
         (single_value,), values
     ).with_default(single_value).with_error(error).\

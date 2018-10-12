@@ -65,8 +65,8 @@ class Mvapich2(AutotoolsPackage):
         values=disjoint_sets(
             ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
         ).with_error(
-            "'slurm' or 'auto' cannot be activated along with other process "
-            "managers in the variant '{0}' of package '{1}'"
+            "'slurm' or 'auto' cannot be activated along with "
+            "other process managers"
         ).with_default('auto'),
     )
 
