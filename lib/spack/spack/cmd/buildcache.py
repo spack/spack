@@ -131,7 +131,7 @@ def setup_parser(subparser):
 
     check.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check")
 
     check.add_argument(
@@ -173,7 +173,7 @@ def setup_parser(subparser):
                      help="Name of AWS profile")
     put.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.cmd.default_modify_scope(),
+        default=spack.config.default_modify_scope(),
         help="configuration scope giving possible mirrors")
     put.set_defaults(func=put_buildcache)
 
