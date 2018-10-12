@@ -74,6 +74,11 @@ class Phist(CMakePackage):
     variant('parmetis', default=False,
             description='enable/disable ParMETIS partitioning (only actually '
                         'used with kernel_lib=builtin)')
+
+    variant('scamac', default=True,
+            description='enable/disable building the "SCAlable MAtrix '
+                        'Collection" matrix generators.')
+
     variant('trilinos', default=False,
             description='enable/disable Trilinos third-party libraries. '
                         'For all kernel_libs, we can use Belos and Anasazi '
