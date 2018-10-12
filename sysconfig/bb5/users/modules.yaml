@@ -34,6 +34,7 @@ modules:
     whitelist:
       - functionalizer
       - git
+      - neuron
       - neurodamus
       - parquet-converters
       - python
