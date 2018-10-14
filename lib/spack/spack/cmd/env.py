@@ -353,14 +353,24 @@ def _env_concretize(env, use_repo=False, force=False):
 # env install
 #
 def env_install_setup_parser(subparser):
-    """install all concretized specs in an environment"""
+    """concretize and install all specs in an environment"""
     subparser.add_argument(
         'env', nargs='?', help='install all packages in this environment')
+    subparser.add_argument(
+        '--only-concrete', action='store_true', default=False,
+        help='only install already concretized specs')
     spack.cmd.install.add_common_arguments(subparser)
 
 
 def env_install(args):
     env = get_env(args, 'status')
+
+    # concretize unless otherwise specified
+    if not args.only_concrete:
+        env.concretize()
+        env.write()
+
+    # install all specs in the environment
     env.install(args)
 
 
