@@ -425,9 +425,8 @@ class Environment(object):
         # return only the newly concretized specs
         return new_specs
 
-    def install(self, install_args=None):
-        """Do a `spack install` on all the (concretized)
-           specs in an Environment."""
+    def install(self, args=None):
+        """Install all concretized specs in an environment."""
 
         # Make sure log directory exists
         logs_dir = log_path(self.dotenv_path)
@@ -439,8 +438,9 @@ class Environment(object):
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
-            if install_args:
-                spack.cmd.install.update_kwargs_from_args(install_args, kwargs)
+            if args:
+                spack.cmd.install.update_kwargs_from_args(args, kwargs)
+
             with fs.working_dir(self.path):
                 spec.package.do_install(**kwargs)
 
