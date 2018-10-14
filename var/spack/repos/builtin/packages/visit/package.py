@@ -42,7 +42,7 @@ class Visit(CMakePackage):
     variant('hdf5',   default=True, description='Enable HDF5 file format')
     variant('silo',   default=True, description='Enable Silo file format')
     variant('python', default=True, description='Enable Python support')
-    variant('parallel', default=False, description='Enable parallel engine')
+    variant('mpi',    default=True, description='Enable parallel engine')
 
     depends_on('cmake@3.0:', type='build')
     depends_on('vtk@6.1.0~opengl2')
