@@ -30,6 +30,8 @@ level = "long"
 
 #: List of subcommands of `spack env`
 subcommands = [
+    'activate',
+    'deactivate',
     'create',
     'destroy',
     ['list', 'ls'],
@@ -46,6 +48,141 @@ subcommands = [
 ]
 
 
+def get_env(args, cmd_name):
+    """Get target environment from args, or from environment variables.
+
+    This is used by a number of commands for handling the environment
+    argument.
+
+    Check whether an environment was passed via arguments, then whether
+    it was passed via SPACK_ENV.  If an environment is found, read it in.
+    If not, print an error message referencing the calling command.
+
+    Arguments:
+        args (Namespace): argparse namespace wtih command arguments
+        cmd_name (str): name of calling command
+
+    """
+    env = args.env
+    if not env:
+        env = os.environ.get('SPACK_ENV')
+        if not env:
+            tty.die(
+                'spack env %s requires an active environment or an argument'
+                % cmd_name)
+
+    return ev.read(env)
+
+
+#
+# env activate
+#
+def env_activate_setup_parser(subparser):
+    """set the current environment"""
+    shells = subparser.add_mutually_exclusive_group()
+    shells.add_argument(
+        '--sh', action='store_const', dest='shell', const='sh',
+        help="print sh commands to activate the environment")
+    shells.add_argument(
+        '--csh', action='store_const', dest='shell', const='csh',
+        help="print csh commands to activate the environment")
+    subparser.add_argument(
+        metavar='env', dest='activate_env',
+        help='name of environment to activate')
+
+
+def env_activate(args):
+    if not args.activate_env:
+        tty.die('spack env activate requires an environment name')
+
+    env = args.activate_env
+    if not args.shell:
+        msg = [
+            "This command works best with Spack's shell support",
+            ""
+        ] + spack.cmd.common.shell_init_instructions + [
+            'Or, if you want to use `spack env activate` without initializing',
+            'shell support, you can run one of these:',
+            '',
+            '    eval `spack env activate --sh %s`   # for bash/sh' % env,
+            '    eval `spack env activate --csh %s`  # for csh/tcsh' % env,
+        ]
+        tty.msg(*msg)
+        return 1
+
+    if not ev.exists(env):
+        tty.die("No such environment: '%s'" % env)
+
+    env_name_prompt = '[%s] ' % env
+
+    if args.shell == 'csh':
+        # TODO: figure out how to make color work for csh
+        sys.stdout.write('''\
+setenv SPACK_ENV %s;
+setenv SPACK_OLD_PROMPT "${prompt}";
+set prompt="%s ${prompt}";
+alias despacktivate "spack env deactivate";
+''' % (env, env_name_prompt))
+    else:
+        if 'color' in os.environ['TERM']:
+            env_name_prompt = colorize('@G{%s} ' % env_name_prompt, color=True)
+
+        sys.stdout.write('''\
+export SPACK_ENV=%s;
+if [ -z "${SPACK_OLD_PS1}" ]; then export SPACK_OLD_PS1="${PS1}"; fi;
+export PS1="%s ${PS1}";
+alias despacktivate='spack env deactivate'
+''' % (env, env_name_prompt))
+
+
+#
+# env deactivate
+#
+def env_deactivate_setup_parser(subparser):
+    """deactivate any active environment in the shell"""
+    shells = subparser.add_mutually_exclusive_group()
+    shells.add_argument(
+        '--sh', action='store_const', dest='shell', const='sh',
+        help="print sh commands to deactivate the environment")
+    shells.add_argument(
+        '--csh', action='store_const', dest='shell', const='csh',
+        help="print csh commands to deactivate the environment")
+
+
+def env_deactivate(args):
+    if not args.shell:
+        msg = [
+            "This command works best with Spack's shell support",
+            ""
+        ] + spack.cmd.common.shell_init_instructions + [
+            'Or, if you want to use `spack env activate` without initializing',
+            'shell support, you can run one of these:',
+            '',
+            '    eval `spack env deactivate --sh`   # for bash/sh',
+            '    eval `spack env deactivate --csh`  # for csh/tcsh',
+        ]
+        tty.msg(*msg)
+        return 1
+
+    if 'SPACK_ENV' not in os.environ:
+        tty.die('No environment is currently active.')
+
+    if args.shell == 'csh':
+        sys.stdout.write('''\
+unsetenv SPACK_ENV;
+set prompt="${SPACK_OLD_PROMPT}";
+unsetenv SPACK_OLD_PROMPT;
+unalias despacktivate;
+''')
+    else:
+        sys.stdout.write('''\
+unset SPACK_ENV; export SPACK_ENV;
+export PS1="$SPACK_OLD_PS1";
+unset SPACK_OLD_PS1; export SPACK_OLD_PS1;
+unalias despacktivate;
+''')
+
+
 #
 # env create
 #
@@ -59,12 +196,12 @@ def env_create_setup_parser(subparser):
 def env_create(args):
     if args.envfile:
         with open(args.envfile) as f:
-            _environment_create(args.env, f)
+            _env_create(args.env, f)
     else:
-        _environment_create(args.env)
+        _env_create(args.env)
 
 
-def _environment_create(name, env_yaml=None):
+def _env_create(name, env_yaml=None):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -93,7 +230,7 @@ def env_destroy_setup_parser(subparser):
 
 def env_destroy(args):
     for env in args.env:
-        if not ev.exists(ev.root(env)):
+        if not ev.exists(env):
             tty.die("No such environment: '%s'" % env)
         elif not os.access(ev.root(env), os.W_OK):
             tty.die("insufficient permissions to modify environment: '%s'"
@@ -152,10 +289,8 @@ def env_add_setup_parser(subparser):
 
 
 def env_add(args):
-    if not args.env:
-        tty.die('spack env unadd requires an active env or argument')
+    env = get_env(args, 'add')
 
-    env = ev.read(args.env)
     for spec in spack.cmd.parse_specs(args.specs):
         if not env.add(spec):
             tty.msg("Package {0} was already added to {1}"
@@ -204,17 +339,14 @@ def env_concretize_setup_parser(subparser):
 
 
 def env_concretize(args):
-    if not args.env:
-        tty.die('spack env status requires an active env or argument')
-    environment = ev.read(args.env)
-    _environment_concretize(
-        environment, use_repo=bool(args.exact_env), force=args.force)
+    env = get_env(args, 'status')
+    _env_concretize(env, use_repo=bool(args.exact_env), force=args.force)
 
 
-def _environment_concretize(environment, use_repo=False, force=False):
+def _env_concretize(env, use_repo=False, force=False):
     """Function body separated out to aid in testing."""
-    new_specs = environment.concretize(force=force)
-    environment.write(dump_packages=new_specs)
+    new_specs = env.concretize(force=force)
+    env.write(dump_packages=new_specs)
 
 
 # REMOVE
@@ -228,10 +360,7 @@ def env_install_setup_parser(subparser):
 
 
 def env_install(args):
-    if not args.env:
-        tty.die('spack env status requires an active env or argument')
-
-    env = ev.read(args.env)
+    env = get_env(args, 'status')
     env.install(args)
 
 
@@ -246,11 +375,8 @@ def env_uninstall_setup_parser(subparser):
 
 
 def env_uninstall(args):
-    if not args.env:
-        tty.die('spack env uninstall requires an active env or argument')
-
-    environment = ev.read(args.env)
-    environment.uninstall(args)
+    env = get_env(args, 'uninstall')
+    env.uninstall(args)
 
 
 #
@@ -262,9 +388,9 @@ def env_relocate_setup_parser(subparser):
 
 
 def env_relocate(args):
-    environment = ev.read(args.env)
-    environment.reset_os_and_compiler(compiler=args.compiler)
-    environment.write()
+    env = get_env(args, 'relocate')
+    env.reset_os_and_compiler(compiler=args.compiler)
+    env.write()
 
 
 #
@@ -280,12 +406,10 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    if not args.env:
-        tty.die('spack env status requires an active env or argument')
+    env = get_env(args, 'status')
 
-    # TODO? option to show packages w/ multiple instances?
-    environment = ev.read(args.env)
-    environment.status(
+    # TODO: option to show packages w/ multiple instances?
+    env.status(
         sys.stdout, recurse_dependencies=args.recurse_dependencies,
         hashes=args.long or args.very_long,
         hashlen=None if args.very_long else 7,
@@ -302,11 +426,8 @@ def env_stage_setup_parser(subparser):
 
 
 def env_stage(args):
-    if not args.env:
-        tty.die('spack env loads requires an active env or argument')
-
-    environment = ev.read(args.env)
-    for spec in environment.specs_by_hash.values():
+    env = get_env(args, 'stage')
+    for spec in env.specs_by_hash.values():
         for dep in spec.traverse():
             dep.package.do_stage()
 
@@ -325,8 +446,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    if not args.env:
-        tty.die('spack env loads requires an active env or argument')
+    env = get_env(args, 'loads')
 
     # Set the module types that have been selected
     module_type = args.module_type
@@ -334,13 +454,12 @@ def env_loads(args):
         # If no selection has been made select all of them
         module_type = 'tcl'
 
-    environment = ev.read(args.env)
     recurse_dependencies = args.recurse_dependencies
     args.recurse_dependencies = False
 
-    loads_file = fs.join_path(environment.path, 'loads')
+    loads_file = fs.join_path(env.path, 'loads')
     with open(loads_file, 'w') as f:
-        specs = environment._get_environment_specs(
+        specs = env._get_environment_specs(
             recurse_dependencies=recurse_dependencies)
 
         spack.cmd.modules.loads(module_type, specs, args, f)
@@ -360,7 +479,7 @@ def env_upgrade_setup_parser(subparser):
 
 
 def env_upgrade(args):
-    env = ev.read(args.env)
+    env = get_env(args, 'upgrade')
 
     if os.path.exists(env.repos_path):
         repo_stage = tempfile.mkdtemp()
