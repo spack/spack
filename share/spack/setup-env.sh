@@ -89,6 +89,42 @@ function spack {
             fi
             return
             ;;
+        "env")
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
+
+            if [ "$_sp_arg" = "-h" ]; then
+                command spack env -h
+            else
+                case $_sp_arg in
+                    activate)
+                        if [ -z "$1" -o "${1#-}" != "$1" ]; then
+                            # no args or does not start with -: just execute
+                            command spack "${args[@]}"
+                        else
+                            # actual call to activate: source the output
+                            eval $(command spack $_sp_flags env activate --sh "$@")
+                        fi
+                        ;;
+                    deactivate)
+                        if [ -n "$1" ]; then
+                            # with args: execute the command
+                            command spack "${args[@]}"
+                        else
+                            # no args: source the output.
+                            eval $(command spack $_sp_flags env deactivate --sh)
+                        fi
+                        ;;
+                    *)
+                        command spack "${args[@]}"
+                        ;;
+                esac
+            fi
+            return
+            ;;
         "use"|"unuse"|"load"|"unload")
             # Shift any other args for use off before parsing spec.
             _sp_subcommand_args=""

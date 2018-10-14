@@ -26,6 +26,10 @@ from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.version import VersionList
 
 
+#: environment variable used to indicate the active environment
+spack_env_var = 'SPACK_ENV'
+
+
 #: currently activated environment
 active = None
 

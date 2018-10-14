@@ -12,7 +12,7 @@ import llnl.util.filesystem as fs
 
 import spack.modules
 import spack.environment as ev
-from spack.cmd.env import _environment_concretize, _environment_create
+from spack.cmd.env import _env_concretize, _env_create
 from spack.version import Version
 from spack.spec import Spec
 from spack.main import SpackCommand
@@ -170,7 +170,7 @@ def test_to_lockfile_dict():
 def test_env_repo():
     e = ev.Environment('testx')
     e.add('mpileaks')
-    _environment_concretize(e)
+    _env_concretize(e)
 
     package = e.repo.get(spack.spec.Spec('mpileaks'))
     assert package.namespace == 'spack.pkg.builtin.mock'
@@ -246,7 +246,7 @@ env:
 """
     spack.package_prefs.PackagePrefs.clear_caches()
 
-    _environment_create('test', test_config)
+    _env_create('test', test_config)
 
     e = ev.read('test')
     ev.prepare_config_scope(e)
@@ -266,7 +266,7 @@ env:
 """
     spack.package_prefs.PackagePrefs.clear_caches()
 
-    _environment_create('test', test_config)
+    _env_create('test', test_config)
 
     e = ev.read('test')
 
@@ -296,7 +296,7 @@ env:
 """ % config_scope_path
 
     spack.package_prefs.PackagePrefs.clear_caches()
-    _environment_create('test', test_config)
+    _env_create('test', test_config)
 
     e = ev.read('test')
 
@@ -328,7 +328,7 @@ env:
 """
     spack.package_prefs.PackagePrefs.clear_caches()
 
-    _environment_create('test', test_config)
+    _env_create('test', test_config)
 
     e = ev.read('test')
 

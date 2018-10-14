@@ -14,4 +14,4 @@ def test_cd():
 
     out = cd()
 
-    assert "To initialize spack's shell commands, you must run one of" in out
+    assert "To initialize spack's shell commands:" in out

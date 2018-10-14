@@ -587,6 +587,10 @@ def main(argv=None):
     env = args.env or args.exact_env
     if env:
         spack.environment.activate(env, args.exact_env is not None)
+    else:
+        env = os.environ.get(spack.environment.spack_env_var)
+        if env:
+            spack.environment.activate(env, False)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
