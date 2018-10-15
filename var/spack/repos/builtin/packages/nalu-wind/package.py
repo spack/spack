@@ -22,6 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class NaluWind(CMakePackage):
@@ -32,6 +33,8 @@ class NaluWind(CMakePackage):
 
     maintainers = ['jrood-nrel']
 
+    tags = ['ecp', 'ecp-apps']
+
     version('master', branch='master')
 
     variant('openfast', default=False,
@@ -40,10 +43,15 @@ class NaluWind(CMakePackage):
             description='Compile with Tioga support')
     variant('hypre', default=False,
             description='Compile with Hypre support')
+    variant('shared', default=(sys.platform != 'darwin'),
+            description='Build Trilinos as shared library')
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')
-    depends_on('trilinos+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards~hypre@master,develop')
+    depends_on('trilinos+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards~hypre@master,develop', when='+shared')
+    # Cannot build Trilinos as a shared library with STK on Darwin
+    # https://github.com/trilinos/Trilinos/issues/2994
+    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards~hypre@master,develop', when='~shared')
     depends_on('openfast+cxx', when='+openfast')
     depends_on('tioga', when='+tioga')
     depends_on('hypre+mpi+int64', when='+hypre')
