@@ -41,8 +41,18 @@ class AtSpi2Core(MesonPackage):
     depends_on('dbus@1.12.8:')
     depends_on('libx11')
     depends_on('libxi')
+    depends_on('libxtst', type='build')
+    depends_on('recordproto', type='build')
+    depends_on('inputproto', type='build')
+    depends_on('fixesproto', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('python', type='build')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
         return url + '/%s/at-spi2-core-%s.tar.xz' % (version.up_to(2), version)
+
+    def setup_environment(self, spack_env, run_env):
+        # this avoids an "import site" error in the build
+        spack_env.unset('PYTHONHOME')

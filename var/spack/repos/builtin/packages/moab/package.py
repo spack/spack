@@ -60,6 +60,7 @@ class Moab(AutotoolsPackage):
     variant('irel', default=False, description='Enable irel interface')
     variant('fbigeom', default=False, description='Enable fbigeom interface')
     variant('coupler', default=True, description='Enable mbcoupler tool')
+    variant('dagmc', default=False, description='Enable dagmc tool')
 
     variant("debug", default=False, description='enable debug symbols')
     variant('shared', default=False,
@@ -161,6 +162,11 @@ class Moab(AutotoolsPackage):
             options.append('--enable-mbcoupler')
         else:
             options.append('--disable-mbcoupler')
+
+        if '+dagmc' in spec:
+            options.append('--enable-dagmc')
+        else:
+            options.append('--disable-dagmc')
 
         if '+metis' in spec:
             options.append('--with-metis=%s' % spec['metis'].prefix)

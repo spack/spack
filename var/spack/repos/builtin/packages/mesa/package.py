@@ -206,3 +206,8 @@ class Mesa(AutotoolsPackage):
                                   shared=True, recursive=False)
             if libs:
                 return libs
+
+    @when('^python@3:')
+    def setup_environment(self, spack_env, run_env):
+        # this avoids an "import site" error in the build
+        spack_env.unset('PYTHONHOME')

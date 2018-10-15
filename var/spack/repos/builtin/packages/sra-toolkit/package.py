@@ -33,13 +33,14 @@ class SraToolkit(Package):
     homepage = "https://trace.ncbi.nlm.nih.gov/Traces/sra"
     url      = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.8.2-1/sratoolkit.2.8.2-1-centos_linux64.tar.gz"
 
-    version('2.8.2-1', '3a2910754aea71aba5662804efff2a68')
+    version('2.9.2', sha256='17dbe13aa1ed7955d31e1e76e8b62786e80a77e9ed9d396631162dc3ad8b716d')
+    version('2.8.2-1', sha256='b053061aae7c6d00162fe0f514be4128a60365b4b2b5b36e7f4798b348b55cf5')
 
     def url_for_version(self, version):
         url = 'https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/{0}/sratoolkit.{0}-centos_linux64.tar.gz'
         return url.format(version)
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        install_tree('bin', prefix.bin, symlinks=True)
         install_tree('example', prefix.example)
         install_tree('schema', prefix.schema)

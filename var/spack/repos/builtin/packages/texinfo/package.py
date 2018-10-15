@@ -42,3 +42,5 @@ class Texinfo(AutotoolsPackage):
     version('5.2', '1b8f98b80a8e6c50422125e07522e8db')
     version('5.1', '54e250014fe698fb4832016158747c03')
     version('5.0', '918432285abe6fe96c98355594c5656a')
+
+    depends_on('perl')

@@ -29,6 +29,8 @@ import spack.spec
 import spack.repo
 import spack.build_environment
 
+from spack.pkgkit import inject_flags, env_flags, build_system_flags
+
 
 @pytest.fixture()
 def temp_env():
@@ -70,7 +72,6 @@ class TestFlagHandlers(object):
         pkg = spack.repo.get(s)
         pkg.flag_handler = pkg.__class__.inject_flags
         spack.build_environment.setup_package(pkg, False)
-
         assert os.environ['SPACK_CPPFLAGS'] == '-g'
         assert 'CPPFLAGS' not in os.environ
 
@@ -78,7 +79,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.inject_flags
+        pkg.flag_handler = inject_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert os.environ['SPACK_CPPFLAGS'] == '-g'
@@ -88,7 +89,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.env_flags
+        pkg.flag_handler = env_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert os.environ['CPPFLAGS'] == '-g'
@@ -98,7 +99,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('cmake-client cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_CPPFLAGS' not in os.environ
@@ -112,7 +113,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('patchelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_CPPFLAGS' not in os.environ
@@ -124,7 +125,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
 
         # Test the command line flags method raises a NotImplementedError
         try:
@@ -161,7 +162,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('cmake-client ldflags=-mthreads')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_LDFLAGS' not in os.environ
@@ -177,7 +178,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('cmake-client ldlibs=-lfoo')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.build_system_flags
+        pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_LDLIBS' not in os.environ

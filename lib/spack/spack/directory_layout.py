@@ -30,7 +30,7 @@ import re
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, chgrp
 
 import spack.config
 import spack.spec
@@ -263,7 +263,19 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        mkdirp(self.metadata_path(spec))
+        # Create install directory with properly configured permissions
+        # Cannot import at top of file
+        from spack.package_prefs import get_package_dir_permissions
+        from spack.package_prefs import get_package_group
+        group = get_package_group(spec)
+        perms = get_package_dir_permissions(spec)
+        mkdirp(spec.prefix, mode=perms)
+        if group:
+            chgrp(spec.prefix, group)
+            # Need to reset the sticky group bit after chgrp
+            os.chmod(spec.prefix, perms)
+
+        mkdirp(self.metadata_path(spec), mode=perms)
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):

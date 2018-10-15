@@ -32,6 +32,7 @@ class NlohmannJson(CMakePackage):
     url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
     maintainers = ['ax3l']
 
+    version('3.3.0', sha256='2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801')
     version('3.1.2', '557651b017c36ad596ba3b577ba1b539')
 
     variant('single_header', default=True,
@@ -42,8 +43,10 @@ class NlohmannJson(CMakePackage):
     depends_on('cmake@3.8:', type='build')
 
     # requires mature C++11 implementations
-    conflicts('%gcc@:4.8')
-    conflicts('%gcc@:3.3')
+    conflicts('%gcc@:4.7')
+    # v3.3.0 adds support for gcc 4.8
+    # https://github.com/nlohmann/json/releases/tag/v3.3.0
+    conflicts('%gcc@:4.8', when='@:3.2.9')
     conflicts('%intel@:16')
     conflicts('%pgi@:14')
 
