@@ -116,8 +116,28 @@ def deactivate():
 
     """
     global active
+
     if not active:
         return
+
+    deactivate_config_scope(active)
+    spack.repo.path.remove(active.repo)
+
+    tty.debug("Deactivated environmennt '%s'" % active.name)
+    active = None
+
+
+@contextmanager
+def env_context(env):
+    """Context manager that activates and deactivates an environment."""
+    old_active = active
+    activate(env)
+
+    yield
+
+    deactivate()
+    if old_active:
+        activate(old_active)
 
 
 def root(name):
@@ -333,7 +353,7 @@ class Environment(object):
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec, report_existing=True):
+    def add(self, user_spec):
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
@@ -342,6 +362,10 @@ class Environment(object):
 
         """
         spec = Spec(user_spec)
+        if not spec.name:
+            raise EnvError('cannot add anonymous specs to an environment!')
+        elif not spack.repo.path.exists(spec.name):
+            raise EnvError('no such package: %s' % spec.name)
 
         existing = set(s for s in self.user_specs if s.name == spec.name)
         if not existing:
@@ -425,7 +449,45 @@ class Environment(object):
         # return only the newly concretized specs
         return new_specs
 
-    def install(self, args=None):
+    def install(self, user_spec, install_args=None):
+        """Install a single spec into an environment.
+
+        This will automatically concretize the single spec, but it won't
+        affect other as-yet unconcretized specs.
+
+        Returns:
+            (Spec): concrete spec if the spec was installed, None if it
+                was already present and installed.
+
+        """
+        spec = Spec(user_spec)
+
+        # TODO: do a more sophisticated match than just by name
+        added = self.add(spec)
+        concrete = None
+        if added:
+            # newly added spec
+            spec = self.user_specs[-1]
+            concrete = spec.concretized()
+            h = concrete.dag_hash()
+
+            self.concretized_user_specs.append(spec)
+            self.concretized_order.append(h)
+            self.specs_by_hash[h] = concrete
+
+        else:
+            # spec might be in the user_specs, but not installed.
+            spec = next(s for s in self.user_specs if s.name == spec.name)
+            if spec not in self.concretized_user_specs:
+                concrete = spec.concretized()
+                self.concretized_user_specs.append(spec)
+                self.concretized_order.append(h)
+                self.specs_by_hash[h] = concrete
+
+        if concrete:
+            spec.package.do_install(**install_args)
+
+    def install_all(self, args=None):
         """Install all concretized specs in an environment."""
 
         # Make sure log directory exists
@@ -704,6 +766,12 @@ def prepare_config_scope(env):
     """Add env's scope to the global configuration search path."""
     for scope in env.config_scopes():
         spack.config.config.push_scope(scope)
+
+
+def deactivate_config_scope(env):
+    """Remove any scopes from env from the global config path."""
+    for scope in env.config_scopes():
+        spack.config.config.remove_scope(scope.name)
 
 
 class EnvError(spack.error.SpackError):
