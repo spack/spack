@@ -1,4 +1,5 @@
 unset DISTRO
+unset DISTRO_VERSION
 unset BASE_IMAGE
 unset BASE_NAME
 unset BASE_TAG
