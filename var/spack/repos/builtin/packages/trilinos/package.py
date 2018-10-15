@@ -273,6 +273,11 @@ class Trilinos(CMakePackage):
     conflicts('+superlu-dist', when='+complex+amesos2')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@0:12.10.1')
+    # https://github.com/trilinos/Trilinos/issues/2994
+    conflicts(
+        '+shared', when='+stk platform=darwin',
+        msg='Cannot build Trilinos with STK as a shared library on Darwin.'
+    )
 
     # ###################### Dependencies ##########################
 
@@ -313,7 +318,7 @@ class Trilinos(CMakePackage):
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
-    # FIXME: concretizer bug? 'hl' req by netcdf is affecting this code.
+    # We need hdf5+hl to match with netcdf during concretization
     depends_on('hdf5+hl+mpi', when='+hdf5')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))

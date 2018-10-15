@@ -22,25 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class SraToolkit(Package):
-    """The NCBI SRA Toolkit enables reading ("dumping") of sequencing files
-       from the SRA database and writing ("loading") files into the .sra
-       format."""
+class Ssht(Package):
+    """The SSHT code provides functionality to perform fast and exact
+    spin spherical harmonic transforms."""
 
-    homepage = "https://trace.ncbi.nlm.nih.gov/Traces/sra"
-    url      = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.8.2-1/sratoolkit.2.8.2-1-centos_linux64.tar.gz"
+    homepage = "https://astro-informatics.github.io/ssht/"
+    git      = "https://github.com/astro-informatics/ssht.git"
 
-    version('2.9.2', sha256='17dbe13aa1ed7955d31e1e76e8b62786e80a77e9ed9d396631162dc3ad8b716d')
-    version('2.8.2-1', sha256='b053061aae7c6d00162fe0f514be4128a60365b4b2b5b36e7f4798b348b55cf5')
+    version('1.2b1', commit='7378ce8853897cbd1b08adebf7ec088c1e40f860')
 
-    def url_for_version(self, version):
-        url = 'https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/{0}/sratoolkit.{0}-centos_linux64.tar.gz'
-        return url.format(version)
+    depends_on('fftw')
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin, symlinks=True)
-        install_tree('example', prefix.example)
-        install_tree('schema', prefix.schema)
+        make('default')
+        install_tree('include/c', join_path(prefix, 'include'))
+        install_tree('doc/c', join_path(prefix, 'doc'))
+        install_tree('lib/c', join_path(prefix, 'lib'))

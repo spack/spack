@@ -31,6 +31,7 @@ class PyScikitLearn(PythonPackage):
     homepage = "https://pypi.python.org/pypi/scikit-learn"
     url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.18.1.tar.gz"
 
+    version('0.20.0', sha256='97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18')
     version('0.19.1', 'b67143988c108862735a96cf2b1e827a')
     version('0.18.1', '6b0ff1eaa5010043895dd63d1e3c60c9')
     version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
