@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Libsharp(AutotoolsPackage):
     """Libsharp is acode library for spherical harmonic transforms (SHTs) and
     spin-weighted spherical harmonic transforms, which evolved from the libpsht
