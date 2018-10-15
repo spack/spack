@@ -19,9 +19,12 @@ class Spark(Package):
     variant('hadoop', default=False,
             description='Build with Hadoop')
 
-    depends_on('java', type=('build', 'run'))
+    depends_on('java@8', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
+    version('2.3.2rc2',
+            url="https://github.com/matz-e/bbp-spark/releases/download/v2.3.2-rc2/spark-2.3.2-bin-rc2-patched.tgz",
+            sha256='b11c8fe0f0454bd5c4ab24a689becf0dc089c4627b3a7374b6a304e7d048dab9')
     version('2.3.0', 'db21021b8e877b219ab886097ef42344')
     version('2.1.0', '21d4471e78250775b1fa7c0e6c3a1326')
     version('2.0.2', '32110c1bb8f081359738742bd26bced1')

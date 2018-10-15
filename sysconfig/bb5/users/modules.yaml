@@ -37,6 +37,7 @@ modules:
       - neurodamus
       - parquet-converters
       - python
+      - spykfunc
       - steps
       - touchdetector
     blacklist:
