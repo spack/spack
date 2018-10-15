@@ -181,9 +181,12 @@ class Vtk(CMakePackage):
             ])
 
         if '+xdmf' in spec:
+            if spec.satisfies('^cmake@3.12:')
+                # This policy exists only for CMake >= 3.12
+                cmake_args.extend(["-DCMAKE_POLICY_DEFAULT_CMP0074=NEW"])
+
             cmake_args.extend([
                 # Enable XDMF Support here
-                "-DCMAKE_POLICY_DEFAULT_CMP0074=NEW",
                 "-DModule_vtkIOXdmf2:BOOL=ON",
                 "-DModule_vtkIOXdmf3:BOOL=ON",
                 "-DModule_vtkIOParallelXdmf3:BOOL=ON",
