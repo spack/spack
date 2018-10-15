@@ -46,7 +46,12 @@ class Redundans(Package):
     depends_on('snap-berkeley@1.0beta.18:', type=('build', 'run'))
 
     def install(self, spec, prefix):
+        sspace_location = join_path(spec['sspace-standard'].prefix,
+                                    'SSPACE_Standard_v3.0.pl')
         mkdirp(prefix.bin)
+        filter_file(r'sspacebin = os.path.join(.*)$',
+                    'sspacebin = \'' + sspace_location + '\'',
+                    'redundans.py')
         install('redundans.py', prefix.bin)
         with working_dir('bin'):
             install('fasta2homozygous.py', prefix.bin)
