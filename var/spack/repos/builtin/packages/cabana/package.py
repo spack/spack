@@ -31,8 +31,10 @@ class Cabana(CMakePackage):
     """
     homepage = "https://github.com/ECP-copa/Cabana"
     git      = "https://github.com/ECP-copa/Cabana.git"
+    url      = "https://github.com/ECP-copa/Cabana/archive/0.1.0.tar.gz"
 
     version('develop', branch='master', submodules=True)
+    version('0.1.0-rc0', sha256='73754d38aaa0c2a1e012be6959787108fec142294774c23f70292f59c1bdc6c5')
 
     variant('serial', default=True, description="enable Serial backend (default)")
     variant('openmp', default=False, description="enable OpenMP backend")
