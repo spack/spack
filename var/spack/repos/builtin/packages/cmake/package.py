@@ -94,6 +94,10 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
 
+    # FindMPI.cmake adding -pthread causes errors for packages that use it
+    # https://gitlab.kitware.com/cmake/cmake/issues/18448
+    patch('fix_findmpi.patch', when='@3.10:3.12')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166

@@ -1,0 +1,26 @@
+diff -Naru cmake-3.12.2/Modules/FindMPI.cmake cmake-3.12.2.orig/Modules/FindMPI.cmake
+--- cmake-3.12.2/Modules/FindMPI.cmake	2018-10-15 11:15:54.000000000 -0600
++++ cmake-3.12.2.orig/Modules/FindMPI.cmake	2018-10-15 11:14:12.000000000 -0600
+@@ -797,14 +797,14 @@
+ 
+   # MPI might require pthread to work. The above mechanism wouldn't detect it, but we need to
+   # link it in that case. -lpthread is covered by the normal library treatment on the other hand.
+-  # if("${MPI_COMPILE_CMDLINE}" MATCHES "-pthread")
+-  #   list(APPEND MPI_COMPILE_OPTIONS_WORK "-pthread")
+-  #   if(MPI_LINK_FLAGS_WORK)
+-  #     string(APPEND MPI_LINK_FLAGS_WORK " -pthread")
+-  #   else()
+-  #     set(MPI_LINK_FLAGS_WORK "-pthread")
+-  #   endif()
+-  # endif()
++  if("${MPI_COMPILE_CMDLINE}" MATCHES "-pthread")
++    list(APPEND MPI_COMPILE_OPTIONS_WORK "-pthread")
++    if(MPI_LINK_FLAGS_WORK)
++      string(APPEND MPI_LINK_FLAGS_WORK " -pthread")
++    else()
++      set(MPI_LINK_FLAGS_WORK "-pthread")
++    endif()
++  endif()
+ 
+   if(MPI_${LANG}_EXTRA_COMPILE_DEFINITIONS)
+     list(APPEND MPI_COMPILE_DEFINITIONS_WORK "${MPI_${LANG}_EXTRA_COMPILE_DEFINITIONS}")
