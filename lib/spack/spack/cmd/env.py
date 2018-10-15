@@ -283,7 +283,7 @@ def env_list(args):
 def env_add_setup_parser(subparser):
     """add a spec to an environment"""
     subparser.add_argument(
-        '-e', '--env', help='add spec to environment with this name')
+        '-e', '--env', help='add spec to this environment')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="spec of the package to add")
 
@@ -371,7 +371,7 @@ def env_install(args):
         env.write()
 
     # install all specs in the environment
-    env.install(args)
+    env.install_all(args)
 
 
 # REMOVE

@@ -71,14 +71,27 @@ def test_concretize():
     assert any(x.name == 'mpileaks' for x in env_specs)
 
 
-def test_env_install(install_mockery, mock_fetch):
+def test_env_install_all(install_mockery, mock_fetch):
     e = ev.Environment('test')
     e.add('cmake-client')
     e.concretize()
-    e.install()
+    e.install_all()
     env_specs = e._get_environment_specs()
     spec = next(x for x in env_specs if x.name == 'cmake-client')
     assert spec.package.installed
+
+
+def test_env_install(install_mockery, mock_fetch):
+    env('create', 'test')
+    install = SpackCommand('install')
+
+    with ev.env_context('test'):
+        install('cmake-client')
+
+    e = ev.read('test')
+    assert e.user_specs[0].name == 'cmake-client'
+    assert e.concretized_user_specs[0].name == 'cmake-client'
+    assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
 def test_remove_after_concretize():
