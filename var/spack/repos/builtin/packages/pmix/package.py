@@ -49,6 +49,12 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.github.io/pmix"
     url      = "https://github.com/pmix/pmix/releases/download/v2.0.1/pmix-2.0.1.tar.bz2"
 
+    version('3.0.2',    'dc2e501605dde93ab459a5e060e01500')
+    version('3.0.1',    'ffe6bc08ab600173ea6e7d4509777629')
+    version('3.0.0',    '396969979a36d45bd292908e4bcec5c8')
+    version('2.1.4',    'edcfd7d1e2c2bcbb3e9852b66b57120e')
+    version('2.1.3',    '9320a4f3aef305fab4f7ac3520153160')
+    version('2.1.2',    '9f99fd893be49c2cb0cd8926cf6fcc78')
     version('2.1.1',    'f9f109421661b757245d5e0bd44a38b3')
     version('2.1.0',    'fc97513b601d78fe7c6bb20c6a21df3c')
     version('2.0.3',    'fae199c9fa1d1f1bc20c336f1292f950')
