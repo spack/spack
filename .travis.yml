@@ -120,7 +120,8 @@ stages:
   - 'style checks'
   - 'unit tests + documentation'
   - 'build tests'
-  - 'docker build'
+  - name: 'docker build'
+    if: type IN (api, cron, push)
 
 
 #=============================================================================
