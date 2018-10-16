@@ -36,5 +36,9 @@ class PyMock(PythonPackage):
     version('2.0.0', '0febfafd14330c9dcaa40de2d82d40ad')
     version('1.3.0', '73ee8a4afb3ff4da1b4afa287f39fdeb')
 
-    depends_on('py-pbr', type=('build', 'run'))
+    depends_on('py-pbr@0.11:', type=('build', 'run'))
+    depends_on('py-six@1.7:',  type=('build', 'run'))
+    depends_on('py-six@1.9:',  type=('build', 'run'), when='@2.0.0:')
+    # requirements.txt references @1:, but 0.4 is newest available..
+    depends_on('py-funcsigs',  type=('build', 'run'), when='^python@:3.2.99')
     depends_on('py-setuptools@17.1:', type='build')
