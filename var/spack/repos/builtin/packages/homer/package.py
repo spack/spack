@@ -37,15 +37,14 @@ class Homer(MakefilePackage):
     homepage = "http://homer.ucsd.edu/homer/"
     url      = "http://homer.ucsd.edu/homer/data/software/homer.v4.9.1.zip"
 
-    build_directory = '/home/las_danhan/spack/homerun/cpp/'
+    build_directory = './cpp'
 
     version('4.10.3', sha256='3e8cd231e9b6a4932992e05e7b7824760d0e28af12ab0448e73943df5c3865a5')
     version('4.9.1', sha256='ad1303b0b0400dc8a88dbeae1ee03a94631977b751a3d335326c4febf0eec3a9')
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter(r'PREFIX = /usr/local',
-                        'PREFIX={0}'.format(self.prefix))
+    #def edit(self, stage, prefix):
+        #makefile = FileFilter('Makefile')
+        #makefile.filter(r'PREFIX = /usr/local', 'PREFIX={0}'.format(self.prefix))
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
