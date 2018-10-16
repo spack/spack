@@ -25,7 +25,7 @@ export dirTargetCompiler=$(echo "${dir_wsdb}/compiler/${compiler_path}/${host_tp
 export targets="${dirTargetHPC} ${dirTargetTPL} ${dirTargetCompiler}"
 
 for g in ${targets}; do
-          mkdir -p ${g}
+    mkdir -p ${g}
 done
 
 export g="${dirTargetHPC}"
@@ -37,18 +37,19 @@ echo "spack configuration: ${targetDirectory}" >> ${g}/${myLog}
 echo ""                                        >> ${g}/${myLog}
 
 # write system profile
-source ${lap_scripts}/profiler-machine.sh ${g}/${myProfile}
+source ${novus_bash}/profiler-machine.sh ${g}/${myProfile}
 cd
 cd ${SPACK_ROOT} # to ward off stale file handles
 echo ""
 
+install_line="spack "
 install_line="${install_line} ${options_debug}"            # spack -sd
 install_line="${install_line} install ${options_install}"  # spack -sd install --dont-restage
 install_line="${install_line} ${tpl}"                      # spack -sd install --dont-restage openmpi @ 3.1.2
-install_line="${install_line} ${compiler}"                 # spack -sd install --dont-restage openmpi @ 3.1.2 % gcc @ 8.2.0
+install_line="${install_line} % ${compiler}"               # spack -sd install --dont-restage openmpi @ 3.1.2 % gcc @ 8.2.0
 install_line="${install_line} ${flags}"                    # spack -sd install --dont-restage openmpi @ 3.1.2 % gcc @ 8.2.0 +pmix
 install_line="${install_line} ${specifications}"           # spack -sd install --dont-restage openmpi @ 3.1.2 % gcc @ 8.2.0 +pmix ^cmake/hash
-install_line="${install_line} ${arch}"                     # spack -sd install --dont-restage openmpi @ 3.1.2 % gcc @ 8.2.0 +pmix ^cmake/hash arch=cray-cnl6-haswell
+install_line="${install_line} ${spack_arch}"               # spack -sd install --dont-restage openmpi @ 3.1.2 % gcc @ 8.2.0 +pmix ^cmake/hash arch=cray-cnl6-haswell
 
 export SECONDS=0
 
@@ -60,7 +61,8 @@ echo "spack install..."
       #spack ${install_line} 2>&1
 
 echo ""
-echo "#  #  #  #  \${install_line} = ${install_line}"
+echo "#  #  #  #  \${install_line} = "
+echo "${install_line}"
 echo ""
 
 export time=SECONDS
