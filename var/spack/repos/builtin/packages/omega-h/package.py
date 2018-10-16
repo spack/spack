@@ -61,7 +61,7 @@ class OmegaH(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     def _bob_options(self):
-        cmake_var_prefix = self.name.capitalize() + '_CXX_'
+        cmake_var_prefix = 'Omega_h_CXX_'
         for variant in ['optimize', 'symbols', 'warnings']:
             cmake_var = cmake_var_prefix + variant.upper()
             if '+' + variant in self.spec:
