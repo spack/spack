@@ -46,6 +46,7 @@ class Xsdk(Package):
 
     variant('debug', default=False, description='Compile in debug mode')
     variant('cuda', default=False, description='Enable CUDA dependent packages')
+    variant('omega-h', default=True, description='Enable omega-h package build')
 
     depends_on('hypre@develop~internal-superlu', when='@develop')
     depends_on('hypre@2.15.0~internal-superlu', when='@0.4.0')
@@ -111,8 +112,8 @@ class Xsdk(Package):
     depends_on('slepc@develop', when='@develop')
     depends_on('slepc@3.10.0', when='@0.4.0')
 
-    depends_on('omega-h@develop', when='@develop')
-    depends_on('omega-h@9.19.1', when='@0.4.0')
+    depends_on('omega-h@develop', when='@develop +omega-h')
+    depends_on('omega-h@9.19.1', when='@0.4.0 +omega-h')
 
     depends_on('strumpack@master', when='@develop')
     depends_on('strumpack@master', when='@0.4.0')
