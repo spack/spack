@@ -11,11 +11,12 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.paths
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.fetch_strategy
+import spack.paths
 import spack.report
 from spack.error import SpackError
 
@@ -156,8 +157,8 @@ def install_spec(cli_args, kwargs, spec):
     def install(spec, kwargs):
         env = spack.environment.active
         if env:
-            new_specs = env.install(spec, kwargs)
-            env.write(dump_packages=new_specs)
+            env.install(spec, kwargs)
+            env.write()
         else:
             spec.package.do_install(**kwargs)
 
@@ -186,7 +187,15 @@ def install_spec(cli_args, kwargs, spec):
 
 def install(parser, args, **kwargs):
     if not args.package and not args.specfiles:
-        tty.die("install requires at least one package argument or yaml file")
+        # if there is a spack.yaml file, then install the packages in it.
+        if os.path.exists(ev.manifest_name):
+            env = ev.Environment(os.getcwd())
+            env.concretize()
+            env.write()
+            env.install_all()
+            return
+        else:
+            tty.die("install requires a package argument or a spack.yaml file")
 
     if args.jobs is not None:
         if args.jobs <= 0:

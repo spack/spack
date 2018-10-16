@@ -101,8 +101,9 @@ function spack {
             else
                 case $_sp_arg in
                     activate)
-                        if [ -z "$1" -o "${1#-}" != "$1" ]; then
-                            # no args or does not start with -: just execute
+                        _a="$@"
+                        if [ -z "$1" -o "${_a#*--sh}" != "$_a" -o "${_a#*--csh}" != "$_a" -o "${_a#*-h}" != "$_a" ]; then
+                            # no args or args contain -h/--help, --sh, or --csh: just execute
                             command spack "${args[@]}"
                         else
                             # actual call to activate: source the output
