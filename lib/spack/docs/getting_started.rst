@@ -204,13 +204,10 @@ This loads the environment module for gcc-4.9.0 to add it to
 
 .. note::
 
-   After running ``spack compiler find``, if spack identifies a new
-   compiler from a module, then you should manually check this entry
-   in your ``compilers.yaml`` file.  By default, spack does not fill
-   in the ``modules:`` field for such entries.  If this field is
-   missing or empty for a compiler from a module, then you should add
-   this field manually.  See the section on
-   :ref:`compilers-requiring-modules`.
+   By default, spack does not fill in the ``modules:`` field in the
+   ``compilers.yaml`` file.  If you are using a compiler from a
+   module, then you should add this field manually.
+   See the section on :ref:`compilers-requiring-modules`.
 
 .. _cmd-spack-compiler-info:
 
