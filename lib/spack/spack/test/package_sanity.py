@@ -84,14 +84,22 @@ def test_no_fixme():
     """Packages should not contain any boilerplate such as
        FIXME or example.com."""
     errors = []
+    fixme_regexes = [
+        r'remove this boilerplate',
+        r'FIXME: Put',
+        r'FIXME: Add',
+        r'example.com',
+    ]
     for name in spack.repo.all_package_names():
         repo = spack.repo.Repo(spack.paths.packages_path)
         filename = repo.filename_for_package_name(name)
         with open(filename, 'r') as package_file:
-            for line in package_file:
-                if (re.search(r'remove this boilerplate', line) or
-                        re.search(r'FIXME: Put', line) or
-                        re.search(r'FIXME: Add', line) or
-                        re.search(r'example.com', line)):
-                    errors.append(name)
-            assert len(errors) == 0
+            for i, line in enumerate(package_file):
+                pattern = next((r for r in fixme_regexes
+                                if re.search(r, line)), None)
+                if pattern:
+                    errors.append(
+                        "%s:%d: boilerplate needs to be removed: %s" %
+                        (filename, i, line.strip())
+                    )
+            assert [] == errors
