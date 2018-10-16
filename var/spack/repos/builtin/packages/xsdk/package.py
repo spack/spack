@@ -112,7 +112,7 @@ class Xsdk(Package):
     depends_on('slepc@3.10.0', when='@0.4.0')
 
     depends_on('omega-h@develop', when='@develop')
-    depends_on('omega-h@9.19.0', when='@0.4.0')
+    depends_on('omega-h@9.19.1', when='@0.4.0')
 
     depends_on('strumpack@master', when='@develop')
     depends_on('strumpack@master', when='@0.4.0')
