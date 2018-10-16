@@ -34,6 +34,7 @@ class Amrex(CMakePackage):
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     version('develop', branch='development')
+    version('18.10.1', commit='260b53169badaa760b91dfc60ea6b2ea3d9ccf06')  # tag:18.10.1
     version('18.10', commit='d37a266c38092e1174096e245326e9eead1f4e03')  # tag:18.10
     version('18.09.1', commit='88120db4736c325a2d3d2c291adacaffd3bf224b')  # tag:18.09.1
 
