@@ -25,7 +25,7 @@ import spack
 import spack.architecture
 import spack.config
 import spack.cmd
-import spack.environment
+import spack.environment as ev
 import spack.hooks
 import spack.paths
 import spack.repo
@@ -325,10 +325,13 @@ def make_argument_parser(**kwargs):
     env_group = parser.add_mutually_exclusive_group()
     env_group.add_argument(
         '-e', '--env', dest='env', metavar='ENV', action='store',
-        help="run spack with a specific environment (see spack env)")
+        help="run with a specific environment (see spack env)")
     env_group.add_argument(
-        '-E', '--exact-env', dest='exact_env', metavar='ENV', action='store',
-        help="run spack with a specific environment AND use its repo")
+        '-E', '--env-dir', metavar='DIR', action='store',
+        help="run with an environment directory (ignore named environments)")
+    parser.add_argument(
+        '--use-env-repo', action='store_true',
+        help="when running in an environment, use its package repository")
 
     parser.add_argument(
         '-k', '--insecure', action='store_true',
@@ -568,6 +571,31 @@ def print_setup_info(*info):
             shell_set('_sp_module_prefix', 'not_installed')
 
 
+def activate_environment(env, env_dir, use_env_repo):
+    """Activate an environment from command line arguments or an env var."""
+
+    if env:
+        if ev.exists(env):
+            # treat env as a name
+            ev.activate(ev.read(env), use_env_repo)
+            return
+        env_dir = env
+
+    if not env_dir:
+        env_dir = os.environ.get(spack.environment.spack_env_var)
+        if not env_dir:
+            return
+
+    if os.path.isdir(env_dir):
+        if ev.is_env_dir(env_dir):
+            ev.activate(ev.Environment(env_dir), use_env_repo)
+        else:
+            tty.die('no environment in %s' % env_dir)
+        return
+
+    tty.die('no such environment: %s' % env_dir)
+
+
 def main(argv=None):
     """This is the entry point for the Spack command.
 
@@ -584,13 +612,7 @@ def main(argv=None):
     args, unknown = parser.parse_known_args(argv)
 
     # activate an environment if one was specified on the command line
-    env = args.env or args.exact_env
-    if env:
-        spack.environment.activate(env, args.exact_env is not None)
-    else:
-        env = os.environ.get(spack.environment.spack_env_var)
-        if env:
-            spack.environment.activate(env, False)
+    activate_environment(args.env, args.env_dir, args.use_env_repo)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:

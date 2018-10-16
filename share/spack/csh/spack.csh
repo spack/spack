@@ -77,8 +77,8 @@ case env:
                 set _sp_env_arg=""
                 [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
 
-                if ( "$_sp_env_arg" == "" || "$_sp_env_arg" =~ "-*" ) then
-                    # no args or does not start with -: just execute
+                if ( "$_sp_env_arg" == "" || "$_sp_args" =~ "*--sh*" || "$_sp_args" =~ "*--csh*" || "$_sp_args" =~ "*-h*" ) then
+                    # no args or args contain -h/--help, --sh, or --csh: just execute
                     \spack $_sp_flags env $_sp_args
                 else
                     shift _sp_args  # consume 'activate' or 'deactivate'

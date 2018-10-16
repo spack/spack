@@ -538,6 +538,30 @@ def hash_directory(directory):
     return md5_hash.hexdigest()
 
 
+@contextmanager
+def write_tmp_and_move(filename):
+    """Write to a temporary file, then move into place."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    tmp = os.path.join(dirname, '.%s.tmp' % basename)
+    with open(tmp, 'w') as f:
+        yield f
+    shutil.move(tmp, filename)
+
+
+@contextmanager
+def open_if_filename(str_or_file, mode='r'):
+    """Takes either a path or a file object, and opens it if it is a path.
+
+    If it's a file object, just yields the file object.
+    """
+    if isinstance(str_or_file, six.string_types):
+        with open(str_or_file, mode) as f:
+            yield f
+    else:
+        yield str_or_file
+
+
 def touch(path):
     """Creates an empty file at the specified path."""
     perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
