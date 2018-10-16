@@ -62,6 +62,8 @@ class OmegaH(CMakePackage):
     depends_on('trilinos +kokkos +teuchos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
+    conflicts('%gcc@8:')
+
     patch('omega-h-remove-Werror.patch')
 
     def _bob_options(self):
