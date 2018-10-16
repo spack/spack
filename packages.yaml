@@ -62,5 +62,10 @@ packages:
 
     opengl:
         paths:
-            opengl@4.5.0: /usr
+            opengl@system: /usr
+        buildable: False
+
+    rdma-core:
+        paths:
+            rdma-core@4.5.0: /usr
         buildable: False
