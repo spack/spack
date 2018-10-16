@@ -1,45 +1,274 @@
-# -------------------------------------------------------------------------
-# This file controls default concretization preferences for Spack.
-#
-# Settings here are versioned with Spack and are intended to provide
-# sensible defaults out of the box. Spack maintainers should edit this
-# file to keep it current.
-#
-# Users can override these settings by editing the following files.
-#
-# Per-spack-instance settings (overrides defaults):
-#   $SPACK_ROOT/etc/spack/packages.yaml
-#
-# Per-user settings (overrides default and site settings):
-#   ~/.spack/packages.yaml
-# -------------------------------------------------------------------------
 packages:
   all:
     compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
-      D: [ldc]
+            #
+      #blas: [intel-mkl]
+      #lapack: [intel-mkl]
+            #
+            #blas: [openblas]
+            #lapack: [openblas]
+            #
+      #blas: [cray-libsci]
+      #lapack: [cray-libsci]
+            #
+      #blas: [intel-mkl]
+      #lapack: [intel-mkl]
+            #
+      blas: [netlib-lapack]
+      lapack: [netlib-lapack]
+      #
       awk: [gawk]
-      blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
-      gl: [mesa, opengl]
-      glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
       java: [jdk]
-      jpeg: [libjpeg-turbo, libjpeg]
-      lapack: [openblas]
       mkl: [intel-mkl]
       mpe: [mpe2]
-      mpi: [openmpi, mpich]
+      mpi: [openmpi]
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
+      #pkgconfig: [pkgconf]
+      pkgconfig: [pkg-config]  
       pil: [py-pillow]
-      pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
-      unwind: [libunwind]
-    permissions:
-      read: world
-      write: user
+      jpeg: [libjpeg-turbo, libjpeg]
+  # # # # #
+  automake:
+    paths:
+      automake: /usr
+    buildable: false
+  # # # # #
+  autoconf:
+    paths:
+      autoconf: /usr
+    buildable: false
+  # # # # #
+  bison:
+    paths:
+      bison: /usr
+    buildable: false
+  # # # # #
+  boost:
+    variants: [+mpi]
+  # # # # #
+  bzip2:
+    paths:
+      bzip2: /usr
+    buildable: false
+  # # # # #
+  calico:
+    variants: [+mpi]
+    version: [180611]
+  # # # # #
+  #cmake:
+  #modules:
+  #  cmake: cmake/3.11.4
+  #  buildable: false
+  # # # # #
+  cray-libsci:
+    modules:
+      cray-libsci: cray-libsci/18.07.1
+    buildable: false
+  # # # # #
+  curl:
+    paths:
+      curl: /usr
+    buildable: false
+  # # # # #
+  eospac:
+    version: [6.4.0beta.2]
+  # # # # #
+  flex:
+    paths:
+      flex: /usr
+    buildable: false
+  # # # # #
+  gettext:
+    paths:
+      autoconf: /usr
+    buildable: false
+  # # # # #
+  git:
+    paths:
+      git: /usr
+    buildable: false
+  # # # # #
+  glib:
+    paths:
+      glib: /usr/lib64
+    buildable: false
+  # # # # #
+  hdf5:
+    variants: [+fortran, +mpi]
+    version: [1.8.17]
+  # # # # #
+  # help2man:
+  #   paths:
+  #     autoconf: /usr
+  #   buildable: false
+  # # # # #
+  hypre:
+    variants: [~internal, +mpi, -superlu]
+    version: [2.10.0b]
+  # # # # #
+  json-c:
+    paths:
+      json: /usr/lib64
+    buildable: False
+  # # # # #
+  libjpeg-turbo:
+    paths:
+      libjpeg: /usr/lib64
+    buildable: False
+  # # # # #
+  libsigsegv:
+    paths:
+      libsigsegv: /usr/lib64
+    buildable: False
+  # # # # #
+  libssh2:
+    paths:
+      libssh2: /usr/lib64
+    buildable: False
+  # # # # #
+  libtool:
+    paths:
+      libtool: /usr
+    buildable: False
+  # # # # #
+  libxml2:
+    paths:
+      libxml2: /usr/lib64
+    buildable: False
+  # # # # #
+  llvm:
+    variants: +link_dylib
+  # # # # #
+  lz4:
+    paths:
+      lz4: /usr/lib64
+    buildable: False
+  # # # # #
+  m4:
+    paths:
+      m4: /usr
+    buildable: False
+  # # # # #
+  mesa:
+    variants: [+llvm]
+  # # # # #
+  metis:
+    variants: [+int64, +real64]
+  # # # # #
+  munge:
+    paths:
+      munge: /usr/lib64
+    buildable: False
+  # # # # #
+  mpc:
+    paths:
+      mpc: /usr/lib64
+    buildable: False
+  # # # # #
+  mpfr:
+    paths:
+      mpfr: /usr/lib64
+    buildable: False
+  # # # # #
+  ncurses:
+    paths:
+      ncurses: /usr
+    variants: [~symlinks, ~termlib]
+    buildable: False
+  # # # # #
+  ndi:
+    version: [2.1.3beta]
+  # # # # #
+  numactl:
+    paths:
+      numactl: /usr
+    buildable: false
+  # # # # #
+  openmpi:
+    variants: [~memchecker, ~pmi]
+    version: [2.1.2,3.1.2]
+  # # # # #
+  openssl:
+    paths:
+      openssl: /usr
+    variants: [+systemcerts]
+    buildable: false
+  # # # # #
+  paraview:
+    variants: [+mpi, +osmesa, +python]
+    version: [5.4.0]
+  # # # # #
+  perl:
+    paths:
+      perl: /usr
+    buildable: false
+  # # # # #
+  pkg-config:
+    paths:
+      pkg-config: /usr
+    buildable: False
+  # # # # #
+  py-matplotlib:
+    variants: [~tk]
+  # # # # #
+  py-pillow:
+    version: [3.2.0]
+  # # # # #
+  #readline:
+  #  paths:
+  #    readline@system: /usr
+  #  version: [system]
+  #  buildable: False
+  # # # # #
+  rewrite:
+    version: [180313]
+  # # # # #
+  shapo:
+    variants: [+mpi, +paraview]
+    version: [171108]
+  # # # # #
+  silo:
+    variants: [+mpi]
+    version: [4.10.2-bsd]
+  # # # # #
+  sqlite:
+    paths:
+      sqlite: /usr/bin/sqlite3
+    buildable: false
+  # # # # #
+  tar:
+    paths:
+      tar: /usr
+    buildable: False
+  # # # # #
+  tcl:
+    paths:
+      tcl: /usr/lib64
+    buildable: False
+  # # # # #
+  tk:
+    paths:
+      tk: /usr/lib64
+    buildable: False
+  # # # # #
+  xz:
+    paths:
+      xz: /usr
+    buildable: false
+  # # # # #
+  zip:
+    paths:
+      zip: /usr
+    buildable: False
+  # # # # #
+  zoltan:
+    variants: [+parmetis]
