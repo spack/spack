@@ -1,0 +1,3 @@
+Mon Oct 15 18:41:06 MDT 2018
+  install   cce@8.7.2   arch = cray-cnl6-haswell  install   cce@8.6.5   arch = cray-cnl6-haswell
+elapse time for build = SECONDS s
