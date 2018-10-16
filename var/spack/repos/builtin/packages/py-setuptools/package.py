@@ -40,6 +40,7 @@ class PySetuptools(PythonPackage):
         'easy_install'
     ]
 
+    version('40.4.3', sha256='acbc5740dd63f243f46c2b4b8e2c7fd92259c2ddb55a4115b16418a2ed371b15')
     version('40.2.0', '592efabea3a65d8e97a025ed52f69b12')
     version('39.2.0', 'dd4e3fa83a21bf7bf9c51026dc8a4e59')
     version('39.0.1', '75310b72ca0ab4e673bf7679f69d7a62')
