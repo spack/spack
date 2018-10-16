@@ -52,12 +52,16 @@ install_line="${install_line} ${arch}"                     # spack -sd install -
 
 export SECONDS=0
 
-echo "spack ${install_line} >>  ${g}/${myLog} 2>&1" >> ${spack_command_file}
-echo "spack ${install_line} >> \${g}/${myLog} 2>&1" >> ${g}/${myLog}
-echo "spack ${install_line} >>  ${g}/${myLog} 2>&1"
+echo "${install_line} >>  ${g}/${myLog} 2>&1" >> ${spack_command_file}
+echo "${install_line} >> \${g}/${myLog} 2>&1" >> ${g}/${myLog}
+echo "${install_line} >>  ${g}/${myLog} 2>&1"
       sync
 echo "spack install..."
-      spack ${install_line} 2>&1
+      #spack ${install_line} 2>&1
+
+echo ""
+echo "#  #  #  #  \${install_line} = ${install_line}"
+echo ""
 
 export time=SECONDS
 
@@ -103,3 +107,4 @@ fi
 # duplicate entries in dir_wsdb
 cp -a ${dirTargetHPC}/debug ${dirTargetTPL}
 cp -a ${dirTargetHPC}/debug ${dirTargetCompiler}
+
