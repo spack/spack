@@ -181,7 +181,7 @@ class Vtk(CMakePackage):
             ])
 
         if '+xdmf' in spec:
-            if spec.satisfies('^cmake@3.12:')
+            if spec.satisfies('^cmake@3.12:'):
                 # This policy exists only for CMake >= 3.12
                 cmake_args.extend(["-DCMAKE_POLICY_DEFAULT_CMP0074=NEW"])
 
