@@ -62,6 +62,8 @@ class OmegaH(CMakePackage):
     depends_on('trilinos +kokkos +teuchos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
+    patch('omega-h-remove-Werror.patch')
+
     def _bob_options(self):
         cmake_var_prefix = self.name.capitalize() + '_CXX_'
         for variant in ['optimize', 'symbols', 'warnings']:
