@@ -31,8 +31,9 @@ class RCrosstalk(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/crosstalk/index.html"
     url      = "https://cran.r-project.org/src/contrib/crosstalk_1.0.0.tar.gz"
+    list_url = ""
 
-    version('1.0.0', 'c13c21b81af2154be3f08870fd3a7077')
+    version('1.0.0', sha256='b31eada24cac26f24c9763d9a8cbe0adfd87b264cf57f8725027fe0c7742ca51')
 
     depends_on('r@3.4.0:3.4.9')
     depends_on('r-htmltools', type=('build', 'run'))
