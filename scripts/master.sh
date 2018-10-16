@@ -18,10 +18,11 @@ source ${novus_bash}/reporter-spack-configuration.sh
 
 for v in ${tpl_versions}; do
     for c in ${l_compilers}; do
+        echo "calling ${novus_bash}/action.sh"
+        echo "passing ${tpl_name} ${v} ${c}"
         source ${novus_bash}/action.sh ${tpl_name} ${v} ${c}
         echo "spack clean -a"
     done
 done
 
 source ${novus_bash}/update-wsdb.sh
-

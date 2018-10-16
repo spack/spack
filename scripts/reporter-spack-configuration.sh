@@ -60,8 +60,8 @@ done
 
 # grab etc/spack/defaults/*.yaml
 cp ${SPACK_ROOT}/etc/spack/defaults/*.yaml "${targetDirectory}/yaml"
-gowsdb
-git add .
-git commit -m "${host_name}-${partition}-${tpl} $(date)"
+# gowsdb
+# git add .
+# git commit -m "${host_name}-${partition}-${tpl} $(date)"
 
 echo "cd ${targetDirectory}"

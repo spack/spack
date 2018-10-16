@@ -26,4 +26,3 @@ echo "$(grep -i 'model name' /proc/cpuinfo | sort | uniq)" >> ${1}
 echo ""                                                    >> ${1}
 echo "full query set in directory ${id}"                   >> ${1}
 echo ""                                                    >> ${1}
-

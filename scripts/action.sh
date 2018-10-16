@@ -13,7 +13,7 @@ export compiler_version=$(echo ${compiler} | cut -d '@' -f2)
 
 
 export compiler_path="${compiler_family}/${compiler}"
-export      tpl_path="${tpl}/${tpl}-${tpl_version}"
+export      tpl_path="${1}/${1}-${2}"
 export     host_path="${host_name}/${arch}"
 export host_tpl_path="${host_path}/${tpl_path}"
 
@@ -109,4 +109,3 @@ fi
 # duplicate entries in dir_wsdb
 cp -a ${dirTargetHPC}/debug ${dirTargetTPL}
 cp -a ${dirTargetHPC}/debug ${dirTargetCompiler}
-
