@@ -53,36 +53,36 @@ class Lbann(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('al', default=True, description='Builds with support for Aluminum Library')
+    variant('al', default=False, description='Builds with support for Aluminum Library')
     variant('conduit', default=False, description='Builds with support for Conduit Library')
 
     # It seems that there is a need for one statement per version bounds
-    depends_on('hydrogen +openmp_blas +shared +int64', when=('@:0.90,0.95:' '~al'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +al', when=('@:0.90,0.95:' '+al'))
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
+    depends_on('hydrogen +openmp_blas +shared +int64 +al', when='@:0.90,0.95: +al')
 
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@:0.90,0.95:' '~al'))
+               when='build_type=Debug @:0.90,0.95: ~al')
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug +al',
-               when=('build_type=Debug' '@:0.90,0.95:' '+al'))
+               when='build_type=Debug @:0.90,0.95: +al')
 
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
-               when=('+gpu' '@:0.90,0.95:' '~al'))
+               when='+gpu @:0.90,0.95: ~al')
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda +al',
-               when=('+gpu' '@:0.90,0.95:' '+al'))
+               when='+gpu @:0.90,0.95: +al')
 
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when=('build_type=Debug' '@:0.90,0.95:' '+gpu'))
+               when='build_type=Debug @:0.90,0.95: +gpu')
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when=('build_type=Debug' '@:0.90,0.95:' '+gpu' '+al'))
+               when='build_type=Debug @:0.90,0.95: +gpu +al')
 
     # Older versions depended on Elemental not Hydrogen
-    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
+    depends_on('elemental +openmp_blas +shared +int64', when='@0.91:0.94')
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@0.91:0.94'))
+               when='build_type=Debug @0.91:0.94')
 
-    depends_on('aluminum', when=('@:0.90,0.95:' '+al' '~gpu'))
-    depends_on('aluminum +gpu +mpi-cuda', when=('@:0.90,0.95:' '+al' '+gpu' '~nccl'))
-    depends_on('aluminum +gpu +nccl +mpi-cuda', when=('@:0.90,0.95:' '+al' '+gpu' '+nccl'))
+    depends_on('aluminum', when='@:0.90,0.95: +al ~gpu')
+    depends_on('aluminum +gpu +mpi-cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum +gpu +nccl +mpi-cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')

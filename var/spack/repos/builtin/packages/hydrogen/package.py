@@ -71,31 +71,31 @@ class Hydrogen(CMakePackage):
             description='Builds with support for OpenMP taskloops instead of parallel for loops.')
 
     # Note that #1712 forces us to enumerate the different blas variants
-    depends_on('openblas', when=('blas=openblas ~openmp_blas ~int64_blas'))
-    depends_on('openblas +ilp64', when=('blas=openblas ~openmp_blas +int64_blas'))
-    depends_on('openblas threads=openmp', when=('blas=openblas +openmp_blas ~int64_blas'))
-    depends_on('openblas threads=openmp +lip64', when=('blas=openblas +openmp_blas +int64_blas'))
+    depends_on('openblas +virtual_machine', when='blas=openblas ~openmp_blas ~int64_blas')
+    depends_on('openblas +ilp64 +virtual_machine', when='blas=openblas ~openmp_blas +int64_blas')
+    depends_on('openblas threads=openmp +virtual_machine', when='blas=openblas +openmp_blas ~int64_blas')
+    depends_on('openblas threads=openmp +lip64 +virtual_machine', when='blas=openblas +openmp_blas +int64_blas')
 
-    depends_on('intel-mkl', when=("blas=mkl ~openmp_blas ~int64_blas"))
-    depends_on('intel-mkl +ilp64', when=("blas=mkl ~openmp_blas +int64_blas"))
-    depends_on('intel-mkl threads=openmp', when=('blas=mkl +openmp_blas ~int64_blas'))
-    depends_on('intel-mkl@2017.1 +openmp +ilp64', when=('blas=mkl +openmp_blas +int64_blas'))
+    depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
+    depends_on('intel-mkl +ilp64', when="blas=mkl ~openmp_blas +int64_blas")
+    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
+    depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
     depends_on('veclibfort', when='blas=accelerate')
     conflicts('blas=accelerate +openmp_blas')
 
-    depends_on('essl -cuda', when=('blas=essl -openmp_blas ~int64_blas'))
-    depends_on('essl -cuda +ilp64', when=('blas=essl -openmp_blas +int64_blas'))
-    depends_on('essl threads=openmp', when=('blas=essl +openmp_blas ~int64_blas'))
-    depends_on('essl threads=openmp +ilp64', when=('blas=essl +openmp_blas +int64_blas'))
+    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl -cuda +ilp64', when='blas=essl -openmp_blas +int64_blas')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+    depends_on('essl threads=openmp +ilp64', when='blas=essl +openmp_blas +int64_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
-    depends_on('aluminum', when=('+al' '~cuda'))
-    depends_on('aluminum +gpu +mpi-cuda', when=('+al' '+cuda' '~nccl'))
-    depends_on('aluminum +gpu +nccl +mpi-cuda', when=('+al' '+cuda' '+nccl'))
+    depends_on('aluminum', when='+al ~cuda')
+    depends_on('aluminum +gpu +mpi-cuda', when='+al +cuda ~nccl')
+    depends_on('aluminum +gpu +nccl +mpi-cuda', when='+al +cuda +nccl')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('lapack', when=('blas=openblas ~openmp_blas'))
+    depends_on('lapack', when='blas=openblas ~openmp_blas')
 
     depends_on('mpi', when='~cuda')
     depends_on('mpi +cuda', when='+cuda')

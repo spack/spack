@@ -42,19 +42,19 @@ class Aluminum(CMakePackage):
 
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
-    variant('mpi-cuda', default=False, description='Builds with support for MPI-CUDA enabled library')
+    variant('mpi_cuda', default=False, description='Builds with support for MPI-CUDA enabled library')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi', when='~mpi-cuda')
-    depends_on('mpi +cuda', when='+mpi-cuda')
+    depends_on('mpi', when='~mpi_cuda')
+    depends_on('mpi +cuda', when='+mpi_cuda')
     depends_on('nccl', when='+nccl')
 
     def cmake_args(self):
         spec = self.spec
         args = [
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+gpu' in spec),
-            '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+mpi-cuda' in spec),
+            '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+mpi_cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec)]
         return args
