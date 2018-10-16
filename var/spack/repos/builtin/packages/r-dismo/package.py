@@ -32,8 +32,9 @@ class RDismo(RPackage):
 
     homepage = "http://rspatial.org/sdm"
     url      = "https://cran.r-project.org/src/contrib/dismo_1.1-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dismo/"
 
-    version('1.1-4', '0ed11729bcf4c2ffa01a3e2ac88dabfc')
+    version('1.1-4', sha256='f2110f716cd9e4cca5fd2b22130c6954658aaf61361d2fe688ba22bbfdfa97c8')
 
     depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-raster@2.5-2:', type=('build', 'run'))
