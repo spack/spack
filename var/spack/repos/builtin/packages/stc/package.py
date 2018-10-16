@@ -34,10 +34,10 @@ class Stc(AutotoolsPackage):
 
     version('0.8.2', '883b0657f1aac9b81158ef0a8989be4c')
 
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
-    depends_on('zsh')
+    depends_on('java', type=('build', 'run'))
+    depends_on('ant', type='build')
+    depends_on('turbine', type=('build', 'run'))
+    depends_on('zsh', type=('build', 'run'))
 
     def configure_args(self):
         args = ['--with-turbine=' + self.spec['turbine'].prefix]
