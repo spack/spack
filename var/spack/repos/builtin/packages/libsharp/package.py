@@ -37,7 +37,7 @@ class Libsharp(AutotoolsPackage):
     homepage = "https://github.com/Libsharp/libsharp"
     git      = "https://github.com/Libsharp/libsharp.git"
 
-    version('1.0', commit='593d4eba67d61827191c32fb94bf235cb31205e1')
+    version('2018-01-17', commit='593d4eba67d61827191c32fb94bf235cb31205e1')
 
     depends_on('autoconf', type='build')
     depends_on('mpi', when='+mpi')
