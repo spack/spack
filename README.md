@@ -117,11 +117,6 @@ option.
 All new contributions must be made under both the MIT and Apache-2.0
 licenses.
 
-13 of Spack's 2,800 packages are still only only available under LGPL-2.1
-terms.  They will eventually be relicensed, rewritten, or removed as we
-work towards 100% Apache2/MIT.  To see which package files are still
-under the LGPL-2.1 license, run the `spack license list-lgpl` command.
-
 See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
 [LICENSE-APACHE](https://github.com/spack/spack/blob/develop/LICENSE-APACHE),
 [COPYRIGHT](https://github.com/spack/spack/blob/develop/COPYRIGHT), and
