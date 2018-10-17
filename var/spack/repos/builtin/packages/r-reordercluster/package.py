@@ -33,7 +33,7 @@ class RReordercluster(RPackage):
     homepage = "https://cran.r-project.org/package=ReorderCluster"
     url      = "https://cran.rstudio.com/src/contrib/ReorderCluster_1.0.tar.gz"
 
-    version('1.0', '67ba34acb15dda75389a822bd2fdd31a')
+    version('1.0', sha256='a87898faa20380aac3e06a52eedcb2f0eb2b35ab74fdc3435d40ee9f1d28476b')
 
     depends_on('r-gplots', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
