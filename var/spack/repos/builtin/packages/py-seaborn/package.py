@@ -36,6 +36,7 @@ class PySeaborn(PythonPackage):
     homepage = "http://seaborn.pydata.org/"
     url      = "https://pypi.io/packages/source/s/seaborn/seaborn-0.7.1.tar.gz"
 
+    version('0.9.0', '76c83f794ca320fb6b23a7c6192d5e185a5fcf4758966a0c0a54baee46d41e2f')
     version('0.7.1', 'ef07e29e0f8a1f2726abe506c1a36e93')
 
     depends_on('py-setuptools', type='build')
