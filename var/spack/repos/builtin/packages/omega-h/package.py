@@ -86,7 +86,7 @@ class OmegaH(CMakePackage):
             args.append('-DZLIB_ROOT:PATH={0}'.format(
                 self.spec['zlib'].prefix))
         else:
-            args.append('-Omega_h_USE_ZLIB:BOOL=OFF')
+            args.append('-DOmega_h_USE_ZLIB:BOOL=OFF')
         if '+examples' in self.spec:
             args.append('-DOmega_h_EXAMPLES:BOOL=ON')
         else:
