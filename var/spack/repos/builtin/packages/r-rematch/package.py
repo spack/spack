@@ -33,7 +33,7 @@ class RRematch(RPackage):
     homepage = "https://cran.r-project.org/package=rematch"
     url      = "https://cran.r-project.org/src/contrib/rematch_1.0.1.tar.gz"
 
-    version('1.0.1', '5271666295e232931f21499522489dd3')
+    version('1.0.1', sha256='a409dec978cd02914cdddfedc974d9b45bd2975a124d8870d52cfd7d37d47578')
 
     depends_on('r-covr', type=('build', 'run'))
     depends_on('r-testthat', type=('build', 'run'))
