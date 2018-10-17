@@ -80,6 +80,8 @@ class Binutils(AutotoolsPackage):
 
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')
+            # Manually add PIC flag for libiberty as we always build shared
+            configure_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+nls' in spec:
             configure_args.append('--enable-nls')
