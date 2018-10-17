@@ -107,17 +107,14 @@ class CDash(Reporter):
                             if current_phase not in map_phases_to_cdash:
                                 current_phase = ''
                                 continue
-                            beginning_of_phase = True
+                            cdash_phase = \
+                                map_phases_to_cdash[current_phase]
+                            if cdash_phase not in phases_encountered:
+                                phases_encountered.append(cdash_phase)
+                            report_data[cdash_phase]['log'] += \
+                                text_type("{0} output for {1}:\n".format(
+                                    cdash_phase, package['name']))
                         else:
-                            if beginning_of_phase:
-                                cdash_phase = \
-                                    map_phases_to_cdash[current_phase]
-                                if cdash_phase not in phases_encountered:
-                                    phases_encountered.append(cdash_phase)
-                                report_data[cdash_phase]['log'] += \
-                                    text_type("{0} output for {1}:\n".format(
-                                        cdash_phase, package['name']))
-                                beginning_of_phase = False
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
 
