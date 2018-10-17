@@ -66,9 +66,9 @@ class Hydrogen(CMakePackage):
     variant('test', default=False,
             description='Builds test suite')
     variant('al', default=False,
-            description='Builds with support for Aluminum communication library')
+            description='Builds with Aluminum communication library')
     variant('omp_taskloops', default=False,
-            description='Builds with support for OpenMP taskloops instead of parallel for loops.')
+            description='Builds using OpenMP taskloops instead of parallel for loops.')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas +virtual_machine', when='blas=openblas ~openmp_blas ~int64_blas')
