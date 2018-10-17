@@ -1,26 +1,30 @@
 diff -Naru cmake-3.12.2.orig/Modules/FindMPI.cmake cmake-3.12.2/Modules/FindMPI.cmake
 --- cmake-3.12.2.orig/Modules/FindMPI.cmake	2018-10-15 11:14:12.000000000 -0600
-+++ cmake-3.12.2/Modules/FindMPI.cmake	2018-10-15 11:15:54.000000000 -0600
-@@ -797,14 +797,14 @@
- 
++++ cmake-3.12.2/Modules/FindMPI.cmake	2018-10-17 13:51:58.000000000 -0600
+@@ -586,7 +586,7 @@
+       # produce inconsistent results with the regularly flags.
+       # Similarly, aliasing flags do not belong into our flag array.
+       if(NOT "${_MPI_COMPILE_OPTION}" MATCHES "^-f((no-|)(stack-protector|strict-aliasing)|PI[CE]|pi[ce])")
+-        list(APPEND MPI_COMPILE_OPTIONS_WORK "${_MPI_COMPILE_OPTION}")
++        string(APPEND MPI_COMPILE_OPTIONS_WORK " ${_MPI_COMPILE_OPTION}")
+       endif()
+     endforeach()
+   endif()
+@@ -798,7 +798,7 @@
    # MPI might require pthread to work. The above mechanism wouldn't detect it, but we need to
    # link it in that case. -lpthread is covered by the normal library treatment on the other hand.
--  if("${MPI_COMPILE_CMDLINE}" MATCHES "-pthread")
+   if("${MPI_COMPILE_CMDLINE}" MATCHES "-pthread")
 -    list(APPEND MPI_COMPILE_OPTIONS_WORK "-pthread")
--    if(MPI_LINK_FLAGS_WORK)
--      string(APPEND MPI_LINK_FLAGS_WORK " -pthread")
--    else()
--      set(MPI_LINK_FLAGS_WORK "-pthread")
--    endif()
--  endif()
-+  # if("${MPI_COMPILE_CMDLINE}" MATCHES "-pthread")
-+  #   list(APPEND MPI_COMPILE_OPTIONS_WORK "-pthread")
-+  #   if(MPI_LINK_FLAGS_WORK)
-+  #     string(APPEND MPI_LINK_FLAGS_WORK " -pthread")
-+  #   else()
-+  #     set(MPI_LINK_FLAGS_WORK "-pthread")
-+  #   endif()
-+  # endif()
- 
-   if(MPI_${LANG}_EXTRA_COMPILE_DEFINITIONS)
++    string(APPEND MPI_COMPILE_OPTIONS_WORK " -pthread")
+     if(MPI_LINK_FLAGS_WORK)
+       string(APPEND MPI_LINK_FLAGS_WORK " -pthread")
+     else()
+@@ -810,7 +810,7 @@
      list(APPEND MPI_COMPILE_DEFINITIONS_WORK "${MPI_${LANG}_EXTRA_COMPILE_DEFINITIONS}")
+   endif()
+   if(MPI_${LANG}_EXTRA_COMPILE_OPTIONS)
+-    list(APPEND MPI_COMPILE_OPTIONS_WORK "${MPI_${LANG}_EXTRA_COMPILE_OPTIONS}")
++    string(APPEND MPI_COMPILE_OPTIONS_WORK " ${MPI_${LANG}_EXTRA_COMPILE_OPTIONS}")
+   endif()
+   if(MPI_${LANG}_EXTRA_LIB_NAMES)
+     list(APPEND MPI_PLAIN_LIB_NAMES_WORK "${MPI_${LANG}_EXTRA_LIB_NAMES}")
