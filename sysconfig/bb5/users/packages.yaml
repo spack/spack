@@ -154,10 +154,6 @@ packages:
         paths:
             swig@2.0.10: /usr
         version: [2.0.10]
-    sqlite:
-        paths:
-            sqlite@3.7.17: /usr
-        version: [3.7.17]
     steps:
         variants: +lapack+petsc+mpi^python@2.7.15
     tar:
