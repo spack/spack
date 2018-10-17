@@ -32,7 +32,7 @@ class SentieonGenomics(Package):
     on any generic-CPU-based computing system."""
 
     homepage = "https://www.sentieon.com/"
-    url      = "https://s3.amazonaws.com/sentieon-release/software/sentieon-genomics-201808.01.tar.gz"
+    url      = "file://{0}/sentieon-genomics-201808.01.tar.gz".format(os.getcwd())
 
     version('201808.01', sha256='6d77bcd5a35539549b28eccae07b19a3b353d027720536e68f46dcf4b980d5f7')
 
