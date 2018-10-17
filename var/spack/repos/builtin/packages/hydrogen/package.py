@@ -71,10 +71,10 @@ class Hydrogen(CMakePackage):
             description='Use OpenMP taskloops instead of parallel for loops.')
 
     # Note that #1712 forces us to enumerate the different blas variants
-    depends_on('openblas +virtual_machine', when='blas=openblas ~openmp_blas ~int64_blas')
-    depends_on('openblas +ilp64 +virtual_machine', when='blas=openblas ~openmp_blas +int64_blas')
-    depends_on('openblas threads=openmp +virtual_machine', when='blas=openblas +openmp_blas ~int64_blas')
-    depends_on('openblas threads=openmp +lip64 +virtual_machine', when='blas=openblas +openmp_blas +int64_blas')
+    depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
+    depends_on('openblas +ilp64', when='blas=openblas ~openmp_blas +int64_blas')
+    depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
+    depends_on('openblas threads=openmp +lip64', when='blas=openblas +openmp_blas +int64_blas')
 
     depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
     depends_on('intel-mkl +ilp64', when="blas=mkl ~openmp_blas +int64_blas")
