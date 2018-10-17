@@ -53,7 +53,7 @@ class Lbann(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('al', default=False, description='Builds with support for Aluminum Library')
+    variant('al', default=True, description='Builds with support for Aluminum Library')
     variant('conduit', default=False, description='Builds with support for Conduit Library')
 
     # It seems that there is a need for one statement per version bounds
@@ -80,16 +80,17 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when='build_type=Debug @0.91:0.94')
 
-    depends_on('aluminum', when='@:0.90,0.95: +al ~gpu')
-    depends_on('aluminum +gpu +mpi-cuda', when='@:0.90,0.95: +al +gpu ~nccl')
-    depends_on('aluminum +gpu +nccl +mpi-cuda', when='@:0.90,0.95: +al +gpu +nccl')
+    depends_on('aluminum@master', when='@:0.90,0.95: +al ~gpu')
+    depends_on('aluminum@master +gpu +mpi-cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
     depends_on('mpi', when='~gpu')
     depends_on('mpi +cuda', when='+gpu')
-    depends_on('hwloc ~pci ~libxml2')
+    depends_on('hwloc')
+
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
@@ -144,7 +145,14 @@ class Lbann(CMakePackage):
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
 
-        args.extend(['-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec)])
+        if '+al' in spec:
+            args.extend(['-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
+                         '-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
+
+        if '+conduit' in spec:
+            args.extend(['-DLBANN_CONDUIT_DIR:BOOL=%s' % ('+conduit' in spec),
+                         '-DLBANN_CONDUIT_DIR={0}'.format(
+                             spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):

@@ -44,12 +44,14 @@ class Aluminum(CMakePackage):
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
     variant('mpi_cuda', default=False, description='Builds with support for MPI-CUDA enabled library')
 
+    depends_on('cmake@3.9.0:', type='build')
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
     depends_on('mpi', when='~mpi_cuda')
     depends_on('mpi +cuda', when='+mpi_cuda')
     depends_on('nccl', when='+nccl')
+    depends_on('hwloc')
 
     def cmake_args(self):
         spec = self.spec
