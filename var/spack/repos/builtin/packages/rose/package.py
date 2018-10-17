@@ -35,12 +35,13 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url      = "https://github.com/rose-compiler/rose/archive/v0.9.7.0.tar.gz"
-    git      = "https://github.com/rose-compiler/rose.git"
+    url      = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
+    git      = "https://github.com/rose-compiler/rose-develop.git"
 
     version('master', branch='master')
-    version('0.9.9.0', tag='v0.9.9.0')
-    version('0.9.7.0', tag='v0.9.7.0')
+    version('0.9.10.0', tag='v0.9.10.0')
+    version('0.9.9.0',  tag='v0.9.9.0')
+    version('0.9.7.0',  tag='v0.9.7.0')
 
     #patch('add_spack_compiler_recognition.patch')
 
@@ -49,7 +50,9 @@ class Rose(AutotoolsPackage):
     depends_on("libtool@2.4:", type='build')
     depends_on("bison", type='build')
     depends_on("flex", type='build')
-    depends_on("boost@1.47.0:1.61.0")
+    depends_on("boost@1.56.0:1.60.0", when="~cxx11")
+    depends_on("boost@1.60.0",        when="+cxx11")
+    
 
     variant('tests', default=False, description='Build the tests directory')
 
@@ -91,8 +94,15 @@ class Rose(AutotoolsPackage):
         spec = self.spec
         cc = self.compiler.cc
         cxx = self.compiler.cxx
-        return [
+        
+        if spec.satisfies('@0.9.8:'):
+            edg = '4.12'
+        else:
+            edg = '4.9'
+        
+        args = [
             '--disable-boost-version-check',
+            '--enable-edg_version={0}'.format(edg),
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec['boost'].prefix),
@@ -101,5 +111,11 @@ class Rose(AutotoolsPackage):
             '--disable-tests-directory' if '+tests' not in spec else '',
             '--enable-tutorial-directory={0}'.format('no'),
         ]
+        
+        if '+cxx11' in spec:
+            args.append("CXXFLAGS=-std=c++11")
+        
+        return args
+        
 
     install_targets = ["install-core"]

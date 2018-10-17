@@ -38,7 +38,7 @@ class Chill(Package):
     #version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
     version('master', branch='master')
 
-    depends_on('rose@master')
+    depends_on('rose@0.9.10.0 +cxx11')
     depends_on('iegenlib')
     depends_on('isl')
     depends_on('python')
