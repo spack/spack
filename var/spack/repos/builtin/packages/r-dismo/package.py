@@ -28,7 +28,7 @@ from spack import *
 class RDismo(RPackage):
     """Functions for species distribution modeling, that is, predicting
        entire geographic distributions form occurrences at a number of
-       sites and the environment at these sites"""
+       sites and the environment at these sites."""
 
     homepage = "http://rspatial.org/sdm"
     url      = "https://cran.r-project.org/src/contrib/dismo_1.1-4.tar.gz"
