@@ -1,0 +1,20 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e7c3f0a..16c1b1f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -30,13 +30,13 @@ if(GMOD_SANITIZE_ADDRESS)
+ endif()
+ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+   set(FLAGS "${FLAGS} -fno-omit-frame-pointer -ferror-limit=1")
+-  set(FLAGS "${FLAGS} -Werror -Weverything -Wno-c++98-compat")
++  set(FLAGS "${FLAGS} -Weverything -Wno-c++98-compat")
+   set(FLAGS "${FLAGS} -Wno-c++98-compat-pedantic -Wno-padded")
+   set(FLAGS "${FLAGS} -Wno-float-equal")
+   set(FLAGS "${FLAGS} -Wno-weak-template-vtables")
+ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+   set(FLAGS "${FLAGS} -fno-omit-frame-pointer -fmax-errors=1")
+-  set(FLAGS "${FLAGS} -Werror -Wall -Wextra")
++  set(FLAGS "${FLAGS} -Wall -Wextra")
+ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+ else()
+   message(FATAL_ERROR "Unexpected compiler type ${CMAKE_CXX_COMPILER_ID}")

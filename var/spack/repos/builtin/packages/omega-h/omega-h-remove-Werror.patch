@@ -1,0 +1,22 @@
+diff --git a/cmake/bob.cmake b/cmake/bob.cmake
+index 2193033e..4e2f3456 100644
+--- a/cmake/bob.cmake
++++ b/cmake/bob.cmake
+@@ -182,7 +182,7 @@ function(bob_begin_cxx_flags)
+     endif()
+     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+       if (${PROJECT_NAME}_CXX_WARNINGS)
+-        set(FLAGS "${FLAGS} -Werror -Weverything")
++        set(FLAGS "${FLAGS} -Weverything")
+         set(FLAGS "${FLAGS} -Wno-padded")
+         set(FLAGS "${FLAGS} -Wno-float-equal")
+         set(FLAGS "${FLAGS} -Wno-weak-template-vtables")
+@@ -201,7 +201,7 @@ function(bob_begin_cxx_flags)
+       endif()
+     elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+       if (${PROJECT_NAME}_CXX_WARNINGS)
+-        set(FLAGS "${FLAGS} -Werror -Wall -Wextra")
++        set(FLAGS "${FLAGS} -Wall -Wextra")
+         set(FLAGS "${FLAGS} -Wdouble-promotion -Wshadow -Wformat=2")
+         if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "6.0")
+           set(FLAGS "${FLAGS} -Wduplicated-cond -Wnull-dereference")
