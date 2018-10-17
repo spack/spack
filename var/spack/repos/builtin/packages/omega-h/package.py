@@ -52,7 +52,7 @@ class OmegaH(CMakePackage):
     variant('examples', default=False, description='Compile examples')
     variant('optimize', default=True, description='Compile C++ with optimization')
     variant('symbols', default=True, description='Compile C++ with debug symbols')
-    variant('warnings', default=True, description='Compile C++ with warnings')
+    variant('warnings', default=False, description='Compile C++ with warnings')
 
     depends_on('gmodel', when='+gmodel')
     depends_on('gmsh', when='+examples', type='build')
