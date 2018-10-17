@@ -29,7 +29,7 @@ class RMulticool(RPackage):
     """Permutations of multisets in cool-lex order."""
 
     homepage = "https://cran.r-project.org/package=multicool"
-    url      = "https://cran.r-project.org/src/contrib/Archive/multicool/multicool_0.1-9.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/multicool_0.1-10.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/multicool/"
 
     version('0.1-10', sha256='5bb0cb0d9eb64420c862877247a79bb0afadacfe23262ec8c3fa26e5e34d6ff9')
