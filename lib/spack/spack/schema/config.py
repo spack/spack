@@ -49,6 +49,7 @@ schema = {
                 'checksum': {'type': 'boolean'},
                 'locks': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
+                'build_language': {'type': 'string'},
                 'build_jobs': {'type': 'integer', 'minimum': 1},
                 'ccache': {'type': 'boolean'},
                 'db_lock_timeout': {'type': 'integer', 'minimum': 1},

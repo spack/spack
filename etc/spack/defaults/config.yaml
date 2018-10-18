@@ -77,6 +77,14 @@ config:
   dirty: false
 
 
+  # The language the build environment will use. This will produce English
+  # compiler messages by default, so the log parser can highlight errors.
+  # If set to C, it will use English (see man locale).
+  # If set to the empty string (''), it will use the language from the
+  # user's environment.
+  build_language: C
+
+
   # When set to true, concurrent instances of Spack will use locks to
   # avoid modifying the install tree, database file, etc. If false, Spack
   # will disable all locking, but you must NOT run concurrent instances
