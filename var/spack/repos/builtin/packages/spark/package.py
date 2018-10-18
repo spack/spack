@@ -49,6 +49,7 @@ class Spark(Package):
     @when('+hadoop')
     def setup_environment(self, spack_env, run_env):
         hadoop = self.spec['hadoop'].command
+        hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
         hadoop_classpath = hadoop('classpath', output=str)
 
         # Remove whitespaces, as they can compromise syntax in
