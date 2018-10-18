@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -37,6 +18,8 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/ibaned/omega_h.git"
 
     version('develop', branch='master')
+    version('9.19.1', sha256='60ef65c2957ce03ef9d1b995d842fb65c32c5659d064de002c071effe66b1b1f')
+    version('9.19.0', sha256='4a1606c4e7287a1b67359cf6ef1c2d7e24b7dc379065566a1d2e0b0330c0abbd')
     version('9.15.0', sha256='342a506a0ff22f6cac759862efdcf34e360110f7901eb9b4c5de8afe38741522')
     version('9.14.0', sha256='035d0f47142f965a57818d1cb6c5c00b5ae6b5a0178b67b0bc9177fa99ba083d')
     version('9.13.14', sha256='f617dfd024c9cc323e56800ca23df3386bfa37e1b9bd378847d1f5d32d2b8e5d')
@@ -45,23 +28,24 @@ class OmegaH(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('zlib', default=True, description='Activates ZLib support')
-    variant('trilinos', default=True, description='Use Teuchos and Kokkos')
+    variant('trilinos', default=False, description='Use Teuchos and Kokkos')
     variant('build_type', default='')
-    variant('gmodel', default=True, description='Gmsh model generation library')
     variant('throw', default=False, description='Errors throw exceptions instead of abort')
     variant('examples', default=False, description='Compile examples')
     variant('optimize', default=True, description='Compile C++ with optimization')
     variant('symbols', default=True, description='Compile C++ with debug symbols')
-    variant('warnings', default=True, description='Compile C++ with warnings')
+    variant('warnings', default=False, description='Compile C++ with warnings')
 
-    depends_on('gmodel', when='+gmodel')
     depends_on('gmsh', when='+examples', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos +kokkos +teuchos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
+    conflicts('%gcc@8:')
+
     def _bob_options(self):
-        cmake_var_prefix = self.name.capitalize() + '_CXX_'
+        cmake_var_prefix = 'Omega_h_CXX_'
         for variant in ['optimize', 'symbols', 'warnings']:
             cmake_var = cmake_var_prefix + variant.upper()
             if '+' + variant in self.spec:
@@ -83,16 +67,12 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_USE_MPI:BOOL=OFF')
         if '+trilinos' in self.spec:
             args.append('-DOmega_h_USE_Trilinos:BOOL=ON')
-        if '+gmodel' in self.spec:
-            args.append('-DOmega_h_USE_Gmodel:BOOL=ON')
         if '+zlib' in self.spec:
-            args.append('-DTPL_ENABLE_ZLIB:BOOL=ON')
-            args.append('-DTPL_ZLIB_INCLUDE_DIRS:STRING={0}'.format(
-                self.spec['zlib'].prefix.include))
-            args.append('-DTPL_ZLIB_LIBRARIES:STRING={0}'.format(
-                self.spec['zlib'].libs))
+            args.append('-DOmega_h_USE_ZLIB:BOOL=ON')
+            args.append('-DZLIB_ROOT:PATH={0}'.format(
+                self.spec['zlib'].prefix))
         else:
-            args.append('-DTPL_ENABLE_ZLIB:BOOL=OFF')
+            args.append('-DOmega_h_USE_ZLIB:BOOL=OFF')
         if '+examples' in self.spec:
             args.append('-DOmega_h_EXAMPLES:BOOL=ON')
         else:

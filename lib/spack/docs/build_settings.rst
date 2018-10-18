@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _build-settings:
 
 ======================================
@@ -166,3 +171,52 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
+
+.. _package_permissions:
+
+-------------------
+Package Permissions
+-------------------
+
+Spack can be configured to assign permissions to the files installed
+by a package.
+
+In the ``packages.yaml`` file under ``permissions``, the attributes
+``read``, ``write``, and ``group`` control the package
+permissions. These attributes can be set per-package, or for all
+packages under ``all``. If permissions are set under ``all`` and for a
+specific package, the package-specific settings take precedence.
+
+The ``read`` and ``write`` attributes take one of ``user``, ``group``,
+and ``world``.
+
+.. code-block:: yaml
+
+  packages:
+    all:
+      permissions:
+        write: group
+        group: spack
+    my_app:
+      permissions:
+        read: group
+        group: my_team
+
+The permissions settings describe the broadest level of access to
+installations of the specified packages. The execute permissions of
+the file are set to the same level as read permissions for those files
+that are executable. The default setting for ``read`` is ``world``,
+and for ``write`` is ``user``. In the example above, installations of
+``my_app`` will be installed with user and group permissions but no
+world permissions, and owned by the group ``my_team``. All other
+packages will be installed with user and group write privileges, and
+world read privileges. Those packages will be owned by the group
+``spack``.
+
+The ``group`` attribute assigns a unix-style group to a package. All
+files installed by the package will be owned by the assigned group,
+and the sticky group bit will be set on the install prefix and all
+directories inside the install prefix. This will ensure that even
+manually placed files within the install prefix are owned by the
+assigned group. If no group is assigned, Spack will allow the OS
+default behavior to go as expected.
