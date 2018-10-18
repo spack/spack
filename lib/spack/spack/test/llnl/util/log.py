@@ -76,7 +76,10 @@ def test_pass_input(capfd, tmpdir):
                 with logger._pass_input():
                     writing_proc.start()
                     time.sleep(1)
-                    x = raw_input()
+                    if sys.version_info < (3,):
+                        x = raw_input()
+                    else:
+                        x = input()
 
                 writing_proc.join()
                 assert x == 'example input'
