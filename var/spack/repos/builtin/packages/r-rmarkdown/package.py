@@ -26,4 +26,5 @@ class RRmarkdown(RPackage):
     depends_on('r-rprojroot', type=('build', 'run'))
     depends_on('r-mime', type=('build', 'run'))
     depends_on('r-stringr@1.2.0:', type=('build', 'run'))
+    depends_on('r-catools', type=('build', 'run'))
     depends_on('r@3.0:')
