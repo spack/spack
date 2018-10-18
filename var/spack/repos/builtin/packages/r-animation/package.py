@@ -15,6 +15,7 @@ class RAnimation(RPackage):
 
     homepage = "https://cran.r-project.org/package=animation"
     url = "https://cran.r-project.org/src/contrib/animation_2.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/animation"
 
     version('2.5', sha256='b232fef1b318c79710e5e1923d87baba4c85ffe2c77ddb188130e0911d8cb55f')
 
