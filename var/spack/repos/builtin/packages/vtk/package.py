@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 from spack import *
@@ -36,6 +17,7 @@ class Vtk(CMakePackage):
     url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
+    version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
     version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
     version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
@@ -47,6 +29,11 @@ class Vtk(CMakePackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
     variant('qt', default=False, description='Build with support for Qt')
+    variant('mpi', default=True, description='Enable MPI support')
+
+    # Haru causes trouble on Fedora and Ubuntu in v8.1.1
+    # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
+    variant('haru', default=True, description='Enable libharu')
 
     patch('gcc.patch', when='@6.1.0')
 
@@ -62,11 +49,16 @@ class Vtk(CMakePackage):
     # drivers is faster, but it must be done externally.
     depends_on('opengl', when='~osmesa')
 
-    # mesa default is software rendering, make it faster with llvm
-    depends_on('mesa+llvm', when='+osmesa')
+    # Note: it is recommended to use mesa+llvm, if possible.
+    # mesa default is software rendering, llvm makes it faster
+    depends_on('mesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
+
+    depends_on('mpi', when='+mpi')
+
+    depends_on('libharu', when='+haru')
 
     depends_on('expat')
     depends_on('freetype')
@@ -74,7 +66,6 @@ class Vtk(CMakePackage):
     depends_on('hdf5')
     depends_on('libjpeg')
     depends_on('jsoncpp')
-    depends_on('libharu')
     depends_on('libxml2')
     depends_on('lz4')
     depends_on('netcdf')
@@ -102,6 +93,9 @@ class Vtk(CMakePackage):
         cmake_args = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
+
+            '-DVTK_USE_SYSTEM_LIBHARU=%s' % (
+                'ON' if '+haru' in spec else 'OFF'),
 
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
@@ -157,6 +151,12 @@ class Vtk(CMakePackage):
                     '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
                 ])
 
+        if '+mpi' in spec:
+            cmake_args.extend([
+                '-DVTK_Group_MPI:BOOL=ON',
+                '-DVTK_USE_SYSTEM_DIY2=OFF'
+            ])
+
         if '+osmesa' in spec:
             prefix = spec['mesa'].prefix
             osmesa_include_dir = prefix.include
@@ -211,7 +211,8 @@ class Vtk(CMakePackage):
             # string. This fix was recommended on the VTK mailing list
             # in March 2014 (see
             # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
-            if (self.compiler.is_apple and
+            if (self.spec.satisfies('%clang') and
+                self.compiler.is_apple and
                 self.compiler.version >= Version('5.1.0')):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
 
