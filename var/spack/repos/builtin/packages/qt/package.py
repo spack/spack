@@ -72,6 +72,12 @@ class Qt(Package):
     patch('qt4-pcre-include-conflict.patch', when='@4')
     patch('qt4-el-capitan.patch', when='@4')
 
+    # Allow Qt's configure script to build the webkit option with more
+    # recent versions of gcc.
+    # https://github.com/spack/spack/issues/9205
+    # https://github.com/spack/spack/issues/9209
+    patch('qt4-gcc-and-webkit.patch', when='@4')
+
     # Use system openssl for security.
     depends_on("openssl")
     depends_on("glib", when='@4:')
