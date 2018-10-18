@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -180,6 +161,22 @@ class Llvm(CMakePackage):
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '7.0.0',
+            'md5': 'e0140354db83cdeb8668531b431398f0',
+            'resources': {
+                'compiler-rt': '3b759c47076298363f4443395e0e51c1',
+                'openmp': '8800aac08f2f9dad0ebf66e0e152bd63',
+                'polly': 'ff689bbfdca3ea812d195f60e63d8346',
+                'libcxx': '5ef835bf8c9f49611af4d5f3362d9658',
+                'libcxxabi': 'f04adafa019f4f5cce9550007da251c1',
+                'cfe': '2ac5d8d78be681e31611c5e546e11174',
+                'clang-tools-extra': 'e98b37a5911cd556775cba0868a56981',
+                'lldb': '76338963b3ccc4f9dccc923716207310',
+                'lld': '5eb148c3064acff71d8e5856163c8323',
+                'libunwind': 'e585a3e4ae6045f2561bc8a8fcd0bfbb'
             }
         },
         {
