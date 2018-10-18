@@ -32,7 +32,7 @@ class Lz4(Package):
 
     def install(self, spec, prefix):
         if sys.platform != "darwin":
-            make('LIBS=-lrt')  # fixes make error on CentOS6
+            make('MOREFLAGS=-lrt')  # fixes make error on CentOS6
         else:
             make()
         if self.run_tests:
