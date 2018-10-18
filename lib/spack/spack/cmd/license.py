@@ -40,7 +40,7 @@ licensed_files = [
     r'^lib/spack/env/cc$',
 
     # rst files in documentation
-    r'^lib/spack/docs/.*\.rst$',
+    r'^lib/spack/docs/(?!command_index|spack|llnl).*\.rst$',
     r'^lib/spack/docs/.*\.py$',
 
     # 2 files in external
