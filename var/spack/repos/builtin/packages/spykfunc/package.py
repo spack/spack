@@ -34,9 +34,11 @@ class Spykfunc(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Spykfunc"
     url      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
+    version('local', git="/gpfs/bbp.cscs.ch/home/matwolf/work/Spykfunc", submodules=True)
     version('develop', git=url, submodules=True, preferred=True)
 
-    depends_on('highfive', type='build')
+    depends_on('hdf5~mpi')
+    depends_on('highfive~mpi', type='build')
     depends_on('mvdtool~mpi')
 
     depends_on('python@3.6:')
@@ -70,6 +72,7 @@ class Spykfunc(PythonPackage):
         run_env.set('JAVA_HOME', self.spec['java'].prefix)
         run_env.set('SPARK_HOME', self.spec['spark'].prefix)
 
+        run_env.prepend_path('PATH', os.path.join(self.spec['py-bb5'].prefix, 'bin'))
         run_env.prepend_path('PATH', os.path.join(self.spec['py-sparkmanager'].prefix, 'bin'))
         run_env.prepend_path('PATH', os.path.join(self.spec['hadoop'].prefix, 'bin'))
         run_env.prepend_path('PATH', os.path.join(self.spec['spark'].prefix, 'bin'))
@@ -82,7 +85,3 @@ class Spykfunc(PythonPackage):
         # module files
         hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
-
-        for m in spack_env.env_modifications:
-            if m.name == 'PYTHONPATH':
-                run_env.prepend_path('PYTHONPATH', m.value)

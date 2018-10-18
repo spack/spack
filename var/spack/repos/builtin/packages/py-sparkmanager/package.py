@@ -31,6 +31,7 @@ class PySparkmanager(PythonPackage):
     homepage = "https://github.com/matz-e/sparkmanager"
     url      = "https://pypi.org/packages/source/s/sparkmanager/sparkmanager-0.6.0.tar.gz"
 
+    version('0.7.0', sha256='5858728b8c91597970293c26b2f114161a435527a5600f9a7386f4e6d28ec7d9')
     version('0.6.0', sha256='98aa542942690b533f087fab1b5544abe189c4f4ee3e16b65f12f5758671db54')
 
     depends_on('py-setuptools', type='build')
