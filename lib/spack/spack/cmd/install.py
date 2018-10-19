@@ -124,7 +124,25 @@ packages. If neither are chosen, don't run tests for any packages."""
     subparser.add_argument(
         '--cdash-upload-url',
         default=None,
-        help="CDash URL where reports will be uploaded"
+        help="CDash URL where reports will be uploaded."
+    )
+    subparser.add_argument(
+        '--cdash-build',
+        default=None,
+        help="""The name of the build that will be reported to CDash.
+Defaults to spec of the package to install."""
+    )
+    subparser.add_argument(
+        '--cdash-site',
+        default=None,
+        help="""The site name that will be reported to CDash.
+Defaults to current system hostname."""
+    )
+    subparser.add_argument(
+        '--cdash-track',
+        default='Experimental',
+        help="""Results will be reported to this group on CDash.
+Defaults to Experimental."""
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
@@ -195,9 +213,7 @@ def install(parser, args, **kwargs):
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    reporter = spack.report.collect_info(args.log_format,
-                                         ' '.join(args.package),
-                                         args.cdash_upload_url)
+    reporter = spack.report.collect_info(args.log_format, args)
     if args.log_file:
         reporter.filename = args.log_file
 

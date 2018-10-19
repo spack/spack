@@ -70,15 +70,23 @@ class CDash(Reporter):
     CDash instance hosted at https://mydomain.com/cdash.
     """
 
-    def __init__(self, install_command, cdash_upload_url):
-        Reporter.__init__(self, install_command, cdash_upload_url)
+    def __init__(self, args):
+        Reporter.__init__(self, args)
         self.template_dir = os.path.join('reports', 'cdash')
-        self.hostname = socket.gethostname()
+        self.cdash_upload_url = args.cdash_upload_url
+        self.install_command = ' '.join(args.package)
+        if args.cdash_build:
+            self.buildname = args.cdash_build
+        else:
+            self.buildname = self.install_command
+        if args.cdash_site:
+            self.site = args.cdash_site
+        else:
+            self.site = socket.gethostname()
         self.osname = platform.system()
         self.starttime = int(time.time())
-        # TODO: remove hardcoded use of Experimental here.
-        #       Make the submission model configurable.
-        self.buildstamp = time.strftime("%Y%m%d-%H%M-Experimental",
+        buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
+        self.buildstamp = time.strftime(buildstamp_format,
                                         time.localtime(self.starttime))
 
     def build_report(self, filename, report_data):
@@ -187,10 +195,11 @@ class CDash(Reporter):
     def initialize_report(self, filename, report_data):
         if not os.path.exists(filename):
             os.mkdir(filename)
-        report_data['install_command'] = self.install_command
+        report_data['buildname'] = self.buildname
         report_data['buildstamp'] = self.buildstamp
-        report_data['hostname'] = self.hostname
+        report_data['install_command'] = self.install_command
         report_data['osname'] = self.osname
+        report_data['site'] = self.site
 
     def upload(self, filename):
         if not self.cdash_upload_url:
