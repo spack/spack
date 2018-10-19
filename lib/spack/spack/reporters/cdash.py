@@ -77,6 +77,7 @@ class CDash(Reporter):
 
         # Parse output phase-by-phase.
         phase_regexp = re.compile(r"Executing phase: '(.*)'")
+        cdash_phase = ''
         for spec in report_data['specs']:
             for package in spec['packages']:
                 if 'stdout' in package:
