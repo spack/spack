@@ -25,7 +25,7 @@ config:
 
 
   # default directory layout
-  directory_layout: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+  install_path_scheme: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
 
 
   # Locations where different types of modules should be installed.
@@ -73,6 +73,14 @@ config:
   # If set to true, `spack install` and friends will NOT clean
   # potentially harmful variables from the build environment. Use wisely.
   dirty: false
+
+
+  # The language the build environment will use. This will produce English
+  # compiler messages by default, so the log parser can highlight errors.
+  # If set to C, it will use English (see man locale).
+  # If set to the empty string (''), it will use the language from the
+  # user's environment.
+  build_language: C
 
 
   # When set to true, concurrent instances of Spack will use locks to
