@@ -31,6 +31,9 @@ class MofemMinimalSurfaceEquation(CMakePackage):
 
     maintainers = ['likask']
 
+    version('0.3.10',
+        git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
+        tag='v0.3.10')
     version('0.3.9',
         git='https://bitbucket.org/likask/mofem_um_minimal_surface_equation',
         tag='v0.3.9')
