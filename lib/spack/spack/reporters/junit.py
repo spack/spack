@@ -17,8 +17,8 @@ __all__ = ['JUnit']
 class JUnit(Reporter):
     """Generate reports of spec installations for JUnit."""
 
-    def __init__(self, install_command, cdash_upload_url):
-        Reporter.__init__(self, install_command, cdash_upload_url)
+    def __init__(self, args):
+        Reporter.__init__(self, args)
         self.template_file = os.path.join('reports', 'junit.xml')
 
     def build_report(self, filename, report_data):
