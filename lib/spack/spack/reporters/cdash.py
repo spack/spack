@@ -96,6 +96,7 @@ class CDash(Reporter):
 
         # Parse output phase-by-phase.
         phase_regexp = re.compile(r"Executing phase: '(.*)'")
+        cdash_phase = ''
         for spec in report_data['specs']:
             for package in spec['packages']:
                 if 'stdout' in package:
@@ -114,7 +115,7 @@ class CDash(Reporter):
                             report_data[cdash_phase]['log'] += \
                                 text_type("{0} output for {1}:\n".format(
                                     cdash_phase, package['name']))
-                        else:
+                        elif cdash_phase:
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
 
