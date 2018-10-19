@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Update>
-  <Site>{{ hostname }}</Site>
-  <BuildName>{{ install_command }}</BuildName>
+  <Site>{{ site }}</Site>
+  <BuildName>{{ buildname }}</BuildName>
   <BuildStamp>{{ buildstamp }}</BuildStamp>
   <StartTime>{{ starttime }}</StartTime>
   <EndTime>{{ endtime }}</EndTime>

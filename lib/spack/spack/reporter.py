@@ -10,9 +10,8 @@ __all__ = ['Reporter']
 class Reporter(object):
     """Base class for report writers."""
 
-    def __init__(self, install_command, cdash_upload_url):
-        self.install_command = install_command
-        self.cdash_upload_url = cdash_upload_url
+    def __init__(self, args):
+        self.args = args
 
     def build_report(self, filename, report_data):
         pass
