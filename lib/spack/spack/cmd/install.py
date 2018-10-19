@@ -232,7 +232,7 @@ def install(parser, args, **kwargs):
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
 
-    if not args.log_file:
+    if not args.log_file and not reporter.filename:
         reporter.filename = default_log_file(specs[0])
     reporter.specs = specs
     with reporter:
