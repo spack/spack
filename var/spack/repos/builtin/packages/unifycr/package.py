@@ -23,7 +23,7 @@ class Unifycr(AutotoolsPackage):
 
     variant('debug', default='False', 
             description='Enable debug build options')
-    variant('hdf5', default='True',
+    variant('hdf5', default='False',
             description='Build with HDF5 (currently serial only)')
     variant('numa', default='True',
             description='Build with NUMA')
@@ -71,23 +71,25 @@ class Unifycr(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = []
+        args = []
 
         if spec.satisfies('@0.1.1'):
             env['CC'] = spec['mpi'].mpicc
 
-        config_args.extend(self.with_or_without('numa'))
-        config_args.extend(self.with_or_without('hdf5'))
+        args.extend(self.with_or_without('numa',
+                                         lambda x: spec['numactl'].prefix))
+        args.extend(self.with_or_without('hdf5',
+                                         activation_value='prefix'))
 
         if '+debug' in spec:
-            config_args.append('--enable-debug')
+            args.append('--enable-debug')
 
         if '+verbose' in spec:
-            config_args.append('--disable-silent-rules')
+            args.append('--disable-silent-rules')
         else:
-            config_args.append('--enable-silent-rules')
+            args.append('--enable-silent-rules')
 
-        return config_args
+        return args
 
 #   @when('@develop') TODO: uncomment when we `make dist` a stable release
     def autoreconf(self, spec, prefix):
