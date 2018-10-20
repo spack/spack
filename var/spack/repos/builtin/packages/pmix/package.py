@@ -30,16 +30,12 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.github.io/pmix"
     url      = "https://github.com/pmix/pmix/releases/download/v2.0.1/pmix-2.0.1.tar.bz2"
 
-    version('3.0.2',    'dc2e501605dde93ab459a5e060e01500')
-    version('3.0.1',    'ffe6bc08ab600173ea6e7d4509777629')
-    version('3.0.0',    '396969979a36d45bd292908e4bcec5c8')
-    version('2.1.4',    'edcfd7d1e2c2bcbb3e9852b66b57120e')
-    version('2.1.3',    '9320a4f3aef305fab4f7ac3520153160')
-    version('2.1.2',    '9f99fd893be49c2cb0cd8926cf6fcc78')
-    version('2.1.1',    'f9f109421661b757245d5e0bd44a38b3')
-    version('2.1.0',    'fc97513b601d78fe7c6bb20c6a21df3c')
-    version('2.0.3',    'fae199c9fa1d1f1bc20c336f1292f950')
-    version('2.0.2',    'e3ed1deed87c84f9b43da2621c6ad689')
+    version('3.0.2',    sha256='df68f35a3ed9517eeade80b13855cebad8fde2772b36a3f6be87559b6d430670')
+    version('3.0.1',    sha256='b81055d2c0d61ef5a451b63debc39c820bcd530490e2e4dcb4cdbacb618c157c')
+    version('3.0.0',    sha256='ee8f68107c24b706237a53333d832445315ae37de6773c5413d7fda415a6e2ee')
+    version('2.1.4',    sha256='eb72d292e76e200f02cf162a477eecea2559ef3ac2edf50ee95b3fe3983d033e')
+    version('2.1.3',    sha256='281283133498e7e5999ed5c6557542c22408bc9eb51ecbcf7696160616782a41')
+    version('2.1.2',    sha256='94bb9c801c51a6caa1b8cef2b85ecf67703a5dfa4d79262e6668c37c744bb643')
     version('2.0.1',    'ba3193b485843516e6b4e8641e443b1e')
     version('2.0.0',    '3e047c2ea0ba8ee9925ed92b205fd92e')
     version('1.2.5',    'c3d20cd9d365a813dc367afdf0f41c37')

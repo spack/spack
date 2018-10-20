@@ -50,6 +50,9 @@ class Plumed(AutotoolsPackage):
     depends_on('zlib')
     depends_on('blas')
     depends_on('lapack')
+    # For libmatheval support through the 'function' module
+    # which is enabled by default (or when optional_modules=all)
+    depends_on('libmatheval')
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
