@@ -57,6 +57,7 @@ class MofemFractureModule(CMakePackage):
         description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
+    depends_on('mofem-users-modules@0.8.15:', when='@0.9.48:')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))
 
     # The CMakeLists.txt installed with mofem-cephas package set cmake
