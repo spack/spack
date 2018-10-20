@@ -702,3 +702,12 @@ def test_disjoint_set_initialization_errors():
     with pytest.raises(spack.error.SpecError) as exc_info:
         disjoint_sets(('a', 'b'), ('b', 'c'))
     assert 'sets in input must be disjoint' in str(exc_info.value)
+
+
+def test_disjoint_set_initialization():
+    # Test that no error is thrown when the sets are disjoint
+    d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f'))
+
+    assert d.default is None
+    assert d.multi is True
+    assert set(x for x in d) == set(['a', 'b', 'c', 'e', 'f'])
