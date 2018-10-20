@@ -18,6 +18,7 @@ class Guile(AutotoolsPackage):
     version('2.0.11', 'e532c68c6f17822561e3001136635ddd')
 
     variant('readline', default=True, description='Use the readline library')
+    variant('threads', default=True, description='Use the thread interface')
 
     depends_on('gmp@4.2:')
     depends_on('gettext')
@@ -30,6 +31,8 @@ class Guile(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
+    conflicts('+threads', when='%intel')
+
     def configure_args(self):
         spec = self.spec
 
@@ -38,8 +41,9 @@ class Guile(AutotoolsPackage):
                 spec['libunistring'].prefix),
             '--with-libltdl-prefix={0}'.format(spec['libtool'].prefix),
             '--with-libgmp-prefix={0}'.format(spec['gmp'].prefix),
-            '--with-libintl-prefix={0}'.format(spec['gettext'].prefix)
+            '--with-libintl-prefix={0}'.format(spec['gettext'].prefix),
         ]
+        config_args += self.with_or_without('threads')
 
         if '+readline' in spec:
             config_args.append('--with-libreadline-prefix={0}'.format(
