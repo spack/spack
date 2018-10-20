@@ -36,8 +36,8 @@ class Jdk(Package):
     # found in a link above. The build number can be deciphered from the URL.
     # Alternatively, run `bin/java -version` after extracting. Replace '+'
     # symbol in version with '_', otherwise it will be interpreted as a variant
-    version('1.8.0_181-b13', 'ef599e322eee42f6769991dd3e3b1a31', curl_options=curl_options,
-            url='http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.tar.gz')
+    version('1.8.0_191-b12', '6d0be0797d400a694c43eddf74efa7fd', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c/jdk-8u191-linux-x64.tar.gz')
     version('1.8.0_172-b11', 'eda2945e8c02b84adbf78f46c37b71c1', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u172-b11/a58eab1ec242421181065cdc37240b08/jdk-8u172-linux-x64.tar.gz')
     version('1.8.0_141-b15', '8cf4c4e00744bfafc023d770cb65328c', curl_options=curl_options,
@@ -50,9 +50,6 @@ class Jdk(Package):
     version('1.7.0_80-b0', '6152f8a7561acf795ca4701daa10a965', curl_options=curl_options)
 
     provides('java')
-    provides('java@11', when='@11.0:11.999')
-    provides('java@10', when='@10.0:10.999')
-    provides('java@9',  when='@9.0:9.999')
     provides('java@8',  when='@1.8.0:1.8.999')
     provides('java@7',  when='@1.7.0:1.7.999')
 
