@@ -6,7 +6,6 @@
 from spack import *
 import spack
 import spack.store
-import os
 
 
 class CbtfKrell(CMakePackage):
@@ -19,6 +18,7 @@ class CbtfKrell(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
+    version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
@@ -50,12 +50,10 @@ class CbtfKrell(CMakePackage):
     depends_on("cmake@3.0.2:", type='build')
 
     # For binutils
-    depends_on("binutils", when='@develop')
-    depends_on("binutils@2.29.1", when='@1.9.1.0:9999')
+    depends_on("binutils")
 
     # For boost
-    depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
+    depends_on("boost@1.66.0:")
 
     # For Dyninst
     depends_on("dyninst@develop", when='@develop')
@@ -63,27 +61,26 @@ class CbtfKrell(CMakePackage):
     depends_on("dyninst@develop", when='@1.9.1.0:9999')
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
 
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999', type=('build', 'link', 'run'))
 
     # For Xerces-C
-    depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4", when='@1.9.1.0:9999')
+    depends_on("xerces-c")
 
     # For CBTF
-    depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999')
+    depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999', type=('build', 'link', 'run'))
 
     # For CBTF with cti
-    depends_on("cbtf@develop+cti", when='@develop+cti')
-    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti')
+    depends_on("cbtf@develop+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
 
     # For CBTF with runtime
-    depends_on("cbtf@develop+runtime", when='@develop+runtime')
-    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
+    depends_on("cbtf@develop+runtime", when='@develop+runtime', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime', type=('build', 'link', 'run'))
 
     # for services and collectors
     depends_on("libmonitor@2013.02.18+krellpatch")
@@ -91,8 +88,7 @@ class CbtfKrell(CMakePackage):
     depends_on("libunwind", when='@develop')
     depends_on("libunwind@1.2.1", when='@1.9.1.0:9999')
 
-    depends_on("papi", when='@develop')
-    depends_on("papi@5.6.0", when='@1.9.1.0:9999')
+    depends_on("papi@5.4.1:")
 
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
@@ -104,8 +100,8 @@ class CbtfKrell(CMakePackage):
     depends_on("mvapich", when='+mvapich')
     depends_on("mpt", when='+mpt')
 
-    depends_on("python", when='@develop')
-    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')
+    depends_on("python", when='@develop', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("gotcha")
 
@@ -234,22 +230,12 @@ class CbtfKrell(CMakePackage):
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
 
-        # Environment settings for cbtf-krell
-        run_env.prepend_path('PATH', self.prefix.bin)
+        # Environment settings for cbtf-krell, bin is automatically
+        # added to the path in the module file
         run_env.prepend_path('PATH', self.prefix.sbin)
 
-        # Find openspeedshop library path
-        cbtfk_libdir = find_libraries('libcbtf-core.so.1.1.0',
-                                      root=self.prefix,
-                                      shared=True, recursive=True)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             os.path.dirname(cbtfk_libdir.joined()))
-
-        cbtf_mc = '/sbin/cbtf_mrnet_commnode'
-        cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
         run_env.set('XPLAT_RSH', 'ssh')
-        run_env.set('MRNET_COMM_PATH',
-                    join_path(self.spec.prefix + cbtf_mc))
+        run_env.set('MRNET_COMM_PATH', self.prefix.sbin.cbtf_mrnet_commnode)
 
         # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
         # This is needed by CBTF tools to deploy the correct
@@ -273,6 +259,4 @@ class CbtfKrell(CMakePackage):
             run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
 
         run_env.set('CBTF_MRNET_BACKEND_PATH',
-                    join_path(self.prefix + cbtf_lmb))
-        run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
-        run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
+                    self.prefix.sbin.cbtf_libcbtf_mrnet_backend)
