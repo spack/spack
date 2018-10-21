@@ -1077,6 +1077,133 @@ Go cannot be used to fetch a particular commit or branch, it always
 downloads the head of the repository. This download method is untrusted,
 and is not recommended. Use another fetch strategy whenever possible.
 
+--------
+Variants
+--------
+
+Many software packages can be configured to enable optional
+features, which often come at the expense of additional dependencies or
+longer build-times. To be flexible enough and support a wide variety of
+use cases, Spack permits to expose to the end-user the ability to choose
+which features should be activated in a package at the time it is installed.
+The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
+
+^^^^^^^^^^^^^^^^
+Boolean variants
+^^^^^^^^^^^^^^^^
+
+In their simplest form variants are boolean options specified at the package
+level:
+
+  .. code-block:: python
+
+    class Hdf5(AutotoolsPackage):
+        ...
+        variant(
+            'shared', default=True, description='Builds a shared version of the library'
+        )
+
+with a default value and a description of their meaning / use in the package.
+*Variants can be tested in any context where a spec constraint is expected.*
+In the example above the ``shared`` variant is tied to the build of shared dynamic
+libraries. To pass the right option at configure time we can branch depending on
+its value:
+
+  .. code-block:: python
+
+    def configure_args(self):
+        ...
+        if '+shared' in self.spec:
+            extra_args.append('--enable-shared')
+        else:
+            extra_args.append('--disable-shared')
+            extra_args.append('--enable-static-exec')
+
+As explained in :ref:`basic-variants` the constraint ``+shared`` means
+that the boolean variant is set to ``True``, while ``~shared`` means it is set
+to ``False``.
+Another common example is the optional activation of an extra dependency
+which requires to use the variant in the ``when`` argument of
+:py:func:`spack.directives.depends_on`:
+
+  ..  code-block:: python
+
+    class Hdf5(AutotoolsPackage):
+        ...
+        variant('szip', default=False, description='Enable szip support')
+        depends_on('szip', when='+szip')
+
+as shown in the snippet above where ``szip`` is modeled to be an optional
+dependency of ``hdf5``.
+
+^^^^^^^^^^^^^^^^^^^^^
+Multi-valued variants
+^^^^^^^^^^^^^^^^^^^^^
+
+If need be, Spack can go beyond Boolean variants and permit an arbitrary
+number of allowed values. This might be useful when modeling
+options that are tightly related to each other.
+The values in this case are passed to the :py:func:`spack.directives.variant`
+directive as a tuple of allowed values:
+
+  .. code-block:: python
+
+    class Blis(Package):
+        ...
+        variant(
+            'threads', default='none', description='Multithreading support',
+            values=('pthreads', 'openmp', 'none'), multi=False
+        )
+
+In the example above the argument ``multi`` is set to ``False`` to indicate
+that only one among all the variant values can be active at any time. In cases
+where multiple values can be selected at the same time it should be set to ``True``:
+
+  .. code-block:: python
+
+    class Gcc(AutotoolsPackage):
+        ...
+        variant(
+            'languages', default='c,c++,fortran',
+            values=('ada', 'brig', 'c', 'c++', 'fortran',
+                    'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
+            multi=True,
+            description='Compilers and runtime libraries to build'
+        )
+
+Within a package recipe a multi-valued variant is tested using a ``key=value`` syntax:
+
+  .. code-block:: python
+
+    if 'languages=jit' in spec:
+        options.append('--enable-host-shared')
+
+"""""""""""""""""""""""""""""""""""""""""""
+Complex validation logic for variant values
+"""""""""""""""""""""""""""""""""""""""""""
+To cover complex use cases, the :py:func:`spack.directives.variant` directive
+could accept as the ``values`` argument a full-fledged object which has
+``default`` and other arguments of the directive embedded as attributes.
+
+An example, already implemented in Spack's core, is :py:class:`spack.variant.DisjointSetsOfValues`.
+This class is used to implement a few convenience functions, like
+:py:func:`spack.variant.any_combination_of`:
+
+  ..  code-block:: python
+
+    class Adios(AutotoolsPackage):
+        ...
+        variant(
+            'staging',
+            values=any_combination_of('flexpath', 'dataspaces').with_default('flexpath'),
+            description='Enable dataspaces and/or flexpath staging transports'
+        )
+
+and employs a fluent-style API to improve the readability of these complex cases
+by allowing a more declarative syntax.
+
+
+
 ------------------------------------
 Resources (expanding extra tarballs)
 ------------------------------------
