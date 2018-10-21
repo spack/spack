@@ -65,6 +65,10 @@ def setup_parser(subparser):
         '-c', '--cdash-url', default='https://cdash.spack.io',
         help="Base url of CDash instance jobs should communicate with")
 
+    subparser.add_argument(
+        '-p', '--print-summary', action='store_true', default=False,
+        help="Print summary of staged jobs to standard output")
+
 
 def stage_spec_jobs(spec_set):
     deptype = all_deptypes
@@ -124,6 +128,18 @@ def stage_spec_jobs(spec_set):
     return spec_labels, dependencies, stages
 
 
+def print_staging_summary(spec_labels, dependencies, stages):
+    print('Staging summary:')
+    stageIndex = 0
+    for stage in stages:
+        print('  stage {0} ({1} jobs):'.format(stageIndex, len(stage)))
+
+        for job in sorted(stage):
+            print('    {0}'.format(job))
+
+        stageIndex += 1
+
+
 def release_jobs(parser, args):
     share_path = os.path.join('.', 'share', 'spack', 'docker')
     os_container_mapping_path = os.path.join(
@@ -150,6 +166,9 @@ def release_jobs(parser, args):
     cdash_url = args.cdash_url
 
     spec_labels, dependencies, stages = stage_spec_jobs(release_spec_set)
+
+    if args.print_summary:
+        print_staging_summary(spec_labels, dependencies, stages)
 
     output_object = {}
     job_count = 0
