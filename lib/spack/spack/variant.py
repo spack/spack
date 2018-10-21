@@ -675,6 +675,11 @@ def _a_single_value_or_a_combination(single_value, *values):
         with_non_feature_values(single_value)
 
 
+# TODO: The factories below are used by package writers to set values of
+# TODO: multi-valued variants. It could be worthwhile to gather them in
+# TODO: a common namespace (like 'multi') in the future.
+
+
 def any_combination_of(*values):
     """Multi-valued variant that allows any combination of a set of
     values or 'none'.
