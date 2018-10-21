@@ -124,21 +124,3 @@ class Plasma(CMakePackage):
 
         # make sure CC variable comes from build environment
         make_inc.filter("CC *[?]*= * .*cc", "")
-
-    @property
-    def build_targets(self):
-        targets = list()
-
-        if self.spec.satisfies('@18.9.0:'):
-            return targets
-
-        # use $CC set by Spack
-        targets.append("CC = {0}".format(self.compiler.cc))
-
-        if self.spec.satisfies("^intel-mkl"):
-            targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
-
-        # pass BLAS library flags
-        targets.append("LIBS = {0}".format(self.spec["blas"].libs.ld_flags))
-
-        return targets
