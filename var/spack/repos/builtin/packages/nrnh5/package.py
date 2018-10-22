@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Nrnh5(CMakePackage):
@@ -37,7 +36,7 @@ class Nrnh5(CMakePackage):
 
     variant('tests', default=False, description="Build unit tests")
 
-    depends_on('cmake@3.5:', type='build')
+    depends_on('cmake@3.2:', type='build')
     depends_on('boost', when='+tests')
     depends_on('hdf5')
     depends_on('mpi')
