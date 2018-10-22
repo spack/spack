@@ -25,9 +25,10 @@ class NetcdfFortran(AutotoolsPackage):
     patch('nag.patch', when='@:4.4.4%nag')
 
     def configure_args(self):
+        cflags = fflags = ''
         if '+pic' in self.spec:
-            cflags = "CFLAGS=" + self.compiler.pic_flag
-            fflags = "FFLAGS=" + self.compiler.pic_flag
+            cflags = 'CFLAGS=' + self.compiler.pic_flag
+            fflags = 'FFLAGS=' + self.compiler.pic_flag
 
         return [cflags, fflags,
                 'CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
