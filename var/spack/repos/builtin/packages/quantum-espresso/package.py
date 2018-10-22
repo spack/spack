@@ -134,13 +134,39 @@ class QuantumEspresso(Package):
         if '+openmp' in spec:
             options.append('--enable-openmp')
 
+        # QE external BLAS, FFT, SCALAPACK detection is a bit tricky.
+        # More predictable to pass in the correct link line to QE.
+        # If external detection of BLAS, LAPACK and FFT fails, QE
+        # is supposed to revert to internal versions of these libraries
+        # instead -- but more likely it will pickup versions of these
+        # libraries found in its the system path, e.g. Red Hat or
+        # Ubuntu's FFTW3 package.
 
-        # For Intel package, lapack.libs = blas.libs, hence it will appear
-        # twice in in link line but this is harmless
+        # FFT
+        # FFT detection gets derailed if you pass into the CPPFLAGS, instead
+        # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
+        # QE supports an internal FFTW2, but only an external FFTW3 interface.
+
+        if '^intel-mkl' in spec:
+            # A seperate FFT library is not needed when linking against MKL
+            options.append(
+                'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
+                                                    'include/fftw')))
+
+        if '^fftw@3:' in spec:
+            fftw_prefix = spec['fftw'].prefix
+            options.append('FFTW_INCLUDE={0}'.format(fftw_prefix.include))
+            fftw_ld_flags = '-L{0}'.format(fftw_prefix) + ' -lfftw3'
+            options.append('FFT_LIBS={0}'.format(fftw_ld_flags))
+
+        # External BLAS and LAPACK requires the correct link line into
+        # BLAS_LIBS, do no use LAPACK_LIBS as the autoconf scripts indicate
+        # that this variable is largely ignored/obsolete.
+
+        # For many Spack packages, lapack.libs = blas.libs, hence it will
+        # appear twice in in link line but this is harmless
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
 
-        # Based on the current QE configure scripts, LAPACK_LIBS
-        # is not used for external LAPACK
         options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
