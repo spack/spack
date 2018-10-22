@@ -14,6 +14,9 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.3.0', '0dde8b9763eecdafbd69d076e687337e')
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
+
     depends_on('netcdf')
 
     depends_on('automake', type='build')
