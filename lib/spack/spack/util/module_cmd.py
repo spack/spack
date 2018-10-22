@@ -158,7 +158,7 @@ def get_path_from_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
     p = get_path_from_module_contents(text, mod)
-    if not os.path.exists(p):
+    if p and not os.path.exists(p):
         tty.warn("Extracted path from module does not exist:"
                  "\n\tExtracted path: " + p)
     return p
