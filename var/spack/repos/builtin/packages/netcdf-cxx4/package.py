@@ -23,7 +23,12 @@ class NetcdfCxx4(AutotoolsPackage):
     force_autoreconf = True
 
     def configure_args(self):
-        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+        if '+pic' in self.spec:
+            cflags = "CFLAGS=" + self.compiler.pic_flag
+            fflags = "FFLAGS=" + self.compiler.pic_flag
+
+        return [cflags, fflags,
+                'CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
 
     @property
     def libs(self):

@@ -15,6 +15,9 @@ class NetcdfFortran(AutotoolsPackage):
     version('4.4.4', 'e855c789cd72e1b8bc1354366bf6ac72')
     version('4.4.3', 'bfd4ae23a34635b273d3eb0d91cbde9e')
 
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
+
     depends_on('netcdf')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
@@ -22,7 +25,12 @@ class NetcdfFortran(AutotoolsPackage):
     patch('nag.patch', when='@:4.4.4%nag')
 
     def configure_args(self):
-        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+        if '+pic' in self.spec:
+            cflags = "CFLAGS=" + self.compiler.pic_flag
+            fflags = "FFLAGS=" + self.compiler.pic_flag
+
+        return [cflags, fflags,
+                'CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
 
     @property
     def libs(self):
