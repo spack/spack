@@ -3245,7 +3245,7 @@ class Spec(object):
             if install_status:
                 status = node._install_status()
                 if status is None:
-                    out += "     "  # Package isn't installed
+                    out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
                     out += colorize("@g{[+]}  ", color=color)  # installed
                 else:

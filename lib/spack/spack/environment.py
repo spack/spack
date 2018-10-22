@@ -7,13 +7,13 @@ import os
 import re
 import sys
 import shutil
-from six.moves import zip_longest
 
 import jsonschema
 import ruamel.yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as color
 
 import spack.error
 import spack.repo
@@ -589,14 +589,48 @@ class Environment(object):
 
     def status(self, stream, **kwargs):
         """List the specs in an environment."""
-        for user_spec, concretized_hash in zip_longest(
-                self.user_specs, self.concretized_order):
+        if self.path.startswith(env_path):
+            name = os.path.basename(self.path)
+        else:
+            name = self.path
 
-            stream.write('========= {0}\n'.format(user_spec))
+        tty.msg('In environment %s' % name)
 
-            if concretized_hash:
-                concretized_spec = self.specs_by_hash[concretized_hash]
-                stream.write(concretized_spec.tree(**kwargs))
+        concretized = [(spec, self.specs_by_hash[h])
+                       for spec, h in zip(self.concretized_user_specs,
+                                          self.concretized_order)]
+
+        added = [s for s in self.user_specs
+                 if s not in self.concretized_user_specs]
+        removed = [(s, c) for s, c in concretized if s not in self.user_specs]
+        current = [(s, c) for s, c in concretized if s in self.user_specs]
+
+        def write_kind(s):
+            color.cwrite('@c{%s}\n' % str(s), stream)
+
+        def write_user_spec(s, c):
+            color.cwrite('@%s{----} %s\n' % (c, str(s)), stream)
+
+        if added:
+            write_kind('added:')
+        for s in added:
+            write_user_spec(s, 'g')
+
+        if current:
+            if added:
+                stream.write('\n')
+            write_kind('concrete:')
+        for s, c in current:
+            write_user_spec(s, 'K')
+            stream.write(c.tree(**kwargs))
+
+        if removed:
+            if added or current:
+                stream.write('\n')
+            write_kind('removed:')
+        for s, c in removed:
+            write_user_spec(s, 'r')
+            stream.write(c.tree(**kwargs))
 
     def upgrade_dependency(self, dep_name, dry_run=False):
         # TODO: if you have
