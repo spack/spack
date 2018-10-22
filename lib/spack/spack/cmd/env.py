@@ -434,7 +434,7 @@ def env_status_setup_parser(subparser):
         'env', nargs='?', help='name of environment to show status for')
     arguments.add_common_arguments(
         subparser,
-        ['recurse_dependencies', 'long', 'very_long', 'install_status'])
+        ['recurse_dependencies', 'long', 'very_long'])
 
 
 def env_status(args):
@@ -443,14 +443,12 @@ def env_status(args):
         tty.msg('No active environment')
         return
 
-    tty.msg('In environment %s' % env.path)
-
     # TODO: option to show packages w/ multiple instances?
     env.status(
         sys.stdout, recurse_dependencies=args.recurse_dependencies,
         hashes=args.long or args.very_long,
         hashlen=None if args.very_long else 7,
-        install_status=args.install_status)
+        install_status=True)
 
 
 #
