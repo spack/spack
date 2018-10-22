@@ -163,6 +163,7 @@ def get_path_from_module(mod):
                  "\n\tExtracted path: " + p)
     return p
 
+
 def get_path_from_module_contents(text, module_name):
     tty.debug("Module name: " + module_name)
     pkg_var_prefix = module_name.replace('-', '_').upper()
