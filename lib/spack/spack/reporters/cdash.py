@@ -208,13 +208,28 @@ class CDash(Reporter):
         # Compute md5 checksum for the contents of this file.
         md5sum = checksum(hashlib.md5, filename, block_size=8192)
 
+        buildId = None
+        buildId_regexp = re.compile("<buildId>([0-9]+)</buildId>")
         opener = build_opener(HTTPHandler)
         with open(filename, 'rb') as f:
-            url = "{0}&MD5={1}".format(self.cdash_upload_url, md5sum)
+            url = "{0}&build={1}&site={2}&stamp={3}&MD5={4}".format(
+                self.cdash_upload_url, self.buildname, self.site,
+                self.buildstamp, md5sum)
             request = Request(url, data=f)
             request.add_header('Content-Type', 'text/xml')
             request.add_header('Content-Length', os.path.getsize(filename))
             # By default, urllib2 only support GET and POST.
             # CDash needs expects this file to be uploaded via PUT.
             request.get_method = lambda: 'PUT'
-            url = opener.open(request)
+            response = opener.open(request)
+            if not buildId:
+                match = buildId_regexp.search(response.read())
+                if match:
+                    buildId = match.group(1)
+        if buildId:
+            # Construct and display a helpful link if CDash responded with
+            # a buildId.
+            build_url = self.cdash_upload_url
+            build_url = build_url[0:build_url.find("submit.php")]
+            build_url += "buildSummary.php?buildid={0}".format(buildId)
+            print("View your build results here:\n  {0}\n".format(build_url))
