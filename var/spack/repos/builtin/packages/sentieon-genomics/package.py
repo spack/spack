@@ -8,7 +8,7 @@ from spack import *
 class SentieonGenomics(Package):
     """Sentieon provides complete solutions for secondary DNA analysis.
     Our software improves upon BWA, GATK, Mutect, and Mutect2 based pipelines.
-    The Sentieon tools are deployable on any CPU-based computing system. 
+    The Sentieon tools are deployable on any CPU-based computing system.
     Please set the path to the sentieon server with:
     export SENTIEON_LICENSE=[FQDN]:[PORT]"""
 
