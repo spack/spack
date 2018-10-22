@@ -194,7 +194,6 @@ class QuantumEspresso(Package):
         if '+hdf5' in spec:
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
 
-
         options.extend([
             'F77={0}'.format(env['SPACK_F77']),
             'F90={0}'.format(env['SPACK_FC']),
