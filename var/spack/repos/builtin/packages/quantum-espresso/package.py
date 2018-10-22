@@ -56,6 +56,7 @@ class QuantumEspresso(Package):
     # still experimental, therefore we default to False for the variant
     variant('hdf5', default=False, description='Builds with HDF5 support')
 
+    # Dependencies
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
@@ -71,6 +72,7 @@ class QuantumEspresso(Package):
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
 
+    # Conflicts
     # MKL with 64-bit integers not supported.
     conflicts('intel-mkl+ilp64')
 
