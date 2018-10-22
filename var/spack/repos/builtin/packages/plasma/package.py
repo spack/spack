@@ -16,10 +16,11 @@ class Plasma(CMakePackage):
     problems, and singular value problems."""
 
     homepage = "https://bitbucket.org/icl/plasma/"
-    url = "https://bitbucket.org/icl/plasma/downloads/plasma18.9.0.tar.gz"
+    url = "https://bitbucket.org/icl/plasma/downloads/plasma-18.10.0.tar.gz"
     hg = "https://luszczek@bitbucket.org/icl/plasma"
 
     version("develop", hg=hg)
+    version("18.10.0", sha256="93dceae93f57a2fbd79b85d2fbf7907d1d32e158b8d1d93892d9ff3df9963210")
     version("18.9.0", sha256="753eae28ea48986a2cc7b8204d6eef646584541e59d42c3c94fa9879116b0774")
     version("17.1",
             sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
