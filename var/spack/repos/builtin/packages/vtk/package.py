@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 from spack import *
@@ -48,6 +29,8 @@ class Vtk(CMakePackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
     variant('qt', default=False, description='Build with support for Qt')
+    variant('xdmf', default=False, description='Build XDMF file support')
+    variant('ffmpeg', default=False, description='Build with FFMPEG support')
     variant('mpi', default=True, description='Enable MPI support')
 
     # Haru causes trouble on Fedora and Ubuntu in v8.1.1
@@ -59,6 +42,13 @@ class Vtk(CMakePackage):
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
+
+    depends_on('python', when='+python')
+    depends_on('py-mpi4py', when='+mpi +python', type='run')
+    extends('python', when='+python')
+    # python3.7 compatibility patch backported from upstream
+    # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
+    patch('python3.7-const-char.patch', when='@:8.1.1 ^python@3.7:')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -79,6 +69,13 @@ class Vtk(CMakePackage):
 
     depends_on('libharu', when='+haru')
 
+    depends_on('boost', when='+xdmf')
+    depends_on('boost+mpi', when='+xdmf +mpi')
+
+    depends_on('mpi', when='+mpi')
+
+    depends_on('ffmpeg', when='+ffmpeg')
+
     depends_on('expat')
     depends_on('freetype')
     depends_on('glew')
@@ -92,8 +89,6 @@ class Vtk(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('zlib')
-
-    extends('python', when='+python')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -118,12 +113,12 @@ class Vtk(CMakePackage):
 
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
-            '-DVTK_USE_SYSTEM_LIBRARIES=ON',
+            '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
 
             # However, in a few cases we can't do without them yet
-            '-DVTK_USE_SYSTEM_GL2PS=OFF',
-            '-DVTK_USE_SYSTEM_LIBPROJ4=OFF',
-            '-DVTK_USE_SYSTEM_OGGTHEORA=OFF',
+            '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
             '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
@@ -134,11 +129,21 @@ class Vtk(CMakePackage):
             '-DVTK_WRAP_TCL=OFF',
         ]
 
+        if '+mpi' in spec:
+            cmake_args.extend([
+                '-DVTK_Group_MPI:BOOL=ON',
+                '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
+            ])
+
+        if '+ffmpeg' in spec:
+            cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
+
         # Enable/Disable wrappers for Python.
         if '+python' in spec:
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
-                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path)
+                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
@@ -175,6 +180,33 @@ class Vtk(CMakePackage):
                 '-DVTK_Group_MPI:BOOL=ON',
                 '-DVTK_USE_SYSTEM_DIY2=OFF'
             ])
+
+        if '+xdmf' in spec:
+            if spec.satisfies('^cmake@3.12:'):
+                # This policy exists only for CMake >= 3.12
+                cmake_args.extend(["-DCMAKE_POLICY_DEFAULT_CMP0074=NEW"])
+
+            cmake_args.extend([
+                # Enable XDMF Support here
+                "-DModule_vtkIOXdmf2:BOOL=ON",
+                "-DModule_vtkIOXdmf3:BOOL=ON",
+                "-DModule_vtkIOParallelXdmf3:BOOL=ON",
+                "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
+                "-DBOOST_LIBRARY_DIR={0}".format(spec['boost'].prefix.lib),
+                "-DBOOST_INCLUDE_DIR={0}".format(spec['boost'].prefix.include),
+                "-DBOOST_NO_SYSTEM_PATHS:BOOL=ON",
+                # This is needed because VTK has multiple FindBoost
+                # and they stick to system boost if there's a system boost
+                # installed with CMake
+                "-DBoost_NO_BOOST_CMAKE:BOOL=ON",
+                "-DHDF5_ROOT={0}".format(spec['hdf5'].prefix),
+                # The xdmf project does not export any CMake file...
+                "-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF",
+                "-DVTK_USE_SYSTEM_XDMF2:BOOL=OFF"
+            ])
+
+            if '+mpi' in spec:
+                cmake_args.extend(["-DModule_vtkIOParallelXdmf3:BOOL=ON"])
 
         if '+osmesa' in spec:
             prefix = spec['mesa'].prefix

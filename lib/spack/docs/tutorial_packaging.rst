@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _packaging-tutorial:
 
 =========================
@@ -55,9 +60,9 @@ we run ``spack create`` on it:
   $ spack create -t generic -f https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
   ==> This looks like a URL for mpileaks
   ==> Found 1 version of mpileaks:
-    
+
     1.0  https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-  
+
   ==> How many would you like to checksum? (default is 1, q to abort) 1
   ==> Downloading...
   ==> Fetching https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
@@ -133,7 +138,7 @@ found in ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/1.package.py``
 and are below.  Make these changes to your ``package.py``:
 
 .. literalinclude:: tutorial/examples/1.package.py
-   :lines: 25-
+   :lines: 6-
    :language: python
 
 We've filled in the comment that describes what this package does and
@@ -184,7 +189,7 @@ The mpileaks packages depends on three other package: ``MPI``,
 ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/2.package.py``):
 
 .. literalinclude:: tutorial/examples/2.package.py
-   :lines: 25-
+   :lines: 6-
    :language: python
 
 Now when we go to build mpileaks, Spack will fetch and build these
@@ -212,15 +217,15 @@ Now when we try to install this package a lot more happens:
   ==> Executing phase: 'install'
   ==> Error: ProcessError: Command exited with status 2:
       'make' '-j36'
-  
+
   1 error found in build log:
        1     ==> Executing phase: 'install'
        2     ==> 'make' '-j36'
     >> 3     make: *** No targets specified and no makefile found.  Stop.
-  
+
   See build log for details:
     SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7/mpileaks-1.0/spack-build.out
-  
+
 Note that this command may take a while to run and produce more output if
 you don't have an MPI already installed or configured in Spack.
 
@@ -239,7 +244,7 @@ call to ``configure()`` to the top of the install routine. The resulting
 package.py is in ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/3.package.py``:
 
 .. literalinclude:: tutorial/examples/3.package.py
-  :lines: 25-
+  :lines: 6-
   :language: python
 
 If we re-run we still get errors:
@@ -254,7 +259,7 @@ If we re-run we still get errors:
   ==> Executing phase: 'install'
   ==> Error: ProcessError: Command exited with status 1:
       './configure'
-  
+
   1 error found in build log:
        [ ... ]
        21    checking whether SPACK_ROOT/lib/spack/env/gcc/gcc and cc understand -c and -o together... yes
@@ -264,10 +269,10 @@ If we re-run we still get errors:
        25    checking for SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc... SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc
        26    Checking whether SPACK_ROOT/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f/bin/mpicc responds to '-showme:compile'... yes
     >> 27    configure: error: unable to locate adept-utils installation
-  
+
   See build log for details:
     SPACK_ROOT/var/spack/stage/mpileaks-1.0-lfgf53rns5mswq25rxckzgvmjc6ywam7/mpileaks-1.0/spack-build.out
-  
+
 Again, the problem may be obvious.  But let's pretend we're not
 all intelligent developers and use this opportunity spend some
 time debugging.  We have a few options that can tell us about
@@ -276,7 +281,7 @@ what's going wrong:
 As per the error message, Spack has given us a ``spack-build.out`` debug log:
 
 .. code-block:: console
-  
+
   ==> Executing phase: 'install'
   ==> './configure'
   checking metadata... no
@@ -290,7 +295,7 @@ As per the error message, Spack has given us a ``spack-build.out`` debug log:
   checking for C compiler default output file name... a.out
   checking whether the C compiler works... yes
   checking whether we are cross compiling... no
-  checking for suffix of executables... 
+  checking for suffix of executables...
   checking for suffix of object files... o
   checking whether we are using the GNU C compiler... yes
   checking whether SPACK_ROOT/lib/spack/env/gcc/gcc accepts -g... yes
@@ -340,7 +345,7 @@ From here we can manually re-run the build:
   checking for C compiler default output file name... a.out
   checking whether the C compiler works... yes
   checking whether we are cross compiling... no
-  checking for suffix of executables... 
+  checking for suffix of executables...
   checking for suffix of object files... o
   checking whether we are using the GNU C compiler... yes
   checking whether SPACK_ROOT/lib/spack/env/gcc/gcc accepts -g... yes
@@ -372,7 +377,7 @@ version can be found in
 ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/4.package.py``:
 
 .. literalinclude:: tutorial/examples/4.package.py
-   :lines: 25-
+   :lines: 6-
    :language: python
 
 This is all we need for working mpileaks!  If we install now we'll see:
@@ -423,7 +428,7 @@ To do this, we'll add a variant to our package, as per the following (see
 ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/5.package.py``):
 
 .. literalinclude:: tutorial/examples/5.package.py
-   :lines: 25-
+   :lines: 6-
    :language: python
 
 We've added the variant ``stackstart``, and given it a default value of
