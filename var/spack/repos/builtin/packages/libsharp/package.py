@@ -26,25 +26,36 @@
 from spack import *
 
 
-class Adlbx(AutotoolsPackage):
-    """ADLB/X: Master-worker library + work stealing and data dependencies"""
+class Libsharp(AutotoolsPackage):
+    """Libsharp is a code library for spherical harmonic transforms (SHTs) and
+    spin-weighted spherical harmonic transforms, which evolved from the libpsht
+    library."""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.0.0.tar.gz'
+    variant('openmp', default=True, description='Build with openmp support')
+    variant('mpi', default=True, description='Build with MPI support')
 
-    version('0.9.1', '07151ddef5fb83d8f4b40700013d9daf')
-    version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
+    homepage = "https://github.com/Libsharp/libsharp"
+    git      = "https://github.com/Libsharp/libsharp.git"
 
-    depends_on('exmcutils@:0.5.3', when='@:0.8.0')
-    depends_on('exmcutils', when='@0.9.1:')
-    depends_on('mpi')
+    version('1.0.0', commit='cc4753ff4b0ef393f0d4ada41a175c6d1dd85d71')
+    version('2018-01-17', commit='593d4eba67d61827191c32fb94bf235cb31205e1')
 
-    def setup_environment(self, spack_env, run_env):
-        spec = self.spec
-        spack_env.set('CC', spec['mpi'].mpicc)
-        spack_env.set('CXX', spec['mpi'].mpicxx)
-        spack_env.set('CXXLD', spec['mpi'].mpicxx)
+    depends_on('autoconf', type='build')
+    depends_on('mpi', when='+mpi')
+
+    def autoreconf(self, spec, prefix):
+        """Generate autotools configuration"""
+        bash = which('bash')
+        bash('autoconf')
 
     def configure_args(self):
-        args = ['--with-c-utils=' + self.spec['exmcutils'].prefix]
+        args = []
+        if '+openmp' not in self.spec:
+            args.append("--disable-openmp")
+        if '+mpi' not in self.spec:
+            args.append("--disable-mpi")
         return args
+
+    def install(self, spec, prefix):
+        install_tree('auto/include', join_path(prefix, 'include'))
+        install_tree('auto/lib', join_path(prefix, 'lib'))

@@ -116,6 +116,11 @@ class MesonPackage(PackageBase):
 
         args = [
             '--prefix={0}'.format(pkg.prefix),
+            # If we do not specify libdir explicitly, Meson chooses something
+            # like lib/x86_64-linux-gnu, which causes problems when trying to
+            # find libraries and pkg-config files.
+            # See https://github.com/mesonbuild/meson/issues/2197
+            '--libdir={0}'.format(pkg.prefix.lib),
             '--buildtype={0}'.format(build_type),
             '--strip',
         ]
@@ -141,6 +146,7 @@ class MesonPackage(PackageBase):
         meson, except:
 
         * ``--prefix``
+        * ``--libdir``
         * ``--buildtype``
         * ``--strip``
 

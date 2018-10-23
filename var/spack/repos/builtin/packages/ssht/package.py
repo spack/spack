@@ -26,25 +26,19 @@
 from spack import *
 
 
-class Adlbx(AutotoolsPackage):
-    """ADLB/X: Master-worker library + work stealing and data dependencies"""
+class Ssht(Package):
+    """The SSHT code provides functionality to perform fast and exact
+    spin spherical harmonic transforms."""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.0.0.tar.gz'
+    homepage = "https://astro-informatics.github.io/ssht/"
+    git      = "https://github.com/astro-informatics/ssht.git"
 
-    version('0.9.1', '07151ddef5fb83d8f4b40700013d9daf')
-    version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
+    version('1.2b1', commit='7378ce8853897cbd1b08adebf7ec088c1e40f860')
 
-    depends_on('exmcutils@:0.5.3', when='@:0.8.0')
-    depends_on('exmcutils', when='@0.9.1:')
-    depends_on('mpi')
+    depends_on('fftw')
 
-    def setup_environment(self, spack_env, run_env):
-        spec = self.spec
-        spack_env.set('CC', spec['mpi'].mpicc)
-        spack_env.set('CXX', spec['mpi'].mpicxx)
-        spack_env.set('CXXLD', spec['mpi'].mpicxx)
-
-    def configure_args(self):
-        args = ['--with-c-utils=' + self.spec['exmcutils'].prefix]
-        return args
+    def install(self, spec, prefix):
+        make('default')
+        install_tree('include/c', join_path(prefix, 'include'))
+        install_tree('doc/c', join_path(prefix, 'doc'))
+        install_tree('lib/c', join_path(prefix, 'lib'))

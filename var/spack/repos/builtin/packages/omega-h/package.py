@@ -52,7 +52,7 @@ class OmegaH(CMakePackage):
     variant('examples', default=False, description='Compile examples')
     variant('optimize', default=True, description='Compile C++ with optimization')
     variant('symbols', default=True, description='Compile C++ with debug symbols')
-    variant('warnings', default=True, description='Compile C++ with warnings')
+    variant('warnings', default=False, description='Compile C++ with warnings')
 
     depends_on('gmodel', when='+gmodel')
     depends_on('gmsh', when='+examples', type='build')
@@ -61,7 +61,7 @@ class OmegaH(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     def _bob_options(self):
-        cmake_var_prefix = self.name.capitalize() + '_CXX_'
+        cmake_var_prefix = 'Omega_h_CXX_'
         for variant in ['optimize', 'symbols', 'warnings']:
             cmake_var = cmake_var_prefix + variant.upper()
             if '+' + variant in self.spec:
