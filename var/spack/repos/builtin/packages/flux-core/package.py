@@ -23,7 +23,7 @@ class FluxCore(AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = 'spack-build'
 
-    variant('doc', default=False, description='Build flux manpages')
+    variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     depends_on("zeromq@4.0.4:")
