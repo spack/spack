@@ -14,6 +14,8 @@ class Stat(AutotoolsPackage):
     git      = "https://github.com/llnl/stat.git"
 
     version('develop', branch='develop')
+    version('4.0.1', '3e21b48e7932d9a4a9efb300f0b97fa2',
+            url='https://github.com/LLNL/STAT/files/2489327/stat-4.0.1.tar.gz')
     version('4.0.0', 'b357160662ced251bc55cb1b884c3407',
             url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz')
     version('3.0.1', 'dac6f23c3639a0b21f923dc6219ba385',
@@ -40,9 +42,10 @@ class Stat(AutotoolsPackage):
     depends_on('graphviz', type=('build', 'link', 'run'))
     depends_on('launchmon')
     depends_on('mrnet')
-    depends_on('python@:2.8')
-    depends_on('py-pygtk', type=('build', 'run'))
-    depends_on('py-enum34', type=('run'))
+    depends_on('python@:2.8', when='@:4.0.0')
+    depends_on('py-pygtk', type=('build', 'run'), when='@:4.0.0')
+    depends_on('py-enum34', type=('run'), when='@:4.0.0')
+    depends_on('py-xdot', when='@4.0.1:')
     depends_on('swig')
     depends_on('mpi', when='+examples')
 
