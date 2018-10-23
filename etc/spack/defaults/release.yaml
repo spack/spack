@@ -14,8 +14,8 @@ spec-set:
                 versions: [1.14.12]
             dakota:
                 versions: [6.3]
-            eigen:
-                versions: [3.3.4]
+            # eigen:
+            #     versions: [3.3.4]
             esmf:
                 versions: [7.0.1]
             gdal:
@@ -62,7 +62,7 @@ spec-set:
                 versions: [1.2.11]
         - compilers:
             gcc:
-                versions: [5.4.0]
+                versions: [5.5.0]
             # clang:
             #     versions: ['9.1.0-apple']
     cdash: ["https://spack.io/cdash/submit.php?project=spack"]
