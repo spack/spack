@@ -387,6 +387,9 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
            installed for this package."""
         _check_concrete(spec)
 
+        if spec.external:
+            return {}
+
         if spec not in self._extension_maps:
             path = self.extension_file_path(spec)
             if not os.path.exists(path):
