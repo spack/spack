@@ -4,6 +4,18 @@ set -x
 
 export FORCE_UNSAFE_CONFIGURE=1
 
+build_spec_name() {
+    read -ra PARTSARRAY <<< "$1"
+    pkgName="${PARTSARRAY[0]}"
+    pkgVersion="${PARTSARRAY[1]}"
+    compiler="${PARTSARRAY[2]}"
+    osarch="${PARTSARRAY[3]}"
+
+    echo "${pkgName}@${pkgVersion}%${compiler} arch=${osarch}"
+}
+
+SPEC_NAME=$( build_spec_name "${CI_JOB_NAME}" )
+
 echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 
 CURRENT_WORKING_DIR=`pwd`
@@ -12,6 +24,20 @@ BUILD_CACHE_DIR="${LOCAL_MIRROR}/build_cache"
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
 export PATH="${SPACK_BIN_DIR}:${PATH}"
 export GNUPGHOME="${CURRENT_WORKING_DIR}/opt/spack/gpg"
+
+# If we have been given a list of paths where we might find compilers
+if [ ! -z "${SPACK_FIND_COMPILER_PATHS}" ]; then
+    IFS=';' read -ra COMPILER_PATHS <<< "${SPACK_FIND_COMPILER_PATHS}"
+    for path in "${COMPILER_PATHS[@]}"; do
+        echo "Finding compiler in ${path}"
+        if [ -d "${path}" ]; then
+            spack compiler find "${path}"
+        fi
+    done
+
+    # Finally, list the compilers spack knows about
+    spack compilers
+fi
 
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
@@ -38,7 +64,8 @@ fi
 IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
 for i in "${DEPS[@]}"; do
     echo "Getting cdash id for dependency --> ${i} <--"
-    DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${i}"`
+    DEP_SPEC_NAME=$( build_spec_name "${i}" )
+    DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${DEP_SPEC_NAME}"`
 
     if [[ $? -eq 0 ]]; then
         DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
@@ -65,7 +92,6 @@ echo ${SPACK_SIGNING_KEY} | base64 --decode | gpg2 --import
 
 spack gpg list --trusted
 spack gpg list --signing
-
 
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt

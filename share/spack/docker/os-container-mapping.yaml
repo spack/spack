@@ -1,5 +1,9 @@
 containers:
-  linux-ubuntu16.04-x86_64:
-    image: scottwittenburg/binary_check_runner
+  linux-ubuntu18.04-x86_64:
+    image: scottwittenburg/spack_builder_ubuntu_18.04
     # image: ubuntu:16.04
     # setup_script: ./share/spack/docker/build/common/install-tools-ubuntu-16.04-%s.sh
+  linux-centos7-x86_64:
+    image: scottwittenburg/spack_builder_centos_7
+    find_compilers:
+      - /opt/gcc/gcc-5.5.0

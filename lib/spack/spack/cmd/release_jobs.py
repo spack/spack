@@ -176,9 +176,11 @@ def release_jobs(parser, args):
     stage_names = ['stage-{0}'.format(i) for i in range(len(stages))]
     stage = 0
 
-    def get_job_name(spec, osname):
-        return '{0}'.format(spec.short_spec)
-        # return '{0} / {1}'.format(spec.short_spec, osname)
+    def get_job_name(spec, osarch):
+        return '{0} {1} {2} {3}'.format(spec.name, spec.version,
+                                        spec.compiler, osarch)
+        # return '{0}'.format(spec.short_spec)
+        # return '{0} / {1}'.format(spec.short_spec, osarch)
 
     for stage_jobs in stages:
         stage_name = stage_names[stage]
@@ -186,15 +188,14 @@ def release_jobs(parser, args):
         for spec_label in stage_jobs:
             release_spec = spec_labels[spec_label]
 
-            pkg_short_spec = release_spec.short_spec
             pkg_compiler = release_spec.compiler
-            pkg_spec_name = release_spec.format().strip()
             pkg_hash = release_spec.dag_hash()
 
             for osname in containers:
                 job_name = get_job_name(release_spec, osname)
                 container_info = containers[osname]
                 build_image = container_info['image']
+
 
                 job_scripts = ['./rebuild-package.sh']
 
@@ -208,19 +209,14 @@ def release_jobs(parser, args):
                     job_dependencies = (
                         [get_job_name(spec_labels[dep_label], osname)
                             for dep_label in dependencies[spec_label]])
-                    job_deps_env = (
-                        [spec_labels[dep_label].format().strip()
-                            for dep_label in dependencies[spec_label]])
 
                 job_object = {
                     'stage': stage_name,
                     'variables': {
-                        'SHORT_SPEC': pkg_short_spec,
                         'MIRROR_URL': mirror_url,
                         'CDASH_BASE_URL': cdash_url,
                         'HASH': pkg_hash,
-                        'SPEC_NAME': pkg_spec_name,
-                        'DEPENDENCIES': ';'.join(job_deps_env),
+                        'DEPENDENCIES': ';'.join(job_dependencies),
                     },
                     'script': job_scripts,
                     'image': build_image,
@@ -231,6 +227,11 @@ def release_jobs(parser, args):
                     },
                     'dependencies': job_dependencies,
                 }
+
+                if 'find_compilers' in container_info:
+                    job_vars = job_object['variables']
+                    job_vars['SPACK_FIND_COMPILER_PATHS'] = ';'.join(
+                        container_info['find_compilers'])
 
                 if args.shared_runner_tag:
                     job_object['tags'] = [args.shared_runner_tag]

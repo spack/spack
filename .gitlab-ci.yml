@@ -1,69 +1,115 @@
-libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht:
+libpng 1.6.34 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
-  dependencies: [zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64
-      /5nus6kn]
-  image: scottwittenburg/binary_check_runner
+  dependencies: [zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64]
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-1
   tags: [spack-k8s]
-  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: zlib@1.2.11%gcc@5.4.0+optimize+pic+shared
-      arch=linux-ubuntu16.04-x86_64, HASH: a5oblht5r7sql6oimuiq3cn2w4kaikqp, MIRROR_URL: 'https://mirror.spack.io',
-    SHORT_SPEC: libpng@1.6.34%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /a5oblht, SPEC_NAME: libpng@1.6.34%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64}
-ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64 /3o765ou:
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: zlib 1.2.11
+      gcc@5.5.0 linux-centos7-x86_64, HASH: 3l2fo77zfjz3gwbd5olpxcwrgynxfhyk, MIRROR_URL: 'https://mirror.spack.io',
+    SPACK_FIND_COMPILER_PATHS: /opt/gcc/gcc-5.5.0}
+libpng 1.6.34 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
-  dependencies: [pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a]
-  image: scottwittenburg/binary_check_runner
+  dependencies: [zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
+  image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
   stage: stage-1
   tags: [spack-k8s]
-  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: pkgconf@1.4.2%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64, HASH: 3o765ourmesfrji6yeclb4wb5w54aqbh, MIRROR_URL: 'https://mirror.spack.io',
-    SHORT_SPEC: ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64
-      /3o765ou, SPEC_NAME: ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64}
-pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a:
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: zlib 1.2.11
+      gcc@5.5.0 linux-ubuntu18.04-x86_64, HASH: 3l2fo77zfjz3gwbd5olpxcwrgynxfhyk,
+    MIRROR_URL: 'https://mirror.spack.io'}
+ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64:
+  artifacts:
+    paths: [local_mirror/build_cache]
+  dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64]
+  image: scottwittenburg/spack_builder_centos_7
+  script: [./rebuild-package.sh]
+  stage: stage-1
+  tags: [spack-k8s]
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: pkgconf 1.4.2
+      gcc@5.5.0 linux-centos7-x86_64, HASH: urtbfu4skrswjibs7g5r2cfscvh6ntvk, MIRROR_URL: 'https://mirror.spack.io',
+    SPACK_FIND_COMPILER_PATHS: /opt/gcc/gcc-5.5.0}
+ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
+  artifacts:
+    paths: [local_mirror/build_cache]
+  dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64]
+  image: scottwittenburg/spack_builder_ubuntu_18.04
+  script: [./rebuild-package.sh]
+  stage: stage-1
+  tags: [spack-k8s]
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: pkgconf 1.4.2
+      gcc@5.5.0 linux-ubuntu18.04-x86_64, HASH: urtbfu4skrswjibs7g5r2cfscvh6ntvk,
+    MIRROR_URL: 'https://mirror.spack.io'}
+pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: []
-  image: scottwittenburg/binary_check_runner
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-0
   tags: [spack-k8s]
-  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: '', HASH: fovrh7alpft646n6mhis5mml6k6e5f4v,
-    MIRROR_URL: 'https://mirror.spack.io', SHORT_SPEC: pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
-      /fovrh7a, SPEC_NAME: pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64}
-readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7:
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: '', HASH: ajmd4zrwcwwmkpmkmannbwg3v3lia5m7,
+    MIRROR_URL: 'https://mirror.spack.io', SPACK_FIND_COMPILER_PATHS: /opt/gcc/gcc-5.5.0}
+pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
-  dependencies: [ncurses@6.1%gcc@5.4.0~symlinks~termlib arch=linux-ubuntu16.04-x86_64
-      /3o765ou, pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /fovrh7a]
-  image: scottwittenburg/binary_check_runner
+  dependencies: []
+  image: scottwittenburg/spack_builder_ubuntu_18.04
+  script: [./rebuild-package.sh]
+  stage: stage-0
+  tags: [spack-k8s]
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: '', HASH: ajmd4zrwcwwmkpmkmannbwg3v3lia5m7,
+    MIRROR_URL: 'https://mirror.spack.io'}
+readline 7.0 gcc@5.5.0 linux-centos7-x86_64:
+  artifacts:
+    paths: [local_mirror/build_cache]
+  dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64, ncurses 6.1 gcc@5.5.0
+      linux-centos7-x86_64]
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-2
   tags: [spack-k8s]
-  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: ncurses@6.1%gcc@5.4.0~symlinks~termlib
-      arch=linux-ubuntu16.04-x86_64;pkgconf@1.4.2%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64,
-    HASH: nxhwrg7xwc6nbsm2v4ezwe63l6nfidbi, MIRROR_URL: 'https://mirror.spack.io',
-    SHORT_SPEC: readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /nxhwrg7, SPEC_NAME: readline@7.0%gcc@5.4.0
-      arch=linux-ubuntu16.04-x86_64}
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: pkgconf 1.4.2
+      gcc@5.5.0 linux-centos7-x86_64;ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64, HASH: 7ghip7owubroxsvey3fsjbrslcyrufkr,
+    MIRROR_URL: 'https://mirror.spack.io', SPACK_FIND_COMPILER_PATHS: /opt/gcc/gcc-5.5.0}
+readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
+  artifacts:
+    paths: [local_mirror/build_cache]
+  dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, ncurses 6.1 gcc@5.5.0
+      linux-ubuntu18.04-x86_64]
+  image: scottwittenburg/spack_builder_ubuntu_18.04
+  script: [./rebuild-package.sh]
+  stage: stage-2
+  tags: [spack-k8s]
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: pkgconf 1.4.2
+      gcc@5.5.0 linux-ubuntu18.04-x86_64;ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64,
+    HASH: 7ghip7owubroxsvey3fsjbrslcyrufkr, MIRROR_URL: 'https://mirror.spack.io'}
 rebuild-index:
-  image: scottwittenburg/binary_check_runner
+  image: scottwittenburg/spack_builder_centos_7
   script: ./rebuild-index.sh
   stage: stage-rebuild-index
   tags: [spack-k8s]
   variables: {MIRROR_URL: 'https://mirror.spack.io'}
 stages: [stage-0, stage-1, stage-2, stage-rebuild-index]
-zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64 /5nus6kn:
+zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: []
-  image: scottwittenburg/binary_check_runner
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-0
   tags: [spack-k8s]
-  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: '', HASH: 5nus6knzumx4ik2yl44jxtgtsl7d54xb,
-    MIRROR_URL: 'https://mirror.spack.io', SHORT_SPEC: zlib@1.2.11%gcc@5.4.0+optimize+pic+shared
-      arch=linux-ubuntu16.04-x86_64 /5nus6kn, SPEC_NAME: zlib@1.2.11%gcc@5.4.0+optimize+pic+shared
-      arch=linux-ubuntu16.04-x86_64}
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: '', HASH: omy635k24jq6hpqhkfvnqykyee6qami2,
+    MIRROR_URL: 'https://mirror.spack.io', SPACK_FIND_COMPILER_PATHS: /opt/gcc/gcc-5.5.0}
+zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
+  artifacts:
+    paths: [local_mirror/build_cache]
+  dependencies: []
+  image: scottwittenburg/spack_builder_ubuntu_18.04
+  script: [./rebuild-package.sh]
+  stage: stage-0
+  tags: [spack-k8s]
+  variables: {CDASH_BASE_URL: 'https://cdash.spack.io', DEPENDENCIES: '', HASH: omy635k24jq6hpqhkfvnqykyee6qami2,
+    MIRROR_URL: 'https://mirror.spack.io'}

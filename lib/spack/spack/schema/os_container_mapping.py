@@ -47,6 +47,7 @@ schema = {
                     'properties': {
                         'image': {'type': 'string'},
                         'setup_script': {'type': 'string'},
+                        'find_compilers': {'type': 'array'},
                     },
                 },
             },
