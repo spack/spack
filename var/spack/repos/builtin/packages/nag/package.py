@@ -11,6 +11,7 @@ class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
 
+    version('6.2', '8b119cc3296969bbd68b781f625de272')
     version('6.1', '9b3cc0f8703c79f6231ae12359535119')
     version('6.0', '3fa1e7f7b51ef8a23e6c687cdcad9f96')
 
