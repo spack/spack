@@ -15,7 +15,6 @@ build_spec_name() {
 }
 
 SPEC_NAME=$( build_spec_name "${CI_JOB_NAME}" )
-
 echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 
 CURRENT_WORKING_DIR=`pwd`
@@ -42,43 +41,15 @@ fi
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
 
-# Get buildcache name so we can write a CDash build id file in the right place
+# Get buildcache name so we can write a CDash build id file in the right place.
+# If we're unable to get the buildcache name, we may have encountered a problem
+# concretizing the spec, or some other issue that will eventually cause the job
+# to fail.
 JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache get-name --spec "${SPEC_NAME}"`
-
-if [[ $? -eq 0 ]]; then
-    JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
-    JOB_ADDBUILD_URL="${CDASH_BASE_URL}/api/v1/addBuild.php"
-
-    # TODO: Build/send POST request to "addBuild" for this job.  Get back the job id and
-    # write it to ${JOB_CDASH_ID_FILE}.
-
-    # Required params:
-    #   project = based on release
-    #   site = ?
-    #   name = derived from job name
-    #   stamp = e.g. "20180911-0136-Experimental"
-
+if [[ $? -ne 0 ]]; then
+    echo "ERROR, unable to get buildcache entry name for job ${CI_JOB_NAME} (spec: ${SPEC_NAME})"
+    exit 1
 fi
-
-# Now get CDash ids for dependencies
-IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
-for i in "${DEPS[@]}"; do
-    echo "Getting cdash id for dependency --> ${i} <--"
-    DEP_SPEC_NAME=$( build_spec_name "${i}" )
-    DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${DEP_SPEC_NAME}"`
-
-    if [[ $? -eq 0 ]]; then
-        DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
-        DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
-        # TODO: Read dependency CDash id from file named above
-
-        # TODO: Build/send POST request to "relateBuilds" between job and dependency,
-        # Required params:
-        #   buildid = this build's id
-        #   relatedid = dependency's buildid
-        #   relationship = "depends on"
-    fi
-done
 
 # This should create the directory we referred to as GNUPGHOME earlier
 spack gpg list
@@ -95,7 +66,9 @@ spack gpg list --signing
 
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt
-spack -d buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
+spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
+
+JOB_CDASH_ID="NONE"
 
 if [[ $? -ne 0 ]]; then
     # Configure mirror
@@ -105,15 +78,16 @@ if [[ $? -ne 0 ]]; then
     # satisfy dependencies.
     spack -d install --use-cache "${SPEC_NAME}"
 
+    # By parsing the output of the "spack install" command, we can get the
+    # buildid generated for us by CDash
+
     # Create buildcache entry for this package
-    spack -d buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
+    spack buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
     # is implemented
     spack upload-s3 spec --base-dir "${LOCAL_MIRROR}" --spec "${SPEC_NAME}"
-
-    # TODO: Build/send POST request to update CDash job status
 else
     echo "spec ${SPEC_NAME} is already up to date on remote mirror, downloading it"
 
@@ -122,6 +96,38 @@ else
 
     # Now download it
     spack buildcache download --spec "${SPEC_NAME}" --path "${BUILD_CACHE_DIR}/"
+fi
 
-    # TODO: Also here, update CDash job status
+# Now, whether we had to build the spec or download it pre-built, we should have
+# the cdash build id handy as well.  We use it to link this job to the jobs it
+# depends on in CDash.
+if [ "${JOB_CDASH_ID}" != "NONE" ]; then
+    JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
+
+    if [ ! -f "${}" ]; then
+        echo "ERROR: Did not find expected .cdashid file ${JOB_CDASH_ID_FILE}"
+        exit 1
+    fi
+
+    # JOB_CDASH_BUILD_ID=""
+
+    # Now get CDash ids for dependencies
+    IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
+    for i in "${DEPS[@]}"; do
+        echo "Getting cdash id for dependency --> ${i} <--"
+        DEP_SPEC_NAME=$( build_spec_name "${i}" )
+        DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${DEP_SPEC_NAME}"`
+
+        if [[ $? -eq 0 ]]; then
+            DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
+            DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
+            # TODO: Read dependency CDash id from file named above
+
+            # TODO: Build/send POST request to "relateBuilds" between job and dependency,
+            # Required params:
+            #   buildid = this build's id
+            #   relatedid = dependency's buildid
+            #   relationship = "depends on"
+        fi
+    done
 fi
