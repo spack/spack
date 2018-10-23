@@ -93,6 +93,13 @@ class Lammps(CMakePackage):
 
     root_cmakelists_dir = 'cmake'
 
+    def setup_environment(self, spack_env, run_env):
+        if '+python' in self.spec:
+            run_env.prepend_path('PYTHONPATH', join_path(
+                self.prefix.lib,
+                'python{0}'.format(self.spec['python'].version.up_to(2)),
+                'site-packages'))
+            
     def cmake_args(self):
         spec = self.spec
 
