@@ -1,0 +1,70 @@
+packages:
+    mpich:
+        modules:
+            mpich@7.6.0 arch=cray-cnl6-haswell: cray-mpich/7.6.0
+        version: [7.6.0]
+        buildable: False
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+        buildable: False
+        version: [2.69]
+    flex:
+        paths:
+            flex@2.5.37: /usr
+        buildable: False
+        version: [2.5.37]
+    bison:
+        paths:
+            bison@2.7: /usr
+        buildable: False
+        version: [2.7]
+    automake:
+        paths:
+            automake@1.13.4: /usr
+        buildable: False
+        version: [1.13.4]
+    pkg-config:
+        paths:
+            pkg-config@0.28: /usr
+        buildable: False
+        version: [0.28]
+    libtool:
+        paths:
+            libtool@2.4.2: /usr
+        buildable: False
+        version: [2.4.2]
+    cmake:
+        paths:
+            cmake@3.6.0: /apps/common/UES/jenkins/SLES12/easybuild/software/CMake/3.6.2
+        buildable: False
+        version: [3.6.0]
+    ncurses:
+        paths:
+            ncurses@6.0: /apps/daint/UES/jenkins/6.0.UP02/mc/easybuild/software/ncurses/6.0-CrayGNU-2016.11
+        buildable: False
+        version: [6.0]
+    hdf5:
+        modules:
+            hdf5@1.8.16 arch=cray-cnl6-haswell: cray-hdf5/1.8.16
+        buildable: False
+        version: [1.8.16]
+    zlib:
+        paths:
+            zlib@1.2.8 arch=cray-cnl6-haswell: /apps/daint/UES/jenkins/6.0.UP02/mc/easybuild/software/zlib/1.2.8-CrayGNU-2016.11
+        buildable: False
+        version: [1.2.8]
+    python:
+        paths:
+            python@2.7.12: /apps/daint/UES/jenkins/6.0.UP02/mc/easybuild/software/Python/2.7.12-CrayGNU-2016.11
+            python@3.5.2: /apps/daint/UES/jenkins/6.0.UP02/mc/easybuild/software/Python/3.5.2-CrayGNU-2016.11/
+        version: [2.7.12, 3.5.2]
+        buildable: False
+    neuron:
+        variants: +mpi +cross-compile
+    reportinglib:
+        variants: +static
+    all:
+        compiler: [intel@17.0.4.196]
+        providers:
+            mpi: [mpich@7.6.0]
