@@ -59,11 +59,9 @@ class QuantumEspresso(Package):
     # Dependencies
     depends_on('blas')
     depends_on('lapack')
+    depends_on('fftw3')
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')
-
-    depends_on('fftw+mpi', when='+mpi')
-    depends_on('fftw~mpi', when='~mpi')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
     # Versions of HDF5 prior to 1.8.16 lead to QE runtim errors
@@ -80,7 +78,8 @@ class QuantumEspresso(Package):
     conflicts('intel-mkl@:11.3.2.210')
 
     # External FFTW2 is not supported out of the box.
-    conflicts('fftw@2.1.5')
+    # not possible to express conflict against fftw2 API
+    # conflicts('fftw2')
 
     # We can't ask for scalapack or elpa if we don't want MPI
     conflicts(
