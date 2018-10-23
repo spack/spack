@@ -39,11 +39,13 @@ class FluxSched(AutotoolsPackage):
 
     @when('@master')
     def setup(self):
-        # Check in case we are running `spack diy` from an "unshallow" clone
-        if os.path.exists('.git/shallow'):
+        with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which('git')
             git('fetch', '--unshallow')
+            git("config", "remote.origin.fetch",
+                "+refs/heads/*:refs/remotes/origin/*")
+            git('fetch', 'origin')
 
     def autoreconf(self, spec, prefix):
         self.setup()
