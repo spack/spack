@@ -50,7 +50,7 @@ class QuantumEspresso(Package):
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
     variant('scalapack', default=True, description='Enables scalapack support')
-    variant('elpa', default=True, description='Uses elpa as an eigenvalue solver')
+    variant('elpa', default=False, description='Uses elpa as an eigenvalue solver')
 
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
