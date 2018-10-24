@@ -18,5 +18,5 @@
 # - F821: undefined name `name` (needed for cmake, configure, etc.)
 #
 [flake8]
-ignore = E129,E221,E241,E272,E731,F999,F405,F821
+ignore = E129,E221,E241,E272,E731,F999,F405,F821,W503,W504
 max-line-length = 79
