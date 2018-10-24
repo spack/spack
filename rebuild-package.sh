@@ -1,8 +1,13 @@
 #!/bin/bash
 
-set -x
-
 export FORCE_UNSAFE_CONFIGURE=1
+
+check_error()
+{
+    if [[ $? -ne 0 ]]; then
+        exit 1
+    fi
+}
 
 extract_build_id()
 {
@@ -69,6 +74,13 @@ fi
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
 
+echo -e "\nFinding and printing all stored cdashid files in build_cache:"
+find "${BUILD_CACHE_DIR}" -type f -name "*cdashid" -exec sh -c 'echo "$0" ; cat "$0"' {} \;
+echo -e "That is all of them\n"
+
+# BUILD_CACHE_CONTENTS=$(ls -R "${BUILD_CACHE_DIR}")
+# echo -e "Build Cache Contents:\n${BUILD_CACHE_CONTENTS}"
+
 # Get buildcache name so we can write a CDash build id file in the right place.
 # If we're unable to get the buildcache name, we may have encountered a problem
 # concretizing the spec, or some other issue that will eventually cause the job
@@ -105,6 +117,8 @@ if [[ $? -ne 0 ]]; then
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
     INSTALL_OUTPUT=$(spack -d install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" "${SPEC_NAME}")
+    check_error $?
+    echo -e "spack install output:\n${INSTALL_OUTPUT}"
 
     # By parsing the output of the "spack install" command, we can get the
     # buildid generated for us by CDash
@@ -112,16 +126,20 @@ if [[ $? -ne 0 ]]; then
 
     BUILD_ID_ARG=""
     if [ "${JOB_CDASH_ID}" != "NONE" ]; then
+        echo "Found build id for ${SPEC_NAME} from 'spack install' output: ${JOB_CDASH_ID}"
         BUILD_ID_ARG="--cdash-build-id \"${JOB_CDASH_ID}\""
     fi
 
     # Create buildcache entry for this package
-    spack buildcache create -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG} "${SPEC_NAME}"
+    BUILDCACHE_CREATE_OUTPUT=$(spack -d buildcache create -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG} "${SPEC_NAME}")
+    check_error $?
+    echo -e "spack buildcache create output:\n${BUILDCACHE_CREATE_OUTPUT}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
     # is implemented
     spack upload-s3 spec --base-dir "${LOCAL_MIRROR}" --spec "${SPEC_NAME}"
+    check_error $?
 else
     echo "spec ${SPEC_NAME} is already up to date on remote mirror, downloading it"
 
@@ -130,10 +148,15 @@ else
 
     # Now download it
     spack buildcache download --spec "${SPEC_NAME}" --path "${BUILD_CACHE_DIR}/"
+    check_error $?
 fi
 
+echo -e "\nOnce again finding and printing all stored cdashid files in build_cache:"
+find "${BUILD_CACHE_DIR}" -type f -name "*cdashid" -exec sh -c 'echo "$0" ; cat "$0"' {} \;
+echo -e "That is all of them\n"
+
 # Now, whether we had to build the spec or download it pre-built, we should have
-# the cdash build id sitting in place as well.  We use it to link this job to
+# the cdash build id file sitting in place as well.  We use it to link this job to
 # the jobs it depends on in CDash.
 JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
 
@@ -151,21 +174,29 @@ if [ -f "${JOB_CDASH_ID_FILE}" ]; then
     for i in "${DEPS[@]}"; do
         echo "Getting cdash id for dependency --> ${i} <--"
         DEP_SPEC_NAME=$( build_spec_name "${i}" )
+        echo "dependency spec name = ${DEP_SPEC_NAME}"
         DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${DEP_SPEC_NAME}"`
 
         if [[ $? -eq 0 ]]; then
             DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
-            DEP_JOB_CDASH_BUILD_ID=$(<${DEP_JOB_ID_FILE})
+            echo "DEP_JOB_ID_FILE path = ${DEP_JOB_ID_FILE}"
 
-            if [ "${DEP_JOB_CDASH_BUILD_ID}" == "NONE" ]; then
-                echo "ERROR: unable to read dependent jobs id from ${DEP_JOB_ID_FILE}"
+            if [ -f "${DEP_JOB_ID_FILE}" ]; then
+                DEP_JOB_CDASH_BUILD_ID=$(<${DEP_JOB_ID_FILE})
+                echo "File ${DEP_JOB_ID_FILE} contained value ${DEP_JOB_CDASH_BUILD_ID}"
+                echo "Relating builds -> ${SPEC_NAME} (buildid=${JOB_CDASH_BUILD_ID}) depends on ${DEP_SPEC_NAME} (buildid=${DEP_JOB_CDASH_BUILD_ID})"
+                relateBuildsPostBody="$(get_relate_builds_post_data "Spack" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
+                relateBuildsResult=`curl "${DEP_JOB_RELATEBUILDS_URL}" -H "Content-Type: application/json" -H "Accept: application/json" -d "${relateBuildsPostBody}"`
+            else
+                echo "ERROR: Did not find expected .cdashid file for dependency: ${DEP_JOB_ID_FILE}"
                 exit 1
             fi
-
-            relateBuildsPostBody="$(generate_relate_builds_post_data "Spack" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
-            relateBuildsResult=`curl "${DEP_JOB_RELATEBUILDS_URL}" -H "Content-Type: application/json" -H "Accept: application/json" -d "${relateBuildsPostBody}"`
+        else
+            echo "ERROR: Unable to get buildcache entry name for ${DEP_SPEC_NAME}"
+            exit 1
         fi
     done
 else
     echo "ERROR: Did not find expected .cdashid file ${JOB_CDASH_ID_FILE}"
+    exit 1
 fi
