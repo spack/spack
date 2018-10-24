@@ -7,10 +7,11 @@ from spack import *
 
 
 class Phyluce(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """phyluce (phy-loo-chee) is a software package that was initially
+       developed for analyzing data collected from ultraconserved
+       elements in organismal genomes"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/faircloth-lab/phyluce"
     url      = "https://github.com/faircloth-lab/phyluce/archive/v1.6.7.tar.gz"
 
     version('1.6.7', sha256='98c213ab1610506722ad1440ffc93f9cbc78d8b3aaf3d9a47837e1231452cdb6')
