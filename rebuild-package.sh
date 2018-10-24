@@ -64,19 +64,21 @@ echo ${SPACK_SIGNING_KEY} | base64 --decode | gpg2 --import
 spack gpg list --trusted
 spack gpg list --signing
 
+JOB_CDASH_ID="NONE"
+
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt
 spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
-
-JOB_CDASH_ID="NONE"
 
 if [[ $? -ne 0 ]]; then
     # Configure mirror
     spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
 
+    CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=Spack"
+
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    spack -d install --use-cache "${SPEC_NAME}"
+    INSTALL_OUTPUT=$(spack -d install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" "${SPEC_NAME}")
 
     # By parsing the output of the "spack install" command, we can get the
     # buildid generated for us by CDash
