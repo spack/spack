@@ -14,6 +14,7 @@ import time
 import xml.sax.saxutils
 from six import text_type
 from six.moves.urllib.request import build_opener, HTTPHandler, Request
+from six.moves.urllib.parse import urlencode
 
 import spack.build_environment
 import spack.fetch_strategy
@@ -197,9 +198,14 @@ class CDash(Reporter):
         buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
         opener = build_opener(HTTPHandler)
         with open(filename, 'rb') as f:
-            url = "{0}&build={1}&site={2}&stamp={3}&MD5={4}".format(
-                self.cdash_upload_url, self.buildname, self.site,
-                self.buildstamp, md5sum)
+            params_dict = {
+                'build': self.buildname,
+                'site': self.site,
+                'stamp': self.buildstamp,
+                'MD5': md5sum,
+            }
+            encoded_params = urlencode(params_dict)
+            url = "{0}&{1}".format(self.cdash_upload_url, encoded_params)
             request = Request(url, data=f)
             request.add_header('Content-Type', 'text/xml')
             request.add_header('Content-Length', os.path.getsize(filename))
