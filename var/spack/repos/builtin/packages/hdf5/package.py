@@ -278,8 +278,8 @@ HDF5 version {version} {version}
             else:
                 cc = Executable(self.compiler.cc)
             cc(*(['-c', "check.c"] + spec['hdf5'].headers.cpp_flags.split()))
-            cc(*(['-o', "check", "check.o"] +
-                 spec['hdf5'].libs.ld_flags.split()))
+            cc(*(['-o', "check",
+                  "check.o"] + spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
                 output = check(output=str)
