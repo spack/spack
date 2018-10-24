@@ -173,7 +173,7 @@ def merge_config_rules(configuration, spec):
         if constraint.endswith(':'):
             constraint = constraint.strip(':')
             override = True
-        if spec.satisfies(constraint):
+        if spec.satisfies(constraint, strict=True):
             if override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)

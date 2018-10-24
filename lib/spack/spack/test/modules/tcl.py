@@ -279,7 +279,6 @@ class TestTcl(object):
 
     @pytest.mark.regression('9624')
     @pytest.mark.db
-    @pytest.mark.xfail
     def test_autoload_with_constraints(
             self, modulefile_content, module_configuration, database
     ):
