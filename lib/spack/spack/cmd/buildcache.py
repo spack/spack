@@ -75,6 +75,9 @@ def setup_parser(subparser):
     create.add_argument('--no-rebuild-index', action='store_true',
                         default=False, help="skip rebuilding index after " +
                                             "building package(s)")
+    create.add_argument('--cdash-build-id', default=None,
+                        help="If provided, a .cdashid file will be written " +
+                        "alongside .spec.yaml")
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to create buildcache for")
@@ -302,7 +305,7 @@ def createtarball(args):
         spec.concretize()
         bindist.build_tarball(spec, outdir, args.force, args.rel,
                               args.unsigned, args.allow_root, signkey,
-                              not args.no_rebuild_index)
+                              not args.no_rebuild_index, args.cdash_build_id)
 
 
 def installtarball(args):

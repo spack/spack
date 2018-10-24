@@ -330,7 +330,8 @@ def generate_package_index(build_cache_dir):
 
 
 def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
-                  allow_root=False, key=None, regenerate_index=False):
+                  allow_root=False, key=None, regenerate_index=False,
+                  cdash_build_id=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -417,6 +418,21 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spec_dict['full_hash'] = spec.full_hash()
     with open(specfile_path, 'w') as outfile:
         outfile.write(syaml.dump(spec_dict))
+
+    # Write the .cdashid file if we were asked to, first checking if it
+    # exists and we were also asked to force.
+    if cdash_build_id:
+        cdashidfile_name = tarball_name(spec, '.cdashid')
+        cdashidfile_path = os.path.realpath(
+            os.path.join(build_cache_dir, cdashidfile_name))
+        if os.path.exists(cdashidfile_path):
+            if force:
+                os.remove(cdashidfile_path)
+            else:
+                raise NoOverwriteException(str(cdashidfile_path))
+        with open(cdashidfile_path, 'w') as outfile:
+            outfile.write('{0}\n'.format(cdash_build_id))
+
     # sign the tarball and spec file with gpg
     if not unsigned:
         sign_tarball(key, force, specfile_path)
@@ -834,6 +850,7 @@ def download_buildcache_entry(spec, path):
 
     tarfile_name = tarball_name(spec, '.spack')
     specfile_name = tarball_name(spec, '.spec.yaml')
+    cdashidfile_name = tarball_name(spec, '.cdashid')
     tarball_dir_name = tarball_directory_name(spec)
     tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
 
@@ -852,6 +869,21 @@ def download_buildcache_entry(spec, path):
             stage2 = Stage(specfile_url, name="build_cache", path=path, keep=True)
             try:
                 stage2.fetch()
+
+                # Since we got the .spec.yaml file successfully, we're going
+                # to break and not try any more mirrors.  Before we do though,
+                # we'll try to fetch a .cdashid file associated with the
+                # buildcache entry.  If we don't get one, it's not any kind of
+                # error, as buildcache entries are not required to have them.
+                cdashidfile_url = mirror_root + "/" + cdashidfile_name
+                stage3 = Stage(cdashidfile_url, name="build_cache",
+                               path=path, keep=True)
+                try:
+                    stage3.fetch()
+                except:
+                    tty.msg('No .cdashid file associated with {0}'.format(
+                        specfile_name))
+
                 break
             except fs.FetchError:
                 continue

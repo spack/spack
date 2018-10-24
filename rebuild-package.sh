@@ -4,6 +4,31 @@ set -x
 
 export FORCE_UNSAFE_CONFIGURE=1
 
+extract_build_id()
+{
+    LINES_TO_SEARCH=$1
+    regex="buildSummary\.php\?buildid=([[:digit:]]+)"
+    SINGLE_LINE_OUTPUT=$(echo ${LINES_TO_SEARCH} | tr -d '\n')
+
+    if [[ ${SINGLE_LINE_OUTPUT} =~ ${regex} ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        echo "NONE"
+    fi
+}
+
+get_relate_builds_post_data()
+{
+  cat <<EOF
+{
+  "project": "${1}",
+  "buildid": "${2}",
+  "relatedid": "${3}",
+  "relationship": "depends on"
+}
+EOF
+}
+
 build_spec_name() {
     read -ra PARTSARRAY <<< "$1"
     pkgName="${PARTSARRAY[0]}"
@@ -21,6 +46,9 @@ CURRENT_WORKING_DIR=`pwd`
 LOCAL_MIRROR="${CURRENT_WORKING_DIR}/local_mirror"
 BUILD_CACHE_DIR="${LOCAL_MIRROR}/build_cache"
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
+CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=Spack"
+DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
+
 export PATH="${SPACK_BIN_DIR}:${PATH}"
 export GNUPGHOME="${CURRENT_WORKING_DIR}/opt/spack/gpg"
 
@@ -64,8 +92,6 @@ echo ${SPACK_SIGNING_KEY} | base64 --decode | gpg2 --import
 spack gpg list --trusted
 spack gpg list --signing
 
-JOB_CDASH_ID="NONE"
-
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt
 spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
@@ -74,7 +100,7 @@ if [[ $? -ne 0 ]]; then
     # Configure mirror
     spack mirror add local_artifact_mirror "file://${LOCAL_MIRROR}"
 
-    CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=Spack"
+    JOB_CDASH_ID="NONE"
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
@@ -82,9 +108,15 @@ if [[ $? -ne 0 ]]; then
 
     # By parsing the output of the "spack install" command, we can get the
     # buildid generated for us by CDash
+    JOB_CDASH_ID=$(extract_build_id "${INSTALL_OUTPUT}")
+
+    BUILD_ID_ARG=""
+    if [ "${JOB_CDASH_ID}" != "NONE" ]; then
+        BUILD_ID_ARG="--cdash-build-id \"${JOB_CDASH_ID}\""
+    fi
 
     # Create buildcache entry for this package
-    spack buildcache create -a -f -d "${LOCAL_MIRROR}" "${SPEC_NAME}"
+    spack buildcache create -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG} "${SPEC_NAME}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
@@ -101,19 +133,20 @@ else
 fi
 
 # Now, whether we had to build the spec or download it pre-built, we should have
-# the cdash build id handy as well.  We use it to link this job to the jobs it
-# depends on in CDash.
-if [ "${JOB_CDASH_ID}" != "NONE" ]; then
-    JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
+# the cdash build id sitting in place as well.  We use it to link this job to
+# the jobs it depends on in CDash.
+JOB_CDASH_ID_FILE="${BUILD_CACHE_DIR}/${JOB_BUILD_CACHE_ENTRY_NAME}.cdashid"
 
-    if [ ! -f "${}" ]; then
-        echo "ERROR: Did not find expected .cdashid file ${JOB_CDASH_ID_FILE}"
+if [ -f "${JOB_CDASH_ID_FILE}" ]; then
+    JOB_CDASH_BUILD_ID=$(<${JOB_CDASH_ID_FILE})
+
+    if [ "${JOB_CDASH_BUILD_ID}" == "NONE" ]; then
+        echo "ERROR: unable to read this jobs id from ${JOB_CDASH_ID_FILE}"
         exit 1
     fi
 
-    # JOB_CDASH_BUILD_ID=""
-
-    # Now get CDash ids for dependencies
+    # Now get CDash ids for dependencies and "relate" each dependency build
+    # with this jobs build
     IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
     for i in "${DEPS[@]}"; do
         echo "Getting cdash id for dependency --> ${i} <--"
@@ -122,14 +155,17 @@ if [ "${JOB_CDASH_ID}" != "NONE" ]; then
 
         if [[ $? -eq 0 ]]; then
             DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"
-            DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
-            # TODO: Read dependency CDash id from file named above
+            DEP_JOB_CDASH_BUILD_ID=$(<${DEP_JOB_ID_FILE})
 
-            # TODO: Build/send POST request to "relateBuilds" between job and dependency,
-            # Required params:
-            #   buildid = this build's id
-            #   relatedid = dependency's buildid
-            #   relationship = "depends on"
+            if [ "${DEP_JOB_CDASH_BUILD_ID}" == "NONE" ]; then
+                echo "ERROR: unable to read dependent jobs id from ${DEP_JOB_ID_FILE}"
+                exit 1
+            fi
+
+            relateBuildsPostBody="$(generate_relate_builds_post_data "Spack" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
+            relateBuildsResult=`curl "${DEP_JOB_RELATEBUILDS_URL}" -H "Content-Type: application/json" -H "Accept: application/json" -d "${relateBuildsPostBody}"`
         fi
     done
+else
+    echo "ERROR: Did not find expected .cdashid file ${JOB_CDASH_ID_FILE}"
 fi

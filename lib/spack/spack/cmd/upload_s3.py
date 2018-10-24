@@ -162,18 +162,28 @@ def upload_spec(args):
         bindist.tarball_name(spec, '.spec.yaml'))
     specfile_path = os.path.join(args.base_dir, specfile_key)
 
-    print(tarball_key)
-    print(specfile_key)
+    cdashidfile_key = os.path.join(build_cache_dir,
+        bindist.tarball_name(spec, '.cdashid'))
+    cdashidfile_path = os.path.join(args.base_dir, cdashidfile_key)
 
+    tty.msg('Uploading {0}'.format(tarball_key))
     s3.meta.client.upload_file(
             tarball_path, bucket_name,
             os.path.join('mirror', tarball_key),
             ExtraArgs={'ACL':'public-read'})
 
+    tty.msg('Uploading {0}'.format(specfile_key))
     s3.meta.client.upload_file(
             specfile_path, bucket_name,
             os.path.join('mirror', specfile_key),
             ExtraArgs={'ACL':'public-read'})
+
+    if os.path.exists(cdashidfile_path):
+        tty.msg('Uploading {0}'.format(cdashidfile_key))
+        s3.meta.client.upload_file(
+                cdashidfile_path, bucket_name,
+                os.path.join('mirror', cdashidfile_key),
+                ExtraArgs={'ACL':'public-read'})
 
 
 def upload_s3(parser, args):

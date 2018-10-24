@@ -2,7 +2,7 @@ libpng 1.6.34 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: [zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64]
-  image: scottwittenburg/spack_builder_centos_7_noentry
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-1
   tags: [spack-k8s]
@@ -13,7 +13,7 @@ libpng 1.6.34 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: [zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
-  image: scottwittenburg/spack_builder_ubuntu_18.04_noentry
+  image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
   stage: stage-1
   tags: [spack-k8s]
@@ -24,7 +24,7 @@ ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64]
-  image: scottwittenburg/spack_builder_centos_7_noentry
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-1
   tags: [spack-k8s]
@@ -35,7 +35,7 @@ ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64]
-  image: scottwittenburg/spack_builder_ubuntu_18.04_noentry
+  image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
   stage: stage-1
   tags: [spack-k8s]
@@ -46,7 +46,7 @@ pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: []
-  image: scottwittenburg/spack_builder_centos_7_noentry
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-0
   tags: [spack-k8s]
@@ -56,7 +56,7 @@ pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: []
-  image: scottwittenburg/spack_builder_ubuntu_18.04_noentry
+  image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
   stage: stage-0
   tags: [spack-k8s]
@@ -67,7 +67,7 @@ readline 7.0 gcc@5.5.0 linux-centos7-x86_64:
     paths: [local_mirror/build_cache]
   dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64, ncurses 6.1 gcc@5.5.0
       linux-centos7-x86_64]
-  image: scottwittenburg/spack_builder_centos_7_noentry
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-2
   tags: [spack-k8s]
@@ -79,7 +79,7 @@ readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
     paths: [local_mirror/build_cache]
   dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, ncurses 6.1 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
-  image: scottwittenburg/spack_builder_ubuntu_18.04_noentry
+  image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
   stage: stage-2
   tags: [spack-k8s]
@@ -87,7 +87,7 @@ readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
       gcc@5.5.0 linux-ubuntu18.04-x86_64;ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     HASH: 7ghip7owubroxsvey3fsjbrslcyrufkr, MIRROR_URL: 'https://mirror.spack.io'}
 rebuild-index:
-  image: scottwittenburg/spack_builder_centos_7_noentry
+  image: scottwittenburg/spack_builder_centos_7
   script: ./rebuild-index.sh
   stage: stage-rebuild-index
   tags: [spack-k8s]
@@ -97,7 +97,7 @@ zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: []
-  image: scottwittenburg/spack_builder_centos_7_noentry
+  image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
   stage: stage-0
   tags: [spack-k8s]
@@ -107,7 +107,7 @@ zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache]
   dependencies: []
-  image: scottwittenburg/spack_builder_ubuntu_18.04_noentry
+  image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
   stage: stage-0
   tags: [spack-k8s]
