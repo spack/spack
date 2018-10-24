@@ -56,7 +56,10 @@ class PyNumpy(PythonPackage):
     depends_on('py-pytest', when='@1.15:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
-        python_version = self.spec['python'].version.up_to(2)
+        if 'python' in self.spec:
+            python_version = self.spec['python'].version.up_to(2)
+        else:
+            python_version = dependent_spec['python'].version.up_to(2)
 
         self.spec.include = join_path(
             self.prefix.lib,
