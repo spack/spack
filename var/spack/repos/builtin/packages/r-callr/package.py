@@ -13,5 +13,6 @@ class RCallr(RPackage):
 
     homepage = "https://github.com/MangoTheCat/callr"
     url      = "https://cran.r-project.org/src/contrib/callr_1.0.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/callr"
 
     version('1.0.0', 'd9af99bb95696310fa1e5d1cb7166c91')
