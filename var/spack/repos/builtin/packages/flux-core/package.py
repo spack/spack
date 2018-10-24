@@ -23,11 +23,13 @@ class FluxCore(AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = 'spack-build'
 
-    variant('doc', default=False, description='Build flux manpages')
+    variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     depends_on("zeromq@4.0.4:")
-    depends_on("czmq@2.2:")
+    depends_on("czmq")
+    depends_on("czmq@2.2:3.99", when="@0.1:0.6.99")
+    depends_on("czmq@3.0.1:", when="@0.7:,master")
     depends_on("hwloc@1.11.1:1.99")
     depends_on("hwloc +cuda", when='+cuda')
     depends_on("lua", type=('build', 'run', 'link'))
@@ -37,9 +39,13 @@ class FluxCore(AutotoolsPackage):
     depends_on("munge")
     depends_on("libuuid")
     depends_on("python", type=('build', 'run'))
+    depends_on("python@2.7:2.99", when="@0.1.0:0.10.0")
+    depends_on("python@2.7:", when="@0.11.0:,master")
     depends_on("py-cffi", type=('build', 'run'))
+    depends_on("py-six", type=('build', 'run'), when="@0.11.0:,master")
     depends_on("jansson")
     depends_on("yaml-cpp")
+    depends_on("lz4", when="@0.11.0:,master")
 
     # versions up to 0.8.0 uses pylint to check Flux's python binding
     # later versions provide a configure flag and disable the check by default
@@ -57,11 +63,13 @@ class FluxCore(AutotoolsPackage):
 
     @when('@master')
     def setup(self):
-        # Check in case we are running `spack diy` from an "unshallow" clone
-        if os.path.exists('.git/shallow'):
+        with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which('git')
             git('fetch', '--unshallow')
+            git("config", "remote.origin.fetch",
+                "+refs/heads/*:refs/remotes/origin/*")
+            git('fetch', 'origin')
 
     def autoreconf(self, spec, prefix):
         self.setup()
