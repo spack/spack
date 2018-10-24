@@ -58,7 +58,7 @@ def setup_parser(subparser):
                               " tarballs for testing")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to install biuldache for")
+        help="specs of packages to install buildcache for")
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list', help=listspecs.__doc__)
