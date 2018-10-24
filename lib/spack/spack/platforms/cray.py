@@ -95,7 +95,7 @@ class Cray(Platform):
         load_module(frontend)
 
     @classmethod
-    def setup_platform_environment(cls, pkg, env, module):
+    def setup_platform_environment(cls, pkg, env):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
@@ -115,8 +115,6 @@ class Cray(Platform):
         # Makes spack installed pkg-config work on Crays
         env.append_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
         env.append_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")
-
-        module.configure = ConfigureExecutable(module.configure)
 
     @classmethod
     def detect(cls):
