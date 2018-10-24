@@ -21,14 +21,9 @@ class Unifycr(AutotoolsPackage):
     version('develop', branch='dev', preferred=True)
     version('0.1.1', sha256='f0628f661d5eff67a55ba2bf254dc38636525c5e191d5f32b9e128294b8f8051')
 
-    variant('debug', default='False', 
-            description='Enable debug build options')
-    variant('hdf5', default='False',
-            description='Build with HDF5 (currently serial only)')
-    variant('numa', default='True',
-            description='Build with NUMA')
-    variant('verbose', default='False', 
-            description='Add VERBOSE arguments to make')
+    variant('debug', default='False', description='Enable debug build options')
+    variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
+    variant('numa', default='False', description='Build with NUMA')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -44,20 +39,17 @@ class Unifycr(AutotoolsPackage):
     depends_on('pkg-config@0.9.0:')
 
     # Optional dependencies
-    # UnifyCR's integration with HDF5 is still a WIP and is currently
-    # configured for serial only. HDF5 is parallel by default. Once fully
-    # integrated and UnifyCR users can choose to configure with serial/parallel
-    # HDF5, the ability for the user to choose needs to made available here as
-    # well.
-    # If using custom packages.yaml, can put `variante: ~mpi` under hdf5 or if
-    # you don't want to restrict other packages using parallel hdf5, identify
-    # the path to h5cc using the a pattern similar to `hdf5@<version>~mpi:
-    # path/to/h5cc` for serial HDF5.
 
-    # TODO: Implement capability for user to choose serial/parallel HDF5
+    # UnifyCR's integration with HDF5 is still a WIP and is currently
+    # configured for serial only. HDF5 is parallel by default.
+    #
+    # To build with serial HDF5, use `spack install unifycr+hdf5 ^hdf5~mpi`
+    #
+    # Once UnifyCR is compatible with parallel HDF5, excluding `^hdf5~mpi` from
+    # the install line will build UnifyCR with parallel HDF5.
 
     # v0.1.1 not HDF5 compatible; can change when v0.1.1 is no longer supported
-    depends_on('hdf5~mpi', when='@0.1.2: +hdf5')
+    depends_on('hdf5', when='@0.1.2: +hdf5')
     depends_on('numactl',  when='+numa')
 
     # we depend on numactl, which does't currently build on darwin
@@ -76,22 +68,31 @@ class Unifycr(AutotoolsPackage):
         if spec.satisfies('@0.1.1'):
             env['CC'] = spec['mpi'].mpicc
 
+        # If additional dependencies require a custom activation_value, can
+        # modify this function to handle them as well.
+        def variant_path(name):
+            # UnifyCR's configure requires the exact path for HDF5
+            if '~mpi' in spec[name]:  # serial HDF5
+                return spec[name].prefix.bin + '/h5cc'
+            else:  # parallel HDF5
+                return spec[name].prefix.bin + '/h5pcc'
+
         args.extend(self.with_or_without('numa',
                                          lambda x: spec['numactl'].prefix))
         args.extend(self.with_or_without('hdf5',
-                                         activation_value='prefix'))
+                                         activation_value=variant_path))
 
         if '+debug' in spec:
             args.append('--enable-debug')
 
-        if '+verbose' in spec:
+        if spack.config.get('config:debug'):
             args.append('--disable-silent-rules')
         else:
             args.append('--enable-silent-rules')
 
         return args
 
-#   @when('@develop') TODO: uncomment when we `make dist` a stable release
+#    @when('@develop') TODO: uncomment when we `make dist` a stable release
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
