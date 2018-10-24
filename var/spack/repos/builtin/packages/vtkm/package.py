@@ -49,7 +49,7 @@ class Vtkm(Package):
     variant("tbb", default=False, description="build TBB support")
     variant("openmp", default=False, description="build OpenMP support")
 
-    depends_on("cmake@3.8.2:")
+    depends_on("cmake@3.9.2:")
     depends_on("intel-tbb~shared", when="+tbb~shared")
     depends_on("cuda", when="+cuda")
 

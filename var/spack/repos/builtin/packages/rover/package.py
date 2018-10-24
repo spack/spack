@@ -41,126 +41,79 @@ def cmake_cache_entry(name, value):
     return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
 
 
-class Ascent(Package):
-    """Ascent is an open source many-core capable lightweight in situ
-    visualization and analysis infrastructure for multi-physics HPC
-    simulations."""
+class Rover(Package):
+    """
+    ROVER: an open source hybrid-parallel library for 
+    volume rendering and simulated radiography
+    """
 
-    homepage = "https://github.com/Alpine-DAV/ascent"
+    homepage = "https://github.com/LLNL/rover"
 
-    maintainers = ['cyrush']
-
+    maintainers = ['mclarsen']
+    
     version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
+            git='https://github.com/LLNL/rover.git',
             branch='develop',
-            submodules=True,
             preferred=True)
 
-    version('0.3.0',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            tag='v0.3.0', 
+    version('0.1.0',
+            git='https://github.com/LLNL/rover.git',
+            tag='v0.1.0', 
             submodules=True)
-
-
-    
 
     ###########################################################################
     # package variants
     ###########################################################################
 
-    variant("shared", default=True, description="Build Ascent as shared libs")
+    variant("shared", default=True, description="Build ROVER as shared libs")
 
-    variant("mpi", default=True, description="Build Ascent MPI Support")
-
-    # variants for python support
-    variant("python", default=True, description="Build Conduit Python support")
+    variant("mpi", default=True, description="Build ROVER MPI Support")
 
     # variants for runtime features
-
-    variant("vtkh", default=True,
-            description="Build VTK-h filter and rendering support")
-
     variant("openmp", default=True, description="Build openmp support")
     variant("cuda", default=False, description="Build cuda support")
-    variant("mfem", default=False, description="Build MFEM filter support")
-    variant("adios", default=False, description="Build Adios filter support")
-
-    # variants for dev-tools (docs, etc)
-    variant("doc", default=False, description="Build Conduit's documentation")
 
     ###########################################################################
     # package dependencies
     ###########################################################################
 
     depends_on("cmake@3.8.2:3.9.999", type='build')
-    depends_on("conduit~python",when="~python")
-    depends_on("conduit+python", when="+python+shared")
-    depends_on("conduit~shared~python", when="~shared")
+   
+    #######################
+    # variants
+    #######################
+    depends_on("vtkm@master~tbb+openmp", when="@develop+openmp")
+    depends_on("vtkm@master~tbb~openmp", when="@develop~openmp")
 
-    #######################
-    # Python
-    #######################
-    # we need a shared version of python b/c linking with static python lib
-    # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python+shared")
-    extends("python", when="+python+shared")
-    depends_on("py-numpy", when="+python+shared", type=('build', 'run'))
+    depends_on("vtkm@master+cuda~tbb+openmp", when="@develop+cuda+openmp")
+    depends_on("vtkm@master+cuda~tbb~openmp", when="@develop+cuda~openmp")
+
+    depends_on("vtkm@master~tbb+openmp~shared", when="@develop+openmp~shared")
+    depends_on("vtkm@master~tbb~openmp~shared", when="@develop~openmp~shared")
+
+    depends_on("vtkm@master+cuda~tbb+openmp~shared", when="@develop+cuda+openmp~shared")
+    depends_on("vtkm@master+cuda~tbb~openmp~shared", when="@develop+cuda~openmp~shared")
+    depends_on("vtkm@master~tbb~openmp", when="@develop~openmp")
+
+    depends_on("vtkm@master+cuda~tbb+openmp", when="@develop+cuda+openmp")
+    depends_on("vtkm@master+cuda~tbb~openmp", when="@develop+cuda~openmp")
+
 
     #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    # use old version of mpi4py to avoid build issues with cython
-    depends_on("py-mpi4py@2.0.0:2.9.999", when="+mpi+python+shared")
 
     #############################
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtkh@develop",             when="+vtkh")
-    depends_on("vtkh@develop~openmp",      when="+vtkh~openmp")
-    depends_on("vtkh@develop+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtkh@develop+cuda~openmp", when="+vtkh+cuda~openmp")
-
-    depends_on("vtkh@develop~shared",             when="~shared+vtkh")
-    depends_on("vtkh@develop~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
-    
-    #automatically build rover if we have vtkh
-    depends_on("rover@develop",             when="+vtkh")
-    depends_on("rover@develop~openmp",      when="+vtkh~openmp")
-    depends_on("rover@develop+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("rover@develop+cuda~openmp", when="+vtkh+cuda~openmp")
-
-    depends_on("rover@develop~shared",             when="~shared+vtkh")
-    depends_on("rover@develop~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("rover@develop~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("rover@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
-
-    # mfem
-    depends_on("mfem+shared+mpi+conduit", when="+shared+mfem+mpi")
-    depends_on("mfem~shared+mpi+conduit", when="~shared+mfem+mpi")
-
-    depends_on("mfem+shared~mpi+conduit", when="+shared+mfem~mpi")
-    depends_on("mfem~shared~mpi+conduit", when="~shared+mfem~mpi")
-
-
-    depends_on("adios", when="+adios")
-
-    #######################
-    # Documentation related
-    #######################
-    depends_on("py-sphinx", when="+python+doc", type='build')
-
     def install(self, spec, prefix):
         """
-        Build and install Ascent.
+        Build and install ROVER.
         """
         with working_dir('spack-build', create=True):
             py_site_pkgs_dir = None
-            if "+python" in spec:
-                py_site_pkgs_dir = site_packages_dir
 
             host_cfg_fname = self.create_host_config(spec,
                                                      prefix,
@@ -185,16 +138,7 @@ class Ascent(Package):
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
         This method creates a 'host-config' file that specifies
-        all of the options used to configure and build ascent.
-
-        For more details about 'host-config' files see:
-            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
-
-        Note:
-          The `py_site_pkgs_dir` arg exists to allow a package that
-          subclasses this package provide a specific site packages
-          dir when calling this function. `py_site_pkgs_dir` should
-          be an absolute path or `None`.
+        all of the options used to configure and build rover.
 
           This is necessary because the spack `site_packages_dir`
           var will not exist in the base class. For more details
@@ -237,7 +181,7 @@ class Ascent(Package):
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s-ascent.cmake" % (socket.gethostname(),
+        host_cfg_fname = "%s-%s-%s-rover.cmake" % (socket.gethostname(),
                                                     sys_type,
                                                     spec.compiler)
 
@@ -264,14 +208,6 @@ class Ascent(Package):
         cfg.write("# cpp compiler used by spack\n")
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
-        cfg.write("# fortran compiler used by spack\n")
-        if f_compiler is not None:
-            cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
-            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
-        else:
-            cfg.write("# no fortran compiler found\n\n")
-            cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
-
         # shared vs static libs
         if "+shared" in spec:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
@@ -282,45 +218,11 @@ class Ascent(Package):
         # Core Dependencies
         #######################################################################
 
-        #######################
-        # Conduit
-        #######################
-
-        cfg.write("# conduit from spack \n")
-        cfg.write(cmake_cache_entry("CONDUIT_DIR", spec['conduit'].prefix))
-
+        cfg.write("# vtk-m from spack\n")
+        cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
         #######################################################################
         # Optional Dependencies
         #######################################################################
-
-        #######################
-        # Python
-        #######################
-
-        cfg.write("# Python Support\n")
-
-        if "+python" in spec:
-            cfg.write("# Enable python module builds\n")
-            cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
-            cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
-                      spec['python'].command.path))
-            # only set dest python site packages dir if passed
-            if py_site_pkgs_dir:
-                cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                            py_site_pkgs_dir))
-        else:
-            cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
-
-        if "+doc" in spec and "+python" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
-
-            cfg.write("# sphinx from spack \n")
-            sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
-                                         "sphinx-build")
-            cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
-        else:
-            cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
 
         #######################
         # MPI
@@ -363,44 +265,6 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
-
-        #######################
-        # VTK-h (and deps)
-        #######################
-
-        cfg.write("# vtk-h support \n")
-
-        if "+vtkh" in spec:
-            cfg.write("# vtk-m from spack\n")
-            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
-
-            cfg.write("# vtk-h from spack\n")
-            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
-
-            cfg.write("# rover from spack\n")
-            cfg.write(cmake_cache_entry("ROVER_DIR", spec['rover'].prefix))
-        else:
-            cfg.write("# vtk-h not built by spack \n")
-
-        #######################
-        # MFEM
-        #######################
-        if "+mfem" in spec:
-            cfg.write("# mfem from spack \n")
-            cfg.write(cmake_cache_entry("MFEM_DIR", spec['mfem'].prefix))
-        else:
-            cfg.write("# mfem not built by spack \n")
-
-        #######################
-        # Adios
-        #######################
-
-        cfg.write("# adios support\n")
-
-        if "+adios" in spec:
-            cfg.write(cmake_cache_entry("ADIOS_DIR", spec['adios'].prefix))
-        else:
-            cfg.write("# adios not built by spack \n")
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
