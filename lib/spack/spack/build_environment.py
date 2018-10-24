@@ -95,6 +95,7 @@ SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
+SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 
 
 # Platform-specific library suffix.
@@ -330,6 +331,13 @@ def set_build_environment_variables(pkg, env, dirty):
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
+
+    # Find ccache binary and hand it to build environment
+    if spack.config.get_config('config').get('ccache', False):
+        ccache = Executable('ccache')
+        if not ccache:
+            raise RuntimeError("No ccache binary found in PATH")
+        env.set(SPACK_CCACHE_BINARY, ccache)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     for prefix in build_link_prefixes:

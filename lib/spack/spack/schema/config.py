@@ -67,6 +67,7 @@ schema = {
                 'checksum': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
                 'build_jobs': {'type': 'integer', 'minimum': 1},
+                'ccache': {'type': 'boolean'},
             }
         },
     },
