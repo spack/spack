@@ -99,7 +99,7 @@ class Conduit(Package):
     # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared", when="+python")
     extends("python", when="+python")
-    depends_on("py-numpy", when="+python")
+    depends_on("py-numpy", when="+python", type=('build', 'run'))
 
     #######################
     # I/O Packages
@@ -269,9 +269,17 @@ class Conduit(Package):
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
-        if "~shared" in spec:
+        if "+shared" in spec:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
+        else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
-            
+
+        if 'blueos_3' in sys_type and 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
+            # Fix missing std linker flag in xlc compiler
+            cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", "-WF,-C! -qxlf2003=polymorphic"))
+            #Conduit can't link C++ into fortran for this spec, but works fine in host code
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
+            cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
 
         #######################
         # Python
@@ -279,7 +287,7 @@ class Conduit(Package):
 
         cfg.write("# Python Support\n")
 
-        if "+python" in spec:
+        if "+python" in spec and "+shared" in spec:
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
