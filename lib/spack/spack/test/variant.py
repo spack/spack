@@ -703,6 +703,12 @@ def test_disjoint_set_initialization_errors():
         disjoint_sets(('a', 'b'), ('b', 'c'))
     assert 'sets in input must be disjoint' in str(exc_info.value)
 
+    # A set containing the reserved item 'none' along with other items
+    # should raise an exception
+    with pytest.raises(spack.error.SpecError) as exc_info:
+        disjoint_sets(('a', 'b'), ('none', 'c'))
+    assert "The value 'none' represents the empty set," in str(exc_info.value)
+
 
 def test_disjoint_set_initialization():
     # Test that no error is thrown when the sets are disjoint
@@ -711,3 +717,35 @@ def test_disjoint_set_initialization():
     assert d.default is None
     assert d.multi is True
     assert set(x for x in d) == set(['a', 'b', 'c', 'e', 'f'])
+
+
+def test_disjoint_set_fluent_methods():
+    # Construct an object without the empty set
+    d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f'))
+    assert set(('none',)) not in d.sets
+
+    # Call this 2 times to check that no matter whether
+    # the empty set was allowed or not before, the state
+    # returned is consistent.
+    for _ in range(2):
+        d = d.allow_empty_set()
+        assert set(('none',)) in d.sets
+        assert 'none' in d
+        assert 'none' in [x for x in d]
+
+    # Marking a value as 'non-feature' means that
+    # the value is in the variant, but iterating over
+    # the variant skips that value. See the originating
+    # class for more insight on this behavior.
+    d = d.with_non_feature_values('none')
+    assert 'none' in d
+    assert 'none' not in [x for x in d]
+
+    # Call this 2 times to check that no matter whether
+    # the empty set was allowed or not before, the state
+    # returned is consistent.
+    for _ in range(2):
+        d = d.prohibit_empty_set()
+        assert set(('none',)) not in d.sets
+        assert 'none' not in d
+        assert 'none' not in [x for x in d]

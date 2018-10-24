@@ -605,14 +605,31 @@ def substitute_abstract_variants(spec):
         spec.variants.substitute(new_variant)
 
 
+# The class below inherit from Sequence to disguise as a tuple and comply
+# with the semantic expected by the 'values' argument of the variant directive
 class DisjointSetsOfValues(Sequence):
-    """Allows combinations from one of among many mutually exclusive sets.
+    """Allows combinations from one of many mutually exclusive sets.
+
+    The value ``('none',)`` is reserved to denote the empty set
+    and therefore no other set can contain the item ``'none'``.
 
     Args:
         *sets (list of tuples): mutually exclusive sets of values
     """
+
+    _empty_set = set(('none',))
+
     def __init__(self, *sets):
         self.sets = [set(x) for x in sets]
+
+        # 'none' is a special value and can appear only in a set of
+        # a single element
+        if any('none' in s and s != set(('none',)) for s in self.sets):
+            raise error.SpecError("The value 'none' represents the empty set,"
+                                  " and must appear alone in a set. Use the "
+                                  "method 'allow_empty_set' to add it.")
+
+        # Sets should not intersect with each other
         if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
             raise error.SpecError('sets in input must be disjoint')
 
@@ -640,7 +657,42 @@ class DisjointSetsOfValues(Sequence):
         )
         return self
 
+    def allow_empty_set(self):
+        """Adds the empty set to the current list of disjoint sets."""
+        if self._empty_set in self.sets:
+            return self
+
+        # Create a new object to be returned
+        object_with_empty_set = type(self)(('none',), *self.sets)
+        object_with_empty_set.error_fmt = self.error_fmt
+        object_with_empty_set.feature_values = self.feature_values + ('none', )
+        return object_with_empty_set
+
+    def prohibit_empty_set(self):
+        """Removes the empty set from the current list of disjoint sets."""
+        if self._empty_set not in self.sets:
+            return self
+
+        # Create a new object to be returned
+        sets = [s for s in self.sets if s != self._empty_set]
+        object_without_empty_set = type(self)(*sets)
+        object_without_empty_set.error_fmt = self.error_fmt
+        object_without_empty_set.feature_values = [
+            x for x in self.feature_values if x != 'none'
+        ]
+        return object_without_empty_set
+
     def __contains__(self, item):
+        # The code taking care of variants uses __contains__ to validate
+        # the values that are parsed, while build systems are often
+        # iterating over "feature" values of a variant to automatically
+        # construct configure options (or similar things) for packagers.
+        #
+        # Here we need to override __contains__ so that we return True
+        # also for values that are marked as "non-feature", while we want
+        # iteration to just return "feature" values so that placeholders
+        # (like 'none') won't interfere with the generation of configure
+        # string.
         return item in itertools.chain.from_iterable(self.sets)
 
     def __getitem__(self, idx):
@@ -682,7 +734,7 @@ def _a_single_value_or_a_combination(single_value, *values):
 
 def any_combination_of(*values):
     """Multi-valued variant that allows any combination of a set of
-    values or 'none'.
+    values including the empty set.
 
     Args:
         *values: allowed variant values
@@ -695,7 +747,7 @@ def any_combination_of(*values):
 
 def auto_or_any_combination_of(*values):
     """Multi-valued variant that allows any combination of a set of values
-    or 'auto'.
+    (but not the empty set) or 'auto'.
 
     Args:
         *values: allowed variant values
