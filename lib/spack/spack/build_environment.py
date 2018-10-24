@@ -255,26 +255,25 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def build_env_compilers(pkg, platform, env):
+class BuildEnvCompilers(object):
 
-    cross_compiler = pkg.compiler
+    def __init__(self, pkg, platform, env):
+        self.__pkg = pkg
+        self.__platform = platform
+        self.__env = env
 
-    def _build_env_compilers(executable):
-        """Fork a sub process that will run the phase in a fork with a
-        preserved environment"""
-        def run_executable_in_frontend(*args, **kwargs):
-            try:
-                pid = os.fork()
-            except OSError:
-                exit("Could not create child process for frontend")
+    def __enter__(self):
+        try:
+            self.__pid = os.fork()
+        except OSError:
+            exit("Could not create child process for frontend build environment")
+        if self.__pid == 0:
+            self.__platform.setup_frontend_environment(self.__env)
+        else:
+            os.waitpid(self.__pid, 0)
 
-            # Inside the child process where we change to frontend env
-            if pid == 0:
-                platform.setup_frontend_environment(env)
-                executable(*args, **kwargs)
-                exit()
-        return run_executable_in_frontend
-    return _build_env_compilers
+    def __exit__(self, *args):
+        return
 
 
 def set_build_environment_variables(pkg, env, dirty):
@@ -470,9 +469,8 @@ def _set_variables_for_single_module(pkg, module, env):
     # Platform-specific library suffix.
     m.dso_suffix = dso_suffix
 
-    m.build_env_compilers = build_env_compilers(pkg,
-                                                pkg.architecture.platform,
-                                                env)
+    m.build_env_compilers = BuildEnvCompilers(pkg, pkg.architecture.platform,
+                                              env)
 
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
         compiler_path = kwargs.get('compiler', m.spack_cc)
