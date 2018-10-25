@@ -419,19 +419,14 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     with open(specfile_path, 'w') as outfile:
         outfile.write(syaml.dump(spec_dict))
 
-    # Write the .cdashid file if we were asked to, first checking if it
-    # exists and we were also asked to force.
+    # Write the .cdashid file if we were asked to do so
     if cdash_build_id:
         cdashidfile_name = tarball_name(spec, '.cdashid')
         cdashidfile_path = os.path.realpath(
             os.path.join(build_cache_dir, cdashidfile_name))
-        if os.path.exists(cdashidfile_path):
-            if force:
-                os.remove(cdashidfile_path)
-            else:
-                raise NoOverwriteException(str(cdashidfile_path))
-        with open(cdashidfile_path, 'w') as outfile:
-            outfile.write('{0}\n'.format(cdash_build_id))
+        if not os.path.exists(cdashidfile_path):
+            with open(cdashidfile_path, 'w') as outfile:
+                outfile.write('{0}\n'.format(cdash_build_id))
 
     # sign the tarball and spec file with gpg
     if not unsigned:
