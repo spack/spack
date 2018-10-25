@@ -115,6 +115,7 @@ class Paraview(CMakePackage):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
+        spack_env.set('ParaView_DIR', self.prefix)
         spack_env.set('PARAVIEW_VTK_DIR',
                       join_path(lib_dir, 'cmake', self.paraview_subdir))
 
@@ -129,6 +130,7 @@ class Paraview(CMakePackage):
         else:
             lib_dir = self.prefix.lib
 
+        run_env.set('ParaView_DIR', self.prefix)
         run_env.set('PARAVIEW_VTK_DIR',
                     join_path(lib_dir, 'cmake', self.paraview_subdir))
 
@@ -152,6 +154,7 @@ class Paraview(CMakePackage):
         else:
             lib_dir = self.prefix.lib
 
+        run_env.set('ParaView_DIR', self.prefix)
         run_env.set('PARAVIEW_VTK_DIR',
                     join_path(lib_dir, 'cmake', self.paraview_subdir))
 
