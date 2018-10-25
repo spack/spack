@@ -43,9 +43,9 @@ class OfCatalyst(CMakePackage):
     function object for embedding ParaView Catalyst in-situ visualization
     into arbitrary OpenFOAM simulations.
     Supports in-situ conversion of the following types:
-      - finite volume meshes and fields. Single or multi-region.
-      - finite area meshes and fields. Single region.
-      - lagrangian (clouds). Single or multiple clouds.
+      1) finite volume meshes and fields, single or multi-region;
+      2) finite area meshes and fields, single region;
+      3) lagrangian (clouds), single or multiple clouds.
     This offering is part of the community repository supported by OpenCFD Ltd,
     producer and distributor of the OpenFOAM software via www.openfoam.com,
     and owner of the OPENFOAM trademark.
