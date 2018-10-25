@@ -717,7 +717,8 @@ class Python(AutotoolsPackage):
                 copy(src, dst)
                 if 'script' in get_filetype(src):
                     filter_file(
-                        self.spec.prefix, os.path.abspath(view.root), dst)
+                        self.spec.prefix, os.path.abspath(view.root), dst,
+                        backup=False)
             else:
                 orig_link_target = os.path.realpath(src)
                 new_link_target = os.path.abspath(merge_map[orig_link_target])

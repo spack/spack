@@ -51,6 +51,8 @@ class FilesystemView(object):
         self.root = root
         self.layout = layout
 
+        self.projections = kwargs.get('projections', {})
+
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
         self.link = kwargs.get("link", os.symlink)
         self.verbose = kwargs.get("verbose", False)
@@ -122,6 +124,12 @@ class FilesystemView(object):
     def remove_standalone(self, spec):
         """
             Remove (unlink) a standalone package from this view.
+        """
+        raise NotImplementedError
+
+    def get_projection_for_spec(self, spec):
+        """
+           Get the projection in this view for a spec.
         """
         raise NotImplementedError
 
@@ -206,9 +214,19 @@ class YamlFilesystemView(FilesystemView):
                      % colorize_spec(spec))
             return True
 
-        if not spec.package.is_activated(self):
+        # Find the directory we should link into
+        extendee_spec = spec.package.extendee_spec
+        extension_root = extendee_spec.package.view_destination(self)
+        
+        # Create a view for the link target if it differs from top level view
+        if extension_root != self.root:
+            extension_view = YamlFilesystemView(extension_root, spack.store.layout)
+        else:
+            extension_view = self
+
+        if not spec.package.is_activated(extension_view):
             spec.package.do_activate(
-                self, verbose=self.verbose, with_dependencies=False)
+                extension_view, verbose=self.verbose, with_dependencies=False)
 
         # make sure the meta folder is linked as well (this is not done by the
         # extension-activation mechnism)
@@ -371,11 +389,21 @@ class YamlFilesystemView(FilesystemView):
                      'Skipping package not linked in view: %s' % spec.name)
             return
 
+        # Find the directory we should unlink from
+        extendee_spec = spec.package.extendee_spec
+        extension_root = extendee_spec.package.view_destination(self)
+        
+        # Create a view for the link target if it differs from top level view
+        if extension_root != self.root:
+            extension_view = YamlFilesystemView(extension_root, spack.store.layout)
+        else:
+            extension_view = self
+
         # The spec might have been deactivated as depdency of another package
         # already
-        if spec.package.is_activated(self):
+        if spec.package.is_activated(extension_view):
             spec.package.do_deactivate(
-                self,
+                extension_view,
                 verbose=self.verbose,
                 remove_dependents=with_dependents)
         self.unlink_meta_folder(spec)
@@ -395,13 +423,31 @@ class YamlFilesystemView(FilesystemView):
         if self.verbose:
             tty.info(self._croot + 'Removed package: %s' % colorize_spec(spec))
 
+    def get_projection_for_spec(self, spec):
+        """
+           Return the projection for a spec in this view.
+
+           Relies on the ordering of projections to avoid ambiguity.
+        """
+        spec = spack.spec.Spec(spec)
+        for spec_like, fmt_str in self.projections.items():
+            if spec_like == 'all' or spec.satisfies(spec_like):
+                return os.path.join(self.root, spec.format(fmt_str))
+        return self.root
+
     def get_all_specs(self):
-        dotspack = os.path.join(self.root,
-                                spack.store.layout.metadata_dir)
-        if os.path.exists(dotspack):
-            return list(filter(None, map(self.get_spec, os.listdir(dotspack))))
-        else:
-            return []
+        metadata_dirs = []
+        for root, dirs, files in os.walk(self.root):
+            if spack.store.layout.metadata_dir in dirs:
+                metadata_dirs.append(os.path.join(root,
+                                                  spack.store.layout.metadata_dir))
+
+        specs = []
+        for md_dir in metadata_dirs:
+            if os.path.exists(md_dir):
+                specs.extend(list(filter(None, map(self.get_spec, 
+                                                   os.listdir(md_dir)))))
+        return specs
 
     def get_conflicts(self, *specs):
         """
@@ -414,7 +460,7 @@ class YamlFilesystemView(FilesystemView):
 
     def get_path_meta_folder(self, spec):
         "Get path to meta folder for either spec or spec name."
-        return os.path.join(self.root,
+        return os.path.join(self.get_projection_for_spec(spec),
                             spack.store.layout.metadata_dir,
                             getattr(spec, "name", spec))
 

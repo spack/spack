@@ -284,7 +284,7 @@ class PackageViewMixin(object):
         """The target root directory: each file is added relative to this
         directory.
         """
-        return view.root
+        return view.get_projection_for_spec(self.spec)
 
     def view_file_conflicts(self, view, merge_map):
         """Report any files which prevent adding this package to the view. The
