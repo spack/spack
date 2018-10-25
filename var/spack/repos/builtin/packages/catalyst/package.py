@@ -116,22 +116,6 @@ class Catalyst(CMakePackage):
             tty.msg("Already generated %s in %s" % (self.name,
                                                     self.stage.path))
 
-    @when('@:5.4.1')
-    def setup_environment(self, spack_env, run_env):
-        # paraview 5.4 and earlier
-        # - libs  under lib/paraview-5.4
-        if os.path.isdir(self.prefix.lib64):
-            lib_dir = self.prefix.lib64
-        else:
-            lib_dir = self.prefix.lib
-
-        run_env.set('ParaView_DIR', self.prefix)
-
-        # Everything else under lib/paraview-5.4
-        lib_dir = join_path(lib_dir, paraview_subdir)
-        run_env.prepend_path('LIBRARY_PATH', lib_dir)
-        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
-
     def setup_environment(self, spack_env, run_env):
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
@@ -142,6 +126,8 @@ class Catalyst(CMakePackage):
         else:
             lib_dir = self.prefix.lib
 
+        if self.spec.version <= Version('5.4.1'):
+            lib_dir = join_path(lib_dir, paraview_subdir)
         run_env.set('ParaView_DIR', self.prefix)
         run_env.prepend_path('LIBRARY_PATH', lib_dir)
         run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
@@ -206,4 +192,4 @@ class Catalyst(CMakePackage):
         with working_dir(self.build_directory, create=True):
             subprocess.check_call([cmake_script_path,
                                    os.path.abspath(self.root_cmakelists_dir)] +
-                                  self.cmake_args() + self.std_cmake_args)
+                                   self.cmake_args() + self.std_cmake_args)
