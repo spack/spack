@@ -35,6 +35,7 @@ class Catalyst(CMakePackage):
     variant('extras', default=False, description='Enable Extras support')
     variant('rendering', default=False, description='Enable VTK Rendering support')
     variant('expat', default=True, description="Use external expat")
+    variant('osmesa', default=True, description='Use offscreen rendering')
 
     depends_on('git', type='build')
     depends_on('mpi')
@@ -191,7 +192,10 @@ class Catalyst(CMakePackage):
 
         cmake_args = [
             '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version),
-            '-DVTK_USE_SYSTEM_EXPAT:BOOL=%s' % variant_bool('+expat')
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=%s' % variant_bool('+expat'),
+            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
+            '-DVTK_USE_OFFSCREEN:BOOL=%s' % variant_bool('+osmesa'),
+            '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa')
         ]
         return cmake_args
 
