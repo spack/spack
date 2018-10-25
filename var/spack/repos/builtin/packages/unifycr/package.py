@@ -53,7 +53,7 @@ class Unifycr(AutotoolsPackage):
 
     # we depend on numactl, which does't currently build on darwin
     conflicts('platform=darwin', when='+numa')
-    conflicts('hdf5', when='@:0.1.1')
+    conflicts('+hdf5', when='@:0.1.1')
 
     # Parallel disabled to prevent tests from being run out-of-order when
     # installed with the --test={root, all} option. Can potentially change if
@@ -69,7 +69,7 @@ class Unifycr(AutotoolsPackage):
             env['CC'] = spec['mpi'].mpicc
 
         # UnifyCR's configure requires the exact path for HDF5
-        def hdf5_path(name):
+        def hdf5_compiler_path(name):
             if '~mpi' in spec[name]:  # serial HDF5
                 return spec[name].prefix.bin.h5cc
             else:  # parallel HDF5
@@ -77,7 +77,7 @@ class Unifycr(AutotoolsPackage):
 
         args.extend(self.with_or_without('numa',
                                          lambda x: spec['numactl'].prefix))
-        args.extend(self.with_or_without('hdf5', hdf5_path))
+        args.extend(self.with_or_without('hdf5', hdf5_compiler_path))
 
         if '+debug' in spec:
             args.append('--enable-debug')
