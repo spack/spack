@@ -1,0 +1,31 @@
+From dd0b8b642ef5ed7295798ca657593b7d728efe99 Mon Sep 17 00:00:00 2001
+From: Ricardo Silva <ricardo.silva@epfl.ch>
+Date: Wed, 24 Oct 2018 10:53:19 +0200
+Subject: [PATCH] Stop coveralls from being picked up as a dependency
+
+* `os.getenv("TRAVIS")` never raises any errors, defaults to 'None'
+* but 'None' is false-ish, can be used in an `if` statement
+---
+ setup.py | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 43715e8..dfe5a0a 100644
+--- a/setup.py
++++ b/setup.py
+@@ -15,11 +15,8 @@ from epic.version import __version__
+ 
+ install_requires = ["scipy", "pandas>=0.23.0", "numpy", "natsort", "joblib", "pyfaidx", "typing", "cython"]
+ 
+-try:
+-    os.getenv("TRAVIS")
++if os.getenv("TRAVIS"):
+     install_requires.append("coveralls")
+-except:
+-    pass
+ 
+ if sys.version_info[0] == 2:
+     install_requires.append("functools32")
+-- 
+1.8.3.1
+

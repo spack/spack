@@ -38,6 +38,8 @@ class PyPandas(PythonPackage):
     homepage = "http://pandas.pydata.org/"
     url = "https://pypi.io/packages/source/p/pandas/pandas-0.19.0.tar.gz"
 
+    version('0.23.4', '7b597c7f989652e0c9af5f09a157e3ae')
+    version('0.23.0', '5df7c8578ce4e98671a7e721603a8e39')
     version('0.21.1', '42ae7f81b81a86c3f91f663b66c525f7')
     version('0.19.2', '26df3ef7cd5686fa284321f4f48b38cd')
     version('0.19.0', 'bc9bb7188e510b5d44fbdd249698a2c3')

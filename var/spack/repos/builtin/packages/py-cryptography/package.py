@@ -33,6 +33,7 @@ class PyCryptography(PythonPackage):
     homepage = "https://pypi.python.org/pypi/cryptography"
     url      = "https://pypi.io/packages/source/c/cryptography/cryptography-1.8.1.tar.gz"
 
+    version('2.2.1', 'de76fc2cbcb772e572798fee438df2af')
     version('1.8.1', '9f28a9c141995cd2300d0976b4fac3fb')
 
     # dependencies taken from https://github.com/pyca/cryptography/blob/master/setup.py
