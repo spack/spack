@@ -32,9 +32,12 @@ class Libmesh(AutotoolsPackage):
     variant('nanoflann', default=False, description='Compile with the bundled nanoflann graph library')
     variant('nemesis', default=False, description='Compile with the bundled nemesis IO library')
     variant('netcdf', default=False, description='Compile with the bundled NETCDF IO library')
-    # TODO parmetis assumes that we use the bundled copy of metis, but the
-    # existing build script assumes that we can get METIS from PETSc. Be
-    # conservative and completely disable parmetis support for now.
+    # TODO the copy of parmetis bundled with libMesh assumes that we use the
+    # bundled copy of metis, but previous versions of this build script use an
+    # external metis installation. Be conservative and completely disable
+    # parmetis support to preserve the old behavior (and to prevent compiling
+    # with two different copies of metis).
+    #
     # variant('parmetis', default=False,
     #         description='Compile with the bundled PARMETIS graph library')
     variant('qhull', default=False, description='Compile with the bundled qhull mesh generation library')
