@@ -25,7 +25,7 @@ config:
 
 
   # default directory layout
-  directory_layout: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+  install_path_scheme: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
 
 
   # Locations where different types of modules should be installed.
@@ -77,6 +77,14 @@ config:
   dirty: false
 
 
+  # The language the build environment will use. This will produce English
+  # compiler messages by default, so the log parser can highlight errors.
+  # If set to C, it will use English (see man locale).
+  # If set to the empty string (''), it will use the language from the
+  # user's environment.
+  build_language: C
+
+
   # When set to true, concurrent instances of Spack will use locks to
   # avoid modifying the install tree, database file, etc. If false, Spack
   # will disable all locking, but you must NOT run concurrent instances
@@ -94,3 +102,16 @@ config:
 
   # If set to true, spack will use ccache to cache c compiles.
   ccache: false
+
+  # How long to wait to lock the Spack installation database. This lock is used
+  # when spack needs to manage its own package metadata and all operations are
+  # expected to complete within the default time limit. The timeout should
+  # therefore generally be left untouched.
+  db_lock_timeout: 120
+
+  # How long to wait when attempting to modify a package (e.g. to install it).
+  # This value should typically be 'null' (never time out) unless the Spack
+  # instance only ever has a single user at a time, and only if the user
+  # anticipates that a significant delay indicates that the lock attempt will
+  # never succeed.
+  package_lock_timeout: null
