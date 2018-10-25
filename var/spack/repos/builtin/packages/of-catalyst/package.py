@@ -57,10 +57,15 @@ class OfCatalyst(CMakePackage):
     homepage = "https://develop.openfoam.com/Community/catalyst"
     gitrepo  = "https://develop.openfoam.com/Community/catalyst.git"
 
+    version('1806', git=gitrepo, tag='v1806')
     version('develop', branch='develop', git=gitrepo)
 
-    depends_on('openfoam-com@1806:', when='@develop', type=('build', 'link', 'run'))
-    depends_on('catalyst@5.5:')
+    variant('full', default=False, description='Build against paraview (full) or catalyst (light)')
+
+    depends_on('openfoam-com@1806', when='@1806', type=('build', 'link', 'run'))
+    depends_on('openfoam-com@develop', when='@develop', type=('build', 'link', 'run'))
+    depends_on('catalyst@5.5:', when='~full')
+    depends_on('paraview@5.5:+osmesa~qt', when='+full')
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
