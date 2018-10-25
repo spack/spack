@@ -11,8 +11,15 @@ class SentieonGenomics(Package):
     """Sentieon provides complete solutions for secondary DNA analysis.
     Our software improves upon BWA, GATK, Mutect, and Mutect2 based pipelines.
     The Sentieon tools are deployable on any CPU-based computing system.
-    Please set the path to the sentieon server with:
-    export SENTIEON_LICENSE=[FQDN]:[PORT]"""
+    Please set the path to the sentieon license server with:
+    
+    export SENTIEON_LICENSE=[FQDN]:[PORT]
+    
+    Note: A manual download is required.
+    Spack will search your current directory for the download file.
+    Alternatively, add this file to a mirror so that Spack can find it.
+    For instructions on how to set up a mirror, see
+    http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.sentieon.com/"
     url      = "file://{0}/sentieon-genomics-201808.01.tar.gz".format(os.getcwd())
