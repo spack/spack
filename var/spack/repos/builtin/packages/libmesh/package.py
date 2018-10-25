@@ -54,11 +54,15 @@ class Libmesh(AutotoolsPackage):
     # other features:
     variant('debug', default=False, description='Compile with support for debugging')
     variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('openmp', default=False,
-            description='Enable OpenMP support; '
-            'this is independent of the choice of threading library')
-    variant('threads', default='none', description='Enable threading support',
-            values=('none', 'pthreads', 'tbb'), multi=False)
+    # While it is possible to configure libMesh to use openMP with neither
+    # pthreads nor TBB, no openMP code can actually be reached without enabling
+    # pthreads as well. Hence, since enabling openMP while disabling pthreads
+    # is not useful, we include openMP in the same variant to make it clear
+    # which scheduler is ultimately used.
+    variant('threads', default='none',
+            description='Enable threading support (with a particular '
+            'scheduler, in the case of openmp and tbb)',
+            values=('none', 'pthreads', 'tbb', 'openmp'), multi=False)
 
     conflicts('+metaphysicl', when='@:1.2.999',
               msg='The interface to metaphysicl is not available in libMesh '
@@ -179,8 +183,12 @@ class Libmesh(AutotoolsPackage):
             options.append('CC=%s' % self.compiler.cc)
             options.append('CXX=%s' % self.compiler.cxx)
 
-        if '+openmp' in self.spec:
+        if 'threads=openmp' in self.spec:
+            # OpenMP cannot be used if pthreads is not available: see
+            # parallel/threads_pthread.h and parallel/threads.h
             options.append('--enable-openmp=yes')
+            options.append('--with-thread-model=pthread')
+            options.append('--enable-pthreads=yes')
         else:
             options.append('--enable-openmp=no')
 
@@ -188,7 +196,8 @@ class Libmesh(AutotoolsPackage):
             options.append('--with-thread-model=pthread')
             options.append('--enable-pthreads=yes')
         else:
-            options.append('--enable-pthreads=no')
+            if 'threads=openmp' not in self.spec:
+                options.append('--enable-pthreads=no')
 
         if 'threads=tbb' in self.spec:
             options.append('--with-thread-model=tbb')
