@@ -16,10 +16,9 @@ class Unifycr(AutotoolsPackage):
 
     homepage = "https://github.com/LLNL/UnifyCR"
     git      = "https://github.com/LLNL/UnifyCR.git"
-    url      = "https://github.com/LLNL/UnifyCR/archive/v0.1.1.tar.gz"
 
     version('develop', branch='dev', preferred=True)
-    version('0.1.1', sha256='f0628f661d5eff67a55ba2bf254dc38636525c5e191d5f32b9e128294b8f8051')
+    version('0.1.1', tag='v0.1.1')
 
     variant('debug', default='False', description='Enable debug build options')
     variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
@@ -54,6 +53,7 @@ class Unifycr(AutotoolsPackage):
 
     # we depend on numactl, which does't currently build on darwin
     conflicts('platform=darwin', when='+numa')
+    conflicts('hdf5', when='@:0.1.1')
 
     # Parallel disabled to prevent tests from being run out-of-order when
     # installed with the --test={root, all} option. Can potentially change if
@@ -68,19 +68,16 @@ class Unifycr(AutotoolsPackage):
         if spec.satisfies('@0.1.1'):
             env['CC'] = spec['mpi'].mpicc
 
-        # If additional dependencies require a custom activation_value, can
-        # modify this function to handle them as well.
-        def variant_path(name):
-            # UnifyCR's configure requires the exact path for HDF5
+        # UnifyCR's configure requires the exact path for HDF5
+        def hdf5_path(name):
             if '~mpi' in spec[name]:  # serial HDF5
-                return spec[name].prefix.bin + '/h5cc'
+                return spec[name].prefix.bin.h5cc
             else:  # parallel HDF5
-                return spec[name].prefix.bin + '/h5pcc'
+                return spec[name].prefix.bin.h5pcc
 
         args.extend(self.with_or_without('numa',
                                          lambda x: spec['numactl'].prefix))
-        args.extend(self.with_or_without('hdf5',
-                                         activation_value=variant_path))
+        args.extend(self.with_or_without('hdf5', hdf5_path))
 
         if '+debug' in spec:
             args.append('--enable-debug')
