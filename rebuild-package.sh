@@ -44,9 +44,6 @@ build_spec_name() {
     echo "${pkgName}@${pkgVersion}%${compiler} arch=${osarch}"
 }
 
-SPEC_NAME=$( build_spec_name "${CI_JOB_NAME}" )
-echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
-
 CURRENT_WORKING_DIR=`pwd`
 LOCAL_MIRROR="${CURRENT_WORKING_DIR}/local_mirror"
 BUILD_CACHE_DIR="${LOCAL_MIRROR}/build_cache"
@@ -54,22 +51,15 @@ SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
 CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=Spack"
 DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
 
+export SPACK_ROOT=${CI_PROJECT_DIR}
 export PATH="${SPACK_BIN_DIR}:${PATH}"
 export GNUPGHOME="${CURRENT_WORKING_DIR}/opt/spack/gpg"
 
-# If we have been given a list of paths where we might find compilers
-if [ ! -z "${SPACK_FIND_COMPILER_PATHS}" ]; then
-    IFS=';' read -ra COMPILER_PATHS <<< "${SPACK_FIND_COMPILER_PATHS}"
-    for path in "${COMPILER_PATHS[@]}"; do
-        echo "Finding compiler in ${path}"
-        if [ -d "${path}" ]; then
-            spack compiler find "${path}"
-        fi
-    done
+SPEC_NAME=$( build_spec_name "${CI_JOB_NAME}" )
+echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 
-    # Finally, list the compilers spack knows about
-    spack compilers
-fi
+# Finally, list the compilers spack knows about
+spack compilers
 
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
