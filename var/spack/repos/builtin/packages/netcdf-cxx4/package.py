@@ -8,6 +8,7 @@ from spack import *
 
 class NetcdfCxx4(AutotoolsPackage):
     """C++ interface for NetCDF4"""
+
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "https://www.github.com/unidata/netcdf-cxx4/tarball/v4.3.0"
 
@@ -25,18 +26,17 @@ class NetcdfCxx4(AutotoolsPackage):
 
     force_autoreconf = True
 
-    def configure_args(self):
-        cflags = fflags = ''
-        if '+pic' in self.spec:
-            cflags = 'CFLAGS=' + self.compiler.pic_flag
-            fflags = 'FFLAGS=' + self.compiler.pic_flag
+    def flag_handler(self, name, flags):
+        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+            flags.append(self.compiler.pic_flag)
+        elif name == 'cppflags':
+            flags.append('-I' + self.spec['netcdf'].prefix.include)
 
-        return [cflags, fflags,
-                'CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+        return (None, None, flags)
 
     @property
     def libs(self):
         shared = True
         return find_libraries(
-            'libnetcdf_c++4', root=self.prefix, shared=shared, recursive=True
+        'libnetcdf_c++4', root=self.prefix, shared=shared, recursive=True
         )

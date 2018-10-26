@@ -24,14 +24,13 @@ class NetcdfFortran(AutotoolsPackage):
     # https://github.com/Unidata/netcdf-fortran/issues/94
     patch('nag.patch', when='@:4.4.4%nag')
 
-    def configure_args(self):
-        cflags = fflags = ''
-        if '+pic' in self.spec:
-            cflags = 'CFLAGS=' + self.compiler.pic_flag
-            fflags = 'FFLAGS=' + self.compiler.pic_flag
+    def flag_handler(self, name, flags):
+        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+            flags.append(self.compiler.pic_flag)
+        elif name == 'cppflags':
+            flags.append('-I' + self.spec['netcdf'].prefix.include)
 
-        return [cflags, fflags,
-                'CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+        return (None, None, flags)
 
     @property
     def libs(self):
