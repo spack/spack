@@ -19,5 +19,5 @@ class RArgparse(RPackage):
 
     depends_on('r-proto@1:', type=('build', 'run'))
     depends_on('r-findpython', type=('build', 'run'))
-    depends_on('r-getopt@1.19', type=('build', 'run'))
+    depends_on('r-getopt', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
