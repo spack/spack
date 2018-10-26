@@ -55,7 +55,7 @@ class Damaris(CMakePackage):
 
         if (self.spec.variants['catalyst'].value):
             args.extend(['-DENABLE_CATALYST:BOOL=ON'])
-            args.extend(['-DParaView_ROOT:PATH=%s' 
+            args.extend(['-DParaView_ROOT:PATH=%s'
                          % self.spec['catalyst'].prefix])
 
         if (self.spec.variants['visit'].value):
