@@ -53,7 +53,7 @@ class Neurodamus(NeurodamusBase):
 
     depends_on("neuron+profile", when='+profile')
     depends_on('reportinglib+profile', when='+profile')
-    depends_on('synapsetool~mpi~shared', when='+syn2')
+    depends_on('synapsetool~shared', when='+syn2')
     depends_on('tau', when='+profile')
 
     # coreneuron support is available for plasticity model

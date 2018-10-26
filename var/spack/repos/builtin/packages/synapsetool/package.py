@@ -40,7 +40,7 @@ class Synapsetool(CMakePackage):
     version('0.2.1', git=url, tag='v0.2.1', submodules=True)
     version('0.2.0', git=url, tag='v0.2.0', submodules=True)
 
-    variant('mpi', default=False, description="Enable MPI backend")
+    variant('mpi', default=True, description="Enable MPI backend")
     variant('shared', default=True, description="Build shared library")
 
     depends_on('boost@1.55:')
