@@ -22,6 +22,7 @@ class Valgrind(AutotoolsPackage):
     git      = "git://sourceware.org/git/valgrind.git"
 
     version('develop', branch='master')
+    version('3.14.0', '74175426afa280184b62591b58c671b3')
     version('3.13.0', '817dd08f1e8a66336b9ff206400a5369')
     version('3.12.0', '6eb03c0c10ea917013a7622e483d61bb')
     version('3.11.0', '4ea62074da73ae82e0162d6550d3f129')
