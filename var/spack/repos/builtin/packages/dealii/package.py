@@ -105,7 +105,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('lapack')
     depends_on('muparser')
     depends_on('suite-sparse')
-    depends_on('suite-sparse@:5.1.0', when='%gcc@:4.8.99')
     depends_on('tbb')
     depends_on('zlib')
 
