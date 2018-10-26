@@ -428,6 +428,46 @@ packages:
         x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
 
 
+def test_included_config_precedence():
+    test_config = """\
+env:
+  include:
+  - ./high-config.yaml  # this one should take precedence
+  - ./low-config.yaml
+  specs:
+  - mpileaks
+"""
+    spack.package_prefs.PackagePrefs.clear_caches()
+
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
+
+    with open(os.path.join(e.path, 'high-config.yaml'), 'w') as f:
+        f.write("""\
+packages:
+  libelf:
+    version: [0.8.10]  # this should override libelf version below
+""")
+
+    with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
+        f.write("""\
+packages:
+  mpileaks:
+    version: [2.2]
+  libelf:
+    version: [0.8.12]
+""")
+
+    ev.prepare_config_scope(e)
+    e.concretize()
+
+    assert any(
+        x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
+
+    assert any(
+        [x.satisfies('libelf@0.8.10') for x in e._get_environment_specs()])
+
+
 def test_bad_env_yaml_format(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:

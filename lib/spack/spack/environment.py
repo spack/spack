@@ -377,9 +377,12 @@ class Environment(object):
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
 
-        Scopes are in order from lowest to highest precedence, i.e., the
-        order they should be pushed on the stack, but the opposite of the
-        order they appaer in the spack.yaml file.
+        Scopes are listed in the YAML file in order from highest to
+        lowest precedence, so configuration from earlier scope will take
+        precedence over later ones.
+
+        This routine returns them in the order they should be pushed onto
+        the internal scope stack (so, in reverse, from lowest to highest).
         """
         scopes = []
 
