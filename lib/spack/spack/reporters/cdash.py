@@ -16,11 +16,13 @@ from six import text_type
 from six.moves.urllib.request import build_opener, HTTPHandler, Request
 from six.moves.urllib.parse import urlencode
 
+from llnl.util.filesystem import working_dir
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
 from spack.reporter import Reporter
 from spack.util.crypto import checksum
+from spack.util.executable import which
 from spack.util.log_parse import parse_log_events
 
 __all__ = ['CDash']
@@ -37,6 +39,7 @@ map_phases_to_cdash = {
 
 # Initialize data structures common to each phase's report.
 cdash_phases = set(map_phases_to_cdash.values())
+cdash_phases.add('update')
 
 
 class CDash(Reporter):
@@ -65,6 +68,10 @@ class CDash(Reporter):
         self.buildstamp = time.strftime(buildstamp_format,
                                         time.localtime(self.starttime))
         self.buildId = None
+        self.revision = ''
+        git = which('git')
+        with working_dir(spack.paths.spack_root):
+            self.revision = git('rev-parse', 'HEAD', output=str).strip()
 
     def build_report(self, filename, report_data):
         self.initialize_report(filename, report_data)
@@ -104,6 +111,8 @@ class CDash(Reporter):
                         elif cdash_phase:
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
+
+        phases_encountered.append('update')
 
         # Move the build phase to the front of the list if it occurred.
         # This supports older versions of CDash that expect this phase
@@ -147,15 +156,21 @@ class CDash(Reporter):
                     report_data[phase]['warnings'].append(
                         clean_log_event(warning))
 
+            if phase == 'update':
+                report_data[phase]['revision'] = self.revision
+
             # Write the report.
             report_name = phase.capitalize() + ".xml"
             phase_report = os.path.join(filename, report_name)
 
             with codecs.open(phase_report, 'w', 'utf-8') as f:
                 env = spack.tengine.make_environment()
-                site_template = os.path.join(self.template_dir, 'Site.xml')
-                t = env.get_template(site_template)
-                f.write(t.render(report_data))
+                if phase != 'update':
+                    # Update.xml stores site information differently
+                    # than the rest of the CTest XML files.
+                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    t = env.get_template(site_template)
+                    f.write(t.render(report_data))
 
                 phase_template = os.path.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
@@ -166,9 +181,11 @@ class CDash(Reporter):
     def concretization_report(self, filename, msg):
         report_data = {}
         self.initialize_report(filename, report_data)
-        report_data['starttime'] = self.starttime
-        report_data['endtime'] = self.starttime
-        report_data['msg'] = msg
+        report_data['update'] = {}
+        report_data['update']['starttime'] = self.starttime
+        report_data['update']['endtime'] = self.starttime
+        report_data['update']['revision'] = self.revision
+        report_data['update']['log'] = msg
 
         env = spack.tengine.make_environment()
         update_template = os.path.join(self.template_dir, 'Update.xml')
