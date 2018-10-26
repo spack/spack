@@ -121,7 +121,7 @@ stages:
   - 'unit tests + documentation'
   - 'build tests'
   - name: 'docker build'
-    if: type IN (api, cron, push)
+    if: type = push AND branch IN (develop, master)
 
 
 #=============================================================================
