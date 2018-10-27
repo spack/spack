@@ -23,6 +23,7 @@ import spack.config
 import spack.caches
 import spack.database
 import spack.directory_layout
+import spack.environment as ev
 import spack.paths
 import spack.platforms.test
 import spack.repo
@@ -35,6 +36,27 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
+
+
+#
+# Disable any activate Spack environment BEFORE all tests
+#
+@pytest.fixture(scope='session', autouse=True)
+def clean_user_environment():
+    env_var = ev.spack_env_var in os.environ
+    active = ev.active
+
+    if env_var:
+        spack_env_value = os.environ.pop(ev.spack_env_var)
+    if active:
+        ev.deactivate()
+
+    yield
+
+    if env_var:
+        os.environ[ev.spack_env_var] = spack_env_value
+    if active:
+        ev.activate(active)
 
 
 # Hooks to add command line options or set other custom behaviors.
