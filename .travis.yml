@@ -115,6 +115,7 @@ jobs:
       env: TEST_SUITE=docker
   allow_failures:
     - dist: xenial
+    - env: TEST_SUITE=docker
 
 stages:
   - 'style checks'
