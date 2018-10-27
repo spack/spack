@@ -12,7 +12,7 @@ import llnl.util.filesystem as fs
 
 import spack.modules
 import spack.environment as ev
-from spack.cmd.env import _env_concretize, _env_create
+from spack.cmd.env import _env_create
 from spack.spec import Spec
 from spack.main import SpackCommand
 
@@ -23,6 +23,7 @@ pytestmark = pytest.mark.usefixtures(
 
 
 env = SpackCommand('env')
+install = SpackCommand('install')
 
 
 def test_add():
@@ -117,7 +118,6 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
 def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
     env('create', 'test')
-    install = SpackCommand('install')
 
     e = ev.read('test')
     with capfd.disabled():
@@ -193,7 +193,9 @@ def test_to_lockfile_dict():
 def test_env_repo():
     e = ev.create('test')
     e.add('mpileaks')
-    _env_concretize(e)
+    e.write()
+
+    env('concretize', 'test')
 
     package = e.repo.get('mpileaks')
     assert package.name == 'mpileaks'
@@ -486,8 +488,12 @@ def test_env_loads(install_mockery, mock_fetch):
 
     with ev.read('test'):
         env('add', 'mpileaks')
+
     env('concretize', 'test')
-    env('install', '--fake', 'test')
+
+    with ev.read('test'):
+        install('--fake')
+
     env('loads', 'test')
 
     e = ev.read('test')
@@ -535,8 +541,6 @@ def test_env_commands_die_with_no_env_arg():
         env('loads')
     with pytest.raises(spack.main.SpackCommandError):
         env('stage')
-    with pytest.raises(spack.main.SpackCommandError):
-        env('install')
     with pytest.raises(spack.main.SpackCommandError):
         env('uninstall')
     with pytest.raises(spack.main.SpackCommandError):

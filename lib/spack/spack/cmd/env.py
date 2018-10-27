@@ -39,44 +39,8 @@ subcommands = [
     ['status', 'st'],
     'loads',
     'stage',
-    'install',
     'uninstall',
 ]
-
-
-def get_env(args, cmd_name, fail_on_error=True):
-    """Get target environment from args, or from environment variables.
-
-    This is used by a number of commands for handling the environment
-    argument.
-
-    Check whether an environment was passed via arguments, then whether
-    it was passed via SPACK_ENV.  If an environment is found, read it in.
-    If not, print an error message referencing the calling command.
-
-    Arguments:
-        args (Namespace): argparse namespace wtih command arguments
-        cmd_name (str): name of calling command
-
-    """
-    env = args.env
-    if not env:
-        if ev.active:
-            return ev.active
-        elif not fail_on_error:
-            return None
-        tty.die(
-            '`spack env %s` requires an environment' % cmd_name,
-            'activate an environment first:',
-            '    spack env activate ENV',
-            'or use:',
-            '    spack -e ENV %s ...' % cmd_name)
-
-    environment = ev.disambiguate(env)
-
-    if not environment:
-        tty.die('no such environment: %s' % env)
-    return environment
 
 
 #
@@ -316,7 +280,7 @@ def env_add_setup_parser(subparser):
 
 
 def env_add(args):
-    env = get_env(args, 'add')
+    env = ev.get_env(args, 'env add')
 
     for spec in spack.cmd.parse_specs(args.specs):
         if not env.add(spec):
@@ -340,7 +304,7 @@ def env_remove_setup_parser(subparser):
 
 
 def env_remove(args):
-    env = get_env(args, 'remove <spec>')
+    env = ev.get_env(args, 'env remove <spec>')
 
     if args.all:
         env.clear()
@@ -364,40 +328,9 @@ def env_concretize_setup_parser(subparser):
 
 
 def env_concretize(args):
-    env = get_env(args, 'status')
-    _env_concretize(env, use_repo=args.use_env_repo, force=args.force)
-
-
-def _env_concretize(env, use_repo=False, force=False):
-    """Function body separated out to aid in testing."""
-    env.concretize(force=force)
+    env = ev.get_env(args, 'env concretize')
+    env.concretize(force=args.force)
     env.write()
-
-
-# REMOVE
-# env install
-#
-def env_install_setup_parser(subparser):
-    """concretize and install all specs in an environment"""
-    subparser.add_argument(
-        'env', nargs='?', help='install all packages in this environment')
-    subparser.add_argument(
-        '--only-concrete', action='store_true', default=False,
-        help='only install already concretized specs')
-    spack.cmd.install.add_common_arguments(subparser)
-
-
-def env_install(args):
-    env = get_env(args, 'status')
-
-    # concretize unless otherwise specified
-    if not args.only_concrete:
-        env.concretize()
-        env.write()
-
-    # install all specs in the environment
-    env.install_all(args)
-
 
 # REMOVE
 # env uninstall
@@ -410,7 +343,7 @@ def env_uninstall_setup_parser(subparser):
 
 
 def env_uninstall(args):
-    env = get_env(args, 'uninstall')
+    env = ev.get_env(args, 'env uninstall')
     env.uninstall(args)
 
 
@@ -427,7 +360,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = get_env(args, 'status', fail_on_error=False)
+    env = ev.get_env(args, 'env status', required=False)
     if not env:
         tty.msg('No active environment')
         return
@@ -450,7 +383,7 @@ def env_stage_setup_parser(subparser):
 
 
 def env_stage(args):
-    env = get_env(args, 'stage')
+    env = ev.get_env(args, 'env stage')
     for spec in env.specs_by_hash.values():
         for dep in spec.traverse():
             dep.package.do_stage()
@@ -470,7 +403,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = get_env(args, 'loads')
+    env = ev.get_env(args, 'env loads')
 
     # Set the module types that have been selected
     module_type = args.module_type
