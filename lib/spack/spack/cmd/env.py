@@ -6,8 +6,6 @@
 import os
 import sys
 import argparse
-import shutil
-import tempfile
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
@@ -37,11 +35,9 @@ subcommands = [
     ['list', 'ls'],
     'add',
     ['remove', 'rm'],
-    'upgrade',
     'concretize',
     ['status', 'st'],
     'loads',
-    'relocate',
     'stage',
     'install',
     'uninstall',
@@ -412,20 +408,6 @@ def env_uninstall(args):
 
 
 #
-# env relocate
-#
-def env_relocate_setup_parser(subparser):
-    """reconcretize environment with new OS and/or compiler"""
-    subparser.add_argument('--compiler', help="Compiler spec to use")
-
-
-def env_relocate(args):
-    env = get_env(args, 'relocate')
-    env.reset_os_and_compiler(compiler=args.compiler)
-    env.write()
-
-
-#
 # env status
 #
 def env_status_setup_parser(subparser):
@@ -501,34 +483,6 @@ def env_loads(args):
 
     print('To load this environment, type:')
     print('   source %s' % loads_file)
-
-
-#
-# env upgrade
-#
-def env_upgrade_setup_parser(subparser):
-    """upgrade a dependency package in an environment to the latest version"""
-    subparser.add_argument('dep_name', help='Dependency package to upgrade')
-    subparser.add_argument('--dry-run', action='store_true', dest='dry_run',
-                           help="Just show the updates that would take place")
-
-
-def env_upgrade(args):
-    env = get_env(args, 'upgrade')
-
-    if os.path.exists(env.repos_path):
-        repo_stage = tempfile.mkdtemp()
-        new_repos_path = os.path.join_path(repo_stage, 'repos')
-        shutil.copytree(env.repos_path, new_repos_path)
-
-        repo = spack.environment.make_repo_path(new_repos_path)
-        if args.dep_name in repo:
-            shutil.rmtree(repo.dirname_for_package_name(args.dep_name))
-        spack.repo.path.put_first(repo)
-
-    new_dep = env.upgrade_dependency(args.dep_name, args.dry_run)
-    if not args.dry_run and new_dep:
-        env.write(new_dep)
 
 
 #: Dictionary mapping subcommand names and aliases to functions

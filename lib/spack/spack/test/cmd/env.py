@@ -13,7 +13,6 @@ import llnl.util.filesystem as fs
 import spack.modules
 import spack.environment as ev
 from spack.cmd.env import _env_concretize, _env_create
-from spack.version import Version
 from spack.spec import Spec
 from spack.main import SpackCommand
 
@@ -139,21 +138,6 @@ def test_remove_command():
     assert 'mpileaks' not in env('status', 'test')
 
 
-def test_reset_compiler():
-    e = ev.create('test')
-    e.add('mpileaks')
-    e.concretize()
-
-    first_spec = e.specs_by_hash[e.concretized_order[0]]
-    available = set(['gcc', 'clang'])
-    available.remove(first_spec.compiler.name)
-    new_compiler = next(iter(available))
-    e.reset_os_and_compiler(compiler=new_compiler)
-
-    new_spec = e.specs_by_hash[e.concretized_order[0]]
-    assert new_spec.compiler != first_spec.compiler
-
-
 def test_environment_status():
     e = ev.create('test')
     e.add('mpileaks')
@@ -166,19 +150,6 @@ def test_environment_status():
     assert 'python' in list_content
     mpileaks_spec = e.specs_by_hash[e.concretized_order[0]]
     assert mpileaks_spec.format() in list_content
-
-
-def test_upgrade_dependency():
-    e = ev.create('test')
-    e.add('mpileaks ^callpath@0.9')
-    e.concretize()
-
-    e.upgrade_dependency('callpath')
-    env_specs = e._get_environment_specs()
-    callpath_dependents = list(x for x in env_specs if 'callpath' in x)
-    assert callpath_dependents
-    for spec in callpath_dependents:
-        assert spec['callpath'].version == Version('1.0')
 
 
 def test_to_lockfile_dict():
