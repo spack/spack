@@ -157,12 +157,9 @@ class Netcdf(AutotoolsPackage):
 
         config_args += self.enable_or_disable('shared')
 
-        if '~shared' in self.spec:
+        if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            cflags.append(self.compiler.pic_flag)
-
-        if '+pic' in self.spec:
             cflags.append(self.compiler.pic_flag)
 
         config_args += self.enable_or_disable('dap')
