@@ -21,8 +21,7 @@ import spack.schema.env
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.config
-from spack.spec import Spec, CompilerSpec, FlagMap
-from spack.version import VersionList
+from spack.spec import Spec
 
 
 #: environment variable used to indicate the active environment
@@ -222,31 +221,6 @@ def list_environments():
         if valid_env_name(candidate) and os.path.exists(yaml_path):
             names.append(candidate)
     return names
-
-
-def _reset_os_and_compiler(spec, compiler=None):
-    spec = spec.copy()
-    for x in spec.traverse():
-        x.compiler = None
-        x.architecture = None
-        x.compiler_flags = FlagMap(x)
-        x._concrete = False
-        x._hash = None
-    if compiler:
-        spec.compiler = CompilerSpec(compiler)
-    spec.concretize()
-    return spec
-
-
-def _upgrade_dependency_version(spec, dep_name):
-    spec = spec.copy()
-    for x in spec.traverse():
-        x._concrete = False
-        x._normal = False
-        x._hash = None
-    spec[dep_name].versions = VersionList(':')
-    spec.concretize()
-    return spec
 
 
 def validate(data, filename=None):
@@ -634,44 +608,6 @@ class Environment(object):
         for s, c in removed:
             write_user_spec(s, 'r')
             stream.write(c.tree(**kwargs))
-
-    def upgrade_dependency(self, dep_name, dry_run=False):
-        # TODO: if you have
-        # w -> x -> y
-        # and
-        # v -> x -> y
-        # then it would be desirable to ensure that w and v refer to the
-        # same x after upgrading y. This is not currently guaranteed.
-        new_order = list()
-        new_deps = list()
-        for i, spec_hash in enumerate(self.concretized_order):
-            spec = self.specs_by_hash[spec_hash]
-            if dep_name in spec:
-                if dry_run:
-                    tty.msg("Would upgrade {0} for {1}"
-                            .format(spec[dep_name].format(), spec.format()))
-                else:
-                    new_spec = _upgrade_dependency_version(spec, dep_name)
-                    new_order.append(new_spec.dag_hash())
-                    self.specs_by_hash[new_spec.dag_hash()] = new_spec
-                    new_deps.append(new_spec[dep_name])
-            else:
-                new_order.append(spec_hash)
-
-        if not dry_run:
-            self.concretized_order = new_order
-            return new_deps[0] if new_deps else None
-
-    def reset_os_and_compiler(self, compiler=None):
-        new_order = list()
-        new_specs_by_hash = {}
-        for spec_hash in self.concretized_order:
-            spec = self.specs_by_hash[spec_hash]
-            new_spec = _reset_os_and_compiler(spec, compiler)
-            new_order.append(new_spec.dag_hash())
-            new_specs_by_hash[new_spec.dag_hash()] = new_spec
-        self.concretized_order = new_order
-        self.specs_by_hash = new_specs_by_hash
 
     def _get_environment_specs(self, recurse_dependencies=True):
         """Returns the specs of all the packages in an environment.
