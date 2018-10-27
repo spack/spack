@@ -16,6 +16,7 @@ class Regcm(AutotoolsPackage):
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
+    depends_on('hdf5')
     depends_on('mpi')
 
     def flag_handler(self, name, flags):
