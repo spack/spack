@@ -150,7 +150,6 @@ def disambiguate(env, env_dir=None):
             return Environment(env_dir)
         else:
             raise EnvError('no environment in %s' % env_dir)
-        return
 
     return None
 
@@ -188,17 +187,6 @@ def create(name, init_file=None):
     if exists(name):
         raise EnvError("'%s': environment already exists" % name)
     return Environment(root(name), init_file)
-
-
-def destroy(name):
-    """Destroy a named environment."""
-    validate_env_name(name)
-    if not exists(name):
-        raise EnvError("no such environment '%s'" % name)
-    if not os.access(root(name), os.W_OK):
-        raise EnvError(
-            "insufficient permissions to modify environment: '%s'" % name)
-    shutil.rmtree(root(name))
 
 
 def config_dict(yaml_data):
@@ -317,7 +305,15 @@ class Environment(object):
 
     @property
     def name(self):
-        return os.path.basename(self.path)
+        """Human-readable representation of the environment.
+
+        This is the path for directory environments, and just the name
+        for named environments.
+        """
+        if self.path.startswith(env_path):
+            return os.path.basename(self.path)
+        else:
+            return self.path
 
     @property
     def manifest_path(self):
@@ -566,12 +562,7 @@ class Environment(object):
 
     def status(self, stream, **kwargs):
         """List the specs in an environment."""
-        if self.path.startswith(env_path):
-            name = os.path.basename(self.path)
-        else:
-            name = self.path
-
-        tty.msg('In environment %s' % name)
+        tty.msg('In environment %s' % self.name)
 
         concretized = [(spec, self.specs_by_hash[h])
                        for spec, h in zip(self.concretized_user_specs,

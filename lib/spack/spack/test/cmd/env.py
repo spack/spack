@@ -43,13 +43,20 @@ def test_env_list():
     assert 'baz' in out
 
 
-def test_env_destroy():
+def test_env_destroy(capfd):
     env('create', 'foo')
     env('create', 'bar')
 
     out = env('list')
     assert 'foo' in out
     assert 'bar' in out
+
+    foo = ev.read('foo')
+    with foo:
+        with pytest.raises(spack.main.SpackCommandError):
+            with capfd.disabled():
+                env('destroy', '-y', 'foo')
+        assert 'foo' in env('list')
 
     env('destroy', '-y', 'foo')
     out = env('list')
@@ -60,6 +67,20 @@ def test_env_destroy():
     out = env('list')
     assert 'foo' not in out
     assert 'bar' not in out
+
+
+def test_destroy_env_dir(capfd):
+    env('create', '-d', 'foo')
+    assert os.path.isdir('foo')
+
+    foo = ev.Environment('foo')
+    with foo:
+        with pytest.raises(spack.main.SpackCommandError):
+            with capfd.disabled():
+                env('destroy', '-y', 'foo')
+
+    env('destroy', '-y', './foo')
+    assert not os.path.isdir('foo')
 
 
 def test_concretize():
