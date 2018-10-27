@@ -31,6 +31,10 @@ class Kokkos(Package):
     variant('cuda', default=False, description="enable Cuda backend")
     variant('openmp', default=False, description="enable OpenMP backend")
 
+    # Compilation options
+    variant('pic', default=False,
+            description="enable position independent code (-fPIC flag)")
+
     # Kokkos options
     variant('aggressive_vectorization', default=False,
             description="set aggressive_vectorization Kokkos option")
@@ -137,6 +141,10 @@ class Kokkos(Package):
             arch_args = []
             kokkos_options_args = []
             cuda_options_args = []
+
+            # PIC
+            if '+pic' in spec:
+                g_args.append('--cxxflags=-fPIC')
 
             # Backends
             if '+serial' in spec:
