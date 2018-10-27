@@ -70,6 +70,7 @@ def get_env(args, cmd_name, fail_on_error=True):
                 % cmd_name)
 
     environment = ev.disambiguate(env)
+
     if not environment:
         tty.die('no such environment: %s' % env)
     return environment
@@ -263,8 +264,15 @@ def env_destroy(args):
         if not answer:
             tty.die("Will not destroy any environments")
 
-    for env in args.env:
-        ev.destroy(env)
+    for env_name in args.env:
+        env = ev.disambiguate(env_name)
+        if not env:
+            tty.die('no such environment: %s' % env_name)
+
+        if ev.active and ev.active.path == env.path:
+            tty.die("Environment %s can't be destroyed while activated.")
+
+        env.destroy()
         tty.msg("Successfully destroyed environment '%s'" % env)
 
 
