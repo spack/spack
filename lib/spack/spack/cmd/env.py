@@ -61,13 +61,16 @@ def get_env(args, cmd_name, fail_on_error=True):
     """
     env = args.env
     if not env:
-        env = os.environ.get('SPACK_ENV')
-        if not env:
-            if not fail_on_error:
-                return None
-            tty.die(
-                'spack env %s requires an active environment or an argument'
-                % cmd_name)
+        if ev.active:
+            return ev.active
+        elif not fail_on_error:
+            return None
+        tty.die(
+            '`spack env %s` requires an environment' % cmd_name,
+            'activate an environment first:',
+            '    spack env activate ENV',
+            'or use:',
+            '    spack -e ENV %s ...' % cmd_name)
 
     environment = ev.disambiguate(env)
 
@@ -309,8 +312,6 @@ def env_list(args):
 def env_add_setup_parser(subparser):
     """add a spec to an environment"""
     subparser.add_argument(
-        '-e', '--env', help='add spec to this environment')
-    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="spec of the package to add")
 
 
@@ -331,8 +332,6 @@ def env_add(args):
 #
 def env_remove_setup_parser(subparser):
     """remove a spec from an environment"""
-    subparser.add_argument(
-        '-e', '--env', help='remove spec with this name from environment')
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
         help="Remove all specs from (clear) the environment")

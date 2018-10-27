@@ -144,18 +144,23 @@ def test_remove_after_concretize():
 def test_remove_command():
     env('create', 'test')
 
-    env('add', '-e', 'test', 'mpileaks')
+    with ev.read('test'):
+        env('add', 'mpileaks')
     assert 'mpileaks' in env('status', 'test')
 
-    env('remove', '-e', 'test', 'mpileaks')
+    with ev.read('test'):
+        env('remove', 'mpileaks')
     assert 'mpileaks' not in env('status', 'test')
 
-    env('add', '-e', 'test', 'mpileaks')
+    with ev.read('test'):
+        env('add', 'mpileaks')
     assert 'mpileaks' in env('status', 'test')
+
     env('concretize', 'test')
     assert 'mpileaks' in env('status', 'test')
 
-    env('remove', '-e', 'test', 'mpileaks')
+    with ev.read('test'):
+        env('remove', 'mpileaks')
     assert 'mpileaks' not in env('status', 'test')
 
 
@@ -478,7 +483,9 @@ env:
 
 def test_env_loads(install_mockery, mock_fetch):
     env('create', 'test')
-    env('add', '-e', 'test', 'mpileaks')
+
+    with ev.read('test'):
+        env('add', 'mpileaks')
     env('concretize', 'test')
     env('install', '--fake', 'test')
     env('loads', 'test')
@@ -496,8 +503,9 @@ def test_env_loads(install_mockery, mock_fetch):
 @pytest.mark.disable_clean_stage_check
 def test_env_stage(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
-    env('add', '-e', 'test', 'mpileaks')
-    env('add', '-e', 'test', 'zmpi')
+    with ev.read('test'):
+        print env('add', 'mpileaks')
+        print env('add', 'zmpi')
     env('concretize', 'test')
     env('stage', 'test')
 
