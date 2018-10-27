@@ -132,6 +132,53 @@ def deactivate():
     active = None
 
 
+def get_env(args, cmd_name, required=True):
+    """Get target environment from args, environment variables, or spack.yaml.
+
+    This is used by a number of commands for determining whether there is
+    an active environment.
+
+    Check for an environment:
+        1. via spack -e ENV
+        2. as a spack.yaml file in the current directory, or
+        3. via the SPACK_ENV environment variable.
+
+    If an environment is found, read it in.  If not, print an error
+    message referencing the calling command.
+
+    Arguments:
+        args (Namespace): argparse namespace wtih command arguments
+        cmd_name (str): name of calling command
+
+    """
+    # try arguments
+    env = args.env
+
+    # try a manifest file in the current directory
+    if not env:
+        if os.path.exists(manifest_name):
+            env = os.getcwd()
+
+    # try the active environment via SPACK_ENV environment variable
+    if not env:
+        if active:
+            return active
+        elif not required:
+            return None
+        tty.die(
+            '`spack %s` requires an environment' % cmd_name,
+            'activate an environment first:',
+            '    spack env activate ENV',
+            'or use:',
+            '    spack -e ENV %s ...' % cmd_name)
+
+    environment = disambiguate(env)
+
+    if not environment:
+        tty.die('no such environment: %s' % env)
+    return environment
+
+
 def disambiguate(env, env_dir=None):
     """Used to determine whether an environment is named or a directory."""
     if env:
