@@ -26,7 +26,7 @@ class Visit(CMakePackage):
     variant('mpi',    default=True, description='Enable parallel engine')
 
     depends_on('cmake@3.0:', type='build')
-    depends_on('vtk@6.1.0~opengl2')
+    depends_on('vtk@6.1.0~opengl2~mpi')
     depends_on('qt@4.8.6', when='+gui')
     depends_on('qwt', when='+gui')
     depends_on('python', when='+python')
