@@ -46,7 +46,7 @@ def test_env_list():
     assert 'baz' in out
 
 
-def test_env_destroy(capfd):
+def test_env_remove(capfd):
     env('create', 'foo')
     env('create', 'bar')
 
@@ -58,21 +58,21 @@ def test_env_destroy(capfd):
     with foo:
         with pytest.raises(spack.main.SpackCommandError):
             with capfd.disabled():
-                env('destroy', '-y', 'foo')
+                env('remove', '-y', 'foo')
         assert 'foo' in env('list')
 
-    env('destroy', '-y', 'foo')
+    env('remove', '-y', 'foo')
     out = env('list')
     assert 'foo' not in out
     assert 'bar' in out
 
-    env('destroy', '-y', 'bar')
+    env('remove', '-y', 'bar')
     out = env('list')
     assert 'foo' not in out
     assert 'bar' not in out
 
 
-def test_destroy_env_dir(capfd):
+def test_remove_env_dir(capfd):
     env('create', '-d', 'foo')
     assert os.path.isdir('foo')
 
@@ -80,9 +80,9 @@ def test_destroy_env_dir(capfd):
     with foo:
         with pytest.raises(spack.main.SpackCommandError):
             with capfd.disabled():
-                env('destroy', '-y', 'foo')
+                env('remove', '-y', 'foo')
 
-    env('destroy', '-y', './foo')
+    env('remove', '-y', './foo')
     assert not os.path.isdir('foo')
 
 
@@ -310,7 +310,7 @@ env:
     out = env('status', 'test')
     assert 'mpileaks' in out
 
-    env('destroy', '-y', 'test')
+    env('remove', '-y', 'test')
 
     out = env('list')
     assert 'test' not in out
@@ -535,7 +535,7 @@ def test_env_commands_die_with_no_env_arg():
     with pytest.raises(SystemExit):
         env('create')
     with pytest.raises(SystemExit):
-        env('destroy')
+        env('remove')
 
     # these have an optional env arg and raise errors via tty.die
     with pytest.raises(spack.main.SpackCommandError):
