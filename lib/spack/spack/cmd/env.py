@@ -34,7 +34,6 @@ subcommands = [
     ['list', 'ls'],
     ['status', 'st'],
     'loads',
-    'stage',
     'uninstall',
 ]
 
@@ -308,23 +307,6 @@ def env_status(args):
         hashes=args.long or args.very_long,
         hashlen=None if args.very_long else 7,
         install_status=True)
-
-
-#
-# env stage
-#
-def env_stage_setup_parser(subparser):
-    """download all source files for all packages in an environment"""
-    subparser.add_argument(
-        'env', nargs='?', help='name of env to generate loads file for')
-
-
-def env_stage(args):
-    env = ev.get_env(args, 'env stage')
-    for spec in env.specs_by_hash.values():
-        for dep in spec.traverse():
-            dep.package.do_stage()
-
 
 #
 # env loads
