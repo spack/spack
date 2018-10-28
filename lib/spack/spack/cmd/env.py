@@ -5,7 +5,6 @@
 
 import os
 import sys
-import argparse
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
@@ -33,9 +32,6 @@ subcommands = [
     'create',
     'destroy',
     ['list', 'ls'],
-    'add',
-    ['remove', 'rm'],
-    'concretize',
     ['status', 'st'],
     'loads',
     'stage',
@@ -270,68 +266,6 @@ def env_list(args):
     colify(color_names, indent=4)
 
 
-#
-# env add
-#
-def env_add_setup_parser(subparser):
-    """add a spec to an environment"""
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="spec of the package to add")
-
-
-def env_add(args):
-    env = ev.get_env(args, 'env add')
-
-    for spec in spack.cmd.parse_specs(args.specs):
-        if not env.add(spec):
-            tty.msg("Package {0} was already added to {1}"
-                    .format(spec.name, env.name))
-        else:
-            tty.msg('Adding %s to environment %s' % (spec, env.name))
-    env.write()
-
-
-#
-# env remove
-#
-def env_remove_setup_parser(subparser):
-    """remove a spec from an environment"""
-    subparser.add_argument(
-        '-a', '--all', action='store_true', dest='all',
-        help="Remove all specs from (clear) the environment")
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs to be removed")
-
-
-def env_remove(args):
-    env = ev.get_env(args, 'env remove <spec>')
-
-    if args.all:
-        env.clear()
-    else:
-        for spec in spack.cmd.parse_specs(args.specs):
-            tty.msg('Removing %s from environment %s' % (spec, env.name))
-            env.remove(spec)
-    env.write()
-
-
-#
-# env concretize
-#
-def env_concretize_setup_parser(subparser):
-    """concretize user specs and write lockfile"""
-    subparser.add_argument(
-        'env', nargs='?', help='concretize all packages for this environment')
-    subparser.add_argument(
-        '-f', '--force', action='store_true',
-        help="Re-concretize even if already concretized.")
-
-
-def env_concretize(args):
-    env = ev.get_env(args, 'env concretize')
-    env.concretize(force=args.force)
-    env.write()
-
 # REMOVE
 # env uninstall
 #
@@ -456,7 +390,7 @@ def setup_parser(subparser):
         setup_parser_cmd(subsubparser)
 
 
-def env(parser, args, **kwargs):
+def env(parser, args):
     """Look for a function called environment_<name> and call it."""
     action = subcommand_functions[args.env_command]
     action(args)

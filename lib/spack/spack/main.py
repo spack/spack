@@ -38,6 +38,11 @@ from spack.error import SpackError
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
 
+#: top-level aliases for Spack commands
+aliases = {
+    'rm': 'remove'
+}
+
 #: help levels in order of detail (i.e., number of commands shown)
 levels = ['short', 'long']
 
@@ -174,8 +179,8 @@ class SpackArgumentParser(argparse.ArgumentParser):
             cmd_set = set(c for c in commands)
 
             # make a dict of commands of interest
-            cmds = dict((a.metavar, a) for a in self.actions
-                        if a.metavar in cmd_set)
+            cmds = dict((a.dest, a) for a in self.actions
+                        if a.dest in cmd_set)
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)
@@ -271,8 +276,13 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # each command module implements a parser() function, to which we
         # pass its subparser for setup.
         module = spack.cmd.get_module(cmd_name)
+
+        # build a list of aliases
+        alias_list = [k for k, v in aliases.items() if v == cmd_name]
+
         subparser = self.subparsers.add_parser(
-            cmd_name, help=module.description, description=module.description)
+            cmd_name, aliases=alias_list,
+            help=module.description, description=module.description)
         module.setup_parser(subparser)
 
         # return the callable function for the command
@@ -647,6 +657,8 @@ def main(argv=None):
         # Try to load the particular command the caller asked for.  If there
         # is no module for it, just die.
         cmd_name = args.command[0]
+        cmd_name = aliases.get(cmd_name, cmd_name)
+
         try:
             command = parser.add_command(cmd_name)
         except ImportError:

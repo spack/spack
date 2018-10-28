@@ -466,17 +466,31 @@ class Environment(object):
             self.user_specs.append(spec)
         return bool(not existing)
 
-    def remove(self, query_spec):
+    def remove(self, query_spec, force=False):
         """Remove specs from an environment that match a query_spec"""
         query_spec = Spec(query_spec)
-        matches = [s for s in self.user_specs if s.satisfies(query_spec)]
+
+        # try abstract specs first
+        matches = []
+        if not query_spec.concrete:
+            matches = [s for s in self.user_specs if s.satisfies(query_spec)]
+
+        if not matches:
+            # concrete specs match against concrete specs in the env
+            specs_hashes = zip(
+                self.concretized_user_specs, self.concretized_order)
+            matches = [
+                s for s, h in specs_hashes
+                if s.satisfies(query_spec) or query_spec.dag_hash() == h]
 
         if not matches:
             raise EnvError("Not found: {0}".format(query_spec))
 
         for spec in matches:
-            self.user_specs.remove(spec)
-            if spec in self.concretized_user_specs:
+            if spec in self.user_specs:
+                self.user_specs.remove(spec)
+
+            if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
                 del self.concretized_user_specs[i]
 
