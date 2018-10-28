@@ -30,7 +30,7 @@ subcommands = [
     'activate',
     'deactivate',
     'create',
-    'destroy',
+    ['remove', 'rm'],
     ['list', 'ls'],
     ['status', 'st'],
     'loads',
@@ -210,33 +210,36 @@ def _env_create(name_or_path, init_file=None, dir=False):
 #
 # env remove
 #
-def env_destroy_setup_parser(subparser):
-    """destroy an existing environment"""
+def env_remove_setup_parser(subparser):
+    """remove an existing environment"""
     subparser.add_argument(
-        'env', nargs='+', help='environment(s) to destroy')
+        'env', nargs='+', help='environment(s) to remove')
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
-def env_destroy(args):
-    if not args.yes_to_all:
-        answer = tty.get_yes_or_no(
-            'Really destroy %s %s?' % (
-                string.plural(len(args.env), 'environment', show_n=False),
-                string.comma_and(args.env)),
-            default=False)
-        if not answer:
-            tty.die("Will not destroy any environments")
-
+def env_remove(args):
     for env_name in args.env:
         env = ev.disambiguate(env_name)
         if not env:
             tty.die('no such environment: %s' % env_name)
 
+    if not args.yes_to_all:
+        answer = tty.get_yes_or_no(
+            'Really remove %s %s?' % (
+                string.plural(len(args.env), 'environment', show_n=False),
+                string.comma_and(args.env)),
+            default=False)
+        if not answer:
+            tty.die("Will not remove any environments")
+
+    for env_name in args.env:
+        env = ev.disambiguate(env_name)
+
         if ev.active and ev.active.path == env.path:
-            tty.die("Environment %s can't be destroyed while activated.")
+            tty.die("Environment %s can't be removed while activated.")
 
         env.destroy()
-        tty.msg("Successfully destroyed environment '%s'" % env)
+        tty.msg("Successfully removed environment '%s'" % env)
 
 
 #
