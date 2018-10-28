@@ -45,10 +45,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
         help="USE CAREFULLY. remove ALL installed packages that match each "
-             "supplied spec. i.e., if you say uninstall `libelf`,"
+             "supplied spec. i.e., if you `uninstall --all libelf`,"
              " ALL versions of `libelf` are uninstalled. if no spec is "
-             "supplied all installed software will be uninstalled. this "
-             "is both useful and dangerous, like rm -r")
+             "supplied all installed software will be uninstalled.")
 
     subparser.add_argument(
         'packages',
@@ -175,7 +174,6 @@ def get_uninstall_list(args, specs):
 
 
 def uninstall_specs(args, specs):
-
     uninstall_list = get_uninstall_list(args, specs)
 
     if not uninstall_list:

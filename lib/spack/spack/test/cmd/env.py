@@ -26,6 +26,7 @@ install     = SpackCommand('install')
 add         = SpackCommand('add')
 remove      = SpackCommand('remove')
 concretize  = SpackCommand('concretize')
+stage       = SpackCommand('stage')
 
 
 def test_add():
@@ -510,13 +511,13 @@ def test_env_loads(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_env_stage(mock_stage, mock_fetch, install_mockery):
+def test_stage(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
         add('zmpi')
         concretize()
-    env('stage', 'test')
+        stage()
 
     root = str(mock_stage)
 
@@ -540,8 +541,6 @@ def test_env_commands_die_with_no_env_arg():
     # these have an optional env arg and raise errors via tty.die
     with pytest.raises(spack.main.SpackCommandError):
         env('loads')
-    with pytest.raises(spack.main.SpackCommandError):
-        env('stage')
     with pytest.raises(spack.main.SpackCommandError):
         env('uninstall')
 
