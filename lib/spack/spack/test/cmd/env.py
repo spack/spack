@@ -21,9 +21,11 @@ from spack.main import SpackCommand
 pytestmark = pytest.mark.usefixtures(
     'mutable_mock_env_path', 'config', 'mutable_mock_packages')
 
-
-env = SpackCommand('env')
-install = SpackCommand('install')
+env         = SpackCommand('env')
+install     = SpackCommand('install')
+add         = SpackCommand('add')
+remove      = SpackCommand('remove')
+concretize  = SpackCommand('concretize')
 
 
 def test_add():
@@ -137,31 +139,33 @@ def test_remove_after_concretize():
     e.concretize()
 
     e.remove('mpileaks')
+    assert Spec('mpileaks') not in e.user_specs
     env_specs = e._get_environment_specs()
-    assert not any(x.name == 'mpileaks' for x in env_specs)
+    assert any(s.name == 'mpileaks' for s in env_specs)
+
+    e.add('mpileaks')
+    assert any(s.name == 'mpileaks' for s in e.user_specs)
+
+    e.remove('mpileaks', force=True)
+    assert Spec('mpileaks') not in e.user_specs
+    env_specs = e._get_environment_specs()
+    assert not any(s.name == 'mpileaks' for s in env_specs)
 
 
 def test_remove_command():
     env('create', 'test')
 
     with ev.read('test'):
-        env('add', 'mpileaks')
+        add('mpileaks')
     assert 'mpileaks' in env('status', 'test')
 
     with ev.read('test'):
-        env('remove', 'mpileaks')
+        remove('mpileaks')
     assert 'mpileaks' not in env('status', 'test')
 
     with ev.read('test'):
-        env('add', 'mpileaks')
+        add('mpileaks')
     assert 'mpileaks' in env('status', 'test')
-
-    env('concretize', 'test')
-    assert 'mpileaks' in env('status', 'test')
-
-    with ev.read('test'):
-        env('remove', 'mpileaks')
-    assert 'mpileaks' not in env('status', 'test')
 
 
 def test_environment_status():
@@ -195,7 +199,8 @@ def test_env_repo():
     e.add('mpileaks')
     e.write()
 
-    env('concretize', 'test')
+    with ev.read('test'):
+        concretize()
 
     package = e.repo.get('mpileaks')
     assert package.name == 'mpileaks'
@@ -487,14 +492,12 @@ def test_env_loads(install_mockery, mock_fetch):
     env('create', 'test')
 
     with ev.read('test'):
-        env('add', 'mpileaks')
-
-    env('concretize', 'test')
-
-    with ev.read('test'):
+        add('mpileaks')
+        concretize()
         install('--fake')
 
-    env('loads', 'test')
+    with ev.read('test'):
+        env('loads', 'test')
 
     e = ev.read('test')
 
@@ -510,9 +513,9 @@ def test_env_loads(install_mockery, mock_fetch):
 def test_env_stage(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
-        print env('add', 'mpileaks')
-        print env('add', 'zmpi')
-    env('concretize', 'test')
+        add('mpileaks')
+        add('zmpi')
+        concretize()
     env('stage', 'test')
 
     root = str(mock_stage)
@@ -536,17 +539,11 @@ def test_env_commands_die_with_no_env_arg():
 
     # these have an optional env arg and raise errors via tty.die
     with pytest.raises(spack.main.SpackCommandError):
-        env('concretize')
-    with pytest.raises(spack.main.SpackCommandError):
         env('loads')
     with pytest.raises(spack.main.SpackCommandError):
         env('stage')
     with pytest.raises(spack.main.SpackCommandError):
         env('uninstall')
-    with pytest.raises(spack.main.SpackCommandError):
-        env('add')
-    with pytest.raises(spack.main.SpackCommandError):
-        env('remove')
 
     # This should NOT raise an error with no environment
     # it just tells the user there isn't an environment
