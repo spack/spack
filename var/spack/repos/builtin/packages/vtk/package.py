@@ -183,7 +183,7 @@ class Vtk(CMakePackage):
             cmake_args.extend([
                 # Enable XDMF Support here
                 "-DModule_vtkIOXdmf2:BOOL=ON",
-                "-DModule_vtkIOParallelXdmf3:BOOL=ON",
+                "-DModule_vtkIOXdmf3:BOOL=ON",
                 "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
                 "-DBOOST_LIBRARY_DIR={0}".format(spec['boost'].prefix.lib),
                 "-DBOOST_INCLUDE_DIR={0}".format(spec['boost'].prefix.include),
