@@ -22,6 +22,7 @@ class Strumpack(CMakePackage):
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     version('master', branch='master')
+    version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
     version('3.1.0', sha256='b4f91b7d433955518b04538be1c726afc5de4bffb163e982ef8844d391b26fa7')
     version('3.0.3', sha256='2bd2a40d9585b769ae4ba461de02c6e36433bf2b21827f824a50f2fdf73389f7')
     version('3.0.2', sha256='828e5ec59019b2c74e008745b04ceebbb7ef1313fb4e3ac01fa8ff350799df38')
