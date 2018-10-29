@@ -56,8 +56,8 @@ class Regcm(AutotoolsPackage):
 
         for opt in ('debug', 'profile', 'singleprecision',
                     'knl', 'skl', 'bdw', 'nhl'):
-            if '+{}'.format(opt) in self.spec:
-                args.append('--enable-{}'.format(opt))
+            if '+{0}'.format(opt) in self.spec:
+                args.append('--enable-' + opt)
 
         # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
         # is ignored by the configure, so we need to set the option in FCFLAGS.
