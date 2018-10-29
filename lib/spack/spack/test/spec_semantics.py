@@ -820,8 +820,8 @@ class TestSpecSematics(object):
         )
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
-        assert "cannot specify 'default' when passing a variant object to " \
-               "the argument" in str(exc_info.value)
+        assert " it is handled by an attribute of the 'values' " \
+               "argument" in str(exc_info.value)
 
         # We can't leave None as a default value
         fn = variant('foo', default=None)

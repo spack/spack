@@ -478,8 +478,8 @@ def variant(
     for argument in ('default', 'multi', 'validator'):
         if hasattr(values, argument) and locals()[argument] is not None:
             def _raise_argument_error(pkg):
-                msg = "cannot specify '{0}' when passing a variant object " \
-                      "to the argument 'values' of a variant directive"
+                msg = "Remove specification of {0} argument: it is handled " \
+                      "by an attribute of the 'values' argument"
                 raise DirectiveError(format_error(msg.format(argument), pkg))
             return _raise_argument_error
 
