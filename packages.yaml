@@ -60,11 +60,6 @@ packages:
             slurm@system: /usr
         buildable: False
 
-    opengl:
-        paths:
-            opengl@system: /usr
-        buildable: False
-
     rdma-core:
         paths:
             rdma-core@4.5.0: /usr
