@@ -11,7 +11,9 @@ class RKs(RPackage):
 
     homepage = "https://cran.r-project.org/package=ks"
     url      = "https://cran.r-project.org/src/contrib/Archive/ks/ks_1.11.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ks/"
 
+    version('1.11.3', sha256="0d69e85fb4dc97045fdc273b36cf44b185ab60a6d7b17e1eb0c6dddf074be47c")
     version('1.11.2', sha256='9dfd485096e1e67abc7dfcb7b76a83de110dd15bcfeffe5c899605b3a5592961')
 
     depends_on('r@2.10:', type=('build', 'run'))
