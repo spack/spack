@@ -12,7 +12,8 @@ import sys
 
 from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
-from llnl.util.lang import match_predicate
+from llnl.util.lang import match_predicate, index_by
+from llnl.util.tty.color import colorize
 
 import spack.spec
 import spack.store
@@ -431,7 +432,7 @@ class YamlFilesystemView(FilesystemView):
         """
         spec = spack.spec.Spec(spec)
         for spec_like, fmt_str in self.projections.items():
-            if spec_like == 'all' or spec.satisfies(spec_like):
+            if spec_like == 'all' or spec.satisfies(spec_like, strict=True):
                 return os.path.join(self.root, spec.format(fmt_str))
         return self.root
 
@@ -445,8 +446,12 @@ class YamlFilesystemView(FilesystemView):
         specs = []
         for md_dir in metadata_dirs:
             if os.path.exists(md_dir):
-                specs.extend(list(filter(None, map(self.get_spec, 
-                                                   os.listdir(md_dir)))))
+                for name_dir in os.listdir(md_dir):
+                    filename = os.path.join(md_dir, name_dir,
+                                            spack.store.layout.spec_file_name)
+                    spec = get_spec_from_file(filename)
+                    if spec:
+                        specs.append(spec)
         return specs
 
     def get_conflicts(self, *specs):
@@ -469,11 +474,7 @@ class YamlFilesystemView(FilesystemView):
         filename = os.path.join(dotspack,
                                 spack.store.layout.spec_file_name)
 
-        try:
-            with open(filename, "r") as f:
-                return spack.spec.Spec.from_yaml(f)
-        except IOError:
-            return None
+        return get_spec_from_file(filename)
 
     def link_meta_folder(self, spec):
         src = spack.store.layout.metadata_path(spec)
@@ -512,10 +513,38 @@ class YamlFilesystemView(FilesystemView):
         if len(specs) > 0:
             tty.msg("Packages linked in %s:" % self._croot[:-1])
 
-            # avoid circular dependency
-            import spack.cmd
-            spack.cmd.display_specs(in_view, flags=True, variants=True,
-                                    long=self.verbose)
+            # Make a dict with specs keyed by architecture and compiler.
+            index = index_by(specs, ('architecture', 'compiler'))
+
+            # Traverse the index and print out each package
+            for i, (architecture, compiler) in enumerate(sorted(index)):
+                if i > 0:
+                    print()
+
+                header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
+                                              architecture, 
+                                              spack.spec.compiler_color,
+                                              compiler)
+                tty.hline(colorize(header), char='-')
+
+                specs = index[(architecture, compiler)]
+                specs.sort()
+
+                format_string = '$_$@$%@+$+'
+                abbreviated = [s.cformat(format_string) for s in specs]
+
+                # Print one spec per line along with prefix path
+                width = max(len(s) for s in abbreviated)
+                width += 2
+                format = "    %%-%ds%%s" % width
+
+                for abbrv, spec in zip(abbreviated, specs):
+                    prefix = gray_hash(spec, hlen) if self.verbose else ''
+                    print(prefix + (format % (abbrv, 
+                                              self.get_projection_for_spec(spec))))
+            #     import spack.cmd
+            # spack.cmd.display_specs(in_view, flags=True, variants=True,
+            #                         long=self.verbose)
         else:
             tty.warn(self._croot + "No packages found.")
 
@@ -554,6 +583,13 @@ class YamlFilesystemView(FilesystemView):
 #####################
 # utility functions #
 #####################
+def get_spec_from_file(filename):
+    try:
+        with open(filename, "r") as f:
+            return spack.spec.Spec.from_yaml(f)
+    except IOError:
+        return None
+
 
 def colorize_root(root):
     colorize = ft.partial(tty.color.colorize, color=sys.stdout.isatty())

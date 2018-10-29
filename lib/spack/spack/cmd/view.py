@@ -37,13 +37,15 @@ import os
 
 import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
+from llnl.util.tty.color import colorize
 
 import spack.environment as ev
 import spack.cmd
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
+from spack.util import spack_yaml as s_yaml
 
-description = "produce a single-rooted directory view of packages"
+description = "produce a directory-based view of packages"
 section = "environments"
 level = "short"
 
@@ -54,30 +56,29 @@ actions_status = ["statlink", "status", "check"]
 
 def relaxed_disambiguate(specs, view):
     """
-        When dealing with querying actions (remove/status) the name of the spec
-        is sufficient even though more versions of that name might be in the
-        database.
+        When dealing with querying actions (remove/status) we only need to
+        disambiguate among specs in the view
     """
-    name_to_spec = dict((s.name, s) for s in view.get_all_specs())
+    view_specs = set(view.get_all_specs())
 
     def squash(matching_specs):
         if not matching_specs:
             tty.die("Spec matches no installed packages.")
 
-        elif len(matching_specs) == 1:
-            return matching_specs[0]
+        matching_in_view = [ms for ms in matching_specs if ms in view_specs]
 
-        elif matching_specs[0].name in name_to_spec:
-            return name_to_spec[matching_specs[0].name]
+        if len(matching_in_view) > 1:
+            args = ["Spec matches multiple packages.",
+                    "Matching packages:"]
+            args += [colorize("  @K{%s} " % s.dag_hash(7)) +
+                     s.cformat('$_$@$%@$=') for s in matching_in_view]
+            args += ["Use a more specific spec."]
+            tty.die(*args)
 
-        else:
-            # we just return the first matching spec, the error about the
-            # missing spec will be printed later on
-            return matching_specs[0]
+        return matching_in_view[0] if matching_in_view else matching_specs[0]
 
     # make function always return a list to keep consistency between py2/3
     return list(map(squash, map(spack.store.db.query, specs)))
-
 
 def setup_parser(sp):
     setup_parser.parser = sp
@@ -119,6 +120,8 @@ def setup_parser(sp):
     for cmd, act in file_system_view_actions.items():
         act.add_argument('path', nargs=1,
                          help="path to file system view directory")
+        act.add_argument('--projection-file', default='', dest='projection_file',
+                         help="Initialize projection using specification from file.")
 
         if cmd == "remove":
             grp = act.add_mutually_exclusive_group(required=True)
@@ -158,8 +161,19 @@ def view(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
     path = args.path[0]
 
+    if args.projection_file:
+        if os.path.exists(args.projection_file):
+            with open(args.projection_file, 'r') as f:
+                ordered_projections = s_yaml.load(f)['projections']
+        else:
+            tty.error('Specified projection file does not exist.')
+    else:
+        ordered_projections = {}
+#        ordered_projections = spack.config.get('projection')
+
     view = YamlFilesystemView(
         path, spack.store.layout,
+        projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
         link=os.link if args.action in ["hardlink", "hard"]
         else os.symlink,
@@ -184,7 +198,7 @@ def view(parser, args):
             specs = relaxed_disambiguate(specs, view)
 
     else:
-        # status and remove can map the name to packages in view
+        # status and remove can map a partial spec to packages in view
         specs = relaxed_disambiguate(specs, view)
 
     with_dependencies = args.dependencies.lower() in ['true', 'yes']
