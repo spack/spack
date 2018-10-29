@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -39,6 +20,9 @@ class Catch(CMakePackage):
     # - CMake config package was added in 2.1.2
     conflicts('~single_header', when='@:1.6.1')
 
+    version('2.4.0', sha256='ab176de36b886a33aa745fcf34642eac853bf677bda518a88655dc750c72d756')
+    version('2.3.0', sha256='aaf6bbf81ce8522131bae2ea4d013a77b003bbb2017614f5872d5787687f8f5f')
+    # releases 2.3.0+ changed to "catch2/catch.hpp" header
     version('2.2.1', '54e56803c84890636bd7fe6c3856b104')
     version('2.1.0', '70b44068976d46d48f3cd8796f675691d3bc726b')
     version('2.0.1', '5c191a031edebd0525640ed2f38cbf64bacb1803')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Spack allows very fine-grained control over how packages are installed and
 over how they are built and configured.  To make this easy, it has its own
@@ -139,7 +120,7 @@ from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
 from spack.version import VersionList, VersionRange, Version, ver
-from yaml.error import MarkedYAMLError
+from ruamel.yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
@@ -1470,6 +1451,7 @@ class Spec(object):
                 v.yaml_entry() for _, v in self.variants.items()
             )
         )
+
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d['parameters'] = params
@@ -1477,7 +1459,7 @@ class Spec(object):
         if self.external:
             d['external'] = {
                 'path': self.external_path,
-                'module': bool(self.external_module)
+                'module': self.external_module
             }
 
         # TODO: restore build dependencies here once we have less picky
@@ -1911,10 +1893,11 @@ class Spec(object):
                 mvar.value = mvar.value + tuple(patches)
                 # FIXME: Monkey patches mvar to store patches order
                 p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = dedupe(p + patches)
+                mvar._patches_in_order_of_appearance = list(
+                    dedupe(p + patches))
 
         for s in self.traverse():
-            if s.external_module:
+            if s.external_module and not s.external_path:
                 compiler = spack.compilers.compiler_for_spec(
                     s.compiler, s.architecture)
                 for mod in compiler.modules:

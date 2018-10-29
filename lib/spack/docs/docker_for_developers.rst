@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _docker_for_developers:
 
 =====================
@@ -12,13 +17,13 @@ meant to serve as the companion documentation for the :ref:`packaging-guide`.
 Overview
 --------
 
-To get started, all you need is the latest version of ``docker`` and
-``docker-compose``.
+To get started, all you need is the latest version of ``docker``.
 
 .. code-block:: console
 
     $ cd share/spack/docker
-    $ docker-compose run --rm ubuntu
+    $ source config/ubuntu.bash
+    $ ./run-image.sh
 
 This command should drop you into an interactive shell where you can run spack
 within an isolated docker container running ubuntu.  The copy of spack being
@@ -27,13 +32,10 @@ you make should be immediately reflected in the running docker container.  Feel
 free to add or modify any packages or to hack on spack, itself.  Your contained
 copy of spack should immediately reflect all changes.
 
-To work within a container running a different linux distro, change the "ubuntu"
-argument to any one of the services listed under the ``docker-compose.yml``
-file.
+To work within a container running a different linux distro, source one of the
+other environment files under ``config``.
 
 .. code-block:: console
 
-    $ docker-compose config --services
-    fedora
-    ubuntu
-    $ docker-compose run --rm fedora
+    $ source config/fedora.bash
+    $ ./run-image.sh

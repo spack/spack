@@ -1,27 +1,8 @@
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
-#
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Fetch strategies are used to download source code into a staging area
 in order to build it.  They need to define the following methods:
@@ -306,13 +287,13 @@ class URLFetchStrategy(FetchStrategy):
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
                                    flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
-            tty.warn("The contents of ",
-                     (self.archive_file if self.archive_file is not None
-                      else "the archive"),
-                     " look like HTML.",
-                     "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean <package>' to remove the bad archive, then",
-                     "fix your internet gateway issue and install again.")
+            msg = ("The contents of {0} look like HTML. Either the URL "
+                   "you are trying to use does not exist or you have an "
+                   "internet gateway issue. You can remove the bad archive "
+                   "using 'spack clean <package>', then try again using "
+                   "the correct URL.")
+            tty.warn(msg.format(self.archive_file or "the archive"))
+
         if save_file:
             os.rename(partial_file, save_file)
 
@@ -596,7 +577,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
     enabled = True
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit']
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call

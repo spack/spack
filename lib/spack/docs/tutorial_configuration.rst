@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _configs-tutorial:
 
 ======================
@@ -324,6 +329,8 @@ license server, you can set this in ``compilers.yaml`` as follows:
           INTEL_LICENSE_FILE: 1713@license4
       ...
 
+
+.. _configs-tutorial-package-prefs:
 
 -------------------------------
 Configuring Package Preferences

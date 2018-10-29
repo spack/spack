@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 import sys
@@ -79,17 +60,20 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.2.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
+    version('3.1.2', '210df69fafd964158527e7f37e333239')  # libmpi.so.40.10.2
     version('3.1.1', '493f1db2f75afaab1c8ecba78d2f5aab')  # libmpi.so.40.10.1
     version('3.1.0', '0895e268ca27735d7654bf64cee6c256')  # libmpi.so.40.10.0
 
     # Still supported
     version('3.0.2', '098fa89646f5b4438d9d8534bc960cd6')  # libmpi.so.40.00.2
-    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1    
+    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1
     version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
+    version('2.1.5', '6019c8b67d4975d833801e72ba290918')  # libmpi.so.20.10.3 
+    version('2.1.4', '003b356a24a5b7bd1705a23ddc69d9a0')  # libmpi.so.20.10.3
     version('2.1.3', '46079b6f898a412240a0bf523e6cd24b')  # libmpi.so.20.10.2
     version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
     version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
@@ -218,6 +202,12 @@ class Openmpi(AutotoolsPackage):
         'memchecker',
         default=False,
         description='Memchecker support for debugging [degrades performance]'
+    )
+
+    variant(
+        'legacylaunchers',
+        default=False,
+        description='Do not remove mpirun/mpiexec when building with slurm'
     )
 
     provides('mpi')
@@ -391,7 +381,7 @@ class Openmpi(AutotoolsPackage):
                 config_args.extend([
                     '--enable-java',
                     '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['java'].prefix)
+                    '--with-jdk-dir={0}'.format(spec['java'].home)
                 ])
             else:
                 config_args.extend([
@@ -460,7 +450,7 @@ class Openmpi(AutotoolsPackage):
         # applications via mpirun or mpiexec, and leaves srun as the
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
-        if '@1.6: schedulers=slurm' in self.spec:
+        if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
             os.remove(self.prefix.bin.mpirun)
             os.remove(self.prefix.bin.mpiexec)
             os.remove(self.prefix.bin.shmemrun)

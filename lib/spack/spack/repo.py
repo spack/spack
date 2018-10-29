@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import collections
 import os
 import stat
@@ -29,10 +10,8 @@ import shutil
 import errno
 import sys
 import inspect
-import imp
 import re
 import traceback
-import tempfile
 import json
 from contextlib import contextmanager
 from six import string_types
@@ -44,7 +23,7 @@ except ImportError:
 
 from types import ModuleType
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -54,10 +33,12 @@ import spack.config
 import spack.caches
 import spack.error
 import spack.spec
+import spack.util.imp as simp
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
 from spack.util.naming import NamespaceTrie, valid_module_name
 from spack.util.naming import mod_to_class, possible_spack_module_names
+
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -994,9 +975,8 @@ class Repo(object):
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
             try:
-                with import_lock():
-                    with prepend_open(file_path, text=_package_prepend) as f:
-                        module = imp.load_source(fullname, file_path, f)
+                module = simp.load_source(fullname, file_path,
+                                          prepend=_package_prepend)
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename so we need to
                 # manually construct the error message in order to give the
@@ -1144,31 +1124,6 @@ def set_path(repo):
     if append:
         sys.meta_path.append(repo)
     return append
-
-
-@contextmanager
-def import_lock():
-    imp.acquire_lock()
-    yield
-    imp.release_lock()
-
-
-@contextmanager
-def prepend_open(f, *args, **kwargs):
-    """Open a file for reading, but prepend with some text prepended
-
-    Arguments are same as for ``open()``, with one keyword argument,
-    ``text``, specifying the text to prepend.
-    """
-    text = kwargs.get('text', None)
-
-    with open(f, *args) as f:
-        with tempfile.NamedTemporaryFile(mode='w+') as tf:
-            if text:
-                tf.write(text + '\n')
-            tf.write(f.read())
-            tf.seek(0)
-            yield tf.file
 
 
 @contextmanager
