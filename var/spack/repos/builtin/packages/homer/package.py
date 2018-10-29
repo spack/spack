@@ -16,6 +16,10 @@ class Homer(Package):
     version('4.9.1', sha256='ad1303b0b0400dc8a88dbeae1ee03a94631977b751a3d335326c4febf0eec3a9')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('r-biocgenerics', type='run')
+    depends_on('r-biocparallel', type='run')
+    depends_on('r-edger', type='run')
+    depends_on('r-deseq2', type='run')
 
     variant('data', default=False,
             description='Download genome data packages')
