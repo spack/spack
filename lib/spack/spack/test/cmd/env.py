@@ -27,6 +27,7 @@ add         = SpackCommand('add')
 remove      = SpackCommand('remove')
 concretize  = SpackCommand('concretize')
 stage       = SpackCommand('stage')
+uninstall   = SpackCommand('uninstall')
 
 
 def test_add():
@@ -541,9 +542,38 @@ def test_env_commands_die_with_no_env_arg():
     # these have an optional env arg and raise errors via tty.die
     with pytest.raises(spack.main.SpackCommandError):
         env('loads')
-    with pytest.raises(spack.main.SpackCommandError):
-        env('uninstall')
 
     # This should NOT raise an error with no environment
     # it just tells the user there isn't an environment
     env('status')
+
+
+def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
+    env('create', 'test')
+    with ev.read('test'):
+        add('mpileaks')
+        install('--fake')
+
+    out = uninstall('mpileaks', fail_on_error=False)
+    assert uninstall.returncode == 1
+    assert 'used by the following environments' in out
+
+
+def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
+    env('create', 'test')
+    with ev.read('test'):
+        add('mpileaks')
+        add('libelf')
+        install('--fake')
+
+    test = ev.read('test')
+    assert any(s.name == 'mpileaks' for s in test.specs_by_hash.values())
+    assert any(s.name == 'libelf' for s in test.specs_by_hash.values())
+
+    with ev.read('test'):
+        uninstall('-ya')
+
+    test = ev.read('test')
+    assert not test.specs_by_hash
+    assert not test.concretized_order
+    assert not test.user_specs

@@ -56,7 +56,7 @@ class ConstraintAction(argparse.Action):
         # only its installed packages.
         env = spack.environment.active
         if env:
-            kwargs['hashes'] = set(env.specs_by_hash.keys())
+            kwargs['hashes'] = set(env.all_hashes())
 
         # return everything for an empty query.
         if not qspecs:

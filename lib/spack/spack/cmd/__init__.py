@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
@@ -207,6 +208,7 @@ def display_specs(specs, args=None, **kwargs):
         namespace (bool): Print namespaces along with names
         show_flags (bool): Show compiler flags with specs
         variants (bool): Show variants with specs
+        indent (int): indent each line this much
 
     """
     def get_arg(name, default=None):
@@ -224,6 +226,9 @@ def display_specs(specs, args=None, **kwargs):
     flags     = get_arg('show_flags', False)
     full_compiler = get_arg('show_full_compiler', False)
     variants  = get_arg('variants', False)
+
+    indent = get_arg('indent', 0)
+    ispace = indent * ' '
 
     hlen = 7
     if get_arg('very_long', False):
@@ -255,6 +260,7 @@ def display_specs(specs, args=None, **kwargs):
         # If they don't have a compiler / architecture attached to them,
         # then skip the header
         if architecture is not None or compiler is not None:
+            sys.stdout.write(ispace)
             tty.hline(colorize(header), char='-')
 
         specs = index[(architecture, compiler)]
@@ -269,7 +275,7 @@ def display_specs(specs, args=None, **kwargs):
 
             for abbrv, spec in zip(abbreviated, specs):
                 prefix = gray_hash(spec, hlen) if hashes else ''
-                print(prefix + (format % (abbrv, spec.prefix)))
+                print(ispace + prefix + (format % (abbrv, spec.prefix)))
 
         elif mode == 'deps':
             for spec in specs:
@@ -290,13 +296,13 @@ def display_specs(specs, args=None, **kwargs):
 
                     return string
 
-                colify(fmt(s) for s in specs)
+                colify((fmt(s) for s in specs), indent=indent)
             # Print one entry per line if including flags
             else:
                 for spec in specs:
                     # Print the hash if necessary
                     hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
-                    print(hsh + spec.cformat(format_string) + '\n')
+                    print(ispace + hsh + spec.cformat(format_string))
 
         else:
             raise ValueError(
