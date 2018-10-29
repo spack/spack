@@ -733,8 +733,12 @@ def _a_single_value_or_a_combination(single_value, *values):
 
 
 def any_combination_of(*values):
-    """Multi-valued variant that allows any combination of a set of
-    values including the empty set.
+    """Multi-valued variant that allows any combination of the specified
+    values, and also allows the user to specify 'none' (as a string) to choose
+    none of them.
+
+    It is up to the package implementation to handle the value 'none'
+    specially, if at all.
 
     Args:
         *values: allowed variant values
