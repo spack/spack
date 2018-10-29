@@ -1144,7 +1144,7 @@ If need be, Spack can go beyond Boolean variants and permit an arbitrary
 number of allowed values. This might be useful when modeling
 options that are tightly related to each other.
 The values in this case are passed to the :py:func:`spack.directives.variant`
-directive as a tuple of allowed values:
+directive as a tuple:
 
   .. code-block:: python
 
@@ -1156,8 +1156,33 @@ directive as a tuple of allowed values:
         )
 
 In the example above the argument ``multi`` is set to ``False`` to indicate
-that only one among all the variant values can be active at any time. In cases
-where multiple values can be selected at the same time it should be set to ``True``:
+that only one among all the variant values can be active at any time. This
+constraint is enforced by the parser and an error is emitted if a user
+specifies two or more values at the same time:
+
+  .. code-block:: console
+
+    $ spack spec blis threads=openmp,pthreads
+    Input spec
+    --------------------------------
+    blis threads=openmp,pthreads
+
+    Concretized
+    --------------------------------
+    ==> Error: multiple values are not allowed for variant "threads"
+
+Another useful note is that *Python's* ``None`` *is not allowed as a default value*
+and therefore it should not be used to denote that no feature was selected.
+Users should instead select another value, like ``'none'``, and handle it explicitly
+within the package recipe if need be:
+
+  .. code-block:: python
+
+      if self.spec.variants['threads'].value == 'none':
+         options.append('--no-threads')
+
+In cases where multiple values can be selected at the same time ``multi`` should
+be set to ``True``:
 
   .. code-block:: python
 
@@ -1195,14 +1220,30 @@ This class is used to implement a few convenience functions, like
         ...
         variant(
             'staging',
-            values=any_combination_of('flexpath', 'dataspaces').with_default('flexpath'),
+            values=any_combination_of('flexpath', 'dataspaces'),
             description='Enable dataspaces and/or flexpath staging transports'
         )
 
-and employs a fluent-style API to improve the readability of these complex cases
-by allowing a more declarative syntax.
+that allows any combination of the specified values, and also allows the
+user to specify ``'none'`` (as a string) to choose none of them.
+The objects returned by these functions can be modified at will by chaining
+method calls to change the default value, customize the error message or
+other similar operations:
 
+  .. code-block:: python
 
+    class Mvapich2(AutotoolsPackage):
+        ...
+        variant(
+            'process_managers',
+            description='List of the process managers to activate',
+            values=disjoint_sets(
+                ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+            ).with_error(
+                "'slurm' or 'auto' cannot be activated along with "
+                "other process managers"
+            ).with_default('auto'),
+        )
 
 ------------------------------------
 Resources (expanding extra tarballs)
