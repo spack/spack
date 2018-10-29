@@ -34,7 +34,6 @@ subcommands = [
     ['list', 'ls'],
     ['status', 'st'],
     'loads',
-    'uninstall',
 ]
 
 
@@ -234,7 +233,7 @@ def env_remove(args):
     for env_name in args.env:
         env = ev.disambiguate(env_name)
 
-        if ev.active and ev.active.path == env.path:
+        if env.active:
             tty.die("Environment %s can't be removed while activated.")
 
         env.destroy()
@@ -250,7 +249,7 @@ def env_list_setup_parser(subparser):
 
 
 def env_list(args):
-    names = ev.list_environments()
+    names = ev.all_environment_names()
 
     color_names = []
     for name in names:
@@ -266,21 +265,6 @@ def env_list(args):
             tty.msg('%d environments' % len(names))
 
     colify(color_names, indent=4)
-
-
-# REMOVE
-# env uninstall
-#
-def env_uninstall_setup_parser(subparser):
-    """uninstall packages from an environment"""
-    subparser.add_argument(
-        'env', nargs='?', help='uninstall all packages in this environment')
-    spack.cmd.uninstall.add_common_arguments(subparser)
-
-
-def env_uninstall(args):
-    env = ev.get_env(args, 'env uninstall')
-    env.uninstall(args)
 
 
 #
@@ -307,6 +291,7 @@ def env_status(args):
         hashes=args.long or args.very_long,
         hashlen=None if args.very_long else 7,
         install_status=True)
+
 
 #
 # env loads

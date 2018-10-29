@@ -242,7 +242,7 @@ def config_dict(yaml_data):
     return yaml_data[key]
 
 
-def list_environments():
+def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
@@ -256,6 +256,12 @@ def list_environments():
         if valid_env_name(candidate) and os.path.exists(yaml_path):
             names.append(candidate)
     return names
+
+
+def all_environments():
+    """Generator for all named Environments."""
+    for name in all_environment_names():
+        yield read(name)
 
 
 def validate(data, filename=None):
@@ -361,6 +367,11 @@ class Environment(object):
             return os.path.basename(self.path)
         else:
             return self.path
+
+    @property
+    def active(self):
+        """True if this environment is currently active."""
+        return active and self.path == active.path
 
     @property
     def manifest_path(self):
@@ -480,8 +491,7 @@ class Environment(object):
             specs_hashes = zip(
                 self.concretized_user_specs, self.concretized_order)
             matches = [
-                s for s, h in specs_hashes
-                if s.satisfies(query_spec) or query_spec.dag_hash() == h]
+                s for s, h in specs_hashes if query_spec.dag_hash() == h]
 
         if not matches:
             raise EnvError("Not found: {0}".format(query_spec))
@@ -615,12 +625,6 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
-    def uninstall(self, args):
-        """Uninstall all the specs in an Environment."""
-        specs = self._get_environment_specs(recurse_dependencies=True)
-        args.all = False
-        spack.cmd.uninstall.uninstall_specs(args, specs)
-
     def status(self, stream, **kwargs):
         """List the specs in an environment."""
         tty.msg('In environment %s' % self.name)
@@ -635,10 +639,10 @@ class Environment(object):
         current = [(s, c) for s, c in concretized if s in self.user_specs]
 
         def write_kind(s):
-            color.cwrite('@c{%s}\n' % str(s), stream)
+            color.cwrite('@c{%s}\n' % color.cescape(s), stream)
 
         def write_user_spec(s, c):
-            color.cwrite('@%s{----} %s\n' % (c, str(s)), stream)
+            color.cwrite('@%s{----} %s\n' % (c, color.cescape(s)), stream)
 
         if added:
             write_kind('added:')
@@ -661,23 +665,44 @@ class Environment(object):
             write_user_spec(s, 'r')
             stream.write(c.tree(**kwargs))
 
+    def all_specs_by_hash(self):
+        """Map of hashes to spec for all specs in this environment."""
+        hashes = {}
+        for h in self.concretized_order:
+            specs = self.specs_by_hash[h].traverse(deptype=('link', 'run'))
+            for spec in specs:
+                hashes[spec.dag_hash()] = spec
+        return hashes
+
+    def all_specs(self):
+        """Return all specs, even those a user spec would shadow."""
+        return sorted(self.all_specs_by_hash().values())
+
+    def all_hashes(self):
+        """Return all specs, even those a user spec would shadow."""
+        return list(self.all_specs_by_hash().keys())
+
     def _get_environment_specs(self, recurse_dependencies=True):
         """Returns the specs of all the packages in an environment.
+
         If these specs appear under different user_specs, only one copy
-        is added to the list returned."""
+        is added to the list returned.
+        """
         package_to_spec = {}
         spec_list = list()
 
         for spec_hash in self.concretized_order:
             spec = self.specs_by_hash[spec_hash]
 
-            specs = spec.traverse(deptype=('link', 'run')) \
-                if recurse_dependencies else (spec,)
+            specs = (spec.traverse(deptype=('link', 'run'))
+                     if recurse_dependencies else (spec,))
+
             for dep in specs:
-                if dep.name in package_to_spec:
-                    tty.warn("{0} takes priority over {1}"
-                             .format(package_to_spec[dep.name].format(),
-                                     dep.format()))
+                prior = package_to_spec.get(dep.name)
+                if prior and prior != dep:
+                    tty.debug("{0} takes priority over {1}"
+                              .format(package_to_spec[dep.name].format(),
+                                      dep.format()))
                 else:
                     package_to_spec[dep.name] = dep
                     spec_list.append(dep)
