@@ -35,6 +35,11 @@ class Regcm(AutotoolsPackage):
     depends_on('hdf5')
     depends_on('mpi')
 
+    # 'make' sometimes crashes when compiling with more than 10-12 cores.
+    # Moreover, parallel compile time is ~ 1m 30s, while serial is ~ 50s.
+    # The user can force the number of procs with: `spack install -j<N>`.
+    parallel = False
+
     def flag_handler(self, name, flags):
         if name == 'fflags' and self.compiler.fc.endswith('gfortran'):
             flags.extend(['-Wall', '-Wextra', '-Warray-temporaries',
