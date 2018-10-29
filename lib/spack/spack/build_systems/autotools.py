@@ -359,9 +359,18 @@ class AutotoolsPackage(PackageBase):
             options = [(name, condition in spec)]
         else:
             condition = '{name}={value}'
+            # If the "values" of a variant are a fully-fledged object with
+            # a "feature_values" attribute, use that list. Otherwise use
+            # "values" directly. This distinction is needed to allow
+            # non-feature values in variants, which convey meaning to the user
+            # but are not translated into a direct feature (see #9481).
+            feature_values = getattr(
+                self.variants[name].values, 'feature_values', None
+            ) or self.variants[name].values
+
             options = [
                 (value, condition.format(name=name, value=value) in spec)
-                for value in self.variants[name].values
+                for value in feature_values
             ]
 
         # For each allowed value in the list of values

@@ -78,8 +78,8 @@ class Variant(object):
 
         else:
             # Otherwise assume values is the set of allowed explicit values
-            self.values = tuple(values)
-            allowed = self.values + (self.default,)
+            self.values = values
+            allowed = tuple(self.values) + (self.default,)
             self.single_value_validator = lambda x: x in allowed
 
         self.multi = multi
@@ -682,24 +682,11 @@ class DisjointSetsOfValues(Sequence):
         ]
         return object_without_empty_set
 
-    def __contains__(self, item):
-        # The code taking care of variants uses __contains__ to validate
-        # the values that are parsed, while build systems are often
-        # iterating over "feature" values of a variant to automatically
-        # construct configure options (or similar things) for packagers.
-        #
-        # Here we need to override __contains__ so that we return True
-        # also for values that are marked as "non-feature", while we want
-        # iteration to just return "feature" values so that placeholders
-        # (like 'none') won't interfere with the generation of configure
-        # string.
-        return item in itertools.chain.from_iterable(self.sets)
-
     def __getitem__(self, idx):
-        return tuple(self.feature_values)[idx]
+        return tuple(itertools.chain.from_iterable(self.sets))[idx]
 
     def __len__(self):
-        return len(self.feature_values)
+        return len(itertools.chain.from_iterable(self.sets))
 
     @property
     def validator(self):

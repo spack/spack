@@ -149,3 +149,17 @@ class TestAutotoolsPackage(object):
 
         options = pkg.with_or_without('bvv')
         assert '--with-bvv' in options
+
+    def test_none_is_allowed(self):
+        s = Spec('a foo=none')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        options = pkg.with_or_without('foo')
+
+        # Ensure that values that are not representing a feature
+        # are not used by with_or_without
+        assert '--with-none' not in options
+        assert '--without-bar' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options

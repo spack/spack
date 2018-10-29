@@ -732,14 +732,15 @@ def test_disjoint_set_fluent_methods():
         assert set(('none',)) in d.sets
         assert 'none' in d
         assert 'none' in [x for x in d]
+        assert 'none' in d.feature_values
 
-    # Marking a value as 'non-feature' means that
-    # the value is in the variant, but iterating over
-    # the variant skips that value. See the originating
-    # class for more insight on this behavior.
+    # Marking a value as 'non-feature' removes it from the
+    # list of feature values, but not for the items returned
+    # when iterating over the object.
     d = d.with_non_feature_values('none')
     assert 'none' in d
-    assert 'none' not in [x for x in d]
+    assert 'none' in [x for x in d]
+    assert 'none' not in d.feature_values
 
     # Call this 2 times to check that no matter whether
     # the empty set was allowed or not before, the state
@@ -749,3 +750,4 @@ def test_disjoint_set_fluent_methods():
         assert set(('none',)) not in d.sets
         assert 'none' not in d
         assert 'none' not in [x for x in d]
+        assert 'none' not in d.feature_values
