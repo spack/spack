@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -40,15 +21,16 @@ class Dealii(CMakePackage, CudaPackage):
     transitive_rpaths = False
 
     version('develop', branch='master')
-    version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
-    version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
-    version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
-    version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
-    version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
-    version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
-    version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
-    version('8.2.1', '71c728dbec14f371297cd405776ccf08')
-    version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
+    version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
+    version('9.0.0', sha256='c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08')
+    version('8.5.1', sha256='d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae')
+    version('8.5.0', sha256='e6913ff6f184d16bc2598c1ba31f879535b72b6dff043e15aef048043ff1d779')
+    version('8.4.2', sha256='ec7c00fadc9d298d1a0d16c08fb26818868410a9622c59ba624096872f3058e4')
+    version('8.4.1', sha256='00a0e92d069cdafd216816f1aff460f7dbd48744b0d9e0da193287ebf7d6b3ad')
+    version('8.4.0', sha256='36a20e097a03f17b557e11aad1400af8c6252d25f7feca40b611d5fc16d71990')
+    version('8.3.0', sha256='4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779')
+    version('8.2.1', sha256='d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0')
+    version('8.1.0', sha256='d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('assimp',   default=True,
@@ -123,7 +105,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('lapack')
     depends_on('muparser')
     depends_on('suite-sparse')
-    depends_on('suite-sparse@:5.1.0', when='%gcc@:4.8.99')
     depends_on('tbb')
     depends_on('zlib')
 

@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _build-systems-tutorial:
 
 ==============================
@@ -105,8 +110,8 @@ This will open the :code:`AutotoolsPackage` file in your text editor.
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
     :language: python
-    :emphasize-lines: 42,45,62
-    :lines: 40-95,259-267
+    :emphasize-lines: 23,26,44
+    :lines: 30-76,240-248
     :linenos:
 
 
@@ -151,7 +156,7 @@ build system. Although this package is acceptable let's make this into an
 
 .. literalinclude:: tutorial/examples/Autotools/0.package.py
    :language: python
-   :emphasize-lines: 28
+   :emphasize-lines: 9
    :linenos:
 
 We first inherit from the :code:`AutotoolsPackage` class.
@@ -163,7 +168,7 @@ to be overridden is :code:`configure_args()`.
 
 .. literalinclude:: tutorial/examples/Autotools/1.package.py
    :language: python
-   :emphasize-lines: 42,43
+   :emphasize-lines: 23,24
    :linenos:
 
 Since Spack takes care of setting the prefix for us we can exclude that as
@@ -204,7 +209,7 @@ Take note of the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/makefile.py
    :language: python
-   :lines: 33-79,89-107
+   :lines: 14-60,70-88
    :emphasize-lines: 48,54,61
    :linenos:
 
@@ -247,7 +252,7 @@ Let's add in the rest of our details for our package:
 
 .. literalinclude:: tutorial/examples/Makefile/1.package.py
    :language: python
-   :emphasize-lines: 29,30,32,33,37,39
+   :emphasize-lines: 10,11,13,14,18,20
    :linenos:
 
 As we mentioned earlier, most packages using a :code:`Makefile` have hard-coded
@@ -289,7 +294,7 @@ To fix this, we need to use the :code:`edit()` method to write our custom
 
 .. literalinclude:: tutorial/examples/Makefile/2.package.py
    :language: python
-   :emphasize-lines: 42,43,44
+   :emphasize-lines: 23,24,25
    :linenos:
 
 Here we use a :code:`FileFilter` object to edit our :code:`Makefile`. It takes
@@ -302,7 +307,7 @@ Let's change the build and install phases of our package:
 
 .. literalinclude:: tutorial/examples/Makefile/3.package.py
    :language: python
-   :emphasize-lines: 46, 52
+   :emphasize-lines: 27, 33
    :linenos:
 
 Here demonstrate another strategy that we can use to manipulate our package
@@ -482,8 +487,8 @@ And go into a bit of detail on the highlighted sections:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/cmake.py
    :language: python
-   :lines: 37-92, 94-155, 174-211
-   :emphasize-lines: 57,68,86,94,96,99,100,101,102,111,117,135,136
+   :lines: 18-73, 75-136, 155-192
+   :emphasize-lines: 38,49,67,75,77,80,81,82,83,92,98,116,117
    :linenos:
 
 Some :code:`CMake` packages use different generators. Spack is able to support
@@ -564,7 +569,7 @@ Again we fill in the details:
 .. literalinclude:: tutorial/examples/Cmake/1.package.py
    :language: python
    :linenos:
-   :emphasize-lines: 28,32,33,37,38,39,40,41,42
+   :emphasize-lines: 9,13,14,18,19,20,21,22,23
 
 As mentioned earlier, Spack will use sensible defaults to prevent repeated code
 and to make writing :code:`CMake` package files simpler.
@@ -575,7 +580,7 @@ compiler flags. We add the following options like so:
 .. literalinclude:: tutorial/examples/Cmake/2.package.py
    :language: python
    :linenos:
-   :emphasize-lines: 45,49,50
+   :emphasize-lines: 26,30,31
 
 Now we can control our build options using :code:`cmake_args()`. If defaults are
 sufficient enough for the package, we can leave this method out.
@@ -677,7 +682,7 @@ We see the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/python.py
    :language: python
-   :lines: 35, 161-364
+   :lines: 16, 142-345
    :linenos:
 
 Each of these methods have sensible defaults or they can be overridden.

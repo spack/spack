@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -167,7 +148,7 @@ class Llvm(CMakePackage):
     }
     releases = [
         {
-            'version': 'trunk',
+            'version': 'develop',
             'repo': 'http://llvm.org/svn/llvm-project/llvm/trunk',
             'resources': {
                 'compiler-rt': 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
@@ -228,6 +209,22 @@ class Llvm(CMakePackage):
                 'lldb': '1ec6498066e273b7261270f344b68121',
                 'lld': '7ab2612417477b03538f11cd8b5e12f8',
                 'libunwind': '022a4ee2c3bf7b6d151e0444f66aca64'
+            }
+        },
+        {
+            'version': '5.0.2',
+            'md5': 'c5e980edf7f22d66f0f7561b35c1e195',
+            'resources': {
+                'compiler-rt': '22728d702a64ffc6d073d1dda25a1eb9',
+                'openmp': 'ad214f7f46d671f9b73d75e9d54e4594',
+                'polly': '5777f1248633ebc2b81ffe6ecb8cf4b1',
+                'libcxx': '93e7942c01cdd5bce5378bc3926f97ea',
+                'libcxxabi': '855ada029899c95cd6a852f13ed0ea71',
+                'cfe': '1cd6ee1b74331fb37c27b4a2a1802c97',
+                'clang-tools-extra': 'd4d0d9637fa1e47daf3f51e743d8f138',
+                'lldb': '9d0addd1a28a4c155b8f69919e7bbff7',
+                'lld': '7b7e2371cd250aec54879ae13b441382',
+                'libunwind': '5b2a11e475fe8e7f3725792ba66da086',
             }
         },
         {
@@ -462,7 +459,7 @@ class Llvm(CMakePackage):
     ]
 
     for release in releases:
-        if release['version'] == 'trunk':
+        if release['version'] == 'develop':
             version(release['version'], svn=release['repo'])
 
             for name, repo in release['resources'].items():
@@ -511,6 +508,9 @@ class Llvm(CMakePackage):
 
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
+
+    # LLVM 4 and 5 does not build with GCC 8
+    conflicts('%gcc@8:',      when='@:5')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')

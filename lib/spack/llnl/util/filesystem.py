@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import collections
 import errno
 import hashlib
@@ -242,6 +223,25 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
+def chgrp(path, group):
+    """Implement the bash chgrp function on a single path"""
+    gid = grp.getgrnam(group).gr_gid
+    os.chown(path, -1, gid)
+
+
+def chmod_x(entry, perms):
+    """Implements chmod, treating all executable bits as set using the chmod
+    utility's `+X` option.
+    """
+    mode = os.stat(entry).st_mode
+    if os.path.isfile(entry):
+        if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            perms &= ~stat.S_IXUSR
+            perms &= ~stat.S_IXGRP
+            perms &= ~stat.S_IXOTH
+    os.chmod(entry, perms)
+
+
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link.
     """
@@ -413,12 +413,23 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def mkdirp(*paths):
-    """Creates a directory, as well as parent directories if needed."""
+def mkdirp(*paths, **kwargs):
+    """Creates a directory, as well as parent directories if needed.
+
+    Arguments:
+        paths (str): paths to create with mkdirp
+
+    Keyword Aguments:
+        mode (permission bits or None, optional): optional permissions to
+            set on the created directory -- use OS default if not provided
+    """
+    mode = kwargs.get('mode', None)
     for path in paths:
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
+                if mode is not None:
+                    os.chmod(path, mode)
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
