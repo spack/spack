@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -38,6 +19,9 @@ class Octave(AutotoolsPackage):
 
     extendable = True
 
+    version('4.4.1', '09fbd0f212f4ef21e53f1d9c41cf30ce3d7f9450fb44911601e21ed64c67ae97')
+    version('4.4.0', '72f846379fcec7e813d46adcbacd069d72c4f4d8f6003bcd92c3513aafcd6e96')
+    version('4.2.2', '77b84395d8e7728a1ab223058fe5e92dc38c03bc13f7358e6533aab36f76726e')
     version('4.2.1', '80c28f6398576b50faca0e602defb9598d6f7308b0903724442c2a35a605333b')
     version('4.2.0', '443ba73782f3531c94bcf016f2f0362a58e186ddb8269af7dcce973562795567')
     version('4.0.2', 'c2a5cacc6e4c52f924739cdf22c2c687')

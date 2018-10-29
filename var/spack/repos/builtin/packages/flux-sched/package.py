@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -34,12 +15,15 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
 
     version('master', branch='master')
+    version('0.6.0', '8aad185949038c7fb6b277e6a8282947917084ebbec5c5bf0ee3a81a0dcdbe41ba18b1df837c669ae7b48ca5f1e492a5172bffa6b9feb4dda1c6a7a85abed4e8')
     version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
     version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     depends_on("boost+graph", when='@0.5.0:,master')
+    depends_on("py-pyyaml", when="@0.7.0:,master")
+    depends_on("libxml2@2.9.1:", when="@0.6.0,master")
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda')
@@ -58,11 +42,13 @@ class FluxSched(AutotoolsPackage):
 
     @when('@master')
     def setup(self):
-        # Check in case we are running `spack diy` from an "unshallow" clone
-        if os.path.exists('.git/shallow'):
+        with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which('git')
             git('fetch', '--unshallow')
+            git("config", "remote.origin.fetch",
+                "+refs/heads/*:refs/remotes/origin/*")
+            git('fetch', 'origin')
 
     def autoreconf(self, spec, prefix):
         self.setup()

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This module contains routines related to the module command for accessing and
 parsing environment modules.
@@ -163,11 +144,6 @@ def get_path_arg_from_module_line(line):
         path_arg = words_and_symbols[-2]
     else:
         path_arg = line.split()[2]
-
-    if not os.path.exists(path_arg):
-        tty.warn("Extracted path from module does not exist:"
-                 "\n\tExtracted path: " + path_arg +
-                 "\n\tFull line: " + line)
     return path_arg
 
 
@@ -181,20 +157,33 @@ def get_path_from_module(mod):
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
-    return get_path_from_module_contents(text, mod)
+    p = get_path_from_module_contents(text, mod)
+    if p and not os.path.exists(p):
+        tty.warn("Extracted path from module does not exist:"
+                 "\n\tExtracted path: " + p)
+    return p
 
 
 def get_path_from_module_contents(text, module_name):
+    tty.debug("Module name: " + module_name)
+    pkg_var_prefix = module_name.replace('-', '_').upper()
+    components = pkg_var_prefix.split('/')
+    # For modules with multiple components like foo/1.0.1, retrieve the package
+    # name "foo" from the module name
+    if len(components) > 1:
+        pkg_var_prefix = components[-2]
+    tty.debug("Package directory variable prefix: " + pkg_var_prefix)
+
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
-        pattern = r'\WLD_LIBRARY_PATH'
+        pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
         if re.search(pattern, line):
             path = get_path_arg_from_module_line(line)
             return path[:path.find('/lib')]
 
     # If it lists its package directory, return that
     for line in text:
-        pattern = r'\W{0}_DIR'.format(module_name.upper())
+        pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
         if re.search(pattern, line):
             return get_path_arg_from_module_line(line)
 
