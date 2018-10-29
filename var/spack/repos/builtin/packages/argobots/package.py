@@ -25,10 +25,10 @@ class Argobots(AutotoolsPackage):
 
     variant("valgrind", default=False, description="Enable Valgrind")
 
-    depends_on("m4", type=("build"))
-    depends_on("autoconf", type=("build"))
-    depends_on("automake", type=("build"))
-    depends_on("libtool", type=("build"))
+    depends_on("m4", type=("build"), when="@develop")
+    depends_on("autoconf", type=("build"), when="@develop")
+    depends_on("automake", type=("build"), when="@develop")
+    depends_on("libtool", type=("build"), when="@develop")
     depends_on("valgrind", when="+valgrind")
 
     def configure_args(self):
