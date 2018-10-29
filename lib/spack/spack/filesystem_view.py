@@ -431,9 +431,13 @@ class YamlFilesystemView(FilesystemView):
            Relies on the ordering of projections to avoid ambiguity.
         """
         spec = spack.spec.Spec(spec)
+        # Extensions are placed by their extendee, not by their own spec
+        locator_spec = spec.package.extendee_spec if spec.package.extendee_spec else spec
+
         for spec_like, fmt_str in self.projections.items():
-            if spec_like == 'all' or spec.satisfies(spec_like, strict=True):
-                return os.path.join(self.root, spec.format(fmt_str))
+            if spec_like == 'all' or locator_spec.satisfies(spec_like, 
+                                                            strict=True):
+                return os.path.join(self.root, locator_spec.format(fmt_str))
         return self.root
 
     def get_all_specs(self):
