@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 import platform
@@ -50,8 +31,12 @@ class Geant4(CMakePackage):
     variant('opengl', default=False, description='Optional OpenGL support')
     variant('x11', default=False, description='Optional X11 support')
     variant('motif', default=False, description='Optional motif support')
+    variant('threads', default=True, description='Build with multithreading')
 
     depends_on('cmake@3.5:', type='build')
+
+    conflicts('+cxx14', when='+cxx11')
+    conflicts('+cxx11', when='+cxx14')
 
     # C++11 support
     depends_on("clhep@2.4.0.0+cxx11~cxx14", when="@10.04+cxx11~cxx14")
@@ -86,7 +71,6 @@ class Geant4(CMakePackage):
             '-DGEANT4_USE_G3TOG4=ON',
             '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
-            '-DGEANT4_BUILD_MULTITHREADED=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
@@ -103,7 +87,7 @@ class Geant4(CMakePackage):
 
         if '+cxx11' in spec:
             options.append('-DGEANT4_BUILD_CXXSTD=c++11')
-        if '+cxx14' or '+cxx1y' in spec:
+        if '+cxx14' in spec:
             options.append('-DGEANT4_BUILD_CXXSTD=c++14')
 
         if '+qt' in spec:
@@ -116,6 +100,9 @@ class Geant4(CMakePackage):
             options.append('-DGEANT4_USE_USOLIDS=ON')
             options.append('-DUSolids_DIR=%s' % spec[
                 'vecgeom'].prefix.lib.CMake.USolids)
+
+        on_or_off = lambda opt: 'ON' if '+' + opt in spec else 'OFF'
+        options.append('-DGEANT4_BUILD_MULTITHREADED=' + on_or_off('threads'))
 
         return options
 
