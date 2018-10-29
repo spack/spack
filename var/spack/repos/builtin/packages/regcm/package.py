@@ -14,6 +14,22 @@ class Regcm(AutotoolsPackage):
     version('4.7.0', sha256='456631c10dcb83d70e51c3babda2f7a1aa41ed9e60cb4209deb3764655267519',
             url='https://gforge.ictp.it/gf/download/frsrelease/259/1845/RegCM-4.7.0.tar.gz')
 
+    variant('debug', default=False,
+            description='Build RegCM using debug options.')
+    variant('profile', default=False,
+            description='Build RegCM using profiling options.')
+    variant('singleprecision', default=False,
+            description='Build RegCM using single precision float type.')
+
+    variant('knl', default=False,
+            description='Build RegCM using Intel Xeon Phi options.')
+    variant('skl', default=False,
+            description='Build RegCM using Intel Sky Lake options.')
+    variant('bdw', default=False,
+            description='Build RegCM using Intel Broadwell (AVX2) options.')
+    variant('nhl', default=False,
+            description='Build RegCM using Intel Nehalem (SSE4.2) options.')
+
     depends_on('netcdf')
     depends_on('netcdf-fortran')
     depends_on('hdf5')
@@ -36,9 +52,15 @@ class Regcm(AutotoolsPackage):
         return (None, None, flags)
 
     def configure_args(self):
-        args = []
+        args = ['--enable-shared']
 
-        # RegCM complains when compiled with gfortran.
+        for opt in ('debug', 'profile', 'singleprecision',
+                    'knl', 'skl', 'bdw', 'nhl'):
+            if '+{}'.format(opt) in self.spec:
+                args.append('--enable-{}'.format(opt))
+
+        # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
+        # is ignored by the configure, so we need to set the option in FCFLAGS.
         if self.compiler.fc.endswith('gfortran'):
             args.append('FCFLAGS=-fno-range-check')
 
