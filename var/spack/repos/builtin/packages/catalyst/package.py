@@ -16,7 +16,8 @@ class Catalyst(CMakePackage):
 
     homepage = 'http://www.paraview.org'
     url      = "http://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
-    _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz' 
 
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
@@ -46,9 +47,11 @@ class Catalyst(CMakePackage):
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
-            return self._urlfmt.format(version.up_to(2), version, '-source')
+            return self._urlfmt_gz.format(version.up_to(2), version, '-source')
+        elif version < Version('5.6.0'):
+            return self._urlfmt_gz.format(version.up_to(2), version, '')
         else:
-            return self._urlfmt.format(version.up_to(2), version, '')
+            return self._urlfmt_xz.format(version.up_to(2), version, '')
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball.

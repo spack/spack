@@ -26,4 +26,7 @@ class Nccl(MakefilePackage):
 
     @property
     def install_targets(self):
-        return ['PREFIX={0}'.format(self.prefix), 'install']
+        if self.version >= Version('2.3.5-5'):
+            return ['PREFIX={0}'.format(self.prefix), 'src.install']
+        else:
+            return ['PREFIX={0}'.format(self.prefix), 'install']

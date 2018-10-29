@@ -212,6 +212,22 @@ class Llvm(CMakePackage):
             }
         },
         {
+            'version': '5.0.2',
+            'md5': 'c5e980edf7f22d66f0f7561b35c1e195',
+            'resources': {
+                'compiler-rt': '22728d702a64ffc6d073d1dda25a1eb9',
+                'openmp': 'ad214f7f46d671f9b73d75e9d54e4594',
+                'polly': '5777f1248633ebc2b81ffe6ecb8cf4b1',
+                'libcxx': '93e7942c01cdd5bce5378bc3926f97ea',
+                'libcxxabi': '855ada029899c95cd6a852f13ed0ea71',
+                'cfe': '1cd6ee1b74331fb37c27b4a2a1802c97',
+                'clang-tools-extra': 'd4d0d9637fa1e47daf3f51e743d8f138',
+                'lldb': '9d0addd1a28a4c155b8f69919e7bbff7',
+                'lld': '7b7e2371cd250aec54879ae13b441382',
+                'libunwind': '5b2a11e475fe8e7f3725792ba66da086',
+            }
+        },
+        {
             'version': '5.0.1',
             'md5': '3a4ec6dcbc71579eeaec7cb157fe2168',
             'resources': {
@@ -492,6 +508,9 @@ class Llvm(CMakePackage):
 
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
+
+    # LLVM 4 and 5 does not build with GCC 8
+    conflicts('%gcc@8:',      when='@:5')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')

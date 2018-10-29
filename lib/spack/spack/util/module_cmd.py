@@ -144,11 +144,6 @@ def get_path_arg_from_module_line(line):
         path_arg = words_and_symbols[-2]
     else:
         path_arg = line.split()[2]
-
-    if not os.path.exists(path_arg):
-        tty.warn("Extracted path from module does not exist:"
-                 "\n\tExtracted path: " + path_arg +
-                 "\n\tFull line: " + line)
     return path_arg
 
 
@@ -162,7 +157,11 @@ def get_path_from_module(mod):
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
-    return get_path_from_module_contents(text, mod)
+    p = get_path_from_module_contents(text, mod)
+    if p and not os.path.exists(p):
+        tty.warn("Extracted path from module does not exist:"
+                 "\n\tExtracted path: " + p)
+    return p
 
 
 def get_path_from_module_contents(text, module_name):

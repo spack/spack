@@ -22,11 +22,6 @@ class Atk(Package):
 
     depends_on('meson', type='build', when='@2.28.0:')
     depends_on('glib')
-    # FIXME: this constraint exists because of the meson dependency.
-    # It should not be required to specify it here, but "spack spec atk" will
-    # fail without it.
-    # See: #2632
-    depends_on('python@3:')
     depends_on('gettext')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
