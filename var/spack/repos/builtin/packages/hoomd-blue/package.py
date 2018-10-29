@@ -59,11 +59,8 @@ class HoomdBlue(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        python_maj, python_min = (
-            str(spec['python'].version.dotted).split('.')[:2]
-        )
-        install_path = '{0}/lib/python{1}.{2}/site-packages'.format(
-            spec.prefix, python_maj, python_min)
+        install_dir = spec['python'].package.site_packages_dir
+        install_path = os.path.join(spec.prefix, install_dir)
 
         cmake_args = [
             '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
