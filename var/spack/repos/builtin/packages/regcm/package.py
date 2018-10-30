@@ -61,7 +61,7 @@ class Regcm(AutotoolsPackage):
                 args.append('--enable-' + opt)
 
         for ext in self.extensions:
-            if 'extension={}'.format(ext) in self.spec:
+            if 'extension={0}'.format(ext) in self.spec:
                 args.append('--enable-' + ext)
                 break
 
