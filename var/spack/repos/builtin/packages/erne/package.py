@@ -21,10 +21,9 @@ class Erne(AutotoolsPackage):
     depends_on('openmpi', type=('build', 'run'), when='+mpi')
 
     def configure_args(self):
-        args = ['--disable-dependency-tracking', '--disable-maintainer-mode']
         if '+mpi' in self.spec:
-            args.append('--enable-openmpi')
-        return args
+            return ['--enable-openmpi']
+        return []
 
     def build(self, spec, prefix):
         # override the AUTOCONF environment to prevent double configure
