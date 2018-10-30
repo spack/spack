@@ -14,9 +14,13 @@ from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
 from llnl.util.lang import match_predicate, index_by
 from llnl.util.tty.color import colorize
+from llnl.util.filesystem import mkdirp
+
+import spack.util.spack_yaml as s_yaml
 
 import spack.spec
 import spack.store
+from spack.error import SpackError
 from spack.directory_layout import ExtensionAlreadyInstalledError
 from spack.directory_layout import YamlViewExtensionsLayout
 
@@ -27,6 +31,9 @@ if sys.version_info < (3, 0):
     from itertools import izip as zip
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
+
+
+_projections_path = '.spack/projections.yaml'
 
 
 class FilesystemView(object):
@@ -175,7 +182,26 @@ class YamlFilesystemView(FilesystemView):
     def __init__(self, root, layout, **kwargs):
         super(YamlFilesystemView, self).__init__(root, layout, **kwargs)
 
-        self.extensions_layout = YamlViewExtensionsLayout(root, layout)
+        # Super class gets projections from the kwargs
+        # YAML specific to get projections from YAML file
+        projections_path = os.path.join(self.root, _projections_path)
+        if not self.projections:
+            if os.path.exists(projections_path):
+                # Read projections file from view
+                with open(projections_path, 'r') as f:
+                    self.projections = s_yaml.load(f)['projections']
+        elif not os.path.exists(projections_path):
+            # Write projections file to new view
+            mkdirp(os.path.dirname(projections_path))
+            with open(projections_path, 'w') as f:
+                f.write(s_yaml.dump({'projections': self.projections}))
+        else:
+            msg = 'View at %s has projections file' % self.root
+            msg += ' and was passed projections manually.'
+            raise ConflictingProjectionsError(msg)
+
+        self.extensions_layout = YamlViewExtensionsLayout(root, layout, 
+                                                          self.projections)
 
         self._croot = colorize_root(self.root) + " "
 
@@ -639,3 +665,7 @@ def get_dependencies(specs):
     retval = set()
     set(map(retval.update, (set(s.traverse()) for s in specs)))
     return retval
+
+
+class ConflictingProjectionsError(SpackError):
+    """Raised when a view has a projections file and is given one manually."""

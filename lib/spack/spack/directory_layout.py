@@ -309,7 +309,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 class YamlViewExtensionsLayout(ExtensionsLayout):
     """Maintain extensions within a view.
     """
-    def __init__(self, root, layout):
+    def __init__(self, root, layout, projections={}):
         """layout is the corresponding YamlDirectoryLayout object for which
            we implement extensions.
         """
@@ -317,6 +317,8 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         self.layout = layout
         self.extension_file_name = 'extensions.yaml'
 
+        self.projections = projections
+        
         # Cache of already written/read extension maps.
         self._extension_maps = {}
 
@@ -361,8 +363,16 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             components = [self.root, self.layout.metadata_dir,
                           self.extension_file_name]
         else:
-            components = [self.root, self.layout.metadata_dir, spec.name,
+            view_prefix = self.root
+            for spec_like, projection in self.projections.items():
+                if spec_like == 'all' or spec.satisfies(spec_like, 
+                                                        strict=True):
+                    view_prefix = os.path.join(self.root, 
+                                               spec.format(projection))
+                    break
+            components = [view_prefix, self.layout.metadata_dir, spec.name,
                           self.extension_file_name]
+
         return os.path.join(*components)
 
     def extension_map(self, spec):
