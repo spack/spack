@@ -32,4 +32,4 @@ class Erne(AutotoolsPackage):
 
     def install(self, spec, prefix):
         # same catch with installing
-        make('install', 'AUTOCONF=:', 'PREFIX={0}'.format(prefix))
+        make('install', 'AUTOCONF=:')
