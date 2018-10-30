@@ -6,7 +6,6 @@
 from spack.main import SpackCommand
 import os.path
 import pytest
-from collections import OrderedDict
 
 import spack.util.spack_yaml as s_yaml
 
@@ -66,8 +65,10 @@ def test_view_multiple_projections(
     install('extendee@1.0%gcc')
     
     viewpath = str(tmpdir.mkdir('view'))
-    view_projection = OrderedDict([('extendee', '${PACKAGE}-${COMPILERNAME}'),
-                                  ('all', '${PACKAGE}-${VERSION}')])
+    view_projection = s_yaml.syaml_dict(
+        [('extendee', '${PACKAGE}-${COMPILERNAME}'),
+         ('all', '${PACKAGE}-${VERSION}')]
+        )
 
     projection_file = create_projection_file(tmpdir, view_projection)
     view('add', viewpath, '--projection-file={0}'.format(projection_file), 
