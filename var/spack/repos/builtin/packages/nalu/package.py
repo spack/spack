@@ -26,6 +26,8 @@ class Nalu(CMakePackage):
             description='Compile with Hypre support')
     variant('shared', default=(sys.platform != 'darwin'),
             description='Build Trilinos as shared library')
+    variant('pic', default=True,
+            description='Position independent code')
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')
@@ -43,7 +45,9 @@ class Nalu(CMakePackage):
 
         options.extend([
             '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix
+            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
+                'ON' if '+pic' in spec else 'OFF'),
         ])
 
         if '+openfast' in spec:

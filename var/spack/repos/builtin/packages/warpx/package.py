@@ -20,7 +20,7 @@ class Warpx(MakefilePackage):
     version('master', git='https://github.com/ECP-WarpX/WarpX.git', tag='master')
     version('dev', git='https://github.com/ECP-WarpX/WarpX.git', tag='dev')
 
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi')
 
     variant('dims',
             default='3',

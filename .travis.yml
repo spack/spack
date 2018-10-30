@@ -108,13 +108,21 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
+    - stage: 'docker build'
+      sudo: required
+      os: linux
+      language: generic
+      env: TEST_SUITE=docker
   allow_failures:
     - dist: xenial
+    - env: TEST_SUITE=docker
 
 stages:
   - 'style checks'
   - 'unit tests + documentation'
   - 'build tests'
+  - name: 'docker build'
+    if: type = push AND branch IN (develop, master)
 
 
 #=============================================================================
@@ -187,8 +195,29 @@ before_script:
 #=============================================================================
 # Building
 #=============================================================================
+services:
+  - docker
+
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
+  - if [[ "$TEST_SUITE" == "docker build" ]]; then
+        login_attempted=0; login_success=0;
+        for config in share/spack/docker/config/* ; do
+            source "$config" ;
+            ./share/spack/docker/build-image.sh;
+            if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then
+                if [ "$login_attempted" '=' '0' ]; then
+                    if echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin; then
+                        login_success=1;
+                    fi;
+                    login_attempted=1;
+                fi;
+                if [ "$login_success" '=' '1' ]; then
+                    ./share/spack/docker/push-image.sh;
+                fi
+            fi
+        done;
+    fi
   - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
         codecov --env PYTHON_VERSION
                 --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";

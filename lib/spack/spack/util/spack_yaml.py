@@ -275,6 +275,8 @@ class LineAnnotationDumper(OrderedLineDumper):
     def __init__(self, *args, **kwargs):
         super(LineAnnotationDumper, self).__init__(*args, **kwargs)
         del _annotations[:]
+        self.colors = 'KgrbmcyGRBMCY'
+        self.filename_colors = {}
 
     def process_scalar(self):
         super(LineAnnotationDumper, self).process_scalar()
@@ -301,7 +303,15 @@ class LineAnnotationDumper(OrderedLineDumper):
         # append annotations at the end of each line
         if self.saved:
             mark = self.saved._start_mark
-            ann = '@K{%s}' % mark.name
+
+            color = self.filename_colors.get(mark.name)
+            if not color:
+                ncolors = len(self.colors)
+                color = self.colors[len(self.filename_colors) % ncolors]
+                self.filename_colors[mark.name] = color
+
+            fmt = '@%s{%%s}' % color
+            ann = fmt % mark.name
             if mark.line is not None:
                 ann += ':@c{%s}' % (mark.line + 1)
             _annotations.append(colorize(ann))
