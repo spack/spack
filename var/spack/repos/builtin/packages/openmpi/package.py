@@ -64,6 +64,7 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
+    version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')
     version('3.1.2', '210df69fafd964158527e7f37e333239')  # libmpi.so.40.10.2
     version('3.1.1', '493f1db2f75afaab1c8ecba78d2f5aab')  # libmpi.so.40.10.1
     version('3.1.0', '0895e268ca27735d7654bf64cee6c256')  # libmpi.so.40.10.0
@@ -165,6 +166,14 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
+
+    # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
+    # Haven't release fix for 2.1.x
+    patch('btl_vader.patch', when='@2.1.3:2.1.5')
+
+    # Fixed in 3.0.3 and 3.1.3
+    patch('btl_vader.patch', when='@3.0.1:3.0.2')
+    patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
     fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
 
