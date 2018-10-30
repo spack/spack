@@ -397,8 +397,6 @@ class Boost(Package):
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
         b2 = Executable(b2name)
-        if "platform=cray" in spec and spec.satisfies("target=mic_knl"):
-            b2 = build_env_compilers(b2)
         jobs = make_jobs
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):

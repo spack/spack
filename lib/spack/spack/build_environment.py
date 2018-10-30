@@ -92,7 +92,6 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
-
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can specify
        parallelism options on a per-invocation basis.  Specifying
@@ -172,21 +171,10 @@ def set_compiler_environment_variables(pkg, env):
     assert all(key in compiler.link_paths for key in (
         'cc', 'cxx', 'f77', 'fc'))
 
-
-def set_compiler_environment_variables(pkg, env):
-    assert pkg.spec.concrete
-    compiler = pkg.compiler
-
-    # Set compiler variables used by CMake and autotools
-    assert all(key in compiler.link_paths for key in (
-        'cc', 'cxx', 'f77', 'fc'))
-
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor,
     # ttyout, ttyerr, etc.
-
-    # Set SPACK compiler variables so that our wrapper knows what to call
     link_dir = spack.paths.build_env_path
 
     if compiler.cc:
