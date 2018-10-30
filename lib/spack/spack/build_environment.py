@@ -172,8 +172,6 @@ def set_compiler_environment_variables(pkg, env):
     assert all(key in compiler.link_paths for key in (
         'cc', 'cxx', 'f77', 'fc'))
 
-    return env
-
 
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
