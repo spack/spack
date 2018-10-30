@@ -21,14 +21,12 @@ class Regcm(AutotoolsPackage):
     variant('singleprecision', default=False,
             description='Build RegCM using single precision float type.')
 
-    variant('knl', default=False,
-            description='Build RegCM using Intel Xeon Phi options.')
-    variant('skl', default=False,
-            description='Build RegCM using Intel Sky Lake options.')
-    variant('bdw', default=False,
-            description='Build RegCM using Intel Broadwell (AVX2) options.')
-    variant('nhl', default=False,
-            description='Build RegCM using Intel Nehalem (SSE4.2) options.')
+    # On Intel and PGI compilers, multiple archs can be built at the same time,
+    # producing a so-called fat binary. Unfortunately, gcc builds only the last
+    # architecture provided (in the configure), so we allow a single arch.
+    extensions = ('knl', 'skl', 'bdw', 'nhl')
+    variant('extension', default=None, values=extensions, multi=True,
+            description='Build extensions for a specific Intel architecture.')
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
@@ -37,7 +35,6 @@ class Regcm(AutotoolsPackage):
 
     # 'make' sometimes crashes when compiling with more than 10-12 cores.
     # Moreover, parallel compile time is ~ 1m 30s, while serial is ~ 50s.
-    # The user can force the number of procs with: `spack install -j<N>`.
     parallel = False
 
     def flag_handler(self, name, flags):
@@ -59,10 +56,14 @@ class Regcm(AutotoolsPackage):
     def configure_args(self):
         args = ['--enable-shared']
 
-        for opt in ('debug', 'profile', 'singleprecision',
-                    'knl', 'skl', 'bdw', 'nhl'):
+        for opt in ('debug', 'profile', 'singleprecision'):
             if '+{0}'.format(opt) in self.spec:
                 args.append('--enable-' + opt)
+
+        for ext in self.extensions:
+            if 'extension={}'.format(ext) in self.spec:
+                args.append('--enable-' + ext)
+                break
 
         # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
         # is ignored by the configure, so we need to set the option in FCFLAGS.
