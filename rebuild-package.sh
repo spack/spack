@@ -61,6 +61,10 @@ echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 # Finally, list the compilers spack knows about
 spack compilers
 
+# Show the compiler details
+echo "Compiler Configurations:"
+cat ~/.spack/linux/compilers.yaml
+
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
 

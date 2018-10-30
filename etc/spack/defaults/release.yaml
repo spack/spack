@@ -6,63 +6,11 @@ spec-set:
     exclude: []
     matrix:
         - packages:
-            # Hide bzip2 for now, as the domain registration expired
-            # See for reference: https://gitlab.com/bzip/bzip2
-            # bzip2:
-            #     versions: [1.0.6]
-            cairo:
-                versions: [1.14.12]
-            dakota:
-                versions: [6.3]
-            # eigen:
-            #     versions: [3.3.4]
-            esmf:
-                versions: [7.0.1]
-            gdal:
-                versions: [2.3.0]
-            gl2ps:
-                versions: [1.3.9]
-            graphviz:
-                versions: [2.40.1]
-            jsoncpp:
-                versions: [1.7.3]
-            libbsd:
-                versions: [0.8.6]
-            libpng:
-                versions: [1.6.34]
-            libtiff:
-                versions: [4.0.9]
-            libx11:
-                versions: [1.6.5]
-            lz4:
-                versions: [1.8.1.2]
-            mesa:
-                versions: [18.1.2]
-            meshkit:
-                versions: [1.5.0]
-            ncurses:
-                versions: [6.1]
-            openmpi:
-                versions: [3.1.0]
-            python:
-                versions: [2.7.14]
-            readline:
-                versions: [7.0]
-            sqlite:
-                versions: [3.23.1]
-            tk:
-                versions: [8.6.5]
-            transset:
-                versions: [1.0.1]
             xsdk:
                 versions: [0.3.0]
-            xz:
-                versions: [5.2.4]
-            zlib:
-                versions: [1.2.11]
         - compilers:
             gcc:
                 versions: [5.5.0]
-            # clang:
-            #     versions: ['9.1.0-apple']
+            clang:
+                versions: [7.0.0]
     cdash: ["https://spack.io/cdash/submit.php?project=spack"]
