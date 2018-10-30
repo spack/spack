@@ -34,7 +34,8 @@ class Xeus(CMakePackage):
     git      = "https://github.com/QuantStack/xeus.git"
 
     version('develop', branch='master')
-    version('0.14.1', '315e0e5d919d8bf0c5a1a002169bd7e2')
+    version('0.15.0', sha256='bc99235b24d5757dc129f3ed531501fb0d0667913927ed39ee24281952649183')
+    version('0.14.1', sha256='a6815845d4522ec279f142d3b4e92ef52cd80847b512146a65f256a77e058cfe')
 
     variant('examples', default=False, description="Build examples")
 
@@ -46,9 +47,13 @@ class Xeus(CMakePackage):
     depends_on('cppzmq@4.3.0:')
     depends_on('cryptopp@7.0.0:')
     depends_on('xtl@0.4.0:')
-    depends_on('nlohmann-json@3.2', when='@develop')
-    depends_on('nlohmann-json@3.1.2', when='@0.14.1')
+    depends_on('nlohmann-json@3.2.0', when='@develop@0.15.0:')
+    depends_on('nlohmann-json@3.1.1', when='@0.14.1')
     depends_on('libuuid')
+
+    # finds cryptopp not built with cmake, removes c++17 attribute
+    # in check_cxx_source_compiles
+    patch('cmake_find_cryptopp_and_check_cxx_compatibility.patch')
 
     def cmake_args(self):
         args = [
