@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import sys
@@ -38,24 +19,17 @@ class Sundials(CMakePackage):
     # ==========================================================================
     # Versions
     # ==========================================================================
-
-    version('4.0.0-dev.1',
-            sha256='6354e1d266b60c23766137b4ffa9bbde8bca97a562ccd94cab756b597ed753c1')
-    version('4.0.0-dev',
-            sha256='50e526327461aebe463accf6ef56f9c6773df65025f3020b9ce68b83bbf5dd27')
-    version('3.1.2',
-            sha256='a8985bb1e851d90e24260450667b134bc13d71f5c6effc9e1d7183bd874fe116',
-            preferred=True)
-    version('3.1.1',
-            sha256='a24d643d31ed1f31a25b102a1e1759508ce84b1e4739425ad0e18106ab471a24')
-    version('3.1.0',
-            sha256='18d52f8f329626f77b99b8bf91e05b7d16b49fde2483d3a0ea55496ce4cdd43a')
-    version('3.0.0',
-            sha256='28b8e07eecfdef66e2c0d0ea0cb1b91af6e4e94d71008abfe80c27bf39f63fde')
-    version('2.7.0',
-            sha256='d39fcac7175d701398e4eb209f7e92a5b30a78358d4a0c0fcc23db23c11ba104')
-    version('2.6.2',
-            sha256='d8ed0151509dd2b0f317b318a4175f8b95a174340fc3080b8c20617da8aa4d2f')
+    version('4.0.0-dev.2', sha256='124fc12f2a68d32210c20f5005510607e0833764afaef2a70b741bc922519984')
+    version('4.0.0-dev.1', sha256='6354e1d266b60c23766137b4ffa9bbde8bca97a562ccd94cab756b597ed753c1')
+    version('4.0.0-dev', sha256='50e526327461aebe463accf6ef56f9c6773df65025f3020b9ce68b83bbf5dd27')
+    version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808', preferred=True)
+    version('3.2.0', sha256='d2b690afecadf8b5a048bb27ab341de591d714605b98d3518985dfc2250e93f9')
+    version('3.1.2', sha256='a8985bb1e851d90e24260450667b134bc13d71f5c6effc9e1d7183bd874fe116')
+    version('3.1.1', sha256='a24d643d31ed1f31a25b102a1e1759508ce84b1e4739425ad0e18106ab471a24')
+    version('3.1.0', sha256='18d52f8f329626f77b99b8bf91e05b7d16b49fde2483d3a0ea55496ce4cdd43a')
+    version('3.0.0', sha256='28b8e07eecfdef66e2c0d0ea0cb1b91af6e4e94d71008abfe80c27bf39f63fde')
+    version('2.7.0', sha256='d39fcac7175d701398e4eb209f7e92a5b30a78358d4a0c0fcc23db23c11ba104')
+    version('2.6.2', sha256='d8ed0151509dd2b0f317b318a4175f8b95a174340fc3080b8c20617da8aa4d2f')
 
     # ==========================================================================
     # Variants
@@ -178,7 +152,8 @@ class Sundials(CMakePackage):
     # Build dependencies
     depends_on('cmake@2.8.1:', type='build')
     depends_on('cmake@2.8.12:', type='build', when='@3.1.2')
-    depends_on('cmake@3.0.2:', type='build', when='@4.0.0:')
+    depends_on('cmake@3.0.2:', type='build', when='@4.0.0-dev.1')
+    depends_on('cmake@3.1.3:', type='build', when='@3.2.0,4.0.0-dev.2')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
@@ -338,6 +313,12 @@ class Sundials(CMakePackage):
                 '-DPETSC_ENABLE=ON',
                 '-DPETSC_INCLUDE_DIR=%s' % spec['petsc'].prefix.include,
                 '-DPETSC_LIBRARY_DIR=%s' % spec['petsc'].prefix.lib
+            ])
+
+        # Building with RAJA
+        if '+raja' in spec:
+            args.extend([
+                '-DRAJA_DIR=%s' % spec['raja'].prefix.share.raja.cmake
             ])
 
         # Examples

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,7 +15,7 @@ class PySpyder(PythonPackage):
     version('3.1.3', '4b9b7c8c3e6dc00001e6e98473473c36')
     version('2.3.9', 'dd01e07a77123c128ff79ba57b97c1d7')
 
-    depends_on('py-setuptools',       type='build')
+    depends_on('python@2.7.0:2.8.0,3.3.0:', type=('build', 'run'))
     depends_on('py-rope@0.9.4:',      type=('build', 'run'), when='^python@:3')
     # depends_on('py-rope_py3k',    type=('build', 'run'), when='^python@3:')
     depends_on('py-jedi@0.9.0',       type=('build', 'run'))
@@ -44,12 +25,21 @@ class PySpyder(PythonPackage):
     depends_on('py-qtconsole@4.2.0:', type=('build', 'run'))
     depends_on('py-nbconvert',        type=('build', 'run'))
     depends_on('py-sphinx',           type=('build', 'run'))
-    depends_on('py-pycodestyle',      type=('build', 'run'))
+    # The pycodestyle dependency is split in two, because internally it
+    # changes its name from pep8 to pycodestyle, and spyder does not cope
+    # with this change until @3.2.0
+    # https://github.com/PyCQA/pycodestyle/issues/466
+    # https://github.com/spyder-ide/spyder/blob/master/CHANGELOG.md#version-32-2017-07-24
+    depends_on('py-pycodestyle@:1.7.1', when='@:3.1.99', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.1.0:', when='@3.2.0:',  type=('build', 'run'))
     depends_on('py-pylint',           type=('build', 'run'))
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
     depends_on('py-qtpy@1.1.0:',      type=('build', 'run'))
-    depends_on('py-zmq',              type=('build', 'run'))
-    depends_on('py-chardet@2:',       type=('build', 'run'))
+    # technically this is a transitive dependency in order for py-pyqt
+    # to pick up webkit, but this is the easier solution (see #9207)
+    depends_on('qt+webkit',           type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
+    depends_on('py-zmq',              type=('build', 'run'))
+    depends_on('py-chardet@2.0.0:',   type=('build', 'run'))
     depends_on('py-numpydoc',         type=('build', 'run'))
