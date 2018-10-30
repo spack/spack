@@ -57,7 +57,8 @@ class Xeus(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DBUILD_EXAMPLES:BOOL=%s' % ('ON' if '+examples' in self.spec else 'OFF')
+            '-DBUILD_EXAMPLES:BOOL=%s' % (
+                'ON' if '+examples' in self.spec else 'OFF')
         ]
 
         return args
