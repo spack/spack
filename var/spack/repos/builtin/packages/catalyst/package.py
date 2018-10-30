@@ -192,4 +192,4 @@ class Catalyst(CMakePackage):
         with working_dir(self.build_directory, create=True):
             subprocess.check_call([cmake_script_path,
                                    os.path.abspath(self.root_cmakelists_dir)] +
-                                   self.cmake_args() + self.std_cmake_args)
+                                  self.cmake_args() + self.std_cmake_args)
