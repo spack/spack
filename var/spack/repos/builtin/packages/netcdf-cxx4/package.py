@@ -15,6 +15,8 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.3.0', '0dde8b9763eecdafbd69d076e687337e')
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
+    # Usually the configure automatically inserts the pic flags, but we can
+    # force its usage with this variant.
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
@@ -27,7 +29,7 @@ class NetcdfCxx4(AutotoolsPackage):
     force_autoreconf = True
 
     def flag_handler(self, name, flags):
-        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+        if name == 'cflags' and '+pic' in self.spec:
             flags.append(self.compiler.pic_flag)
         elif name == 'cppflags':
             flags.append('-I' + self.spec['netcdf'].prefix.include)
