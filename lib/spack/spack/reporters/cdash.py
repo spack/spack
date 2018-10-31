@@ -118,6 +118,13 @@ class CDash(Reporter):
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
 
+        # Move the build phase to the front of the list if it occurred.
+        # This supports older versions of CDash that expect this phase
+        # to be reported before all others.
+        if "build" in phases_encountered:
+            build_pos = phases_encountered.index("build")
+            phases_encountered.insert(0, phases_encountered.pop(build_pos))
+
         for phase in phases_encountered:
             errors, warnings = parse_log_events(
                 report_data[phase]['log'].splitlines())
