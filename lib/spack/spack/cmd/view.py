@@ -80,6 +80,7 @@ def relaxed_disambiguate(specs, view):
     # make function always return a list to keep consistency between py2/3
     return list(map(squash, map(spack.store.db.query, specs)))
 
+
 def setup_parser(sp):
     setup_parser.parser = sp
 
@@ -120,8 +121,9 @@ def setup_parser(sp):
     for cmd, act in file_system_view_actions.items():
         act.add_argument('path', nargs=1,
                          help="path to file system view directory")
-        act.add_argument('--projection-file', default='', dest='projection_file',
-                         help="Initialize projection using specification from file.")
+        act.add_argument('--projection-file', default='',
+                         dest='projection_file',
+                         help="Initialize view using projections from file.")
 
         if cmd == "remove":
             grp = act.add_mutually_exclusive_group(required=True)
@@ -175,8 +177,7 @@ def view(parser, args):
         path, spack.store.layout,
         projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
-        link=os.link if args.action in ["hardlink", "hard"]
-        else os.symlink,
+        link=os.link if args.action in ["hardlink", "hard"] else os.symlink,
         verbose=args.verbose)
 
     # Process common args and specs

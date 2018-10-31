@@ -318,7 +318,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         self.extension_file_name = 'extensions.yaml'
 
         self.projections = projections
-        
+
         # Cache of already written/read extension maps.
         self._extension_maps = {}
 
@@ -365,9 +365,9 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         else:
             view_prefix = self.root
             for spec_like, projection in self.projections.items():
-                if spec_like == 'all' or spec.satisfies(spec_like, 
+                if spec_like == 'all' or spec.satisfies(spec_like,
                                                         strict=True):
-                    view_prefix = os.path.join(self.root, 
+                    view_prefix = os.path.join(self.root,
                                                spec.format(projection))
                     break
             components = [view_prefix, self.layout.metadata_dir, spec.name,

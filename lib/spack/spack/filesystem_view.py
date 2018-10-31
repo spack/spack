@@ -192,8 +192,8 @@ class YamlFilesystemView(FilesystemView):
                     self.projections = s_yaml.load(f)['projections']
             else:
                 # Write projections file to new view
-                # Not strictly necessary as the empty file is the empty projection
-                # But it makes sense for consistency
+                # Not strictly necessary as the empty file is the empty
+                # projection but it makes sense for consistency
                 mkdirp(os.path.dirname(projections_path))
                 with open(projections_path, 'w') as f:
                     f.write(s_yaml.dump({'projections': self.projections}))
@@ -207,7 +207,7 @@ class YamlFilesystemView(FilesystemView):
             msg += ' and was passed projections manually.'
             raise ConflictingProjectionsError(msg)
 
-        self.extensions_layout = YamlViewExtensionsLayout(root, layout, 
+        self.extensions_layout = YamlViewExtensionsLayout(root, layout,
                                                           self.projections)
 
         self._croot = colorize_root(self.root) + " "
@@ -251,10 +251,11 @@ class YamlFilesystemView(FilesystemView):
         # Find the directory we should link into
         extendee_spec = spec.package.extendee_spec
         extension_root = extendee_spec.package.view_destination(self)
-        
+
         # Create a view for the link target if it differs from top level view
         if extension_root != self.root:
-            extension_view = YamlFilesystemView(extension_root, spack.store.layout)
+            extension_view = YamlFilesystemView(extension_root,
+                                                spack.store.layout)
         else:
             extension_view = self
 
@@ -426,10 +427,11 @@ class YamlFilesystemView(FilesystemView):
         # Find the directory we should unlink from
         extendee_spec = spec.package.extendee_spec
         extension_root = extendee_spec.package.view_destination(self)
-        
+
         # Create a view for the link target if it differs from top level view
         if extension_root != self.root:
-            extension_view = YamlFilesystemView(extension_root, spack.store.layout)
+            extension_view = YamlFilesystemView(extension_root,
+                                                spack.store.layout)
         else:
             extension_view = self
 
@@ -465,23 +467,25 @@ class YamlFilesystemView(FilesystemView):
         """
         spec = spack.spec.Spec(spec)
         # Extensions are placed by their extendee, not by their own spec
-        locator_spec = spec.package.extendee_spec if spec.package.extendee_spec else spec
+        locator_spec = spec
+        if spec.package.extendee_spec:
+            locator_spec = spec.package.extendee_spec
 
         for spec_like, fmt_str in self.projections.items():
-            if spec_like == 'all' or locator_spec.satisfies(spec_like, 
+            if spec_like == 'all' or locator_spec.satisfies(spec_like,
                                                             strict=True):
                 return os.path.join(self.root, locator_spec.format(fmt_str))
         return self.root
 
     def get_all_specs(self):
-        metadata_dirs = []
+        md_dirs = []
         for root, dirs, files in os.walk(self.root):
             if spack.store.layout.metadata_dir in dirs:
-                metadata_dirs.append(os.path.join(root,
-                                                  spack.store.layout.metadata_dir))
+                md_dirs.append(os.path.join(root,
+                                            spack.store.layout.metadata_dir))
 
         specs = []
-        for md_dir in metadata_dirs:
+        for md_dir in md_dirs:
             if os.path.exists(md_dir):
                 for name_dir in os.listdir(md_dir):
                     filename = os.path.join(md_dir, name_dir,
@@ -559,7 +563,7 @@ class YamlFilesystemView(FilesystemView):
                     print()
 
                 header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
-                                              architecture, 
+                                              architecture,
                                               spack.spec.compiler_color,
                                               compiler)
                 tty.hline(colorize(header), char='-')
@@ -575,13 +579,14 @@ class YamlFilesystemView(FilesystemView):
                 width += 2
                 format = "    %%-%ds%%s" % width
 
-                for abbrv, spec in zip(abbreviated, specs):
-                    prefix = gray_hash(spec, hlen) if self.verbose else ''
-                    print(prefix + (format % (abbrv, 
-                                              self.get_projection_for_spec(spec))))
-            #     import spack.cmd
-            # spack.cmd.display_specs(in_view, flags=True, variants=True,
-            #                         long=self.verbose)
+                for abbrv, s in zip(abbreviated, specs):
+                    prefix = ''
+                    if self.verbose:
+                        prefix = colorize('@K{%s}' % s.dag_hash(7))
+                    print(
+                        prefix + (format % (abbrv,
+                                            self.get_projection_for_spec(s)))
+                    )
         else:
             tty.warn(self._croot + "No packages found.")
 

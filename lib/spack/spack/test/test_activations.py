@@ -10,15 +10,14 @@ import sys
 import spack.spec
 import spack.package
 from llnl.util.link_tree import MergeConflictError
-from spack.build_systems.python import PythonPackage
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
-from spack.util.prefix import Prefix
 from spack.repo import RepoPath
 
 """This includes tests for customized activation logic for specific packages
    (e.g. python and perl).
 """
+
 
 def create_ext_pkg(name, prefix, extendee_spec):
     ext_spec = spack.spec.Spec(name)
@@ -152,7 +151,8 @@ def namespace_extensions(tmpdir, builtin_and_mock_packages):
     return str(ext1_prefix), str(ext2_prefix), 'examplenamespace'
 
 
-def test_python_activation_with_files(tmpdir, python_and_extension_dirs, builtin_and_mock_packages):
+def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
+                                      builtin_and_mock_packages):
     # Set mock repo to lower precedence than builtin. We can test builtin
     # python against mock python extensions.
     python_prefix, ext_prefix = python_and_extension_dirs
@@ -162,7 +162,7 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs, builtin
     python_spec.package.spec.prefix = python_prefix
 
     ext_pkg = create_python_ext_pkg('py-extension1', ext_prefix, python_spec)
-    
+
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, python_pkg.view())
 
@@ -176,7 +176,8 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs, builtin
     assert 'setuptools.egg' not in easy_install_contents
 
 
-def test_python_activation_view(tmpdir, python_and_extension_dirs, builtin_and_mock_packages):
+def test_python_activation_view(tmpdir, python_and_extension_dirs,
+                                builtin_and_mock_packages):
     python_prefix, ext_prefix = python_and_extension_dirs
 
     python_spec = spack.spec.Spec('python@2.7.12')
@@ -197,7 +198,8 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs, builtin_and_m
     assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
 
 
-def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions, builtin_and_mock_packages):
+def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions,
+                                               builtin_and_mock_packages):
     """Test the view update logic in PythonPackage ignores conflicting
        instances of __init__ for packages which are in the same namespace.
     """
@@ -207,9 +209,9 @@ def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions, bui
     python_spec._concrete = True
 
     ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
-                                    py_namespace)
+                                     py_namespace)
     ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
-                                    py_namespace)
+                                     py_namespace)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -230,7 +232,8 @@ def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions, bui
     assert os.path.exists(os.path.join(view_dir, init_file))
 
 
-def test_python_keep_namespace_init(tmpdir, namespace_extensions, builtin_and_mock_packages):
+def test_python_keep_namespace_init(tmpdir, namespace_extensions,
+                                    builtin_and_mock_packages):
     """Test the view update logic in PythonPackage keeps the namespace
        __init__ file as long as one package in the namespace still
        exists.
@@ -241,9 +244,9 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions, builtin_and_mo
     python_spec._concrete = True
 
     ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
-                                    py_namespace)
+                                     py_namespace)
     ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
-                                    py_namespace)
+                                     py_namespace)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -271,7 +274,8 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions, builtin_and_mo
     assert not os.path.exists(os.path.join(view_dir, init_file))
 
 
-def test_python_namespace_conflict(tmpdir, namespace_extensions, builtin_and_mock_packages):
+def test_python_namespace_conflict(tmpdir, namespace_extensions,
+                                   builtin_and_mock_packages):
     """Test the view update logic in PythonPackage reports an error when two
        python extensions with different namespaces have a conflicting __init__
        file.
@@ -283,9 +287,9 @@ def test_python_namespace_conflict(tmpdir, namespace_extensions, builtin_and_moc
     python_spec._concrete = True
 
     ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
-                                    py_namespace)
+                                     py_namespace)
     ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
-                                    other_namespace)
+                                     other_namespace)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -365,7 +369,8 @@ def test_perl_activation(tmpdir, builtin_and_mock_packages):
     perl_pkg.activate(ext_pkg, perl_pkg.view())
 
 
-def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs, builtin_and_mock_packages):
+def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs,
+                                    builtin_and_mock_packages):
     perl_prefix, ext_prefix = perl_and_extension_dirs
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
@@ -380,7 +385,8 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs, builtin_and
     assert os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
 
-def test_perl_activation_view(tmpdir, perl_and_extension_dirs, builtin_and_mock_packages):
+def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
+                              builtin_and_mock_packages):
     perl_prefix, ext_prefix = perl_and_extension_dirs
 
     perl_spec = spack.spec.Spec('perl@5.24.1')

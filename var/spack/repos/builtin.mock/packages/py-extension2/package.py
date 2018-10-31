@@ -44,6 +44,7 @@ class PyExtension2(PythonPackage):
 
     # Give the package a hook to set the extendee spec
     extends_spec = 'python'
+
     @property
     def extendee_spec(self):
         return self.extends_spec

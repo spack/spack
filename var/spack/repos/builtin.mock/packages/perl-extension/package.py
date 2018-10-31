@@ -32,7 +32,6 @@ class PerlExtension(PerlPackage):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/extension1-1.0.tar.gz"
 
-
     version('1.0', 'hash-extension-1.0')
     version('2.0', 'hash-extension-2.0')
 
@@ -43,6 +42,7 @@ class PerlExtension(PerlPackage):
 
     # Give the package a hook to set the extendee spec
     extends_spec = 'perl'
+
     @property
     def extendee_spec(self):
         return self.extends_spec

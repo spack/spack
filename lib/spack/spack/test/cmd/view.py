@@ -39,18 +39,18 @@ def test_view_link_type(
 
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add'])
 def test_view_projections(
-        tmpdir, mock_packages, mock_archive, mock_fetch, config, 
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, cmd):
     install('libdwarf@20130207')
-    
+
     viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
     view_projection = {
         'projections': {
             'all': '${PACKAGE}-${VERSION}'
-            }
         }
+    }
     projection_file = create_projection_file(tmpdir, view_projection)
-    view(cmd, viewpath, '--projection-file={0}'.format(projection_file), 
+    view(cmd, viewpath, '--projection-file={0}'.format(projection_file),
          'libdwarf')
 
     package_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
@@ -59,19 +59,19 @@ def test_view_projections(
 
 
 def test_view_multiple_projections(
-        tmpdir, mock_packages, mock_archive, mock_fetch, config, 
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
     install('libdwarf@20130207')
     install('extendee@1.0%gcc')
-    
+
     viewpath = str(tmpdir.mkdir('view'))
     view_projection = s_yaml.syaml_dict(
         [('extendee', '${PACKAGE}-${COMPILERNAME}'),
          ('all', '${PACKAGE}-${VERSION}')]
-        )
+    )
 
     projection_file = create_projection_file(tmpdir, view_projection)
-    view('add', viewpath, '--projection-file={0}'.format(projection_file), 
+    view('add', viewpath, '--projection-file={0}'.format(projection_file),
          'libdwarf', 'extendee')
 
     libdwarf_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
@@ -144,7 +144,7 @@ def test_view_extension_projection(
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
 
-    assert os.path.exists(os.path.join(viewpath, 'extendee-1.0', 
+    assert os.path.exists(os.path.join(viewpath, 'extendee-1.0',
                                        'bin', 'extension1'))
 
 
