@@ -15,11 +15,18 @@ class PyScikitLearn(PythonPackage):
     version('0.20.0', sha256='97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18')
     version('0.19.1', 'b67143988c108862735a96cf2b1e827a')
     version('0.18.1', '6b0ff1eaa5010043895dd63d1e3c60c9')
-    version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
-    version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
     version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
-    version('0.13.1', 'acba398e1d46274b8470f40d0926e6a4')
+    version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
+    version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
+    
+    depends_on('python@2.7:2.8,3.4:3.7.9999', when='@0.20.0')
+    depends_on('python@2.7:2.8,3.3:3.6.9999', when='@0.19.1')
+    depends_on('py-numpy@1.8.2:', when='@0.19.1:20.0', type=('build', 'run'))
+    depends_on('py-scipy@0.13.3:', when='@0.19.1:20.0', type=('build', 'run'))
 
-    depends_on('python@2.6:2.8,3.3:')
-    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
-    depends_on('py-scipy@0.9:',   type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.3:3.6.9999', when='@0.15.1:0.18.1')
+    depends_on('py-numpy@1.6.1:', when='@0.15.1:0.18.1', type=('build', 'run'))
+    depends_on('py-scipy@0.9:', when='@0.15.1:0.18.1', type=('build', 'run'))
+
+    depends_on('py-setuptools', type='build')
+
