@@ -16,10 +16,11 @@ class Plasma(CMakePackage):
     problems, and singular value problems."""
 
     homepage = "https://bitbucket.org/icl/plasma/"
-    url = "https://bitbucket.org/icl/plasma/downloads/plasma-18.10.0.tar.gz"
+    url = "https://bitbucket.org/icl/plasma/downloads/plasma-18.11.0.tar.gz"
     hg = "https://luszczek@bitbucket.org/icl/plasma"
 
     version("develop", hg=hg)
+    version("18.11.0", sha256="36501488be5b4b2b973524824e1afd27779d37addfeeb34c1871ba753b6c06bf")
     version("18.10.0", sha256="93dceae93f57a2fbd79b85d2fbf7907d1d32e158b8d1d93892d9ff3df9963210")
     version("18.9.0", sha256="753eae28ea48986a2cc7b8204d6eef646584541e59d42c3c94fa9879116b0774")
     version("17.1",
@@ -28,6 +29,10 @@ class Plasma(CMakePackage):
 
     variant("shared", default=True,
             description="Build shared library (disables static library)")
+    variant("lua", default=False,
+            description="Build Lua support for tuning tile sizes")
+
+    depends_on("lua", when="+lua")
 
     depends_on("blas")
     depends_on("lapack")
