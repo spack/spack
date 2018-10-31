@@ -1,44 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-##############################################################################
-# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation; either version 2 of the License, or (at your option)
-# any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-# Place, Suite 330, Boston, MA  02111-1307  USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
@@ -72,6 +35,8 @@ class OpenspeedshopUtils(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     version('develop', branch='master')
+    version('2.4.0', branch='2.4.0')
+    version('2.3.1.5', branch='2.3.1.5')
     version('2.3.1.4', branch='2.3.1.4')
     version('2.3.1.3', branch='2.3.1.3')
 
@@ -117,8 +82,7 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("flex@2.6.1", type='build')
 
     # For binutils
-    depends_on("binutils", when='@develop', type='build')
-    depends_on("binutils@2.29.1", when='@2.3.1.3:9999', type='build')
+    depends_on("binutils", type='build')
 
     depends_on("elf", type="link")
     depends_on("libdwarf")
@@ -126,58 +90,57 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("sqlite")
 
     # For boost
-    depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@2.3.1.3:9999')
+    depends_on("boost@1.66.0:")
 
     depends_on("dyninst@develop", when='@develop')
-    # This will change to dyninst@10.0 when it is released
+    # This will change to version dyninst@10.0 when it is released
     depends_on("dyninst@develop", when='@2.3.1.3:9999')
 
-    depends_on("python", when='@develop')
-    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')
+    depends_on("python", when='@develop', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("libxml2")
 
     # Dependencies for the openspeedshop cbtf packages.
-    depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999')
+    depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
-    depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999')
+    depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe')
-    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe')
+    depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+cti', when='@develop+cti')
-    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti')
+    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich')
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich')
+    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2')
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2')
+    depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpt', when='@develop+mpt')
-    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt')
+    depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich')
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich')
+    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2')
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2')
+    depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi')
-    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi')
+    depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi', type=('build', 'link', 'run'))
 
-    depends_on("cbtf-argonavis@develop", when='@develop+cuda')
-    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda')
+    depends_on("cbtf-argonavis@develop", when='@develop+cuda', type=('build', 'link', 'run'))
+    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda', type=('build', 'link', 'run'))
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
 
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999')
+    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
     parallel = False
 

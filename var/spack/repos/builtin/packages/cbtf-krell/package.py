@@ -1,44 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-##########################################################################
-# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-# Place, Suite 330, Boston, MA  02111-1307  USA
-##########################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import spack
@@ -55,6 +18,7 @@ class CbtfKrell(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
+    version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
@@ -86,12 +50,10 @@ class CbtfKrell(CMakePackage):
     depends_on("cmake@3.0.2:", type='build')
 
     # For binutils
-    depends_on("binutils", when='@develop')
-    depends_on("binutils@2.29.1", when='@1.9.1.0:9999')
+    depends_on("binutils")
 
     # For boost
-    depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
+    depends_on("boost@1.66.0:")
 
     # For Dyninst
     depends_on("dyninst@develop", when='@develop')
@@ -99,36 +61,34 @@ class CbtfKrell(CMakePackage):
     depends_on("dyninst@develop", when='@1.9.1.0:9999')
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
 
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999', type=('build', 'link', 'run'))
 
     # For Xerces-C
-    depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4", when='@1.9.1.0:9999')
+    depends_on("xerces-c")
 
     # For CBTF
-    depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999')
+    depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999', type=('build', 'link', 'run'))
 
     # For CBTF with cti
-    depends_on("cbtf@develop+cti", when='@develop+cti')
-    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti')
+    depends_on("cbtf@develop+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
 
     # For CBTF with runtime
-    depends_on("cbtf@develop+runtime", when='@develop+runtime')
-    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
+    depends_on("cbtf@develop+runtime", when='@develop+runtime', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime', type=('build', 'link', 'run'))
 
     # for services and collectors
     depends_on("libmonitor@2013.02.18+krellpatch")
 
     depends_on("libunwind", when='@develop')
-    depends_on("libunwind@1.1", when='@1.9.1.0:9999')
+    depends_on("libunwind@1.2.1", when='@1.9.1.0:9999')
 
-    depends_on("papi", when='@develop')
-    depends_on("papi@5.5.1", when='@1.9.1.0:9999')
+    depends_on("papi@5.4.1:")
 
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
@@ -139,6 +99,9 @@ class CbtfKrell(CMakePackage):
     depends_on("mvapich2", when='+mvapich2')
     depends_on("mvapich", when='+mvapich')
     depends_on("mpt", when='+mpt')
+
+    depends_on("python", when='@develop', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("gotcha")
 
@@ -263,3 +226,37 @@ class CbtfKrell(CMakePackage):
             self.set_cray_login_node_cmake_options(spec, cmake_args)
 
         return cmake_args
+
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environments for a package."""
+
+        # Environment settings for cbtf-krell, bin is automatically
+        # added to the path in the module file
+        run_env.prepend_path('PATH', self.prefix.sbin)
+
+        run_env.set('XPLAT_RSH', 'ssh')
+        run_env.set('MRNET_COMM_PATH', self.prefix.sbin.cbtf_mrnet_commnode)
+
+        # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
+        # This is needed by CBTF tools to deploy the correct
+        # mpi runtimes for cbtfsummary
+        # Users may have to set the CBTF_MPI_IMPLEMENTATION variable
+        # manually if multiple mpi's are specified in the build
+
+        if self.spec.satisfies('+mpich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
+
+        if self.spec.satisfies('+mvapich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
+
+        if self.spec.satisfies('+mvapich2'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
+
+        if self.spec.satisfies('+mpt'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
+
+        if self.spec.satisfies('+openmpi'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
+
+        run_env.set('CBTF_MRNET_BACKEND_PATH',
+                    self.prefix.sbin.cbtf_libcbtf_mrnet_backend)
