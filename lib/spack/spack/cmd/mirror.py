@@ -73,6 +73,19 @@ def setup_parser(subparser):
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
+    # Set-Url
+    set_url_parser = sp.add_parser('set-url', help=mirror_set_url.__doc__)
+    set_url_parser.add_argument('name', help="mnemonic name for mirror")
+    set_url_parser.add_argument(
+        'url', help="url of mirror directory from 'spack mirror create'")
+    set_url_parser.add_argument(
+        '--push', action='store_true',
+        help="set only the URL used for uploading new packages")
+    set_url_parser.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope(),
+        help="configuration scope to modify")
+
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
@@ -91,12 +104,8 @@ def mirror_add(args):
     if not mirrors:
         mirrors = syaml_dict()
 
-    for name, u in mirrors.items():
-        if name == args.name:
-            tty.die("Mirror with name %s already exists." % name)
-        if u == url:
-            tty.die("Mirror with url %s already exists." % url)
-        # should only be one item per mirror dict.
+    if args.name in mirrors:
+        tty.die("Mirror with name %s already exists." % args.name)
 
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (args.name, url))
@@ -117,21 +126,105 @@ def mirror_remove(args):
 
     old_value = mirrors.pop(name)
     spack.config.set('mirrors', mirrors, scope=args.scope)
-    tty.msg("Removed mirror %s with url %s" % (name, old_value))
+
+    msg_url = "url %s"
+    msg = ["Removed mirror %s with"]
+    values = [name]
+
+    try:
+        fetch_value = old_value['fetch']
+        push_value = old_value['push']
+
+        msg.extend(("fetch", msg_url, "and push", msg_url))
+        values.extend((fetch_value, push_value))
+    except TypeError:
+        msg.append(msg_url)
+        values.append(old_value)
+
+    tty.msg(" ".join(msg) % tuple(values))
+
+
+def mirror_set_url(args):
+    """Change the URL of a mirror."""
+    url = args.url
+    if url.startswith('/'):
+        url = 'file://' + url
+
+    mirrors = spack.config.get('mirrors', scope=args.scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if args.name not in mirrors:
+        tty.die("No mirror found with name %s." % args.name)
+
+    entry = mirrors[args.name]
+
+    try:
+        fetch_url = entry['fetch']
+        push_url = entry['push']
+    except TypeError:
+        fetch_url, push_url = entry, entry
+
+    changes_made = False
+
+    if args.push:
+        changes_made = changes_made or push_url != args.url
+        push_url = args.url
+    else:
+        changes_made = (
+                changes_made or fetch_url != push_url or push_url != args.url)
+
+        fetch_url, push_url = args.url, args.url
+
+    items = [(
+            (n, u)
+            if n != args.name else
+
+            (n, {"fetch": fetch_url, "push": push_url})
+            if fetch_url != push_url else
+
+            (n, fetch_url))
+
+            for n, u in mirrors.items()]
+
+    mirrors = syaml_dict(items)
+    spack.config.set('mirrors', mirrors, scope=args.scope)
+
+    if changes_made:
+        tty.msg("Changed%s url for mirror %s." %
+                ((" (push)" if args.push else ""), args.name))
+    else:
+        tty.msg("Url already set for mirror %s." % args.name)
+
+
+def _display_mirror_entry(size, name, url, type_=None):
+    if type_:
+        type_ = "".join((" (", type_, ")"))
+    else:
+        type_ = ""
+
+    print("%-*s%s%s" % (size + 4, name, url, type_))
 
 
 def mirror_list(args):
     """Print out available mirrors to the console."""
+
     mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
         tty.msg("No mirrors configured.")
         return
 
     max_len = max(len(n) for n in mirrors.keys())
-    fmt = "%%-%ds%%s" % (max_len + 4)
 
-    for name in mirrors:
-        print(fmt % (name, mirrors[name]))
+    for name, url in mirrors.items():
+        try:
+            fetch_url = url['fetch']
+            push_url = url['push']
+
+            _display_mirror_entry(max_len, name, fetch_url, "fetch")
+            _display_mirror_entry(max_len, name, push_url, "push")
+        except TypeError:
+            _display_mirror_entry(max_len, name, url)
 
 
 def _read_specs_from_file(filename):
@@ -220,6 +313,7 @@ def mirror(parser, args):
               'add': mirror_add,
               'remove': mirror_remove,
               'rm': mirror_remove,
+              'set-url': mirror_set_url,
               'list': mirror_list}
 
     if args.no_checksum:
