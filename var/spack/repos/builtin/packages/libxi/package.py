@@ -26,4 +26,3 @@ class Libxi(AutotoolsPackage):
     depends_on('xextproto@7.0.3:', type='build')
     depends_on('inputproto@2.2.99.1:', type='build')
     depends_on('fixesproto', type='build')
-    depends_on('pkg-config', type='build')
