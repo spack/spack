@@ -21,7 +21,6 @@ def create_projection_file(tmpdir, projection):
 
     projection_file = tmpdir.mkdir('projection').join('projection.yaml')
     projection_file.write(s_yaml.dump(projection))
-    print s_yaml.dump(projection)
     return projection_file
 
 
