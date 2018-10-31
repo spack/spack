@@ -34,4 +34,5 @@ class Doxygen(CMakePackage):
 
     # Support C++14's std::shared_ptr. For details about this patch, see
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
+    # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
