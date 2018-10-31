@@ -100,6 +100,7 @@ class CDash(Reporter):
             for package in spec['packages']:
                 if 'stdout' in package:
                     current_phase = ''
+                    cdash_phase = ''
                     for line in package['stdout'].splitlines():
                         match = phase_regexp.search(line)
                         if match:
@@ -114,7 +115,7 @@ class CDash(Reporter):
                             report_data[cdash_phase]['log'] += \
                                 text_type("{0} output for {1}:\n".format(
                                     cdash_phase, package['name']))
-                        else:
+                        elif cdash_phase:
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
 
