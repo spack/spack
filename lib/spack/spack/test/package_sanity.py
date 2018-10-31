@@ -59,3 +59,28 @@ def test_package_version_consistency():
         spack.fetch_strategy.check_pkg_attributes(pkg)
         for version in pkg.versions:
             assert spack.fetch_strategy.for_package_version(pkg, version)
+
+
+def test_no_fixme():
+    """Packages should not contain any boilerplate such as
+       FIXME or example.com."""
+    errors = []
+    fixme_regexes = [
+        r'remove this boilerplate',
+        r'FIXME: Put',
+        r'FIXME: Add',
+        r'example.com',
+    ]
+    for name in spack.repo.all_package_names():
+        repo = spack.repo.Repo(spack.paths.packages_path)
+        filename = repo.filename_for_package_name(name)
+        with open(filename, 'r') as package_file:
+            for i, line in enumerate(package_file):
+                pattern = next((r for r in fixme_regexes
+                                if re.search(r, line)), None)
+                if pattern:
+                    errors.append(
+                        "%s:%d: boilerplate needs to be removed: %s" %
+                        (filename, i, line.strip())
+                    )
+            assert [] == errors

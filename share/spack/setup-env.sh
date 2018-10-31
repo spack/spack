@@ -199,7 +199,7 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+	PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 

@@ -15,12 +15,13 @@ class Damaris(CMakePackage):
     url = "https://gitlab.inria.fr/Damaris/damaris"
 
     version('master', git='https://gitlab.inria.fr/Damaris/damaris.git')
-    version('1.3.1',  git='https://gitlab.inria.fr/Damaris/damaris.git', 
-            commit='98c27e99458c10b834c4e59753f4ce5a42337c6f', preferred=True)
+    version('1.3.1',  git='https://gitlab.inria.fr/Damaris/damaris.git', tag='v1.3.1', preferred=True)
 
-    variant('fortran', default=True,  description='Enable Fortran support')
-    variant('hdf5',    default=False, description='Enable the HDF5 storage plugin')
-    variant('static',  default=False, description='Builds a static version of the library')
+    variant('fortran',  default=True,  description='Enables Fortran support')
+    variant('hdf5',     default=False, description='Enables the HDF5 storage plugin')
+    variant('static',   default=False, description='Builds a static version of the library')
+    variant('catalyst', default=False, description='Enables the Catalyst visualization plugin')
+    variant('visit',    default=False, description='Enables the VisIt visualization plugin')
 
     depends_on('mpi')
     depends_on('cmake@3.12.0:', type=('build'))
@@ -28,6 +29,8 @@ class Damaris(CMakePackage):
     depends_on('xsd')
     depends_on('xerces-c')
     depends_on('hdf5@1.8.20:', when='+hdf5')
+    depends_on('catalyst+python', when='+catalyst')
+    depends_on('visit+mpi', when='+visit')
 
     def cmake_args(self):
 
@@ -49,4 +52,13 @@ class Damaris(CMakePackage):
         if (self.spec.variants['hdf5'].value):
             args.extend(['-DENABLE_HDF5:BOOL=ON'])
             args.extend(['-DHDF5_ROOT:PATH=%s' % self.spec['hdf5'].prefix])
+
+        if (self.spec.variants['catalyst'].value):
+            args.extend(['-DENABLE_CATALYST:BOOL=ON'])
+            args.extend(['-DParaView_ROOT:PATH=%s'
+                         % self.spec['catalyst'].prefix])
+
+        if (self.spec.variants['visit'].value):
+            args.extend(['-DENABLE_VISIT:BOOL=ON'])
+            args.extend(['-DVisIt_ROOT:PATH=%s' % self.spec['visit'].prefix])
         return args

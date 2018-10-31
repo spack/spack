@@ -24,6 +24,7 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.7.3', sha256='ab2d853c9ba13bcd3069fcc61c359cb412466a2e4b22ebbd2f5263cffa685126')
     version('1.7.2', sha256='29b504d78b5efd57b87d2ca6e20bc8a32b1ba55b40f5a5b7189cc0d28e43bcc0')
     version('1.6.1', sha256='4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d')
     version('1.6.0', '751f855230d6227b972b5ab7bce2c65f')
@@ -37,6 +38,7 @@ class Phist(CMakePackage):
                     'petsc',
                     'eigen',
                     'ghost'])
+
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
                         '3: +verbose 4: +extreme 5; +debug')
@@ -47,9 +49,18 @@ class Phist(CMakePackage):
     variant('mpi', default=True,
             description='enable/disable MPI (note that the kernel library may '
             'not support this choice)')
+
+    variant('openmp', default=True,
+            description='enable/disable OpenMP')
+
     variant('parmetis', default=False,
             description='enable/disable ParMETIS partitioning (only actually '
                         'used with kernel_lib=builtin)')
+
+    variant('scamac', default=True,
+            description='enable/disable building the "SCAlable MAtrix '
+                        'Collection" matrix generators.')
+
     variant('trilinos', default=False,
             description='enable/disable Trilinos third-party libraries. '
                         'For all kernel_libs, we can use Belos and Anasazi '
@@ -57,12 +68,19 @@ class Phist(CMakePackage):
                         '(kernel_lib=epetra|tpetra) we can use preconditioner '
                         'packages such as Ifpack, Ifpack2 and ML.')
 
+    variant('fortran', default=True,
+            description='generate Fortran 2003 bindings (requires Python3 and '
+                        'a Fortran compiler)')
+
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('python@3:', when='@1.7:', type='build')
+    # Python 3 or later is required for generating the Fortran 2003 bindings
+    # since version 1.7, you can get rid of the dependency by switching off
+    # the feature (e.g. use the '~fortran' variant)
+    depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
     depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
@@ -75,14 +93,18 @@ class Phist(CMakePackage):
     depends_on('trilinos', when='+trilinos')
     depends_on('parmetis ^metis+int64', when='+parmetis')
 
+    # Fortran 2003 bindings were included in version 1.7, previously they
+    # required a separate package
+    conflicts('+fortran', when='@:1.6.99')
+
     def cmake_args(self):
         spec = self.spec
 
         kernel_lib = spec.variants['kernel_lib'].value
         outlev = spec.variants['outlev'].value
 
-        lapacke_libs = \
-            (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
+        lapacke_libs = (spec['lapack:c'].libs + spec['blas:c'].libs +
+                        find_system_libraries(['libm'])).joined(';')
         lapacke_include_dir = spec['lapack:c'].headers.directories[0]
 
         args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
@@ -91,14 +113,20 @@ class Phist(CMakePackage):
                 '-DTPL_LAPACKE_INCLUDE_DIRS=%s' % lapacke_include_dir,
                 '-DPHIST_ENABLE_MPI:BOOL=%s'
                 % ('ON' if '+mpi' in spec else 'OFF'),
+                '-DPHIST_ENABLE_OPENMP=%s'
+                % ('ON' if '+openmp' in spec else 'OFF'),
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
                 % ('ON' if '+shared' in spec else 'OFF'),
+                '-DPHIST_ENABLE_SCAMAC:BOOL=%s'
+                % ('ON' if '+scamac' in spec else 'OFF'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
                 % ('ON' if '+trilinos' in spec else 'OFF'),
+                '-DXSDK_ENABLE_Fortran:BOOL=%s'
+                % ('ON' if '+fortran' in spec else 'OFF'),
                 ]
 
         return args
