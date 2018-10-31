@@ -164,6 +164,8 @@ packages:
         paths:
             tcl@8.5.13: /usr
         version: [8.5.13]
+    touchdetector:
+        compiler: [gcc]
     trilinos:
         variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
         version: [develop]
