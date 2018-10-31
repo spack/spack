@@ -18,7 +18,7 @@ class PyScikitLearn(PythonPackage):
     version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
     version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
     version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
- 
+
     depends_on('python@2.7:2.8,3.4:3.7.9999', when='@0.20.0')
     depends_on('python@2.7:2.8,3.3:3.6.9999', when='@0.19.1')
     depends_on('py-numpy@1.8.2:', when='@0.19.1:20.0', type=('build', 'run'))
