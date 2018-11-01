@@ -2,6 +2,8 @@
 
 export FORCE_UNSAFE_CONFIGURE=1
 
+set -x
+
 check_error()
 {
     if [[ $? -ne 0 ]]; then
@@ -27,8 +29,8 @@ get_relate_builds_post_data()
   cat <<EOF
 {
   "project": "${1}",
-  "buildid": "${2}",
-  "relatedid": "${3}",
+  "buildid": ${2},
+  "relatedid": ${3},
   "relationship": "depends on"
 }
 EOF
@@ -181,6 +183,7 @@ if [ -f "${JOB_CDASH_ID_FILE}" ]; then
                 echo "Relating builds -> ${SPEC_NAME} (buildid=${JOB_CDASH_BUILD_ID}) depends on ${DEP_SPEC_NAME} (buildid=${DEP_JOB_CDASH_BUILD_ID})"
                 relateBuildsPostBody="$(get_relate_builds_post_data "Spack" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
                 relateBuildsResult=`curl "${DEP_JOB_RELATEBUILDS_URL}" -H "Content-Type: application/json" -H "Accept: application/json" -d "${relateBuildsPostBody}"`
+                echo "Result of curl request: ${relateBuildsResult}"
             else
                 echo "ERROR: Did not find expected .cdashid file for dependency: ${DEP_JOB_ID_FILE}"
                 exit 1
