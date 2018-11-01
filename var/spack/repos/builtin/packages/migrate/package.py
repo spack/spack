@@ -53,7 +53,7 @@ class Migrate(AutotoolsPackage):
                     raise InstallError('Failed to update linker command')
 
                 # don't try to install MPI binaries that aren't there
-                if not '+mpi' in spec:
+                if '+mpi' not in spec:
                     line = '$(INSTALL) $(IFLAGS) $(MPINAME) $(INSTALLDIR)'
                     mfc = mfc.replace(line, '')
 
