@@ -1,26 +1,8 @@
-##############################################################################
-# Copyright (c) 2018 Arm Limited and affiliates. All rights reserved.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-#
-# For details, see https://github.com/spack/spack # Please also see the NOTICE
-# and LICENSE files for the LLNL notice and LGPL.
-#
-# License (SPDX-License-Identifier:LGPL-2.1-only)
-# ----------------------------------------------- This program is free
-# software; you can redistribute it and/or modify # it under the terms of the
-# GNU Lesser General Public License (as # published by the Free Software
-# Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but # WITHOUT
-# ANY WARRANTY; without even the IMPLIED WARRANTY OF # MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the terms and # conditions of the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public # License
-# along with this program; if not, write to the Free Software # Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-# ##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 
 from spack.compiler import Compiler, _version_cache
