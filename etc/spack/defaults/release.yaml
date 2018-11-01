@@ -7,7 +7,7 @@ spec-set:
     matrix:
         - packages:
             xsdk:
-                versions: [0.3.0]
+                versions: [0.4.0]
         - compilers:
             gcc:
                 versions: [5.5.0]
