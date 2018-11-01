@@ -15,6 +15,19 @@ from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
 
+# Regex to extract the primary generator from the CMake generator
+# string.
+_primary_generator_extractor = re.compile(r'(?:.* - )?(.*)')
+
+
+def _extract_primary_generator(generator):
+    """Use the compiled regex _primary_generator_extractor to extract the
+    primary generator from the generator string which may contain an
+    optional secondary generator.
+    """
+    primary_generator = _primary_generator_extractor.match(generator).group(1)
+    return primary_generator
+
 
 class CMakePackage(PackageBase):
     """Specialized class for packages built using CMake
@@ -43,6 +56,17 @@ class CMakePackage(PackageBase):
         +-----------------------------------------------+--------------------+
 
 
+    The generator used by CMake can be specified by providing the
+    generator attribute. Per
+    https://cmake.org/cmake/help/git-master/manual/cmake-generators.7.html,
+    the format is: [<secondary-generator> - ]<primary_generator>. The
+    full list of primary and secondary generators supported by CMake may
+    be found in the documentation for the version of CMake used;
+    however, at this time Spack supports only the primary generators
+    "Unix Makefiles" and "Ninja." Spack's CMake support is agnostic with
+    respect to primary generators. Spack will generate a runtime error
+    if the generator string does not follow the prescribed format, or if
+    the primary generator is not supported.
     """
     #: Phases of a CMake package
     phases = ['cmake', 'build', 'install']
@@ -109,14 +133,13 @@ class CMakePackage(PackageBase):
             generator = 'Unix Makefiles'
 
         # Make sure a valid generator was chosen
-        valid_generators = ['Unix Makefiles', 'Ninja']
-        generator_extractor = re.compile(r'(?:.*?-\s+)?(.*)')
-        primary_generator = generator_extractor.match(generator).group(1)
-        if primary_generator not in valid_generators:
+        valid_primary_generators = ['Unix Makefiles', 'Ninja']
+        primary_generator = _extract_primary_generator(generator)
+        if primary_generator not in valid_primary_generators:
             msg  = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
             msg += "primary generators: '{0}'".\
-                   format("', '".join(valid_generators))
+                   format("', '".join(valid_primary_generators))
             raise InstallError(msg)
 
         try:
