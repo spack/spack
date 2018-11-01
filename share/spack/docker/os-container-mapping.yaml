@@ -1,9 +1,18 @@
 containers:
   linux-ubuntu18.04-x86_64:
-    image: scottwittenburg/spack_builder_ubuntu_18.04
-    # image: ubuntu:16.04
+    # image: scottwittenburg/spack_builder_ubuntu_18.04
+    image: scottwittenburg/spack_commander_ubuntu_18.04
+    compilers:
+      - name: gcc@5.5.0
+        path: /opt/gcc/gcc-5.5.0
+      - name: gcc@7.3.0
+      - name: clang@7.0.0
     # setup_script: ./share/spack/docker/build/common/install-tools-ubuntu-16.04-%s.sh
   linux-centos7-x86_64:
-    image: scottwittenburg/spack_builder_centos_7
-    find_compilers:
-      - /opt/gcc/gcc-5.5.0
+    # image: scottwittenburg/spack_builder_centos_7
+    image: scottwittenburg/spack_commander_centos_7
+    compilers:
+      - name: gcc@5.5.0
+        path: /opt/gcc/gcc-5.5.0
+      - name: gcc@4.8.5
+      - name: clang@7.0.0

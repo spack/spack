@@ -1,0 +1,20 @@
+# -------------------------------------------------------------------------
+# This is the default spack release package list file.
+# -------------------------------------------------------------------------
+spec-set:
+    include: []
+    exclude: []
+    matrix:
+        - packages:
+            xsdk:
+                versions: [0.4.0]
+        - compilers:
+            # gcc:
+            #     versions: [7.3.0]
+            gcc:
+                versions: [4.8.5, 5.5.0, 7.3.0]
+            # clang:
+            #     versions: [7.0.0]
+            clang:
+                versions: [7.0.0, '9.1.0-apple']
+    cdash: ["https://spack.io/cdash/submit.php?project=spack"]

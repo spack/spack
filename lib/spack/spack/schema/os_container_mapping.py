@@ -47,7 +47,20 @@ schema = {
                     'properties': {
                         'image': {'type': 'string'},
                         'setup_script': {'type': 'string'},
-                        'find_compilers': {'type': 'array'},
+                        'compilers': {
+                            'type': 'array',
+                            'default': [],
+                            'items': {
+                                'type': 'object',
+                                'default': {},
+                                'additionalProperties': False,
+                                'required': ['name'],
+                                'properties': {
+                                    'name': {'type': 'string'},
+                                    'path': {'type': 'string'},
+                                },
+                            },
+                        },
                     },
                 },
             },
