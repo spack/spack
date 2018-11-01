@@ -69,6 +69,7 @@ class Conduit(Package):
 
     # variants for python support
     variant("python", default=True, description="Build Conduit Python support")
+    variant("fortran", default=True, description="Build Conduit Fortran support")
 
     # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
@@ -262,7 +263,7 @@ class Conduit(Package):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if f_compiler is not None:
+        if "+fortran" in spec and f_compiler is not None:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
         else:
