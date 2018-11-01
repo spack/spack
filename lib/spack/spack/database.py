@@ -29,7 +29,7 @@ import contextlib
 from six import string_types
 from six import iteritems
 
-from ruamel.yaml.error import MarkedYAMLError, YAMLError
+from external.ruamel.yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp

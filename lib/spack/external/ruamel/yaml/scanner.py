@@ -38,9 +38,9 @@ try:
     from .tokens import *                           # NOQA
     from .compat import utf8, unichr, PY3
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import MarkedYAMLError
-    from ruamel.yaml.tokens import *                # NOQA
-    from ruamel.yaml.compat import utf8, unichr, PY3
+    from external.ruamel.yaml.error import MarkedYAMLError
+    from external.ruamel.yaml.tokens import *                # NOQA
+    from external.ruamel.yaml.compat import utf8, unichr, PY3
 
 
 class ScannerError(MarkedYAMLError):

@@ -8,14 +8,14 @@ try:
     from .error import MarkedYAMLError
     from .compat import utf8
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import MarkedYAMLError
-    from ruamel.yaml.compat import utf8
+    from external.ruamel.yaml.error import MarkedYAMLError
+    from external.ruamel.yaml.compat import utf8
 
-from ruamel.yaml.events import (
+from external.ruamel.yaml.events import (
     StreamStartEvent, StreamEndEvent, MappingStartEvent, MappingEndEvent,
     SequenceStartEvent, SequenceEndEvent, AliasEvent, ScalarEvent,
 )
-from ruamel.yaml.nodes import (
+from external.ruamel.yaml.nodes import (
     MappingNode, ScalarNode, SequenceNode,
 )
 

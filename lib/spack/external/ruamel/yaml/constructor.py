@@ -18,12 +18,12 @@ try:
     from .comments import *                               # NOQA
     from .scalarstring import *                           # NOQA
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import *                               # NOQA
-    from ruamel.yaml.nodes import *                               # NOQA
-    from ruamel.yaml.compat import (utf8, builtins_module, to_str, PY2, PY3,
+    from external.ruamel.yaml.error import *                               # NOQA
+    from external.ruamel.yaml.nodes import *                               # NOQA
+    from external.ruamel.yaml.compat import (utf8, builtins_module, to_str, PY2, PY3,
                                     ordereddict, text_type)
-    from ruamel.yaml.comments import *                               # NOQA
-    from ruamel.yaml.scalarstring import *                           # NOQA
+    from external.ruamel.yaml.comments import *                               # NOQA
+    from external.ruamel.yaml.scalarstring import *                           # NOQA
 
 
 __all__ = ['BaseConstructor', 'SafeConstructor', 'Constructor',
@@ -864,7 +864,7 @@ class RoundTripConstructor(SafeConstructor):
             if len(node.comment) > 2:
                 seqtyp.yaml_end_comment_extend(node.comment[2], clear=True)
         if node.anchor:
-            from ruamel.yaml.serializer import templated_id
+            from external.ruamel.yaml.serializer import templated_id
             if not templated_id(node.anchor):
                 seqtyp.yaml_set_anchor(node.anchor)
         for idx, child in enumerate(node.value):
@@ -952,7 +952,7 @@ class RoundTripConstructor(SafeConstructor):
             if len(node.comment) > 2:
                 maptyp.yaml_end_comment_extend(node.comment[2], clear=True)
         if node.anchor:
-            from ruamel.yaml.serializer import templated_id
+            from external.ruamel.yaml.serializer import templated_id
             if not templated_id(node.anchor):
                 maptyp.yaml_set_anchor(node.anchor)
         for key_node, value_node in node.value:
@@ -996,7 +996,7 @@ class RoundTripConstructor(SafeConstructor):
             if len(node.comment) > 2:
                 typ.yaml_end_comment_extend(node.comment[2], clear=True)
         if node.anchor:
-            from ruamel.yaml.serializer import templated_id
+            from external.ruamel.yaml.serializer import templated_id
             if not templated_id(node.anchor):
                 typ.yaml_set_anchor(node.anchor)
         for key_node, value_node in node.value:

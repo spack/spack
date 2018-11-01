@@ -9,7 +9,7 @@ __all__ = ["ScalarString", "PreservedScalarString", "SingleQuotedScalarString",
 try:
     from .compat import text_type
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.compat import text_type
+    from external.ruamel.yaml.compat import text_type
 
 
 class ScalarString(text_type):
@@ -42,7 +42,7 @@ def walk_tree(base):
     dict values and list items) and converts strings that
     have multiple lines to literal scalars
     """
-    from ruamel.yaml.compat import string_types
+    from external.ruamel.yaml.compat import string_types
 
     if isinstance(base, dict):
         for k in base:

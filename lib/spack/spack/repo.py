@@ -23,7 +23,7 @@ except ImportError:
 
 from types import ModuleType
 
-import ruamel.yaml as yaml
+import external.ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty

@@ -12,12 +12,12 @@ try:
     from .constructor import *                           # NOQA
     from .resolver import *                              # NOQA
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.reader import *                                # NOQA
-    from ruamel.yaml.scanner import *                               # NOQA
-    from ruamel.yaml.parser import *                                # NOQA
-    from ruamel.yaml.composer import *                              # NOQA
-    from ruamel.yaml.constructor import *                           # NOQA
-    from ruamel.yaml.resolver import *                              # NOQA
+    from external.ruamel.yaml.reader import *                                # NOQA
+    from external.ruamel.yaml.scanner import *                               # NOQA
+    from external.ruamel.yaml.parser import *                                # NOQA
+    from external.ruamel.yaml.composer import *                              # NOQA
+    from external.ruamel.yaml.constructor import *                           # NOQA
+    from external.ruamel.yaml.resolver import *                              # NOQA
 
 
 class BaseLoader(Reader, Scanner, Parser, Composer, BaseConstructor, BaseResolver):

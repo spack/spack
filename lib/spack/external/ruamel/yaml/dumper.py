@@ -10,10 +10,10 @@ try:
     from .representer import *                               # NOQA
     from .resolver import *                               # NOQA
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.emitter import *                               # NOQA
-    from ruamel.yaml.serializer import *                               # NOQA
-    from ruamel.yaml.representer import *                               # NOQA
-    from ruamel.yaml.resolver import *                               # NOQA
+    from external.ruamel.yaml.emitter import *                               # NOQA
+    from external.ruamel.yaml.serializer import *                               # NOQA
+    from external.ruamel.yaml.representer import *                               # NOQA
+    from external.ruamel.yaml.resolver import *                               # NOQA
 
 
 class BaseDumper(Emitter, Serializer, BaseRepresenter, BaseResolver):

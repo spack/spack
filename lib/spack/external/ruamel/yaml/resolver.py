@@ -9,9 +9,9 @@ try:
     from .nodes import *                               # NOQA
     from .compat import string_types
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import *                               # NOQA
-    from ruamel.yaml.nodes import *                               # NOQA
-    from ruamel.yaml.compat import string_types
+    from external.ruamel.yaml.error import *                               # NOQA
+    from external.ruamel.yaml.nodes import *                               # NOQA
+    from external.ruamel.yaml.compat import string_types
 
 __all__ = ['BaseResolver', 'Resolver', 'VersionedResolver']
 

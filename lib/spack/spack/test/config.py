@@ -11,7 +11,7 @@ import tempfile
 from llnl.util.filesystem import touch, mkdirp
 
 import pytest
-import ruamel.yaml as yaml
+import external.ruamel.yaml as yaml
 
 import spack.paths
 import spack.config

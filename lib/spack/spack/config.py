@@ -42,8 +42,8 @@ from six import string_types
 from six import iteritems
 from ordereddict_backport import OrderedDict
 
-import ruamel.yaml as yaml
-from ruamel.yaml.error import MarkedYAMLError
+import external.ruamel.yaml as yaml
+from external.ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.lang
 import llnl.util.tty as tty

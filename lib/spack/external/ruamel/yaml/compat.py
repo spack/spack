@@ -9,7 +9,7 @@ import os
 import types
 
 try:
-    from ruamel.ordereddict import ordereddict
+    from external.ruamel.ordereddict import ordereddict
 except:
     try:
         from collections import OrderedDict  # nopyqver

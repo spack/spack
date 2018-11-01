@@ -8,15 +8,15 @@ try:
     from .error import YAMLError
     from .compat import nprint, DBG_NODE, dbg, string_types
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import YAMLError
-    from ruamel.yaml.compat import nprint, DBG_NODE, dbg, string_types
+    from external.ruamel.yaml.error import YAMLError
+    from external.ruamel.yaml.compat import nprint, DBG_NODE, dbg, string_types
 
-from ruamel.yaml.events import (
+from external.ruamel.yaml.events import (
     StreamStartEvent, StreamEndEvent, MappingStartEvent, MappingEndEvent,
     SequenceStartEvent, SequenceEndEvent, AliasEvent, ScalarEvent,
     DocumentStartEvent, DocumentEndEvent,
 )
-from ruamel.yaml.nodes import (
+from external.ruamel.yaml.nodes import (
     MappingNode, ScalarNode, SequenceNode,
 )
 

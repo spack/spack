@@ -14,7 +14,7 @@ import re
 import ordereddict_backport
 import py
 import pytest
-import ruamel.yaml as yaml
+import external.ruamel.yaml as yaml
 
 from llnl.util.filesystem import remove_linked_tree
 
@@ -285,7 +285,7 @@ def mutable_config(tmpdir_factory, configuration_dir, config):
 
 
 def _populate(mock_db):
-    """Populate a mock database with packages.
+    r"""Populate a mock database with packages.
 
     Here is what the mock DB looks like:
 

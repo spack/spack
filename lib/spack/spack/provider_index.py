@@ -12,7 +12,7 @@ from pprint import pformat
 
 import spack.error
 import spack.util.spack_yaml as syaml
-from ruamel.yaml.error import MarkedYAMLError
+from external.ruamel.yaml.error import MarkedYAMLError
 
 
 class ProviderIndex(object):

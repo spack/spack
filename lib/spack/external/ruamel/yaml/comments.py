@@ -18,7 +18,7 @@ __all__ = ["CommentedSeq", "CommentedMap", "CommentedOrderedMap",
 try:
     from .compat import ordereddict
 except ImportError:
-    from ruamel.yaml.compat import ordereddict
+    from external.ruamel.yaml.compat import ordereddict
 
 comment_attrib = '_yaml_comment'
 format_attrib = '_yaml_format'

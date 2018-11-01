@@ -9,7 +9,7 @@ import glob
 import tempfile
 import re
 
-import ruamel.yaml as yaml
+import external.ruamel.yaml as yaml
 
 from llnl.util.filesystem import mkdirp, chgrp
 
@@ -171,7 +171,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
         if self.hash_len is not None:
-            if re.search('\${HASH:\d+}', self.path_scheme):
+            if re.search(r'\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
                     "Conflicting options for installation layout hash length")
             self.path_scheme = self.path_scheme.replace(

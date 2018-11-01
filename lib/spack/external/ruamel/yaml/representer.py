@@ -9,10 +9,10 @@ try:
     from .compat import text_type, binary_type, to_unicode, PY2, PY3, ordereddict
     from .scalarstring import *                           # NOQA
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import *                       # NOQA
-    from ruamel.yaml.nodes import *                       # NOQA
-    from ruamel.yaml.compat import text_type, binary_type, to_unicode, PY2, PY3, ordereddict
-    from ruamel.yaml.scalarstring import *                # NOQA
+    from external.ruamel.yaml.error import *                       # NOQA
+    from external.ruamel.yaml.nodes import *                       # NOQA
+    from external.ruamel.yaml.compat import text_type, binary_type, to_unicode, PY2, PY3, ordereddict
+    from external.ruamel.yaml.scalarstring import *                # NOQA
 
 
 import datetime
@@ -582,7 +582,7 @@ try:
     from .comments import CommentedMap, CommentedOrderedMap, CommentedSeq, \
         CommentedSet, comment_attrib, merge_attrib
 except ImportError:  # for Jython
-    from ruamel.yaml.comments import CommentedMap, CommentedOrderedMap, \
+    from external.ruamel.yaml.comments import CommentedMap, CommentedOrderedMap, \
         CommentedSeq, CommentedSet, comment_attrib, merge_attrib
 
 

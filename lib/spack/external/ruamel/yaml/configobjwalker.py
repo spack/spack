@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import warnings
-from ruamel.yaml.util import configobj_walker as new_configobj_walker
+from external.ruamel.yaml.util import configobj_walker as new_configobj_walker
 
 
 def configobj_walker(cfg):

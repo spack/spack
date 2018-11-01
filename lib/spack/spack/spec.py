@@ -120,7 +120,7 @@ from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
 from spack.version import VersionList, VersionRange, Version, ver
-from ruamel.yaml.error import MarkedYAMLError
+from external.ruamel.yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',

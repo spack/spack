@@ -7,7 +7,7 @@ __all__ = ['Mark', 'YAMLError', 'MarkedYAMLError']
 try:
     from .compat import utf8
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.compat import utf8
+    from external.ruamel.yaml.compat import utf8
 
 
 class Mark(object):

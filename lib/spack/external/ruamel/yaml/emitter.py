@@ -17,9 +17,9 @@ try:
     from .events import *                                                # NOQA
     from .compat import utf8, text_type, PY2, nprint, dbg, DBG_EVENT
 except (ImportError, ValueError):  # for Jython
-    from ruamel.yaml.error import YAMLError
-    from ruamel.yaml.events import *                                     # NOQA
-    from ruamel.yaml.compat import utf8, text_type, PY2, nprint, dbg, DBG_EVENT
+    from external.ruamel.yaml.error import YAMLError
+    from external.ruamel.yaml.events import *                                     # NOQA
+    from external.ruamel.yaml.compat import utf8, text_type, PY2, nprint, dbg, DBG_EVENT
 
 
 class EmitterError(YAMLError):

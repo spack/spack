@@ -3,15 +3,15 @@
 from __future__ import absolute_import
 
 
-from ruamel.yaml.error import *                                # NOQA
+from external.ruamel.yaml.error import *                                # NOQA
 
-from ruamel.yaml.tokens import *                               # NOQA
-from ruamel.yaml.events import *                               # NOQA
-from ruamel.yaml.nodes import *                                # NOQA
+from external.ruamel.yaml.tokens import *                               # NOQA
+from external.ruamel.yaml.events import *                               # NOQA
+from external.ruamel.yaml.nodes import *                                # NOQA
 
-from ruamel.yaml.loader import *                               # NOQA
-from ruamel.yaml.dumper import *                               # NOQA
-from ruamel.yaml.compat import StringIO, BytesIO, with_metaclass, PY3
+from external.ruamel.yaml.loader import *                               # NOQA
+from external.ruamel.yaml.dumper import *                               # NOQA
+from external.ruamel.yaml.compat import StringIO, BytesIO, with_metaclass, PY3
 
 # import io
 

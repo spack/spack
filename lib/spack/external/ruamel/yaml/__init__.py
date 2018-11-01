@@ -82,4 +82,4 @@ except (ImportError, ValueError):  # for Jython
 try:
     from .main import *                               # NOQA
 except ImportError:
-    from ruamel.yaml.main import *                               # NOQA
+    from external.ruamel.yaml.main import *                               # NOQA
