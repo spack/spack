@@ -17,14 +17,13 @@ class Henson(CMakePackage):
 
     depends_on('mpi')
 
-    variant('python', default=False, description= 'Build Python bindings')
+    variant('python', default=False, description='Build Python bindings')
     extends('python', when='+python')
-    variant('mpi-wrappers', default=False, description= 'Build MPI wrappers (PMPI)')
+    variant('mpi-wrappers', default=False, description='Build MPI wrappers (PMPI)')
 
     conflicts('^openmpi', when='+mpi-wrappers')
 
     def cmake_args(self):
-        spec = self.spec
         args = []
         if '+python' in self.spec:
             args += ['-Dpython=on']
