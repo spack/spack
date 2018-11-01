@@ -139,7 +139,7 @@ class Libmesh(AutotoolsPackage):
 
         if '+vtk' in self.spec:
             options.append('--enable-vtk')
-	    options.append('--with-vtk=%s' %self.spec['vtk'].prefix)
+            options.append('--with-vtk=%s' % self.spec['vtk'].prefix)
         else:
             options.append('--disable-vtk')
 
