@@ -19,7 +19,7 @@ class Henson(CMakePackage):
 
     variant('python', default=False, description= 'Build Python bindings')
     extends('python', when='+python')
-    variant('mpi-wrappers', default=True, description= 'Build MPI wrappers (PMPI)')
+    variant('mpi-wrappers', default=False, description= 'Build MPI wrappers (PMPI)')
 
     conflicts('^openmpi', when='+mpi-wrappers')
 
