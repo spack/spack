@@ -23,7 +23,7 @@
 from spack import *
 
 
-class PythonHtmlgen(PythonPackage):
+class PyPythonHtmlgen(PythonPackage):
     """Library to generate HTML from classes.
     """
 
