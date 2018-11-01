@@ -13,6 +13,15 @@ class SentieonGenomics(Package):
     The Sentieon tools are deployable on any CPU-based computing system.
     Please set the path to the sentieon license server with:
 
+    Please append the following to your license.dat file located in the
+    $SPACK_ROOT/etc/spack/licenses/SentieonGenomics/license.dat
+
+    SERVER [FQDN]:[PORT]
+    USE_SERVER
+
+    Alternately you may run the below command with your license server
+    details.
+
     export SENTIEON_LICENSE=[FQDN]:[PORT]
 
     Note: A manual download is required.
@@ -28,7 +37,9 @@ class SentieonGenomics(Package):
 
     # Licensing.
     license_require = True
-    license_vars = ['SENTIEON_LICENSE']
+    license_files   = ['licenses/license.dat']
+    license_vars    = ['SENTIEON_LICENSE']
+    license_url     = 'https://support.sentieon.com/manual/_downloads/Sentieon.pdf'
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
