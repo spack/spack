@@ -9,9 +9,9 @@ from spack import *
 class Henson(CMakePackage):
     """Cooperative multitasking for in situ processing."""
 
-    homepage = "https://github.com/mrzv/henson"
-    url      = "https://github.com/mrzv/henson"
-    git      = "https://github.com/mrzv/henson.git"
+    homepage = "https://github.com/henson-insitu/henson"
+    url      = "https://github.com/henson-insitu/henson"
+    git      = "https://github.com/henson-insitu/henson.git"
 
     version('master', branch='master')
 
