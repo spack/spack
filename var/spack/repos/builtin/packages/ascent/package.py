@@ -58,11 +58,9 @@ class Ascent(Package):
 
     version('0.3.0',
             git='https://github.com/Alpine-DAV/ascent.git',
-            tag='v0.3.0', 
+            tag='v0.3.0',
             submodules=True)
 
-
-    
 
     ###########################################################################
     # package variants
@@ -126,17 +124,6 @@ class Ascent(Package):
     depends_on("vtkh@develop~shared~openmp",      when="~shared+vtkh~openmp")
     depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
     depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
-    
-    #automatically build rover if we have vtkh
-    depends_on("rover@develop",             when="+vtkh")
-    depends_on("rover@develop~openmp",      when="+vtkh~openmp")
-    depends_on("rover@develop+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("rover@develop+cuda~openmp", when="+vtkh+cuda~openmp")
-
-    depends_on("rover@develop~shared",             when="~shared+vtkh")
-    depends_on("rover@develop~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("rover@develop~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("rover@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
     # mfem
     depends_on("mfem+shared+mpi+conduit", when="+shared+mfem+mpi")
@@ -358,7 +345,7 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
-          
+
         if "+openmp" in spec:
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
         else:
@@ -377,8 +364,6 @@ class Ascent(Package):
             cfg.write("# vtk-h from spack\n")
             cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
 
-            cfg.write("# rover from spack\n")
-            cfg.write(cmake_cache_entry("ROVER_DIR", spec['rover'].prefix))
         else:
             cfg.write("# vtk-h not built by spack \n")
 
