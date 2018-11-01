@@ -208,8 +208,7 @@ class Conduit(Package):
 
         if self.compiler.fc:
             # even if this is set, it may not exist so do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler = env["SPACK_FC"]
+            f_compiler = which(env["SPACK_FC"])
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
