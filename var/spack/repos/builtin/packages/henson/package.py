@@ -13,7 +13,7 @@ class Henson(CMakePackage):
     url      = "https://github.com/henson-insitu/henson"
     git      = "https://github.com/henson-insitu/henson.git"
 
-    version('master', branch='master')
+    version('develop', branch='master')
 
     depends_on('mpi')
 
