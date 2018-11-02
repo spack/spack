@@ -2,8 +2,6 @@
 
 export FORCE_UNSAFE_CONFIGURE=1
 
-set -x
-
 check_error()
 {
     if [[ $? -ne 0 ]]; then
