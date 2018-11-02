@@ -271,26 +271,19 @@ def env_list(args):
 # env status
 #
 def env_status_setup_parser(subparser):
-    """get install status of specs in an environment"""
-    subparser.add_argument(
-        'env', nargs='?', help='name of environment to show status for')
-    arguments.add_common_arguments(
-        subparser,
-        ['recurse_dependencies', 'long', 'very_long'])
+    """print whether there is an active environment"""
 
 
 def env_status(args):
     env = ev.get_env(args, 'env status', required=False)
-    if not env:
+    if env:
+        if env.path == os.getcwd():
+            tty.msg('Using %s in current directory: %s'
+                    % (ev.manifest_name, env.path))
+        else:
+            tty.msg('In environment %s' % env.name)
+    else:
         tty.msg('No active environment')
-        return
-
-    # TODO: option to show packages w/ multiple instances?
-    env.status(
-        sys.stdout, recurse_dependencies=args.recurse_dependencies,
-        hashes=args.long or args.very_long,
-        hashlen=None if args.very_long else 7,
-        install_status=True)
 
 
 #

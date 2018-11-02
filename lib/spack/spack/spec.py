@@ -2906,7 +2906,7 @@ class Spec(object):
         """Comparison key for just *this node* and not its deps."""
         return (self.name,
                 self.namespace,
-                self.versions,
+                tuple(self.versions),
                 self.variants,
                 self.architecture,
                 self.compiler,
@@ -2964,6 +2964,7 @@ class Spec(object):
         You can also use full-string versions, which elide the prefixes::
 
             ${PACKAGE}       Package name
+            ${FULLPACKAGE}   Full package name (with namespace)
             ${VERSION}       Version
             ${COMPILER}      Full compiler string
             ${COMPILERNAME}  Compiler name
@@ -2995,11 +2996,9 @@ class Spec(object):
         Args:
             format_string (str): string containing the format to be expanded
 
-            **kwargs (dict): the following list of keywords is supported
-
-                - color (bool): True if returned string is colored
-
-                - transform (dict): maps full-string formats to a callable \
+        Keyword Args:
+            color (bool): True if returned string is colored
+            transform (dict): maps full-string formats to a callable \
                 that accepts a string and returns another one
 
         Examples:
@@ -3019,16 +3018,18 @@ class Spec(object):
         color = kwargs.get('color', False)
 
         # Dictionary of transformations for named tokens
-        token_transforms = {}
-        token_transforms.update(kwargs.get('transform', {}))
+        token_transforms = dict(
+            (k.upper(), v) for k, v in kwargs.get('transform', {}).items())
 
         length = len(format_string)
         out = StringIO()
         named = escape = compiler = False
         named_str = fmt = ''
 
-        def write(s, c):
-            f = color_formats[c] + cescape(s) + '@.'
+        def write(s, c=None):
+            f = cescape(s)
+            if c is not None:
+                f = color_formats[c] + f + '@.'
             cwrite(f, stream=out, color=color)
 
         iterator = enumerate(format_string)
@@ -3048,7 +3049,8 @@ class Spec(object):
                     name = self.name if self.name else ''
                     out.write(fmt % name)
                 elif c == '.':
-                    out.write(fmt % self.fullname)
+                    name = self.fullname if self.fullname else ''
+                    out.write(fmt % name)
                 elif c == '@':
                     if self.versions and self.versions != _any_version:
                         write(fmt % (c + str(self.versions)), c)
@@ -3103,60 +3105,63 @@ class Spec(object):
                 #
                 # The default behavior is to leave the string unchanged
                 # (`lambda x: x` is the identity function)
-                token_transform = token_transforms.get(named_str, lambda x: x)
+                transform = token_transforms.get(named_str, lambda s, x: x)
 
                 if named_str == 'PACKAGE':
                     name = self.name if self.name else ''
-                    write(fmt % token_transform(name), '@')
-                if named_str == 'VERSION':
+                    write(fmt % transform(self, name))
+                elif named_str == 'FULLPACKAGE':
+                    name = self.fullname if self.fullname else ''
+                    write(fmt % transform(self, name))
+                elif named_str == 'VERSION':
                     if self.versions and self.versions != _any_version:
-                        write(fmt % token_transform(str(self.versions)), '@')
+                        write(fmt % transform(self, str(self.versions)), '@')
                 elif named_str == 'COMPILER':
                     if self.compiler:
-                        write(fmt % token_transform(self.compiler), '%')
+                        write(fmt % transform(self, self.compiler), '%')
                 elif named_str == 'COMPILERNAME':
                     if self.compiler:
-                        write(fmt % token_transform(self.compiler.name), '%')
+                        write(fmt % transform(self, self.compiler.name), '%')
                 elif named_str in ['COMPILERVER', 'COMPILERVERSION']:
                     if self.compiler:
                         write(
-                            fmt % token_transform(self.compiler.versions),
+                            fmt % transform(self, self.compiler.versions),
                             '%'
                         )
                 elif named_str == 'COMPILERFLAGS':
                     if self.compiler:
                         write(
-                            fmt % token_transform(str(self.compiler_flags)),
+                            fmt % transform(self, str(self.compiler_flags)),
                             '%'
                         )
                 elif named_str == 'OPTIONS':
                     if self.variants:
-                        write(fmt % token_transform(str(self.variants)), '+')
+                        write(fmt % transform(self, str(self.variants)), '+')
                 elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
                         if named_str == "ARCHITECTURE":
                             write(
-                                fmt % token_transform(str(self.architecture)),
+                                fmt % transform(self, str(self.architecture)),
                                 '='
                             )
                         elif named_str == "PLATFORM":
                             platform = str(self.architecture.platform)
-                            write(fmt % token_transform(platform), '=')
+                            write(fmt % transform(self, platform), '=')
                         elif named_str == "OS":
                             operating_sys = str(self.architecture.platform_os)
-                            write(fmt % token_transform(operating_sys), '=')
+                            write(fmt % transform(self, operating_sys), '=')
                         elif named_str == "TARGET":
                             target = str(self.architecture.target)
-                            write(fmt % token_transform(target), '=')
+                            write(fmt % transform(self, target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
-                        out.write(fmt % token_transform(str(self.dag_hash(7))))
+                        out.write(fmt % transform(self, str(self.dag_hash(7))))
                 elif named_str == 'SPACK_ROOT':
-                    out.write(fmt % token_transform(spack.paths.prefix))
+                    out.write(fmt % transform(self, spack.paths.prefix))
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % token_transform(spack.store.root))
+                    out.write(fmt % transform(self, spack.store.root))
                 elif named_str == 'PREFIX':
-                    out.write(fmt % token_transform(self.prefix))
+                    out.write(fmt % transform(self, self.prefix))
                 elif named_str.startswith('HASH'):
                     if named_str.startswith('HASH:'):
                         _, hashlen = named_str.split(':')
@@ -3165,7 +3170,7 @@ class Spec(object):
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
                 elif named_str == 'NAMESPACE':
-                    out.write(fmt % token_transform(self.namespace))
+                    out.write(fmt % transform(self.namespace))
 
                 named = False
 
