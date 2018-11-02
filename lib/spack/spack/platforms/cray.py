@@ -90,9 +90,10 @@ class Cray(Platform):
         self.add_operating_system(self.back_os, back_distro)
         self.add_operating_system(self.front_os, front_distro)
 
-    def setup_frontend_compiler_environment(self, env):
+    def setup_frontend_environment(self, env):
         frontend_target = self.target("frontend").module_name
-        load_module(frontend)
+        tty.msg("Loading frontend target= {0}".format(frontend_target))
+        load_module(frontend_target)
 
     @classmethod
     def setup_platform_environment(cls, pkg, env):
