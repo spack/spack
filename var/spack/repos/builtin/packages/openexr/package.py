@@ -11,7 +11,7 @@ class Openexr(Package):
 
     homepage = "http://www.openexr.com/"
     url = "https://github.com/openexr/openexr/releases/download/v2.3.0/openexr-2.3.0.tar.gz"
-    
+
     # New versions should come from github now
     version('2.3.0', sha256='fd6cb3a87f8c1a233be17b94c74799e6241d50fc5efd4df75c7a4b9cf4e25ea6')
 
