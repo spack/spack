@@ -169,7 +169,7 @@ class Hdf5(AutotoolsPackage):
         # 
         # shared = '+shared' in self.spec
         # return find_libraries(
-        #     libraries, root=self.prefix, shared=shared, recurse=True
+        #     libraries, root=self.prefix, shared=shared, recursive=True
         # )
         return []
 
