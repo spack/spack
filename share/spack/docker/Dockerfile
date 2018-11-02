@@ -133,8 +133,8 @@ MASK POP
 # [WORKAROUND]
 # https://superuser.com/questions/1241548/
 #     xubuntu-16-04-ttyname-failed-inappropriate-ioctl-for-device#1253889
-RUN [ -f ~/.profile ]                                                   \
- && sed -i 's/mesg \\-n/( tty -s \\&\\& mesg -n || true )/g' ~/.profile \
+RUN [ -f ~/.profile ]                                               \
+ && sed -i 's/mesg n/( tty -s \\&\\& mesg n || true )/g' ~/.profile \
  || true
 
 WORKDIR /root
