@@ -9,8 +9,8 @@ spec-set:
             xsdk:
                 versions: [0.4.0]
         - compilers:
-            gcc:
-                versions: [5.5.0]
+            # gcc:
+            #     versions: [5.5.0]
             clang:
-                versions: [7.0.0]
+                versions: ['6.0.0-1ubuntu2']
     cdash: ["https://spack.io/cdash/submit.php?project=spack"]
