@@ -21,11 +21,11 @@ class PyScikitLearn(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:3.7.9999', when='@0.20.0')
     depends_on('python@2.7:2.8,3.3:3.6.9999', when='@0.19.1')
-    depends_on('py-numpy@1.8.2:', when='@0.19.1:20.0', type=('build', 'run'))
-    depends_on('py-scipy@0.13.3:', when='@0.19.1:20.0', type=('build', 'run'))
+    depends_on('py-numpy@1.8.2:1.99', when='@0.19.1:20.0', type=('build', 'run'))
+    depends_on('py-scipy@0.13.3:1.99', when='@0.19.1:20.0', type=('build', 'run'))
 
     depends_on('python@2.6:2.8,3.3:3.6.9999', when='@0.15.1:0.18.1')
-    depends_on('py-numpy@1.6.1:', when='@0.15.1:0.18.1', type=('build', 'run'))
-    depends_on('py-scipy@0.9:', when='@0.15.1:0.18.1', type=('build', 'run'))
+    depends_on('py-numpy@1.6.1:1.99', when='@0.15.1:0.18.1', type=('build', 'run'))
+    depends_on('py-scipy@0.9:1.99', when='@0.15.1:0.18.1', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
