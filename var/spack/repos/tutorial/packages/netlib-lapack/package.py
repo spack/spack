@@ -103,9 +103,9 @@ class NetlibLapack(CMakePackage):
         )
 
     # TUTORIAL: add a proper `lapack_lib` property, along the lines
-    # of the `blas_lib` property above. The library that provides 
+    # of the `blas_lib` property above. The library that provides
     # the lapack API is called `liblapack`.
-    
+
     @property
     def headers(self):
         include_dir = self.spec.prefix.include

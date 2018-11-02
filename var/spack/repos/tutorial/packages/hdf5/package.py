@@ -116,7 +116,7 @@ class Hdf5(AutotoolsPackage):
         """
         # This map contains a translation from query_parameters
         # to the libraries needed
-        query2libraries = {
+        query2libraries = {  # noqa: F841
             tuple(): ['libhdf5'],
             ('cxx', 'fortran', 'hl'): [
                 'libhdf5hl_fortran',
@@ -163,10 +163,11 @@ class Hdf5(AutotoolsPackage):
         #
         # query_parameters = self.spec.last_query.extra_parameters
         #
-        # and use the map above to query the list of libraries you need to search.
+        # and use the map above to query the list of libraries you need
+        # to search.
         #
         # Finally uncomment the lines below to return a LibraryList
-        # 
+        #
         # shared = '+shared' in self.spec
         # return find_libraries(
         #     libraries, root=self.prefix, shared=shared, recursive=True
