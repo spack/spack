@@ -26,6 +26,7 @@ class Openexr(Package):
 
     depends_on('pkgconfig', type='build')
     depends_on('ilmbase')
+    depends_on('zlib', type=('build', 'link'))
 
     def install(self, spec, prefix):
         configure_options = ['--prefix={0}'.format(prefix)]
