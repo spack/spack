@@ -175,7 +175,8 @@ def disambiguate_spec(spec):
 
 
 def gray_hash(spec, length):
-    return colorize('@K{%s}' % spec.dag_hash(length))
+    h = spec.dag_hash(length) if spec.concrete else '-' * length
+    return colorize('@K{%s}' % h)
 
 
 def display_specs(specs, args=None, **kwargs):
@@ -209,7 +210,9 @@ def display_specs(specs, args=None, **kwargs):
         show_flags (bool): Show compiler flags with specs
         variants (bool): Show variants with specs
         indent (int): indent each line this much
-
+        decorators (dict): dictionary mappng specs to decorators
+        header_callback (function): called at start of arch/compiler sections
+        all_headers (bool): show headers even when arch/compiler aren't defined
     """
     def get_arg(name, default=None):
         """Prefer kwargs, then args, then default."""
@@ -220,12 +223,17 @@ def display_specs(specs, args=None, **kwargs):
         else:
             return default
 
-    mode      = get_arg('mode', 'short')
-    hashes    = get_arg('long', False)
-    namespace = get_arg('namespace', False)
-    flags     = get_arg('show_flags', False)
+    mode          = get_arg('mode', 'short')
+    hashes        = get_arg('long', False)
+    namespace     = get_arg('namespace', False)
+    flags         = get_arg('show_flags', False)
     full_compiler = get_arg('show_full_compiler', False)
-    variants  = get_arg('variants', False)
+    variants      = get_arg('variants', False)
+    all_headers   = get_arg('all_headers', False)
+
+    decorator     = get_arg('decorator', None)
+    if decorator is None:
+        decorator = lambda s, f: f
 
     indent = get_arg('indent', 0)
     ispace = indent * ' '
@@ -235,7 +243,7 @@ def display_specs(specs, args=None, **kwargs):
         hashes = True
         hlen = None
 
-    nfmt = '.' if namespace else '_'
+    nfmt = '{fullpackage}' if namespace else '{package}'
     ffmt = ''
     if full_compiler or flags:
         ffmt += '$%'
@@ -247,35 +255,46 @@ def display_specs(specs, args=None, **kwargs):
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
+    transform = {'package': decorator, 'fullpackage': decorator}
 
     # Traverse the index and print out each package
     for i, (architecture, compiler) in enumerate(sorted(index)):
         if i > 0:
             print()
 
-        header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
-                                      architecture, spack.spec.compiler_color,
-                                      compiler)
+        header = "%s{%s} / %s{%s}" % (
+            spack.spec.architecture_color,
+            architecture if architecture else 'no arch',
+            spack.spec.compiler_color,
+            compiler if compiler else 'no compiler')
+
         # Sometimes we want to display specs that are not yet concretized.
         # If they don't have a compiler / architecture attached to them,
         # then skip the header
-        if architecture is not None or compiler is not None:
+        if all_headers or (architecture is not None or compiler is not None):
             sys.stdout.write(ispace)
             tty.hline(colorize(header), char='-')
 
         specs = index[(architecture, compiler)]
         specs.sort()
 
-        abbreviated = [s.cformat(format_string) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
+            abbreviated = [s.cformat(format_string, transform=transform)
+                           for s in specs]
             width = max(len(s) for s in abbreviated)
             width += 2
-            format = "    %%-%ds%%s" % width
 
             for abbrv, spec in zip(abbreviated, specs):
-                prefix = gray_hash(spec, hlen) if hashes else ''
-                print(ispace + prefix + (format % (abbrv, spec.prefix)))
+                # optional hash prefix for paths
+                h = gray_hash(spec, hlen) if hashes else ''
+
+                # only show prefix for concrete specs
+                prefix = spec.prefix if spec.concrete else ''
+
+                # print it all out at once
+                fmt = "%%s%%s    %%-%ds%%s" % width
+                print(fmt % (ispace, h, abbrv, prefix))
 
         elif mode == 'deps':
             for spec in specs:
@@ -285,24 +304,25 @@ def display_specs(specs, args=None, **kwargs):
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
 
         elif mode == 'short':
-            # Print columns of output if not printing flags
+            def fmt(s):
+                string = ""
+                if hashes:
+                    string += gray_hash(s, hlen) + ' '
+                string += s.cformat(
+                    '$%s$@%s' % (nfmt, vfmt), transform=transform)
+                return string
+
             if not flags and not full_compiler:
-
-                def fmt(s):
-                    string = ""
-                    if hashes:
-                        string += gray_hash(s, hlen) + ' '
-                    string += s.cformat('$-%s$@%s' % (nfmt, vfmt))
-
-                    return string
-
+                # Print columns of output if not printing flags
                 colify((fmt(s) for s in specs), indent=indent)
-            # Print one entry per line if including flags
+
             else:
+                # Print one entry per line if including flags
                 for spec in specs:
                     # Print the hash if necessary
                     hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
-                    print(ispace + hsh + spec.cformat(format_string))
+                    print(ispace + hsh + spec.cformat(
+                        format_string, transform=transform))
 
         else:
             raise ValueError(

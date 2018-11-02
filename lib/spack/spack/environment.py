@@ -13,7 +13,6 @@ import ruamel.yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-import llnl.util.tty.color as color
 
 import spack.error
 import spack.repo
@@ -152,7 +151,7 @@ def get_env(args, cmd_name, required=True):
 
     """
     # try arguments
-    env = args.env
+    env = getattr(args, 'env', None)
 
     # try a manifest file in the current directory
     if not env:
@@ -357,13 +356,18 @@ class Environment(object):
         self._previous_active = None      # previously active environment
 
     @property
+    def internal(self):
+        """Whether this environment is managed by Spack."""
+        return self.path.startswith(env_path)
+
+    @property
     def name(self):
         """Human-readable representation of the environment.
 
         This is the path for directory environments, and just the name
         for named environments.
         """
-        if self.path.startswith(env_path):
+        if self.internal:
             return os.path.basename(self.path)
         else:
             return self.path
@@ -625,46 +629,6 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
-    def status(self, stream, **kwargs):
-        """List the specs in an environment."""
-        tty.msg('In environment %s' % self.name)
-
-        concretized = [(spec, self.specs_by_hash[h])
-                       for spec, h in zip(self.concretized_user_specs,
-                                          self.concretized_order)]
-
-        added = [s for s in self.user_specs
-                 if s not in self.concretized_user_specs]
-        removed = [(s, c) for s, c in concretized if s not in self.user_specs]
-        current = [(s, c) for s, c in concretized if s in self.user_specs]
-
-        def write_kind(s):
-            color.cwrite('@c{%s}\n' % color.cescape(s), stream)
-
-        def write_user_spec(s, c):
-            color.cwrite('@%s{----} %s\n' % (c, color.cescape(s)), stream)
-
-        if added:
-            write_kind('added:')
-        for s in added:
-            write_user_spec(s, 'g')
-
-        if current:
-            if added:
-                stream.write('\n')
-            write_kind('concrete:')
-        for s, c in current:
-            write_user_spec(s, 'K')
-            stream.write(c.tree(**kwargs))
-
-        if removed:
-            if added or current:
-                stream.write('\n')
-            write_kind('removed:')
-        for s, c in removed:
-            write_user_spec(s, 'r')
-            stream.write(c.tree(**kwargs))
-
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
         hashes = {}
@@ -681,6 +645,50 @@ class Environment(object):
     def all_hashes(self):
         """Return all specs, even those a user spec would shadow."""
         return list(self.all_specs_by_hash().keys())
+
+    def roots(self):
+        """Specs explicitly requested by the user *in this environment*.
+
+        Yields both added and installed specs that have user specs in
+        `spack.yaml`.
+        """
+        concretized = dict(self.concretized_specs())
+        for spec in self.user_specs:
+            concrete = concretized.get(spec)
+            yield concrete if concrete else spec
+
+    def added_specs(self):
+        """Specs that are not yet installed.
+
+        Yields the user spec for non-concretized specs, and the concrete
+        spec for already concretized but not yet installed specs.
+        """
+        concretized = dict(self.concretized_specs())
+        for spec in self.user_specs:
+            concrete = concretized.get(spec)
+            if not concrete:
+                yield spec
+            elif not concrete.package.installed:
+                yield concrete
+
+    def concretized_specs(self):
+        """Tuples of (user spec, concrete spec) for all concrete specs."""
+        for s, h in zip(self.concretized_user_specs, self.concretized_order):
+            yield (s, self.specs_by_hash[h])
+
+    def removed_specs(self):
+        """Tuples of (user spec, concrete spec) for all specs that will be
+           removed on nexg concretize."""
+        needed = set()
+        for s, c in self.concretized_specs():
+            if s in self.user_specs:
+                for d in c.traverse():
+                    needed.add(d)
+
+        for s, c in self.concretized_specs():
+            for d in c.traverse():
+                if d not in needed:
+                    yield d
 
     def _get_environment_specs(self, recurse_dependencies=True):
         """Returns the specs of all the packages in an environment.

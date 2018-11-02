@@ -21,13 +21,14 @@ from spack.main import SpackCommand
 pytestmark = pytest.mark.usefixtures(
     'mutable_mock_env_path', 'config', 'mutable_mock_packages')
 
-env         = SpackCommand('env')
-install     = SpackCommand('install')
-add         = SpackCommand('add')
-remove      = SpackCommand('remove')
-concretize  = SpackCommand('concretize')
-stage       = SpackCommand('stage')
-uninstall   = SpackCommand('uninstall')
+env        = SpackCommand('env')
+install    = SpackCommand('install')
+add        = SpackCommand('add')
+remove     = SpackCommand('remove')
+concretize = SpackCommand('concretize')
+stage      = SpackCommand('stage')
+uninstall  = SpackCommand('uninstall')
+find       = SpackCommand('find')
 
 
 def test_add():
@@ -156,32 +157,62 @@ def test_remove_after_concretize():
 
 def test_remove_command():
     env('create', 'test')
+    assert 'test' in env('list')
 
     with ev.read('test'):
         add('mpileaks')
-    assert 'mpileaks' in env('status', 'test')
+        assert 'mpileaks' in find()
+        assert 'mpileaks@' not in find()
+        assert 'mpileaks@' not in find('--show-concretized')
 
     with ev.read('test'):
         remove('mpileaks')
-    assert 'mpileaks' not in env('status', 'test')
+        assert 'mpileaks' not in find()
+        assert 'mpileaks@' not in find()
+        assert 'mpileaks@' not in find('--show-concretized')
 
     with ev.read('test'):
         add('mpileaks')
-    assert 'mpileaks' in env('status', 'test')
+        assert 'mpileaks' in find()
+        assert 'mpileaks@' not in find()
+        assert 'mpileaks@' not in find('--show-concretized')
+
+    with ev.read('test'):
+        concretize()
+        assert 'mpileaks' in find()
+        assert 'mpileaks@' not in find()
+        assert 'mpileaks@' in find('--show-concretized')
+
+    with ev.read('test'):
+        remove('mpileaks')
+        assert 'mpileaks' not in find()
+        # removed but still in last concretized specs
+        assert 'mpileaks@' in find('--show-concretized')
+
+    with ev.read('test'):
+        concretize()
+        assert 'mpileaks' not in find()
+        assert 'mpileaks@' not in find()
+        # now the lockfile is regenerated and it's gone.
+        assert 'mpileaks@' not in find('--show-concretized')
 
 
-def test_environment_status():
-    e = ev.create('test')
-    e.add('mpileaks')
-    e.concretize()
-    e.add('python')
-    mock_stream = StringIO()
-    e.status(mock_stream)
-    list_content = mock_stream.getvalue()
-    assert 'mpileaks' in list_content
-    assert 'python' in list_content
-    mpileaks_spec = e.specs_by_hash[e.concretized_order[0]]
-    assert mpileaks_spec.format() in list_content
+def test_environment_status(capfd, tmpdir):
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            assert 'No active environment' in env('status')
+
+            with ev.create('test'):
+                assert 'In environment test' in env('status')
+
+            with ev.Environment('local_dir'):
+                assert os.path.join(os.getcwd(), 'local_dir') in env('status')
+
+                e = ev.Environment('myproject')
+                e.write()
+                with tmpdir.join('myproject').as_cwd():
+                    with e:
+                        assert 'in current directory' in env('status')
 
 
 def test_to_lockfile_dict():
@@ -309,8 +340,8 @@ env:
     out = env('list')
     assert 'test' in out
 
-    out = env('status', 'test')
-    assert 'mpileaks' in out
+    with ev.read('test'):
+        assert 'mpileaks' in find()
 
     env('remove', '-y', 'test')
 
