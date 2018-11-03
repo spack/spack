@@ -25,35 +25,21 @@ from spack import *
 
 class MofemUsersModules(CMakePackage):
     """MofemUsersModules creates installation environment for user-provided
-    modules and extends of mofem-cephas package. The CMakeList.txt file for
-    user modules is located in mofem-cephas/user_modules prefix.
-    MofemUsersModules itself does not contain any code (is a dummy with a
-    single dummy version). It provide sources location of users modules, i.e.
-    mofem-fracture-module. Those are kept as a stand-alone package (instead
-    of resources) as they have different versions and developers. One can
-    install the extension, f.e. spack installs extension spack install
-    mofem-fracture-module. Next, create a symlink to run the code, f.e. spack
-    view symlink um_view mofem-cephas, and activate the extension, i.e. spack
-    activate um_view mofem-minimal-surface-equation. Basic mofem
-    functionality is available when with spack install mofem-users-modules,
-    it provides simple examples for calculating elasticity problems,
-    magnetostatics, saturated and unsaturated flow and a couple more. For
-    more information how to work with Spack and MoFEM see
-    http://mofem.eng.gla.ac.uk/mofem/html/install_spack.html"""
+    modules and extends of mofem-cephas package. For more information how to
+    work with Spack and MoFEM see
+    http: // mofem.eng.gla.ac.uk / mofem / html / install_spack.html """
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    url = "https://bitbucket.org/likask/mofem-joseph/downloads/users_modules_dummy"
+    git = "https://likask@bitbucket.org/mofem/users-modules-cephas.git"
 
-    version('0.8.15', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.14', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.13', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.12', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.11', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.10', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.9', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.8', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('0.8.7', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
-    version('develop', '5a8b22c9cdcad7bbad92b1590d55edb1', expand=False)
+    version('0.8.15', commit='4843b2d92ec21ad100a8d637698f56b3a2e14af3')
+    version('0.8.14', commit='cfaa32133c574a31beaeb36202d033280521ddff')
+    version('0.8.12', commit='7b2ce5595a95d1b919f50103513c44bb2bc9e6d2')
+    version('0.8.11', commit='329b06d758137f1ec830f157d383b5ea415963de')
+    version('0.8.10', commit='ca03a8222b20f9c8ff93a2d6f4c3babbcfde2058')
+    version('0.8.8', commit='eb40f3c218badcd528ab08ee952835fb2ff07fd3')
+    version('0.8.7', commit='a83b236f26f258f4d6bafc379ddcb9503088df56')
+    version('develop', branch='develop')
 
     maintainers = ['likask']
 
@@ -63,26 +49,12 @@ class MofemUsersModules(CMakePackage):
     extends('mofem-cephas')
     depends_on('mofem-cephas@0.8.15', when='@0.8.15')
     depends_on('mofem-cephas@0.8.14', when='@0.8.14')
-    depends_on('mofem-cephas@0.8.13', when='@0.8.13')
-    depends_on('mofem-cephas@0.8.12', when='@0.8.12')
+    depends_on('mofem-cephas@0.8.12:0.8.13', when='@0.8.12')
     depends_on('mofem-cephas@0.8.11', when='@0.8.11')
     depends_on('mofem-cephas@0.8.10', when='@0.8.10')
-    depends_on('mofem-cephas@0.8.9', when='@0.8.9')
-    depends_on('mofem-cephas@0.8.8', when='@0.8.8')
+    depends_on('mofem-cephas@0.8.8:0.8.9', when='@0.8.8')
     depends_on('mofem-cephas@0.8.7', when='@0.8.7')
     depends_on('mofem-cephas@develop', when='@develop')
-
-    @property
-    def root_cmakelists_dir(self):
-        """The relative path to the directory containing CMakeLists.txt
-
-        This path is relative to the root of the extracted tarball,
-        not to the ``build_directory``. Defaults to the current directory.
-
-        :return: directory containing CMakeLists.txt
-        """
-        spec = self.spec
-        return spec['mofem-cephas'].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
@@ -91,6 +63,7 @@ class MofemUsersModules(CMakePackage):
 
         # obligatory options
         options.extend([
+            '-DMOFEM_DIR=%s' % spec['mofem-cephas'].prefix.users_module,
             '-DWITH_SPACK=YES',
             '-DSTAND_ALLONE_USERS_MODULES=%s' %
             ('YES' if '+copy_user_modules' in spec else 'NO')])

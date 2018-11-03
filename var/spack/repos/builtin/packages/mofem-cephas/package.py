@@ -32,26 +32,26 @@ class MofemCephas(CMakePackage):
     maintainers = ['likask']
 
     version('0.8.15', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.15', submodules=True)
+        tag='v0.8.15')
     version('0.8.14', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.14', submodules=True)
+        tag='v0.8.14')
     version('0.8.13', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.13', submodules=True)
+        tag='v0.8.13')
     version('0.8.12', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.12', submodules=True)
+        tag='v0.8.12')
     version('0.8.11', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.11', submodules=True)
+        tag='v0.8.11')
     version('0.8.10', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.10', submodules=True)
+        tag='v0.8.10')
     version('0.8.9', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.9', submodules=True)
+        tag='v0.8.9')
     version('0.8.8', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.8', submodules=True)
+        tag='v0.8.8')
     version('0.8.7', git='https://bitbucket.org/likask/mofem-cephas.git',
-        tag='v0.8.7', submodules=True)
+        tag='v0.8.7')
     version('develop',
         git='https://bitbucket.org/likask/mofem-cephas.git',
-        branch='develop', submodules=True)
+        branch='develop')
 
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
