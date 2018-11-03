@@ -6,7 +6,7 @@
 import spack.environment as ev
 
 description = 'concretize an environment and write a lockfile'
-section = "environment"
+section = "environments"
 level = "long"
 
 

@@ -14,8 +14,8 @@ import spack.environment
 import spack.paths
 import spack.repo
 
-description = "print out locations of various directories used by Spack"
-section = "environment"
+description = "print out locations of packages and spack directories"
+section = "basic"
 level = "long"
 
 

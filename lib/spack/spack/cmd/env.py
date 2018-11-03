@@ -21,8 +21,8 @@ import spack.environment as ev
 import spack.util.string as string
 
 description = "manage virtual environments"
-section = "environment"
-level = "long"
+section = "environments"
+level = "short"
 
 
 #: List of subcommands of `spack env`
