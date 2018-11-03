@@ -27,7 +27,7 @@ class MofemUsersModules(CMakePackage):
     """MofemUsersModules creates installation environment for user-provided
     modules and extends of mofem-cephas package. For more information how to
     work with Spack and MoFEM see
-    http: // mofem.eng.gla.ac.uk / mofem / html / install_spack.html """
+    http://mofem.eng.gla.ac.uk/mofem/html/install_spack.html"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
     git = "https://likask@bitbucket.org/mofem/users-modules-cephas.git"
