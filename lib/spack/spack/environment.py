@@ -195,7 +195,7 @@ def disambiguate(env, env_dir=None):
         if is_env_dir(env_dir):
             return Environment(env_dir)
         else:
-            raise EnvError('no environment in %s' % env_dir)
+            raise SpackEnvironmentError('no environment in %s' % env_dir)
 
     return None
 
@@ -223,7 +223,7 @@ def read(name):
     """Get an environment with the supplied name."""
     validate_env_name(name)
     if not exists(name):
-        raise EnvError("no such environment '%s'" % name)
+        raise SpackEnvironmentError("no such environment '%s'" % name)
     return Environment(root(name))
 
 
@@ -231,7 +231,7 @@ def create(name, init_file=None):
     """Create a named environment in Spack."""
     validate_env_name(name)
     if exists(name):
-        raise EnvError("'%s': environment already exists" % name)
+        raise SpackEnvironmentError("'%s': environment already exists" % name)
     return Environment(root(name), init_file)
 
 
@@ -472,9 +472,10 @@ class Environment(object):
         """
         spec = Spec(user_spec)
         if not spec.name:
-            raise EnvError('cannot add anonymous specs to an environment!')
+            raise SpackEnvironmentError(
+                'cannot add anonymous specs to an environment!')
         elif not spack.repo.path.exists(spec.name):
-            raise EnvError('no such package: %s' % spec.name)
+            raise SpackEnvironmentError('no such package: %s' % spec.name)
 
         existing = set(s for s in self.user_specs if s.name == spec.name)
         if not existing:
@@ -498,7 +499,7 @@ class Environment(object):
                 s for s, h in specs_hashes if query_spec.dag_hash() == h]
 
         if not matches:
-            raise EnvError("Not found: {0}".format(query_spec))
+            raise SpackEnvironmentError("Not found: {0}".format(query_spec))
 
         for spec in matches:
             if spec in self.user_specs:
@@ -860,9 +861,5 @@ def deactivate_config_scope(env):
         spack.config.config.remove_scope(scope.name)
 
 
-class EnvError(spack.error.SpackError):
-    """Superclass for all errors to do with Spack environments.
-
-    Note that this is called ``EnvError`` to distinguish it from the
-    builtin ``EnvironmentError``.
-    """
+class SpackEnvironmentError(spack.error.SpackError):
+    """Superclass for all errors to do with Spack environments."""
