@@ -47,9 +47,12 @@ def test_all_virtual_packages_have_default_providers():
     defaults = spack.config.get('packages', scope='defaults')
     default_providers = defaults['all']['providers']
     providers = spack.repo.path.provider_index.providers
-
+    default_providers_filename = \
+        spack.config.config.scopes['defaults'].get_section_filename('packages')
     for provider in providers:
-        assert provider in default_providers
+        assert provider in default_providers, \
+            "all providers must have a default in %s" \
+            % default_providers_filename
 
 
 def test_package_version_consistency():
