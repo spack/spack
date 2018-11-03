@@ -12,7 +12,7 @@ import spack.environment as ev
 
 
 description = 'add a spec to an environment'
-section = "environment"
+section = "environments"
 level = "long"
 
 

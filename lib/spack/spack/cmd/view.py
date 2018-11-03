@@ -43,7 +43,7 @@ import spack.store
 from spack.filesystem_view import YamlFilesystemView
 
 description = "produce a single-rooted directory view of packages"
-section = "environment"
+section = "environments"
 level = "short"
 
 actions_link = ["symlink", "add", "soft", "hardlink", "hard"]

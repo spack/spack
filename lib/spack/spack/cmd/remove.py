@@ -12,7 +12,7 @@ import spack.environment as ev
 
 
 description = 'remove specs from an environment'
-section = "environment"
+section = "environments"
 level = "long"
 
 

@@ -19,6 +19,7 @@ import argparse
 from six import StringIO
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
 import spack
@@ -324,12 +325,12 @@ def make_argument_parser(**kwargs):
         help="when to colorize output (default: auto)")
     parser.add_argument(
         '-C', '--config-scope', dest='config_scopes', action='append',
-        metavar='DIRECTORY', help="use an additional configuration scope")
+        metavar='DIR', help="use an additional configuration scope")
     parser.add_argument(
         '-d', '--debug', action='store_true',
         help="write out debug logs during compile")
     parser.add_argument(
-        '-D', '--pdb', action='store_true',
+        '--pdb', action='store_true',
         help="run spack under the pdb debugger")
 
     env_group = parser.add_mutually_exclusive_group()
@@ -337,8 +338,11 @@ def make_argument_parser(**kwargs):
         '-e', '--env', dest='env', metavar='ENV', action='store',
         help="run with a specific environment (see spack env)")
     env_group.add_argument(
-        '-E', '--env-dir', metavar='DIR', action='store',
+        '-D', '--env-dir', dest='env_dir', metavar='DIR', action='store',
         help="run with an environment directory (ignore named environments)")
+    env_group.add_argument(
+        '-E', '--no-env', dest='no_env', action='store_true',
+        help="run without any environments activated (see spack env)")
     parser.add_argument(
         '--use-env-repo', action='store_true',
         help="when running in an environment, use its package repository")
@@ -359,7 +363,7 @@ def make_argument_parser(**kwargs):
         '-p', '--profile', action='store_true', dest='spack_profile',
         help="profile execution using cProfile")
     parser.add_argument(
-        '-P', '--sorted-profile', default=None, metavar="STAT",
+        '--sorted-profile', default=None, metavar="STAT",
         help="profile and sort by one or more of:\n[%s]" %
         ',\n '.join([', '.join(line) for line in stat_lines]))
     parser.add_argument(
@@ -369,7 +373,7 @@ def make_argument_parser(**kwargs):
         '-v', '--verbose', action='store_true',
         help="print additional output during builds")
     parser.add_argument(
-        '-s', '--stacktrace', action='store_true',
+        '--stacktrace', action='store_true',
         help="add stacktraces to all printed statements")
     parser.add_argument(
         '-V', '--version', action='store_true',
@@ -410,7 +414,7 @@ def setup_main_options(args):
         spack.config.set('config:verify_ssl', False, scope='command_line')
 
     # when to use color (takes always, auto, or never)
-    tty.color.set_color_when(args.color)
+    color.set_color_when(args.color)
 
 
 def allows_unknown_args(command):
@@ -622,7 +626,8 @@ def main(argv=None):
     args, unknown = parser.parse_known_args(argv)
 
     # activate an environment if one was specified on the command line
-    activate_environment(args.env, args.env_dir, args.use_env_repo)
+    if not args.no_env:
+        activate_environment(args.env, args.env_dir, args.use_env_repo)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
