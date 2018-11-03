@@ -168,7 +168,7 @@ def do_uninstall(specs, force):
         if ev.active:
             try:
                 ev.active.remove(item, force=True)
-            except ev.EnvError:
+            except ev.SpackEnvironmentError:
                 pass  # ignore errors from specs that are not roots
 
     # Sort packages to be uninstalled by the number of installed dependents
