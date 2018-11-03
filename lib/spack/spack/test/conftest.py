@@ -310,7 +310,7 @@ def mutable_config(tmpdir_factory, configuration_dir, config):
 
 
 def _populate(mock_db):
-    """Populate a mock database with packages.
+    r"""Populate a mock database with packages.
 
     Here is what the mock DB looks like:
 

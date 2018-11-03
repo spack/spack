@@ -460,11 +460,11 @@ def pretty_string_to_date(date_str, now=None):
     now = now or datetime.now()
 
     # datetime formats
-    pattern[re.compile('^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
-    pattern[re.compile('^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m'
     )
-    pattern[re.compile('^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
     )
 
