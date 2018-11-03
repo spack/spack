@@ -2709,6 +2709,15 @@ class Spec(object):
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
+
+        # FIXME: we manage _patches_in_order_of_appearance specially here
+        # to keep it from leaking out of spec.py, but we should figure
+        # out how to handle it more elegantly in the Variant classes.
+        for k, v in other.variants.items():
+            patches = getattr(v, '_patches_in_order_of_appearance', None)
+            if patches:
+                self.variants[k]._patches_in_order_of_appearance = patches
+
         self.variants.spec = self
         self.external_path = other.external_path
         self.external_module = other.external_module
