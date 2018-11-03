@@ -95,22 +95,23 @@ class Gnuplot(AutotoolsPackage):
             # QT needs C++11 compiler:
             os.environ['CXXFLAGS'] = '{0}'.format(self.compiler.cxx11_flag)
 
-            qt_path = spec['qt'].prefix
-            # see
-            # http://gnuplot.10905.n7.nabble.com/Building-with-Qt-depends-on-pkg-config-Qt-5-term-doesn-t-work-on-OS-X-td18063.html
-            os.environ['QT_LIBS'] = (
-                '-F{0}/lib -framework ' +
-                'QtCore -framework QtGui -framework QtWidgets ' +
-                '-framework QtNetwork -framework QtSvg ' +
-                '-framework QtPrintSupport').format(qt_path)
+            if spec.satisfies('platform=darwin'):
+                qt_path = spec['qt'].prefix
+                # see
+                # http://gnuplot.10905.n7.nabble.com/Building-with-Qt-depends-on-pkg-config-Qt-5-term-doesn-t-work-on-OS-X-td18063.html
+                os.environ['QT_LIBS'] = (
+                    '-F{0}/lib -framework ' +
+                    'QtCore -framework QtGui -framework QtWidgets ' +
+                    '-framework QtNetwork -framework QtSvg ' +
+                    '-framework QtPrintSupport').format(qt_path)
 
-            os.environ['QT_CFLAGS'] = (
-                '-F{0}/lib ' +
-                '-I{0}/lib/QtCore.framework/Headers ' +
-                '-I{0}/lib/QtGui.framework/Headers ' +
-                '-I{0}/lib/QtWidgets.framework/Headers ' +
-                '-I{0}/lib/QtNetwork.framework/Headers ' +
-                '-I{0}/lib/QtSvg.framework/Headers').format(qt_path)
+                os.environ['QT_CFLAGS'] = (
+                    '-F{0}/lib ' +
+                    '-I{0}/lib/QtCore.framework/Headers ' +
+                    '-I{0}/lib/QtGui.framework/Headers ' +
+                    '-I{0}/lib/QtWidgets.framework/Headers ' +
+                    '-I{0}/lib/QtNetwork.framework/Headers ' +
+                    '-I{0}/lib/QtSvg.framework/Headers').format(qt_path)
         else:
             options.append('--with-qt=no')
 
