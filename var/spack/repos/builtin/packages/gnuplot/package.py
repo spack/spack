@@ -60,6 +60,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('wx', when='+wx')
     depends_on('pango@1.10:', when='+wx')
     depends_on('pango@1.10:', when='+cairo')
+    depends_on('libx11', when='+X')
 
     def configure_args(self):
         # see https://github.com/Homebrew/homebrew-core/blob/master/Formula/gnuplot.rb
