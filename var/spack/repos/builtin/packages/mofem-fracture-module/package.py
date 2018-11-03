@@ -76,7 +76,7 @@ class MofemFractureModule(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return spec['mofem-cephas'].prefix.users_modules
+        return spec['mofem-users-modules'].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
@@ -112,9 +112,9 @@ class MofemFractureModule(CMakePackage):
         return options
 
     # This function is not needed to run code installed by extension, nor in
-    # the install process. However for users like to have access to source code
-    # to play and make with it. Having source code at hand one can compile in
-    # own build directory it in mofem-cephas view when the extension is
+    # the install process. However, for users like to have access to source
+    # code to play, change and make it. Having source code at hand one can
+    # compile in own build directory it in package view when the extension is
     # activated.
     @run_after('install')
     def copy_source_code(self):

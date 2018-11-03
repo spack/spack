@@ -73,3 +73,15 @@ class MofemUsersModules(CMakePackage):
             'ON' if self.run_tests else 'OFF'))
 
         return options
+
+    # This function is not needed to run code installed by extension, nor in
+    # the install process. However, the source code of users modules is
+    # necessary to compile other sub-modules. Also, for users like to have
+    # access to source code to play, change and make it. Having source code at
+    # hand one can compile in own build directory it in package view when the
+    # extension is activated.
+    @run_after('install')
+    def copy_source_code(self):
+        source = self.stage.source_path
+        prefix = self.prefix
+        install_tree(source, prefix.users_modules)
