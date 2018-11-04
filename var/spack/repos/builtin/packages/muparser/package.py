@@ -11,7 +11,9 @@ class Muparser(Package):
     homepage = "http://muparser.beltoforion.de/"
     url      = "https://github.com/beltoforion/muparser/archive/v2.2.5.tar.gz"
 
-    version('2.2.6', 'f197b2815ca0422b2091788a78f2dc8a')
+    version('2.2.6.1', '410d29b4c58d1cdc2fc9ed1c1c7f67fe')
+    # 2.2.6 presents itself as 2.2.5, don't add it to Spack
+    # version('2.2.6', 'f197b2815ca0422b2091788a78f2dc8a')
     version('2.2.5', '02dae671aa5ad955fdcbcd3fee313fb7')
 
     # Replace std::auto_ptr by std::unique_ptr
