@@ -33,7 +33,7 @@ class NeurodamusBase(Package):
     homepage = "ssh://bbpcode.epfl.ch/sim/neurodamus/bbp"
     url      = "ssh://bbpcode.epfl.ch/sim/neurodamus/bbp"
 
-    version('master',      git=url)
+    version('master',      git=url, branch='master')
     version('hippocampus', git=url, branch='sandbox/king/hippocampus')
     version('plasticity',  git=url, branch='sandbox/king/saveupdate_v6support_mask', preferred=True)
 
