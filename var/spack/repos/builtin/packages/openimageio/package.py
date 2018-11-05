@@ -38,11 +38,11 @@ class Openimageio(CMakePackage):
     depends_on('qt@5.6.0:+opengl', when='+qt')
 
     def cmake_args(self):
-        args = ["-DUSE_FFMPEG={}".format(
+        args = ["-DUSE_FFMPEG={0}".format(
             'ON' if '+ffmpeg' in self.spec else 'OFF')]
-        args += ["-DUSE_OPENJPEG={}".format(
+        args += ["-DUSE_OPENJPEG={0}".format(
             'ON' if '+jpeg2k' in self.spec else 'OFF')]
-        args += ["-DUSE_PYTHON={}".format(
+        args += ["-DUSE_PYTHON={0}".format(
             'ON' if '+python' in self.spec else 'OFF')]
-        args += ["-DUSE_QT={}".format('ON' if '+qt' in self.spec else 'OFF')]
+        args += ["-DUSE_QT={0}".format('ON' if '+qt' in self.spec else 'OFF')]
         return args
