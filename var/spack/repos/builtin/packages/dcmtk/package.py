@@ -38,8 +38,8 @@ class Dcmtk(CMakePackage):
     variant('stl', default=True, description="Use native STL implementation")
 
     def cmake_args(self):
-        args = ["-DDCMTK_ENABLE_CXX11={}".format(
+        args = ["-DDCMTK_ENABLE_CXX11={0}".format(
             'ON' if '+cxx11' in self.spec else 'OFF')]
-        args += ["-DDCMTK_ENABLE_STL={}".format(
+        args += ["-DDCMTK_ENABLE_STL={0}".format(
             'ON' if '+stl' in self.spec else 'OFF')]
         return args
