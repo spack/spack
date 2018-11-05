@@ -381,9 +381,9 @@ class CommentedMap(ordereddict, CommentedBase):
             pre_comments = self.ca.comment[1] = []
         return pre_comments
 
-    def update(self, vals):
+    def update(self, *vals, **kwds):
         try:
-            ordereddict.update(self, vals)
+            ordereddict.update(self, *vals, **kwds)
         except TypeError:
             # probably a dict that is used
             for x in vals:
