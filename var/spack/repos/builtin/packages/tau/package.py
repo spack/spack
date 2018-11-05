@@ -37,7 +37,7 @@ class Tau(Package):
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.tar.gz"
 
-    version('2.28', '0bac5cde74595be24bc0880e6a6d7541')
+    version('2.28', '58ee68463d583e79c9f128e6a92c9b20')
     version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
     version('2.27.2', 'b264ab0df78112f9a529e59a5f4dc191')
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
