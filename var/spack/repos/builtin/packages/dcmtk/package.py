@@ -5,8 +5,10 @@
 
 from spack import *
 
+
 class Dcmtk(CMakePackage):
-    """DCMTK is a collection of libraries and applications implementing large parts the DICOM standard."""
+    """DCMTK is a collection of libraries and applications implementing large 
+       parts of the DICOM standard."""
 
     homepage = "https://dicom.offis.de"
     url      = "https://github.com/DCMTK/dcmtk/archive/DCMTK-3.6.3.tar.gz"
@@ -36,6 +38,8 @@ class Dcmtk(CMakePackage):
     variant('stl', default=True, description="Use native STL implementation")
 
     def cmake_args(self):
-        args = ["-DDCMTK_ENABLE_CXX11={}".format('ON' if '+cxx11' in self.spec else 'OFF'),
-                "-DDCMTK_ENABLE_STL={}".format('ON' if '+stl' in self.spec else 'OFF')]
+        args = ["-DDCMTK_ENABLE_CXX11={}".format(
+                    'ON' if '+cxx11' in self.spec else 'OFF'),
+                "-DDCMTK_ENABLE_STL={}".format(
+                    'ON' if '+stl' in self.spec else 'OFF')]
         return args
