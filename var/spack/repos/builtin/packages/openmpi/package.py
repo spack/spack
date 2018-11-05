@@ -64,27 +64,29 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
-    version('3.1.2', SHA256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
-    version('3.1.1', SHA256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
-    version('3.1.0', SHA256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
+    version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.2
+    version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
+    version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
+    version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
 
     # Still supported
-    version('3.0.2', SHA256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
-    version('3.0.1', SHA256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
-    version('3.0.0', SHA256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
+    version('3.0.3', sha256='fb228e42893fe6a912841a94cd8a0c06c517701ae505b73072409218a12cf066')  # libmpi.so.40.00.2
+    version('3.0.2', sha256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
+    version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
+    version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
-    version('2.1.5', SHA256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
-    version('2.1.4', SHA256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
-    version('2.1.3', SHA256='285b3e2a69ed670415524474496043ecc61498f2c63feb48575f8469354d79e8')  # libmpi.so.20.10.2
-    version('2.1.2', SHA256='3cc5804984c5329bdf88effc44f2971ed244a29b256e0011b8deda02178dd635')  # libmpi.so.20.10.2
-    version('2.1.1', SHA256='bd7badd4ff3afa448c0d7f3ca0ee6ce003b957e9954aa87d8e4435759b5e4d16')  # libmpi.so.20.10.1
-    version('2.1.0', SHA256='b169e15f5af81bf3572db764417670f508c0df37ce86ff50deb56bd3acb43957')  # libmpi.so.20.10.0
+    version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
+    version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
+    version('2.1.3', sha256='285b3e2a69ed670415524474496043ecc61498f2c63feb48575f8469354d79e8')  # libmpi.so.20.10.2
+    version('2.1.2', sha256='3cc5804984c5329bdf88effc44f2971ed244a29b256e0011b8deda02178dd635')  # libmpi.so.20.10.2
+    version('2.1.1', sha256='bd7badd4ff3afa448c0d7f3ca0ee6ce003b957e9954aa87d8e4435759b5e4d16')  # libmpi.so.20.10.1
+    version('2.1.0', sha256='b169e15f5af81bf3572db764417670f508c0df37ce86ff50deb56bd3acb43957')  # libmpi.so.20.10.0
 
-    version('2.0.4', SHA256='4f82d5f7f294becbd737319f74801206b08378188a95b70abe706fdc77a0c20b')  # libmpi.so.20.0.4
-    version('2.0.3', SHA256='b52c0204c0e5954c9c57d383bb22b4181c09934f97783292927394d29f2a808a')  # libmpi.so.20.0.3
-    version('2.0.2', SHA256='cae396e643f9f91f0a795f8d8694adf7bacfb16f967c22fb39e9e28d477730d3')  # libmpi.so.20.0.2
-    version('2.0.1', SHA256='fed74f4ae619b7ebcc18150bb5bdb65e273e14a8c094e78a3fea0df59b9ff8ff')  # libmpi.so.20.0.1
-    version('2.0.0', SHA256='08b64cf8e3e5f50a50b4e5655f2b83b54653787bd549b72607d9312be44c18e0')  # libmpi.so.20.0.0
+    version('2.0.4', sha256='4f82d5f7f294becbd737319f74801206b08378188a95b70abe706fdc77a0c20b')  # libmpi.so.20.0.4
+    version('2.0.3', sha256='b52c0204c0e5954c9c57d383bb22b4181c09934f97783292927394d29f2a808a')  # libmpi.so.20.0.3
+    version('2.0.2', sha256='cae396e643f9f91f0a795f8d8694adf7bacfb16f967c22fb39e9e28d477730d3')  # libmpi.so.20.0.2
+    version('2.0.1', sha256='fed74f4ae619b7ebcc18150bb5bdb65e273e14a8c094e78a3fea0df59b9ff8ff')  # libmpi.so.20.0.1
+    version('2.0.0', sha256='08b64cf8e3e5f50a50b4e5655f2b83b54653787bd549b72607d9312be44c18e0')  # libmpi.so.20.0.0
 
     version('1.10.7', 'c87c613f9acb1a4eee21fa1ac8042579')  # libmpi.so.12.0.7
     version('1.10.6', '2e65008c1867b1f47c32f9f814d41706')  # libmpi.so.12.0.6
