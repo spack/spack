@@ -2944,6 +2944,7 @@ class Spec(object):
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
             ${PREFIX}        The package prefix
+            ${NAMESPACE}     The package namespace
 
         Note these are case-insensitive: for example you can specify either
         ``${PACKAGE}`` or ``${package}``.
@@ -3126,6 +3127,8 @@ class Spec(object):
                     else:
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
+                elif named_str == 'NAMESPACE':
+                    out.write(fmt % token_transform(self.namespace))
 
                 named = False
 
