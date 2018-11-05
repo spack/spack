@@ -7,7 +7,7 @@ from spack import *
 
 
 class Dcmtk(CMakePackage):
-    """DCMTK is a collection of libraries and applications implementing large 
+    """DCMTK is a collection of libraries and applications implementing large
        parts of the DICOM standard."""
 
     homepage = "https://dicom.offis.de"
@@ -39,7 +39,7 @@ class Dcmtk(CMakePackage):
 
     def cmake_args(self):
         args = ["-DDCMTK_ENABLE_CXX11={}".format(
-                    'ON' if '+cxx11' in self.spec else 'OFF'),
-                "-DDCMTK_ENABLE_STL={}".format(
-                    'ON' if '+stl' in self.spec else 'OFF')]
+            'ON' if '+cxx11' in self.spec else 'OFF')]
+        args += ["-DDCMTK_ENABLE_STL={}".format(
+            'ON' if '+stl' in self.spec else 'OFF')]
         return args
