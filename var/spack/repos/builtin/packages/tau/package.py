@@ -35,8 +35,10 @@ class Tau(Package):
     """
 
     homepage = "http://www.cs.uoregon.edu/research/tau"
-    url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.27.2.tar.gz"
+    url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.tar.gz"
 
+    version('2.28', '0bac5cde74595be24bc0880e6a6d7541')
+    version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
     version('2.27.2', 'b264ab0df78112f9a529e59a5f4dc191')
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
     version('2.27', '76602d35fc96f546b5b9dcaf09158651')
@@ -110,17 +112,12 @@ class Tau(Package):
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('python', when='+python')
-#   depends_on('binutils', when='~download')
     depends_on('gettext')
     depends_on('binutils@2.27+libiberty')
     depends_on('libunwind', when='~download')
     depends_on("mpi", when='+mpi')
     depends_on('cuda', when='+cuda')
     depends_on('gasnet', when='+gasnet')
-
-    # filter_compiler_wrappers(
-    #    'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
-    # )
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
