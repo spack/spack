@@ -8,14 +8,12 @@ from spack import *
 
 class Openimageio(CMakePackage):
     """OpenImageIO is a library for reading and writing images, and a bunch of
-    related classes, utilities, and applications."""
+       related classes, utilities, and applications."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.openimageio.org"
     url      = "https://github.com/OpenImageIO/oiio/archive/Release-1.8.15.tar.gz"
 
     version('1.8.15', sha256='4d5b4ed3f2daaed69989f53c0f9364dd87c82dc0a09807b5b6e9008e2426e86f')
-
 
     # Core dependencies
     depends_on('cmake@3.2.2:', type='build')
@@ -40,8 +38,11 @@ class Openimageio(CMakePackage):
     depends_on('qt@5.6.0:+opengl', when='+qt')
 
     def cmake_args(self):
-        args = ["-DUSE_FFMPEG={}".format('ON' if '+ffmpeg' in self.spec else 'OFF'),
-                "-DUSE_OPENJPEG={}".format('ON' if '+jpeg2k' in self.spec else 'OFF'),
-                "-DUSE_PYTHON={}".format('ON' if '+python' in self.spec else 'OFF'),
-                "-DUSE_QT={}".format('ON' if '+qt' in self.spec else 'OFF')]
+        args = ["-DUSE_FFMPEG={}".format(
+            'ON' if '+ffmpeg' in self.spec else 'OFF')]
+        args += ["-DUSE_OPENJPEG={}".format(
+            'ON' if '+jpeg2k' in self.spec else 'OFF')]
+        args += ["-DUSE_PYTHON={}".format(
+            'ON' if '+python' in self.spec else 'OFF')]
+        args += ["-DUSE_QT={}".format('ON' if '+qt' in self.spec else 'OFF')]
         return args
