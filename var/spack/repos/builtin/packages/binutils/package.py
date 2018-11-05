@@ -93,20 +93,19 @@ class Binutils(AutotoolsPackage):
     def install(self, spec, prefix):
         super(Binutils, self).install(spec, prefix)
 
+        extradir = os.path.join(prefix.include, 'extra')
+        mkdirp(extradir)
         for current_file in glob.glob(os.path.join(self.build_directory,
                                                    'bfd', '*.h')):
-            install(current_file, prefix.include)
+            install(current_file, extradir)
         for current_file in glob.glob(os.path.join(self.build_directory,
                                                    'include', '*.h')):
-            install(current_file, prefix.include)
+            install(current_file, extradir)
         for subdir in ['aout', 'cgen', 'coff', 'elf', 'gdb', 'mach-o', 'nlm',
                        'opcode', 'som', 'vms']:
-            outputdir = os.path.join(prefix.include, subdir)
+            outputdir = os.path.join(extradir, subdir)
             mkdirp(outputdir)
             for current_file in glob.glob(os.path.join(self.build_directory,
                                                        'include', subdir,
                                                        '*')):
                 install(current_file, outputdir)
-        bfd_file = os.path.join(prefix.include, 'bfd.h')
-        filter_file("#if !defined PACKAGE && !defined PACKAGE_VERSION",
-                    "#if 0", bfd_file)
