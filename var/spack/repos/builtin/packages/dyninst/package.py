@@ -40,6 +40,7 @@ class Dyninst(Package):
     depends_on("libdwarf", when='@:9')
     depends_on("boost@1.42:")
     depends_on('libiberty+pic')
+    depends_on("tbb@2018.6:")
     depends_on('cmake', type='build')
 
     patch('stat_dysect.patch', when='+stat_dysect')
@@ -73,6 +74,10 @@ class Dyninst(Package):
             # For @develop + use elfutils libdw, libelf is an abstraction
             # we are really using elfutils here
             if spec.satisfies('@develop'):
+                tbb = spec['tbb'].prefix
+                args.append('-DTBB_INCLUDE_DIRS=%s' % tbb.include)
+                args.append('-DTBB_LIBRARIES=%s'   % join_path(
+                    tbb.lib, "libtbb." + dso_suffix))
                 args.append('-DLIBDWARF_INCLUDE_DIR=%s' % libelf.include)
                 args.append('-DLIBDWARF_LIBRARIES=%s'   % join_path(
                     libelf.lib, "libdw." + dso_suffix))
