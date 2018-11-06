@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import glob
 
 
 class Trinotate(Package):
