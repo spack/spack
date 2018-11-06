@@ -29,7 +29,7 @@ class Trinotate(Package):
     depends_on('perl-cgi', type='run')
 
     def patch(self):
-        with working_dir(join_path(self.stage.source_path, 'lib/admin/util')):
+        with working_dir(join_path(self.stage.source_path, 'admin/util')):
             perlscripts = glob.glob('*.pl')
             filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', *perlscripts)
 
