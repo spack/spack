@@ -31,14 +31,12 @@ if sys.version_info[:2] == (2, 6):
 
 sys.path.insert(0, spack_external_libs)
 
-# Here we delete ruamel.yaml if it has been imported on the system
-# (see #9206 for a description of the issue).
+# Here we delete ruamel.yaml in case it has been already imported from site
+# (see #9206 for a broader description of the issue).
 #
-# Deleting the entry from sys.modules is the fastest way to solve our
-# issues with ruamel.yaml .pth file, but could leave pre-existing references
-# to the "site" installed module still in place. This should be a rare
-# occurrence happening only if spack is run from another external command
-# that also imports ruamel.yaml before reaching the lines below.
+# Briefly: ruamel.yaml produces a .pth file when installed with pip that
+# makes the site installed package the preferred one, even tough sys.path
+# is modified to point to another version of ruamel.yaml.
 if 'ruamel.yaml' in sys.modules:
     del sys.modules['ruamel.yaml']
 
