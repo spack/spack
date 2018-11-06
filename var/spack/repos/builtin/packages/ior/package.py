@@ -32,9 +32,7 @@ class Ior(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = []
-
-        env['CC'] = spec['mpi'].mpicc
+        config_args = ['CC=%s' % spec['mpi'].mpicc]
 
         if '+hdf5' in spec:
             config_args.append('--with-hdf5')
