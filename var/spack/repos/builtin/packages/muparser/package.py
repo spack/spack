@@ -23,7 +23,8 @@ class Muparser(Package):
 
     depends_on('cmake@3.1.0:', when='@2.2.6:', type='build')
 
-    # Cmake build
+    # Cmake build since 2.2.6
+    @when('@2.2.6:')
     def install(self, spec, prefix):
         cmake_args = [
             '-DENABLE_SAMPLES=OFF',
