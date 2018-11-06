@@ -41,7 +41,14 @@ class SentieonGenomics(Package):
     license_vars    = ['SENTIEON_LICENSE']
     license_url     = 'https://support.sentieon.com/manual/_downloads/Sentieon.pdf'
 
+    def configure(self, spec, prefix):
+        config = {
+            'destinationFolder':   prefix,
+            'licensePath':         self.global_license_file
+        }
+
     def install(self, spec, prefix):
+        self.configure(spec, prefix)
         install_tree('bin', prefix.bin)
         install_tree('doc', prefix.doc)
         install_tree('etc', prefix.etc)
