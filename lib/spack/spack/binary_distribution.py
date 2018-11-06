@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import errno
 import re
 import tarfile
 import shutil
@@ -124,6 +125,15 @@ def write_buildinfo_file(prefix, workdir, rel=False):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
+            try:
+                os.stat(path_name)
+            except OSError, e:
+                if e.errno == errno.ENOENT:
+                    tty.warn("{0} does not exist, or is a broken symlink"
+                             .format(path_name))
+                    continue
+                else:
+                    raise e
             #  Check if the file contains a string with the installroot.
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
