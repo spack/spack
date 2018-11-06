@@ -585,31 +585,6 @@ def print_setup_info(*info):
             shell_set('_sp_module_prefix', 'not_installed')
 
 
-def activate_environment(env, env_dir, use_env_repo):
-    """Activate an environment from command line arguments or an env var."""
-
-    if env:
-        if ev.exists(env):
-            # treat env as a name
-            ev.activate(ev.read(env), use_env_repo)
-            return
-        env_dir = env
-
-    if not env_dir:
-        env_dir = os.environ.get(spack.environment.spack_env_var)
-        if not env_dir:
-            return
-
-    if os.path.isdir(env_dir):
-        if ev.is_env_dir(env_dir):
-            ev.activate(ev.Environment(env_dir), use_env_repo)
-        else:
-            tty.die('no environment in %s' % env_dir)
-        return
-
-    tty.die('no such environment: %s' % env_dir)
-
-
 def main(argv=None):
     """This is the entry point for the Spack command.
 
@@ -627,7 +602,9 @@ def main(argv=None):
 
     # activate an environment if one was specified on the command line
     if not args.no_env:
-        activate_environment(args.env, args.env_dir, args.use_env_repo)
+        env = ev.find_environment(args)
+        if env:
+            ev.activate(env, args.use_env_repo)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:

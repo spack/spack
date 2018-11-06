@@ -62,9 +62,6 @@ def env_activate_setup_parser(subparser):
 
 
 def env_activate(args):
-    if not args.activate_env:
-        tty.die('spack env activate requires an environment name')
-
     env = args.activate_env
     if not args.shell:
         msg = [
@@ -92,6 +89,9 @@ def env_activate(args):
 
     else:
         tty.die("No such environment: '%s'" % env)
+
+    if spack_env == os.environ.get('SPACK_ENV'):
+        tty.die("Environment %s is already active" % args.activate_env)
 
     if args.shell == 'csh':
         # TODO: figure out how to make color work for csh
@@ -167,7 +167,8 @@ def env_deactivate(args):
 #
 def env_create_setup_parser(subparser):
     """create a new environment"""
-    subparser.add_argument('env', help='name of environment to create')
+    subparser.add_argument(
+        'create_env', metavar='ENV', help='name of environment to create')
     subparser.add_argument(
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
@@ -179,9 +180,9 @@ def env_create_setup_parser(subparser):
 def env_create(args):
     if args.envfile:
         with open(args.envfile) as f:
-            _env_create(args.env, f, args.dir)
+            _env_create(args.create_env, f, args.dir)
     else:
-        _env_create(args.env, None, args.dir)
+        _env_create(args.create_env, None, args.dir)
 
 
 def _env_create(name_or_path, init_file=None, dir=False):
@@ -211,33 +212,38 @@ def _env_create(name_or_path, init_file=None, dir=False):
 def env_remove_setup_parser(subparser):
     """remove an existing environment"""
     subparser.add_argument(
-        'env', nargs='+', help='environment(s) to remove')
+        'rm_env', metavar='ENV', nargs='+',
+        help='environment(s) to remove')
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_remove(args):
-    for env_name in args.env:
-        env = ev.disambiguate(env_name)
-        if not env:
-            tty.die('no such environment: %s' % env_name)
+    """Remove a *named* environment.
+
+    This removes an environment managed by Spack. Directory environments
+    and `spack.yaml` files embedded in repositories should be removed
+    manually.
+    """
+    read_envs = []
+    for env_name in args.rm_env:
+        env = ev.read(env_name)
+        read_envs.append(env)
 
     if not args.yes_to_all:
         answer = tty.get_yes_or_no(
             'Really remove %s %s?' % (
-                string.plural(len(args.env), 'environment', show_n=False),
-                string.comma_and(args.env)),
+                string.plural(len(args.rm_env), 'environment', show_n=False),
+                string.comma_and(args.rm_env)),
             default=False)
         if not answer:
             tty.die("Will not remove any environments")
 
-    for env_name in args.env:
-        env = ev.disambiguate(env_name)
-
+    for env in read_envs:
         if env.active:
             tty.die("Environment %s can't be removed while activated.")
 
         env.destroy()
-        tty.msg("Successfully removed environment '%s'" % env)
+        tty.msg("Successfully removed environment '%s'" % env.name)
 
 
 #
@@ -245,7 +251,6 @@ def env_remove(args):
 #
 def env_list_setup_parser(subparser):
     """list available environments"""
-    pass
 
 
 def env_list(args):

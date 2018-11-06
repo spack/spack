@@ -75,20 +75,6 @@ def test_env_remove(capfd):
     assert 'bar' not in out
 
 
-def test_remove_env_dir(capfd):
-    env('create', '-d', 'foo')
-    assert os.path.isdir('foo')
-
-    foo = ev.Environment('foo')
-    with foo:
-        with pytest.raises(spack.main.SpackCommandError):
-            with capfd.disabled():
-                env('remove', '-y', 'foo')
-
-    env('remove', '-y', './foo')
-    assert not os.path.isdir('foo')
-
-
 def test_concretize():
     e = ev.create('test')
     e.add('mpileaks')
