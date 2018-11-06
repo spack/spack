@@ -397,6 +397,11 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         spec.prefix, spack.store.layout.root)
     spec_dict['buildinfo'] = buildinfo
     spec_dict['full_hash'] = spec.full_hash()
+
+    print('The full_hash ({0}) of {1} will be written into {2}'.format(
+        spec_dict['full_hash'], spec.name, specfile_path))
+    print(spec.tree())
+
     with open(specfile_path, 'w') as outfile:
         outfile.write(syaml.dump(spec_dict))
 
@@ -714,10 +719,13 @@ def needs_rebuild(spec, mirror_url, buildcache_index):
     pkg_name = spec.name
     pkg_version = spec.version
 
-    tty.msg('Checking {0}-{1}'.format(pkg_name, pkg_version))
-
     pkg_hash = spec.dag_hash()
     pkg_full_hash = spec.full_hash()
+
+    # tty.msg('Checking {0}-{1}'.format(pkg_name, pkg_version))
+    tty.msg('Checking {0}-{1}, dag_hash = {2}, full_hash = {3}'.format(
+        pkg_name, pkg_version, pkg_hash, pkg_full_hash))
+    print(spec.tree())
 
     if buildcache_index:
         # just look in the index we already fetched
@@ -767,6 +775,12 @@ def needs_rebuild(spec, mirror_url, buildcache_index):
         # full_hash become the same thing.
         if ('full_hash' not in spec_yaml or
             spec_yaml['full_hash'] != pkg_full_hash):
+                if 'full_hash' in spec_yaml:
+                    tty.msg('hashes did not match, remote = {0}, local = {1}'.format(
+                        spec_yaml['full_hash'], pkg_full_hash))
+                else:
+                    tty.msg('full_hash missing from remote spec.yaml')
+                print(spec.tree())
                 return True
 
     return False
