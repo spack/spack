@@ -360,7 +360,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    install_tree(spec.prefix, workdir, symlinks=True)
+    # set symlinks=False here to avoid broken symlinks when archiving and
+    # moving the package
+    install_tree(spec.prefix, workdir, symlinks=False)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
