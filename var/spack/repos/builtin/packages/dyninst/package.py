@@ -40,7 +40,7 @@ class Dyninst(Package):
     depends_on("libdwarf", when='@:9')
     depends_on("boost@1.42:")
     depends_on('libiberty+pic')
-    depends_on("tbb@2018.6:")
+    depends_on("tbb@2018.6:", when='@develop')
     depends_on('cmake', type='build')
 
     patch('stat_dysect.patch', when='+stat_dysect')
