@@ -36,7 +36,7 @@ in a separate package repository, which can be enabled with:
 
 .. code-block:: console
 
-  $ spack repo add --scope=defaults tutorial var/spack/repos/tutorial
+  $ spack repo add --scope=site tutorial var/spack/repos/tutorial
 
 If you are using the tutorial docker image, all dependency packages
 will have been installed. Otherwise, to install these packages you can use
