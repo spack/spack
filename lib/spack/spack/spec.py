@@ -1462,7 +1462,8 @@ class Spec(object):
                 'module': self.external_module
             }
 
-        d['concrete'] = self._concrete
+        if not self._concrete:
+            d['concrete'] = False
 
         if 'patches' in self.variants:
             variant = self.variants['patches']
@@ -1560,8 +1561,8 @@ class Spec(object):
             spec.external_path = None
             spec.external_module = None
 
-        if 'concrete' in node:
-            spec._concrete = node['concrete']
+        # specs read in are concrete unless marked abstract
+        spec._concrete = node.get('concrete', True)
 
         if 'patches' in node:
             patches = node['patches']
