@@ -33,7 +33,8 @@ class Synapsetool(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', git=url, submodules=True)
-    version('0.3.1', git=url, tag='v0.3.1', submodules=True, preferred=True)
+    version('0.3.2', git=url, tag='v0.3.2', submodules=True, preferred=True)
+    version('0.3.1', git=url, tag='v0.3.1', submodules=True)
     version('0.2.5', git=url, tag='v0.2.5', submodules=True)
     version('0.2.4', git=url, tag='v0.2.4', submodules=True)
     version('0.2.3', git=url, tag='v0.2.3', submodules=True)
@@ -44,7 +45,7 @@ class Synapsetool(CMakePackage):
     variant('shared', default=True, description="Build shared library")
 
     depends_on('boost@1.55:')
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.0:', type='build')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('highfive+mpi', when='+mpi')
@@ -70,7 +71,7 @@ class Synapsetool(CMakePackage):
             args.extend([
                 '-DCMAKE_C_COMPILER:STRING={}'.format(self.spec['mpi'].mpicc),
                 '-DCMAKE_CXX_COMPILER:STRING={}'.format(self.spec['mpi'].mpicxx),
-                '-DSYNTOOL_WITH_MPI:BOOL=ON',
+                '-DSYNTOOL_WITH_MPI:BOOL=ON'
             ])
         if self.spec.satisfies('~shared'):
             args.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
