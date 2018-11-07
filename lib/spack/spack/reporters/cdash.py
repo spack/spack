@@ -81,6 +81,7 @@ class CDash(Reporter):
             for package in spec['packages']:
                 if 'stdout' in package:
                     current_phase = ''
+                    cdash_phase = ''
                     for line in package['stdout'].splitlines():
                         match = phase_regexp.search(line)
                         if match:
@@ -88,19 +89,23 @@ class CDash(Reporter):
                             if current_phase not in map_phases_to_cdash:
                                 current_phase = ''
                                 continue
-                            beginning_of_phase = True
-                        else:
-                            if beginning_of_phase:
-                                cdash_phase = \
-                                    map_phases_to_cdash[current_phase]
-                                if cdash_phase not in phases_encountered:
-                                    phases_encountered.append(cdash_phase)
-                                report_data[cdash_phase]['log'] += \
-                                    text_type("{0} output for {1}:\n".format(
-                                        cdash_phase, package['name']))
-                                beginning_of_phase = False
+                            cdash_phase = \
+                                map_phases_to_cdash[current_phase]
+                            if cdash_phase not in phases_encountered:
+                                phases_encountered.append(cdash_phase)
+                            report_data[cdash_phase]['log'] += \
+                                text_type("{0} output for {1}:\n".format(
+                                    cdash_phase, package['name']))
+                        elif cdash_phase:
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
+
+        # Move the build phase to the front of the list if it occurred.
+        # This supports older versions of CDash that expect this phase
+        # to be reported before all others.
+        if "build" in phases_encountered:
+            build_pos = phases_encountered.index("build")
+            phases_encountered.insert(0, phases_encountered.pop(build_pos))
 
         for phase in phases_encountered:
             errors, warnings = parse_log_events(
