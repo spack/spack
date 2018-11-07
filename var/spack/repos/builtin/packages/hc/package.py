@@ -16,12 +16,22 @@ class Hc(MakefilePackage):
 
     version('1.0.7', sha256='7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on('gmt@4.2.1:4.999')
+    depends_on('netcdf')
 
-    def edit(self, spec, prefix):
-        # FIXME: Edit the Makefile if necessary
-        # FIXME: If not needed delete this function
-        # makefile = FileFilter('Makefile')
-        # makefile.filter('CC = .*', 'CC = cc')
+    # Build phase fails in parallel with the following error messages:
+    # /usr/bin/ld: cannot find -lrick
+    # /usr/bin/ld: cannot find -lhc
+    # /usr/bin/ld: cannot find -lggrd
+    parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('GMTHOME', self.spec['gmt'].prefix)
+        spack_env.set('NETCDFHOME', self.spec['netcdf'].prefix)
+        spack_env.set('HC_HOME', self.prefix)
+        spack_env.unset('ARCH')
+
+    def install(self, spec, prefix):
+        # The Makefile does not have an install target.
+        # Instead, files are installed during the build stage.
         pass
