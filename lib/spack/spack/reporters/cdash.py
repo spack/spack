@@ -63,10 +63,10 @@ class CDash(Reporter):
         self.buildname = args.cdash_build or self.install_command
         self.site = args.cdash_site or socket.gethostname()
         self.osname = platform.system()
-        self.starttime = int(time.time())
+        self.endtime = int(time.time())
         buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
         self.buildstamp = time.strftime(buildstamp_format,
-                                        time.localtime(self.starttime))
+                                        time.localtime(self.endtime))
         self.buildId = None
         self.revision = ''
         git = which('git')
@@ -80,16 +80,18 @@ class CDash(Reporter):
             report_data[phase] = {}
             report_data[phase]['log'] = ""
             report_data[phase]['status'] = 0
-            report_data[phase]['starttime'] = self.starttime
-            report_data[phase]['endtime'] = self.starttime
+            report_data[phase]['endtime'] = self.endtime
 
         # Track the phases we perform so we know what reports to create.
         phases_encountered = []
+        total_duration = 0
 
         # Parse output phase-by-phase.
         phase_regexp = re.compile(r"Executing phase: '(.*)'")
         cdash_phase = ''
         for spec in report_data['specs']:
+            if 'time' in spec:
+                total_duration += int(spec['time'])
             for package in spec['packages']:
                 if 'stdout' in package:
                     current_phase = ''
@@ -121,7 +123,9 @@ class CDash(Reporter):
             build_pos = phases_encountered.index("build")
             phases_encountered.insert(0, phases_encountered.pop(build_pos))
 
+        self.starttime = self.endtime - total_duration
         for phase in phases_encountered:
+            report_data[phase]['starttime'] = self.starttime
             errors, warnings = parse_log_events(
                 report_data[phase]['log'].splitlines())
             nerrors = len(errors)
@@ -182,8 +186,8 @@ class CDash(Reporter):
         report_data = {}
         self.initialize_report(filename, report_data)
         report_data['update'] = {}
-        report_data['update']['starttime'] = self.starttime
-        report_data['update']['endtime'] = self.starttime
+        report_data['update']['starttime'] = self.endtime
+        report_data['update']['endtime'] = self.endtime
         report_data['update']['revision'] = self.revision
         report_data['update']['log'] = msg
 
