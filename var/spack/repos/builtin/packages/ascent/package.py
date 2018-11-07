@@ -67,14 +67,15 @@ class Ascent(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Ascent as shared libs")
+    variant('test', default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
 
-    # variants for python support
-    variant("python", default=True, description="Build Conduit Python support")
+    # variants for language support
+    variant("python", default=True, description="Build Ascent Python support")
+    variant("fortran", default=True, description="Build Ascent Fortran support")
 
     # variants for runtime features
-
     variant("vtkh", default=True,
             description="Build VTK-h filter and rendering support")
 
@@ -197,8 +198,7 @@ class Ascent(Package):
 
         if self.compiler.fc:
             # even if this is set, it may not exist so do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler = env["SPACK_FC"]
+            f_compiler = which(env["SPACK_FC"])
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -238,7 +238,11 @@ class Ascent(Package):
         # Include path to cmake for reference
         cfg.write("# cmake from spack \n")
         cfg.write("# cmake executable path: %s\n\n" % cmake_exe)
-
+       
+        if "+test" in spec:
+           cfg.write(cmake_cache_entry("ENABLE_TESTS","ON"))
+        else: 
+           cfg.write(cmake_cache_entry("ENABLE_TESTS","OFF"))
         #######################
         # Compiler Settings
         #######################
@@ -252,7 +256,7 @@ class Ascent(Package):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if f_compiler is not None:
+        if "+fortran" in spec and f_compiler is not None:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
         else:

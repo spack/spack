@@ -1,10 +1,3 @@
-diff --git a/src/blt b/src/blt
-index 606b41f..a83651a 160000
---- a/src/blt
-+++ b/src/blt
-@@ -1 +1 @@
--Subproject commit 606b41f578348b191587ce7bb24ca131f011d377
-+Subproject commit a83651ae2b04fd4191ae30a3b7145f5f360b9412
 diff --git a/src/vtkh/filters/CMakeLists.txt b/src/vtkh/filters/CMakeLists.txt
 index 4a42d61..a092bf9 100644
 --- a/src/vtkh/filters/CMakeLists.txt
