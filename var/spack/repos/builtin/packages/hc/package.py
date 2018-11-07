@@ -32,6 +32,7 @@ class Hc(MakefilePackage):
         spack_env.unset('ARCH')
 
     def install(self, spec, prefix):
-        # The Makefile does not have an install target.
-        # Instead, files are installed during the build stage.
-        pass
+        # Most files are installed during the build stage.
+        # Manually install header files as well.
+        for header in find('.', '*.h'):
+            install(header, prefix.include)
