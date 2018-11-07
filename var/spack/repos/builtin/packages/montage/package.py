@@ -42,18 +42,18 @@ class Montage(MakefilePackage):
     depends_on('wcslib', when='+wcs')
     depends_on('mpi', when='+mpi')
 
-    def patch(self):
-        filter_file(r'#.MPICC..=', 'MPICC =', 'Montage/Makefile.LINUX',
-                    when='+mpi')
-        filter_file(r'..BINS.....SBINS....MBINS', '#', 'Montage/Makefile.LINUX',
-                    when='+mpi')
-        filter_file(r'.*cfitsio.*', '', 'lib/src/Makefile', when='+cfitsio')
-        filter_file(r'.*wcssubs3.9.0.montage.*', '', 'lib/src/Makefile',
-                    when='+wcslib')
-        filter_file(r'.wcs.h.', '<wcs.h>',
-                    'lib/src/two_plane_v1.1/two_plane.c', when='+wcslib')
-        filter_file(r'.fitsio.h.', '<fitsio.h>',
-                    'lib/src/two_plane_v1.1/two_plane.c', when='+wcslib')
+    #def patch(self):
+        #filter_file(r'#.MPICC..=', 'MPICC =', 'Montage/Makefile.LINUX',
+       #             when='+mpi')
+        #filter_file(r'..BINS.....SBINS....MBINS', '#', 'Montage/Makefile.LINUX',
+       #             when='+mpi')
+        #filter_file(r'.*cfitsio.*', '', 'lib/src/Makefile', when='+cfitsio')
+        #filter_file(r'.*wcssubs3.9.0.montage.*', '', 'lib/src/Makefile',
+       #             when='+wcslib')
+        #filter_file(r'.wcs.h.', '<wcs.h>',
+       #             'lib/src/two_plane_v1.1/two_plane.c', when='+wcslib')
+        #filter_file(r'.fitsio.h.', '<fitsio.h>',
+       #             'lib/src/two_plane_v1.1/two_plane.c', when='+wcslib')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path('CPATH', self.prefix.include.wcslib)
