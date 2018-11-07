@@ -10,7 +10,7 @@ class Gmt(Package):
     """GMT (Generic Mapping Tools) is an open source collection of about 80
     command-line tools for manipulating geographic and Cartesian data sets
     (including filtering, trend fitting, gridding, projecting, etc.) and
-    producing PostScript illustrations ranging from simple x–y plots via
+    producing PostScript illustrations ranging from simple x-y plots via
     contour maps to artificially illuminated surfaces and 3D perspective views.
     """
 
@@ -37,21 +37,21 @@ class Gmt(Package):
     depends_on('curl', when='@5.4:')
 
     # Optional dependencies
-    depends_on('pcre2', when='@5.4.4:+pcre')
-    depends_on('pcre', when='@:5.4.3+pcre')
+    depends_on('pcre', when='+pcre')
     depends_on('gdal', when='+gdal')
     depends_on('fftw', when='+fftw')
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
     depends_on('graphicsmagick', type='test')
 
+    patch('type.patch', when='@4.5.9')
+
     @when('@5:')
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake('..', *std_cmake_args)
+
             make()
-            if self.run_tests:
-                make('test')
             make('install')
 
     @when('@:4')
@@ -59,7 +59,8 @@ class Gmt(Package):
         args = [
             '--prefix={0}'.format(prefix),
             '--enable-netcdf={0}'.format(spec['netcdf'].prefix),
-            '--enable-shared'
+            '--enable-shared',
+            '--without-x'
         ]
 
         if '+gdal' in spec:
@@ -68,7 +69,11 @@ class Gmt(Package):
             args.append('--disable-gdal')
 
         configure(*args)
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+
+        # Building in parallel results in dozens of errors like:
+        # *** No rule to make target `../libgmtps.so', needed by `pssegyz'.
+        make(parallel=False)
+
+        # Installing in parallel results in dozens of errors like:
+        # /usr/bin/install: cannot create directory '...': File exists
+        make('install', parallel=False)

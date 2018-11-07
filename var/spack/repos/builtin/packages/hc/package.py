@@ -24,3 +24,4 @@ class Hc(MakefilePackage):
         # FIXME: If not needed delete this function
         # makefile = FileFilter('Makefile')
         # makefile.filter('CC = .*', 'CC = cc')
+        pass
