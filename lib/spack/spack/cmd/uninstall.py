@@ -61,18 +61,20 @@ def setup_parser(subparser):
         help="specs of packages to uninstall")
 
 
-def find_matching_specs(specs, allow_multiple_matches=False, force=False):
+def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
     Args:
-        specs: list of specs to be matched against installed packages
-        allow_multiple_matches : if True multiple matches are admitted
+        env (Environment): active environment, or ``None`` if there is not one
+        specs (list): list of specs to be matched against installed packages
+        allow_multiple_matches (bool): if True multiple matches are admitted
 
     Return:
         list of specs
     """
-    hashes = ev.active.all_hashes() if ev.active else None
+    # constrain uninstall resolution to current environment if one is active
+    hashes = env.all_hashes() if env else None
 
     # List of specs that match expressions given via command line
     specs_from_cli = []
@@ -90,8 +92,8 @@ def find_matching_specs(specs, allow_multiple_matches=False, force=False):
 
         # No installed package matches the query
         if len(matching) == 0 and spec is not any:
-            if ev.active:
-                pkg_type = "packages in environment '%s'" % ev.active.name
+            if env:
+                pkg_type = "packages in environment '%s'" % env.name
             else:
                 pkg_type = 'installed packages'
             tty.die('{0} does not match any {1}.'.format(spec, pkg_type))
@@ -147,13 +149,14 @@ def dependent_environments(specs):
     return dependents
 
 
-def do_uninstall(specs, force):
+def do_uninstall(env, specs, force):
     """
     Uninstalls all the specs in a list.
 
     Args:
-        specs: list of specs to be uninstalled
-        force: force uninstallation (boolean)
+        env (Environment): active environment, or ``None`` if there is not one
+        specs (list): list of specs to be uninstalled
+        force (bool): force uninstallation (boolean)
     """
     packages = []
     for item in specs:
@@ -165,11 +168,13 @@ def do_uninstall(specs, force):
             # want to uninstall.
             spack.package.Package.uninstall_by_spec(item, force=True)
 
-        if ev.active:
+        if env:
             try:
-                ev.active.remove(item, force=True)
+                # try removing the spec from the current active
+                # environment. this will fail if the spec is not a root
+                env.remove(item, force=True)
             except ev.SpackEnvironmentError:
-                pass  # ignore errors from specs that are not roots
+                pass  # ignore non-root specs
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order
@@ -183,14 +188,14 @@ def do_uninstall(specs, force):
         item.do_uninstall(force=force)
 
     # write any changes made to the active environment
-    if ev.active:
-        ev.active.write()
+    if env:
+        env.write()
 
 
-def get_uninstall_list(args, specs):
+def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
     # takes care of '-a' is given in the cli
-    uninstall_list = find_matching_specs(specs, args.all, args.force)
+    uninstall_list = find_matching_specs(env, specs, args.all, args.force)
 
     # Takes care of '-R'
     spec_dependents = installed_dependents(uninstall_list)
@@ -231,7 +236,7 @@ def get_uninstall_list(args, specs):
             msgs.append(
                 'use `spack env remove` to remove environments, or '
                 '`spack remove` to remove specs from environments.')
-        if ev.active:
+        if env:
             msgs.append('consider using `spack remove` to remove the spec '
                         'from this environment')
         print()
@@ -246,7 +251,8 @@ def get_uninstall_list(args, specs):
 
 
 def uninstall_specs(args, specs):
-    uninstall_list = get_uninstall_list(args, specs)
+    env = ev.get_env(args, 'uninstall', required=False)
+    uninstall_list = get_uninstall_list(args, specs, env)
 
     if not uninstall_list:
         tty.warn('There are no package to uninstall.')
@@ -260,7 +266,7 @@ def uninstall_specs(args, specs):
             tty.die('Will not uninstall any packages.')
 
     # Uninstall everything on the list
-    do_uninstall(uninstall_list, args.force)
+    do_uninstall(env, uninstall_list, args.force)
 
 
 def uninstall(parser, args):

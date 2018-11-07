@@ -44,7 +44,7 @@ from spack.version import Version
 @pytest.fixture(scope='session', autouse=True)
 def clean_user_environment():
     env_var = ev.spack_env_var in os.environ
-    active = ev.active
+    active = ev._active_environment
 
     if env_var:
         spack_env_value = os.environ.pop(ev.spack_env_var)

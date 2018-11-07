@@ -258,7 +258,7 @@ def env_list(args):
 
     color_names = []
     for name in names:
-        if ev.active and name == ev.active.name:
+        if ev.active(name):
             name = colorize('@*g{%s}' % name)
         color_names.append(name)
 
