@@ -31,6 +31,6 @@ class Claw(CMakePackage):
                     format(spec['libxml2'].prefix))
 
         args.append('-DCMAKE_Fortran_COMPILER={0}'.
-                   format(self.compiler.fc))
+                    format(self.compiler.fc))
 
         return args
