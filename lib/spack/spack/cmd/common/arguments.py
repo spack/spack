@@ -8,7 +8,7 @@ import argparse
 
 import spack.cmd
 import spack.config
-import spack.environment
+import spack.environment as ev
 import spack.modules
 import spack.spec
 import spack.store
@@ -54,7 +54,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = spack.environment.active
+        env = ev._active_environment
         if env:
             kwargs['hashes'] = set(env.all_hashes())
 

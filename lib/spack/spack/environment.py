@@ -28,7 +28,7 @@ spack_env_var = 'SPACK_ENV'
 
 
 #: currently activated environment
-active = None
+_active_environment = None
 
 
 #: path where environments are stored in the spack tree
@@ -98,14 +98,14 @@ def activate(env, use_env_repo=False):
     TODO: Add support for views here.  Activation should set up the shell
     TODO: environment to use the activated spack environment.
     """
-    global active
+    global _active_environment
 
-    active = env
-    prepare_config_scope(active)
+    _active_environment = env
+    prepare_config_scope(_active_environment)
     if use_env_repo:
-        spack.repo.path.put_first(active.repo)
+        spack.repo.path.put_first(_active_environment.repo)
 
-    tty.debug("Using environmennt '%s'" % active.name)
+    tty.debug("Using environmennt '%s'" % _active_environment.name)
 
 
 def deactivate():
@@ -116,19 +116,19 @@ def deactivate():
         environment was active.
 
     """
-    global active
+    global _active_environment
 
-    if not active:
+    if not _active_environment:
         return
 
-    deactivate_config_scope(active)
+    deactivate_config_scope(_active_environment)
 
     # use _repo so we only remove if a repo was actually constructed
-    if active._repo:
-        spack.repo.path.remove(active._repo)
+    if _active_environment._repo:
+        spack.repo.path.remove(_active_environment._repo)
 
-    tty.debug("Deactivated environmennt '%s'" % active.name)
-    active = None
+    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    _active_environment = None
 
 
 def find_environment(args):
@@ -219,8 +219,8 @@ def get_env(args, cmd_name, required=True):
             raise SpackEnvironmentError('no environment in %s' % env)
 
     # try the active environment. This is set by find_environment() (above)
-    if active:
-        return active
+    if _active_environment:
+        return _active_environment
     elif not required:
         return None
     else:
@@ -243,6 +243,11 @@ def exists(name):
     if not valid_env_name(name):
         return False
     return os.path.isdir(root(name))
+
+
+def active(name):
+    """True if the named environment is active."""
+    return _active_environment and name == _active_environment.name
 
 
 def is_env_dir(path):
@@ -407,7 +412,7 @@ class Environment(object):
     @property
     def active(self):
         """True if this environment is currently active."""
-        return active and self.path == active.path
+        return _active_environment and self.path == _active_environment.path
 
     @property
     def manifest_path(self):
@@ -854,7 +859,7 @@ class Environment(object):
             _write_yaml(self.yaml, f)
 
     def __enter__(self):
-        self._previous_active = active
+        self._previous_active = _active_environment
         activate(self)
         return
 
