@@ -79,6 +79,12 @@ modules:
       environment:
         set:
           KMP_INIT_AT_FORK: 'FALSE'
+    intel-mpi:
+      environment:
+        set:
+          I_MPI_ROOT: '${PREFIX}'
+          I_MPI_EXTRA_FILESYSTEM: '1'
+          I_MPI_EXTRA_FILESYSTEM_LIST: gpfs
   tcl:
     all:
       filter:
@@ -134,3 +140,9 @@ modules:
       environment:
         set:
           KMP_INIT_AT_FORK: 'FALSE'
+    intel-mpi:
+      environment:
+        set:
+          I_MPI_ROOT: '${PREFIX}'
+          I_MPI_EXTRA_FILESYSTEM: '1'
+          I_MPI_EXTRA_FILESYSTEM_LIST: gpfs
