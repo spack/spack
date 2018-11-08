@@ -50,19 +50,17 @@ class Arm(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        if comp not in _version_cache:
-            compiler = Executable(comp)
-            output = compiler('--version', output=str, error=str)
+        """The ``--version`` option seems to be the most consistent one
+        for arm compilers.  Output looks like this::
 
-            ver = 'unknown'
-            match = re.search(r'Arm C/C++/Fortran Compiler version ([^ )]+)',
-                              output)
-            if match:
-                ver = match.group(1)
-
-            _version_cache[comp] = ver
-
-        return _version_cache[comp]
+            $ arm<c/f>lang --version
+            Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)
+            Target: aarch64--linux-gnu
+            Thread model: posix
+            InstalledDir: /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
+        """
+        return get_compiler_version(
+            comp, '--version', r'\((?:Arm)\) ([^ ]+)')
 
     @classmethod
     def fc_version(cls, fc):
