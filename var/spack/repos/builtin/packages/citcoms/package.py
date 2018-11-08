@@ -14,7 +14,7 @@ class Citcoms(AutotoolsPackage):
     url      = "https://github.com/geodynamics/citcoms/releases/download/v3.3.1/CitcomS-3.3.1.tar.gz"
 
     version('3.3.1', sha256='e3520e0a933e4699d31e86fe309b8c154ea6ecb0f42a1cf6f25e8d13d825a4b3')
-    version('3.2.0', sha256='d28d1ce13e5e5a92b8f73211ad25b6aaeda1c38603c69891bb5bf26dc38bbcba')
+    version('3.2.0', sha256='773a14d91ecbb4a4d1e04317635fab79819d83c57b47f19380ff30b9b19cb07a')
 
     variant('pyre', default=False, description='build Pyre modules')
     variant('exchanger', default=False, description='use Exchanger')
