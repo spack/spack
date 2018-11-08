@@ -31,12 +31,12 @@ import llnl.util.tty as tty
 from os import environ as env
 
 
-def cmake_cache_entry(name, value):
+def cmake_cache_entry(name, value, vtype="PATH"):
     """
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
-    return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
+    return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
 class Conduit(Package):
@@ -274,13 +274,14 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
+        # extra fun for blueos
         if 'blueos_3' in sys_type and 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
             # Fix missing std linker flag in xlc compiler
             cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", "-WF,-C! -qxlf2003=polymorphic"))
             #Conduit can't link C++ into fortran for this spec, but works fine in host code
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
             cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
-
+        
         #######################
         # Python
         #######################
@@ -355,6 +356,10 @@ class Conduit(Package):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
+            # extra fun for BG/Q
+            if 'bgqos_0' in sys_type:
+                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_m', '-lm', 'STRING'))
+                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_dl', '-ldl', 'STRING'))
         else:
             cfg.write("# hdf5 not built by spack \n")
 
