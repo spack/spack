@@ -36,7 +36,6 @@ class QuantumEspresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
-    url      = 'https://github.com/QEF/q-e/archive/qe-6.2.0.tar.gz'
 
     version('6.3',   '1b67687d90d1d16781d566d44d14634c')
     version('6.2.1', '769cc973382156bffd35254c3dbaf453')
@@ -45,7 +44,7 @@ class QuantumEspresso(Package):
     version('6.0.0', 'd915f2faf69d0e499f8e1681c42cbfc9')
     version('5.4',   '085f7e4de0952e266957bbc79563c54e')
     version('5.3',   'be3f8778e302cffb89258a5f936a7592')
-    version('develop', git='https://github.com/QEF/q-e.git')
+    version('develop', git='https://gitlab.com/QEF/q-e.git')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
@@ -117,6 +116,10 @@ class QuantumEspresso(Package):
     patch_url = 'https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff'
     patch_checksum = 'b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca'
     patch(patch_url, sha256=patch_checksum, when='@6.3')
+
+    def url_for_version(self, version):
+        url = 'http://gitlab.com/QEF/q-e/-/archive/qe-{0}/q-e-qe-{1}.tar.gz'
+        return url.format(version, version)
 
     def install(self, spec, prefix):
 
