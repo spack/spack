@@ -14,21 +14,15 @@ class OmegaH(CMakePackage):
     """
 
     homepage = "https://github.com/ibaned/omega_h"
-    url      = "https://github.com/ibaned/omega_h/archive/v9.13.4.tar.gz"
+    url      = "https://github.com/ibaned/omega_h/archive/v9.22.1.tar.gz"
     git      = "https://github.com/ibaned/omega_h.git"
 
     version('develop', branch='master')
+    version('9.22.1', sha256='e45907210b7992aa6168e8e8435482d032c2a504b0c0fe222715ce67e7998bf4')
+    version('9.21.1', sha256='750415614747681c0094d3103e7683c74edcd95819ef9477f2179c805c416cfa')
+    version('9.20.2', sha256='e1491969ccb170a92018a8b7d02f34b6177deffcbba74bc7c2ee862793a846c8')
     version('9.19.1', sha256='60ef65c2957ce03ef9d1b995d842fb65c32c5659d064de002c071effe66b1b1f')
-    version('9.19.0', sha256='4a1606c4e7287a1b67359cf6ef1c2d7e24b7dc379065566a1d2e0b0330c0abbd')
-    version('9.17.2', sha256='d9399a23b4f717be836e736090017e9250b944e306bd41286bc6dec02d2e72e3')
-    version('9.17.1', sha256='7337b4f900cdcca5019aaf63a3dce80f544e42d7604dc06f4c52cb6d2df5866f')
-    version('9.17.0', sha256='3cd19b0502ca90d1091bba0b587abab1e7455dea3deb51f732df8705688b49b4')
-    version('9.16.0', sha256='4f318782258dea20df06aab3ac488d86283a189576202025624057e73d09b307')
-    version('9.15.0', sha256='342a506a0ff22f6cac759862efdcf34e360110f7901eb9b4c5de8afe38741522')
-    version('9.14.0', sha256='035d0f47142f965a57818d1cb6c5c00b5ae6b5a0178b67b0bc9177fa99ba083d')
-    version('9.13.14', sha256='f617dfd024c9cc323e56800ca23df3386bfa37e1b9bd378847d1f5d32d2b8e5d')
-    version('9.13.13', sha256='753702edf4bda9ae57ea21f09ca071e341604a468d8c86468c9aebba049f581c')
-    version('9.13.12', sha256='b37872c6059d5405f971098cce7bab3f74926d99b5f9dc8f8270467a85ed41d7')
+    version('9.18.1', sha256='333c93e28c56173afd2815274fa2bde25d361edc4a8a9a28f90c3a3e144512c3')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
