@@ -30,4 +30,7 @@ class Claw(CMakePackage):
         args.append('-DOMNI_CONF_OPTION=--with-libxml2={0}'.
                     format(spec['libxml2'].prefix))
 
+        args.append('-DCMAKE_Fortran_COMPILER={0}'.
+                    format(self.compiler.fc))
+
         return args

@@ -18,6 +18,7 @@ class Typhon(CMakePackage):
 
     version('develop', branch='develop')
 
+    version('3.0.2', sha256='28087eb07bf91d23792900214728b5eea61b5e81aa33df28c032dadd6d89b76e')
     version('3.0.1', '89045decfba5fd468ef05ad4c924df8c')
     version('3.0', 'ec67cd1aa585ce2410d4fa50514a916f')
 

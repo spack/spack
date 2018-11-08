@@ -12,6 +12,8 @@ class PyBackportsFunctoolsLruCache(PythonPackage):
     homepage = "https://github.com/jaraco/backports.functools_lru_cache"
     url = "https://pypi.io/packages/source/b/backports.functools_lru_cache/backports.functools_lru_cache-1.4.tar.gz"
 
+    py_namespace = 'backports'
+
     version('1.5', '20f53f54cd3f04b3346ce75a54959754')
     version('1.4', 'b954e7d5e2ca0f0f66ad2ed12ba800e5')
     version('1.0.1', 'c789ef439d189330b99872746a6d9e85',

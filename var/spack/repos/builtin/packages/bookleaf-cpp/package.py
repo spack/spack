@@ -14,6 +14,8 @@ class BookleafCpp(CMakePackage):
     git      = "https://github.com/UK-MAC/BookLeaf_Cpp.git"
 
     version('develop', branch='develop')
+
+    version('2.0.2', sha256='787ade5045415d71d9bad55fe9f93598f3a0548d13e2ff80e752cc99f62fe6d3')
     version('2.0.1', '34a5a9e7b2b5ffc98562656a4406ba5b')
     version('2.0',   '69819ebcbae5eaa63d1a4de2c77cac85')
 
