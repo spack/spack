@@ -50,20 +50,6 @@ config_override_list = {
 
 
 @pytest.fixture()
-def mock_config(tmpdir):
-    """Mocks the configuration scope."""
-    real_configuration = spack.config.config
-
-    spack.config.config = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
-          for name in ['low', 'high']])
-
-    yield spack.config.config
-
-    spack.config.config = real_configuration
-
-
-@pytest.fixture()
 def write_config_file(tmpdir):
     """Returns a function that writes a config file."""
     def _write(config, data, scope):

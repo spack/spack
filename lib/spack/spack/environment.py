@@ -483,9 +483,13 @@ class Environment(object):
 
         return scopes
 
+    def env_file_config_scope_name(self):
+        """Name of the config scope of this environment's manifest file."""
+        return 'env:%s' % self.name
+
     def env_file_config_scope(self):
         """Get the configuration scope for the environment's manifest file."""
-        config_name = 'env:%s' % self.name
+        config_name = self.env_file_config_scope_name()
         return spack.config.SingleFileScope(config_name,
                                             self.manifest_path,
                                             spack.schema.env.schema,

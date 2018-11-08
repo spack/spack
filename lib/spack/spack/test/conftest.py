@@ -309,6 +309,20 @@ def mutable_config(tmpdir_factory, configuration_dir, config):
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
+@pytest.fixture()
+def mock_config(tmpdir):
+    """Mocks two configuration scopes: 'low' and 'high'."""
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
+          for name in ['low', 'high']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+
+
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 
