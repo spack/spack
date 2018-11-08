@@ -5,12 +5,12 @@ index 4a42d61..a092bf9 100644
 @@ -36,6 +36,11 @@ set(vtkh_filters_sources
    VectorMagnitude.cpp
    )
- 
++if(CUDA_FOUND)
 +if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
 +    set(particle_cuda_src "${CMAKE_CURRENT_SOURCE_DIR}/Lagrangian.cpp")
 +    set_source_files_properties(${particle_cuda_src} PROPERTIES COMPILE_FLAGS "-Xptxas --opt-level=0")
 +endif()
-+
++endif()
  set(vtkh_filters_deps vtkh_core vtkh_utils )
  
  if(CUDA_FOUND)
