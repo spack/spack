@@ -31,12 +31,19 @@ import os
 import llnl.util.tty as tty
 from os import environ as env
 
-def cmake_cache_entry(name, value):
+
+def cmake_cache_entry(name, value, vtype=None):
     """
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
-    return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
+    if vtype is None:
+        if value == "ON" or value == "OFF":
+            vtype = "BOOL"
+        else:
+            vtype = "PATH"
+    return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
+
 
 class Vtkh(Package):
     """VTK-h is a toolkit of scientific visualization algorithms for emerging
@@ -62,12 +69,11 @@ class Vtkh(Package):
     depends_on("intel-tbb", when="@0.1.0+tbb")
     depends_on("cuda", when="+cuda")
 
-    #raise ValueError('A very specific bad thing happened.')
     depends_on("vtkm@1.2.0", when="@0.1.0")
     depends_on("vtkm@1.2.0+tbb", when="@0.1.0+tbb")
     depends_on("vtkm@1.2.0+cuda", when="@0.1.0+cuda")
     depends_on("vtkm@1.2.0~shared", when="@0.1.0~shared")
-  
+
     depends_on("vtkm@master~tbb+openmp", when="@develop+openmp")
     depends_on("vtkm@master~tbb~openmp", when="@develop~openmp")
 
@@ -79,22 +85,22 @@ class Vtkh(Package):
 
     depends_on("vtkm@master+cuda~tbb+openmp~shared", when="@develop+cuda+openmp~shared")
     depends_on("vtkm@master+cuda~tbb~openmp~shared", when="@develop+cuda~openmp~shared")
-  
+
     patch('vtkm_lagrange_cuda_fix.patch')
-  
+
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake_args = ["../src",
                           "-DVTKM_DIR={0}".format(spec["vtkm"].prefix),
                           "-DENABLE_TESTS=OFF",
                           "-DBUILD_TESTING=OFF"]
-            
+
             # shared vs static libs
             if "+shared" in spec:
                 cmake_args.append('-DBUILD_SHARED_LIBS=ON')
             else:
                 cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
-            
+
             # mpi support
             if "+mpi" in spec:
                 mpicc = spec['mpi'].mpicc
@@ -147,12 +153,6 @@ class Vtkh(Package):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = None
-
-        if self.compiler.fc:
-            # even if this is set, it may not exist so do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -169,11 +169,11 @@ class Vtkh(Package):
         # Find and record what CMake is used
         ##############################################
 
-        #cmake_exe = spec['cmake'].command.path
+        cmake_exe = spec['cmake'].command.path
 
         host_cfg_fname = "%s-%s-%s-vtkh.cmake" % (socket.gethostname(),
-                                                    sys_type,
-                                                    spec.compiler)
+                                                  sys_type,
+                                                  spec.compiler)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -184,7 +184,7 @@ class Vtkh(Package):
 
         # Include path to cmake for reference
         cfg.write("# cmake from spack \n")
-        #cfg.write("# cmake executable path: %s\n\n" % cmake_exe)
+        cfg.write("# cmake executable path: %s\n\n" % cmake_exe)
 
         #######################
         # Compiler Settings

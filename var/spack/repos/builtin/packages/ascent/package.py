@@ -33,12 +33,17 @@ import llnl.util.tty as tty
 from os import environ as env
 
 
-def cmake_cache_entry(name, value):
+def cmake_cache_entry(name, value, vtype=None):
     """
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
-    return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
+    if vtype is None:
+        if value == "ON" or value == "OFF":
+            vtype = "BOOL"
+        else:
+            vtype = "PATH"
+    return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
 class Ascent(Package):
@@ -60,7 +65,6 @@ class Ascent(Package):
             git='https://github.com/Alpine-DAV/ascent.git',
             tag='v0.3.0',
             submodules=True)
-
 
     ###########################################################################
     # package variants
@@ -92,7 +96,7 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake@3.8.2:3.9.999", type='build')
-    depends_on("conduit~python",when="~python")
+    depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
 
@@ -132,7 +136,6 @@ class Ascent(Package):
 
     depends_on("mfem+shared~mpi+conduit", when="+shared+mfem~mpi")
     depends_on("mfem~shared~mpi+conduit", when="~shared+mfem~mpi")
-
 
     depends_on("adios", when="+adios")
 
@@ -238,11 +241,11 @@ class Ascent(Package):
         # Include path to cmake for reference
         cfg.write("# cmake from spack \n")
         cfg.write("# cmake executable path: %s\n\n" % cmake_exe)
-       
+
         if "+test" in spec:
-           cfg.write(cmake_cache_entry("ENABLE_TESTS","ON"))
-        else: 
-           cfg.write(cmake_cache_entry("ENABLE_TESTS","OFF"))
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
         #######################
         # Compiler Settings
         #######################

@@ -31,11 +31,16 @@ import llnl.util.tty as tty
 from os import environ as env
 
 
-def cmake_cache_entry(name, value, vtype="PATH"):
+def cmake_cache_entry(name, value, vtype=None):
     """
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
+    if vtype is None:
+        if value == "ON" or value == "OFF":
+            vtype = "BOOL"
+        else:
+            vtype = "PATH"
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
@@ -76,7 +81,7 @@ class Conduit(Package):
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
-    
+
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
     # doxygen support is wip, since doxygen has several dependencies
@@ -122,7 +127,7 @@ class Conduit(Package):
     depends_on("adios+mpi~hdf5~shared~blosc", when="+adios+mpi~shared")
     depends_on("adios~mpi~hdf5+shared",       when="+adios~mpi+shared")
     depends_on("adios~mpi~hdf5~shared~blosc", when="+adios~mpi~shared")
-    
+
     #######################
     # MPI
     #######################
@@ -275,13 +280,16 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
         # extra fun for blueos
-        if 'blueos_3' in sys_type and 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
-            # Fix missing std linker flag in xlc compiler
-            cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", "-WF,-C! -qxlf2003=polymorphic"))
-            #Conduit can't link C++ into fortran for this spec, but works fine in host code
-            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
-            cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
-        
+        if 'blueos_3' in sys_type:
+            if 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
+                # Fix missing std linker flag in xlc compiler
+                cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
+                                            "-WF,-C! -qxlf2003=polymorphic"))
+                # Conduit can't link C++ into fortran for this spec, but works
+                # fine in host code
+                cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
+                cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
+
         #######################
         # Python
         #######################
@@ -308,7 +316,8 @@ class Conduit(Package):
                 cfg.write("# sphinx from spack \n")
                 sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
                                              "sphinx-build")
-                cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
+                cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE",
+                                            sphinx_build_exe))
             if "+doxygen" in spec:
                 cfg.write("# doxygen from uberenv\n")
                 doxygen_exe = spec['doxygen'].command.path
@@ -358,8 +367,10 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
             # extra fun for BG/Q
             if 'bgqos_0' in sys_type:
-                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_m', '-lm', 'STRING'))
-                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_dl', '-ldl', 'STRING'))
+                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_m',
+                                            '-lm', 'STRING'))
+                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_dl',
+                                            '-ldl', 'STRING'))
         else:
             cfg.write("# hdf5 not built by spack \n")
 
