@@ -168,7 +168,7 @@ packages:
         compiler: [gcc]
     trilinos:
         variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
-        version: [develop]
+        version: [xsdk-0.4.0-rc1]
     tk:
         paths:
             tk@8.5.13: /usr
