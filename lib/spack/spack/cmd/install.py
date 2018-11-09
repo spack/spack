@@ -75,7 +75,7 @@ the dependencies"""
         '--dont-restage', action='store_true',
         help="if a partial install is detected, don't delete prior state")
     subparser.add_argument(
-        '--use-cache', action='store_true', dest='use_cache',
+        '--no-cache', action='store_false', dest='use_cache',
         help="check for pre-built Spack packages in mirrors")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
