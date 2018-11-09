@@ -536,11 +536,12 @@ def get_specs(force=False):
         if url.startswith('file'):
             mirror = url.replace('file://', '') + '/build_cache'
             tty.msg("Finding buildcaches in %s" % mirror)
-            files = os.listdir(mirror)
-            for file in files:
-                if re.search('spec.yaml', file):
-                    link = 'file://' + mirror + '/' + file
-                    urls.add(link)
+            if os.path.exists(mirror):
+                files = os.listdir(mirror)
+                for file in files:
+                    if re.search('spec.yaml', file):
+                        link = 'file://' + mirror + '/' + file
+                        urls.add(link)
         else:
             tty.msg("Finding buildcaches on %s" % url)
             p, links = spider(url + "/build_cache")
