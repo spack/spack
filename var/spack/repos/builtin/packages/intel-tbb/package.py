@@ -19,6 +19,7 @@ class IntelTbb(Package):
 
     # See url_for_version() below.
     version('2019',   '2119f1db2f905dc5b423482d7689b7d6')
+    version('2018.6', '9a0f78db4f72356068b00f29f54ee6bc')
     version('2018.5', 'ff3ae09f8c23892fbc3008c39f78288f')
     version('2018.4', '5e2e6ba0e25624a94331c945856551c2')
     version('2018.3', 'cd2e136598ffa5c136f077ee85a35b4c')
