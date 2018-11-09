@@ -15,8 +15,10 @@ class RRgl(RPackage):
     including PNG, Postscript, SVG, PGF."""
 
     homepage = "https://r-forge.r-project.org/projects/rgl"
-    url      = "https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rgl_0.99.16.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rgl"
 
+    version('0.99.16', sha256='692a545ed2ff0f5e15289338736f0e3c092667574c43ac358d8004901d7a1a61')
     version('0.98.1', 'bd69e1d33f1590feb4b6dc080b133e5b')
 
     depends_on('r@3.2:3.9')
