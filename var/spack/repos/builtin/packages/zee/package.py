@@ -48,7 +48,7 @@ class Zee(CMakePackage):
             description='Compile examples using PETSc')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
-    depends_on('gmsh@:3 -mpi %gcc')
+    depends_on('gmsh@:3 +oce -mpi %gcc')
     depends_on('mpi')
     depends_on('omega-h')
     depends_on('petsc +int64', when='+petsc')
