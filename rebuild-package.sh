@@ -200,3 +200,8 @@ else
     echo "ERROR: Did not find expected .cdashid file ${JOB_CDASH_ID_FILE}"
     exit 1
 fi
+
+# Show the size of the buildcache and a list of what's in it
+set -x
+du -sh ${BUILD_CACHE_DIR}
+find ${BUILD_CACHE_DIR} -maxdepth 3 -type d -ls
