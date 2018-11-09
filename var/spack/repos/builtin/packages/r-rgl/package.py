@@ -34,6 +34,8 @@ class RRgl(RPackage):
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-crosstalk', type('build', 'run'), when='@0.99.16:')
+    depends_on('r-manipulatewidget', type('build', 'run'), when='@0.99.16:')
 
     def configure_args(self):
         args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,
