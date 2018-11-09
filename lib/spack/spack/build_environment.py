@@ -195,6 +195,15 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
+    # Set linker behavior to use rpaths
+    # necessary for ubuntu 17+
+    # HOTFIX: TODO: Something better
+    rpath_arg = ''
+    pkg_os = pkg.spec.architecture.platform_os
+    if pkg_os.startswith('ubuntu') and int(pkg_os[6:8]) >= 17:
+        rpath_arg = '-Wl,--disable-new-dtags' 
+    env.set('SPACK_LD_RPATH_ARG', rpath_arg)
+    
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
     inject_flags = {}

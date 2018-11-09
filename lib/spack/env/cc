@@ -380,8 +380,11 @@ case "$mode" in
 esac
 
 # Linker flags
+# SPACK_LD_RPATH_ARG is a hotfix for ubuntu 17+
+# TODO: Find a better way to do this
 case "$mode" in
     ld|ccld)
+        flags=("${flags[@]}" "${SPACK_LD_RPATH_ARG}")
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
