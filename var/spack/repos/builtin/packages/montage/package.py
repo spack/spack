@@ -38,15 +38,18 @@ class Montage(MakefilePackage):
     variant('mpi',      default=False, description='Include MPI support') 
     variant('wcs',      default=False, description='use spack wcs library')
 
-    depends_on('cfitsio', when='+cfitsio')
-    depends_on('wcslib', when='+wcs')
+    depends_on('cfitsio', when='+mpi')
+    depends_on('wcslib', when='+mpi')
     depends_on('mpi', when='+mpi')
+    depends_on('freetype')
 
-    #def patch(self):
-        #filter_file(r'#.MPICC..=', 'MPICC =', 'Montage/Makefile.LINUX',
-       #             when='+mpi')
-        #filter_file(r'..BINS.....SBINS....MBINS', '#', 'Montage/Makefile.LINUX',
-       #             when='+mpi')
+    def patch(self):
+        filter_file(r"# MPICC  =", "MPICC  =", 'Montage/Makefile.LINUX',
+                    when='+mpi')
+        filter_file(r"# BINS =.*SBINS.*MBINS", "BINS = $(SBINS) $(MBINS)", 'Montage/Makefile.LINUX',
+                    when='+mpi')
+        filter_file('.*cfitsio.*', "", 'lib/src/Makefile')
+        filter_file('.*freetype.*', "", 'lib/src/Makefile')
         #filter_file(r'.*cfitsio.*', '', 'lib/src/Makefile', when='+cfitsio')
         #filter_file(r'.*wcssubs3.9.0.montage.*', '', 'lib/src/Makefile',
        #             when='+wcslib')
