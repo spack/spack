@@ -242,14 +242,9 @@ class Ascent(Package):
         cfg.write("# cmake from spack \n")
         cfg.write("# cmake executable path: %s\n\n" % cmake_exe)
 
-        if "+test" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
-        else:
-            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
         #######################
         # Compiler Settings
         #######################
-
         cfg.write("#######\n")
         cfg.write("# using %s compiler spec\n" % spec.compiler)
         cfg.write("#######\n\n")
@@ -272,6 +267,14 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+
+        #######################
+        # Unit Tests
+        #######################
+        if "+test" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         #######################################################################
         # Core Dependencies

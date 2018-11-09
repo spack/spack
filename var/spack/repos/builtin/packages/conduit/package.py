@@ -68,9 +68,7 @@ class Conduit(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-
-    variant("cmake", default=True,
-            description="Build CMake (if off, attempt to use cmake from PATH)")
+    variant('test', default=True, description='Enable Ascent unit tests')
 
     # variants for python support
     variant("python", default=True, description="Build Conduit Python support")
@@ -96,7 +94,7 @@ class Conduit(Package):
     # CMake
     #######################
     # cmake 3.8.2 or newer
-    depends_on("cmake@3.8.2:", when="+cmake", type='build')
+    depends_on("cmake@3.8.2:", type='build')
 
     #######################
     # Python
@@ -230,15 +228,7 @@ class Conduit(Package):
         # Find and record what CMake is used
         ##############################################
 
-        if "+cmake" in spec:
-            cmake_exe = spec['cmake'].command.path
-        else:
-            cmake_exe = which("cmake")
-            if cmake_exe is None:
-                msg = 'failed to find CMake (and cmake variant is off)'
-                raise RuntimeError(msg)
-            cmake_exe = cmake_exe.path
-
+        cmake_exe = spec['cmake'].command.path
         host_cfg_fname = "%s-%s-%s-conduit.cmake" % (socket.gethostname(),
                                                      sys_type,
                                                      spec.compiler)
@@ -290,6 +280,14 @@ class Conduit(Package):
                 # fine in host code
                 cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
                 cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
+
+        #######################
+        # Unit Tests
+        #######################
+        if "+test" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         #######################
         # Python
