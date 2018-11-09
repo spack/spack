@@ -58,10 +58,14 @@ for s in specs:
 names = [os.path.join(x, 'package.py') for x in names]
 names = sorted(set(names))
 
-changes_in_relevant_packages = any(name in x for x in files for name in names)
+names_filter = [name in x for x in files for name in names]
+
+changes_in_relevant_packages = any(names_filter)
 
 if changes_in_relevant_packages:
-    print('FAILURE: at least one of the packages in the "Build tests" stage has been modified.')  # noqa: ignore=E501
+    print('FAILURE: at least one of the packages in the "Build tests" stage has been modified:')  # noqa: ignore=E501
+    changed_files = [n for (n, f) in zip(names, names_filter) if f]
+    print('\n'.join(changed_files))
     print('Rename your branch to something that does not start with "packages"')  # noqa: ignore=E501
     sys.exit(1)
 
