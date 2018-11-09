@@ -53,6 +53,7 @@ class IntelMkl(IntelPackage):
     provides('lapack')
     provides('scalapack')
     provides('mkl')
+    provides('fftw-api@3', when='@2017:')
 
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS
