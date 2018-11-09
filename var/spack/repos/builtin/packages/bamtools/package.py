@@ -28,3 +28,9 @@ class Bamtools(CMakePackage):
         rpath.append(os.path.join(self.prefix.lib, "bamtools"))
         args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
         return args
+
+    @run_after('install')
+    def install_extra_lib(self):
+        if self.spec.version.string == '2.3.0':
+            with working_dir('lib'):
+                install('libbamtools-utils.a', prefix.lib)
