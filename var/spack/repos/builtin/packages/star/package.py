@@ -31,6 +31,8 @@ class Star(Package):
     homepage = "https://github.com/alexdobin/STAR"
     url      = "https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz"
 
+    version('2.6.1c', '941624893bd66cd211cb11a1051ad1c1',
+            url='https://github.com/alexdobin/STAR/archive/2.6.1c.tar.gz')
     version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391',
             url='https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz')
     version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
