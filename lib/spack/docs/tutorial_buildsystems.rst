@@ -323,23 +323,36 @@ Let's look at a couple of other examples and go through them:
 
 .. code-block:: console
 
-    $ spack edit cbench
+    $ spack edit esmf
 
 Some packages allow environment variables to be set and will honor them.
 Packages that use :code:`?=` for assignment in their :code:`Makefile`
-can be set using environment variables. In our :code:`cbench` example we
+can be set using environment variables. In our :code:`esmf` example we
 set two environment variables in our :code:`edit()` method:
 
 .. code-block:: python
 
     def edit(self, spec, prefix):
-        # The location of the Cbench source tree
-        env['CBENCHHOME'] = self.stage.source_path
+        for var in os.environ:
+            if var.startswith('ESMF_'):
+                os.environ.pop(var)
 
-        # The location that will contain all your tests and your results
-        env['CBENCHTEST'] = prefix
+        # More code ...
 
-        # ... more code
+        if self.compiler.name == 'gcc':
+            os.environ['ESMF_COMPILER'] = 'gfortran'
+        elif self.compiler.name == 'intel':
+            os.environ['ESMF_COMPILER'] = 'intel'
+        elif self.compiler.name == 'clang':
+            os.environ['ESMF_COMPILER'] = 'gfortranclang'
+        elif self.compiler.name == 'nag':
+            os.environ['ESMF_COMPILER'] = 'nag'
+        elif self.compiler.name == 'pgi':
+            os.environ['ESMF_COMPILER'] = 'pgi'
+        else:
+            msg  = "The compiler you are building with, "
+            msg += "'{0}', is not supported by ESMF."
+            raise InstallError(msg.format(self.compiler.name))
 
 As you may have noticed, we didn't really write anything to the :code:`Makefile`
 but rather we set environment variables that will override variables set in
