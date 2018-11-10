@@ -34,12 +34,19 @@ get_relate_builds_post_data()
 EOF
 }
 
-build_spec_name() {
-    read -ra PARTSARRAY <<< "$1"
+gen_full_spec() {
+    yaml_path=$1
+
+    read -ra PARTSARRAY <<< "$2"
     pkgName="${PARTSARRAY[0]}"
     pkgVersion="${PARTSARRAY[1]}"
     compiler="${PARTSARRAY[2]}"
     osarch="${PARTSARRAY[3]}"
+
+    dep_spec_name="${pkgName}@${pkgVersion}%${compiler} arch=${osarch}"
+    root_spec_name="${ROOT_SPEC} arch=${osarch}"
+
+    spack buildcache save-yaml --spec "${pkgName}" --root-spec "${root_spec_name}" --yaml-path "${yaml_path}"
 
     echo "${pkgName}@${pkgVersion}%${compiler} arch=${osarch}"
 }
@@ -55,8 +62,14 @@ export SPACK_ROOT=${CI_PROJECT_DIR}
 export PATH="${SPACK_BIN_DIR}:${PATH}"
 export GNUPGHOME="${CURRENT_WORKING_DIR}/opt/spack/gpg"
 
-SPEC_NAME=$( build_spec_name "${CI_JOB_NAME}" )
+SPEC_DIR=$(mktemp -d)
+SPEC_YAML_PATH="${SPEC_DIR}/spec.yaml"
+
+SPEC_NAME=$( gen_full_spec "${SPEC_YAML_PATH}" "${CI_JOB_NAME}" )
 echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
+
+echo "Saved full spec yaml to ${SPEC_YAML_PATH}, contents:"
+cat ${SPEC_YAML_PATH}
 
 # Finally, list the compilers spack knows about
 spack compilers
@@ -68,18 +81,11 @@ cat ~/.spack/linux/compilers.yaml
 # Make the build_cache directory if it doesn't exist
 mkdir -p "${BUILD_CACHE_DIR}"
 
-echo -e "\nFinding and printing all stored cdashid files in build_cache:"
-find "${BUILD_CACHE_DIR}" -type f -name "*cdashid" -exec sh -c 'echo "$0" ; cat "$0"' {} \;
-echo -e "That is all of them\n"
-
-# BUILD_CACHE_CONTENTS=$(ls -R "${BUILD_CACHE_DIR}")
-# echo -e "Build Cache Contents:\n${BUILD_CACHE_CONTENTS}"
-
 # Get buildcache name so we can write a CDash build id file in the right place.
 # If we're unable to get the buildcache name, we may have encountered a problem
 # concretizing the spec, or some other issue that will eventually cause the job
 # to fail.
-JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache get-name --spec "${SPEC_NAME}"`
+JOB_BUILD_CACHE_ENTRY_NAME=`spack buildcache get-buildcache-name --spec-yaml "${SPEC_YAML_PATH}"`
 if [[ $? -ne 0 ]]; then
     echo "ERROR, unable to get buildcache entry name for job ${CI_JOB_NAME} (spec: ${SPEC_NAME})"
     exit 1
@@ -100,7 +106,7 @@ spack gpg list --signing
 
 # Finally, we can check the spec we have been tasked with build against
 # the built binary on the remote mirror to see if it needs to be rebuilt
-spack buildcache check --spec "${SPEC_NAME}" --mirror-url "${MIRROR_URL}" --no-index
+spack -d buildcache check --spec-yaml "${SPEC_YAML_PATH}" --mirror-url "${MIRROR_URL}" --no-index
 
 if [[ $? -ne 0 ]]; then
     # Configure mirror
@@ -110,7 +116,7 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    INSTALL_OUTPUT=$(spack -d install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" "${SPEC_NAME}")
+    INSTALL_OUTPUT=$(spack -d install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}")
     check_error $?
     echo -e "spack install output:\n${INSTALL_OUTPUT}"
 
@@ -129,7 +135,10 @@ if [[ $? -ne 0 ]]; then
     echo "Tried to find all symlinks in ${CHECK_INSTALL_DIR}:"
     echo -e ${FIND_SYMLINKS_OUTPUT}
 
-    # Create buildcache entry for this package
+    # Create buildcache entry for this package.  We should eventually change
+    # this to read the spec from the yaml file, but it seems unlikely there
+    # will be a spec that matches the name which is NOT the same as represented
+    # in the yaml file
     BUILDCACHE_CREATE_OUTPUT=$(spack -d buildcache create -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG} "${SPEC_NAME}")
     check_error $?
     echo -e "spack buildcache create output:\n${BUILDCACHE_CREATE_OUTPUT}"
@@ -137,7 +146,7 @@ if [[ $? -ne 0 ]]; then
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
     # is implemented
-    spack upload-s3 spec --base-dir "${LOCAL_MIRROR}" --spec "${SPEC_NAME}"
+    spack upload-s3 spec --base-dir "${LOCAL_MIRROR}" --spec-yaml "${SPEC_YAML_PATH}"
     check_error $?
 else
     echo "spec ${SPEC_NAME} is already up to date on remote mirror, downloading it"
@@ -146,13 +155,9 @@ else
     spack mirror add remote_binary_mirror ${MIRROR_URL}
 
     # Now download it
-    spack buildcache download --spec "${SPEC_NAME}" --path "${BUILD_CACHE_DIR}/"
+    spack buildcache download --spec-yaml "${SPEC_YAML_PATH}" --path "${BUILD_CACHE_DIR}/"
     check_error $?
 fi
-
-echo -e "\nOnce again finding and printing all stored cdashid files in build_cache:"
-find "${BUILD_CACHE_DIR}" -type f -name "*cdashid" -exec sh -c 'echo "$0" ; cat "$0"' {} \;
-echo -e "That is all of them\n"
 
 # Now, whether we had to build the spec or download it pre-built, we should have
 # the cdash build id file sitting in place as well.  We use it to link this job to
@@ -172,9 +177,13 @@ if [ -f "${JOB_CDASH_ID_FILE}" ]; then
     IFS=';' read -ra DEPS <<< "${DEPENDENCIES}"
     for i in "${DEPS[@]}"; do
         echo "Getting cdash id for dependency --> ${i} <--"
-        DEP_SPEC_NAME=$( build_spec_name "${i}" )
+        DEP_SPEC_YAML_DIR=$(mktemp -d)
+        DEP_SPEC_YAML_PATH="${DEP_SPEC_YAML_DIR}/spec.yaml"
+        DEP_SPEC_NAME=$( gen_full_spec "${DEP_SPEC_YAML_PATH}" "${i}" )
         echo "dependency spec name = ${DEP_SPEC_NAME}"
-        DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-name --spec "${DEP_SPEC_NAME}"`
+        echo "dependency spec yaml contents:"
+        cat ${DEP_SPEC_YAML_PATH}
+        DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-buildcache-name --spec-yaml "${DEP_SPEC_YAML_PATH}"`
 
         if [[ $? -eq 0 ]]; then
             DEP_JOB_ID_FILE="${BUILD_CACHE_DIR}/${DEP_JOB_BUILDCACHE_NAME}.cdashid"

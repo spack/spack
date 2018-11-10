@@ -131,7 +131,10 @@ def get_deps_using_container(spec, container_info, deps, spec_labels):
             spec_label_tuples = SPEC_LINE_REGEX.findall(specs_and_deps)
 
             for label, spec_str in spec_label_tuples:
-                spec_labels[label.strip()] = Spec(spec_str.strip())
+                spec_labels[label.strip()] = {
+                    'spec': Spec(spec_str.strip()),
+                    'rootSpec': spec,
+                }
 
             dep_tuples = DEP_LINE_REGEX.findall(specs_and_deps)
 
@@ -233,7 +236,10 @@ def stage_spec_jobs(spec_set):
             if not s.concrete:
                 s.concretize()
             skey, slabel = key_label(s)
-            spec_labels[slabel] = s
+            spec_labels[slabel] = {
+                'spec': s,
+                'rootSpec': spec,
+            }
             add_dep(rlabel, slabel)
 
             for d in s.dependencies(deptype=deptype):
@@ -264,7 +270,7 @@ def print_staging_summary(spec_labels, dependencies, stages):
         print('  stage {0} ({1} jobs):'.format(stageIndex, len(stage)))
 
         for job in sorted(stage):
-            print('    {0} -> {1}'.format(job, spec_labels[job]))
+            print('    {0} -> {1}'.format(job, spec_labels[job]['spec']))
 
         stageIndex += 1
 
@@ -364,7 +370,8 @@ def release_jobs(parser, args):
         stage_name = stage_names[stage]
 
         for spec_label in stage_jobs:
-            release_spec = spec_labels[spec_label]
+            release_spec = spec_labels[spec_label]['spec']
+            root_spec = spec_labels[spec_label]['rootSpec']
 
             pkg_compiler = release_spec.compiler
             pkg_hash = release_spec.dag_hash()
@@ -385,7 +392,7 @@ def release_jobs(parser, args):
                 job_deps_env = []
                 if spec_label in dependencies:
                     job_dependencies = (
-                        [get_job_name(spec_labels[dep_label], osname)
+                        [get_job_name(spec_labels[dep_label]['spec'], osname)
                             for dep_label in dependencies[spec_label]])
 
                 job_object = {
@@ -395,6 +402,7 @@ def release_jobs(parser, args):
                         'CDASH_BASE_URL': cdash_url,
                         'HASH': pkg_hash,
                         'DEPENDENCIES': ';'.join(job_dependencies),
+                        'ROOT_SPEC': str(root_spec),
                     },
                     'script': job_scripts,
                     'image': build_image,

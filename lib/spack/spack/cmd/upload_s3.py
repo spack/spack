@@ -38,6 +38,9 @@ def setup_parser(subparser):
     spec.add_argument('-s', '--spec', default=None,
         help='Spec to upload')
 
+    spec.add_argument('-y', '--spec-yaml', default=None,
+        help='Path to spec yaml file representing spec to upload')
+
     spec.add_argument('-b', '--base-dir', default=None,
         help='Path to root of buildcaches')
 
@@ -135,20 +138,28 @@ def update_index(args):
 
 def upload_spec(args):
     """Upload a spec to s3 bucket"""
-    if not args.spec:
-        tty.error('No specs provided, exiting.')
+    if not args.spec and not args.spec_yaml:
+        tty.error('Cannot upload spec without spec string or path to spec yaml')
         sys.exit(1)
 
     if not args.base_dir:
         tty.error('No base directory for buildcache specified')
         sys.exit(1)
 
-    try:
-        spec = Spec(args.spec)
-        spec.concretize()
-    except Exception:
-        tty.error('Unable to concrectize spec {0}'.format(args.spec))
-        sys.exit(1)
+    if args.spec:
+        try:
+            spec = Spec(args.spec)
+            spec.concretize()
+        except Exception:
+            tty.error('Unable to concrectize spec from string {0}'.format(args.spec))
+            sys.exit(1)
+    else:
+        try:
+            with open(args.spec_yaml, 'r') as fd:
+                spec = Spec.from_yaml(fd.read())
+        except Exception:
+            tty.error('Unable to concrectize spec from yaml {0}'.format(args.spec_yaml))
+            sys.exit(1)
 
     s3, bucket_name = get_s3_session(args.endpoint_url)
 

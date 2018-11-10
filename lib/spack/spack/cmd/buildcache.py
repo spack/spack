@@ -123,7 +123,11 @@ def setup_parser(subparser):
         help='Check single spec instead of building from release specs file')
 
     check.add_argument(
-        '-n', '--no-index', action='store_true', default=False,
+        '-y', '--spec-yaml', default=None,
+        help='Check single spec from yaml file instead of building from release specs file')
+
+    check.add_argument(
+        '-', '--no-index', action='store_true', default=False,
         help='Do not use buildcache index, instead retrieve .spec.yaml files')
     check.set_defaults(func=check_binaries)
 
@@ -133,17 +137,37 @@ def setup_parser(subparser):
         '-s', '--spec', default=None,
         help="Download built tarball for spec from mirror")
     dltarball.add_argument(
+        '-y', '--spec-yaml', default=None,
+        help="Download built tarball for spec (from yaml file) from mirror")
+    dltarball.add_argument(
         '-p', '--path', default=None,
         help="Path to directory where tarball should be downloaded")
     dltarball.set_defaults(func=get_tarball)
 
     # Get buildcache name
-    getname = subparsers.add_parser('get-name',
+    getbuildcachename = subparsers.add_parser('get-buildcache-name',
                                     help=get_buildcache_name.__doc__)
-    getname.add_argument(
+    getbuildcachename.add_argument(
         '-s', '--spec', default=None,
-        help='Spec for which buildcache name is desired')
-    getname.set_defaults(func=get_buildcache_name)
+        help='Spec string for which buildcache name is desired')
+    getbuildcachename.add_argument(
+        '-y', '--spec-yaml', default=None,
+        help='Path to spec yaml file for which buildcache name is desired')
+    getbuildcachename.set_defaults(func=get_buildcache_name)
+
+    # Given the root spec, save the yaml of the dependent spec to a file
+    saveyaml = subparsers.add_parser('save-yaml',
+                                    help=save_dependent_spec_yaml.__doc__)
+    saveyaml.add_argument(
+        '-r', '--root-spec', default=None,
+        help='Root spec of dependent spec')
+    saveyaml.add_argument(
+        '-s', '--spec', default=None,
+        help='Dependent spec for which saved yaml is desired')
+    saveyaml.add_argument(
+        '-y', '--yaml-path', default=None,
+        help='Path to file where spec yaml should be saved')
+    saveyaml.set_defaults(func=save_dependent_spec_yaml)
 
     # Put buildcache entry somewhere (file system or s3)
     put = subparsers.add_parser('put', help=put_buildcache.__doc__)
@@ -358,8 +382,8 @@ def check_binaries(args):
     of release specs) against remote binary mirror(s) to see if any need
     to be rebuilt.
     """
-    if args.spec:
-        specs = [Spec(args.spec)]
+    if args.spec or args.spec_yaml:
+        specs = [get_concrete_spec(args)]
     else:
         release_specs_path = os.path.join(
             etc_path, 'spack', 'defaults', 'release.yaml')
@@ -392,7 +416,7 @@ def check_binaries(args):
 
 def get_tarball(args):
     """Download buildcache entry from remote mirror to local folder"""
-    if not args.spec:
+    if not args.spec and not args.spec_yaml:
         tty.msg('No specs provided, exiting.')
         sys.exit(0)
 
@@ -400,27 +424,70 @@ def get_tarball(args):
         tty.msg('No download path provided, exiting')
         sys.exit(0)
 
-    spec = Spec(args.spec)
-    spec.concretize()
+    spec = get_concrete_spec(args)
     bindist.download_buildcache_entry(spec, args.path)
+
+
+def get_concrete_spec(args):
+    spec_str = args.spec
+    spec_yaml_path = args.spec_yaml
+
+    if not spec_str and not spec_yaml_path:
+        tty.msg('Must provide either spec string or path to ' +
+            'yaml to concretize spec')
+        sys.exit(1)
+
+    if spec_str:
+        try:
+            spec = Spec(spec_str)
+            spec.concretize()
+        except Exception:
+            tty.error('Unable to concrectize spec {0}'.format(args.spec))
+            sys.exit(1)
+
+        return spec
+
+    with open(spec_yaml_path, 'r') as fd:
+        return Spec.from_yaml(fd.read())
 
 
 def get_buildcache_name(args):
     """Get name (prefix) of buildcache entries for this spec"""
-    if not args.spec:
-        tty.msg('No specs provided, exiting.')
-        sys.exit(1)
-
-    try:
-        spec = Spec(args.spec)
-        spec.concretize()
-    except Exception:
-        tty.error('Unable to concrectize spec {0}'.format(args.spec))
-        sys.exit(1)
-
+    spec = get_concrete_spec(args)
     buildcache_name = bindist.tarball_name(spec, '')
 
     print('{0}'.format(buildcache_name))
+
+    sys.exit(0)
+
+
+def save_dependent_spec_yaml(args):
+    """Get full spec relative to root spec and write it to a file"""
+    if not args.root_spec:
+        tty.msg('No root spec provided, exiting.')
+        sys.exit(1)
+
+    if not args.spec:
+        tty.msg('No dependent spec provided, exiting.')
+        sys.exit(1)
+
+    if not args.yaml_path:
+        tty.msg('No yaml path provided, exiting.')
+        sys.exit(1)
+
+    try:
+        rootSpec = Spec(args.root_spec)
+        rootSpec.concretize()
+        spec = rootSpec
+        if args.root_spec != args.spec:
+            spec = rootSpec[args.spec]
+    except Exception:
+        tty.error('Unable to get dependent spec {0} from root spec {1}'.format(
+            args.root_spec, args.spec))
+        sys.exit(1)
+
+    with open(args.yaml_path, 'w') as fd:
+        fd.write(spec.to_yaml())
 
     sys.exit(0)
 
