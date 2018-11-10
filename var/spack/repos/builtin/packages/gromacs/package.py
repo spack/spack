@@ -24,6 +24,7 @@ class Gromacs(CMakePackage):
     git      = 'https://github.com/gromacs/gromacs.git'
 
     version('develop', branch='master')
+    version('2018.3', 'c82634a31d0ec7dc8a128f404149440e')
     version('2018.2', '7087462bb08393aec4ce3192fa4cd8df')
     version('2018.1', '7ee393fa3c6b7ae351d47eae2adf980e')
     version('2018',   '6467ffb1575b8271548a13abfba6374c')
