@@ -608,7 +608,7 @@ different location is found in :code:`spades`.
 
 .. code-block:: console
 
-    $ spack edit spade
+    $ spack edit spades
 
 .. code-block:: python
 
