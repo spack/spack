@@ -122,8 +122,9 @@ class Boost(Package):
             description='Compile with clang libc++ instead of libstdc++')
     variant('numpy', default=False,
             description='Build the Boost NumPy library (requires +python)')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
+    variant('pic', default=False,
+            description='Generate position-independent code (PIC), useful '
+                        'for building static libraries')
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
