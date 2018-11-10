@@ -269,9 +269,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    # set symlinks=False here to avoid broken symlinks when archiving and
-    # moving the package
-    install_tree(spec.prefix, workdir, symlinks=False)
+    install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -589,14 +587,14 @@ def get_keys(install=False, trust=False, force=False):
             tty.msg("Finding public keys in %s" % mirror)
             files = os.listdir(mirror)
             for file in files:
-                if re.search(r'\.key', file):
+                if re.search('\.key', file):
                     link = 'file://' + mirror + '/' + file
                     keys.add(link)
         else:
             tty.msg("Finding public keys on %s" % url)
             p, links = spider(url + "/build_cache", depth=1)
             for link in links:
-                if re.search(r'\.key', link):
+                if re.search("\.key", link):
                     keys.add(link)
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
