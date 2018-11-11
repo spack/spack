@@ -77,10 +77,10 @@ the dependencies"""
 
     cache_group = subparser.add_mutually_exclusive_group()
     cache_group.add_argument(
-        '--use-cache', action='store_true', dest='use_cache',
-        help="check for pre-built Spack packages in mirrors")
+        '--use-cache', action='store_true', dest='use_cache', default=True,
+        help="check for pre-built Spack packages in mirrors (default)")
     cache_group.add_argument(
-        '--no-cache', action='store_false', dest='use_cache',
+        '--no-cache', action='store_false', dest='use_cache', default=True,
         help="do not check for pre-built Spack packages in mirrors")
 
     subparser.add_argument(
