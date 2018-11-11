@@ -168,7 +168,7 @@ to be overridden is :code:`configure_args()`.
 
 .. literalinclude:: tutorial/examples/Autotools/1.package.py
    :language: python
-   :emphasize-lines: 23,24
+   :emphasize-lines: 25,26,27,28,29,30,31,32
    :linenos:
 
 Since Spack takes care of setting the prefix for us we can exclude that as
@@ -209,7 +209,7 @@ Take note of the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/makefile.py
    :language: python
-   :lines: 14-60,70-88
+   :lines: 14-61,70-88
    :emphasize-lines: 48,54,61
    :linenos:
 
@@ -307,7 +307,7 @@ Let's change the build and install phases of our package:
 
 .. literalinclude:: tutorial/examples/Makefile/3.package.py
    :language: python
-   :emphasize-lines: 27, 33
+   :emphasize-lines: 28, 35
    :linenos:
 
 Here demonstrate another strategy that we can use to manipulate our package
@@ -488,20 +488,16 @@ In the :code:`CMakePackage` class we can override the following phases:
 The :code:`CMakePackage` class also provides sensible defaults so we only need to
 override :code:`cmake_args()`.
 
-Let's look at these defaults in the :code:`CMakePackage` class:
+Let's look at these defaults in the :code:`CMakePackage` class in the :code:`_std_args()` method:
 
 .. code-block:: console
 
     $ spack edit --build-system cmake
 
-
-And go into a bit of detail on the highlighted sections:
-
-
 .. literalinclude:: ../../../lib/spack/spack/build_systems/cmake.py
    :language: python
-   :lines: 18-73, 75-136, 155-192
-   :emphasize-lines: 48,51,107,108,109,120
+   :lines: 102-147
+   :emphasize-lines: 10,18,24,36,37,38,44
    :linenos:
 
 Some :code:`CMake` packages use different generators. Spack is able to support
@@ -510,16 +506,16 @@ Unix-Makefile_ generators as well as Ninja_ generators.
 .. _Unix-Makefile: https://cmake.org/cmake/help/v3.4/generator/Unix%20Makefiles.html
 .. _Ninja: https://cmake.org/cmake/help/v3.4/generator/Ninja.html
 
-Default generator is :code:`Unix Makefile`.
+If no generator is specified Spack will default to :code:`Unix Makefile`.
 
 Next we setup the build type. In :code:`CMake` you can specify the build type
 that you want. Options include:
 
-1. empty
-2. Debug
-3. Release
-4. RelWithDebInfo
-5. MinSizeRel
+1. :code:`empty`
+2. :code:`Debug`
+3. :code:`Release`
+4. :code:`RelWithDebInfo`
+5. :code:`MinSizeRel`
 
 With these options you can specify whether you want your executable to have
 the debug version only, release version or the release with debug information.
@@ -527,7 +523,7 @@ Release executables tend to be more optimized than Debug. In Spack, we set
 the default as RelWithDebInfo unless otherwise specified through a variant.
 
 Spack then automatically sets up the :code:`-DCMAKE_INSTALL_PREFIX` path,
-appends the build type (RelDebInfo default), and then specifies a verbose
+appends the build type (:code:`RelDebInfo` default), and then specifies a verbose
 :code:`Makefile`.
 
 Next we add the :code:`rpaths` to :code:`-DCMAKE_INSTALL_RPATH:STRING`.
@@ -542,9 +538,8 @@ In the end our :code:`cmake` line will look like this (example is :code:`xrootd`
 
     $ cmake $HOME/spack/var/spack/stage/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/xrootd-4.6.0 -G Unix Makefiles -DCMAKE_INSTALL_PREFIX:PATH=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DCMAKE_FIND_FRAMEWORK:STRING=LAST -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE -DCMAKE_INSTALL_RPATH:STRING=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/lib:$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/lib64 -DCMAKE_PREFIX_PATH:STRING=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/cmake-3.9.4-hally3vnbzydiwl3skxcxcbzsscaasx5
 
-
-Saves a lot of typing doesn't it?
-
+We can see now how :code:`CMake` takes care of a lot of the boilerplate code
+that would have to be otherwise typed in.
 
 Let's try to recreate callpath_:
 
