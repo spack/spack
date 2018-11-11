@@ -133,7 +133,7 @@ def setup_env(env):
 
     def decorator(spec, fmt):
         # add +/-/* to show added/removed/root specs
-        if spec in roots:
+        if any(spec.dag_hash() == r.dag_hash() for r in roots):
             return color.colorize('@*{%s}' % fmt)
         elif spec in removed:
             return color.colorize('@K{%s}' % fmt)
@@ -171,12 +171,10 @@ def find(parser, args):
     if env:
         tty.msg('In environment %s' % env.name)
 
-        print()
-        tty.msg('Root specs')
-
         if not env.user_specs:
-            print('none')
+            tty.msg('No root specs')
         else:
+            tty.msg('Root specs')
             display_specs(
                 env.user_specs, args,
                 decorator=lambda s, f: color.colorize('@*{%s}' % f))
