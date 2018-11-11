@@ -325,7 +325,7 @@ def make_argument_parser(**kwargs):
         help="when to colorize output (default: auto)")
     parser.add_argument(
         '-C', '--config-scope', dest='config_scopes', action='append',
-        metavar='DIR', help="use an additional configuration scope")
+        metavar='DIR', help="add a custom configuration scope")
     parser.add_argument(
         '-d', '--debug', action='store_true',
         help="write out debug logs during compile")
