@@ -73,10 +73,10 @@ the rest of the tutorial.
 Modifying a package's build environment
 ---------------------------------------
 
-Spack sets up several environment variables like PATH by default to aid in
+Spack sets up several environment variables like ``PATH`` by default to aid in
 building a package, but many packages make use of environment variables which
-convey specific information about their dependencies (e.g., MPICC). This
-section covers how update your Spack packages so that package-specific
+convey specific information about their dependencies (e.g., ``MPICC``).
+This section covers how to update your Spack packages so that package-specific
 environment variables are defined at build-time.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
