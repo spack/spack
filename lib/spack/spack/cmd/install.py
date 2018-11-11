@@ -155,14 +155,14 @@ def default_log_file(spec):
     return fs.os.path.join(dirname, basename)
 
 
-def install_spec(cli_args, kwargs, spec):
+def install_spec(cli_args, kwargs, abstract_spec, spec):
     """Do the actual installation."""
 
     # handle active environment, if any
     def install(spec, kwargs):
         env = ev.get_env(cli_args, 'install', required=False)
         if env:
-            env.install(spec, kwargs)
+            env.install(abstract_spec, spec, **kwargs)
             env.write()
         else:
             spec.package.do_install(**kwargs)
@@ -230,12 +230,12 @@ def install(parser, args, **kwargs):
     if args.log_file:
         reporter.filename = args.log_file
 
-    specs = spack.cmd.parse_specs(args.package)
+    abstract_specs = spack.cmd.parse_specs(args.package)
     tests = False
     if args.test == 'all' or args.run_tests:
         tests = True
     elif args.test == 'root':
-        tests = [spec.name for spec in specs]
+        tests = [spec.name for spec in abstract_specs]
     kwargs['tests'] = tests
 
     try:
@@ -295,8 +295,8 @@ def install(parser, args, **kwargs):
                     tty.die('Reinstallation aborted.')
 
             with fs.replace_directory_transaction(specs[0].prefix):
-                install_spec(args, kwargs, specs[0])
+                install_spec(args, kwargs, abstract_specs[0], specs[0])
 
         else:
-            for spec in specs:
-                install_spec(args, kwargs, spec)
+            for abstract, concrete in zip(abstract_specs, specs):
+                install_spec(args, kwargs, abstract, concrete)
