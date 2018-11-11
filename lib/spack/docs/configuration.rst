@@ -108,7 +108,7 @@ For example, the following adds two configuration scopes, named
 
    $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
 
-Command-line scopes come *after* the ``spack`` command and *before* the
+Custom scopes come *after* the ``spack`` command and *before* the
 subcommand, and they specify a single path to a directory full of
 configuration files. You can add the same configuration files to that
 directory that you can add to any other scope (``config.yaml``,
