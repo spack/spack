@@ -209,8 +209,8 @@ Take note of the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/makefile.py
    :language: python
-   :lines: 14-61,70-88
-   :emphasize-lines: 48,54,61
+   :lines: 14,43-61,70-88
+   :emphasize-lines: 21,27,34
    :linenos:
 
 Similar to :code:`Autotools`, :code:`MakefilePackage` class has properties
@@ -307,7 +307,7 @@ Let's change the build and install phases of our package:
 
 .. literalinclude:: tutorial/examples/Makefile/3.package.py
    :language: python
-   :emphasize-lines: 28, 35
+   :emphasize-lines: 28,29,30,31,32,35,36
    :linenos:
 
 Here demonstrate another strategy that we can use to manipulate our package
@@ -678,6 +678,12 @@ list you can run:
         check             perform some checks on the package
 
 
+We can write package files for Python packages using the :code:`Package` class,
+but the class brings with it a lot of methods that are useless for Python packages.
+Instead, Spack has a :code:`PythonPackage` subclass that allows packagers
+of Python modules to be able to invoke :code:`setup.py` and use :code:`Distutils`,
+which is much more familiar to a typical python user.
+
 To see the defaults that Spack has for each a methods, we will take a look
 at the :code:`PythonPackage` class:
 
@@ -690,17 +696,10 @@ We see the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/python.py
    :language: python
-   :lines: 16, 142-345
+   :lines: 19,146-357
    :linenos:
 
 Each of these methods have sensible defaults or they can be overridden.
-
-We can write package files for Python packages using the :code:`Package` class,
-but the class brings with it a lot of methods that are useless for Python packages.
-Instead, Spack has a :code: `PythonPackage` subclass that allows packagers
-of Python modules to be able to invoke :code:`setup.py` and use :code:`Distutils`,
-which is much more familiar to a typical python user.
-
 
 We will write a package file for Pandas_:
 
