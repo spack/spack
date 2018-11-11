@@ -599,7 +599,7 @@ class Environment(object):
                     recurse_dependencies=True, install_status=True,
                     hashlen=7, hashes=True))
 
-    def install(self, user_spec, install_args=None):
+    def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
 
         This will automatically concretize the single spec, but it won't
@@ -608,7 +608,7 @@ class Environment(object):
         spec = Spec(user_spec)
 
         if self.add(spec):
-            concrete = spec.concretized()
+            concrete = concrete_spec if concrete_spec else spec.concretized()
             self._add_concrete_spec(spec, concrete)
         else:
             # spec might be in the user_specs, but not installed.
