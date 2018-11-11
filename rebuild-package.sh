@@ -130,16 +130,11 @@ if [[ $? -ne 0 ]]; then
         BUILD_ID_ARG="--cdash-build-id \"${JOB_CDASH_ID}\""
     fi
 
-    CHECK_INSTALL_DIR="/scott/spack/opt/spack/linux-ubuntu18.04-x86_64/clang-6.0.0-1ubuntu2"
-    FIND_SYMLINKS_OUTPUT=$(find ${CHECK_INSTALL_DIR} -type l | xargs ls -al)
-    echo "Tried to find all symlinks in ${CHECK_INSTALL_DIR}:"
-    echo -e ${FIND_SYMLINKS_OUTPUT}
-
     # Create buildcache entry for this package.  We should eventually change
     # this to read the spec from the yaml file, but it seems unlikely there
     # will be a spec that matches the name which is NOT the same as represented
     # in the yaml file
-    BUILDCACHE_CREATE_OUTPUT=$(spack -d buildcache create -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG} "${SPEC_NAME}")
+    BUILDCACHE_CREATE_OUTPUT=$(spack -d buildcache create --spec-yaml "${SPEC_YAML_PATH}" -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG})
     check_error $?
     echo -e "spack buildcache create output:\n${BUILDCACHE_CREATE_OUTPUT}"
 

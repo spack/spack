@@ -218,13 +218,19 @@ def install(parser, args, **kwargs):
         with open(file, 'r') as f:
             s = spack.spec.Spec.from_yaml(f)
 
-        if s.concretized().dag_hash() != s.dag_hash():
+        concrete_s = s.concretized()
+
+        if concrete_s.dag_hash() != s.dag_hash():
+            print('concretized spec ({0})'.format(concrete_s.dag_hash()))
+            print(concrete_s.tree())
+            print('Spec ({0})'.format(s.dag_hash()))
+            print(s.tree())
             msg = 'skipped invalid file "{0}". '
             msg += 'The file does not contain a concrete spec.'
             tty.warn(msg.format(file))
             continue
 
-        specs.append(s.concretized())
+        specs.append(concrete_s)
 
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')

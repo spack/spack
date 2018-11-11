@@ -59,6 +59,8 @@ def setup_parser(subparser):
     create.add_argument('--cdash-build-id', default=None,
                         help="If provided, a .cdashid file will be written " +
                         "alongside .spec.yaml")
+    create.add_argument('-y', '--spec-yaml', default=None,
+        help='Create buildcache entry for spec from yaml file')
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to create buildcache for")
@@ -200,7 +202,9 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
+    tty.msg('find_matching_specs: going to parse specs')
     specs = spack.cmd.parse_specs(pkgs)
+    tty.msg('find_matching_specs: going to parse specs')
     for spec in specs:
         matching = spack.store.db.query(spec)
         # For each spec provided, make sure it refers to only one package.
@@ -272,10 +276,22 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
 
 def createtarball(args):
     """create a binary package from an existing install"""
-    if not args.packages:
+    if args.spec_yaml:
+        packages = set()
+        tty.msg('createtarball, reading spec from {0}'.format(args.spec_yaml))
+        with open(args.spec_yaml, 'r') as fd:
+            yaml_text = fd.read()
+            tty.msg('createtarball read spec yaml:')
+            print(yaml_text)
+            s = Spec.from_yaml(yaml_text)
+            packages.add(s.format())
+    elif args.packages:
+        packages = args.packages
+    else:
         tty.die("build cache file creation requires at least one" +
-                " installed package argument")
-    pkgs = set(args.packages)
+                " installed package argument or else path to a" +
+                " yaml file containing a spec to install")
+    pkgs = set(packages)
     specs = set()
     outdir = '.'
     if args.directory:
@@ -285,7 +301,12 @@ def createtarball(args):
         signkey = args.key
 
     matches = find_matching_specs(pkgs, False, False)
+
+    if matches:
+        tty.msg('Found at least one matching spec')
+
     for match in matches:
+        tty.msg('examining match {0}'.format(match.format()))
         if match.external or match.virtual:
             tty.msg('skipping external or virtual spec %s' %
                     match.format())
@@ -481,6 +502,7 @@ def save_dependent_spec_yaml(args):
         spec = rootSpec
         if args.root_spec != args.spec:
             spec = rootSpec[args.spec]
+            spec.concretize()
     except Exception:
         tty.error('Unable to get dependent spec {0} from root spec {1}'.format(
             args.root_spec, args.spec))
