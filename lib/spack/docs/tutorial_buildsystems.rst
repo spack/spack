@@ -373,7 +373,7 @@ Let's look at an example of this in the :code:`elk` package:
 .. code-block:: python
 
         def edit(self, spec, prefix):
-        # Dictionary of configuration options
+            # Dictionary of configuration options
             config = {
                 'MAKE': 'make',
                 'AR':   'ar'
