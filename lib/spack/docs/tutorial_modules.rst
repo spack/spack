@@ -156,9 +156,9 @@ to uninstall everything from earlier in the tutorial.
 
   $ spack uninstall -ay
 
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 Build a module tool
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 
 The first thing that we need is the module tool. In this case we
 choose ``lmod`` as it can work with both hierarchical and non-hierarchical
@@ -191,9 +191,9 @@ our module path.
   to the documentation :ref:`here <InstallEnvironmentModules>`.
 
 
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 Add a new compiler
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 
 The second step is to build a recent compiler. On first use, Spack
 scans the environment and automatically locates the compiler(s)
@@ -251,9 +251,9 @@ can finally add it to the list of compilers known to Spack:
   gcc@7.2.0  gcc@5.4.0  gcc@4.7
 
 
-""""""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Build the software that will be used in the tutorial
-""""""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Finally, we should use Spack to install the packages used in the examples:
 
