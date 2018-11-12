@@ -202,8 +202,8 @@ Retrieving library information
 ------------------------------
 
 Although Spack attempts to help packages locate their dependency libraries
-automatically (e.g. by setting PKG_CONFIG_PATH and CMAKE_PREFIX_PATH), a
-package may have unique configuration options that are required to locate
+automatically (e.g. by setting ``PKG_CONFIG_PATH`` and ``CMAKE_PREFIX_PATH``),
+a package may have unique configuration options that are required to locate
 libraries. When a package needs information about dependency libraries, the
 general approach in Spack is to query the dependencies for the locations of
 their libraries and set configuration options accordingly. By default most
