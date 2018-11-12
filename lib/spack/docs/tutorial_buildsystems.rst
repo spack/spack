@@ -523,7 +523,7 @@ Release executables tend to be more optimized than Debug. In Spack, we set
 the default as RelWithDebInfo unless otherwise specified through a variant.
 
 Spack then automatically sets up the :code:`-DCMAKE_INSTALL_PREFIX` path,
-appends the build type (:code:`RelDebInfo` default), and then specifies a verbose
+appends the build type (:code:`RelWithDebInfo` default), and then specifies a verbose
 :code:`Makefile`.
 
 Next we add the :code:`rpaths` to :code:`-DCMAKE_INSTALL_RPATH:STRING`.
