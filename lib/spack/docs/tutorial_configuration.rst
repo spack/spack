@@ -804,7 +804,7 @@ the software. We can do this like so:
          group: fluid_dynamics
 
 
-Now, the ``fluid_dynamics`` group has control over who can use any
+Now, only members of the ``fluid_dynamics`` group can use any
 ``converge`` installations.
 
 .. warning::
