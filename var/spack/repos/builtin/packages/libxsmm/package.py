@@ -13,10 +13,11 @@ class Libxsmm(MakefilePackage):
     and small convolutions.'''
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.9.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.10.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
 
     version('develop', branch='master')
+    version('1.10',  '1ad21021739211715649f449957fb872')
     version('1.9',   'a001a491d9b98239bc2bfd906bd09d90')
     version('1.8.3', '3415928340929c3a29773934de05c978')
     version('1.8.2', '8f11ece699244c28dcb6742969a2ccd4')
