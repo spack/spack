@@ -23,7 +23,8 @@ class Erne(AutotoolsPackage):
     def configure_args(self):
         if '+mpi' in self.spec:
             return ['--enable-openmpi']
-        return []
+        else:
+            return ['--disable-openmpi']
 
     def build(self, spec, prefix):
         # override the AUTOCONF environment to prevent double configure
