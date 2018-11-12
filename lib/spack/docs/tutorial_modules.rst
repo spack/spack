@@ -182,7 +182,7 @@ our module path.
 
 .. code-block:: console
 
-  $ . share/spack/setup_env.sh
+  $ . share/spack/setup-env.sh
 
 .. FIXME: this needs bootstrap support for ``lmod``
 
@@ -1130,8 +1130,8 @@ and update ``MODULEPATH`` to point to the ``Core``:
 .. code-block:: console
 
   $ module purge
-  $ module unuse /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64
-  $ module use /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/Core
+  $ module unuse $HOME/spack/share/spack/modules/linux-ubuntu16.04-x86_64
+  $ module use $HOME/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/Core
 
 asking for the available modules will return:
 
