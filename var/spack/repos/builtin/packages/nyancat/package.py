@@ -19,7 +19,7 @@ class Nyancat(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         makefile.filter(
-            'install src/nyancat /usr/bin/\${package}',
+            r'install src/nyancat /usr/bin/\${package}',
             'install src/nyancat {0}/{1}'.format(
                 prefix.bin,
                 '${package}'
