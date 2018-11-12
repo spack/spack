@@ -21,5 +21,4 @@ class PyPythonHtmlgen(PythonPackage):
     depends_on('py-setuptools', type='build')
     # dependencies for tests
     depends_on('py-typing', type='test')
-    # the following spack dependency to be added later
-    # depends_on('py-python-asserts', type='build')
+    depends_on('py-python-asserts', type='test')
