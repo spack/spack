@@ -795,7 +795,7 @@ for the following build systems:
 3. :code:`WafPackage`
 4. :code:`RPackage`
 5. :code:`PerlPackage`
-6. :code:`QMake`
+6. :code:`QMakePackage`
 
 
 Each of these classes have their own abstractions to help assist in writing
