@@ -9,7 +9,7 @@ from spack import *
 class RMiniui(RPackage):
     """Provides UI widget and layout functions for writing Shiny apps that
        work well on small screens."""
-    
+
     homepage = "https://cran.r-project.org/package=miniUI"
     url      = "https://cran.r-project.org/src/contrib/miniUI_0.1.1.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/miniUI/"
