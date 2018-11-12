@@ -8,7 +8,7 @@ from spack import *
 
 class RWebshot(RPackage):
     """webshot: Take Screenshots of Web Pages"""
-    
+
     homepage = "https://github.com/wch/webshot/"
     url      = "https://cran.r-project.org/src/contrib/webshot_0.5.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/webshot/"
