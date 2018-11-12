@@ -24,7 +24,7 @@ config:
     - $spack/share/spack/templates
 
 
-  # default directory layout
+  # Default directory layout
   install_path_scheme: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
 
 
@@ -52,7 +52,7 @@ config:
     - $spack/var/spack/stage
 
 
-  # Cache directory already downloaded source tarballs and archived
+  # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
   source_cache: $spack/var/spack/cache
 
@@ -100,14 +100,16 @@ config:
   # build_jobs: 4
 
 
-  # If set to true, spack will use ccache to cache c compiles.
+  # If set to true, Spack will use ccache to cache C compiles.
   ccache: false
 
+
   # How long to wait to lock the Spack installation database. This lock is used
-  # when spack needs to manage its own package metadata and all operations are
+  # when Spack needs to manage its own package metadata and all operations are
   # expected to complete within the default time limit. The timeout should
   # therefore generally be left untouched.
   db_lock_timeout: 120
+
 
   # How long to wait when attempting to modify a package (e.g. to install it).
   # This value should typically be 'null' (never time out) unless the Spack
