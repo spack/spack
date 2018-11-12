@@ -6,7 +6,7 @@
 .. _binary_caches:
 
 ============
-Build caches
+Build Caches
 ============
 
 Some sites may encourage users to set up their own test environments
