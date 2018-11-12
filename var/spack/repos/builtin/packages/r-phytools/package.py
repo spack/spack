@@ -11,6 +11,7 @@ class RPhytools(RPackage):
 
     homepage = "http://github.com/liamrevell/phytools"
     url      = "https://cran.r-project.org/src/contrib/phytools_0.6-60.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/phytools/"
 
     version('0.6-60', sha256='55cad759510d247ebbf03a53a46caddadd3bf87584ccf7fcd6dd06d44516b377')
 
