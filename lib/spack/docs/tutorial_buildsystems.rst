@@ -506,7 +506,7 @@ Unix-Makefile_ generators as well as Ninja_ generators.
 .. _Unix-Makefile: https://cmake.org/cmake/help/v3.4/generator/Unix%20Makefiles.html
 .. _Ninja: https://cmake.org/cmake/help/v3.4/generator/Ninja.html
 
-If no generator is specified Spack will default to :code:`Unix Makefile`.
+If no generator is specified Spack will default to :code:`Unix Makefiles`.
 
 Next we setup the build type. In :code:`CMake` you can specify the build type
 that you want. Options include:
