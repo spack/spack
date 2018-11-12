@@ -18,9 +18,19 @@ class Nyancat(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter('install src/nyancat /usr/bin/\${package}',
-            'install src/nyancat {0}/{1}'.format(prefix.bin, '${package}'))
-        makefile.filter('gzip -9 -c < nyancat.1 > /usr/share/man/man1/nyancat.1.gz',
-            'gzip -9 -c < {1}.1 > {0}/{1}.1.gz'.format(prefix.man.man1, '${package}'))
+        makefile.filter(
+            'install src/nyancat /usr/bin/\${package}',
+            'install src/nyancat {0}/{1}'.format(
+                prefix.bin,
+                '${package}'
+            )
+        )
+        makefile.filter(
+            'gzip -9 -c < nyancat.1 > /usr/share/man/man1/nyancat.1.gz',
+            'gzip -9 -c < {1}.1 > {0}/{1}.1.gz'.format(
+                prefix.man.man1,
+                '${package}'
+            )
+        )
         mkdirp(prefix.bin)
         mkdirp(prefix.man.man1)
