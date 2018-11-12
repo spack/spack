@@ -162,7 +162,7 @@ attacks.  Use at your own risk.
 When set to ``true``, concurrent instances of Spack will use locks to
 avoid modifying the install tree, database file, etc. If false, Spack
 will disable all locking, but you must **not** run concurrent instances
-of Spack.  For filesystems that don't support locking, you should set
+of Spack.  For file systems that don't support locking, you should set
 this to ``false`` and run one Spack at a time, but otherwise we recommend
 enabling locks.
 
