@@ -25,6 +25,9 @@ class EcpProxyApps(Package):
     version('1.1', '15825c318acd3726fd8e72803b1c1090')
     version('1.0', '8b3f00f05e6cde88d8d913da4293ee62')
 
+    variant('candle', default=False,
+            description='Also build CANDLE Benchmarks')
+
     # Added with release 2.0
     depends_on('ember@1.0.0', when='@2.0:')
     depends_on('miniqmc@0.4.0', when='@2.0:')
@@ -33,7 +36,7 @@ class EcpProxyApps(Package):
     depends_on('thornado-mini@1.0', when='@2.0:')
 
     depends_on('amg@1.1', when='@2.0:')
-    depends_on('candle-benchmarks@0.1', when='@2.0:')
+    depends_on('candle-benchmarks@0.1', when='+candle @2.0:')
     depends_on('laghos@1.1', when='@2.0:')
     depends_on('macsio@1.1', when='@2.0:')
     depends_on('miniamr@1.4.1', when='@2.0:')
@@ -48,7 +51,7 @@ class EcpProxyApps(Package):
 
     # Dependencies for versions 1.0:1.1
     depends_on('amg@1.0', when='@1.0:1.1')
-    depends_on('candle-benchmarks@0.0', when='@1.0:1.1')
+    depends_on('candle-benchmarks@0.0', when='+candle @1.0:1.1')
     depends_on('laghos@1.0', when='@1.0:1.1')
     depends_on('macsio@1.0', when='@1.0:1.1')
     depends_on('miniamr@1.4.0', when='@1.0:1.1')

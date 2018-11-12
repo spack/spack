@@ -18,6 +18,6 @@ class PyLlvmlite(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
-    depends_on('llvm@6.0:', when='@0.23.0:')
+    depends_on('llvm@6.0:6.99', when='@0.23.0:')
     depends_on('llvm@4.0:4.99', when='@0.17.0:0.20.99')
     depends_on('binutils', type='build')

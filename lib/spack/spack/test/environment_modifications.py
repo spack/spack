@@ -6,11 +6,11 @@
 import os
 
 import pytest
-import spack.environment as environment
+import spack.util.environment as environment
 from spack.paths import spack_root
-from spack.environment import EnvironmentModifications
-from spack.environment import RemovePath, PrependPath, AppendPath
-from spack.environment import SetEnv, UnsetEnv
+from spack.util.environment import EnvironmentModifications
+from spack.util.environment import RemovePath, PrependPath, AppendPath
+from spack.util.environment import SetEnv, UnsetEnv
 from spack.util.environment import filter_system_paths, is_system_path
 
 
