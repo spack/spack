@@ -11,5 +11,6 @@ class RCombinat(RPackage):
 
     homepage = "https://cran.r-project.org/package=combinat"
     url      = "https://cran.r-project.org/src/contrib/combinat_0.0-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/combinat/"
 
     version('0.0-8', sha256='1513cf6b6ed74865bfdd9f8ca58feae12b62f38965d1a32c6130bef810ca30c1')
