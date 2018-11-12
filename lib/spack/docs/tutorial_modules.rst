@@ -569,15 +569,15 @@ If you try to regenerate the module files now you will get an error:
 .. code-block:: console
 
   $ spack module tcl refresh --delete-tree -y
-==> Error: Name clashes detected in module files:
+  ==> Error: Name clashes detected in module files:
 
-file: /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/netlib-scalapack-2.0.2-gcc-7.2.0
-spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
-spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
-spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
-spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
+  file: /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/netlib-scalapack-2.0.2-gcc-7.2.0
+  spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
+  spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
+  spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
+  spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
 
-==> Error: Operation aborted
+  ==> Error: Operation aborted
 
 .. note::
   We try to check for errors upfront!
@@ -624,8 +624,8 @@ Regenerating module files now we obtain:
      automake-1.16.1-gcc-7.2.0        mpich-3.2.1-gcc-7.2.0                                py-numpy-1.15.2-gcc-7.2.0-openblas
      bzip2-1.0.6-gcc-7.2.0            ncurses-6.1-gcc-7.2.0                                py-scipy-1.1.0-gcc-7.2.0-openblas
      cmake-3.12.3-gcc-7.2.0           netlib-lapack-3.8.0-gcc-7.2.0                        py-setuptools-40.4.3-gcc-7.2.0
-     diffutils-3.6-gcc-7.2.0          netlib-scalapack-2.0.2-gcc-7.2.0-netlib-mpich       python-2.7.15-gcc-7.2.0
-     findutils-4.6.0-gcc-7.2.0        netlib-scalapack-2.0.2-gcc-7.2.0-netlib-openmpi     readline-7.0-gcc-7.2.0
+     diffutils-3.6-gcc-7.2.0          netlib-scalapack-2.0.2-gcc-7.2.0-netlib-mpich        python-2.7.15-gcc-7.2.0
+     findutils-4.6.0-gcc-7.2.0        netlib-scalapack-2.0.2-gcc-7.2.0-netlib-openmpi      readline-7.0-gcc-7.2.0
      gcc-7.2.0-gcc-5.4.0              netlib-scalapack-2.0.2-gcc-7.2.0-openblas-mpich      sqlite-3.23.1-gcc-7.2.0
      gdbm-1.14.1-gcc-7.2.0            netlib-scalapack-2.0.2-gcc-7.2.0-openblas-openmpi    texinfo-6.5-gcc-7.2.0
      hwloc-1.11.9-gcc-7.2.0           numactl-2.0.11-gcc-7.2.0                             util-macros-1.19.1-gcc-7.2.0
@@ -677,8 +677,8 @@ The final result should look like:
      automake/1.16.1-gcc-7.2.0        mpich/3.2.1-gcc-7.2.0                                    py-numpy/1.15.2-gcc-7.2.0-openblas
      bzip2/1.0.6-gcc-7.2.0            ncurses/6.1-gcc-7.2.0                                    py-scipy/1.1.0-gcc-7.2.0-openblas
      cmake/3.12.3-gcc-7.2.0           netlib-lapack/3.8.0-gcc-7.2.0                            py-setuptools/40.4.3-gcc-7.2.0
-     diffutils/3.6-gcc-7.2.0          netlib-scalapack/2.0.2-gcc-7.2.0-netlib-mpich           python/2.7.15-gcc-7.2.0
-     findutils/4.6.0-gcc-7.2.0        netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi         readline/7.0-gcc-7.2.0
+     diffutils/3.6-gcc-7.2.0          netlib-scalapack/2.0.2-gcc-7.2.0-netlib-mpich            python/2.7.15-gcc-7.2.0
+     findutils/4.6.0-gcc-7.2.0        netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi          readline/7.0-gcc-7.2.0
      gcc/7.2.0-gcc-5.4.0              netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          sqlite/3.23.1-gcc-7.2.0
      gdbm/1.14.1-gcc-7.2.0            netlib-scalapack/2.0.2-gcc-7.2.0-openblas-openmpi (D)    texinfo/6.5-gcc-7.2.0
      hwloc/1.11.9-gcc-7.2.0           numactl/2.0.11-gcc-7.2.0                                 util-macros/1.19.1-gcc-7.2.0
@@ -950,8 +950,7 @@ Now the ``py-scipy`` module will be:
   ##
 
 
-  module-whatis "SciPy (pronounced 'Sigh Pie') is a Scientific Library for Python. It provides many user-friendly and efficient numerical routines such as routines for n
-umerical integration and optimization."
+  module-whatis "SciPy (pronounced 'Sigh Pie') is a Scientific Library for Python. It provides many user-friendly and efficient numerical routines such as routines for numerical integration and optimization."
 
   proc ModulesHelp { } {
   puts stderr "SciPy (pronounced "Sigh Pie") is a Scientific Library for Python. It"
@@ -975,8 +974,7 @@ umerical integration and optimization."
 
   prepend-path LD_LIBRARY_PATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/lib"
   prepend-path CMAKE_PREFIX_PATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/"
-  prepend-path PYTHONPATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/lib/python2.7/site-pac
-kages"
+  prepend-path PYTHONPATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/lib/python2.7/site-packages"
   setenv PY_SCIPY_ROOT "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn"
 
 and will contain code to autoload all the dependencies:

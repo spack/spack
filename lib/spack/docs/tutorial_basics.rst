@@ -855,35 +855,35 @@ DAG as a graph.
 .. code-block:: console
 
   $ spack graph hdf5+hl+mpi ^mpich
-o  hdf5
-|\
-o |  zlib
- /
-o  mpich
-o  findutils
-|\
-| |\
-| | |\
-| | | |\
-o | | | |  texinfo
-| | | o |  automake
-| |_|/| |
-|/| | | |
-| | | |/
-| | | o  autoconf
-| |_|/|
-|/| |/
-| |/|
-o | |  perl
-o | |  gdbm
-o | |  readline
-o | |  ncurses
-o | |  pkgconf
- / /
-| o  libtool
-|/
-o  m4
-o  libsigsegv
+  o  hdf5
+  |\
+  o |  zlib
+   /
+  o  mpich
+  o  findutils
+  |\
+  | |\
+  | | |\
+  | | | |\
+  o | | | |  texinfo
+  | | | o |  automake
+  | |_|/| |
+  |/| | | |
+  | | | |/
+  | | | o  autoconf
+  | |_|/|
+  |/| |/
+  | |/|
+  o | |  perl
+  o | |  gdbm
+  o | |  readline
+  o | |  ncurses
+  o | |  pkgconf
+   / /
+  | o  libtool
+  |/
+  o  m4
+  o  libsigsegv
 
 You may also have noticed that there are some packages shown in the
 ``spack find -d`` output that we didn't install explicitly. These are
