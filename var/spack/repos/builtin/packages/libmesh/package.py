@@ -15,6 +15,7 @@ class Libmesh(AutotoolsPackage):
     url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
     git      = "https://github.com/libMesh/libmesh.git"
 
+    version('1.3.1', sha256='638cf30d05c249315760f16cbae4804964db8857a04d5e640f37617bef17ab0f')
     version('1.3.0', sha256='a8cc2cd44f42b960989dba10fa438b04af5798c46db0b4ec3ed29591b8359786')
     version('1.2.1', sha256='11c22c7d96874a17de6b8c74caa45d6745d40bf3610e88b2bd28fd3381f5ba70')
     version('1.0.0', 'cb464fc63ea0b71b1e69fa3f5d4f93a4')
@@ -23,6 +24,7 @@ class Libmesh(AutotoolsPackage):
     # TODO libMesh 1.2.1 gained the ability to specify a path to capnproto
     variant('capnproto', default=False, description='Compile with the bundled capnproto serialization library')
     variant('exodusii', default=False, description='Compile with the bundled ExodusII output library')
+    variant('vtk', default=False, description='Compile with  VTK input/output library')
     variant('fparser', default=False, description='Compile with the bundled fparser function parser library')
     variant('gmv', default=False, description='Compile with the bundled gmv format IO library')
     variant('laspack', default=False, description='Compile with the bundled laspack interative solver library')
@@ -50,6 +52,7 @@ class Libmesh(AutotoolsPackage):
     variant('eigen', default=False, description='support for dense linear algebra with Eigen')
     variant('hdf5', default=False, description='Compile with support for HDF5 files')
     variant('slepc', default=False, description='Compile with support for the SLEPc eigensolver')
+    variant('petsc', default=False, description='Compile with support for the PETSc')
 
     # other features:
     variant('debug', default=False, description='Compile with support for debugging')
@@ -82,7 +85,9 @@ class Libmesh(AutotoolsPackage):
     depends_on('petsc+mpi', when='+mpi')
     depends_on('petsc+metis', when='+metis')
     depends_on('slepc', when='+slepc')
+    depends_on('petsc', when='+petsc')
     depends_on('tbb', when='threads=tbb')
+    depends_on('vtk', when='+vtk')
 
     def configure_args(self):
         options = []
@@ -132,6 +137,12 @@ class Libmesh(AutotoolsPackage):
         else:
             options.append('--enable-netcdf=no')
 
+        if '+vtk' in self.spec:
+            options.append('--enable-vtk')
+            options.append('--with-vtk=%s' % self.spec['vtk'].prefix)
+        else:
+            options.append('--disable-vtk')
+
         # handle external library dependencies:
         if '+boost' in self.spec:
             options.append('--with-boost=%s' % self.spec['boost'].prefix)
@@ -155,13 +166,14 @@ class Libmesh(AutotoolsPackage):
         if '+metis' in self.spec:
             options.append('--with-metis=PETSc')
 
-        if '+petsc' in self.spec:
+        if '+petsc' in self.spec or '+slepc' in self.spec:
             options.append('--enable-petsc=yes')
             options.append('PETSC_DIR=%s' % self.spec['petsc'].prefix)
         else:
             options.append('--enable-petsc=no')
 
         if '+slepc' in self.spec:
+            options.append('--enable-slepc=yes')
             options.append('SLEPC_DIR=%s' % self.spec['slepc'].prefix)
         else:
             options.append('--enable-slepc=no')

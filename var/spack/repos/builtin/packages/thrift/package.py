@@ -32,6 +32,7 @@ class Thrift(Package):
     variant('python', default=True,
             description="Build support for python")
 
+    depends_on('pkgconfig', type='build')
     depends_on('java')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

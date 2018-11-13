@@ -57,8 +57,7 @@ class CbtfKrell(CMakePackage):
 
     # For Dyninst
     depends_on("dyninst@develop", when='@develop')
-    # This will change to dyninst@10.0 when it is released
-    depends_on("dyninst@develop", when='@1.9.1.0:9999')
+    depends_on("dyninst@10:", when='@1.9.1.0:9999')
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))

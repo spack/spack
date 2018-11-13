@@ -8,6 +8,7 @@
 import collections
 import os.path
 import shutil
+import sys
 
 from llnl.util import filesystem, tty
 
@@ -54,22 +55,28 @@ def setup_parser(subparser):
         'loads',
         help='prompt the list of modules associated with a constraint'
     )
-    loads_parser.add_argument(
+    add_loads_arguments(loads_parser)
+    arguments.add_common_arguments(loads_parser, ['constraint'])
+
+    return sp
+
+
+def add_loads_arguments(subparser):
+    subparser.add_argument(
         '--input-only', action='store_false', dest='shell',
         help='generate input for module command (instead of a shell script)'
     )
-    loads_parser.add_argument(
+    subparser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
         help='prepend to module names when issuing module load commands'
     )
-    loads_parser.add_argument(
+    subparser.add_argument(
         '-x', '--exclude', dest='exclude', action='append', default=[],
         help="exclude package from output; may be specified multiple times"
     )
     arguments.add_common_arguments(
-        loads_parser, ['constraint', 'recurse_dependencies']
+        subparser, ['recurse_dependencies']
     )
-    return sp
 
 
 class MultipleSpecsMatch(Exception):
@@ -98,7 +105,7 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
-def loads(module_type, specs, args):
+def loads(module_type, specs, args, out=sys.stdout):
     """Prompt the list of modules associated with a list of specs"""
 
     # Get a comprehensive list of specs
@@ -141,7 +148,8 @@ def loads(module_type, specs, args):
         d['comment'] = '' if not args.shell else '# {0}\n'.format(
             spec.format())
         d['name'] = mod
-        print(prompt_template.format(**d))
+        out.write(prompt_template.format(**d))
+        out.write('\n')
 
 
 def find(module_type, specs, args):

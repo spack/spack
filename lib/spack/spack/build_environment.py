@@ -53,8 +53,8 @@ import spack.main
 import spack.paths
 import spack.store
 from spack.util.string import plural
-from spack.environment import EnvironmentModifications, validate
-from spack.environment import preserve_environment
+from spack.util.environment import EnvironmentModifications, validate
+from spack.util.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.environment import system_dirs
 from spack.util.executable import Executable

@@ -72,6 +72,9 @@ class Fftw(AutotoolsPackage):
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts('%gcc@8:8.9999', when="@3.3.7")
 
+    provides('fftw-api@2', when='@2.1.5')
+    provides('fftw-api@3', when='@3:')
+
     @property
     def libs(self):
 

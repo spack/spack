@@ -17,3 +17,8 @@ class RCallr(RPackage):
 
     version('3.0.0', sha256='e36361086c65660a6ecbbc09b5ecfcddee6b59caf75e983e48b21d3b8defabe7')
     version('1.0.0', 'd9af99bb95696310fa1e5d1cb7166c91')
+
+    depends_on('r-base64enc', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-processx@3.2.0:', type=('build', 'run'), when='@3.0.0')
+    depends_on('r-r6', type=('build', 'run'), when='@2.0.0')
+    depends_on('r-utils', type=('build', 'run'), when='@2.0.0')
