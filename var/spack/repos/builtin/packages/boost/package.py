@@ -122,6 +122,9 @@ class Boost(Package):
             description='Compile with clang libc++ instead of libstdc++')
     variant('numpy', default=False,
             description='Build the Boost NumPy library (requires +python)')
+    variant('pic', default=False,
+            description='Generate position-independent code (PIC), useful '
+                        'for building static libraries')
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
@@ -213,14 +216,12 @@ class Boost(Package):
                                                        spack_cxx))
 
             if '+mpi' in spec:
-
                 # Use the correct mpi compiler.  If the compiler options are
                 # empty or undefined, Boost will attempt to figure out the
                 # correct options by running "${mpicxx} -show" or something
                 # similar, but that doesn't work with the Cray compiler
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
-
                 mpi_line = 'using mpi : %s' % spec['mpi'].mpicxx
 
                 if 'platform=cray' in spec:
@@ -312,6 +313,9 @@ class Boost(Package):
             flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
             if flag:
                 cxxflags.append(flag)
+
+        if '+pic' in self.spec:
+            cxxflags.append(self.compiler.pic_flag)
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
