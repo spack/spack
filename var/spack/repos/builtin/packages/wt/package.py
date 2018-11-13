@@ -41,7 +41,8 @@ class Wt(CMakePackage):
     # variant('fastcgi', default=False,
     #         description='FastCGI connector via libfcgi++')
 
-    depends_on('boost@1.46.1:')
+    depends_on('pkgconfig', type='build')
+    depends_on('boost@1.46.1:1.65')
     depends_on('openssl', when='+openssl')
     depends_on('libharu', when='+libharu')
     depends_on('sqlite', when='+sqlite')
