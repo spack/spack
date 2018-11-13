@@ -14,6 +14,7 @@ class Cmake(Package):
     list_url = 'https://cmake.org/files/'
     list_depth = 1
 
+    version('3.12.4',   '5255584bfd043eb717562cff8942d472f1c0e4679c4941d84baadaa9b28e3194')
     version('3.12.3',   'acbf13af31a741794106b76e5d22448b004a66485fc99f6d7df4d22e99da164a')
     version('3.12.2',   '6e7c550cfa1c2e216b35903dc70d80af')
     version('3.12.1',   '10109246a51102bfda45ff3935275fbf')
