@@ -15,9 +15,11 @@ class Libevent(AutotoolsPackage):
     """
 
     homepage = "http://libevent.org"
-    url      = "https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz"
+    url      = "https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz"
     list_url = "http://libevent.org/old-releases.html"
 
+    version('2.1.8',  '965cc5a8bb46ce4199a47e9b2c9e1cae3b137e8356ffdad6d94d3b9069b71dc2')
+    version('2.0.22', '71c2c49f0adadacfdbe6332a372c38cf9c8b7895bb73dabeaa53cdcc1d4e1fa3')
     version('2.0.21', 'b2405cc9ebf264aa47ff615d9de527a2')
     version('2.0.20', '94270cdee32c0cd0aa9f4ee6ede27e8e')
     version('2.0.19', '91111579769f46055b0a438f5cc59572')
@@ -29,10 +31,19 @@ class Libevent(AutotoolsPackage):
     version('2.0.13', 'af786b4b3f790c9d3279792edf7867fc')
     version('2.0.12', '42986228baf95e325778ed328a93e070')
 
-    # Does not build with OpenSSL 1.1.0
     variant('openssl', default=True,
             description="Build with encryption enabled at the libevent level.")
-    depends_on('openssl @:1.0', when='+openssl')
+    # Versions before 2.1 do not build with OpenSSL 1.1
+    depends_on('openssl@:1.0', when='@:2.0.99+openssl')
+    depends_on('openssl', when='+openssl')
+
+    def url_for_version(self, version):
+        if version >= Version('2.0.22'):
+            url = "https://github.com/libevent/libevent/releases/download/release-{0}-stable/libevent-{0}-stable.tar.gz"
+        else:
+            url = "https://github.com/downloads/libevent/libevent/libevent-{0}-stable.tar.gz"
+
+        return url.format(version)
 
     def configure_args(self):
         spec = self.spec
