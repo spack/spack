@@ -33,7 +33,7 @@ class Openssl(Package):
     version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
     # Note: Version 1.0.2 is the previous long-term support version that will
     # remain supported until December 2019.
-    version('1.0.2p', '50a98e07b1a89eb8f6a99477f262df71c6fa7bef77df4dc83025a2845c827d00', preferred=True)
+    version('1.0.2p', '50a98e07b1a89eb8f6a99477f262df71c6fa7bef77df4dc83025a2845c827d00')
     version('1.0.2o', '44279b8557c3247cbe324e2322ecd114')
     version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4')
     version('1.0.2m', '10e9e37f492094b9ef296f68f24a7666')
