@@ -24,9 +24,9 @@ class Netcdf(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
 
+    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
-    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
     version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
     # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
@@ -40,6 +40,8 @@ class Netcdf(AutotoolsPackage):
     variant('parallel-netcdf', default=False,
             description='Enable parallel I/O for classic files')
     variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
 
@@ -155,7 +157,7 @@ class Netcdf(AutotoolsPackage):
 
         config_args += self.enable_or_disable('shared')
 
-        if '~shared' in self.spec:
+        if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
             cflags.append(self.compiler.pic_flag)
