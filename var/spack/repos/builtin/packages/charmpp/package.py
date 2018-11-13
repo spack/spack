@@ -22,6 +22,7 @@ class Charmpp(Package):
     git      = "https://github.com/UIUC-PPL/charm.git"
 
     version("develop", branch="charm")
+    version("6.9.0", "85ed660e46eeb7a6fc6b32deab08226f647c244241948f6b592ebcd2b6050cbd")
     version("6.8.2", "a887a34b638a5b2f7fcf7ff3c262496d")
     version("6.8.1", "3e95ffa760909154ef16b643c9bb8193")
     version("6.8.0", "54df066a5aefb0bbc1a263c2383c2bba")
