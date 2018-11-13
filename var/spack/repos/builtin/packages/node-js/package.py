@@ -15,10 +15,12 @@ class NodeJs(Package):
     homepage = "https://nodejs.org/"
     url      = "https://nodejs.org/download/release/v6.3.0/node-v6.3.0.tar.gz"
 
-    version('8.9.1', '7482b2523f72000d1b6060c38945026b')
-    version('7.1.0', '1db5df2cb025f9c70e83d9cf21c4266a')
-    version('6.3.0', '8c14e5c89d66d4d060c91b3ba15dfd31')
-    version('6.2.2', '1120e8bf191fdaee42206d031935210d')
+    version('11.1.0',  '3f53b5ac25b2d36ad538267083c0e603d9236867a936c22a9116d95fa10c60d5')
+    version('10.13.0', 'aa06825fff375ece7c0d881ae0de5d402a857e8cabff9b4a50f2f0b7b44906be')
+    version('8.9.1',   '7482b2523f72000d1b6060c38945026b')
+    version('7.1.0',   '1db5df2cb025f9c70e83d9cf21c4266a')
+    version('6.3.0',   '8c14e5c89d66d4d060c91b3ba15dfd31')
+    version('6.2.2',   '1120e8bf191fdaee42206d031935210d')
 
     # variant('bash-completion', default=False, description='Build with bash-completion support for npm')  # NOQA: ignore=E501
     variant('debug', default=False, description='Include debugger support')
@@ -32,7 +34,8 @@ class NodeJs(Package):
     depends_on('python@2.7:2.8', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
-    depends_on('openssl@1.0.2d:', when='+openssl')
+    depends_on('openssl@1.0.2d:1.0.99', when='@:9+openssl')
+    depends_on('openssl@1.1:', when='@10:+openssl')
 
     def install(self, spec, prefix):
         options = []
