@@ -19,5 +19,5 @@ class Mscgen(AutotoolsPackage):
 
     depends_on('flex')
     depends_on('bison')
-    depends_on('pkgconf')
+    depends_on('pkgconfig')
     depends_on('libgd')
