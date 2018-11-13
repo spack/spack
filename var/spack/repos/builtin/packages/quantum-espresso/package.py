@@ -36,6 +36,7 @@ class QuantumEspresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
+    git = 'https://gitlab.com/QEF/q-e.git'
 
     version('6.3',   '1b67687d90d1d16781d566d44d14634c')
     version('6.2.1', '769cc973382156bffd35254c3dbaf453')
@@ -44,7 +45,8 @@ class QuantumEspresso(Package):
     version('6.0.0', 'd915f2faf69d0e499f8e1681c42cbfc9')
     version('5.4',   '085f7e4de0952e266957bbc79563c54e')
     version('5.3',   'be3f8778e302cffb89258a5f936a7592')
-    version('develop', git='https://gitlab.com/QEF/q-e.git')
+    version('develop', branch='develop')
+    version('latest-backports', branch='qe-6.3-backports')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
