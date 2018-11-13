@@ -72,6 +72,18 @@ class Glib(AutotoolsPackage):
                 os.path.basename(self.spec['python'].command.path))
             )
         args.extend(self.enable_or_disable('tracing'))
+        # glib should not use the globally installed gtk-doc. Otherwise,
+        # gtk-doc can fail with Python errors such as "ImportError: No module
+        # named site". This is due to the fact that Spack sets PYTHONHOME,
+        # which can confuse the global Python installation used by gtk-doc.
+        args.append('--disable-gtk-doc-html')
+        # glib uses gtk-doc even though it should be disabled if it can find
+        # its binaries. Override the checks to use the true binary.
+        true = which('true')
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
     @property
