@@ -13,6 +13,7 @@ class PerlNetSsleay(PerlPackage):
     homepage = "http://search.cpan.org/~mikem/Net-SSLeay-1.82/lib/Net/SSLeay.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/M/MI/MIKEM/Net-SSLeay-1.82.tar.gz"
 
+    version('1.85', '9d8188b9fb1cae3bd791979c20554925d5e94a138d00414f1a6814549927b0c8')
     version('1.82', '2170469d929d5173bacffd0cb2d7fafa')
 
     depends_on('openssl')
@@ -28,6 +29,6 @@ class PerlNetSsleay(PerlPackage):
             f.writelines(config_answers)
 
         with open(config_answers_filename, 'r') as f:
+            env['OPENSSL_PREFIX'] = self.spec['openssl'].prefix
             inspect.getmodule(self).perl('Makefile.PL', 'INSTALL_BASE={0}'.
-                                         format(prefix), 'OPENSSL_PREFIX=%s' %
-                                         self.spec['openssl'].prefix, input=f)
+                                         format(prefix), input=f)
