@@ -80,7 +80,7 @@ class Petsc(Package):
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
 
-    variant('x', default=False,
+    variant('X', default=False,
             description='Activate X support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
@@ -149,7 +149,7 @@ class Petsc(Package):
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
-    depends_on('libx11', when='+x')
+    depends_on('libx11', when='+X')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -213,7 +213,7 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
-        if '+x' in spec:
+        if '+X' in spec:
             options.append('--with-x=1')
         else:
             options.append('--with-x=0')
