@@ -149,6 +149,7 @@ class Petsc(Package):
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('libx11', when='+x')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
