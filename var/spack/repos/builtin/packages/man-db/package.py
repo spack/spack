@@ -22,6 +22,7 @@ class ManDb(AutotoolsPackage):
     depends_on('gettext')
     depends_on('libpipeline')
     depends_on('flex')
+    depends_on('gdbm')
     depends_on('groff', type=('build', 'link', 'run'))
 
     # TODO: add gzip support via a new package.
