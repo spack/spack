@@ -60,7 +60,7 @@ class Arm(Compiler):
             InstalledDir: /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
         """
         return get_compiler_version(
-            comp, '--version', r'\((?:Arm)\) ([^ ]+)')
+            comp, '--version', r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)')
 
     @classmethod
     def fc_version(cls, fc):
