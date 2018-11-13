@@ -55,7 +55,7 @@ class Arm(Compiler):
             output = compiler('--version', output=str, error=str)
 
             ver = 'unknown'
-            match = re.search(r'Arm C/C++/Fortran Compiler version ([^ )]+)',
+            match = re.search(r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)',
                               output)
             if match:
                 ver = match.group(1)
