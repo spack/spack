@@ -1,0 +1,46 @@
+--- liblockfile-1.14/Makefile.in	2017-01-17 13:21:05.000000000 +0000
++++ liblockfile-1.14/Makefile.in	2018-03-28 07:20:45.054312625 +0000
+@@ -49,35 +49,33 @@ xlockfile.o:	lockfile.c
+ 		$(CC) $(CFLAGS) -c lockfile.c -o xlockfile.o
+ 
+ install_static:	static install_common
+-		install -d -m 755 -g root -p $(libdir)
++		install -d -m 755 -p $(libdir)
+ 		install -m 644 liblockfile.a $(libdir)
+ 
+ install_shared:	shared install_static install_common
+-		install -d -m 755 -g root -p $(libdir)
++		install -d -m 755 -p $(libdir)
+ 		install -m 755 liblockfile.so \
+ 			$(libdir)/liblockfile.so.$(SOVER)
+ 		ln -s liblockfile.so.$(SOVER) $(libdir)/liblockfile.so.$(MAJOR)
+ 		ln -s liblockfile.so.$(SOVER) $(libdir)/liblockfile.so
+-		if test "$(DESTDIR)" = ""; then @LDCONFIG@; fi
+ 
+ install_common:
+-		install -d -m 755 -g root -p $(includedir)
+-		install -d -m 755 -g root -p $(bindir)
+-		install -d -m 755 -g root -p $(mandir)/man1
+-		install -d -m 755 -g root -p $(mandir)/man3
++		install -d -m 755 -p $(includedir)
++		install -d -m 755 -p $(bindir)
++		install -d -m 755 -p $(mandir)/man1
++		install -d -m 755 -p $(mandir)/man3
+ 		install -m 644 lockfile.h maillock.h $(includedir)
+ 		if [ "$(MAILGROUP)" != "" ]; then\
+ 		  install -g $(MAILGROUP) -m 2755 dotlockfile $(bindir);\
+ 		else \
+-		  install -g root -m 755 dotlockfile $(bindir); \
++		  install -m 755 dotlockfile $(bindir); \
+ 		fi
+ 		install -m 644 *.1 $(mandir)/man1
+ 		install -m 644 *.3 $(mandir)/man3
+ 
+ install_nfslib:	nfslib
+-		install -d -m 755 -g root -p $(nfslockdir)
++		install -d -m 755 -p $(nfslockdir)
+ 		install -m 755 nfslock.so.$(NFSVER) $(nfslockdir)
+-		if test "$(DESTDIR)" = ""; then @LDCONFIG@; fi
+ 
+ clean:
+ 		rm -f *.a *.o *.so *.so.* dotlockfile

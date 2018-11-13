@@ -1,34 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
 import spack.store
+import spack.repo
 import spack.cmd
 
 description = "show dependencies of a package"
@@ -43,7 +24,10 @@ def setup_parser(subparser):
         "instead of possible dependencies of a package.")
     subparser.add_argument(
         '-t', '--transitive', action='store_true', default=False,
-        help="Show all transitive dependencies.")
+        help="show all transitive dependencies")
+    subparser.add_argument(
+        '-V', '--no-expand-virtuals', action='store_false', default=True,
+        dest="expand_virtuals", help="do not expand virtual dependencies")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec or package name")
 
@@ -70,13 +54,15 @@ def dependencies(parser, args):
         if not spec.virtual:
             packages = [spec.package]
         else:
-            packages = [spack.repo.get(s.name)
-                        for s in spack.repo.providers_for(spec)]
+            packages = [
+                spack.repo.get(s.name)
+                for s in spack.repo.path.providers_for(spec)]
 
         dependencies = set()
         for pkg in packages:
             dependencies.update(
-                set(pkg.possible_dependencies(args.transitive)))
+                set(pkg.possible_dependencies(
+                    args.transitive, args.expand_virtuals)))
 
         if spec.name in dependencies:
             dependencies.remove(spec.name)

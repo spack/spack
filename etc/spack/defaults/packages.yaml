@@ -17,13 +17,18 @@ packages:
   all:
     compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
+      D: [ldc]
       awk: [gawk]
       blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
+      fftw-api: [fftw]
+      gl: [mesa, opengl]
+      glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
       java: [jdk]
+      jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
       mkl: [intel-mkl]
       mpe: [mpe2]
@@ -31,7 +36,11 @@ packages:
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
+      pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
-      jpeg: [libjpeg-turbo, libjpeg]
+      unwind: [libunwind]
+    permissions:
+      read: world
+      write: user

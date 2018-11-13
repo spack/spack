@@ -1,0 +1,28 @@
+--- pixman-0.34.0/test/utils-prng.c.bak	2018-02-01 00:34:15.757691302 +0100
++++ pixman-0.34.0/test/utils-prng.c	2018-02-01 00:36:38.285690995 +0100
+@@ -199,12 +199,24 @@
+         }
+         else
+         {
++
++#ifndef __has_builtin
++#define __has_builtin(x) 0
++#endif
++
+ #ifdef HAVE_GCC_VECTOR_EXTENSIONS
++# if !defined(__clang__) || __has_builtin(__builtin_shuffle)
+             const uint8x16 bswap_shufflemask =
+             {
+                 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12
+             };
+             randdata.vb = __builtin_shuffle (randdata.vb, bswap_shufflemask);
++# elif __has_builtin(__builtin_shufflevector)
++            randdata.vb = __builtin_shufflevector(randdata.vb, randdata.vb, 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12);
++# else
++#  error "GCC_VECTOR_EXTENSION is defined, but neither __builtin_shuffle nor __builtin_shufflevector is supported!"
++# endif
++
+             store_rand_128_data (buf, &randdata, aligned);
+             buf += 16;
+ #else
+

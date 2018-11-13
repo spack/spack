@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import spack.architecture
 import pytest
 
@@ -101,7 +82,7 @@ def check_invalid_constraint(spec, constraint):
         spec.constrain(constraint)
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestSpecSematics(object):
     """This tests satisfies(), constrain() and other semantic operations
     on specs.
@@ -720,3 +701,45 @@ class TestSpecSematics(object):
 
         with pytest.raises(ValueError):
             Spec('libelf foo')
+
+    def test_spec_formatting(self):
+        spec = Spec("libelf cflags=-O2")
+        spec.concretize()
+
+        # Since the default is the full spec see if the string rep of
+        # spec is the same as the output of spec.format()
+        # ignoring whitespace (though should we?)
+        assert str(spec) == spec.format().strip()
+
+        # Testing named strings ie ${STRING} and whether we get
+        # the correct component
+        package_segments = [("${PACKAGE}", "name"),
+                            ("${VERSION}", "versions"),
+                            ("${COMPILER}", "compiler"),
+                            ("${COMPILERFLAGS}", "compiler_flags"),
+                            ("${OPTIONS}", "variants"),
+                            ("${ARCHITECTURE}", "architecture")]
+
+        compiler_segments = [("${COMPILERNAME}", "name"),
+                             ("${COMPILERVER}", "versions")]
+
+        architecture_segments = [("${PLATFORM}", "platform"),
+                                 ("${OS}", "platform_os"),
+                                 ("${TARGET}", "target")]
+
+        for named_str, prop in package_segments:
+            expected = getattr(spec, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        compiler = spec.compiler
+        for named_str, prop in compiler_segments:
+            expected = getattr(compiler, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        arch = spec.architecture
+        for named_str, prop in architecture_segments:
+            expected = getattr(arch, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual

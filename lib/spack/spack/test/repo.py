@@ -1,30 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import spack
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+
+import spack.repo
+import spack.paths
 
 
 # Unlike the repo_path fixture defined in conftest, this has a test-level
@@ -32,7 +14,7 @@ import pytest
 # given RepoPath
 @pytest.fixture()
 def repo_for_test():
-    return spack.repository.RepoPath(spack.mock_packages_path)
+    return spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
 @pytest.fixture()
@@ -41,12 +23,12 @@ def extra_repo(tmpdir_factory):
     repo_dir = tmpdir_factory.mktemp(repo_namespace)
     repo_dir.ensure('packages', dir=True)
 
-    with open(str(repo_dir.join('repo.yaml')), 'w') as F:
-        F.write("""
+    with open(str(repo_dir.join('repo.yaml')), 'w') as f:
+        f.write("""
 repo:
   namespace: extra_test_repo
 """)
-    return spack.repository.Repo(str(repo_dir))
+    return spack.repo.Repo(str(repo_dir))
 
 
 def test_repo_getpkg(repo_for_test):
@@ -67,10 +49,10 @@ def test_repo_multi_getpkgclass(repo_for_test, extra_repo):
 
 
 def test_repo_pkg_with_unknown_namespace(repo_for_test):
-    with pytest.raises(spack.repository.UnknownNamespaceError):
+    with pytest.raises(spack.repo.UnknownNamespaceError):
         repo_for_test.get('unknown.a')
 
 
 def test_repo_unknown_pkg(repo_for_test):
-    with pytest.raises(spack.repository.UnknownPackageError):
+    with pytest.raises(spack.repo.UnknownPackageError):
         repo_for_test.get('builtin.mock.nonexistentpackage')

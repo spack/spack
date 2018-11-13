@@ -1,0 +1,24 @@
+diff -ruw cube-4.3.5.orig/build-backend/configure cube-4.3.5/build-backend/configure
+--- cube-4.3.5.orig/build-backend/configure	2017-05-23 13:15:46.121704000 +0200
++++ cube-4.3.5/build-backend/configure	2018-02-14 15:07:27.313842086 +0100
+@@ -5589,7 +5589,7 @@
+ else
+   echo "$as_me:$LINENO: Running $QMAKE --version:" >&5
+   $QMAKE --version >&5 2>&1
+-  qmake_version_sed='/^.*Qt.version.\([0-9]\.[0-9]\.[0-9]\).in.*$/!d;s//\1/'
++  qmake_version_sed='/^.*Qt.version.\([0-9]\.[0-9]\+\.[0-9]\+\).in.*$/!d;s//\1/'
+   at_cv_QT_VERSION=`$QMAKE --version 2>&1 | sed "$qmake_version_sed"`
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $at_cv_QT_VERSION" >&5
+diff -ruw cube-4.3.5.orig/build-frontend/configure cube-4.3.5/build-frontend/configure
+--- cube-4.3.5.orig/build-frontend/configure	2017-05-23 13:16:00.499773000 +0200
++++ cube-4.3.5/build-frontend/configure	2018-02-14 15:07:46.349487111 +0100
+@@ -19757,7 +19757,7 @@
+ else
+   echo "$as_me:$LINENO: Running $QMAKE --version:" >&5
+   $QMAKE --version >&5 2>&1
+-  qmake_version_sed='/^.*Qt.version.\([0-9]\.[0-9]\.[0-9]\).in.*$/!d;s//\1/'
++  qmake_version_sed='/^.*Qt.version.\([0-9]\.[0-9]\+\.[0-9]\+\).in.*$/!d;s//\1/'
+   at_cv_QT_VERSION=`$QMAKE --version 2>&1 | sed "$qmake_version_sed"`
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $at_cv_QT_VERSION" >&5

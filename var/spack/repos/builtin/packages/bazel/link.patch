@@ -1,6 +1,6 @@
 --- bazel-0.3.1/src/main/java/com/google/devtools/build/lib/rules/cpp/CppLinkAction.java	2016-07-29 10:22:16.000000000 +0200
 +++ bazel-0.3.1/src/main/java/com/google/devtools/build/lib/rules/cpp/CppLinkAction.java	2016-10-13 15:21:35.036617890 +0200
-@@ -214,6 +214,130 @@
+@@ -214,6 +214,135 @@
                .getParentDirectory()
                .getPathString());
      }
@@ -26,6 +26,11 @@
 +    String spack_env_path = System.getenv("SPACK_ENV_PATH");
 +    if (spack_env_path != null) {
 +      result.put("SPACK_ENV_PATH", spack_env_path);
++    }
++
++    String spack_debug_log_id = System.getenv("SPACK_DEBUG_LOG_ID");
++    if (spack_debug_log_id != null) {
++      result.put("SPACK_DEBUG_LOG_ID", spack_debug_log_id);
 +    }
 +
 +    String spack_debug_log_dir = System.getenv("SPACK_DEBUG_LOG_DIR");

@@ -1,16 +1,16 @@
 diff -Nr -U5 qt-everywhere-opensource-src-4.8.6/src/plugins/bearer/corewlan/corewlan.pro qt-everywhere-opensource-src-4.8.6.corewlan-new-osx/src/plugins/bearer/corewlan/corewlan.pro
 --- qt-everywhere-opensource-src-4.8.6/src/plugins/bearer/corewlan/corewlan.pro	2014-04-10 14:37:12.000000000 -0400
 +++ qt-everywhere-opensource-src-4.8.6.corewlan-new-osx/src/plugins/bearer/corewlan/corewlan.pro	2015-12-02 12:21:34.608585392 -0500
-@@ -3,11 +3,11 @@
- 
+@@ -3,9 +3,9 @@
+
  QT = core network
  LIBS += -framework Foundation -framework SystemConfiguration
- 
+
  contains(QT_CONFIG, corewlan) {
 -    isEmpty(QMAKE_MAC_SDK)|contains(QMAKE_MAC_SDK, "/Developer/SDKs/MacOSX10\.[67]\.sdk") {
-+    isEmpty(QMAKE_MAC_SDK)|contains(QMAKE_MAC_SDK, ".*MacOSX10\.([6789]|1[01])\.sdk") {
++    isEmpty(QMAKE_MAC_SDK)|contains(QMAKE_MAC_SDK, ".*MacOSX10\.([6789]|1[0123])\.sdk") {
           LIBS += -framework CoreWLAN -framework Security
      }
  }
- 
+
  HEADERS += qcorewlanengine.h \

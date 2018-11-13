@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 from spack import *
@@ -31,16 +12,22 @@ import spack.architecture
 
 class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
-    homepage = 'http://www.openblas.net'
-    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
 
+    homepage = 'http://www.openblas.net'
+    url      = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
+    git      = 'https://github.com/xianyi/OpenBLAS.git'
+
+    version('develop', branch='develop')
+    version('0.3.3', sha256='49d88f4494ae780e3d7fa51769c00d982d7cdb73e696054ac3baa81d42f13bab')
+    version('0.3.2', sha256='e8ba64f6b103c511ae13736100347deb7121ba9b41ba82052b1a018a65c0cb15')
+    version('0.3.1', sha256='1f5e956f35f3acdd3c74516e955d797a320c2e0135e31d838cbdb3ea94d0eb33')
+    version('0.3.0',  '42cde2c1059a8a12227f1e6551c8dbd2')
     version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
 
     variant(
         'shared',
@@ -61,6 +48,12 @@ class Openblas(MakefilePackage):
         multi=False
     )
 
+    variant(
+        'virtual_machine',
+        default=False,
+        description="Adding options to build openblas on Linux virtual machine"
+    )
+
     # virtual dependency
     provides('blas')
     provides('lapack')
@@ -70,8 +63,9 @@ class Openblas(MakefilePackage):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     #  UPD: the patch has been merged starting version 0.2.20
     patch('openblas_icc.patch', when='@:0.2.19%intel')
-    patch('openblas_icc_openmp.patch', when='%intel@16.0:')
+    patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+    patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
@@ -80,6 +74,18 @@ class Openblas(MakefilePackage):
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
     patch('openblas0.2.19.diff', when='@0.2.19')
+
+    # Fix CMake export symbol error
+    # https://github.com/xianyi/OpenBLAS/pull/1703
+    patch('openblas-0.3.2-cmake.patch', when='@0.3.1:0.3.2')
+
+    # Disable experimental TLS code that lead to many threading issues
+    # https://github.com/xianyi/OpenBLAS/issues/1735#issuecomment-422954465
+    # https://github.com/xianyi/OpenBLAS/issues/1761#issuecomment-421039174
+    # https://github.com/xianyi/OpenBLAS/pull/1765
+    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch',
+          sha256='714aea33692304a50bd0ccde42590c176c82ded4a8ac7f06e573dc8071929c33',
+          when='@0.3.3')
 
     parallel = False
 
@@ -90,10 +96,11 @@ class Openblas(MakefilePackage):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
         # require both.
-        if self.compiler.f77 is None:
+        if self.compiler.fc is None:
             raise InstallError(
                 'OpenBLAS requires both C and Fortran compilers!'
             )
+
         # Add support for OpenMP
         if (self.spec.satisfies('threads=openmp') and
             self.spec.satisfies('%clang')):
@@ -108,7 +115,7 @@ class Openblas(MakefilePackage):
 
     @property
     def make_defs(self):
-        # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
+        # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
@@ -116,9 +123,16 @@ class Openblas(MakefilePackage):
 
         make_defs = [
             'CC={0}'.format(spack_cc),
-            'FC={0}'.format(spack_f77),
+            'FC={0}'.format(spack_fc),
             'MAKE_NO_J=1'
         ]
+
+        if self.spec.variants['virtual_machine'].value:
+            make_defs += [
+                'DYNAMIC_ARCH=1',
+                'NO_AVX2=1'
+            ]
+
         if self.spec.variants['cpu_target'].value:
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)

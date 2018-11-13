@@ -1,0 +1,54 @@
+--- percept.orig/CMakeLists.txt	2017-12-08 09:16:41.572819000 -0700
++++ percept/CMakeLists.txt	2017-12-08 09:17:25.028818000 -0700
+@@ -97,13 +97,6 @@
+     SET (INSTALL_PERCEPT TRUE)
+ ENDIF()
+ 
+-IF (INSTALL_PERCEPT)
+-  set(BINARY_INSTALL_DIR bin)
+-  set(INCLUDE_INSTALL_DIR include)
+-  set(LIB_INSTALL_DIR lib)
+-  INCLUDE(CMakePackageConfigHelpers)
+-ENDIF ()
+-
+ MESSAGE("Setting and checking of compilers:")
+ SET(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
+ SET(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
+@@ -269,6 +262,8 @@
+ FILE (GLOB ADAPT_SOURCE src/adapt/main/*.cpp)
+ MESSAGE("-- ADAPT_SOURCE = ${ADAPT_SOURCE}")
+ 
++file(GLOB TRANSFER_SOURCE src/percept/mesh_transfer/*.cpp)
++
+ FILE (GLOB PERCEPT_UTEST_SOURCE test/unit_tests/*.cpp)
+ MESSAGE("-- PERCEPT_UTEST_SOURCE = ${PERCEPT_UTEST_SOURCE}")
+ 
+@@ -330,8 +325,11 @@
+   TARGET_LINK_LIBRARIES(${percept_lib_name} ${Trilinos_LIBRARIES} ${YAML_LIBRARY} ${OPENNURBS_LIBRARY} ${BOOST_LIBRARIES})
+ #  TARGET_LINK_LIBRARIES(${percept_lib_name} ${GTEST_LIBRARY})
+ 
++  add_executable(mesh_transfer ${TRANSFER_SOURCE})
++  target_link_libraries(mesh_transfer ${percept_lib_name})
++
+   SET_PROPERTY(
+-    TARGET ${percept_lib_name} ${adapt_ex_name} ${percept_utest_name} ${percept_rtest_name}
++    TARGET ${percept_lib_name} mesh_transfer ${adapt_ex_name} ${percept_utest_name} ${percept_rtest_name}
+     PROPERTY COMPILE_DEFINITIONS STK_PERCEPT_LITE=0 STK_PERCEPT_HAS_GEOMETRY STK_PERCEPT_USE_INTREPID
+   )
+ 
+@@ -342,5 +340,15 @@
+ 
+ ENDIF()
+ 
++IF (INSTALL_PERCEPT)
++  install(TARGETS ${percept_ex_name} ${adapt_ex_name}
++          ${percept_htest_name} ${percept_rtest_name} ${percept_utest_name}
++          mesh_transfer percept
++          RUNTIME DESTINATION bin
++          ARCHIVE DESTINATION lib
++          LIBRARY DESTINATION lib)
++  #install(DIRECTORY include/ DESTINATION include)
++  include(CMakePackageConfigHelpers)
++ENDIF ()
+ 
+ MESSAGE("\nAnd CMake says...:")

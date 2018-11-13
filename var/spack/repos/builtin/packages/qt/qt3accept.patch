@@ -1,0 +1,38 @@
+--- qt-x11-free-3.3.8b/configure	2008-01-15 13:09:15.000000000 -0600
++++ qt-x11-free-3.3.8b-fixes/configure	2015-07-08 15:49:03.379560633 -0500
+@@ -2339,7 +2339,7 @@
+         else
+             echo "Do you accept the terms of the $TheLicense? \c"
+         fi
+-        read acceptance
++        acceptance=yes
+         echo
+ 	if [ "$acceptance" = yes ]; then
+ 	    break
+@@ -2397,7 +2397,7 @@
+ 	else
+ 	    echo "Do you accept the terms of $affix license? \c"
+ 	fi
+-	read acceptance
++        acceptance=yes
+ 	echo
+ 	if [ "$acceptance" = "yes" ]; then
+ 	    break
+@@ -2443,7 +2443,7 @@
+ 	else
+ 	    echo "Do you accept the terms of the license? \c"
+ 	fi
+-	read acceptance
++        acceptance=yes
+ 	echo
+ 	if [ "$acceptance" = "yes" ]; then
+ 	    break
+@@ -2524,7 +2524,7 @@
+ 	else
+ 	    echo "Do you accept the terms of the $Platform License? \c"
+ 	fi
+-	read acceptance
++        acceptance=yes
+ 	echo
+ 	if [ "$acceptance" = "yes" ]; then
+ 	    break
