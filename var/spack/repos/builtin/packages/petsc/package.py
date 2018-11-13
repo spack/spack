@@ -80,7 +80,7 @@ class Petsc(Package):
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
 
-    variant('x',default=False,
+    variant('x', default=False,
             description='Activate X support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
