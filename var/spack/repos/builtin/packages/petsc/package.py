@@ -213,7 +213,7 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
-        if 'x' in spec:
+        if '+x' in spec:
             options.append('--with-x=1')
         else:
             options.append('--with-x=0')
