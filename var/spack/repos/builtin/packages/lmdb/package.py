@@ -15,6 +15,7 @@ class Lmdb(MakefilePackage):
     homepage = "https://lmdb.tech/"
     url      = "https://github.com/LMDB/lmdb/archive/LMDB_0.9.21.tar.gz"
 
+    version('0.9.22', 'f3927859882eb608868c8c31586bb7eb84562a40a6bf5cc3e13b6b564641ea28')
     version('0.9.21', '41a4f7b63212a00e53fabd8159008201')
     version('0.9.16', '0de89730b8f3f5711c2b3a4ba517b648')
 
