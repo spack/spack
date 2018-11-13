@@ -21,7 +21,7 @@ class PyPyarrow(PythonPackage):
     variant('parquet', default=False, description="Build with Parquet support")
 
     depends_on('cmake@3.0.0:', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
 
