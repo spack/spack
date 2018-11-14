@@ -284,7 +284,7 @@ def createtarball(args):
             tty.msg('createtarball read spec yaml:')
             print(yaml_text)
             s = Spec.from_yaml(yaml_text)
-            packages.add(s.format())
+            packages.add('/{0}'.format(s.dag_hash()))
     elif args.packages:
         packages = args.packages
     else:
@@ -509,7 +509,7 @@ def save_dependent_spec_yaml(args):
         sys.exit(1)
 
     with open(args.yaml_path, 'w') as fd:
-        fd.write(spec.to_yaml())
+        fd.write(spec.to_yaml(all_deps=True))
 
     sys.exit(0)
 
