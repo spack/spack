@@ -109,7 +109,8 @@ def compiler_find(args):
 
 def compiler_remove(args):
     cspec = CompilerSpec(args.compiler_spec)
-    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
+    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope,
+                                                   check_paths=False)
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)
     elif not args.all and len(compilers) > 1:
@@ -127,7 +128,8 @@ def compiler_remove(args):
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
     cspec = CompilerSpec(args.compiler_spec)
-    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
+    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope,
+                                                   check_paths=False)
 
     if not compilers:
         tty.error("No compilers match spec %s" % cspec)
@@ -157,7 +159,8 @@ def compiler_info(args):
 
 def compiler_list(args):
     tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope),
+    index = index_by(spack.compilers.all_compilers(scope=args.scope,
+                     check_paths=False),
                      lambda c: (c.spec.name, c.operating_system, c.target))
     ordered_sections = sorted(index.items(), key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):

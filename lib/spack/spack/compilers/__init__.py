@@ -274,18 +274,18 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
                                                init_config)]
 
 
-def all_compilers(scope=None):
+def all_compilers(scope=None, check_paths=True):
     config = get_compiler_config(scope)
     compilers = list()
     for items in config:
         items = items['compiler']
-        compilers.append(_compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items, check_paths))
     return compilers
 
 
 @_auto_compiler_spec
 def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
-                       use_cache=True, init_config=True):
+                       use_cache=True, init_config=True, check_paths=True):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
@@ -297,7 +297,7 @@ def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
     for cspec in matches:
-        compilers.extend(get_compilers(config, cspec, arch_spec))
+        compilers.extend(get_compilers(config, cspec, arch_spec, check_paths))
     return compilers
 
 
@@ -324,7 +324,7 @@ class CacheReference(object):
         return isinstance(other, CacheReference) and self.id == other.id
 
 
-def compiler_from_dict(items):
+def compiler_from_dict(items, check_paths=True):
     cspec = spack.spec.CompilerSpec(items['spec'])
     os = items.get('operating_system', None)
     target = items.get('target', None)
@@ -362,10 +362,11 @@ def compiler_from_dict(items):
     return cls(cspec, os, target, compiler_paths, mods, alias,
                environment, extra_rpaths,
                enable_implicit_rpaths=implicit_rpaths,
+               check_paths=check_paths,
                **compiler_flags)
 
 
-def _compiler_from_config_entry(items):
+def _compiler_from_config_entry(items, check_paths=True):
     """Note this is intended for internal use only. To avoid re-parsing
        the same config dictionary this keeps track of its location in
        memory. If you provide the same dictionary twice it will return
@@ -376,13 +377,13 @@ def _compiler_from_config_entry(items):
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
-        compiler = compiler_from_dict(items)
+        compiler = compiler_from_dict(items, check_paths)
         _compiler_cache[config_id] = compiler
 
     return compiler
 
 
-def get_compilers(config, cspec=None, arch_spec=None):
+def get_compilers(config, cspec=None, arch_spec=None, check_paths=True):
     compilers = []
 
     for items in config:
@@ -415,7 +416,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         if arch_spec and target and (target != family and target != 'any'):
             continue
 
-        compilers.append(_compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items, check_paths))
 
     return compilers
 

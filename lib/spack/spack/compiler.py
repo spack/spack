@@ -252,7 +252,7 @@ class Compiler(object):
     def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
                  extra_rpaths=None, enable_implicit_rpaths=None,
-                 **kwargs):
+                 check_paths=True, **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
@@ -264,7 +264,8 @@ class Compiler(object):
         def check(exe):
             if exe is None:
                 return None
-            _verify_executables(self.spec, self.operating_system, exe)
+            if check_paths:
+                _verify_executables(self.spec, self.operating_system, exe)
             return exe
 
         self.cc  = check(paths[0])
