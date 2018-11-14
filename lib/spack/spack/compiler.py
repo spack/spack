@@ -27,7 +27,7 @@ __all__ = ['Compiler']
 
 def _verify_executables(*paths):
     for path in paths:
-        if not os.path.isfile(path) and os.access(path, os.X_OK):
+        if not (os.path.isfile(path) and os.access(path, os.X_OK)):
             raise CompilerAccessError(path)
 
 
