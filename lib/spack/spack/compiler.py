@@ -25,10 +25,10 @@ from spack.util.environment import filter_system_paths
 __all__ = ['Compiler']
 
 
-def _verify_executables(*paths):
+def _verify_executables(spec, operating_system, *paths):
     for path in paths:
         if not (os.path.isfile(path) and os.access(path, os.X_OK)):
-            raise CompilerAccessError(path)
+            raise CompilerAccessError(str(spec), operating_system, path)
 
 
 @llnl.util.lang.memoized
@@ -264,7 +264,7 @@ class Compiler(object):
         def check(exe):
             if exe is None:
                 return None
-            _verify_executables(exe)
+            _verify_executables(self.spec, self.operating_system, exe)
             return exe
 
         self.cc  = check(paths[0])
@@ -476,16 +476,11 @@ class Compiler(object):
 
 class CompilerAccessError(spack.error.SpackError):
 
-    def __init__(self, path):
+    def __init__(self, spec, operating_system, path):
         super(CompilerAccessError, self).__init__(
-            "'%s' is not a valid compiler." % path)
-
-
-class InvalidCompilerError(spack.error.SpackError):
-
-    def __init__(self):
-        super(InvalidCompilerError, self).__init__(
-            "Compiler has no executables.")
+            "'{0}' is not a valid path for compiler '{1}'"
+            "on operating system '{2}'.".format(path, spec, operating_system),
+            "Please use 'spack compiler' to diagnose and fix the problem.")
 
 
 class UnsupportedCompilerFlag(spack.error.SpackError):
