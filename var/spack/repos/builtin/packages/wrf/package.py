@@ -102,5 +102,5 @@ class Wrf(AutotoolsPackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('main/wrf.exe', prefix.bin)
-        install('main/ndown.exe', prefix)
+        install('main/ndown.exe', prefix.bin)
         install('main/real.exe', prefix.bin)
