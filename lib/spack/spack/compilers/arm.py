@@ -3,10 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
-
-from spack.compiler import Compiler, _version_cache
-from spack.util.executable import Executable
+from spack.compiler import Compiler, get_compiler_version
 
 
 class Arm(Compiler):
@@ -54,13 +51,17 @@ class Arm(Compiler):
         for arm compilers.  Output looks like this::
 
             $ arm<c/f>lang --version
-            Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)
+            Arm C/C++/Fortran Compiler version 19.0 (build number 73)
+            (based on LLVM 7.0.2)
             Target: aarch64--linux-gnu
             Thread model: posix
-            InstalledDir: /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
+            InstalledDir:
+            /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7 \\
+            _aarch64-linux/bin
         """
         return get_compiler_version(
-            comp, '--version', r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)')
+            comp, '--version',
+            r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)')
 
     @classmethod
     def fc_version(cls, fc):
