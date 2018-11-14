@@ -41,7 +41,7 @@ class QuantumEspresso(Package):
     # Dependencies
     depends_on('blas')
     depends_on('lapack')
-    depends_on('fftw3')
+    depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')
     depends_on('elpa+openmp', when='+elpa+openmp')
