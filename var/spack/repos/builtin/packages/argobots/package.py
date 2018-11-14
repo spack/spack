@@ -33,7 +33,9 @@ class Argobots(AutotoolsPackage):
 
     def configure_args(self):
         args = ["--enable-perf-opt"]
-        if (self.spec.variants["valgrind"].value):
-            args.extend(["--enable-valgrind"])
+        if '+valgrind' in self.spec:
+            args.append('--enable-valgrind')
+        else:
+            args.append('--disable-valgrind')
 
         return args
