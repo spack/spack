@@ -32,8 +32,12 @@ class Cp2k(Package):
     depends_on('lapack')
     depends_on('blas')
     depends_on('fftw@3:')
+
+    depends_on('libxsmm@1.10:~header-only', when='smm=libxsmm')
+    # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
+    depends_on('pkgconfig', type='build', when='smm=libxsmm')
+
     depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
-    depends_on('libxsmm~header-only', when='smm=libxsmm')
     depends_on('libxc@2.2.2:')
 
     depends_on('mpi@2:', when='+mpi')
@@ -259,11 +263,10 @@ class Cp2k(Package):
             elif 'smm=libxsmm' in spec:
                 cppflags.extend([
                     '-D__LIBXSMM',
-                    spec['libxsmm'].headers.cpp_flags,
+                    '$(shell pkg-config --cflags-only-other libxsmmf)',
                 ])
-                libxsmm = spec['libxsmm'].libs
-                ldflags.append(libxsmm.search_flags)
-                libs.append(str(libxsmm))
+                fcflags.append('$(shell pkg-config --cflags-only-I libxsmmf)')
+                libs.append('$(shell pkg-config --libs libxsmmf)')
 
             dflags.extend(cppflags)
             cflags.extend(cppflags)
