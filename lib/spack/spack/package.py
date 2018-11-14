@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This is where most of the action happens in Spack.
 
 The spack package class structure is based strongly on Homebrew
@@ -66,7 +47,7 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, touch
+from llnl.util.filesystem import mkdirp, touch, chgrp
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
@@ -78,6 +59,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
+from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1421,7 +1403,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
-        if kwargs.get('use_cache', False):
+        if kwargs.get('use_cache', True):
             if self.try_install_from_binary_cache(explicit):
                 tty.msg('Successfully installed %s from binary cache'
                         % self.name)
@@ -1527,6 +1509,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
+            else:
+                # Set the proper group for the prefix
+                group = get_package_group(self.spec)
+                if group:
+                    chgrp(self.prefix, group)
+                # Set the proper permissions.
+                # This has to be done after group because changing groups blows
+                # away the sticky group bit on the directory
+                mode = os.stat(self.prefix).st_mode
+                perms = get_package_dir_permissions(self.spec)
+                if mode != perms:
+                    os.chmod(self.prefix, perms)
 
             # Fork a child to do the actual installation
             # we preserve verbosity settings across installs.
@@ -1738,6 +1732,31 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
+    @classmethod
+    def inject_flags(cls, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
+        return (flags, None, None)
+
+    @classmethod
+    def env_flags(cls, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
+        return (None, flags, None)
+
+    @classmethod
+    def build_system_flags(cls, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.  Any
+        package using `build_system_flags` must also implement
+        `flags_to_build_system_args`, or derive from a class that
+        implements it.  Currently, AutotoolsPackage and CMakePackage
+        implement it.
+        """
+        return (None, None, flags)
+
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package.
 
@@ -1837,28 +1856,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 package's spec is available as ``self.spec``.
         """
         pass
-
-    def inject_flags(self, name, flags):
-        """
-        flag_handler that injects all flags through the compiler wrapper.
-        """
-        return (flags, None, None)
-
-    def env_flags(self, name, flags):
-        """
-        flag_handler that adds all flags to canonical environment variables.
-        """
-        return (None, flags, None)
-
-    def build_system_flags(self, name, flags):
-        """
-        flag_handler that passes flags to the build system arguments.  Any
-        package using `build_system_flags` must also implement
-        `flags_to_build_system_args`, or derive from a class that
-        implements it.  Currently, AutotoolsPackage and CMakePackage
-        implement it.
-        """
-        return (None, None, flags)
 
     flag_handler = inject_flags
     # The flag handler method is called for each of the allowed compiler flags.
@@ -2194,6 +2191,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+
+
+inject_flags = PackageBase.inject_flags
+env_flags = PackageBase.env_flags
+build_system_flags = PackageBase.build_system_flags
 
 
 class Package(PackageBase):

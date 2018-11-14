@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import sys
 from spack import *
@@ -36,6 +17,7 @@ class Hydrogen(CMakePackage):
     git      = "https://github.com/LLNL/Elemental.git"
 
     version('develop', branch='hydrogen')
+    version('1.0', sha256='d8a97de3133f2c6b6bb4b80d32b4a4cc25eb25e0df4f0cec0f8cb19bf34ece98')
     version('0.99', 'b678433ab1d498da47acf3dc5e056c23')
 
     variant('shared', default=True,
@@ -64,6 +46,10 @@ class Hydrogen(CMakePackage):
             description='Builds with support for GPUs via CUDA and cuDNN')
     variant('test', default=False,
             description='Builds test suite')
+    variant('al', default=False,
+            description='Builds with Aluminum communication library')
+    variant('omp_taskloops', default=False,
+            description='Use OpenMP taskloops instead of parallel for loops.')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
@@ -84,6 +70,10 @@ class Hydrogen(CMakePackage):
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
     depends_on('essl threads=openmp +ilp64', when='blas=essl +openmp_blas +int64_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
+
+    depends_on('aluminum@master', when='+al ~cuda')
+    depends_on('aluminum@master +gpu +mpi-cuda', when='+al +cuda ~nccl')
+    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='+al +cuda +nccl')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -142,7 +132,7 @@ class Hydrogen(CMakePackage):
             args.extend([
                 '-DHydrogen_USE_OpenBLAS:BOOL=%s' % ('blas=openblas' in spec),
                 '-DOpenBLAS_DIR:STRING={0}'.format(
-                    spec['hydrogen'].prefix)])
+                    spec['openblas'].prefix)])
         elif 'blas=mkl' in spec:
             args.extend([
                 '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
@@ -151,5 +141,16 @@ class Hydrogen(CMakePackage):
         elif 'blas=essl' in spec:
             args.extend([
                 '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
+
+        if '+omp_taskloops' in spec:
+            args.extend([
+                '-DHydrogen_ENABLE_OMP_TASKLOOP:BOOL=%s' %
+                ('+omp_taskloops' in spec)])
+
+        if '+al' in spec:
+            args.extend([
+                '-DHydrogen_ENABLE_ALUMINUM:BOOL=%s' % ('+al' in spec),
+                '-DHYDROGEN_Aluminum_DIR={0}'.format(
+                    spec['aluminum'].prefix)])
 
         return args

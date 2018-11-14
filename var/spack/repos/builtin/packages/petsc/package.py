@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 import sys
@@ -43,6 +24,8 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.2', '63ed950653ae9b8d19daea47e24c0338')
+    version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
     version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
     version('3.9.4', 'c98eb67573efb2f91c6f239368259e44')
     version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
@@ -204,6 +187,9 @@ class Petsc(Package):
                    '--download-c2html=0',
                    '--download-sowing=0',
                    '--download-hwloc=0',
+                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
+                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags']),
                    'COPTFLAGS=',
                    'FOPTFLAGS=',
                    'CXXOPTFLAGS=']
