@@ -1510,9 +1510,9 @@ class Spec(object):
 
         return syaml_dict([('spec', node_list)])
 
-    def to_yaml(self, stream=None):
+    def to_yaml(self, stream=None, all_deps=False):
         return syaml.dump(
-            self.to_dict(), stream=stream, default_flow_style=False)
+            self.to_dict(all_deps), stream=stream, default_flow_style=False)
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
