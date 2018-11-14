@@ -116,7 +116,7 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    INSTALL_OUTPUT=$(spack -d install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}")
+    INSTALL_OUTPUT=$(spack -d -k install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}")
     check_error $?
     echo -e "spack install output:\n${INSTALL_OUTPUT}"
 
