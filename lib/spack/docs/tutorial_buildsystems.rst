@@ -373,7 +373,7 @@ Let's look at an example of this in the :code:`elk` package:
 .. code-block:: python
 
         def edit(self, spec, prefix):
-        # Dictionary of configuration options
+            # Dictionary of configuration options
             config = {
                 'MAKE': 'make',
                 'AR':   'ar'
@@ -506,7 +506,7 @@ Unix-Makefile_ generators as well as Ninja_ generators.
 .. _Unix-Makefile: https://cmake.org/cmake/help/v3.4/generator/Unix%20Makefiles.html
 .. _Ninja: https://cmake.org/cmake/help/v3.4/generator/Ninja.html
 
-If no generator is specified Spack will default to :code:`Unix Makefile`.
+If no generator is specified Spack will default to :code:`Unix Makefiles`.
 
 Next we setup the build type. In :code:`CMake` you can specify the build type
 that you want. Options include:
@@ -523,7 +523,7 @@ Release executables tend to be more optimized than Debug. In Spack, we set
 the default as RelWithDebInfo unless otherwise specified through a variant.
 
 Spack then automatically sets up the :code:`-DCMAKE_INSTALL_PREFIX` path,
-appends the build type (:code:`RelDebInfo` default), and then specifies a verbose
+appends the build type (:code:`RelWithDebInfo` default), and then specifies a verbose
 :code:`Makefile`.
 
 Next we add the :code:`rpaths` to :code:`-DCMAKE_INSTALL_RPATH:STRING`.
@@ -795,7 +795,7 @@ for the following build systems:
 3. :code:`WafPackage`
 4. :code:`RPackage`
 5. :code:`PerlPackage`
-6. :code:`QMake`
+6. :code:`QMakePackage`
 
 
 Each of these classes have their own abstractions to help assist in writing
