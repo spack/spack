@@ -15,8 +15,8 @@ class Cp2k(Package):
     periodic, material, crystal, and biological systems
     """
     homepage = 'https://www.cp2k.org'
-    url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
-    list_url = 'https://sourceforge.net/projects/cp2k/files/'
+    url = 'https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2'
+    list_url = 'https://github.com/cp2k/cp2k/releases'
 
     version('6.1', '573a4de5a0ee2aaabb213e04543cb10f')
     version('5.1', 'f25cf301aec471d7059179de4dac3ee7')
