@@ -24,6 +24,9 @@ class Cp2k(Package):
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
+            description='Enable the use of OpenBlas/MKL/Accelerate')
+    variant('openmp', default=False, description='Enable OpenMP support')
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
@@ -37,9 +40,18 @@ class Cp2k(Package):
 
     depends_on('python', type='build')
 
-    depends_on('lapack')
-    depends_on('blas')
-    depends_on('fftw@3:')
+    depends_on('fftw@3:', when='~openmp')
+    depends_on('fftw@3:+openmp', when='+openmp')
+
+    # see #1712 for the reason to enumerate BLAS libraries here
+    depends_on('openblas threads=none', when='blas=openblas ~openmp')
+    depends_on('openblas threads=openmp', when='blas=openblas +openmp')
+    depends_on('lapack', when='blas=openblas ~openmp')
+
+    depends_on('intel-mkl', when="blas=mkl ~openmp")
+    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp')
+
+    conflicts('blas=accelerate', '+openmp')  # there is no Accelerate with OpenMP support
 
     depends_on('libxsmm@1.10:~header-only', when='smm=libxsmm')
     # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
@@ -52,8 +64,10 @@ class Cp2k(Package):
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
-    depends_on('elpa@2011.12:2016.13', when='+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11', when='+elpa@6.0:')
+    depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
+    depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:')
+    depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
+    depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
 
@@ -82,7 +96,10 @@ class Cp2k(Package):
     def install(self, spec, prefix):
         # Construct a proper filename for the architecture file
         cp2k_architecture = '{0.architecture}-{0.compiler.name}'.format(spec)
-        cp2k_version = 'sopt' if '~mpi' in spec else 'popt'
+        cp2k_version = ('{prefix}{suffix}'
+                        .format(prefix='p' if '+mpi' in spec else 's',
+                                suffix='smp' if '+openmp' in spec else 'opt'))
+
         makefile_basename = '.'.join([cp2k_architecture, cp2k_version])
         makefile = join_path('arch', makefile_basename)
 
@@ -109,12 +126,17 @@ class Cp2k(Package):
 
             dflags = ['-DNDEBUG']
 
+            if '+openmp' in spec:
+                fftw = spec['fftw:openmp']
+            else:
+                fftw = spec['fftw']
+
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
                 '-D__LIBINT_MAX_AM=6',
                 '-D__LIBDERIV_MAX_AM1=5',
-                spec['fftw'].headers.cpp_flags,
+                fftw.headers.cpp_flags,
             ]
 
             if '^mpi@3:' in spec:
@@ -128,18 +150,28 @@ class Cp2k(Package):
             cflags = copy.deepcopy(optflags[self.spec.compiler.name])
             cxxflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
+            ldflags = []
+            libs = []
 
             if '%intel' in spec:
                 cflags.append('-fp-model precise')
                 cxxflags.append('-fp-model precise')
                 fcflags.extend(['-fp-model source', '-heap-arrays 64'])
+                if '+openmp' in spec:
+                    fcflags.append('-openmp')
+                    ldflags.append('-openmp')
             elif '%gcc' in spec:
                 fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
+                if '+openmp' in spec:
+                    fcflags.append('-fopenmp')
+                    ldflags.append('-fopenmp')
             elif '%pgi' in spec:
                 fcflags.extend(['-Mfreeform', '-Mextend'])
+                if '+openmp' in spec:
+                    fcflags.append('-mp')
+                    ldflags.append('-mp')
 
-            fftw = spec['fftw'].libs
-            ldflags = [fftw.search_flags]
+            ldflags.append(fftw.libs.search_flags)
 
             if 'superlu-dist@4.3' in spec:
                 ldflags.insert(0, '-Wl,--allow-multiple-definition')
@@ -148,10 +180,10 @@ class Cp2k(Package):
             # inconsistencies in its Fortran interface definition
             # (short-int vs int) which otherwise causes segfaults at runtime
             # due to wrong offsets into the shared library symbols.
-            libs = [
+            libs.extend([
                 join_path(spec['libint'].libs.directories[0], 'libderiv.a'),
                 join_path(spec['libint'].libs.directories[0], 'libint.a'),
-            ]
+            ])
 
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
@@ -205,7 +237,7 @@ class Cp2k(Package):
             lapack = spec['lapack'].libs
             blas = spec['blas'].libs
             ldflags.append((lapack + blas).search_flags)
-            libs.extend([str(x) for x in (fftw, lapack, blas)])
+            libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
             # MPI
             if '+mpi' in self.spec:
@@ -259,14 +291,18 @@ class Cp2k(Package):
 
             if '+elpa' in self.spec:
                 elpa = spec['elpa']
+                elpa_suffix = '_openmp' if '+openmp' in elpa else ''
                 elpa_base_path = join_path(
                     elpa.prefix,
                     'include',
-                    'elpa-{0}'.format(str(elpa.version)))
+                    'elpa{suffix}-{version!s}'.format(
+                        suffix=elpa_suffix, version=elpa.version))
 
                 fcflags.append('-I' + join_path(elpa_base_path, 'modules'))
                 libs.append(join_path(elpa.libs.directories[0],
-                                      'libelpa.{0}'.format(dso_suffix)))
+                                      ('libelpa{elpa_suffix}.{dso_suffix}'
+                                       .format(elpa_suffix=elpa_suffix,
+                                               dso_suffix=dso_suffix))))
 
                 if spec.satisfies('@:4.999'):
                     if elpa.satisfies('@:2014.5.999'):
