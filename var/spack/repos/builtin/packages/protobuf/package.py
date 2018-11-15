@@ -12,9 +12,10 @@ class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
+    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.2.0.tar.gz"
     root_cmakelists_dir = "cmake"
 
+    version('3.6.1', sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')
     version('3.5.2', 'ff6742018c172c66ecc627029ad54280')
     version('3.5.1.1', '5005003ae6b94773c4bbca87a644b131')
     version('3.5.1',   '710f1a75983092c9b45ecef207236104')
@@ -34,7 +35,8 @@ class Protobuf(CMakePackage):
 
     depends_on('zlib')
 
-    conflicts('%gcc@:4.6')  # Requires c++11
+    conflicts('%gcc@:4.6', when='@3.6.0:')  # Requires c++11
+    conflicts('%gcc@:4.6', when='@3.2.0:3.3.0')  # Breaks
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
