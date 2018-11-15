@@ -82,7 +82,7 @@ class Phist(CMakePackage):
     # in older versions, it is not possible to turn off the use of host-
     # specific compiler flags in Release mode.
     conflicts('~host', when='@:1.7.4')
-    
+
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
