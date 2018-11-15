@@ -36,6 +36,7 @@ class Protobuf(CMakePackage):
     depends_on('zlib')
 
     conflicts('%gcc@:4.6', when='@3.6.0:')  # Requires c++11
+    conflicts('%gcc@:4.6', when='@3.2.0:3.3.0')  # Breaks
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
