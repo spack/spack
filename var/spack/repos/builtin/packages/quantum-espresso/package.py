@@ -199,11 +199,9 @@ class QuantumEspresso(Package):
         if '+hdf5' in spec:
             make_inc = join_path(self.stage.source_path, 'make.inc')
             hdf5_libs = ' '.join(spec['hdf5:hl,fortran'].libs)
-            filter_file(
-                'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
-                'HDF5_LIB = {0}'.format(hdf5_libs),
-                make_inc
-            )
+            filter_file(r'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
+                        'HDF5_LIB = {0}'.format(hdf5_libs),
+                        make_inc)
 
         make('all')
 
