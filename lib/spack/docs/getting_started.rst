@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _getting_started:
 
 ===============
@@ -202,6 +207,13 @@ installed, but you know that new compilers have been added to your
 This loads the environment module for gcc-4.9.0 to add it to
 ``PATH``, and then it adds the compiler to Spack.
 
+.. note::
+
+   By default, spack does not fill in the ``modules:`` field in the
+   ``compilers.yaml`` file.  If you are using a compiler from a
+   module, then you should add this field manually.
+   See the section on :ref:`compilers-requiring-modules`.
+
 .. _cmd-spack-compiler-info:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -320,6 +332,7 @@ by adding the following to your ``packages.yaml`` file:
      all:
        compiler: [gcc@4.9.3]
 
+.. _compilers-requiring-modules:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Compilers Requiring Modules

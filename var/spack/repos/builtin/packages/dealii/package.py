@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -65,6 +46,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
+    variant('muparser', default=True,  description='Compile with muParser')
     variant('nanoflann', default=True, description='Compile with Nanoflann')
     variant('netcdf',   default=True,
             description='Compile with Netcdf (only with MPI)')
@@ -122,9 +104,7 @@ class Dealii(CMakePackage, CudaPackage):
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
-    depends_on('muparser')
     depends_on('suite-sparse')
-    depends_on('suite-sparse@:5.1.0', when='%gcc@:4.8.99')
     depends_on('tbb')
     depends_on('zlib')
 
@@ -147,6 +127,7 @@ class Dealii(CMakePackage, CudaPackage):
     # but we should not need it
     depends_on('metis@5:+int64+real64',   when='+metis+int64')
     depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
     depends_on('netcdf+mpi',       when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
@@ -221,7 +202,6 @@ class Dealii(CMakePackage, CudaPackage):
             '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
                 spec['lapack'].prefix.include, spec['blas'].prefix.include),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
-            '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
@@ -321,7 +301,7 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp', 'gmsh'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser'):
             if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),

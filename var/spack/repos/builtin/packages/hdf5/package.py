@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import shutil
 import sys
 
@@ -39,6 +20,7 @@ class Hdf5(AutotoolsPackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
+    version('1.10.4', '8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', 'b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
     version('1.10.2', '8d4eae84e533efa57496638fd0dca8c3')
     version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
@@ -296,8 +278,8 @@ HDF5 version {version} {version}
             else:
                 cc = Executable(self.compiler.cc)
             cc(*(['-c', "check.c"] + spec['hdf5'].headers.cpp_flags.split()))
-            cc(*(['-o', "check", "check.o"] +
-                 spec['hdf5'].libs.ld_flags.split()))
+            cc(*(['-o', "check",
+                  "check.o"] + spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
                 output = check(output=str)

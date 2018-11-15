@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import sys
 from spack import *
@@ -35,6 +16,7 @@ class Slepc(Package):
     git      = "https://bitbucket.org/slepc/slepc.git"
 
     version('develop', branch='master')
+    version('3.10.1', 'f64787c8c2ab3d2f6db3c67d2bfe6ee84f741ce3dfde1d2f8221e131820a12a1')
     version('3.10.0', '069d7a579995e0be1567c5bc869251e29c00044369a786933ca3040149d0412a')
     version('3.9.2', '247585b3f8c10bf50b9464cb8ef7b5f22bead6f96524384897a37ec4146eb03e')
     version('3.9.1', 'e174ea7c127d9161eef976b0288f0c56d443a58d6ab2dc8af1e8bd66f156ce17')

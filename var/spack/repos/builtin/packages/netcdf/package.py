@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import numbers
@@ -43,9 +24,9 @@ class Netcdf(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
 
+    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
-    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
     version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
     # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
@@ -59,6 +40,8 @@ class Netcdf(AutotoolsPackage):
     variant('parallel-netcdf', default=False,
             description='Enable parallel I/O for classic files')
     variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
 
@@ -174,7 +157,7 @@ class Netcdf(AutotoolsPackage):
 
         config_args += self.enable_or_disable('shared')
 
-        if '~shared' in self.spec:
+        if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
             cflags.append(self.compiler.pic_flag)
