@@ -15,13 +15,12 @@
 # -------------------------------------------------------------------------
 packages:
     all:
-        compiler: [gcc, intel, pgi]
-        providers:
-            mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
-            blas: [openblas, intel-parallel-studio+mkl]
-            lapack: [openblas, intel-parallel-studio+mkl]
-            scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
-
+      compiler: [gcc, intel, pgi]
+      providers:
+        mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
+        blas: [openblas, intel-parallel-studio+mkl]
+        lapack: [openblas, intel-parallel-studio+mkl]
+        scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
     autoconf:
       paths:
         autoconf@2.69 arch=linux-centos7-x86_64: /usr
@@ -50,7 +49,6 @@ packages:
       paths:
         m4@1.4.16 arch=linux-centos7-x86_64: /usr
       buildable: False 
-
     intel-parallel-studio:
         paths:
             intel-parallel-studio@cluster.2016.4%intel@16.0.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ybjjq75tqpzgzjc4drolyijzm45g5qul
@@ -87,9 +85,4 @@ packages:
     slurm:
         paths:
             slurm@system: /usr
-        buildable: False
-
-    rdma-core:
-        paths:
-            rdma-core@4.5.0: /usr
         buildable: False
