@@ -70,5 +70,5 @@ for pkg,specs in mpipkgs.items():
                     install(concrete_spec)
 
 # Remove intermediate dependency
-for pkg in ["automake", "autoconf", "bison", "m4", "gperf", "flex", "inputproto", "help2man", "pkg-config", "nasm"]:
+for pkg in ["gperf", "inputproto", "help2man", "nasm"]:
     os.system("spack uninstall -y --all {}".format(pkg))

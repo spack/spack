@@ -51,5 +51,5 @@ for pkg,specs in packages.items():
             install("{} %{} {}".format(pkg, cc, spec))
 
 # Remove intermediate dependency
-for pkg in ["automake", "autoconf", "perl", "m4", "pkg-conf"]:
+for pkg in ["perl"]:
     os.system("spack uninstall -y {}".format(pkg))
