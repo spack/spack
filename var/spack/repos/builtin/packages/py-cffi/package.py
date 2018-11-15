@@ -18,6 +18,7 @@ class PyCffi(PythonPackage):
     version('1.10.0', '2b5fa41182ed0edaf929a789e602a070')
     version('1.1.2',  'ca6e6c45b45caa87aee9adc7c796eaea')
 
+    depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-pycparser', type=('build', 'run'))
     depends_on('libffi')
