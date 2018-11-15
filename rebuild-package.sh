@@ -68,8 +68,9 @@ SPEC_YAML_PATH="${SPEC_DIR}/spec.yaml"
 SPEC_NAME=$( gen_full_spec "${SPEC_YAML_PATH}" "${CI_JOB_NAME}" )
 echo "Building package ${SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
 
-echo "Saved full spec yaml to ${SPEC_YAML_PATH}, contents:"
-cat ${SPEC_YAML_PATH}
+echo "Saved full spec yaml to ${SPEC_YAML_PATH}"
+# echo "Saved full spec yaml to ${SPEC_YAML_PATH}, contents:"
+# cat ${SPEC_YAML_PATH}
 
 # Finally, list the compilers spack knows about
 spack compilers
@@ -97,6 +98,7 @@ spack gpg list
 # Importing the secret key using gpg2 directly should allow to
 # sign and verify both
 echo ${SPACK_SIGNING_KEY} | base64 --decode | gpg2 --import
+check_error $?
 
 # This line doesn't seem to add any extra trust levels
 # echo ${SPACK_SIGNING_KEY} | base64 --decode | spack gpg trust /dev/stdin
@@ -116,7 +118,7 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    INSTALL_OUTPUT=$(spack -d -k install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}")
+    INSTALL_OUTPUT=$(spack -k install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}")
     check_error $?
     echo -e "spack install output:\n${INSTALL_OUTPUT}"
 
@@ -134,7 +136,7 @@ if [[ $? -ne 0 ]]; then
     # this to read the spec from the yaml file, but it seems unlikely there
     # will be a spec that matches the name which is NOT the same as represented
     # in the yaml file
-    BUILDCACHE_CREATE_OUTPUT=$(spack -d buildcache create --spec-yaml "${SPEC_YAML_PATH}" -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG})
+    BUILDCACHE_CREATE_OUTPUT=$(spack buildcache create --spec-yaml "${SPEC_YAML_PATH}" -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG})
     check_error $?
     echo -e "spack buildcache create output:\n${BUILDCACHE_CREATE_OUTPUT}"
 
@@ -175,9 +177,10 @@ if [ -f "${JOB_CDASH_ID_FILE}" ]; then
         DEP_SPEC_YAML_DIR=$(mktemp -d)
         DEP_SPEC_YAML_PATH="${DEP_SPEC_YAML_DIR}/spec.yaml"
         DEP_SPEC_NAME=$( gen_full_spec "${DEP_SPEC_YAML_PATH}" "${i}" )
-        echo "dependency spec name = ${DEP_SPEC_NAME}"
-        echo "dependency spec yaml contents:"
-        cat ${DEP_SPEC_YAML_PATH}
+        # echo "dependency spec name = ${DEP_SPEC_NAME}"
+        echo "dependency spec name = ${DEP_SPEC_NAME}, spec yaml saved to ${DEP_SPEC_YAML_PATH}"
+        # echo "dependency spec yaml contents:"
+        # cat ${DEP_SPEC_YAML_PATH}
         DEP_JOB_BUILDCACHE_NAME=`spack buildcache get-buildcache-name --spec-yaml "${DEP_SPEC_YAML_PATH}"`
 
         if [[ $? -eq 0 ]]; then
