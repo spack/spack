@@ -14,6 +14,7 @@ class Krb5(AutotoolsPackage):
 
     version('1.16.1', '848e9b80d6aaaa798e3f3df24b83c407')
 
+    depends_on('bison', type='build')
     depends_on('openssl')
 
     configure_directory = 'src'
