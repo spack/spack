@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Spack's installation tracking database.
 
 The database serves two purposes:
@@ -942,7 +923,8 @@ class Database(object):
             installed=True,
             explicit=any,
             start_date=None,
-            end_date=None
+            end_date=None,
+            hashes=None
     ):
         """Run a query on the database
 
@@ -976,8 +958,12 @@ class Database(object):
             end_date (datetime, optional): filters the query discarding
                 specs that have been installed after ``end_date``.
 
+            hashes (container): list or set of hashes that we can use to
+                restrict the search
+
         Returns:
             list of specs that match the query
+
         """
         # TODO: Specs are a lot like queries.  Should there be a
         # TODO: wildcard spec object, and should specs have attributes
@@ -986,20 +972,24 @@ class Database(object):
 
         # Just look up concrete specs with hashes; no fancy search.
         if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
-
+            # TODO: handling of hashes restriction is not particularly elegant.
             hash_key = query_spec.dag_hash()
-            if hash_key in self._data:
+            if (hash_key in self._data and
+                (not hashes or hash_key in hashes)):
                 return [self._data[hash_key].spec]
             else:
                 return []
 
         # Abstract specs require more work -- currently we test
         # against everything.
+        results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
 
-        results = []
         for key, rec in self._data.items():
+            if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
             if installed is not any and rec.installed != installed:
                 continue
 
@@ -1028,11 +1018,13 @@ class Database(object):
             installed=True,
             explicit=any,
             start_date=None,
-            end_date=None
+            end_date=None,
+            hashes=None
     ):
         kwargs = {'query_spec': query_spec, 'known': known,
                   'installed': installed, 'explicit': explicit,
-                  'start_date': start_date, 'end_date': end_date}
+                  'start_date': start_date, 'end_date': end_date,
+                  'hashes': hashes}
 
         results = []
         for upstream_db in self.upstream_dbs:

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,11 +14,10 @@ class Davix(CMakePackage):
     list_url = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/"
     list_depth = 1
 
-    version('0.6.7', 'f811647d924a6dc5852c92110359ed91')
+    version('0.6.8', 'e1820f4cc3fc44858ae97197a3922cce2a1130ff553b080ba19e06eb8383ddf7',
+            url='http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/0.6.8/davix-0.6.8.tar.gz')
 
     depends_on('pkgconfig', type='build')
     depends_on('libxml2')
     depends_on('libuuid')
     depends_on('openssl')
-
-    patch('davix-0.6.7-uuid.patch', when="@0.6.7")

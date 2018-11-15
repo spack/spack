@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import codecs
 import hashlib
@@ -58,7 +39,17 @@ cdash_phases = set(map_phases_to_cdash.values())
 
 
 class CDash(Reporter):
-    """Generate reports of spec installations for CDash."""
+    """Generate reports of spec installations for CDash.
+
+    To use this reporter, pass the ``--cdash-upload-url`` argument to
+    ``spack install``::
+
+        spack install --cdash-upload-url=\\
+            https://mydomain.com/cdash/submit.php?project=Spack <spec>
+
+    In this example, results will be uploaded to the *Spack* project on the
+    CDash instance hosted at https://mydomain.com/cdash.
+    """
 
     def __init__(self, install_command, cdash_upload_url):
         Reporter.__init__(self, install_command, cdash_upload_url)
@@ -90,6 +81,7 @@ class CDash(Reporter):
             for package in spec['packages']:
                 if 'stdout' in package:
                     current_phase = ''
+                    cdash_phase = ''
                     for line in package['stdout'].splitlines():
                         match = phase_regexp.search(line)
                         if match:
@@ -97,19 +89,23 @@ class CDash(Reporter):
                             if current_phase not in map_phases_to_cdash:
                                 current_phase = ''
                                 continue
-                            beginning_of_phase = True
-                        else:
-                            if beginning_of_phase:
-                                cdash_phase = \
-                                    map_phases_to_cdash[current_phase]
-                                if cdash_phase not in phases_encountered:
-                                    phases_encountered.append(cdash_phase)
-                                report_data[cdash_phase]['log'] += \
-                                    text_type("{0} output for {1}:\n".format(
-                                        cdash_phase, package['name']))
-                                beginning_of_phase = False
+                            cdash_phase = \
+                                map_phases_to_cdash[current_phase]
+                            if cdash_phase not in phases_encountered:
+                                phases_encountered.append(cdash_phase)
+                            report_data[cdash_phase]['log'] += \
+                                text_type("{0} output for {1}:\n".format(
+                                    cdash_phase, package['name']))
+                        elif cdash_phase:
                             report_data[cdash_phase]['log'] += \
                                 xml.sax.saxutils.escape(line) + "\n"
+
+        # Move the build phase to the front of the list if it occurred.
+        # This supports older versions of CDash that expect this phase
+        # to be reported before all others.
+        if "build" in phases_encountered:
+            build_pos = phases_encountered.index("build")
+            phases_encountered.insert(0, phases_encountered.pop(build_pos))
 
         for phase in phases_encountered:
             errors, warnings = parse_log_events(

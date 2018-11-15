@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,6 +14,7 @@ class Dyninst(Package):
     git      = "https://github.com/dyninst/dyninst.git"
 
     version('develop', branch='master')
+    version('10.0.0', tag='v10.0.0')
     version('9.3.2', tag='v9.3.2')
     version('9.3.0', tag='v9.3.0')
     version('9.2.0', tag='v9.2.0')
@@ -59,6 +41,8 @@ class Dyninst(Package):
     depends_on("libdwarf", when='@:9')
     depends_on("boost@1.42:")
     depends_on('libiberty+pic')
+    depends_on("tbb@2018.6:", when='@develop')
+    depends_on("tbb@2018.6:", when='@10:')
     depends_on('cmake', type='build')
 
     patch('stat_dysect.patch', when='+stat_dysect')
@@ -91,7 +75,11 @@ class Dyninst(Package):
                     libdwarf.lib, "libdwarf." + dso_suffix))
             # For @develop + use elfutils libdw, libelf is an abstraction
             # we are really using elfutils here
-            if spec.satisfies('@develop'):
+            if spec.satisfies('@develop') or spec.satisfies('@10:'):
+                tbb = spec['tbb'].prefix
+                args.append('-DTBB_INCLUDE_DIRS=%s' % tbb.include)
+                args.append('-DTBB_LIBRARIES=%s'    % join_path(
+                    tbb.lib, "libtbb." + dso_suffix))
                 args.append('-DLIBDWARF_INCLUDE_DIR=%s' % libelf.include)
                 args.append('-DLIBDWARF_LIBRARIES=%s'   % join_path(
                     libelf.lib, "libdw." + dso_suffix))
