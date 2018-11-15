@@ -17,9 +17,11 @@ class Gplates(CMakePackage):
     homepage = 'https://www.gplates.org'
     url      = 'https://sourceforge.net/projects/gplates/files/gplates/2.0/gplates-2.0.0-unixsrc.tar.bz2/download'
 
+    version('2.1.0', '5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07')
     version('2.0.0', '9e95874b35a01f4c9bff5845a1621ad5')
 
     depends_on('cmake@2.6.2:', type='build')
+    depends_on('ninja', type='build')
     # Qt 5 does not support (at least) the Q_WS_* constants.
     depends_on('qt+opengl@4.4.0:4.99')
     depends_on('qwt@6.0.1:')
@@ -34,13 +36,9 @@ class Gplates(CMakePackage):
     depends_on('boost+python@1.34:1.60')
     depends_on('python@2:2.99')
 
-    # Officially, GPlates only supports GCC 4. Moreover, it requires
-    # QtXmlPatterns, which Qt 4 only builds with GCC 4.
-    conflicts('%gcc@5:')
-
     # When built in parallel, headers are not generated before they are used
-    # (specifically, ViewportWindowUi.h).
-    parallel = False
+    # (specifically, ViewportWindowUi.h) with the Makefiles generator.
+    generator = 'Ninja'
 
     def url_for_version(self, version):
         url = 'https://sourceforge.net/projects/gplates/files/gplates/{0}/gplates-{1}-unixsrc.tar.bz2/download'

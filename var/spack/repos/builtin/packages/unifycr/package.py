@@ -35,7 +35,7 @@ class Unifycr(AutotoolsPackage):
     depends_on('gotcha@0.0.2')
     depends_on('leveldb')
     depends_on('mpi')
-    depends_on('pkg-config@0.9.0:')
+    depends_on('pkgconfig')
 
     # Optional dependencies
 

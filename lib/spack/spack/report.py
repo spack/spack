@@ -135,6 +135,7 @@ class InfoCollector(object):
 
                     value = do_install(pkg, *args, **kwargs)
                     package['result'] = 'success'
+                    package['stdout'] = fetch_package_log(pkg)
                     if installed_on_entry:
                         return
 

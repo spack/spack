@@ -2,15 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import sys
+from __future__ import print_function
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as color
 import llnl.util.lang
 
+import spack.environment as ev
 import spack.repo
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
+from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"
@@ -37,8 +39,12 @@ def setup_parser(subparser):
         const='deps',
         help='show full dependency DAG of installed packages')
 
-    arguments.add_common_arguments(subparser, ['long', 'very_long', 'tags'])
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'tags'])
 
+    subparser.add_argument('-c', '--show-concretized',
+                           action='store_true',
+                           help='show concretized specs in an environment')
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',
                            dest='show_flags',
@@ -49,11 +55,11 @@ def setup_parser(subparser):
                            help='show full compiler specs')
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
-        '-e', '--explicit',
+        '-x', '--explicit',
         action='store_true',
         help='show only specs that were installed explicitly')
     implicit_explicit.add_argument(
-        '-E', '--implicit',
+        '-X', '--implicit',
         action='store_true',
         help='show only specs that were installed as dependencies')
     subparser.add_argument(
@@ -115,12 +121,42 @@ def query_arguments(args):
     return q_args
 
 
+def setup_env(env):
+    """Create a function for decorating specs when in an environment."""
+
+    def strip_build(seq):
+        return set(s.copy(deps=('link', 'run')) for s in seq)
+
+    added = set(strip_build(env.added_specs()))
+    roots = set(strip_build(env.roots()))
+    removed = set(strip_build(env.removed_specs()))
+
+    def decorator(spec, fmt):
+        # add +/-/* to show added/removed/root specs
+        if any(spec.dag_hash() == r.dag_hash() for r in roots):
+            return color.colorize('@*{%s}' % fmt)
+        elif spec in removed:
+            return color.colorize('@K{%s}' % fmt)
+        else:
+            return '%s' % fmt
+
+    return decorator, added, roots, removed
+
+
 def find(parser, args):
     q_args = query_arguments(args)
-    query_specs = args.specs(**q_args)
+    results = args.specs(**q_args)
+
+    decorator = lambda s, f: f
+    added = set()
+    removed = set()
+
+    env = ev.get_env(args, 'find', required=False)
+    if env:
+        decorator, added, roots, removed = setup_env(env)
 
     # Exit early if no package matches the constraint
-    if not query_specs and args.constraint:
+    if not results and args.constraint:
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
@@ -129,10 +165,27 @@ def find(parser, args):
     # If tags have been specified on the command line, filter by tags
     if args.tags:
         packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
-        query_specs = [x for x in query_specs if x.name in packages_with_tags]
+        results = [x for x in results if x.name in packages_with_tags]
 
     # Display the result
-    if sys.stdout.isatty():
-        tty.msg("%d installed packages." % len(query_specs))
+    if env:
+        tty.msg('In environment %s' % env.name)
 
-    display_specs(query_specs, args)
+        if not env.user_specs:
+            tty.msg('No root specs')
+        else:
+            tty.msg('Root specs')
+            display_specs(
+                env.user_specs, args,
+                decorator=lambda s, f: color.colorize('@*{%s}' % f))
+        print()
+
+        if args.show_concretized:
+            tty.msg('Concretized roots')
+            display_specs(
+                env.specs_by_hash.values(), args, decorator=decorator)
+            print()
+
+    tty.msg("%s" % plural(len(results), 'installed package'))
+
+    display_specs(results, args, decorator=decorator, all_headers=True)

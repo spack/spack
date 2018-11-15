@@ -8,7 +8,7 @@ from spack.cmd.common import print_module_placeholder_help
 import spack.cmd.location
 
 description = "cd to spack directories in the shell"
-section = "environment"
+section = "developer"
 level = "long"
 
 
