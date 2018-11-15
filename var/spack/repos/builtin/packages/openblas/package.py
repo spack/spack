@@ -171,6 +171,15 @@ class Openblas(MakefilePackage):
         return make_defs
 
     @property
+    def headers(self):
+        # As in netlib-lapack, the only public headers for cblas and lapacke in
+        # openblas are cblas.h and lapacke.h. The remaining headers are private
+        # headers either included in one of these two headers, or included in
+        # one of the source files implementing functions declared in these
+        # headers.
+        return find_headers(['cblas', 'lapacke'], self.prefix.include)
+
+    @property
     def build_targets(self):
         targets = ['libs', 'netlib']
 
