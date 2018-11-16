@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install openjdk
-#
-# You can edit this file again by typing:
-#
-#     spack edit openjdk
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 import os
 
@@ -36,7 +19,7 @@ class Openjdk(Package):
     provides('java@11', when='@11.0:11.99')
 
     # FIXME:
-    # 1. `extends('java')` doesn't work, you need to use `extends('jdk')`
+    # 1. `extends('java')` doesn't work, you need to use `extends('openjdk')`
     # 2. Packages cannot extend multiple packages, see #987
     # 3. Update `YamlFilesystemView.merge` to allow a Package to completely
     #    override how it is symlinked into a view prefix. Then, spack activate
