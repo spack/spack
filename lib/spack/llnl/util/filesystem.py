@@ -428,9 +428,11 @@ def mkdirp(*paths, **kwargs):
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
+                tty.debug("[9787] Created directories")
                 if mode is not None:
                     os.chmod(path, mode)
             except OSError as e:
+                tty.debug("[9787] Attempted path: " + path)
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
         elif not os.path.isdir(path):

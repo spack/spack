@@ -12,6 +12,7 @@ import re
 import ruamel.yaml as yaml
 
 from llnl.util.filesystem import mkdirp, chgrp
+from llnl.util import tty
 
 import spack.config
 import spack.spec
@@ -250,6 +251,8 @@ class YamlDirectoryLayout(DirectoryLayout):
         from spack.package_prefs import get_package_group
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
+        tty.debug("[9787] Spec prefix: " + spec.prefix)
+        tty.debug("[9787] permissions: {0:o}".format(perms))
         mkdirp(spec.prefix, mode=perms)
         if group:
             chgrp(spec.prefix, group)
