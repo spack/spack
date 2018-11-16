@@ -92,14 +92,14 @@ class Dyninst(CMakePackage):
 
             '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
             '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
-            ]
+        ]
 
         # TBB include and lib directories, version 10.x or later.
         if spec.satisfies('@10.0.0:'):
             args.extend([
                 '-DTBB_INCLUDE_DIRS=%s' % spec['tbb'].prefix.include,
                 '-DTBB_LIBRARY=%s' % spec['tbb'].prefix.lib,
-                ])
+            ])
 
         # Openmp applies to version 10.x or later.
         if spec.satisfies('@10.0.0:'):
