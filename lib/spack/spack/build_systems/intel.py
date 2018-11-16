@@ -674,7 +674,7 @@ class IntelPackage(PackageBase):
             gcc = Executable(self.compiler.cc)
             omp_lib_path = gcc(
                 '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
-            omp_libs = LibraryList(omp_lib_path)
+            omp_libs = LibraryList(omp_lib_path.strip())
 
         if len(omp_libs) < 1:
             raise_lib_error('Cannot locate OpenMP libraries:', omp_libnames)
