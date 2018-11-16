@@ -14,6 +14,8 @@ class Vt(MakefilePackage):
 
     version('0.577',  '59807456022bcecf978314c93254fe15')
 
+    depends_on('zlib')
+
     def install(self, spec, spack):
         mkdirp(prefix.bin)
         install('vt', prefix.bin)
