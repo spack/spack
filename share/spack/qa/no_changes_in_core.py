@@ -58,7 +58,7 @@ for s in specs:
 names = [os.path.join(x, 'package.py') for x in names]
 names = sorted(set(names))
 
-names_filter = [name in x for x in files for name in names]
+names_filter = [name == x for x in files for name in names]
 
 changes_in_relevant_packages = any(names_filter)
 
