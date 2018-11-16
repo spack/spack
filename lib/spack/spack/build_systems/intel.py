@@ -741,10 +741,10 @@ class IntelPackage(PackageBase):
                 mkl_threading = 'libmkl_intel_thread'
             elif '%gcc' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
-            threading_engine_libs = self.openmp_libs()
+            threading_engine_libs = self.openmp_libs
         elif self.spec.satisfies('threads=tbb'):
             mkl_threading = 'libmkl_tbb_thread'
-            threading_engine_libs = self.tbb_libs()
+            threading_engine_libs = self.tbb_libs
         elif self.spec.satisfies('threads=none'):
             mkl_threading = 'libmkl_sequential'
             threading_engine_libs = LibraryList([])
