@@ -9,6 +9,16 @@
    :lines: 13-
 """
 
+#: Matches a spec or a multi-valued variant but not another
+#: valid keyword.
+#:
+#: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
+#: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
+spec_regex = r'(?!hierarchy|verbose|hash_length|whitelist|' \
+             r'blacklist|naming_scheme|core_compilers|all)(^\w[\w-]*)'
+
+#: Matches an anonymous spec, i.e. a spec without a root name
+anonymous_spec_regex = r'^[\^@%+~]'
 
 #: Definitions for parts of module schema
 definitions = {
@@ -62,7 +72,14 @@ definitions = {
             'load': {
                 '$ref': '#/definitions/array_of_strings'},
             'suffixes': {
-                '$ref': '#/definitions/dictionary_of_strings'},
+                'type': 'object',
+                'is_spec': True,
+                'patternProperties': {
+                    r'\w[\w-]*': {  # key
+                        'type': 'string'
+                    }
+                }
+            },
             'environment': {
                 'type': 'object',
                 'default': {},
@@ -83,34 +100,45 @@ definitions = {
     'module_type_configuration': {
         'type': 'object',
         'default': {},
-        'anyOf': [
-            {'properties': {
-                'verbose': {
-                    'type': 'boolean',
-                    'default': False
-                },
-                'hash_length': {
-                    'type': 'integer',
-                    'minimum': 0,
-                    'default': 7
-                },
-                'whitelist': {
-                    '$ref': '#/definitions/array_of_strings'},
-                'blacklist': {
-                    '$ref': '#/definitions/array_of_strings'},
-                'blacklist_implicits': {
-                    'type': 'boolean',
-                    'default': False
-                },
-                'naming_scheme': {
-                    'type': 'string'  # Can we be more specific here?
+        'allOf': [
+            {
+                'properties': {
+                    'verbose': {
+                        'type': 'boolean',
+                        'default': False
+                    },
+                    'hash_length': {
+                        'type': 'integer',
+                        'minimum': 0,
+                        'default': 7
+                    },
+                    'whitelist': {
+                        '$ref': '#/definitions/array_of_strings'},
+                    'blacklist': {
+                        '$ref': '#/definitions/array_of_strings'},
+                    'blacklist_implicits': {
+                        'type': 'boolean',
+                        'default': False
+                    },
+                    'naming_scheme': {
+                        'type': 'string'  # Can we be more specific here?
+                    },
+                    'all': {
+                        '$ref': '#/definitions/module_file_configuration'
+                    },
                 }
-            }},
-            {'patternProperties': {
-                r'\w[\w-]*': {
-                    '$ref': '#/definitions/module_file_configuration'
+            },
+            {
+                'is_spec': True,
+                'patternProperties': {
+                    spec_regex: {
+                        '$ref': '#/definitions/module_file_configuration'
+                    },
+                    anonymous_spec_regex: {
+                        '$ref': '#/definitions/module_file_configuration'
+                    },
                 }
-            }}
+            }
         ]
     }
 }
@@ -140,12 +168,15 @@ properties = {
                     # Base configuration
                     {'$ref': '#/definitions/module_type_configuration'},
                     {
-                        'core_compilers': {
-                            '$ref': '#/definitions/array_of_strings'
+                        'type': 'object',
+                        'properties': {
+                            'core_compilers': {
+                                '$ref': '#/definitions/array_of_strings'
+                            },
+                            'hierarchy': {
+                                '$ref': '#/definitions/array_of_strings'
+                            }
                         },
-                        'hierarchical_scheme': {
-                            '$ref': '#/definitions/array_of_strings'
-                        }
                     }  # Specific lmod extensions
                 ]
             },
