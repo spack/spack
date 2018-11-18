@@ -32,6 +32,7 @@ class MofemUsersModules(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     git = "https://likask@bitbucket.org/mofem/users-modules-cephas.git"
 
+    version('0.8.16', commit='f6af51ad7db5b5dbc9d9acc6e753277a857c9f24')
     version('0.8.15', commit='4843b2d92ec21ad100a8d637698f56b3a2e14af3')
     version('0.8.14', commit='cfaa32133c574a31beaeb36202d033280521ddff')
     version('0.8.12', commit='7b2ce5595a95d1b919f50103513c44bb2bc9e6d2')
@@ -47,6 +48,7 @@ class MofemUsersModules(CMakePackage):
         description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
+    depends_on('mofem-cephas@0.8.16', when='@0.8.16')
     depends_on('mofem-cephas@0.8.15', when='@0.8.15')
     depends_on('mofem-cephas@0.8.14', when='@0.8.14')
     depends_on('mofem-cephas@0.8.12:0.8.13', when='@0.8.12')
