@@ -60,9 +60,22 @@ class Catch(CMakePackage):
     def build(self, spec, prefix):
         pass
 
-    @when('+single_header')
+    @when('@1.0.0:1.99.99+single_header')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install(join_path('single_include', 'catch.hpp'), prefix.include)
+        # fakes out spack so it installs a module file
+        mkdirp(join_path(prefix, 'bin'))
+
+    @when('@2.0.0:2.4.0+single_header')
+    def install(self, spec, prefix):
+        mkdirp(prefix.include)
+        # According to Catch2's README, "If you have installed Catch2
+        # from [a] system package manager, or CMake package, you need
+        # to include the header as `#include <catch2/catch.hpp>`"; to
+        # conform to this expectation, the Catch2 header should be
+        # installed in prefix.include.catch2
+        install(join_path('single_include', 'catch2', 'catch.hpp'),
+                prefix.include.catch2)
         # fakes out spack so it installs a module file
         mkdirp(join_path(prefix, 'bin'))
