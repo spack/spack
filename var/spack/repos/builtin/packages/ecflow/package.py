@@ -7,7 +7,7 @@ from spack import *
 
 
 class Ecflow(CMakePackage):
-    '''ecFlow is a work flow package that enables users to run a large number 
+    '''ecFlow is a work flow package that enables users to run a large number
     of programs (with dependencies on each other and on time) in a controlled
     environment.
 
@@ -25,5 +25,6 @@ class Ecflow(CMakePackage):
     depends_on('cmake@2.8.11:', type='build')
 
     def cmake_args(self):
-        args = ['-DBoost_PYTHON_LIBRARY_RELEASE=' + self.spec['boost'].prefix.lib]
+        boost_lib = self.spec['boost'].prefix.lib
+        args = ['-DBoost_PYTHON_LIBRARY_RELEASE=' + boost_lib]
         return args
