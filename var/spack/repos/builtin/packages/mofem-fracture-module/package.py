@@ -31,6 +31,9 @@ class MofemFractureModule(CMakePackage):
 
     maintainers = ['likask']
 
+    version('0.9.49',
+        git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
+        tag='v0.9.49')
     version('0.9.48',
         git='https://bitbucket.org/likask/mofem_um_fracture_mechanics',
         tag='v0.9.48')
@@ -57,7 +60,8 @@ class MofemFractureModule(CMakePackage):
         description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
-    depends_on('mofem-users-modules@0.8.15:', when='@0.9.48:')
+    depends_on('mofem-users-modules@0.8.16', when='@0.9.49')
+    depends_on('mofem-users-modules@0.8.15', when='@0.9.48')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))
 
     # The CMakeLists.txt installed with mofem-cephas package set cmake
