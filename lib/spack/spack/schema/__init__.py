@@ -11,6 +11,8 @@ import re
 import jsonschema
 import six
 
+import spack.spec
+
 _validate_properties = jsonschema.Draft4Validator.VALIDATORS["properties"]
 _validate_pattern_properties = jsonschema.Draft4Validator.VALIDATORS[
     "patternProperties"
@@ -54,8 +56,25 @@ def _set_pp_defaults(validator, properties, instance, schema):
         yield err
 
 
+def _is_spec(validator, is_spec, instance, schema):
+    """Adds support to check if the attributes in an object are
+    valid specs.
+    """
+    if not validator.is_type(instance, "object"):
+        return
+
+    for spec_str in instance:
+        try:
+            spack.spec.parse(spec_str)
+        except spack.spec.SpecParseError as e:
+            yield jsonschema.ValidationError(
+                '"{0}" is an invalid spec [{1}]'.format(spec_str, str(e))
+            )
+
+
 Validator = jsonschema.validators.extend(
     jsonschema.Draft4Validator, {
+        "is_spec": _is_spec,
         "properties": _set_defaults,
         "patternProperties": _set_pp_defaults
     }
