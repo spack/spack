@@ -25,6 +25,7 @@ modules:
       suffixes:
           '+profile': 'profile'
           '^coreneuron+knl': 'knl'
+          'neuron~mpi': 'serial'
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     naming_scheme: '${PACKAGE}/${VERSION}/${COMPILERNAME}'
