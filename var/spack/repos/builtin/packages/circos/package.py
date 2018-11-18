@@ -10,7 +10,7 @@ from os import symlink
 class Circos(Package):
     """Circos is a software package for visualizing data and information."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://circos.ca/"
     url      = "http://circos.ca/distribution/circos-0.69-6.tgz"
 
     version('0.69-6', sha256='52d29bfd294992199f738a8d546a49754b0125319a1685a28daca71348291566')
@@ -35,9 +35,9 @@ class Circos(Package):
     depends_on('perl-text-format', type='run')
 
     def install(self, spec, prefix):
-        basedir = join_path(prefix.lib, 'circos')
+        basedir = prefix.lib.circos
         install_tree('.', basedir)
 
         mkdirp(prefix.bin)
-        symlink(join_path(basedir, 'bin/circos'),
+        symlink(basedir.bin.circos,
                 join_path(prefix.bin, 'circos'))
