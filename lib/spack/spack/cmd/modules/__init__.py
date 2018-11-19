@@ -165,6 +165,9 @@ def find(module_type, specs, args):
         return os.path.isfile(writer.layout.filename)
 
     if not module_exists(spec):
+        # TODO: at this point, check if spec.package.installed_upstream and
+        # if that's the case, ideally we would say "use spack instance located
+        # at <path>" and the user could invoke that to find modules
         msg = 'Even though {1} is installed, '
         msg += 'no {0} module has been generated for it.'
         tty.die(msg.format(module_type, spec))
@@ -231,6 +234,8 @@ def refresh(module_type, specs, args):
     if not specs:
         tty.msg('No package matches your query')
         return
+
+    specs = list(s for s in specs if not s.package.installed_upstream)
 
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'
