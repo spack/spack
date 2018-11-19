@@ -76,10 +76,15 @@ def setup_parser(subparser):
                            default=spack.config.default_modify_scope(),
                            help="Configuration scope to modify.")
     arguments.add_common_arguments(subparser, ['tags', 'constraint'])
-
+    subparser.add_argument('-e', '--explicit',
+                           help='export specs that were installed explicitly',
+                           default=None,
+                           action='store_true')
 
 def export(parser, args):
-    specs = args.specs()
+    q_args = {"explicit": True if args.explicit else any}
+    specs = args.specs(**q_args)
+
     # Exit early if no package matches the constraint
     if not args.specs and args.constraint:
         msg = "No package matches the query: {0}"
