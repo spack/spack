@@ -29,3 +29,5 @@ class RDiversitree(RPackage):
     depends_on('r-desolve@1.7:', type=('build', 'run'))
     depends_on('r-subplex', type=('build', 'run'))
     depends_on('r-rcpp@0.10.0:', type=('build', 'run'))
+    depends_on('fftw@3.1.2:')
+    depends_on('gsl@1.15:')
