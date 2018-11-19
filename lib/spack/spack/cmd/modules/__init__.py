@@ -32,6 +32,11 @@ def setup_parser(subparser):
         help='delete the module file tree before refresh',
         action='store_true'
     )
+    refresh_parser.add_argument(
+        '--upstream-modules',
+        help='generate modules for packages installed upstream',
+        action='store_true'
+    )
     arguments.add_common_arguments(
         refresh_parser, ['constraint', 'yes_to_all']
     )
@@ -239,7 +244,8 @@ def refresh(module_type, specs, args):
         tty.msg('No package matches your query')
         return
 
-    specs = list(s for s in specs if not s.package.installed_upstream)
+    if not args.upstream_modules:
+        specs = list(s for s in specs if not s.package.installed_upstream)
 
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'
