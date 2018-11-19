@@ -159,15 +159,19 @@ def find(module_type, specs, args):
 
     spec = one_spec_or_raise(specs)
 
+    if spec.package.installed_upstream:
+        msg = ("The package {0} is installed upstream."
+               " Use 'spack location --spack-instance' to locate the"
+               " spack instance which manages the associated module file"
+               .format(spec))
+        tty.die(msg)
+
     # Check if the module file is present
     def module_exists(spec):
         writer = spack.modules.module_types[module_type](spec)
         return os.path.isfile(writer.layout.filename)
 
     if not module_exists(spec):
-        # TODO: at this point, check if spec.package.installed_upstream and
-        # if that's the case, ideally we would say "use spack instance located
-        # at <path>" and the user could invoke that to find modules
         msg = 'Even though {1} is installed, '
         msg += 'no {0} module has been generated for it.'
         tty.die(msg.format(module_type, spec))
