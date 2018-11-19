@@ -42,6 +42,13 @@ class H5zZfp(MakefilePackage):
     depends_on('hdf5',         when='~fortran')
     depends_on('zfp bsws=8')
 
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        if "~fortran" in spec:
+            # h5z-zfp will always try to build fortran support
+            # if FC env var is set
+            spack_env.unset('FC')
+
     @property
     def make_defs(self):
         make_defs = [
