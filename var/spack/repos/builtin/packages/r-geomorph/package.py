@@ -19,6 +19,7 @@ class RGeomorph(RPackage):
     version('3.0.7', '68f8942e1a5bc3f0298c9f5b8f69c4702c8e12ecb2275d740fda4d04d66d38e1')
     version('3.0.5', '240e69fe260ca3ef4d84b4281d61396c')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-rgl', type=('build', 'run'))
     depends_on('r-ape', type=('build', 'run'))
     depends_on('r-jpeg', type=('build', 'run'))
