@@ -40,4 +40,4 @@ class Circos(Package):
 
         mkdirp(prefix.bin)
         symlink(basedir.bin.circos,
-                join_path(prefix.bin, 'circos'))
+                prefix.bin.circos)
