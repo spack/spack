@@ -64,21 +64,20 @@ class Dyninst(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        # Elf -- the directory containing libelf.h, and the path to
-        # libelf.so.  Elfutils puts the headers in include, but libelf
-        # uses include/libelf.
+        # Elf -- the directory containing libelf.h, either
+        # prefix/include (elfutils), or prefix/include/libelf
+        # (libelf).
         elf = spec['elf'].prefix
         if spec.satisfies('@9.3.0:'):
             elf_include = elf.include
         else:
             elf_include = join_path(elf.include, 'libelf')
-        elf_lib = join_path(elf.lib, 'libelf.' + dso_suffix)
 
         # Dwarf -- the directory containing elfutils/libdw.h or
         # libdwarf.h, and the path to libdw.so or libdwarf.so.
         if spec.satisfies('@10.0.0:'):
             dwarf_include = elf.include
-            dwarf_lib = join_path(elf.lib, 'libdw.' + dso_suffix)
+            dwarf_lib = find_libraries('libdw', elf, recursive=True)
         else:
             dwarf_include = spec['libdwarf'].prefix.include
             dwarf_lib = spec['libdwarf'].libs
@@ -88,7 +87,7 @@ class Dyninst(CMakePackage):
             '-DIBERTY_LIBRARIES=%s' % spec['libiberty'].libs,
 
             '-DLIBELF_INCLUDE_DIR=%s' % elf_include,
-            '-DLIBELF_LIBRARIES=%s' % elf_lib,
+            '-DLIBELF_LIBRARIES=%s' % spec['elf'].libs,
 
             '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
             '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
