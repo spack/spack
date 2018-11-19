@@ -1,0 +1,282 @@
+def deployment_directory(parent) {
+    def pull = env.ghprbPullId
+    if (parent || pull == null) {
+        return "/gpfs/bbp.cscs.ch/apps/hpc/jenkins/"
+    } else {
+        return "/gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/${pull}"
+    }
+}
+
+def post_process() {
+    dir("${BASEDIR}") {
+        def pull = env.ghprbPullId
+        def last = run_stages()[-1]
+        def stages = run_stages().join(' ')
+
+        if (params.REDEPLOY) {
+            sh "./deploy.sh -l ${stages}"
+        }
+
+        if (pull == null) {
+            sh "./deploy.sh -m ${stages}"
+        }
+
+        sh "./deploy.sh -c ${last}"
+    }
+}
+
+def deployment_stages() {
+    return ['compilers',
+            'tools',
+            'external-libraries',
+            'serial-libraries',
+            'parallel-libraries',
+            'applications']
+}
+
+def deployment_stages_string() {
+    return deployment_stages().join('\n')
+}
+
+def run_stages() {
+    def take = false
+    def stages = []
+    deployment_stages().each {
+        if (it == params.STAGE)
+            take = true
+        if (take)
+            stages << it
+    }
+    return stages
+}
+
+pipeline {
+    agent {
+        label 'bb5-full'
+    }
+
+    options {
+        timestamps()
+    }
+
+    parameters {
+        booleanParam(name: 'REDEPLOY',
+                     defaultValue: false,
+                     description: 'Set the "latest" symlink to the currently built deployment')
+        string(name: 'DEPLOYMENT_DATE',
+               defaultValue: 'latest',
+               description: 'Date to use when redeploying, in YYYY-MM-DD format')
+        choice(name: 'STAGE',
+               choices: deployment_stages_string(),
+               description: 'Stage from which to restart the building process')
+        booleanParam(name: 'BUILDCACHE',
+                     defaultValue: true,
+                     description: 'Use cache to install already compiled software')
+        booleanParam(name: 'SOURCECACHE',
+                     defaultValue: true,
+                     description: 'Use cache to install already downloaded sources')
+    }
+
+    environment {
+        DEPLOYMENT_UPSTREAM = deployment_directory(true)
+        DEPLOYMENT_ROOT = deployment_directory(false)
+        BASEDIR = "${DEPLOYMENT_ROOT}/spack/deploy"
+        TMPDIR = "/dev/shm/jenkins"
+    }
+
+    stages {
+        stage('Setup') {
+            when {
+                not {
+                    expression {
+                        return env.ghprbPullId
+                    }
+                }
+            }
+
+            // General setup: make sure that Spack is installed and that
+            // license files are available to Spack
+            steps {
+                dir("${DEPLOYMENT_ROOT}/spack") {
+                    git(url: "https://github.com/BlueBrain/spack.git", branch: "spack_chain")
+                }
+                dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
+                    git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
+                }
+            }
+        }
+
+        stage('PR Setup') {
+            when {
+                expression {
+                    return env.ghprbPullId
+                }
+            }
+
+            // General setup: make sure that Spack is installed and that
+            // license files are available to Spack
+            steps {
+                dir("${DEPLOYMENT_ROOT}/spack") {
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: "FETCH_HEAD"]],
+                              extensions: [[$class: 'LocalBranch']],
+                              userRemoteConfigs: [[
+                                    refspec: "+refs/pull/${env.ghprbPullId}/head:refs/remotes/origin/pull/${env.ghprbPullId}", 
+                                    url: "https://github.com/BlueBrain/spack.git"
+                              ]]])
+
+                }
+                dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
+                    git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
+                }
+            }
+        }
+
+        // stage('Archival') {
+        //     // When tagging a new release, reset the symlinks pointing to
+        //     // the last release
+        //     when {
+        //         tag pattern: "release-\\d+", comparator: "REGEXP"
+        //     }
+
+        //     steps {
+        //         sh "ls"
+        //     }
+        // }
+
+        stage('Compilers') {
+            when {
+                expression {
+                    return 'compilers' in run_stages()
+                }
+            }
+
+            steps {
+                dir("${BASEDIR}") {
+                    sh "./deploy.sh compilers"
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: "stacks/compilers.xml"
+                    junit testResults: "stacks/compilers.xml", allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('Tools') {
+            when {
+                expression {
+                    return 'tools' in run_stages()
+                }
+            }
+
+            steps {
+                dir("${BASEDIR}") {
+                    sh "./deploy.sh tools"
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: "stacks/tools.xml"
+                    junit testResults: "stacks/tools.xml", allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('External Libraries') {
+            when {
+                expression {
+                    return 'external-libraries' in run_stages()
+                }
+            }
+
+            steps {
+                dir("${BASEDIR}") {
+                    sh "./deploy.sh external-libraries"
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: "stacks/external-libraries.xml"
+                    junit testResults: "stacks/external-libraries.xml", allowEmptyResults: true
+                }
+            }
+        }
+
+
+
+        stage('Serial Libraries') {
+            when {
+                expression {
+                    return 'serial-libraries' in run_stages()
+                }
+            }
+
+            steps {
+                dir("${BASEDIR}") {
+                    sh "./deploy.sh serial-libraries"
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: "stacks/serial-libraries.xml"
+                    junit testResults: "stacks/serial-libraries.xml", allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('Parallel Libraries') {
+            when {
+                expression {
+                    return 'parallel-libraries' in run_stages()
+                }
+            }
+
+            steps {
+                dir("${BASEDIR}") {
+                    sh "./deploy.sh parallel-libraries"
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: "stacks/parallel-libraries.xml"
+                    junit testResults: "stacks/parallel-libraries.xml", allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('Applications') {
+            when {
+                expression {
+                    return 'applications' in run_stages()
+                }
+            }
+
+            steps {
+                withEnv(['SOURCECACHE=false',
+                         'BUILDCACHE=false']) {
+                    dir("${BASEDIR}") {
+                        sh "./deploy.sh applications"
+                    }
+                }
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: "stacks/applications.xml"
+                    junit testResults: "stacks/applications.xml", allowEmptyResults: true
+                }
+
+                success {
+                    post_process()
+                }
+            }
+        }
+    }
+}

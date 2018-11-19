@@ -1,0 +1,112 @@
+modules:
+  enable::
+      - lmod
+      - tcl
+  prefix_inspections:
+    bin:
+      - PATH
+    bin64:
+      - PATH
+    share/man:
+      - MANPATH
+    man:
+      - MANPATH
+    lib:
+      - LD_LIBRARY_PATH
+    lib64:
+      - LD_LIBRARY_PATH
+    lib/pkgconfig:
+      - PKG_CONFIG_PATH
+    lib64/pkgconfig:
+      - PKG_CONFIG_PATH
+    '':
+      - CMAKE_PREFIX_PATH
+  lmod:
+    all:
+      filter:
+        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+    core_compilers:
+      - 'gcc@4.8.5'
+    hash_length: 0
+    whitelist:
+      - 'gcc'
+      - 'intel-parallel-studio'
+      - 'llvm'
+      - 'pgi'
+    blacklist:
+      - '%gcc'
+    gcc:
+      environment:
+        set:
+          MPICC_CC: 'gcc'
+          MPICXX_CXX: 'g++'
+          MPIF90_F90: 'gfortran'
+    intel-parallel-studio:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    intel:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    pgi:
+      environment:
+        set:
+          MPICC_CC: 'pgcc'
+          MPICXX_CXX: 'pgc++'
+          MPIF90_F90: 'pgfortran'
+    llvm:
+      environment:
+        set:
+          MPICC_CC: 'clang'
+          MPICXX_CXX: 'clang++'
+          MPIF90_F90: 'gfortran'
+  tcl:
+    all:
+      filter:
+        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+    naming_scheme: '${PACKAGE}/${VERSION}'
+    verbose: True
+    hash_length: 0
+    whitelist:
+      - 'gcc'
+      - 'pgi'
+      - 'intel-parallel-studio'
+      - 'llvm'
+      - 'intel'
+    blacklist:
+      - '%gcc'
+    gcc:
+      environment:
+        set:
+          MPICC_CC: 'gcc'
+          MPICXX_CXX: 'g++'
+          MPIF90_F90: 'gfortran'
+    intel-parallel-studio:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    intel:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    pgi:
+      environment:
+        set:
+          MPICC_CC: 'pgcc'
+          MPICXX_CXX: 'pgc++'
+          MPIF90_F90: 'pgfortran'
+    llvm:
+      environment:
+        set:
+          MPICC_CC: 'clang'
+          MPICXX_CXX: 'clang++'
+          MPIF90_F90: 'gfortran'

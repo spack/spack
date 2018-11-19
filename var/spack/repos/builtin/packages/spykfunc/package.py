@@ -34,19 +34,24 @@ class Spykfunc(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Spykfunc"
     url      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
-    version('develop', git=url, submodules=True)
-    version('0.11.0', git=url, tag='v0.11.0', submodules=True, preferred=True)
+    version('develop', git=url, submodules=True, clean=False)
+    version('0.11.0', git=url, tag='v0.11.0', submodules=True, preferred=True, clean=False)
+    version('0.12.0', git=url, tag='v0.12.0', submodules=True, preferred=True, clean=False)
 
     depends_on('hdf5~mpi')
     depends_on('highfive~mpi', type='build')
+
+    # Note : when spark is used as external package, spec['java'] is not
+    # accessible. Add explicit dependency for now.
+    depends_on('java@8', type=('build', 'run'))
+
     depends_on('mvdtool~mpi')
 
     depends_on('python@3.6:')
     depends_on('py-cython', type='run')
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('spark@2.3.2rc2', type='run')
-    depends_on('hadoop@2.9.0', type='run')
+    depends_on('spark+hadoop@2.3.2rc2:', type='run')
 
     depends_on('py-bb5', type=('build', 'run'))
     depends_on('py-docopt', type=('build', 'run'))
@@ -60,28 +65,17 @@ class Spykfunc(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))
-    depends_on('py-py4j@0.10.7', type=('build', 'run'))
     depends_on('py-pyarrow+parquet', type=('build', 'run'))
-    depends_on('py-pyspark@2.3.2rc2', type=('build', 'run'))
+    depends_on('py-pyspark@2.3.2rc2:', type=('build', 'run'))
     depends_on('py-sparkmanager', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
         # This is a rather ugly setup to run spykfunc without having to
         # activate all python packages.
-        run_env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
         run_env.set('JAVA_HOME', self.spec['java'].prefix)
         run_env.set('SPARK_HOME', self.spec['spark'].prefix)
+        run_env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
 
         run_env.prepend_path('PATH', os.path.join(self.spec['py-bb5'].prefix, 'bin'))
         run_env.prepend_path('PATH', os.path.join(self.spec['py-sparkmanager'].prefix, 'bin'))
-        run_env.prepend_path('PATH', os.path.join(self.spec['hadoop'].prefix, 'bin'))
         run_env.prepend_path('PATH', os.path.join(self.spec['spark'].prefix, 'bin'))
-
-        hadoop_env = dict(os.environ)
-        hadoop_env['JAVA_HOME'] = self.spec['java'].prefix
-        hadoop = self.spec['hadoop'].command
-        hadoop_classpath = hadoop('classpath', output=str, env=hadoop_env)
-        # Remove whitespaces, as they can compromise syntax in
-        # module files
-        hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
-        run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

@@ -1,0 +1,131 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+        version: [2.69]
+    automake:
+        paths:
+            automake@1.13.4: /usr
+        version: [1.13.4]
+    bison:
+        paths:
+            bison@3.0.4: /usr
+        version: [3.0.4]
+    cairo:
+        paths:
+            cairo@1.8.10: /usr
+        version: [1.8.10]
+    curl:
+        paths:
+            curl@7.29.0: /usr
+        version: [7.29.0]
+    flex:
+        paths:
+            flex@2.5.37: /usr
+        version: [2.5.37]
+    fontconfig:
+        paths:
+            fontconfig@2.10.95: /usr
+        version: [2.10.95]
+    glib:
+        paths:
+            glib@2.50.3: /usr
+        version: [2.50.3]
+    gtkplus:
+        paths:
+            gtkplus@2.24.31: /usr
+        version: [2.24.31]
+    hdf5:
+        variants: +hl
+    hpe-mpi:
+        paths:
+            hpe-mpi@2.16: /opt/hpe/hpc/mpt/mpt-2.16
+        version: [2.16]
+    intel-mkl:
+        version: [2018.3.222]
+    libjpeg:
+        paths:
+            libjpeg@1.2.90: /usr
+        version: [1.2.90]
+    libgcrypt:
+        paths:
+            libgcrypt@1.5.3: /usr
+        version: [1.5.3]
+    libmng:
+        paths:
+            libmng@1.0.10: /usr
+        version: [1.0.10]
+    libtool:
+        paths:
+            libtool@2.4.2: /usr
+        version: [2.4.2]
+    m4:
+        paths:
+            m4@1.4.16: /usr
+        version: [1.4.16]
+    ncurses:
+        paths:
+            ncurses@5.9: /usr
+        version: [5.9]
+    # can not be installed with python 3
+    node-js:
+        paths:
+            node-js@6.12.2: /usr
+        version: [6.12.2]
+    openssl:
+        paths:
+            openssl@1.0.2k: /usr
+        version: [1.0.2k]
+    pango:
+        paths:
+            pango@1.40.4: /usr
+        version: [1.40.4]
+    pcre:
+        paths:
+            pcre@8.32+jit+utf: /usr
+        version: [8.32]
+    perl:
+        paths:
+            perl@5.16.3: /usr
+        version: [5.16.3]
+    petsc:
+        variants: +patchmpi64
+    pkg-config:
+        paths:
+            pkg-config@0.27.1: /usr
+        version: [0.27.1]
+    python:
+        version: [3.6.5]
+    slurm:
+        paths:
+            slurm@17.02: /usr
+        buildable: False
+        version: [17.02]
+    steps:
+        variants: +lapack+petsc+mpi
+    tar:
+        paths:
+            tar@1.26: /usr
+        version: [1.26]
+    #tcl:
+    #    paths:
+    #        tcl@8.5.13: /usr
+    #    version: [8.5.13]
+    tk:
+        paths:
+            tk@8.5.13: /usr
+        version: [8.5.13]
+    trilinos:
+        variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+        version: [xsdk-0.4.0-rc1]
+    xz:
+        paths:
+            xz@5.2: /usr
+        version: [5.2]
+    all:
+        compiler: [gcc@6.4.0, intel@18.0.1]
+        providers:
+            mpi: [hpe-mpi, intel-mpi]
+            scalapack: [intel-mkl, netlib-scalapack]
+            lapack: [intel-mkl, openblas]
+            blas: [intel-mkl, openblas]

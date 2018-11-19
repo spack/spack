@@ -1,0 +1,45 @@
+# Serial libraries and packages
+
+axis:
+  - architecture
+  - compiler
+  - mpi
+  - lapack
+  - python
+
+combinations: !include packages/toolchains.yaml
+
+packages:
+
+  gnu-stable-serial-python:
+    target_matrix:
+      - gnu-stable
+      - gnu-stable-py2
+    requires:
+      - architecture
+      - compiler
+      - python
+    specs:
+      - arrow+parquet+python@0.11.0
+      - neuron~mpi@2018-10
+
+  intel-stable-serial-python:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+      - python
+    specs:
+      - neuron~mpi@2018-10
+
+  gnu-intel-stable-serial:
+    target_matrix:
+      - gnu-stable
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - python@2.7.15
+      - python@3.6.5

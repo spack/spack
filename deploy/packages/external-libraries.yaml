@@ -1,0 +1,45 @@
+# External libraries and packages
+
+axis:
+  - architecture
+  - compiler
+  - mpi
+  - lapack
+  - python
+
+combinations: !include packages/toolchains.yaml
+
+packages:
+
+  gnu-stable-serial:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - arrow+parquet~python@0.11.0
+      - boost~mpi@1.68.0
+      - bzip2@1.0.6
+      - cuda@9.2.88
+      - gmsh+oce~mpi@3.0.6
+      - hdf5~mpi@1.10.4
+      - highfive~mpi@1.6
+      - intel-mkl@2018.1.163
+      - jdk@1.8.0_191-b12
+      - libjpeg@1.2.90
+      - libxml2@2.9.8
+      - libxslt@1.1.29
+      - metis@5.1.0
+      - ncurses@5.9
+      - openblas@0.3.3
+      - python@2.7.15
+      - python@3.6.5
+      - qhull@2015.2
+      # - qt@5.10.0
+      - readline@7.0
+      - spark@2.4.0+hadoop
+      - sqlite@3.23.1
+      - symengine@0.3.0
+      - zeromq@4.2.5
+      - zlib@1.2.11

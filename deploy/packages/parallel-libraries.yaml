@@ -1,0 +1,85 @@
+# Packages and libraries require MPI
+
+axis:
+  - architecture
+  - compiler
+  - mpi
+  - lapack
+  - python
+
+combinations: !include packages/toolchains.yaml
+
+packages:
+
+  gnu-stable-parallel:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+    specs:
+      - py-mpi4py@3.0.0
+      - hdf5+mpi@1.10.4
+      - highfive+mpi@1.6
+      - parmetis@4.0.3
+
+  gnu-stable-python-parallel:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+      - python
+    specs:
+      - neuron@2018-10
+      - py-mpi4py@3.0.0
+
+  gnu-stable-parallel-lapack:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+      - lapack
+    specs:
+      - hypre@2.14.0
+      - omega-h+trilinos@9.22.2
+      - superlu-dist@5.4.0
+      - trilinos@xsdk-0.4.0-rc1
+
+  gnu-stable-parallel-lapack-python:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - lapack
+      - mpi
+      - python
+    specs:
+      - petsc+int64+mpi@3.10.2
+
+  intel-stable-parallel:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+    specs:
+      - hdf5+mpi@1.10.4
+      - highfive+mpi@1.6
+
+  intel-stable-parallel-python:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+      - python
+    specs:
+      - neuron@2018-10

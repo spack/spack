@@ -1,0 +1,86 @@
+# core toolchain typically represent system compilers
+core:
+  architecture:
+  - x86_64
+  compiler:
+  - gcc@4.8.5
+  mpi: None
+  lapack: None
+  python: None
+
+# stable gnu toolchain
+gnu-stable:
+  architecture:
+  - x86_64
+  compiler:
+  - gcc@6.4.0
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - intel-mkl@2018.1.163
+  python:
+  - python@3.6.5
+
+gnu-stable-py2:
+  architecture:
+  - x86_64
+  compiler:
+  - gcc@6.4.0
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - intel-mkl@2018.1.163
+  python:
+  - python@2.7.15
+
+# stable intel toolchain
+intel-stable:
+  architecture:
+  - x86_64
+  compiler:
+  - intel@18.0.3
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - intel-mkl@2018.1.163
+  python:
+  - python@3.6.5
+
+# stable intel knl toolchain
+intel-knl-stable:
+  architecture:
+  - x86_64_knl
+  compiler:
+  - intel@18.0.3
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - intel-mkl@2018.1.163
+  python:
+  - python@3.6.5
+
+# stable PGI toolchain
+pgi-stable:
+  architecture:
+  - x86_64
+  compiler:
+  - pgi@18.4
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - openblas@0.3.3
+  python:
+  - python@2.7.15
+
+# stable LLVM toolchain
+llvm-stable:
+  architecture:
+  - x86_64
+  compiler:
+  - clang@6.0.1
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - openblas@0.3.3
+  python:
+  - python@2.7.15

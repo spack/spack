@@ -34,7 +34,8 @@ class ParquetConverters(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/building/ParquetConverters"
 
     version('develop', git=url)
-    version('0.2.1', git=url, tag='v0.2.1', preferred=True)
+    version('0.3', git=url, tag='v0.3', preferred=True)
+    version('0.2.1', git=url, tag='v0.2.1')
 
     depends_on('hdf5+mpi')
     depends_on('highfive+mpi')

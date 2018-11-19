@@ -468,9 +468,11 @@ class BaseFileLayout(object):
         # Not everybody is working on linux...
         parts = name.split('/')
         name = os.path.join(*parts)
-        # Add optional suffixes based on constraints
-        path_elements = [name] + self.conf.suffixes
-        return '-'.join(path_elements)
+
+        # if suffix starts with '/' separator, don't append extra '-'
+        suffix = ''.join([suffix if suffix.startswith('/') else '-'+suffix
+            for suffix in self.conf.suffixes])
+        return name + suffix
 
     @property
     def filename(self):

@@ -1,0 +1,102 @@
+# Package configurations for BBP Software Stack
+
+axis:
+  - architecture
+  - compiler
+  - mpi
+  - lapack
+  - python
+
+combinations: !include packages/toolchains.yaml
+
+packages:
+
+  #### circuit building ####
+
+  gnu-stable-serial:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - python
+    specs:
+      - spykfunc@0.12.0
+
+  gnu-stable-parallel:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+    specs:
+      - functionalizer@3.11.0
+      - touchdetector@4.3.3
+
+  gnu-stable-parallel-python:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+      #- python
+    specs:
+      - parquet-converters@0.3
+
+  #### sub-cellular ####
+
+  gnu-stable-lapack-python-parallel:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - lapack
+      - mpi
+      - python
+    specs:
+      - steps@3.3.0+petsc
+
+  gnu-stable-lapack-parallel:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+      - lapack
+      #- python
+    specs:
+      - zee@develop
+
+  gnu-stable-lapack-python:
+    target_matrix:
+      - gnu-stable
+      - gnu-stable-py2
+    requires:
+      - architecture
+      - compiler
+      # - lapack
+      - python
+    specs:
+      - py-bluepymm@0.6.38 ^neuron~mpi
+      - py-bluepyopt@1.6.56 ^neuron~mpi
+      - py-efel@3.0.22
+
+  #### cellular ####
+
+  intel-stable-python-parallel:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+      - python
+    specs:
+      - neurodamus@plasticity
+      - neurodamus@plasticity+coreneuron^coreneuron+knl
+      - neurodamus@master~coreneuron
+      - neurodamus@hippocampus~coreneuron

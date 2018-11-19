@@ -1,0 +1,591 @@
+# vim: ft=sh:
+
+# # A library for deployment via Spack
+#
+# This library assumes the following environmental variables:
+#
+# * `DEPLOYMENT_ROOT` for the installation directory
+# * `DEPLOYMENT_DATA` containing tarballs of proprietary software
+# * `DEPLOYMENT_DATE` to force a date for the installation directory
+
+DEFAULT_DEPLOYMENT_DATE=${DEFAULT_DEPLOYMENT_DATE:-$(date +%Y-%m-%d)}
+DEFAULT_MODULE_DATE=${DEFAULT_MODULE_DATE-$(date +Y-%m)}
+
+# A list of stages in the order they will be built
+stages="compilers tools external-libraries serial-libraries parallel-libraries applications"
+
+# Definitions for the installation spec generation. For every stage
+# mentioned above, this should be a list of filenames *without* extension
+# found in `packages`.
+declare -A spec_definitions=([compilers]=compilers
+                             [tools]=tools
+                             [external-libraries]="external-libraries"
+                             [serial-libraries]="serial-libraries python-packages"
+                             [parallel-libraries]=parallel-libraries
+                             [applications]=bbp-packages)
+
+# Export installed software as packages to be re-used later
+# Allowed values: yes/no
+#
+# Rationale:
+# * compilers end up in their configuration file
+# * tools + serial libraries should be exported
+# * for serial, parallel libraries: use in chains (see below) to get
+#   dependency DAG
+declare -A export_packages=([compilers]=no
+                            [tools]=yes
+                            [external-libraries]=yes
+                            [serial-libraries]=no
+                            [parallel-libraries]=no
+                            [applications]=no)
+
+# Re-use installed software via the chain mechanism
+# Allowed values: yes/no
+declare -A include_in_chain=([compilers]=no
+                             [tools]=no
+                             [external-libraries]=no
+                             [serial-libraries]=yes
+                             [parallel-libraries]=yes
+                             [applications]=yes)
+
+# Set up the dependency graph
+declare -A spec_parentage
+last=""
+for stage in $stages; do
+    if [[ -n "$last" ]]; then
+        spec_parentage[$stage]="$last"
+    fi
+    last="$stage"
+done
+
+log() {
+    date="$(tput smul)$(date +%H:%M:%S)$(tput rmul)"
+    echo "$(tput bold)### ${date} $@$(tput sgr0)" >&2
+}
+
+install_dir_raw() {
+    # Create an installation directory name based on the environment
+    # variables set.
+    what=$1
+    date="${DEPLOYMENT_DATE:-${DEFAULT_DEPLOYMENT_DATE}}"
+    name="${DEPLOYMENT_ROOT}/${DEPLOYMENT_TYPE:-deploy}/${what}/${date}"
+    echo "${name}"
+}
+
+install_dir_name() {
+    # Create an installation directory name based on the environment
+    # variables set. Resovles any symlinks.
+    what=$1
+    name=$(install_dir_raw ${what})
+    if [[ -L "${name}" ]]; then
+        echo "$(readlink -f ${name})"
+    else
+        echo "${name}"
+    fi
+}
+
+set_latest() {
+    # Set the "latest" symlink to the current deployment date
+    what=$1
+    source="$(install_dir_name ${what})"
+    DEPLOYMENT_DATE="latest"
+    target="$(install_dir_raw ${what})"
+    if [[ -e "${target}" && ! -L "${target}" ]]; then
+        log "link target is not a symlink: ${target}"
+        return 1
+    elif [[ "${source}" = "${target}" ]]; then
+        log "cannot link to itself: ${source}"
+        log "returning!"
+        return 0
+    elif [[ ! -d "${source}" ]]; then
+        log "link source is not a directory: ${source}"
+        return 1
+    fi
+    log "creating symlink for ${what}"
+    log "...from ${source}"
+    log "...to   ${target}"
+    rm -f "${target}"
+    ln -s "${source}" "${target}"
+}
+
+install_dir() {
+    # Create an installation directory based on the environment variables
+    # set.
+    #
+    # When DEPLOYMENT_DATE is set to "latest" and the corresponding symlink
+    # does not resolve/is not existing, find the last installation
+    # directory and symlink it to "latest".
+    what=$1
+    date="${DEPLOYMENT_DATE:-${DEFAULT_DEPLOYMENT_DATE}}"
+    name="$(install_dir_name ${what})"
+    if [[ ! -e "${name}" && "${date}" = "latest" ]]; then
+        log "creating symlink for ${date}"
+        target=$(last_install_dir ${what})
+        if [[ ! -d "${target}" ]]; then
+            DEPLOYMENT_DATE=${DEFAULT_DEPLOYMENT_DATE}
+            target="$(install_dir_name ${what})"
+            log "...creating ${target}"
+            mkdir -p "${target}"
+        fi
+        log "...from ${target}"
+        log "...to   ${name}"
+        ln -sf "${target}" "${name}"
+    fi
+
+    if [[ -L "${name}" ]]; then
+        echo "$(readlink -f ${name})"
+    else
+        echo "${name}"
+    fi
+}
+
+last_install_dir() {
+    # Obtain the installation directory of a parental stage, i.e.,
+    # compilers when building tools. Based on some assumptions:
+    #
+    # 1. Attempt to use the globally set `DEPLOYMENT_DATE` or default via
+    #    `install_dir`
+    # 2. Otherwise, use the latest directory present
+    what=$1
+    name="$(install_dir_name ${what})"
+    parent="$(dirname ${name})"
+    if [[ ! -d "${name}" && -d "${parent}" ]]; then
+        name=$(find "${parent}" -mindepth 1 -maxdepth 1 -type d|sort|tail -n1)
+    fi
+    echo "$(readlink -f ${name})"
+}
+
+list_module_paths() {
+    # Print all module paths up to and including the stage passed as first
+    # argument
+    local what="$1"
+    for stage in ${stages}; do
+        local base="$(last_install_dir ${stage})"
+        for modpath in ${base}/modules/tcl/*; do
+            if [[ -d "${modpath}" ]]; then
+                echo "${modpath}"
+            fi
+        done
+
+        if [[ "${stage}" = "${what}" ]]; then
+            return
+        fi
+    done
+}
+
+update_module_path() {
+    # Export MODULEPATH including all stages up to and excluding the one
+    # passed as first argument
+    local what="$1"
+    local include_self="${2:-no}"
+    local modpaths=$(list_module_paths ${what})
+
+    for modpath in ${modpaths}; do
+        if [[ "${modpath}" = *${what}* && "${include_self}" != "yes" ]]; then
+            return
+        fi
+        grep -oF "${modpath}" <<< ${MODULEPATH} || {
+            log "prepending to MODULEPATH: ${modpath}"
+            MODULEPATH="${modpath}${MODULEPATH:+:}${MODULEPATH}"
+            export MODULEPATH
+        }
+        if [[ "${modpath}" = *${what}* ]]; then
+            return
+        fi
+    done
+}
+
+update_chain_config() {
+    local what="$1"
+    local add="${2:-}"
+    local suffix="${3:-}"
+
+    conf="${HOME}/.spack/upstreams.yaml"
+    ckey="^upstreams:"
+
+    chains=""
+    for stage in ${stages}; do
+        if [[ "${stage}" = "${what}" ]]; then
+            break
+        fi
+        if [[ "${include_in_chain[${stage}]}" = "yes" ]]; then
+            chains="${stage}${chains:+ }${chains}"
+        fi
+    done
+    chains="${add}${add:+ }${chains}"
+
+    if [[ -n "${chains}" ]]; then
+        grep -e ${ckey} ${conf} &> /dev/null || {
+            echo "upstreams:" >> "${conf}"
+        }
+        log "chaining up ${what}"
+        for stage in ${chains}; do
+            log "...adding ${stage}"
+            cat << EOF >> "${conf}"
+  ${stage}${suffix}:
+    install_tree: $(last_install_dir ${stage})
+    modules:
+      tcl: $(last_install_dir ${stage})/modules
+EOF
+        done
+    fi
+}
+
+configure_compilers() {
+    # Add modules for compilers themselves
+    update_module_path "compilers" "yes"
+    while read -r line; do
+        set +o nounset
+        log "...processing ${line}"
+        $(spack module tcl loads ${line}|tail -n 1)
+        set -o nounset
+        if [[ ${line} != *"intel-parallel-studio"* ]]; then
+            spack compiler find --scope=user
+        fi
+
+        if [[ ${line} = *"intel"* ]]; then
+            GCC_DIR=$(spack location --install-dir gcc@6.4.0)
+
+            # update intel modules to use gcc@6.4.0 in .cfg files
+            install_dir=$(spack location --install-dir ${line})
+            for f in $(find ${install_dir} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
+                if ! grep -q "${GCC_DIR}" $f; then
+                    echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
+                    echo "-Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
+                    echo "-Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
+                    log "updated ${f} with newer GCC"
+                fi
+            done
+        elif [[ ${line} = *"pgi"* ]]; then
+            #update pgi modules for network installation
+            PGI_DIR=$(dirname $(which makelocalrc))
+            makelocalrc ${PGI_DIR} -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
+
+            #configure pgi network license
+            template=$(find $PGI_DIR -name localrc* | tail -n 1)
+            for node in bbpv1 bbpv2 bbptadm tds03 tds04 r2i3n0 r2i3n1 r2i3n2 r2i3n3 r2i3n4 r2i3n5 r2i3n6; do
+                cp $template $PGI_DIR/localrc.$node || true
+            done
+        fi
+        spack unload ${line}
+    done
+
+    sed  -i 's#.*f\(77\|c\): null#      f\1: /usr/bin/gfortran#' ${HOME}/.spack/compilers.yaml
+}
+
+setup_mirror() {
+    what="$1"
+    log "adding mirrors"
+    if [[ "${what}" = "compilers" ]]; then
+        if [[ -z "${SPACK_PROPRIETARY_MIRROR_DIR:+x}" ]]; then
+            log "...need to have \$SPACK_PROPRIETARY_MIRROR_DIR set!"
+            return 1
+        fi
+        log "...source mirror: ${SPACK_PROPRIETARY_MIRROR_DIR}"
+        spack mirror add --scope=user my_proprietary_mirror file://${SPACK_PROPRIETARY_MIRROR_DIR} || log "proprietary mirror already added!"
+    fi
+
+    if [[ "${SOURCECACHE:-x}" = "true" ]]; then
+        if [[ -z "${SPACK_SOURCE_MIRROR_DIR:+x}" ]]; then
+            log "...need to have \$SPACK_SOURCE_MIRROR_DIR set!"
+            return 1
+        fi
+        log "...source mirror: ${SPACK_SOURCE_MIRROR_DIR}"
+        spack mirror add --scope=user my_source_mirror file://${SPACK_SOURCE_MIRROR_DIR} || log "source mirror already added!"
+    fi
+
+    if [[ "${BUILDCACHE:-x}" = "true" ]]; then
+        if [[ -z "${SPACK_BINARY_MIRROR_DIR:+x}" ]]; then
+            log "need to have \$SPACK_BINARY_MIRROR_DIR set!"
+            return 1
+        fi
+        log "...binary mirror: ${SPACK_BINARY_MIRROR_DIR}"
+        spack mirror add --scope=user my_binary_mirror file://${SPACK_BINARY_MIRROR_DIR} || log "binary mirror already added!"
+    fi
+}
+
+populate_build_cache() {
+    start_date="$1"
+
+    local created cached spec
+
+    if [[ "${BUILDCACHE:-x}" != "true" ]]; then
+        return
+    fi
+
+    log "gpg keys available"
+    spack gpg list
+    log "creating build caches"
+    cached=$(spack buildcache list -l|awk '!/^--|^==/ {print $1}')
+    created=$(spack find -l --start-date "${start_date}"|awk '!/^--|^==/ {print $1}')
+    for checksum in ${created}; do
+        spec=$(spack find /${checksum}|tail -n 1)
+        if [[ "${cached}" = *${checksum}* ]]; then
+            log "...already in build cache: ${spec}"
+        else
+            log "...caching ${spec}"
+            spack buildcache create --no-dependencies -d "${HOME}" "/${checksum}" || true
+        fi
+    done
+
+    if [[ ! -d "${HOME}/build_cache" ]]; then
+        log "nothing in build cache"
+        return
+    fi
+
+    log "cleaning up failed build caches"
+    garbage=$(find "${HOME}/build_cache" -name "*.tar.gz")
+    for tarball in ${garbage}; do
+        if [[ ! -f "${tarball%%.tar.gz}.spack" ]]; then
+            log "...cleaning $(basename ${tarball})"
+            rm -f "${tarball}"
+            rm -f "${HOME}/build_cache/$(basename ${tarball%%.tar.gz}).spec.yaml"
+        fi
+    done
+
+    log "syncing build cache to mirror"
+    log "...from ${HOME}/build_cache"
+    log "...to   ${SPACK_BINARY_MIRROR_DIR}"
+    mkdir -p "${SPACK_BINARY_MIRROR_DIR}"
+    rsync -av "${HOME}/build_cache" "${SPACK_BINARY_MIRROR_DIR}"
+}
+
+populate_mirror() {
+    what=$1
+
+    if [[ "${what}" = "compilers" ]]; then
+        log "populating mirror with proprietary compilers"
+        for compiler in intel intel-parallel-studio pgi; do
+            mkdir -p ${SPACK_PROPRIETARY_MIRROR_DIR}/${compiler}
+            cp ${DEPLOYMENT_DATA}/${compiler}/* ${SPACK_PROPRIETARY_MIRROR_DIR}/${compiler}/
+        done
+    fi
+
+    if [[ "${SOURCECACHE:-x}" != "true" ]]; then
+        return
+    fi
+
+    log "populating mirror for ${what}"
+
+    specfile="$(install_dir ${what})/data/specs.txt"
+    spec_list=$(spack filter --not-installed $(cat ${specfile}))
+
+    if [[ -z "${spec_list}" ]]; then
+        log "...found no new packages"
+        return 0
+    fi
+
+    log "found the following specs"
+    echo "${spec_list}"
+    spack mirror create -D -d ${SPACK_SOURCE_MIRROR_DIR} ${spec_list}
+}
+
+check_specs() {
+    spack spec -Il "$@"
+}
+
+generate_specs() {
+    what="$@"
+
+    if [[ -z "${what}" ]]; then
+        log "asked to generate no specs!"
+        return 1
+    fi
+
+    venv="${DEPLOYMENT_ROOT}/spack/venv"
+
+    log "updating the deployment virtualenv"
+    # Recreate the virtualenv and update the command line
+    mkdir -p ${venv}
+    virtualenv -q -p $(which python) ${venv} --clear
+    set +o nounset
+    . ${venv}/bin/activate
+    set -o nounset
+    pip install -q --force-reinstall -U .
+
+    for stage in ${what}; do
+        log "generating specs for ${stage}"
+        datadir="$(install_dir ${stage})/data"
+
+        mkdir -p "${datadir}"
+        env &> "${datadir}/spack_deploy.env"
+        git rev-parse HEAD &> "${datadir}/spack_deploy.version"
+
+        rm -f "${datadir}/specs.txt"
+        for stub in ${spec_definitions[$stage]}; do
+            log "...using ${stub}.yaml"
+            spackd --input packages/${stub}.yaml packages x86_64 >> "${datadir}/specs.txt"
+        done
+    done
+}
+
+copy_configuration() {
+    what="$1"
+
+    log "copying configuration"
+    log "...into ${HOME}"
+    rm -rf "${HOME}/.spack"
+    mkdir -p "${HOME}/.spack"
+    cp configs/*.yaml "${HOME}/.spack"
+
+    if [[ ${spec_parentage[${what}]+_} ]]; then
+        parent="${spec_parentage[$what]}"
+        pdir="$(last_install_dir ${parent})"
+        log "...using configuration output of ${parent}"
+        cp "${pdir}/data/packages.yaml" "${HOME}/.spack"
+        cp "${pdir}/data/compilers.yaml" "${HOME}/.spack"
+    fi
+
+    if [[ -d "configs/${what}" ]]; then
+        log "...using specialized configuration files: $(ls configs/${what})"
+        cp configs/${what}/*.yaml "${HOME}/.spack"
+    fi
+
+    log "...copying gpg setup"
+    mkdir -p ${DEPLOYMENT_ROOT}/spack/opt/spack
+    cp -r gpg "${DEPLOYMENT_ROOT}/spack/opt/spack"
+    chmod 700 "${DEPLOYMENT_ROOT}/spack/opt/spack/gpg"
+    chmod 600 "${DEPLOYMENT_ROOT}/spack/opt/spack/gpg/"*
+}
+
+copy_user_configuration() {
+    what="$1"
+
+    local source="$(install_dir ${what})/data"
+    local target="${DEPLOYMENT_ROOT}/config"
+    local modpaths=$(list_module_paths ${what})
+
+    log "copying configuration"
+    log "...from ${source}"
+    log "...into ${target}"
+
+    mkdir -p "${target}"
+    cp ${source}/{compilers,.spack/upstreams,packages}.yaml ${target}
+
+    rm -f ${target}/modules.sh
+    for modpath in ${modpaths}; do
+        echo "MODULEPATH=\"\${MODULEPATH}\${MODULEPATH:+:}${modpath}\"" >> ${target}/modules.sh
+    done
+    echo "export MODULEPATH" >> ${target}/modules.sh
+}
+
+copy_modules() {
+    what="$1"
+
+    local source="$(install_dir ${what})/modules"
+    local target="${DEPLOYMENT_ROOT}/modules/${what}/$(date +%Y-%m)"
+
+    log "copying module files"
+    log "...from ${source}"
+    log "...into ${target}"
+    mkdir -p ${target}
+    rsync -av "${source}/" "${target}"
+}
+
+install_specs() {
+    what="$1"
+
+    location="$(install_dir ${what})"
+    HOME="${location}/data"
+    SOFTS_DIR_PATH="${location}"
+    MODS_DIR_PATH="${location}/modules"
+    export HOME SOFTS_DIR_PATH MODS_DIR_PATH
+
+    copy_configuration "${what}"
+    update_chain_config "${what}"
+    update_module_path "${what}"
+
+    if [[ "${DEPLOYMENT_UPSTREAM:-${DEPLOYMENT_ROOT}}" != "${DEPLOYMENT_ROOT}" ]]; then
+        OLD_DEPLOYMENT_ROOT="${DEPLOYMENT_ROOT}"
+        DEPLOYMENT_ROOT="${DEPLOYMENT_UPSTREAM}"
+        export DEPLOYMENT_ROOT
+        log "setting up upstream chains, modules"
+        update_chain_config "${what}" "${what}" "-upstream"
+        update_module_path "${what}" "yes"
+        DEPLOYMENT_ROOT="${OLD_DEPLOYMENT_ROOT}"
+        export DEPLOYMENT_ROOT
+    fi
+
+    # This directory may fail intel builds, pre-emptively remove it.
+    rm -rf "${HOME}/intel/.pset"
+
+    log "sourcing spack environment"
+    . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
+    env &> "${HOME}/spack.env"
+    (cd "${DEPLOYMENT_ROOT}/spack" && git rev-parse HEAD) &> "${HOME}/spack.version"
+
+    log "stage directory:"
+    ls -l "${SPACK_ROOT}/var/spack/stage" || true
+    log "stage directory in depth:"
+    find "${SPACK_ROOT}/var/spack/stage" || true
+    log "cleaning up after a bad spack"
+    spack clean -a
+
+    log "installed specs"
+    spack reindex && spack find -lv
+
+    log "gathering specs"
+    spec_list=$(spack filter --not-installed $(< ${HOME}/specs.txt))
+
+    setup_mirror "${what}"
+    populate_mirror "${what}"
+
+    # SPEC CHECK
+    if [[ -n "${spec_list}" ]]; then
+        log "found the following uninstalled specs"
+        echo "${spec_list}"
+        log "checking specs"
+        spack spec -Il ${spec_list}
+    else
+        log "no specs to install?"
+    fi
+
+    # todo : patchelf recursion issue
+    log "installing patchelf for buildcache"
+    spack install --no-cache -y patchelf %gcc
+
+    # INSTALL
+    #
+    # use all specs to get the right unit test setup
+    install_start=$(date "+%Y-%m-%d %H:%M:%S")
+    log "running installation for all specs"
+    spack install -y --log-format=junit --log-file="${HOME}/stack.xml" $(< "${HOME}/specs.txt")
+
+    # BUILD CACHE
+    populate_build_cache "${install_start}"
+
+    # Do not activate any packages for now. Maybe with lmod…
+    # if [[ "${what}" = "serial-libraries" ]]; then
+    #     log "running activation for python"
+    #     while read spec; do
+    #         if [[ "${spec}" = py-* ]]; then
+    #             spack activate $spec || true
+    #         fi
+    #     done < "${HOME}/specs.txt"
+    # fi
+
+    mkdir -p "${WORKSPACE:-.}/stacks"
+    cp "${HOME}/stack.xml" "${WORKSPACE:-.}/stacks/${what}.xml"
+
+    spack module tcl refresh -y --delete-tree --latest --upstream-modules
+
+    . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
+    if [[ "${export_packages[${what}]}" = "yes" ]]; then
+        log "augmenting packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'py-.*|neuron|hdf5' > "${HOME}/packages.yaml"
+    else
+        log "copying packages.yaml"
+        cp "${HOME}/.spack/packages.yaml" "${HOME}"
+    fi
+
+    if [[ "${what}" = "compilers" ]]; then
+        log "adding compilers"
+        configure_compilers < "${HOME}/specs.txt"
+    fi
+
+    cp "${HOME}/.spack/compilers.yaml" "${HOME}" || true
+
+    log "cleaning up after a bad spack"
+    spack clean -a
+}
+

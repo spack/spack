@@ -13,5 +13,6 @@ class PyDbf(PythonPackage):
     homepage = 'https://pypi.python.org/pypi/dbf'
     url      = "https://pypi.io/packages/source/d/dbf/dbf-0.96.005.tar.gz"
 
+    version('0.97.11', sha256='8aa5a73d8b140aa3c511a3b5b204a67d391962e90c66b380dd048fcae6ddbb68')
     version('0.96.005', 'bce1a1ed8b454a30606e7e18dd2f8277')
     version('0.94.003', '33a659ec90d7e8d8ffcd69d2189c0c6c')

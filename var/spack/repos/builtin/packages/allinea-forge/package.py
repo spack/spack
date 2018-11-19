@@ -15,7 +15,7 @@ class AllineaForge(Package):
     homepage = "http://www.allinea.com/products/develop-allinea-forge"
 
     version('6.0', 'c85fec6d01680b5b46fea80111186244')
-    version('7.0', 'b70f4b140a71a5db0791d44684ac6cb5')
+    version('7.0', '4c2f5b2ff83d494854df74e6df4be7be')
 
     # Licensing
     license_required = True

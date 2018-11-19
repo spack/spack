@@ -1,0 +1,51 @@
+modules:
+
+  enable::
+    - tcl
+
+  prefix_inspections::
+    bin:
+      - PATH
+    bin64:
+      - PATH
+    share/man:
+      - MANPATH
+    man:
+      - MANPATH
+    lib:
+      - LD_LIBRARY_PATH
+    lib64:
+      - LD_LIBRARY_PATH
+    lib/pkgconfig:
+      - PKG_CONFIG_PATH
+    lib64/pkgconfig:
+      - PKG_CONFIG_PATH
+    '':
+      - CMAKE_PREFIX_PATH
+
+  tcl:
+    verbose: True
+    hash_length: 0
+    whitelist:
+      - hdf5+mpi
+      - highfive+mpi
+      - petsc
+      - py-mpi4py
+      - trilinos
+      - neuron+mpi
+      - omega-h
+    blacklist:
+      - '%gcc'
+      - '%intel'
+      - '%llvm'
+      - '%pgi'
+    naming_scheme: '${PACKAGE}/${VERSION}'
+    all:
+      autoload: 'all'
+      suffixes:
+        '^python@:2.99': '/python2'
+        '^python@3:': '/python3'
+        '+mpi': '/parallel'
+      environment:
+        set:
+          '${PACKAGE}_ROOT': '${PREFIX}'

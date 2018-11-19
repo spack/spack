@@ -1,0 +1,61 @@
+# Common dependency packages
+
+axis:
+  - architecture
+  - compiler
+  - mpi
+  - lapack
+  - python
+
+combinations: !include packages/toolchains.yaml
+
+packages:
+
+  gnu-stable-serial:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - allinea-forge@7.0
+      - binutils@2.31.1
+      - bison@3.0.5
+      - cmake@3.13.0
+      - environment-modules@3.2.10
+      - flex@2.6.3
+      - gdb~python@8.2
+      - gdbm@1.14.1
+      - gettext@0.19.8.1
+      - git@2.18.0
+      - gmp@6.1.2
+      - help2man@1.47.4
+      - hpe-mpi@2.16
+      - intel-mpi@2018.1.163
+      - isl@0.18
+      - libx11@1.6.5
+      - m4@1.4.18
+      - mpc@1.1.0
+      - 'mvapich2@2.3 fabrics=mrail process_managers=slurm file_systems=gpfs'
+      - node-js@6.12.2
+      - npm@3.10.9
+      - pkg-config@0.29.2
+      - swig@3.0.12
+      - tcl@8.6.8
+      - texinfo@6.5
+      - tk@8.6.8
+      - util-macros@1.19.1
+      - valgrind~mpi@3.13.0
+
+  #gnu-stable-python-serial:
+  #  target_matrix:
+  #    - gnu-stable
+  #  requires:
+  #    - architecture
+  #    - compiler
+  #    - python
+  #  specs:
+  #    - gdb@8.2
+  #    - ninja@1.8.2
+  #    - py-lit@0.5.0
+  #    - py-setuptools@40.2.0

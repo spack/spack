@@ -30,7 +30,7 @@ modules:
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     naming_scheme: '${PACKAGE}/${VERSION}'
-    hash_length: 0
+    hash_length: 6
     whitelist:
       - functionalizer
       - git

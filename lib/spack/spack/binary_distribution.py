@@ -271,7 +271,11 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     # set symlinks=False here to avoid broken symlinks when archiving and
     # moving the package
-    install_tree(spec.prefix, workdir, symlinks=False)
+    # see #10062, intel packages have symlinks that we want to preserve
+    build_system_class = spec.package.build_system_class
+    allow_symlinks = True if build_system_class == 'IntelPackage' else False
+
+    install_tree(spec.prefix, workdir, symlinks=allow_symlinks)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)

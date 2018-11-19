@@ -39,9 +39,10 @@ class Neurodamus(NeurodamusBase):
     variant('syntool', default=True, description="Enable Synapsetool reader")
     variant('sonata', default=False, description="Enable Synapsetool with Sonata")
 
-    depends_on('mpi')
-    depends_on('hdf5+mpi')
-    depends_on('neuron')
+    depends_on("boost", when="+syntool")
+    depends_on("hdf5+mpi")
+    depends_on("mpi")
+    depends_on("neuron+mpi")
     depends_on('reportinglib')
     depends_on('synapsetool+mpi', when='+syntool~sonata')
     depends_on('synapsetool+mpi+sonata', when='+syntool+sonata')
@@ -75,6 +76,10 @@ class Neurodamus(NeurodamusBase):
     conflicts('@master', when='+coreneuron')
     conflicts('^neuron~python', when='+coreneuron')
     conflicts('+sonata', when='~syntool')
+
+    # Note : to support neuron as external package where readline is not brought
+    # with correct library path
+    depends_on('readline')
 
     phases = ['build', 'install']
 

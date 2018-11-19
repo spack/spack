@@ -27,6 +27,7 @@ class PyPyarrow(PythonPackage):
 
     depends_on('arrow+python')
     depends_on('arrow+parquet+python', when='+parquet')
+    depends_on('py-numpy')
 
     phases = ['build_ext', 'install']
 

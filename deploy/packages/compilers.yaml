@@ -1,0 +1,38 @@
+# Compiler Specs
+
+# axis that defines software deployment strategy
+axis:
+  - architecture
+  - compiler
+  - mpi
+  - lapack
+  - python
+
+# toolchain combinations
+combinations:
+  # core toolchain typically represent system compilers
+  core:
+    architecture:
+    - x86_64
+    compiler:
+    - gcc@4.8.5
+    mpi: None
+    lapack: None
+    python: None
+
+# list of compilers to build
+packages:
+  compilers:
+    target_matrix:
+      - core
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - gcc@8.2.0
+      - gcc@7.3.0
+      - gcc@6.4.0
+      - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2018.3
+      - intel@18.0.3
+      - llvm@7.0.0
+      - pgi+network+nvidia+mpi@18.4
