@@ -165,11 +165,10 @@ def find(module_type, specs, args):
     spec = one_spec_or_raise(specs)
 
     if spec.package.installed_upstream:
-        msg = ("The package {0} is installed upstream."
-               " Use 'spack location --spack-instance' to locate the"
-               " spack instance which manages the associated module file"
-               .format(spec))
-        tty.die(msg)
+        module = spack.modules.common.upstream_module(spec, module_type)
+        if module:
+            print(module)
+        return
 
     # Check if the module file is present
     def module_exists(spec):
@@ -291,6 +290,7 @@ def refresh(module_type, specs, args):
 
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
+    spack.modules.common.generate_module_index(module_type_root, writers)
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:

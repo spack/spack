@@ -215,6 +215,42 @@ def root_path(name):
     return spack.util.path.canonicalize_path(path)
 
 
+import spack.util.spack_yaml as syaml
+def generate_module_index(root, modules):
+    entries = syaml.syaml_dict(
+        (m.spec.dag_hash(), m.layout.filename) for m in modules)
+    index = {'module_index': entries}
+    index_path = os.path.join(root, 'module-index.yaml')
+    with open(index_path, 'w') as F:
+        syaml.dump(index, F, default_flow_style=False)
+
+
+def read_module_index(root):
+    index_path = os.path.join(root, 'module-index.yaml')
+    with open(index_path, 'w') as F:
+        return syaml.load(F)
+
+
+def read_module_indices():
+    module_roots = spack.config.get('config:upstream_module_roots') or {}
+    module_type_to_indices = {}
+    for name, paths in module_roots.items():
+        indices = module_type_to_indices.set_default(name, [])
+        for root in paths:
+            index_path = os.path.join(root, 'module-index.yaml')
+            indices.append(read_module_index(index_path))
+
+
+module_type_to_indices = read_module_indices()
+
+
+def upstream_module(spec, module_type):
+    indices = module_type_to_indices[module_type]
+    for index in indices:
+        if spec.dag_hash() in index:
+            return index[spec.dag_hash()]
+
+
 class BaseConfiguration(object):
     """Manipulates the information needed to generate a module file to make
     querying easier. It needs to be sub-classed for specific module types.
