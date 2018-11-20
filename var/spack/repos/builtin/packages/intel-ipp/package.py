@@ -11,8 +11,12 @@ class IntelIpp(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2019.1.144', '1eb7cd0fba74615aeafa4e314c645414497eb73f1705200c524fe78f00620db3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14887/l_ipp_2019.1.144.tgz')
     version('2019.0.117', 'c96be6e138d32bf9b8abc789d25db71d',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13576/l_ipp_2019.0.117.tgz')
+    version('2018.4.274', 'bdc6082c65410c98ccf6daf239e0a6625d15ec5e0ddc1c0563aad42b6ba9063c',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13726/l_ipp_2018.4.274.tgz')
     version('2018.3.222', '2ccc16ec002466e52f1e6e1bfe9b1149',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13006/l_ipp_2018.3.222.tgz')
     version('2018.2.199', 'f87276b485d2f6ec070c1b41ac1ed871',
