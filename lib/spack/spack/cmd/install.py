@@ -35,6 +35,7 @@ import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy
+import spack.hooks.strip_binaries
 import spack.report
 
 
@@ -123,6 +124,10 @@ packages. If neither are chosen, don't run tests for any packages."""
         help="filename for the log file. if not passed a default will be used"
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
+    subparser.add_argument(
+        '--strip-binaries', action='store_true',
+        help='strip binaries from symbols'
+    )
 
 
 def default_log_file(spec):
@@ -171,6 +176,9 @@ def install(parser, args, **kwargs):
 
     if args.no_checksum:
         spack.do_checksum = False  # TODO: remove this global.
+
+    if args.strip_binaries:
+        spack.hooks.strip_binaries.enabled = True
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
