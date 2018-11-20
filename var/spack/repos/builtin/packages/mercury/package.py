@@ -18,9 +18,10 @@ class Mercury(CMakePackage):
 
     variant('cci', default=False, description='Use CCI for network transport')
     variant('bmi', default=False, description='Use BMI for network transport')
-    variant('fabric',default=True, description='Use libfabric for network transport')
+    variant('fabric', default=True, description='Use libfabric for network transport')
     variant('selfforward', default=True,
-            description='Mercury will short-circuit operations by forwarding to itself when possible')
+            description="""Mercury will short-circuit operations
+                           by forwarding to itself when possible""")
 
     depends_on('cci@master', when='+cci', type=('build', 'link', 'run'))
     depends_on('libfabric', when='+fabric', type=('build', 'link', 'run'))
@@ -30,7 +31,7 @@ class Mercury(CMakePackage):
 
     def cmake_args(self):
         args = ['-DMERCURY_USE_BOOST_PP:BOOL=ON',
-                '-DBUILD_SHARED_LIBS=ON' ]
+                '-DBUILD_SHARED_LIBS=ON']
         if (self.spec.variants['cci'].value):
             args.extend(['-DNA_USE_CCI:BOOL=ON'])
         if (self.spec.variants['bmi'].value):
