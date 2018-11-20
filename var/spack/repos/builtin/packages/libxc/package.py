@@ -13,9 +13,20 @@ class Libxc(AutotoolsPackage):
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
+    version('4.2.3', '6176ac7edf234425d973903f82199350')
     version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
     version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
+
+    def url_for_version(self, version):
+        if version < Version('3.0.0'):
+            return ("http://www.tddft.org/programs/octopus/"
+                    "down.php?file=libxc/libxc-{0}.tar.gz"
+                    .format(version))
+
+        return ("http://www.tddft.org/programs/octopus/"
+                "down.php?file=libxc/{0}/libxc-{0}.tar.gz"
+                .format(version))
 
     @property
     def libs(self):
@@ -38,7 +49,10 @@ class Libxc(AutotoolsPackage):
         # Libxc has a fortran90 interface: give clients the
         # possibility to query for it
         if 'fortran' in query_parameters:
-            libraries = ['libxcf90'] + libraries
+            if self.version < Version('4.0.0'):
+                libraries = ['libxcf90'] + libraries
+            else:  # starting from version 4 there is also a stable f03 iface
+                libraries = ['libxcf90', 'libxcf03'] + libraries
 
         return find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
