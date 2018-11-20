@@ -18,4 +18,3 @@ class Asciidoctor(Package):
 
     def install(self, spec, prefix):
         gem('install', 'asciidoctor-{0}.gem'.format(self.version))
-
