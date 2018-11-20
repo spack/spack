@@ -22,4 +22,4 @@ class PyCsvkit(PythonPackage):
     depends_on('py-xlrd', type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-openpyxl@2.2.0-b1', type=('build', 'run'))
+    depends_on('py-openpyxl', type=('build', 'run'))

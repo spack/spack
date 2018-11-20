@@ -22,6 +22,7 @@ class PyIpython(PythonPackage):
 
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
+
     depends_on('py-pygments',                   type=('build', 'run'))
     depends_on('py-pickleshare',                type=('build', 'run'))
     depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))

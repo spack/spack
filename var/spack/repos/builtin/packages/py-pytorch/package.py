@@ -27,6 +27,7 @@ class PyPytorch(PythonPackage):
     conflicts('+magma', when='~cuda')
     conflicts('+mkldnn', when='@:0.3.2')
 
+    depends_on('cmake@3:', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-cffi', type='build')
     depends_on('py-numpy', type=('run', 'build'))
