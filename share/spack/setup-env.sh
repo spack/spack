@@ -89,6 +89,43 @@ function spack {
             fi
             return
             ;;
+        "env")
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
+
+            if [ "$_sp_arg" = "-h" ]; then
+                command spack env -h
+            else
+                case $_sp_arg in
+                    activate)
+                        _a="$@"
+                        if [ -z "$1" -o "${_a#*--sh}" != "$_a" -o "${_a#*--csh}" != "$_a" -o "${_a#*-h}" != "$_a" ]; then
+                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            command spack "${args[@]}"
+                        else
+                            # actual call to activate: source the output
+                            eval $(command spack $_sp_flags env activate --sh "$@")
+                        fi
+                        ;;
+                    deactivate)
+                        if [ -n "$1" ]; then
+                            # with args: execute the command
+                            command spack "${args[@]}"
+                        else
+                            # no args: source the output.
+                            eval $(command spack $_sp_flags env deactivate --sh)
+                        fi
+                        ;;
+                    *)
+                        command spack "${args[@]}"
+                        ;;
+                esac
+            fi
+            return
+            ;;
         "use"|"unuse"|"load"|"unload")
             # Shift any other args for use off before parsing spec.
             _sp_subcommand_args=""
@@ -199,7 +236,7 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+	PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 

@@ -17,6 +17,7 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.11.2', 'c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81')
     version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d')
     version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
     version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
@@ -70,6 +71,12 @@ class Qt(Package):
     patch('qt4-corewlan-new-osx.patch', when='@4')
     patch('qt4-pcre-include-conflict.patch', when='@4')
     patch('qt4-el-capitan.patch', when='@4')
+
+    # Allow Qt's configure script to build the webkit option with more
+    # recent versions of gcc.
+    # https://github.com/spack/spack/issues/9205
+    # https://github.com/spack/spack/issues/9209
+    patch('qt4-gcc-and-webkit.patch', when='@4')
 
     # Use system openssl for security.
     depends_on("openssl")

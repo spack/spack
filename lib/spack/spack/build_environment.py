@@ -53,8 +53,8 @@ import spack.main
 import spack.paths
 import spack.store
 from spack.util.string import plural
-from spack.environment import EnvironmentModifications, validate
-from spack.environment import preserve_environment
+from spack.util.environment import EnvironmentModifications, validate
+from spack.util.environment import preserve_environment
 from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.environment import system_dirs
 from spack.util.executable import Executable
@@ -141,6 +141,13 @@ def clean_environment():
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+
+    build_lang = spack.config.get('config:build_language')
+    if build_lang:
+        # Override language-related variables. This can be used to force
+        # English compiler messages etc., which allows parse_log_events to
+        # show useful matches.
+        env.set('LC_ALL', build_lang)
 
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
@@ -490,16 +497,16 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
         compiler_args = [
             '-dynamiclib',
-            '-install_name {0}'.format(install_name),
+            '-install_name', '{0}'.format(install_name),
             '-Wl,-force_load,{0}'.format(static_lib)
         ]
 
         if compat_version:
-            compiler_args.append('-compatibility_version {0}'.format(
-                compat_version))
+            compiler_args.extend(['-compatibility_version', '{0}'.format(
+                compat_version)])
 
         if version:
-            compiler_args.append('-current_version {0}'.format(version))
+            compiler_args.extend(['-current_version', '{0}'.format(version)])
 
     if len(arguments) > 0:
         compiler_args.extend(arguments)

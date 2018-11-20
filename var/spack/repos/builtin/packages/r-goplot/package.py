@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
 
 
@@ -27,4 +26,4 @@ class RGoplot(RPackage):
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
     depends_on('r-ggdendro@0.1-17:', type=('build', 'run'))
     depends_on('r-gridextra@2.0.0:', type=('build', 'run'))
-    depends_on('r-rcolorbrewer@1.1.2:', type=('build', 'run'))
+    depends_on('r-rcolorbrewer@1.1-2:', type=('build', 'run'))

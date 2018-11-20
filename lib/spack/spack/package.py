@@ -1403,7 +1403,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
-        if kwargs.get('use_cache', False):
+        if kwargs.get('use_cache', True):
             if self.try_install_from_binary_cache(explicit):
                 tty.msg('Successfully installed %s from binary cache'
                         % self.name)

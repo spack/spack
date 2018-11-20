@@ -17,7 +17,7 @@ class Openfast(CMakePackage):
     version('develop', branch='dev')
     version('master', branch='master')
 
-    variant('shared', default=False,
+    variant('shared', default=True,
             description="Build shared libraries")
     variant('double-precision', default=True,
             description="Treat REAL as double precision")
@@ -25,6 +25,8 @@ class Openfast(CMakePackage):
             description="Enable dynamic library loading interface")
     variant('cxx', default=False,
             description="Enable C++ bindings")
+    variant('pic', default=True,
+            description="Position independent code")
 
     # Dependencies for OpenFAST Fortran
     depends_on('blas')
@@ -54,6 +56,8 @@ class Openfast(CMakePackage):
                 'ON' if '+dll-interface' in spec else 'OFF'),
             '-DBUILD_FAST_CPP_API:BOOL=%s' % (
                 'ON' if '+cxx' in spec else 'OFF'),
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
+                'ON' if '+pic' in spec else 'OFF'),
         ])
 
         # Make sure we use Spack's blas/lapack:

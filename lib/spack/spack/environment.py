@@ -3,621 +3,904 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
-import contextlib
-import inspect
-import json
 import os
 import re
 import sys
-import os.path
-import subprocess
+import shutil
 
+import jsonschema
+import ruamel.yaml
+
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-from llnl.util.lang import dedupe
+import spack.error
+import spack.repo
+import spack.schema.env
+import spack.spec
+import spack.util.spack_json as sjson
+import spack.config
+from spack.spec import Spec
 
 
-class NameModifier(object):
-
-    def __init__(self, name, **kwargs):
-        self.name = name
-        self.args = {'name': name}
-        self.args.update(kwargs)
-
-    def update_args(self, **kwargs):
-        self.__dict__.update(kwargs)
-        self.args.update(kwargs)
+#: environment variable used to indicate the active environment
+spack_env_var = 'SPACK_ENV'
 
 
-class NameValueModifier(object):
-
-    def __init__(self, name, value, **kwargs):
-        self.name = name
-        self.value = value
-        self.separator = kwargs.get('separator', ':')
-        self.args = {'name': name, 'value': value, 'separator': self.separator}
-        self.args.update(kwargs)
-
-    def update_args(self, **kwargs):
-        self.__dict__.update(kwargs)
-        self.args.update(kwargs)
+#: currently activated environment
+_active_environment = None
 
 
-class SetEnv(NameValueModifier):
-
-    def execute(self):
-        os.environ[self.name] = str(self.value)
+#: path where environments are stored in the spack tree
+env_path = os.path.join(spack.paths.var_path, 'environments')
 
 
-class AppendFlagsEnv(NameValueModifier):
-
-    def execute(self):
-        if self.name in os.environ and os.environ[self.name]:
-            os.environ[self.name] += self.separator + str(self.value)
-        else:
-            os.environ[self.name] = str(self.value)
+#: Name of the input yaml file for an environment
+manifest_name = 'spack.yaml'
 
 
-class UnsetEnv(NameModifier):
-
-    def execute(self):
-        # Avoid throwing if the variable was not set
-        os.environ.pop(self.name, None)
+#: Name of the input yaml file for an environment
+lockfile_name = 'spack.lock'
 
 
-class SetPath(NameValueModifier):
-
-    def execute(self):
-        string_path = concatenate_paths(self.value, separator=self.separator)
-        os.environ[self.name] = string_path
+#: Name of the directory where environments store repos, logs, views
+env_subdir_name = '.spack-env'
 
 
-class AppendPath(NameValueModifier):
+#: default spack.yaml file to put in new environments
+default_manifest_yaml = """\
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs:
+  -
+"""
+#: regex for validating enviroment names
+valid_environment_name_re = r'^\w[\w-]*$'
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(
-            self.separator) if environment_value else []
-        directories.append(os.path.normpath(self.value))
-        os.environ[self.name] = self.separator.join(directories)
+#: version of the lockfile format. Must increase monotonically.
+lockfile_format_version = 1
 
+#: legal first keys in the spack.yaml manifest file
+env_schema_keys = ('spack', 'env')
 
-class PrependPath(NameValueModifier):
-
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(
-            self.separator) if environment_value else []
-        directories = [os.path.normpath(self.value)] + directories
-        os.environ[self.name] = self.separator.join(directories)
-
-
-class RemovePath(NameValueModifier):
-
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(
-            self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
-        os.environ[self.name] = self.separator.join(directories)
+#: jsonschema validator for environments
+_validator = None
 
 
-class EnvironmentModifications(object):
-    """Keeps track of requests to modify the current environment.
+def valid_env_name(name):
+    return re.match(valid_environment_name_re, name)
 
-    Each call to a method to modify the environment stores the extra
-    information on the caller in the request:
 
-        * 'filename' : filename of the module where the caller is defined
-        * 'lineno': line number where the request occurred
-        * 'context' : line of code that issued the request that failed
+def validate_env_name(name):
+    if not valid_env_name(name):
+        raise ValueError((
+            "'%s': names must start with a letter, and only contain "
+            "letters, numbers, _, and -.") % name)
+    return name
+
+
+def activate(env, use_env_repo=False):
+    """Activate an environment.
+
+    To activate an environment, we add its configuration scope to the
+    existing Spack configuration, and we set active to the current
+    environment.
+
+    Arguments:
+        env (Environment): the environment to activate
+        use_env_repo (bool): use the packages exactly as they appear in the
+            environment's repository
+
+    TODO: Add support for views here.  Activation should set up the shell
+    TODO: environment to use the activated spack environment.
     """
+    global _active_environment
 
-    def __init__(self, other=None):
-        """Initializes a new instance, copying commands from 'other'
-        if it is not None.
+    _active_environment = env
+    prepare_config_scope(_active_environment)
+    if use_env_repo:
+        spack.repo.path.put_first(_active_environment.repo)
 
-        Args:
-            other (EnvironmentModifications): list of environment modifications
-                to be extended (optional)
+    tty.debug("Using environmennt '%s'" % _active_environment.name)
+
+
+def deactivate():
+    """Undo any configuration or repo settings modified by ``activate()``.
+
+    Returns:
+        (bool): True if an environment was deactivated, False if no
+        environment was active.
+
+    """
+    global _active_environment
+
+    if not _active_environment:
+        return
+
+    deactivate_config_scope(_active_environment)
+
+    # use _repo so we only remove if a repo was actually constructed
+    if _active_environment._repo:
+        spack.repo.path.remove(_active_environment._repo)
+
+    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    _active_environment = None
+
+
+def find_environment(args):
+    """Find active environment from args, spack.yaml, or environment variable.
+
+    This is called in ``spack.main`` to figure out which environment to
+    activate.
+
+    Check for an environment in this order:
+        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
+        2. as a spack.yaml file in the current directory, or
+        3. via a path in the SPACK_ENV environment variable.
+
+    If an environment is found, read it in.  If not, return None.
+
+    Arguments:
+        args (Namespace): argparse namespace wtih command arguments
+
+    Returns:
+        (Environment): a found environment, or ``None``
+    """
+    # try arguments
+    env = getattr(args, 'env', None)
+
+    # treat env as a name
+    if env:
+        if exists(env):
+            return read(env)
+
+    else:
+        # if env was specified, see if it is a dirctory otherwise, look
+        # at env_dir (env and env_dir are mutually exclusive)
+        env = getattr(args, 'env_dir', None)
+
+        # if no argument, look for a manifest file
+        if not env:
+            if os.path.exists(manifest_name):
+                env = os.getcwd()
+
+            # if no env, env_dir, or manifest try the environment
+            if not env:
+                env = os.environ.get(spack_env_var)
+
+                # nothing was set; there's no active environment
+                if not env:
+                    return None
+
+    # if we get here, env isn't the name of a spack environment; it has
+    # to be a path to an environment, or there is something wrong.
+    if is_env_dir(env):
+        return Environment(env)
+
+    raise SpackEnvironmentError('no environment in %s' % env)
+
+
+def get_env(args, cmd_name, required=True):
+    """Used by commands to get the active environment.
+
+    This first checks for an ``env`` argument, then looks at the
+    ``active`` environment.  We check args first because Spack's
+    subcommand arguments are parsed *after* the ``-e`` and ``-D``
+    arguments to ``spack``.  So there may be an ``env`` argument that is
+    *not* the active environment, and we give it precedence.
+
+    This is used by a number of commands for determining whether there is
+    an active environment.
+
+    If an environment is not found *and* is required, print an error
+    message that says the calling command *needs* an active environment.
+
+    Arguments:
+        args (Namespace): argparse namespace wtih command arguments
+        cmd_name (str): name of calling command
+        required (bool): if ``False``, return ``None`` if no environment
+            is found instead of raising an exception.
+
+    Returns:
+        (Environment): if there is an arg or active environment
+    """
+    # try argument first
+    env = getattr(args, 'env', None)
+    if env:
+        if exists(env):
+            return read(env)
+        elif is_env_dir(env):
+            return Environment(env)
+        else:
+            raise SpackEnvironmentError('no environment in %s' % env)
+
+    # try the active environment. This is set by find_environment() (above)
+    if _active_environment:
+        return _active_environment
+    elif not required:
+        return None
+    else:
+        tty.die(
+            '`spack %s` requires an environment' % cmd_name,
+            'activate an environment first:',
+            '    spack env activate ENV',
+            'or use:',
+            '    spack -e ENV %s ...' % cmd_name)
+
+
+def root(name):
+    """Get the root directory for an environment by name."""
+    validate_env_name(name)
+    return os.path.join(env_path, name)
+
+
+def exists(name):
+    """Whether an environment with this name exists or not."""
+    if not valid_env_name(name):
+        return False
+    return os.path.isdir(root(name))
+
+
+def active(name):
+    """True if the named environment is active."""
+    return _active_environment and name == _active_environment.name
+
+
+def is_env_dir(path):
+    """Whether a directory contains a spack environment."""
+    return os.path.isdir(path) and os.path.exists(
+        os.path.join(path, manifest_name))
+
+
+def read(name):
+    """Get an environment with the supplied name."""
+    validate_env_name(name)
+    if not exists(name):
+        raise SpackEnvironmentError("no such environment '%s'" % name)
+    return Environment(root(name))
+
+
+def create(name, init_file=None):
+    """Create a named environment in Spack."""
+    validate_env_name(name)
+    if exists(name):
+        raise SpackEnvironmentError("'%s': environment already exists" % name)
+    return Environment(root(name), init_file)
+
+
+def config_dict(yaml_data):
+    """Get the configuration scope section out of an spack.yaml"""
+    key = spack.config.first_existing(yaml_data, env_schema_keys)
+    return yaml_data[key]
+
+
+def all_environment_names():
+    """List the names of environments that currently exist."""
+    # just return empty if the env path does not exist.  A read-only
+    # operation like list should not try to create a directory.
+    if not os.path.exists(env_path):
+        return []
+
+    candidates = sorted(os.listdir(env_path))
+    names = []
+    for candidate in candidates:
+        yaml_path = os.path.join(root(candidate), manifest_name)
+        if valid_env_name(candidate) and os.path.exists(yaml_path):
+            names.append(candidate)
+    return names
+
+
+def all_environments():
+    """Generator for all named Environments."""
+    for name in all_environment_names():
+        yield read(name)
+
+
+def validate(data, filename=None):
+    global _validator
+    if _validator is None:
+        _validator = jsonschema.Draft4Validator(spack.schema.env.schema)
+    try:
+        _validator.validate(data)
+    except jsonschema.ValidationError as e:
+        raise spack.config.ConfigFormatError(
+            e, data, filename, e.instance.lc.line + 1)
+
+
+def _read_yaml(str_or_file):
+    """Read YAML from a file for round-trip parsing."""
+    data = ruamel.yaml.load(str_or_file, ruamel.yaml.RoundTripLoader)
+    filename = getattr(str_or_file, 'name', None)
+    validate(data, filename)
+    return data
+
+
+def _write_yaml(data, str_or_file):
+    """Write YAML to a file preserving comments and dict order."""
+    filename = getattr(str_or_file, 'name', None)
+    validate(data, filename)
+    ruamel.yaml.dump(data, str_or_file, Dumper=ruamel.yaml.RoundTripDumper,
+                     default_flow_style=False)
+
+
+class Environment(object):
+    def __init__(self, path, init_file=None):
+        """Create a new environment.
+
+        The environment can be optionally initialized with either a
+        spack.yaml or spack.lock file.
+
+        Arguments:
+            path (str): path to the root directory of this environment
+            init_file (str or file object): filename or file object to
+                initialize the environment
         """
-        self.env_modifications = []
-        if other is not None:
-            self.extend(other)
+        self.path = os.path.abspath(path)
+        self.clear()
 
-    def __iter__(self):
-        return iter(self.env_modifications)
+        if init_file:
+            # initialize the environment from a file if provided
+            with fs.open_if_filename(init_file) as f:
+                if hasattr(f, 'name') and f.name.endswith('.lock'):
+                    # Initialize the environment from a lockfile
+                    self._read_lockfile(f)
+                    self._set_user_specs_from_lockfile()
+                    self.yaml = _read_yaml(default_manifest_yaml)
+                else:
+                    # Initialize the environment from a spack.yaml file
+                    self._read_manifest(f)
+        else:
+            # read lockfile, if it exists
+            if os.path.exists(self.lock_path):
+                with open(self.lock_path) as f:
+                    self._read_lockfile(f)
 
-    def __len__(self):
-        return len(self.env_modifications)
+            if os.path.exists(self.manifest_path):
+                # read the spack.yaml file, if exists
+                with open(self.manifest_path) as f:
+                    self._read_manifest(f)
 
-    def extend(self, other):
-        self._check_other(other)
-        self.env_modifications.extend(other.env_modifications)
+            elif self.concretized_user_specs:
+                # if not, take user specs from the lockfile
+                self._set_user_specs_from_lockfile()
+                self.yaml = _read_yaml(default_manifest_yaml)
+            else:
+                # if there's no manifest or lockfile, use the default
+                self._read_manifest(default_manifest_yaml)
 
-    @staticmethod
-    def _check_other(other):
-        if not isinstance(other, EnvironmentModifications):
-            raise TypeError(
-                'other must be an instance of EnvironmentModifications')
+    def _read_manifest(self, f):
+        """Read manifest file and set up user specs."""
+        self.yaml = _read_yaml(f)
+        spec_list = config_dict(self.yaml).get('specs')
+        if spec_list:
+            self.user_specs = [Spec(s) for s in spec_list if s]
 
-    def _get_outside_caller_attributes(self):
-        stack = inspect.stack()
-        try:
-            _, filename, lineno, _, context, index = stack[2]
-            context = context[index].strip()
-        except Exception:
-            filename = 'unknown file'
-            lineno = 'unknown line'
-            context = 'unknown context'
-        args = {'filename': filename, 'lineno': lineno, 'context': context}
-        return args
-
-    def set(self, name, value, **kwargs):
-        """Stores a request to set an environment variable.
-
-        Args:
-            name: name of the environment variable to be set
-            value: value of the environment variable
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        item = SetEnv(name, value, **kwargs)
-        self.env_modifications.append(item)
-
-    def append_flags(self, name, value, sep=' ', **kwargs):
-        """
-        Stores in the current object a request to append to an env variable
-
-        Args:
-            name: name of the environment variable to be appended to
-            value: value to append to the environment variable
-        Appends with spaces separating different additions to the variable
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        kwargs.update({'separator': sep})
-        item = AppendFlagsEnv(name, value, **kwargs)
-        self.env_modifications.append(item)
-
-    def unset(self, name, **kwargs):
-        """Stores a request to unset an environment variable.
-
-        Args:
-            name: name of the environment variable to be set
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        item = UnsetEnv(name, **kwargs)
-        self.env_modifications.append(item)
-
-    def set_path(self, name, elements, **kwargs):
-        """Stores a request to set a path generated from a list.
-
-        Args:
-            name: name o the environment variable to be set.
-            elements: elements of the path to set.
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        item = SetPath(name, elements, **kwargs)
-        self.env_modifications.append(item)
-
-    def append_path(self, name, path, **kwargs):
-        """Stores a request to append a path to a path list.
-
-        Args:
-            name: name of the path list in the environment
-            path: path to be appended
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        item = AppendPath(name, path, **kwargs)
-        self.env_modifications.append(item)
-
-    def prepend_path(self, name, path, **kwargs):
-        """Same as `append_path`, but the path is pre-pended.
-
-        Args:
-            name: name of the path list in the environment
-            path: path to be pre-pended
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        item = PrependPath(name, path, **kwargs)
-        self.env_modifications.append(item)
-
-    def remove_path(self, name, path, **kwargs):
-        """Stores a request to remove a path from a path list.
-
-        Args:
-            name: name of the path list in the environment
-            path: path to be removed
-        """
-        kwargs.update(self._get_outside_caller_attributes())
-        item = RemovePath(name, path, **kwargs)
-        self.env_modifications.append(item)
-
-    def group_by_name(self):
-        """Returns a dict of the modifications grouped by variable name.
-
-        Returns:
-            dict mapping the environment variable name to the modifications to
-            be done on it
-        """
-        modifications = collections.defaultdict(list)
-        for item in self:
-            modifications[item.name].append(item)
-        return modifications
+    def _set_user_specs_from_lockfile(self):
+        """Copy user_specs from a read-in lockfile."""
+        self.user_specs = [Spec(s) for s in self.concretized_user_specs]
 
     def clear(self):
+        self.user_specs = []              # current user specs
+        self.concretized_user_specs = []  # user specs from last concretize
+        self.concretized_order = []       # roots of last concretize, in order
+        self.specs_by_hash = {}           # concretized specs by hash
+        self.new_specs = []               # write packages for these on write()
+        self._repo = None                 # RepoPath for this env (memoized)
+        self._previous_active = None      # previously active environment
+
+    @property
+    def internal(self):
+        """Whether this environment is managed by Spack."""
+        return self.path.startswith(env_path)
+
+    @property
+    def name(self):
+        """Human-readable representation of the environment.
+
+        This is the path for directory environments, and just the name
+        for named environments.
         """
-        Clears the current list of modifications
+        if self.internal:
+            return os.path.basename(self.path)
+        else:
+            return self.path
+
+    @property
+    def active(self):
+        """True if this environment is currently active."""
+        return _active_environment and self.path == _active_environment.path
+
+    @property
+    def manifest_path(self):
+        """Path to spack.yaml file in this environment."""
+        return os.path.join(self.path, manifest_name)
+
+    @property
+    def lock_path(self):
+        """Path to spack.lock file in this environment."""
+        return os.path.join(self.path, lockfile_name)
+
+    @property
+    def env_subdir_path(self):
+        """Path to directory where the env stores repos, logs, views."""
+        return os.path.join(self.path, env_subdir_name)
+
+    @property
+    def repos_path(self):
+        return os.path.join(self.path, env_subdir_name, 'repos')
+
+    @property
+    def log_path(self):
+        return os.path.join(self.path, env_subdir_name, 'logs')
+
+    @property
+    def repo(self):
+        if self._repo is None:
+            self._repo = make_repo_path(self.repos_path)
+        return self._repo
+
+    def included_config_scopes(self):
+        """List of included configuration scopes from the environment.
+
+        Scopes are listed in the YAML file in order from highest to
+        lowest precedence, so configuration from earlier scope will take
+        precedence over later ones.
+
+        This routine returns them in the order they should be pushed onto
+        the internal scope stack (so, in reverse, from lowest to highest).
         """
-        self.env_modifications.clear()
+        scopes = []
 
-    def apply_modifications(self):
-        """Applies the modifications and clears the list."""
-        modifications = self.group_by_name()
-        # Apply modifications one variable at a time
-        for name, actions in sorted(modifications.items()):
-            for x in actions:
-                x.execute()
+        # load config scopes added via 'include:', in reverse so that
+        # highest-precedence scopes are last.
+        includes = config_dict(self.yaml).get('include', [])
+        for i, config_path in enumerate(reversed(includes)):
+            # allow paths to contain environment variables
+            config_path = config_path.format(**os.environ)
 
-    @staticmethod
-    def from_sourcing_file(filename, *args, **kwargs):
-        """Returns modifications that would be made by sourcing a file.
+            # treat relative paths as relative to the environment
+            if not os.path.isabs(config_path):
+                config_path = os.path.join(self.path, config_path)
+                config_path = os.path.normpath(os.path.realpath(config_path))
 
-        Parameters:
-            filename (str): The file to source
-            *args (list of str): Arguments to pass on the command line
+            if os.path.isdir(config_path):
+                # directories are treated as regular ConfigScopes
+                config_name = 'env:%s:%s' % (
+                    self.name, os.path.basename(config_path))
+                scope = spack.config.ConfigScope(config_name, config_path)
+            else:
+                # files are assumed to be SingleFileScopes
+                base, ext = os.path.splitext(os.path.basename(config_path))
+                config_name = 'env:%s:%s' % (self.name, base)
+                scope = spack.config.SingleFileScope(
+                    config_name, config_path, spack.schema.merged.schema)
 
-        Keyword Arguments:
-            shell (str): The shell to use (default: ``bash``)
-            shell_options (str): Options passed to the shell (default: ``-c``)
-            source_command (str): The command to run (default: ``source``)
-            suppress_output (str): Redirect used to suppress output of command
-                (default: ``&> /dev/null``)
-            concatenate_on_success (str): Operator used to execute a command
-                only when the previous command succeeds (default: ``&&``)
-            blacklist ([str or re]): Ignore any modifications of these
-                variables (default: [])
-            whitelist ([str or re]): Always respect modifications of these
-                variables (default: []). Has precedence over blacklist.
-            clean (bool): In addition to removing empty entries,
-                also remove duplicate entries (default: False).
+            scopes.append(scope)
+
+        return scopes
+
+    def env_file_config_scope_name(self):
+        """Name of the config scope of this environment's manifest file."""
+        return 'env:%s' % self.name
+
+    def env_file_config_scope(self):
+        """Get the configuration scope for the environment's manifest file."""
+        config_name = self.env_file_config_scope_name()
+        return spack.config.SingleFileScope(config_name,
+                                            self.manifest_path,
+                                            spack.schema.env.schema,
+                                            [env_schema_keys])
+
+    def config_scopes(self):
+        """A list of all configuration scopes for this environment."""
+        return self.included_config_scopes() + [self.env_file_config_scope()]
+
+    def destroy(self):
+        """Remove this environment from Spack entirely."""
+        shutil.rmtree(self.path)
+
+    def add(self, user_spec):
+        """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
-            EnvironmentModifications: an object that, if executed, has
-                the same effect on the environment as sourcing the file
+            (bool): True if the spec was added, False if it was already
+                present and did not need to be added
+
         """
-        # Check if the file actually exists
-        if not os.path.isfile(filename):
-            msg = 'Trying to source non-existing file: {0}'.format(filename)
-            raise RuntimeError(msg)
+        spec = Spec(user_spec)
+        if not spec.name:
+            raise SpackEnvironmentError(
+                'cannot add anonymous specs to an environment!')
+        elif not spack.repo.path.exists(spec.name):
+            raise SpackEnvironmentError('no such package: %s' % spec.name)
 
-        # Kwargs parsing and default values
-        shell                  = kwargs.get('shell', '/bin/bash')
-        shell_options          = kwargs.get('shell_options', '-c')
-        source_command         = kwargs.get('source_command', 'source')
-        suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
-        concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
-        blacklist              = kwargs.get('blacklist', [])
-        whitelist              = kwargs.get('whitelist', [])
-        clean                  = kwargs.get('clean', False)
+        existing = set(s for s in self.user_specs if s.name == spec.name)
+        if not existing:
+            self.user_specs.append(spec)
+        return bool(not existing)
 
-        source_file = [source_command, filename]
-        source_file.extend(args)
-        source_file = ' '.join(source_file)
+    def remove(self, query_spec, force=False):
+        """Remove specs from an environment that match a query_spec"""
+        query_spec = Spec(query_spec)
 
-        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+        # try abstract specs first
+        matches = []
+        if not query_spec.concrete:
+            matches = [s for s in self.user_specs if s.satisfies(query_spec)]
 
-        # Construct the command that will be executed
-        command = [
-            shell,
-            shell_options,
-            ' '.join([
-                source_file, suppress_output,
-                concatenate_on_success, dump_environment,
-            ]),
-        ]
+        if not matches:
+            # concrete specs match against concrete specs in the env
+            specs_hashes = zip(
+                self.concretized_user_specs, self.concretized_order)
+            matches = [
+                s for s, h in specs_hashes if query_spec.dag_hash() == h]
 
-        # Try to source the file
-        proc = subprocess.Popen(
-            command, stdout=subprocess.PIPE, env=os.environ)
-        proc.wait()
+        if not matches:
+            raise SpackEnvironmentError("Not found: {0}".format(query_spec))
 
-        if proc.returncode != 0:
-            msg = 'Sourcing file {0} returned a non-zero exit code'.format(
-                filename)
-            raise RuntimeError(msg)
+        for spec in matches:
+            if spec in self.user_specs:
+                self.user_specs.remove(spec)
 
-        output = ''.join([line.decode('utf-8') for line in proc.stdout])
+            if force and spec in self.concretized_user_specs:
+                i = self.concretized_user_specs.index(spec)
+                del self.concretized_user_specs[i]
 
-        # Construct dictionaries of the environment before and after
-        # sourcing the file, so that we can diff them.
-        env_before = dict(os.environ)
-        env_after = json.loads(output)
+                dag_hash = self.concretized_order[i]
+                del self.concretized_order[i]
+                del self.specs_by_hash[dag_hash]
 
-        # If we're in python2, convert to str objects instead of unicode
-        # like json gives us.  We can't put unicode in os.environ anyway.
-        if sys.version_info[0] < 3:
-            env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
-                             for k, v in env_after.items())
+    def concretize(self, force=False):
+        """Concretize user_specs in this environment.
 
-        # Other variables unrelated to sourcing a file
-        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+        Only concretizes specs that haven't been concretized yet unless
+        force is ``True``.
 
-        def set_intersection(fullset, *args):
-            # A set intersection using string literals and regexs
-            meta = '[' + re.escape('[$()*?[]^{|}') + ']'
-            subset = fullset & set(args)   # As literal
-            for name in args:
-                if re.search(meta, name):
-                    pattern = re.compile(name)
-                    for k in fullset:
-                        if re.match(pattern, k):
-                            subset.add(k)
-            return subset
+        This only modifies the environment in memory. ``write()`` will
+        write out a lockfile containing concretized specs.
 
-        for d in env_after, env_before:
-            # Retain (whitelist) has priority over prune (blacklist)
-            prune = set_intersection(set(d), *blacklist)
-            prune -= set_intersection(prune, *whitelist)
-            for k in prune:
-                d.pop(k, None)
+        Arguments:
+            force (bool): re-concretize ALL specs, even those that were
+               already concretized
+        """
+        if force:
+            # Clear previously concretized specs
+            self.concretized_user_specs = []
+            self.concretized_order = []
+            self.specs_by_hash = {}
 
-        # Fill the EnvironmentModifications instance
-        env = EnvironmentModifications()
+        # keep any concretized specs whose user specs are still in the manifest
+        old_concretized_user_specs = self.concretized_user_specs
+        old_concretized_order = self.concretized_order
+        old_specs_by_hash = self.specs_by_hash
 
-        # New variables
-        new_variables = list(set(env_after) - set(env_before))
-        # Variables that have been unset
-        unset_variables = list(set(env_before) - set(env_after))
-        # Variables that have been modified
-        common_variables = set(env_before).intersection(set(env_after))
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
 
-        modified_variables = [x for x in common_variables
-                              if env_before[x] != env_after[x]]
+        for s, h in zip(old_concretized_user_specs, old_concretized_order):
+            if s in self.user_specs:
+                concrete = old_specs_by_hash[h]
+                self._add_concrete_spec(s, concrete, new=False)
 
-        # Consistent output order - looks nicer, easier comparison...
-        new_variables.sort()
-        unset_variables.sort()
-        modified_variables.sort()
+        # concretize any new user specs that we haven't concretized yet
+        for uspec in self.user_specs:
+            if uspec not in old_concretized_user_specs:
+                tty.msg('Concretizing %s' % uspec)
+                concrete = uspec.concretized()
+                self._add_concrete_spec(uspec, concrete)
 
-        def return_separator_if_any(*args):
-            separators = ':', ';'
-            for separator in separators:
-                for arg in args:
-                    if separator in arg:
-                        return separator
-            return None
+                # Display concretized spec to the user
+                sys.stdout.write(concrete.tree(
+                    recurse_dependencies=True, install_status=True,
+                    hashlen=7, hashes=True))
 
-        # Add variables to env.
-        # Assume that variables with 'PATH' in the name or that contain
-        # separators like ':' or ';' are more likely to be paths
-        for x in new_variables:
-            sep = return_separator_if_any(env_after[x])
-            if sep:
-                env.prepend_path(x, env_after[x], separator=sep)
-            elif 'PATH' in x:
-                env.prepend_path(x, env_after[x])
-            else:
-                # We just need to set the variable to the new value
-                env.set(x, env_after[x])
+    def install(self, user_spec, concrete_spec=None, **install_args):
+        """Install a single spec into an environment.
 
-        for x in unset_variables:
-            env.unset(x)
+        This will automatically concretize the single spec, but it won't
+        affect other as-yet unconcretized specs.
+        """
+        spec = Spec(user_spec)
 
-        for x in modified_variables:
-            before = env_before[x]
-            after = env_after[x]
-            sep = return_separator_if_any(before, after)
-            if sep:
-                before_list = before.split(sep)
-                after_list = after.split(sep)
+        if self.add(spec):
+            concrete = concrete_spec if concrete_spec else spec.concretized()
+            self._add_concrete_spec(spec, concrete)
+        else:
+            # spec might be in the user_specs, but not installed.
+            spec = next(s for s in self.user_specs if s.name == spec.name)
+            concrete = self.specs_by_hash.get(spec.dag_hash())
+            if not concrete:
+                concrete = spec.concretized()
+                self._add_concrete_spec(spec, concrete)
 
-                # Filter out empty strings
-                before_list = list(filter(None, before_list))
-                after_list = list(filter(None, after_list))
+        concrete.package.do_install(**install_args)
 
-                # Remove duplicate entries (worse matching, bloats env)
-                if clean:
-                    before_list = list(dedupe(before_list))
-                    after_list = list(dedupe(after_list))
-                    # The reassembled cleaned entries
-                    before = sep.join(before_list)
-                    after = sep.join(after_list)
+    def _add_concrete_spec(self, spec, concrete, new=True):
+        """Called when a new concretized spec is added to the environment.
 
-                # Paths that have been removed
-                remove_list = [
-                    ii for ii in before_list if ii not in after_list]
-                # Check that nothing has been added in the middle of
-                # before_list
-                remaining_list = [
-                    ii for ii in before_list if ii in after_list]
-                try:
-                    start = after_list.index(remaining_list[0])
-                    end = after_list.index(remaining_list[-1])
-                    search = sep.join(after_list[start:end + 1])
-                except IndexError:
-                    env.prepend_path(x, after)
+        This ensures that all internal data structures are kept in sync.
 
-                if search not in before:
-                    # We just need to set the variable to the new value
-                    env.prepend_path(x, after)
+        Arguments:
+            spec (Spec): user spec that resulted in the concrete spec
+            concrete (Spec): spec concretized within this environment
+            new (bool): whether to write this spec's package to the env
+                repo on write()
+        """
+        assert concrete.concrete
+
+        # when a spec is newly concretized, we need to make a note so
+        # that we can write its package to the env repo on write()
+        if new:
+            self.new_specs.append(concrete)
+
+        # update internal lists of specs
+        self.concretized_user_specs.append(spec)
+
+        h = concrete.dag_hash()
+        self.concretized_order.append(h)
+        self.specs_by_hash[h] = concrete
+
+    def install_all(self, args=None):
+        """Install all concretized specs in an environment."""
+
+        # Make sure log directory exists
+        log_path = self.log_path
+        fs.mkdirp(log_path)
+
+        for concretized_hash in self.concretized_order:
+            spec = self.specs_by_hash[concretized_hash]
+
+            # Parse cli arguments and construct a dictionary
+            # that will be passed to Package.do_install API
+            kwargs = dict()
+            if args:
+                spack.cmd.install.update_kwargs_from_args(args, kwargs)
+
+            with fs.working_dir(self.path):
+                spec.package.do_install(**kwargs)
+
+                # Link the resulting log file into logs dir
+                build_log_link = os.path.join(
+                    log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+                if os.path.exists(build_log_link):
+                    os.remove(build_log_link)
+                os.symlink(spec.package.build_log_path, build_log_link)
+
+    def all_specs_by_hash(self):
+        """Map of hashes to spec for all specs in this environment."""
+        hashes = {}
+        for h in self.concretized_order:
+            specs = self.specs_by_hash[h].traverse(deptype=('link', 'run'))
+            for spec in specs:
+                hashes[spec.dag_hash()] = spec
+        return hashes
+
+    def all_specs(self):
+        """Return all specs, even those a user spec would shadow."""
+        return sorted(self.all_specs_by_hash().values())
+
+    def all_hashes(self):
+        """Return all specs, even those a user spec would shadow."""
+        return list(self.all_specs_by_hash().keys())
+
+    def roots(self):
+        """Specs explicitly requested by the user *in this environment*.
+
+        Yields both added and installed specs that have user specs in
+        `spack.yaml`.
+        """
+        concretized = dict(self.concretized_specs())
+        for spec in self.user_specs:
+            concrete = concretized.get(spec)
+            yield concrete if concrete else spec
+
+    def added_specs(self):
+        """Specs that are not yet installed.
+
+        Yields the user spec for non-concretized specs, and the concrete
+        spec for already concretized but not yet installed specs.
+        """
+        concretized = dict(self.concretized_specs())
+        for spec in self.user_specs:
+            concrete = concretized.get(spec)
+            if not concrete:
+                yield spec
+            elif not concrete.package.installed:
+                yield concrete
+
+    def concretized_specs(self):
+        """Tuples of (user spec, concrete spec) for all concrete specs."""
+        for s, h in zip(self.concretized_user_specs, self.concretized_order):
+            yield (s, self.specs_by_hash[h])
+
+    def removed_specs(self):
+        """Tuples of (user spec, concrete spec) for all specs that will be
+           removed on nexg concretize."""
+        needed = set()
+        for s, c in self.concretized_specs():
+            if s in self.user_specs:
+                for d in c.traverse():
+                    needed.add(d)
+
+        for s, c in self.concretized_specs():
+            for d in c.traverse():
+                if d not in needed:
+                    yield d
+
+    def _get_environment_specs(self, recurse_dependencies=True):
+        """Returns the specs of all the packages in an environment.
+
+        If these specs appear under different user_specs, only one copy
+        is added to the list returned.
+        """
+        package_to_spec = {}
+        spec_list = list()
+
+        for spec_hash in self.concretized_order:
+            spec = self.specs_by_hash[spec_hash]
+
+            specs = (spec.traverse(deptype=('link', 'run'))
+                     if recurse_dependencies else (spec,))
+
+            for dep in specs:
+                prior = package_to_spec.get(dep.name)
+                if prior and prior != dep:
+                    tty.debug("{0} takes priority over {1}"
+                              .format(package_to_spec[dep.name].format(),
+                                      dep.format()))
                 else:
-                    try:
-                        prepend_list = after_list[:start]
-                        prepend_list.reverse()  # Preserve order after prepend
-                    except KeyError:
-                        prepend_list = []
-                    try:
-                        append_list = after_list[end + 1:]
-                    except KeyError:
-                        append_list = []
+                    package_to_spec[dep.name] = dep
+                    spec_list.append(dep)
 
-                    for item in remove_list:
-                        env.remove_path(x, item)
-                    for item in append_list:
-                        env.append_path(x, item)
-                    for item in prepend_list:
-                        env.prepend_path(x, item)
-            else:
-                # We just need to set the variable to the new value
-                env.set(x, after)
+        return spec_list
 
-        return env
+    def _to_lockfile_dict(self):
+        """Create a dictionary to store a lockfile for this environment."""
+        concrete_specs = {}
+        for spec in self.specs_by_hash.values():
+            for s in spec.traverse():
+                dag_hash = s.dag_hash()
+                if dag_hash not in concrete_specs:
+                    concrete_specs[dag_hash] = s.to_node_dict(all_deps=True)
 
+        hash_spec_list = zip(
+            self.concretized_order, self.concretized_user_specs)
 
-def concatenate_paths(paths, separator=':'):
-    """Concatenates an iterable of paths into a string of paths separated by
-    separator, defaulting to colon.
+        # this is the lockfile we'll write out
+        data = {
+            # metadata about the format
+            '_meta': {
+                'file-type': 'spack-lockfile',
+                'lockfile-version': lockfile_format_version,
+            },
 
-    Args:
-        paths: iterable of paths
-        separator: the separator to use, default ':'
+            # users specs + hashes are the 'roots' of the environment
+            'roots': [{
+                'hash': h,
+                'spec': str(s)
+            } for h, s in hash_spec_list],
 
-    Returns:
-        string
-    """
-    return separator.join(str(item) for item in paths)
+            # Concrete specs by hash, including dependencies
+            'concrete_specs': concrete_specs,
+        }
 
+        return data
 
-def set_or_unset_not_first(variable, changes, errstream):
-    """Check if we are going to set or unset something after other
-    modifications have already been requested.
-    """
-    indexes = [ii for ii, item in enumerate(changes)
-               if ii != 0 and
-               not item.args.get('force', False) and
-               type(item) in [SetEnv, UnsetEnv]]
-    if indexes:
-        good = '\t    \t{context} at {filename}:{lineno}'
-        nogood = '\t--->\t{context} at {filename}:{lineno}'
-        message = "Suspicious requests to set or unset '{var}' found"
-        errstream(message.format(var=variable))
-        for ii, item in enumerate(changes):
-            print_format = nogood if ii in indexes else good
-            errstream(print_format.format(**item.args))
+    def _read_lockfile(self, file_or_json):
+        """Read a lockfile from a file or from a raw string."""
+        lockfile_dict = sjson.load(file_or_json)
+        self._read_lockfile_dict(lockfile_dict)
 
+    def _read_lockfile_dict(self, d):
+        """Read a lockfile dictionary into this environment."""
+        roots = d['roots']
+        self.concretized_user_specs = [Spec(r['spec']) for r in roots]
+        self.concretized_order = [r['hash'] for r in roots]
 
-def validate(env, errstream):
-    """Validates the environment modifications to check for the presence of
-    suspicious patterns. Prompts a warning for everything that was found.
+        json_specs_by_hash = d['concrete_specs']
+        root_hashes = set(self.concretized_order)
 
-    Current checks:
-    - set or unset variables after other changes on the same variable
+        specs_by_hash = {}
+        for dag_hash, node_dict in json_specs_by_hash.items():
+            specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
 
-    Args:
-        env: list of environment modifications
-    """
-    modifications = env.group_by_name()
-    for variable, list_of_changes in sorted(modifications.items()):
-        set_or_unset_not_first(variable, list_of_changes, errstream)
+        for dag_hash, node_dict in json_specs_by_hash.items():
+            for dep_name, dep_hash, deptypes in (
+                    Spec.dependencies_from_node_dict(node_dict)):
+                specs_by_hash[dag_hash]._add_dependency(
+                    specs_by_hash[dep_hash], deptypes)
 
+        self.specs_by_hash = dict(
+            (x, y) for x, y in specs_by_hash.items() if x in root_hashes)
 
-def filter_environment_blacklist(env, variables):
-    """Generator that filters out any change to environment variables present in
-    the input list.
+    def write(self):
+        """Writes an in-memory environment to its location on disk.
 
-    Args:
-        env: list of environment modifications
-        variables: list of variable names to be filtered
+        This will also write out package files for each newly concretized spec.
+        """
+        # ensure path in var/spack/environments
+        fs.mkdirp(self.path)
 
-    Returns:
-        items in env if they are not in variables
-    """
-    for item in env:
-        if item.name not in variables:
-            yield item
+        if self.specs_by_hash:
+            # ensure the prefix/.env directory exists
+            fs.mkdirp(self.env_subdir_path)
 
+            for spec in self.new_specs:
+                for dep in spec.traverse():
+                    if not dep.concrete:
+                        raise ValueError('specs passed to environment.write() '
+                                         'must be concrete!')
 
-def inspect_path(root, inspections, exclude=None):
-    """Inspects ``root`` to search for the subdirectories in ``inspections``.
-    Adds every path found to a list of prepend-path commands and returns it.
+                    root = os.path.join(self.repos_path, dep.namespace)
+                    repo = spack.repo.create_or_construct(root, dep.namespace)
+                    pkg_dir = repo.dirname_for_package_name(dep.name)
 
-    Args:
-        root (str): absolute path where to search for subdirectories
+                    fs.mkdirp(pkg_dir)
+                    spack.repo.path.dump_provenance(dep, pkg_dir)
+            self.new_specs = []
 
-        inspections (dict): maps relative paths to a list of environment
-            variables that will be modified if the path exists. The
-            modifications are not performed immediately, but stored in a
-            command object that is returned to client
+            # write the lock file last
+            with fs.write_tmp_and_move(self.lock_path) as f:
+                sjson.dump(self._to_lockfile_dict(), stream=f)
+        else:
+            if os.path.exists(self.lock_path):
+                os.unlink(self.lock_path)
 
-        exclude (callable): optional callable. If present it must accept an
-            absolute path and return True if it should be excluded from the
-            inspection
+        # invalidate _repo cache
+        self._repo = None
 
-    Examples:
+        # put the new user specs in the YAML
+        yaml_spec_list = config_dict(self.yaml).setdefault('specs', [])
+        yaml_spec_list[:] = [str(s) for s in self.user_specs]
 
-    The following lines execute an inspection in ``/usr`` to search for
-    ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
-    ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
+        # if all that worked, write out the manifest file at the top level
+        with fs.write_tmp_and_move(self.manifest_path) as f:
+            _write_yaml(self.yaml, f)
 
-        .. code-block:: python
+    def __enter__(self):
+        self._previous_active = _active_environment
+        activate(self)
+        return
 
-            # Set up the dictionary containing the inspection
-            inspections = {
-                'include': ['CPATH'],
-                'lib64': ['MY_LIB64_PATH']
-            }
-
-            # Get back the list of command needed to modify the environment
-            env = inspect_path('/usr', inspections)
-
-            # Eventually execute the commands
-            env.apply_modifications()
-
-    Returns:
-        instance of EnvironmentModifications containing the requested
-        modifications
-    """
-    if exclude is None:
-        exclude = lambda x: False
-
-    env = EnvironmentModifications()
-    # Inspect the prefix to check for the existence of common directories
-    for relative_path, variables in inspections.items():
-        expected = os.path.join(root, relative_path)
-
-        if os.path.isdir(expected) and not exclude(expected):
-            for variable in variables:
-                env.prepend_path(variable, expected)
-
-    return env
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        deactivate()
+        if self._previous_active:
+            activate(self._previous_active)
 
 
-@contextlib.contextmanager
-def preserve_environment(*variables):
-    """Ensures that the value of the environment variables passed as
-    arguments is the same before entering to the context manager and after
-    exiting it.
+def make_repo_path(root):
+    """Make a RepoPath from the repo subdirectories in an environment."""
+    path = spack.repo.RepoPath()
 
-    Variables that are unset before entering the context manager will be
-    explicitly unset on exit.
+    if os.path.isdir(root):
+        for repo_root in os.listdir(root):
+            repo_root = os.path.join(root, repo_root)
 
-    Args:
-        variables (list of str): list of environment variables to be preserved
-    """
-    cache = {}
-    for var in variables:
-        # The environment variable to be preserved might not be there.
-        # In that case store None as a placeholder.
-        cache[var] = os.environ.get(var, None)
+            if not os.path.isdir(repo_root):
+                continue
 
-    yield
+            repo = spack.repo.Repo(repo_root)
+            path.put_last(repo)
 
-    for var in variables:
-        value = cache[var]
-        msg = '[PRESERVE_ENVIRONMENT]'
-        if value is not None:
-            # Print a debug statement if the value changed
-            if var not in os.environ:
-                msg += ' {0} was unset, will be reset to "{1}"'
-                tty.debug(msg.format(var, value))
-            elif os.environ[var] != value:
-                msg += ' {0} was set to "{1}", will be reset to "{2}"'
-                tty.debug(msg.format(var, os.environ[var], value))
-            os.environ[var] = value
-        elif var in os.environ:
-            msg += ' {0} was set to "{1}", will be unset'
-            tty.debug(msg.format(var, os.environ[var]))
-            del os.environ[var]
+    return path
+
+
+def prepare_config_scope(env):
+    """Add env's scope to the global configuration search path."""
+    for scope in env.config_scopes():
+        spack.config.config.push_scope(scope)
+
+
+def deactivate_config_scope(env):
+    """Remove any scopes from env from the global config path."""
+    for scope in env.config_scopes():
+        spack.config.config.remove_scope(scope.name)
+
+
+class SpackEnvironmentError(spack.error.SpackError):
+    """Superclass for all errors to do with Spack environments."""

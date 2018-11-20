@@ -5,15 +5,17 @@
 
 from __future__ import print_function
 
+import os
 import argparse
 import llnl.util.tty as tty
 
-import spack.paths
 import spack.cmd
+import spack.environment
+import spack.paths
 import spack.repo
 
-description = "print out locations of various directories used by Spack"
-section = "environment"
+description = "print out locations of packages and spack directories"
+section = "basic"
 level = "long"
 
 
@@ -47,6 +49,9 @@ def setup_parser(subparser):
         '-b', '--build-dir', action='store_true',
         help="checked out or expanded source directory for a spec "
              "(requires it to be staged first)")
+    directories.add_argument(
+        '-e', '--env', action='store',
+        help="location of an environment managed by spack")
 
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
@@ -59,6 +64,12 @@ def location(parser, args):
 
     elif args.spack_root:
         print(spack.paths.prefix)
+
+    elif args.env:
+        path = spack.environment.root(args.env)
+        if not os.path.isdir(path):
+            tty.die("no such environment: '%s'" % args.env)
+        print(path)
 
     elif args.packages:
         print(spack.repo.path.first_repo().root)

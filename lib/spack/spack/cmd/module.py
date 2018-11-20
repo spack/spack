@@ -12,7 +12,7 @@ import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
 
 description = "manipulate module files"
-section = "environment"
+section = "modules"
 level = "short"
 
 

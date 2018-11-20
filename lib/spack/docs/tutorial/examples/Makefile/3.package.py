@@ -24,11 +24,13 @@ class Bowtie(MakefilePackage):
         makefile.filter('CC= .*', 'CC = ' + env['CC'])
         makefile.filter('CXX = .*', 'CXX = ' + env['CXX'])
 
-    def build(self, spec, prefix):
+    @property
+    def build_targets(self):
         if "+tbb" in spec:
-            make()
+            return []
         else:
-            make("NO_TBB=1")
+            return ["NO_TBB=1"]
 
-    def install(self, spec, prefix):
-        make('prefix={0}'.format(self.prefix), 'install')
+    @property
+    def install_targets(self):
+        return ['prefix={0}'.format(self.prefix), 'install']

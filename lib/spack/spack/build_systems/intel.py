@@ -20,10 +20,10 @@ from llnl.util.filesystem import \
 
 from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
+from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.build_environment import dso_suffix
-from spack.environment import EnvironmentModifications
 
 
 # A couple of utility functions that might be useful in general. If so, they
@@ -674,7 +674,7 @@ class IntelPackage(PackageBase):
             gcc = Executable(self.compiler.cc)
             omp_lib_path = gcc(
                 '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
-            omp_libs = LibraryList(omp_lib_path)
+            omp_libs = LibraryList(omp_lib_path.strip())
 
         if len(omp_libs) < 1:
             raise_lib_error('Cannot locate OpenMP libraries:', omp_libnames)
@@ -741,10 +741,10 @@ class IntelPackage(PackageBase):
                 mkl_threading = 'libmkl_intel_thread'
             elif '%gcc' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
-            threading_engine_libs = self.openmp_libs()
+            threading_engine_libs = self.openmp_libs
         elif self.spec.satisfies('threads=tbb'):
             mkl_threading = 'libmkl_tbb_thread'
-            threading_engine_libs = self.tbb_libs()
+            threading_engine_libs = self.tbb_libs
         elif self.spec.satisfies('threads=none'):
             mkl_threading = 'libmkl_sequential'
             threading_engine_libs = LibraryList([])

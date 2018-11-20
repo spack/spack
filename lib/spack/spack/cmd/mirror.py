@@ -20,7 +20,7 @@ from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
-description = "manage mirrors"
+description = "manage mirrors (source and binary)"
 section = "config"
 level = "long"
 

@@ -1431,7 +1431,7 @@ class Spec(object):
 
         return self._full_hash[:length]
 
-    def to_node_dict(self, hash_function=None):
+    def to_node_dict(self, hash_function=None, all_deps=False):
         d = syaml_dict()
 
         if self.versions:
@@ -1462,9 +1462,21 @@ class Spec(object):
                 'module': self.external_module
             }
 
+        if not self._concrete:
+            d['concrete'] = False
+
+        if 'patches' in self.variants:
+            variant = self.variants['patches']
+            if hasattr(variant, '_patches_in_order_of_appearance'):
+                d['patches'] = variant._patches_in_order_of_appearance
+
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
-        deps = self.dependencies_dict(deptype=('link', 'run'))
+        if all_deps:
+            deptypes = ('link', 'run', 'build')
+        else:
+            deptypes = ('link', 'run')
+        deps = self.dependencies_dict(deptype=deptypes)
         if deps:
             if hash_function is None:
                 hash_function = lambda s: s.dag_hash()
@@ -1478,10 +1490,14 @@ class Spec(object):
 
         return syaml_dict([(self.name, d)])
 
-    def to_dict(self):
+    def to_dict(self, all_deps=False):
+        if all_deps:
+            deptypes = ('link', 'run', 'build')
+        else:
+            deptypes = ('link', 'run')
         node_list = []
-        for s in self.traverse(order='pre', deptype=('link', 'run')):
-            node = s.to_node_dict()
+        for s in self.traverse(order='pre', deptype=deptypes):
+            node = s.to_node_dict(all_deps=all_deps)
             node[s.name]['hash'] = s.dag_hash()
             node_list.append(node)
 
@@ -1545,10 +1561,32 @@ class Spec(object):
             spec.external_path = None
             spec.external_module = None
 
+        # specs read in are concrete unless marked abstract
+        spec._concrete = node.get('concrete', True)
+
+        if 'patches' in node:
+            patches = node['patches']
+            if len(patches) > 0:
+                mvar = spec.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = patches
+                # FIXME: Monkey patches mvar to store patches order
+                mvar._patches_in_order_of_appearance = patches
+
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.
 
         return spec
+
+    @staticmethod
+    def dependencies_from_node_dict(node):
+        name = next(iter(node))
+        node = node[name]
+        if 'dependencies' not in node:
+            return
+        for t in Spec.read_yaml_dep_specs(node['dependencies']):
+            yield t
 
     @staticmethod
     def read_yaml_dep_specs(dependency_dict):
@@ -2672,6 +2710,15 @@ class Spec(object):
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
+
+        # FIXME: we manage _patches_in_order_of_appearance specially here
+        # to keep it from leaking out of spec.py, but we should figure
+        # out how to handle it more elegantly in the Variant classes.
+        for k, v in other.variants.items():
+            patches = getattr(v, '_patches_in_order_of_appearance', None)
+            if patches:
+                self.variants[k]._patches_in_order_of_appearance = patches
+
         self.variants.spec = self
         self.external_path = other.external_path
         self.external_module = other.external_module
@@ -2692,17 +2739,17 @@ class Spec(object):
                 deptypes = deps
             self._dup_deps(other, deptypes, caches)
 
+        self._concrete = other._concrete
+
         if caches:
             self._hash = other._hash
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
-            self._concrete = other._concrete
             self._full_hash = other._full_hash
         else:
             self._hash = None
             self._cmp_key_cache = None
             self._normal = False
-            self._concrete = False
             self._full_hash = None
 
         return changed
@@ -2869,7 +2916,7 @@ class Spec(object):
         """Comparison key for just *this node* and not its deps."""
         return (self.name,
                 self.namespace,
-                self.versions,
+                tuple(self.versions),
                 self.variants,
                 self.architecture,
                 self.compiler,
@@ -2927,6 +2974,7 @@ class Spec(object):
         You can also use full-string versions, which elide the prefixes::
 
             ${PACKAGE}       Package name
+            ${FULLPACKAGE}   Full package name (with namespace)
             ${VERSION}       Version
             ${COMPILER}      Full compiler string
             ${COMPILERNAME}  Compiler name
@@ -2944,6 +2992,7 @@ class Spec(object):
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
             ${PREFIX}        The package prefix
+            ${NAMESPACE}     The package namespace
 
         Note these are case-insensitive: for example you can specify either
         ``${PACKAGE}`` or ``${package}``.
@@ -2957,11 +3006,9 @@ class Spec(object):
         Args:
             format_string (str): string containing the format to be expanded
 
-            **kwargs (dict): the following list of keywords is supported
-
-                - color (bool): True if returned string is colored
-
-                - transform (dict): maps full-string formats to a callable \
+        Keyword Args:
+            color (bool): True if returned string is colored
+            transform (dict): maps full-string formats to a callable \
                 that accepts a string and returns another one
 
         Examples:
@@ -2981,16 +3028,18 @@ class Spec(object):
         color = kwargs.get('color', False)
 
         # Dictionary of transformations for named tokens
-        token_transforms = {}
-        token_transforms.update(kwargs.get('transform', {}))
+        token_transforms = dict(
+            (k.upper(), v) for k, v in kwargs.get('transform', {}).items())
 
         length = len(format_string)
         out = StringIO()
         named = escape = compiler = False
         named_str = fmt = ''
 
-        def write(s, c):
-            f = color_formats[c] + cescape(s) + '@.'
+        def write(s, c=None):
+            f = cescape(s)
+            if c is not None:
+                f = color_formats[c] + f + '@.'
             cwrite(f, stream=out, color=color)
 
         iterator = enumerate(format_string)
@@ -3010,7 +3059,8 @@ class Spec(object):
                     name = self.name if self.name else ''
                     out.write(fmt % name)
                 elif c == '.':
-                    out.write(fmt % self.fullname)
+                    name = self.fullname if self.fullname else ''
+                    out.write(fmt % name)
                 elif c == '@':
                     if self.versions and self.versions != _any_version:
                         write(fmt % (c + str(self.versions)), c)
@@ -3065,60 +3115,63 @@ class Spec(object):
                 #
                 # The default behavior is to leave the string unchanged
                 # (`lambda x: x` is the identity function)
-                token_transform = token_transforms.get(named_str, lambda x: x)
+                transform = token_transforms.get(named_str, lambda s, x: x)
 
                 if named_str == 'PACKAGE':
                     name = self.name if self.name else ''
-                    write(fmt % token_transform(name), '@')
-                if named_str == 'VERSION':
+                    write(fmt % transform(self, name))
+                elif named_str == 'FULLPACKAGE':
+                    name = self.fullname if self.fullname else ''
+                    write(fmt % transform(self, name))
+                elif named_str == 'VERSION':
                     if self.versions and self.versions != _any_version:
-                        write(fmt % token_transform(str(self.versions)), '@')
+                        write(fmt % transform(self, str(self.versions)), '@')
                 elif named_str == 'COMPILER':
                     if self.compiler:
-                        write(fmt % token_transform(self.compiler), '%')
+                        write(fmt % transform(self, self.compiler), '%')
                 elif named_str == 'COMPILERNAME':
                     if self.compiler:
-                        write(fmt % token_transform(self.compiler.name), '%')
+                        write(fmt % transform(self, self.compiler.name), '%')
                 elif named_str in ['COMPILERVER', 'COMPILERVERSION']:
                     if self.compiler:
                         write(
-                            fmt % token_transform(self.compiler.versions),
+                            fmt % transform(self, self.compiler.versions),
                             '%'
                         )
                 elif named_str == 'COMPILERFLAGS':
                     if self.compiler:
                         write(
-                            fmt % token_transform(str(self.compiler_flags)),
+                            fmt % transform(self, str(self.compiler_flags)),
                             '%'
                         )
                 elif named_str == 'OPTIONS':
                     if self.variants:
-                        write(fmt % token_transform(str(self.variants)), '+')
+                        write(fmt % transform(self, str(self.variants)), '+')
                 elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
                         if named_str == "ARCHITECTURE":
                             write(
-                                fmt % token_transform(str(self.architecture)),
+                                fmt % transform(self, str(self.architecture)),
                                 '='
                             )
                         elif named_str == "PLATFORM":
                             platform = str(self.architecture.platform)
-                            write(fmt % token_transform(platform), '=')
+                            write(fmt % transform(self, platform), '=')
                         elif named_str == "OS":
                             operating_sys = str(self.architecture.platform_os)
-                            write(fmt % token_transform(operating_sys), '=')
+                            write(fmt % transform(self, operating_sys), '=')
                         elif named_str == "TARGET":
                             target = str(self.architecture.target)
-                            write(fmt % token_transform(target), '=')
+                            write(fmt % transform(self, target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
-                        out.write(fmt % token_transform(str(self.dag_hash(7))))
+                        out.write(fmt % transform(self, str(self.dag_hash(7))))
                 elif named_str == 'SPACK_ROOT':
-                    out.write(fmt % token_transform(spack.paths.prefix))
+                    out.write(fmt % transform(self, spack.paths.prefix))
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % token_transform(spack.store.root))
+                    out.write(fmt % transform(self, spack.store.root))
                 elif named_str == 'PREFIX':
-                    out.write(fmt % token_transform(self.prefix))
+                    out.write(fmt % transform(self, self.prefix))
                 elif named_str.startswith('HASH'):
                     if named_str.startswith('HASH:'):
                         _, hashlen = named_str.split(':')
@@ -3126,6 +3179,8 @@ class Spec(object):
                     else:
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
+                elif named_str == 'NAMESPACE':
+                    out.write(fmt % transform(self.namespace))
 
                 named = False
 
@@ -3187,6 +3242,7 @@ class Spec(object):
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', 'all')
+        recurse_dependencies = kwargs.pop('recurse_dependencies', True)
         check_kwargs(kwargs, self.tree)
 
         out = ""
@@ -3204,7 +3260,7 @@ class Spec(object):
             if install_status:
                 status = node._install_status()
                 if status is None:
-                    out += "     "  # Package isn't installed
+                    out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
                     out += colorize("@g{[+]}  ", color=color)  # installed
                 else:
@@ -3235,6 +3291,11 @@ class Spec(object):
             if d > 0:
                 out += "^"
             out += node.format(fmt, color=color) + "\n"
+
+            # Check if we wanted just the first line
+            if not recurse_dependencies:
+                break
+
         return out
 
     def __repr__(self):

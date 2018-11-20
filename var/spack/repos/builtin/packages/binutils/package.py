@@ -17,6 +17,7 @@ class Binutils(AutotoolsPackage):
     version('2.28', '9e8340c96626b469a603c15c9d843727')
     version('2.27', '2869c9bf3e60ee97c74ac2a6bf4e9d68')
     version('2.26', '64146a0faa3b411ba774f47d41de239f')
+    version('2.25.1', sha256='b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22')
     version('2.25', 'd9f3303f802a5b6b0bb73a335ab89d66')
     version('2.24', 'e0f71a7b2ddab0f8612336ac81d9636b')
     version('2.23.2', '4f8fa651e35ef262edc01d60fb45702e')

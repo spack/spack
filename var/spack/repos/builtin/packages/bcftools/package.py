@@ -15,6 +15,7 @@ class Bcftools(AutotoolsPackage):
     homepage = "http://samtools.github.io/bcftools/"
     url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
 
+    version('1.9', sha256='6f36d0e6f16ec4acf88649fb1565d443acf0ba40f25a9afd87f14d14d13070c8')
     version('1.8', 'ba6c2fb7eb6dcb208f00ab8b22df475c')
     version('1.7', 'c972db68d17af9da3a18963f4e5aeca8')
     version('1.6', 'c4dba1e8cb55db0f94b4c47724b4f9fa')
@@ -24,6 +25,7 @@ class Bcftools(AutotoolsPackage):
 
     depends_on('libzip', when='@1.8:')
 
+    depends_on('htslib@1.9', when='@1.9')
     depends_on('htslib@1.8', when='@1.8')
     depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')

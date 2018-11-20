@@ -22,6 +22,8 @@ class Libmatheval(AutotoolsPackage):
     # Only needed for unit tests, but configure crashes without it
     depends_on('guile', type='build')
 
+    depends_on('flex')
+
     # guile 2.0 provides a deprecated interface for the unit test using guile
     patch('guile-2.0.patch', when='^guile@2.0')
 

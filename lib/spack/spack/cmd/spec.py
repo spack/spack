@@ -20,7 +20,8 @@ level = "short"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
         '-y', '--yaml', action='store_true', default=False,
         help='print concrete spec as YAML')
@@ -31,11 +32,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
-    subparser.add_argument(
-        '-I', '--install-status', action='store_true', default=False,
-        help='show install status of packages. packages can be: '
-             'installed [+], missing and needed by an installed package [-], '
-             'or not installed (no annotation)')
+
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')

@@ -13,8 +13,12 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2019.1.144', '5205a460a9c685f7a442868367389b2d0c25e1455346bc6a37c5b8ff90a20fbb',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14895/l_mkl_2019.1.144.tgz")
     version('2019.0.117', 'd9e1b6b96fbffd4b306c7e8291f141a2',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13575/l_mkl_2019.0.117.tgz")
+    version('2018.4.274', '18eb3cde3e6a61a88f25afff25df762a560013f650aaf363f7d3d516a0d04881',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13725/l_mkl_2018.4.274.tgz")
     version('2018.3.222', '3e63646a4306eff95e8d0aafd53a2983',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13005/l_mkl_2018.3.222.tgz")
     version('2018.2.199', 'fd31b656a8eb859c89495b9cc41230b4',
@@ -53,6 +57,7 @@ class IntelMkl(IntelPackage):
     provides('lapack')
     provides('scalapack')
     provides('mkl')
+    provides('fftw-api@3', when='@2017:')
 
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS

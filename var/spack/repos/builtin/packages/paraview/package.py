@@ -15,6 +15,7 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
     version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')

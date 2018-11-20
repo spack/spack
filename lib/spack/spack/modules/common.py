@@ -40,7 +40,7 @@ import llnl.util.tty as tty
 
 import spack.paths
 import spack.build_environment as build_environment
-import spack.environment
+import spack.util.environment
 import spack.tengine as tengine
 import spack.util.path
 import spack.util.environment
@@ -173,7 +173,7 @@ def merge_config_rules(configuration, spec):
         if constraint.endswith(':'):
             constraint = constraint.strip(':')
             override = True
-        if spec.satisfies(constraint):
+        if spec.satisfies(constraint, strict=True):
             if override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
@@ -256,7 +256,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.environment.EnvironmentModifications()
+        env_mods = spack.util.environment.EnvironmentModifications()
         actions = self.conf.get('environment', {})
 
         def process_arglist(arglist):
@@ -500,14 +500,14 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed inspecting the spec prefix
-        env = spack.environment.inspect_path(
+        env = spack.util.environment.inspect_path(
             self.spec.prefix,
             prefix_inspections,
             exclude=spack.util.environment.is_system_path
         )
 
         # Modifications that are coded at package level
-        _ = spack.environment.EnvironmentModifications()
+        _ = spack.util.environment.EnvironmentModifications()
         # TODO : the code down below is quite similar to
         # TODO : build_environment.setup_package and needs to be factored out
         # TODO : to a single place
@@ -546,7 +546,7 @@ class BaseContext(tengine.Context):
         # tokens uppercase.
         transform = {}
         for token in _valid_tokens:
-            transform[token] = str.upper
+            transform[token] = lambda spec, string: str.upper(string)
 
         for x in env:
             # Ensure all the tokens are valid in this context

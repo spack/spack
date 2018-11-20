@@ -198,6 +198,9 @@ echo $PATH"""
     shutil.rmtree(mirror_path)
     stage.destroy()
 
+    # Remove cached binary specs since we deleted the mirror
+    bindist._cached_specs = None
+
 
 def test_relocate_text(tmpdir):
     with tmpdir.as_cwd():
