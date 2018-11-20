@@ -17,7 +17,7 @@ class IntelMkl(IntelPackage):
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14895/l_mkl_2019.1.144.tgz")
     version('2019.0.117', 'd9e1b6b96fbffd4b306c7e8291f141a2',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13575/l_mkl_2019.0.117.tgz")
-    version('2018.4.274', '18eb3cde3e6a61a88f25afff25df762a560013f650aaf363f7d3d516a0d0488',
+    version('2018.4.274', '18eb3cde3e6a61a88f25afff25df762a560013f650aaf363f7d3d516a0d04881',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13725/l_mkl_2018.4.274.tgz")
     version('2018.3.222', '3e63646a4306eff95e8d0aafd53a2983',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13005/l_mkl_2018.3.222.tgz")
