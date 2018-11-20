@@ -48,3 +48,14 @@ class Gtkplus(AutotoolsPackage):
                                self.prefix.share)
         run_env.prepend_path("XDG_DATA_DIRS",
                              self.prefix.share)
+
+    def configure_args(self):
+        args = []
+        # disable building of gtk-doc files following #9771
+        args.append('--disable-gtk-doc-html')
+        true = which('true')
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
+        return args
