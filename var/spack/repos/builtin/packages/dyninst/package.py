@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os.path
 
 
 class Dyninst(CMakePackage):
@@ -64,14 +65,10 @@ class Dyninst(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        # Elf -- the directory containing libelf.h, either
-        # prefix/include (elfutils), or prefix/include/libelf
-        # (libelf).
+        # Elf -- the directory containing libelf.h.
         elf = spec['elf'].prefix
-        if spec.satisfies('@9.3.0:'):
-            elf_include = elf.include
-        else:
-            elf_include = join_path(elf.include, 'libelf')
+        elf_include = os.path.dirname(
+            find_headers('libelf', elf.include, recursive=True)[0])
 
         # Dwarf -- the directory containing elfutils/libdw.h or
         # libdwarf.h, and the path to libdw.so or libdwarf.so.
