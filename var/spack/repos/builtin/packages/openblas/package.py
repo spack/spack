@@ -58,7 +58,8 @@ class Openblas(MakefilePackage):
     provides('blas')
     provides('lapack')
 
-    patch('make.patch', when='@0.2.16:')
+    # OpenBLAS >=3.0 has an official way to disable internal parallel builds
+    patch('make.patch', when='@0.2.16:0.2.20')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     #  UPD: the patch has been merged starting version 0.2.20
@@ -87,9 +88,18 @@ class Openblas(MakefilePackage):
           sha256='714aea33692304a50bd0ccde42590c176c82ded4a8ac7f06e573dc8071929c33',
           when='@0.3.3')
 
-    parallel = False
+    # Fix parallel build issues on filesystems
+    # with missing sub-second timestamp resolution
+    patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch',
+          sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
+          when='@0.3.0:0.3.3')
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
+
+    @property
+    def parallel(self):
+        # unclear whether setting `-j N` externally was supported before 0.3
+        return self.spec.version >= Version('0.3.0')
 
     @run_before('edit')
     def check_compilers(self):
@@ -124,13 +134,19 @@ class Openblas(MakefilePackage):
         make_defs = [
             'CC={0}'.format(spack_cc),
             'FC={0}'.format(spack_fc),
-            'MAKE_NO_J=1'
         ]
+
+        # force OpenBLAS to use externally defined parallel build
+        if self.spec.version < Version('0.3'):
+            make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
+        else:
+            make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
 
         if self.spec.variants['virtual_machine'].value:
             make_defs += [
                 'DYNAMIC_ARCH=1',
-                'NO_AVX2=1'
+                'NO_AVX2=1',
+                'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
         if self.spec.variants['cpu_target'].value:
@@ -192,7 +208,7 @@ class Openblas(MakefilePackage):
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('tests', *self.make_defs)
+        make('tests', *self.make_defs, parallel=False)
 
     @property
     def install_targets(self):
