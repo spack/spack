@@ -25,6 +25,7 @@ class RCorhmm(RPackage):
     depends_on('r-gensa', type=('build', 'run'))
     depends_on('r-expm', type=('build', 'run'))
     depends_on('r-numderiv', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))
     depends_on('r-corpcor', type=('build', 'run'))
     depends_on('r-phangorn', type=('build', 'run'))
     depends_on('r-rmpfr', type=('build', 'run'))
