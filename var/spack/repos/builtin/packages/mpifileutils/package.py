@@ -21,6 +21,7 @@ class Mpifileutils(AutotoolsPackage):
     git      = "https://github.com/hpc/mpifileutils.git"
 
     version('develop', branch='master')
+    version('0.8.1', 'acbd5b5c15919a67392509614bb7871e')
     version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
