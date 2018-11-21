@@ -588,7 +588,11 @@ def print_setup_info(*info):
             module_to_roots[module_type].append(root)
 
     for name, paths in module_to_roots.items():
-        shell_set('_sp_%s_roots' % name, ':'.join(paths))
+        # Environment setup prepends paths, so the order is reversed here to
+        # preserve the intended priority: the modules of the local Spack
+        # instance are the highest-precedence.
+        roots_val = ':'.join(reversed(paths))
+        shell_set('_sp_%s_roots' % name, roots_val)
 
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
