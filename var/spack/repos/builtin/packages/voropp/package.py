@@ -26,9 +26,11 @@ class Voropp(MakefilePackage):
         filter_file(r'PREFIX=/usr/local',
                     'PREFIX={0}'.format(self.prefix),
                     'config.mk')
+        # We can safely replace the default CFLAGS which are:
+        # CFLAGS=-Wall -ansi -pedantic -O3
+        cflags = ''
         if '+pic' in spec:
-            # We can safely replace the default CFLAGS which are:
-            # CFLAGS=-Wall -ansi -pedantic -O3
-            filter_file(r'CFLAGS=.*',
-                        'CFLAGS={0}'.format(self.compiler.pic_flag),
-                        'config.mk')
+            cflags += self.compiler.pic_flag
+        filter_file(r'CFLAGS=.*',
+                    'CFLAGS={0}'.format(cflags),
+                    'config.mk')
