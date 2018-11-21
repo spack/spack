@@ -14,6 +14,9 @@ class Voropp(MakefilePackage):
     homepage = "http://math.lbl.gov/voro++/about.html"
     url      = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
 
+    variant('pic', default=True,
+            description='Position independent code')
+
     version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9')
 
     def edit(self, spec, prefix):
@@ -23,3 +26,9 @@ class Voropp(MakefilePackage):
         filter_file(r'PREFIX=/usr/local',
                     'PREFIX={0}'.format(self.prefix),
                     'config.mk')
+        if '+pic' in spec:
+            # We can safely replace the default CFLAGS which are:
+            # CFLAGS=-Wall -ansi -pedantic -O3
+            filter_file(r'CFLAGS=.*',
+                        'CFLAGS={0}'.format(self.compiler.pic_flag),
+                        'config.mk')
