@@ -42,6 +42,15 @@ class Pango(AutotoolsPackage):
             args.append('--with-xft')
         else:
             args.append('--without-xft')
+
+        # disable building of gtk-doc files following #9885 and #9771
+        args.append('--disable-gtk-doc-html')
+        true = which('true')
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
+
         return args
 
     def install(self, spec, prefix):
