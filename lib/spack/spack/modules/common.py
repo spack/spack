@@ -252,12 +252,16 @@ def read_module_index(root):
 
 
 def read_module_indices():
-    module_roots = spack.config.get('config:upstream_module_roots') or {}
     module_type_to_indices = {}
-    for name, paths in module_roots.items():
-        indices = module_type_to_indices.setdefault(name, [])
-        for root in paths:
+    other_spack_instances = spack.config.get(
+        'config:upstream_spack_installations') or []
+
+    for install_properties in other_spack_instances:
+        module_type_to_root = install_properties.get('modules', {})
+        for module_type, root in module_type_to_root.items():
+            indices = module_type_to_indices.setdefault(module_type, [])
             indices.append(read_module_index(root))
+
     return module_type_to_indices
 
 

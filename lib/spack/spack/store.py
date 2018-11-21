@@ -93,9 +93,8 @@ def retrieve_upstream_dbs():
     upstream_dbs = []
     for install_properties in other_spack_instances:
         install_root = install_properties['spack-install-prefix']
-        spack_exe = install_properties['spack-binary']
         upstream_dbs.append(
-            spack.database.Database(install_root, upstream_spack=spack_exe))
+            spack.database.Database(install_root, is_upstream=True))
 
     # TODO: if the upstream dbs are using each other as upstream, then these
     # need to be constructed one at a time, starting with the most-upstream

@@ -151,7 +151,7 @@ class Database(object):
     _prefix_locks = {}
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
-                 upstream_spack=None):
+                 is_upstream=False):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -194,8 +194,7 @@ class Database(object):
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
 
-        self.is_upstream = bool(upstream_spack)
-        self.upstream_spack = upstream_spack
+        self.is_upstream = is_upstream
 
         if self.is_upstream:
             self.lock = ForbiddenLock()
