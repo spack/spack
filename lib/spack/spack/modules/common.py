@@ -227,8 +227,14 @@ def generate_module_index(root, modules):
 
 def read_module_index(root):
     index_path = os.path.join(root, 'module-index.yaml')
-    with open(index_path, 'w') as index_file:
-        return syaml.load(index_file)
+    if not os.path.exists(index_path):
+        return {}
+    with open(index_path, 'r') as index_file:
+        yaml_content = syaml.load(index_file)
+        if yaml_content:
+            return yaml_content['module_index']
+        else:
+            return {}
 
 
 def read_module_indices():
@@ -237,8 +243,8 @@ def read_module_indices():
     for name, paths in module_roots.items():
         indices = module_type_to_indices.setdefault(name, [])
         for root in paths:
-            index_path = os.path.join(root, 'module-index.yaml')
-            indices.append(read_module_index(index_path))
+            indices.append(read_module_index(root))
+    return module_type_to_indices
 
 
 module_type_to_indices = read_module_indices()
