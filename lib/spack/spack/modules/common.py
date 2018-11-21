@@ -33,6 +33,7 @@ import datetime
 import inspect
 import os.path
 import re
+import collections
 
 import six
 import llnl.util.filesystem
@@ -217,12 +218,21 @@ def root_path(name):
 
 
 def generate_module_index(root, modules):
-    entries = syaml.syaml_dict(
-        (m.spec.dag_hash(), m.layout.filename) for m in modules)
+    entries = syaml.syaml_dict()
+    for m in modules:
+        entry = {
+            'path': m.layout.filename,
+            'use_name': m.layout.use_name
+        }
+        entries[m.spec.dag_hash()] = entry
     index = {'module_index': entries}
     index_path = os.path.join(root, 'module-index.yaml')
     with open(index_path, 'w') as index_file:
         syaml.dump(index, index_file, default_flow_style=False)
+
+
+ModuleIndexEntry = collections.namedtuple(
+    'ModuleIndexEntry', ['path', 'use_name'])
 
 
 def read_module_index(root):
@@ -231,10 +241,13 @@ def read_module_index(root):
         return {}
     with open(index_path, 'r') as index_file:
         yaml_content = syaml.load(index_file)
-        if yaml_content:
-            return yaml_content['module_index']
-        else:
-            return {}
+        index = {}
+        yaml_index = yaml_content['module_index']
+        for dag_hash, module_properties in yaml_index.items():
+            index[dag_hash] = ModuleIndexEntry(
+                module_properties['path'],
+                module_properties['use_name'])
+        return index
 
 
 def read_module_indices():
