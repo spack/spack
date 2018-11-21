@@ -580,11 +580,12 @@ def print_setup_info(*info):
         path = spack.util.path.canonicalize_path(path)
         module_to_roots[name].append(path)
 
-    upstream_module_roots = (
-        spack.config.get('config:upstream_module_roots') or {})
-    for name, paths in upstream_module_roots.items():
-        paths = [spack.util.path.canonicalize_path(x) for x in paths]
-        module_to_roots[name].extend(paths)
+    other_spack_instances = spack.config.get(
+        'config:upstream_spack_installations') or []
+    for install_properties in other_spack_instances:
+        upstream_module_roots = install_properties.get('modules', {})
+        for module_type, root in upstream_module_roots.items():
+            module_to_roots[module_type].append(root)
 
     for name, paths in module_to_roots.items():
         shell_set('_sp_%s_roots' % name, ':'.join(paths))
