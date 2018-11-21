@@ -130,10 +130,14 @@ def loads(module_type, specs, args, out=sys.stdout):
             )
 
     module_cls = spack.modules.module_types[module_type]
-    modules = [
-        (spec, module_cls(spec).layout.use_name)
-        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
-    ]
+    modules = list()
+    for spec in specs:
+        if os.path.exists(module_cls(spec).layout.filename):
+            modules.append(module_cls(spec).layout.use_name)
+        elif spec.package.installed_upstream:
+            tty.debug("Using upstream module for {0}".format(spec))
+            module = spack.modules.common.upstream_module(spec, module_type)
+            modules.append(module.use_name)
 
     module_commands = {
         'tcl': 'module load ',
@@ -167,7 +171,7 @@ def find(module_type, specs, args):
     if spec.package.installed_upstream:
         module = spack.modules.common.upstream_module(spec, module_type)
         if module:
-            print(module)
+            print(module.path)
         return
 
     # Check if the module file is present
