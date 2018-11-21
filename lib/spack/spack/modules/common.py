@@ -227,6 +227,7 @@ def generate_module_index(root, modules):
         entries[m.spec.dag_hash()] = entry
     index = {'module_index': entries}
     index_path = os.path.join(root, 'module-index.yaml')
+    llnl.util.filesystem.mkdirp(root)
     with open(index_path, 'w') as index_file:
         syaml.dump(index, index_file, default_flow_style=False)
 
