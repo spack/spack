@@ -86,3 +86,8 @@ class Elfutils(AutotoolsPackage):
             args.append('--disable-nls')
 
         return args
+
+    # Provide location of libelf.so to match libelf.
+    @property
+    def libs(self):
+        return find_libraries('libelf', self.prefix, recursive=True)
