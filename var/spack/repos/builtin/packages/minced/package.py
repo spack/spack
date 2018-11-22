@@ -15,11 +15,13 @@ class Minced(Package):
     homepage = "https://github.com/ctSkennerton/minced"
     url      = "https://github.com/ctSkennerton/minced/archive/0.2.0.tar.gz"
 
+    version('0.3.2', sha256='334aee43292d0b657c4849f818ddfb3ac7811eb505502bf24a01d66719084b44')
     version('0.2.0', '32544f5a523f10fece6a127699e11245')
 
     depends_on('java', type=('build', 'run'))
 
     def install(self, spec, prefix):
         make()
-        install('minced', prefix)
-        install('minced.jar', prefix)
+        mkdirp(prefix.bin)
+        install('minced', prefix.bin)
+        install('minced.jar', prefix.bin)
