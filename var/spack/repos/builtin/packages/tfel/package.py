@@ -23,6 +23,7 @@
 from spack import *
 
 class Tfel(CMakePackage):
+
     """
     `TFEL` is a collaborative development of CEA and EDF.
 
@@ -61,7 +62,7 @@ class Tfel(CMakePackage):
     version("rliv-3.0", branch="rliv-3.0")
     version("rliv-2.0", branch="rliv-2.0")
     version("rliv-1.2", branch="rliv-1.2")
-    
+
     # released version
     version('3.2.0', sha256='089d79745e9f267a2bd03dcd8841d484e668bd27f5cc2ff7453634cb39016848')
     version('3.1.3', sha256='2022fa183d2c2902ada982ec6550ebe15befafcb748fd988fc9accdde7976a42')
@@ -73,12 +74,12 @@ class Tfel(CMakePackage):
     version('3.0.1', sha256='fa239ddd353431954f2ab7443cf85d86c862433e72f7685c1b933ae12dbde435')
     version('3.0.0', sha256='b2cfaa3d7900b4f32f327565448bf9cb8e4242763f651bff8f231f378a278f9e')
     version('2.0.4', sha256='cac078435aad73d9a795516f161b320d204d2099d6a286e786359f484355a43a')
-    
+
     variant('python',
             default=True, description='Enables python interface')
     variant('python_bindings',
             default=True, description='Enables python bindings')
-    
+
     depends_on('boost', when='+python_bindings')
 
     def cmake_args(self):
@@ -98,5 +99,5 @@ class Tfel(CMakePackage):
 
         if '+python_bindings' in self.spec:
             args.append("-Denable-python-bindings=ON")
-        
+
         return args
