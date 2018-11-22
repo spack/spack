@@ -48,13 +48,21 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
+    variant('simd', default='AUTO',
+            description='The SIMD instruction set to use',
+            values=('AUTO', 'None', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
+                    'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
+                    'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
+                    'ARM_NEON', 'ARM_NEON_ASIMD'))
+
+    variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw')
     depends_on('cmake@2.8.8:3.9.99', type='build')
-    depends_on('cmake@3.4.3:3.9.99', type='build', when='@2018:')
+    depends_on('cmake@3.4.3:', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
 
     def patch(self):
@@ -78,5 +86,11 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_GPU:BOOL=ON')
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
+
+        options.append('-DGMX_SIMD:STRING=' +
+                       self.spec.variants['simd'].value)
+
+        if '-rdtscp' in self.spec:
+            options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
 
         return options
