@@ -14,4 +14,5 @@ class PyPsycopg2(PythonPackage):
 
     version('2.7.5', '9e7d6f695fc7f8d1c42a7905449246c9')
 
+    depends_on('py-setuptools', type='build')
     depends_on('postgresql', type=('build', 'run'))
