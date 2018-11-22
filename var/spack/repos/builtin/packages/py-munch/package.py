@@ -16,3 +16,4 @@ class PyMunch(PythonPackage):
     version('2.2.0', 'a50f0e4d770b5106f0c440a6cff3617f')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))

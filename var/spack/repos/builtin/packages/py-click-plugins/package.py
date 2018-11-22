@@ -15,5 +15,5 @@ class PyClickPlugins(PythonPackage):
 
     version('1.0.4', '3db73ba58271e3d9644be9b9c03a9d8d')
 
-    depends_on('py-setuptools',        type='build')
-    depends_on('py-click',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-click@3.0:', type=('build', 'run'))

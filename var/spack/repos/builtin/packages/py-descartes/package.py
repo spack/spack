@@ -15,6 +15,5 @@ class PyDescartes(PythonPackage):
 
     version('1.1.0', 'ac608090f3c9f6e0ce856fdc29944096')
 
-    depends_on('py-nose',        type=('build', 'run'))
-    depends_on('py-tornado',        type=('build', 'run'))
-    depends_on('py-matplotlib',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-matplotlib', type=('build', 'run'))
