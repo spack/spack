@@ -16,6 +16,7 @@ class RGeor(RPackage):
 
     version('1.7-5.2.1', 'a50f477bea1bec9070a4de01f69b831c')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
     depends_on('r-splancs', type=('build', 'run'))

@@ -17,5 +17,6 @@ class RRandomfields(RPackage):
 
     version('3.1.50', 'fd91aea76365427c0ba3b25fb3af43a6')
 
+    depends_on('r@3.3:', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
-    depends_on('r-randomfieldsutils', type=('build', 'run'))
+    depends_on('r-randomfieldsutils@0.3.25:', type=('build', 'run'))

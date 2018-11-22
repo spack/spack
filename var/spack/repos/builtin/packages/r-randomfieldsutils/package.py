@@ -17,3 +17,5 @@ class RRandomfieldsutils(RPackage):
     list_url = "https://cran.r-project.org/src/contrib/Archive/RandomFieldsUtils"
 
     version('0.3.25', '026c15a23296c9726012135891f016d5')
+
+    depends_on('r@3.3:', type=('build', 'run'))
