@@ -6,7 +6,7 @@
 """Schema for configuration merged into one file.
 
 .. literalinclude:: ../spack/schema/merged.py
-   :lines: 40-
+   :lines: 39-
 """
 from llnl.util.lang import union_dicts
 
@@ -33,7 +33,6 @@ properties = union_dicts(
 schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack merged configuration file schema',
-    'definitions': spack.schema.modules.definitions,
     'type': 'object',
     'additionalProperties': False,
     'properties': properties,
