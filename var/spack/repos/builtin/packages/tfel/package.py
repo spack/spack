@@ -22,8 +22,8 @@
 
 from spack import *
 
-class Tfel(CMakePackage):
 
+class Tfel(CMakePackage):
     """
     `TFEL` is a collaborative development of CEA and EDF.
 
