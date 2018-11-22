@@ -73,7 +73,7 @@ definitions = {
                 '$ref': '#/definitions/array_of_strings'},
             'suffixes': {
                 'type': 'object',
-                'is_spec': True,
+                'validate_spec': True,
                 'patternProperties': {
                     r'\w[\w-]*': {  # key
                         'type': 'string'
@@ -129,7 +129,7 @@ definitions = {
                 }
             },
             {
-                'is_spec': True,
+                'validate_spec': True,
                 'patternProperties': {
                     spec_regex: {
                         '$ref': '#/definitions/module_file_configuration'

@@ -11,10 +11,10 @@ import spack.schema
 
 
 @pytest.fixture()
-def is_spec_schema():
+def validate_spec_schema():
     return {
         'type': 'object',
-        'is_spec': True,
+        'validate_spec': True,
         'patternProperties': {
             r'\w[\w-]*': {
                 'type': 'string'
@@ -35,7 +35,7 @@ def module_suffixes_schema():
                         'type': 'object',
                         'properties': {
                             'suffixes': {
-                                'is_spec': True,
+                                'validate_spec': True,
                                 'patternProperties': {
                                     r'\w[\w-]*': {
                                         'type': 'string',
@@ -51,8 +51,8 @@ def module_suffixes_schema():
 
 
 @pytest.mark.regression('9857')
-def test_is_spec(is_spec_schema):
-    v = spack.schema.Validator(is_spec_schema)
+def test_validate_spec(validate_spec_schema):
+    v = spack.schema.Validator(validate_spec_schema)
     data = {'foo@3.7': 'bar'}
 
     # Validate good data (the key is a spec)

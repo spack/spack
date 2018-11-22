@@ -56,10 +56,8 @@ def _set_pp_defaults(validator, properties, instance, schema):
         yield err
 
 
-def _is_spec(validator, is_spec, instance, schema):
-    """Adds support to check if the attributes in an object are
-    valid specs.
-    """
+def _validate_spec(validator, is_spec, instance, schema):
+    """Check if the attributes on instance are valid specs."""
     if not validator.is_type(instance, "object"):
         return
 
@@ -74,7 +72,7 @@ def _is_spec(validator, is_spec, instance, schema):
 
 Validator = jsonschema.validators.extend(
     jsonschema.Draft4Validator, {
-        "is_spec": _is_spec,
+        "validate_spec": _validate_spec,
         "properties": _set_defaults,
         "patternProperties": _set_pp_defaults
     }
