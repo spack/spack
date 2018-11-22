@@ -13,6 +13,7 @@ class RRandomfields(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/RandomFields"
     url = "https://cran.r-project.org/src/contrib/RandomFields_3.1.50.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RandomFields"
 
     version('3.1.50', 'fd91aea76365427c0ba3b25fb3af43a6')
 

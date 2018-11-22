@@ -14,5 +14,6 @@ class RRandomfieldsutils(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/RandomFieldsUtils"
     url = "https://cran.r-project.org/src/contrib/RandomFieldsUtils_0.3.25.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RandomFieldsUtils"
 
     version('0.3.25', '026c15a23296c9726012135891f016d5')
