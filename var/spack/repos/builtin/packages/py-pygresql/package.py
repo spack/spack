@@ -15,4 +15,5 @@ class PyPygresql(PythonPackage):
 
     version('5.0.5', 'c7d1558e85568d3369a98609174ca6a0')
 
+    depends_on('py-setuptools', type='build')
     depends_on('postgresql', type=('build', 'run'))
