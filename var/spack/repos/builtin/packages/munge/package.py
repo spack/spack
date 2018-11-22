@@ -10,8 +10,9 @@ import os
 class Munge(AutotoolsPackage):
     """ MUNGE Uid 'N' Gid Emporium """
     homepage = "https://code.google.com/p/munge/"
-    url      = "https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2"
-
+    url      = "https://github.com/dun/munge/releases/download/munge-0.5.13/munge-0.5.13.tar.xz"
+    version('0.5.13', '9204f34aac7f0cc50880196f4a8f5f33')
+    version('0.5.12', '84ffef069af93caea4b4c06f183b99c0')
     version('0.5.11', 'bd8fca8d5f4c1fcbef1816482d49ee01',
             url='https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2')
 
