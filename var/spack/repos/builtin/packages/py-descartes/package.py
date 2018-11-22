@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyDescartes(PythonPackage):
-    """Use Shapely or GeoJSON-like geometric objects as matplotlib paths 
+    """Use Shapely or GeoJSON-like geometric objects as matplotlib paths
        and patches"""
 
     homepage = "https://pypi.org/project/descartes/"
