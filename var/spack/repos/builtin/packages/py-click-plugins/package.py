@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyClickPlugins(PythonPackage):
-    """An extension module for py-click to register external CLI 
+    """An extension module for py-click to register external CLI
        commands via setuptools entry-points."""
 
     homepage = "https://pypi.org/project/click-plugins/"

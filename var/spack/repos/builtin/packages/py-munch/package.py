@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyMunch(PythonPackage):
-    """A Munch is a Python dictionary that provides attribute-style 
+    """A Munch is a Python dictionary that provides attribute-style
        access (a la JavaScript objects). """
 
     homepage = "https://github.com/Infinidat/munch"
