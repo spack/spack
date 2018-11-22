@@ -11,6 +11,7 @@ class RBayesm(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/bayesm/index.html"
     url      = "https://cran.r-project.org/src/contrib/bayesm_3.1-0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/bayesm"
 
     version('3.1-0.1', '34998382cafd3e7972d8a03245eac768')
 

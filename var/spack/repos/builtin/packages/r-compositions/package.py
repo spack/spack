@@ -11,6 +11,7 @@ class RCompositions(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/compositions/index.html"
     url      = "https://cran.r-project.org/src/contrib/compositions_1.40-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/compositions"
 
     version('1.40-2', 'ad87efe2fb303d95472e73c8ca8d9a01')
 
