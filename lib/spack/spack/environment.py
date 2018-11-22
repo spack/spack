@@ -8,7 +8,6 @@ import re
 import sys
 import shutil
 
-import jsonschema
 import ruamel.yaml
 
 import llnl.util.filesystem as fs
@@ -298,6 +297,7 @@ def all_environments():
 
 
 def validate(data, filename=None):
+    import jsonschema
     try:
         spack.schema.Validator(spack.schema.env.schema).validate(data)
     except jsonschema.ValidationError as e:

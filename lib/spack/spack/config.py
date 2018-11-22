@@ -39,7 +39,6 @@ from six import string_types
 from six import iteritems
 from ordereddict_backport import OrderedDict
 
-import jsonschema
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
 
@@ -658,6 +657,7 @@ def _validate(data, schema, set_defaults=True):
     This leverages the line information (start_mark, end_mark) stored
     on Spack YAML structures.
     """
+    import jsonschema
     try:
         spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
