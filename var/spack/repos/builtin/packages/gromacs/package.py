@@ -54,7 +54,6 @@ class Gromacs(CMakePackage):
                     'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
                     'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
-
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
 
     depends_on('mpi', when='+mpi')
