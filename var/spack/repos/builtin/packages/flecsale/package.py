@@ -18,11 +18,16 @@ class Flecsale(CMakePackage):
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
 
+    depends_on("pkgconfig", type='build')
     depends_on("cmake@3.1:", type='build')
     depends_on("flecsi~mpi", when='~mpi')
     depends_on("flecsi+mpi", when='+mpi')
     depends_on("python")
     depends_on("openssl")
+    depends_on("boost~mpi", when='~mpi')
+    depends_on("boost+mpi", when='+mpi')
+    depends_on("exodusii~mpi", when='~mpi')
+    depends_on("exodusii+mpi", when='+mpi')
 
     def cmake_args(self):
         options = [
@@ -34,7 +39,7 @@ class Flecsale(CMakePackage):
         if '+mpi' in self.spec:
             options.extend([
                 '-DENABLE_MPI=ON',
-                '-DFLECSI_RUNTIME_MODEL=mpilegion'
+                '-DFLECSI_RUNTIME_MODEL=legion'
             ])
 
         return options
