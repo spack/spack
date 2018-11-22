@@ -133,7 +133,7 @@ def test_installed_upstream_external(
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
-    mock_layout = spack.test.database.MockLayout()
+    mock_layout = spack.test.database.MockLayout('/a/')
 
     dependency = spack.spec.Spec('externaltool')
     dependency.concretize()
@@ -167,7 +167,7 @@ def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
-    mock_layout = spack.test.database.MockLayout()
+    mock_layout = spack.test.database.MockLayout('/a/')
 
     dependency = spack.spec.Spec('dependency-install')
     dependency.concretize()

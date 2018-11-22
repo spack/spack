@@ -27,8 +27,11 @@ pytestmark = pytest.mark.db
 
 
 class MockLayout(object):
+    def __init__(self, root):
+        self.root = root
+
     def path_for_spec(self, spec):
-        return '/' + '/'.join(['test_upstream_root', spec.name])
+        return self.root + '/'.join(['test_upstream_root', spec.name])
 
     def check_installed(self, spec):
         return True
@@ -60,7 +63,7 @@ def test_installed_upstream(tmpdir_factory, test_store):
     w = MockPackage('w', [x, y], [default, default])
     mock_repo = MockPackageMultiRepo([w, x, y, z])
 
-    mock_layout = MockLayout()
+    mock_layout = MockLayout('/a/')
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('w')
@@ -78,10 +81,13 @@ def test_installed_upstream(tmpdir_factory, test_store):
                 tmpdir_factory.mktemp('mock_downstream_db_root'))
             spack.store.db = spack.database.Database(
                 downstream_db_root, upstream_dbs=[prepared_db])
-            spack.store.layout = original_layout
+            spack.store.layout = MockLayout('/b/')
+            with open(spack.store.db._index_path, 'w') as db_file:
+                spack.store.db._write_to_file(db_file)
 
             new_spec = spack.spec.Spec('w')
             new_spec.concretize()
+            spack.store.db.add(new_spec, spack.store.layout)
             for dep in new_spec.traverse(root=False):
                 upstream, record = spack.store.db.query_by_spec_hash(
                     dep.dag_hash())
@@ -90,6 +96,7 @@ def test_installed_upstream(tmpdir_factory, test_store):
             upstream, record = spack.store.db.query_by_spec_hash(
                 new_spec.dag_hash())
             assert not upstream
+            assert record.installed
         finally:
             spack.store.db = original_db
             spack.store.layout = original_layout
