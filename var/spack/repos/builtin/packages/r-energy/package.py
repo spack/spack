@@ -15,6 +15,5 @@ class REnergy(RPackage):
 
     version('1.7-5', 'd13c76c26b5221ba29aade6a824f32d6')
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.6:', type=('build', 'run'))
     depends_on('r-boot', type=('build', 'run'))
