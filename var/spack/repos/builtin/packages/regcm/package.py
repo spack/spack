@@ -25,7 +25,7 @@ class Regcm(AutotoolsPackage):
     # producing a so-called fat binary. Unfortunately, gcc builds only the last
     # architecture provided (in the configure), so we allow a single arch.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
-    variant('extension', default=None, values=extensions, multi=True,
+    variant('extension', default=None, values=extensions,
             description='Build extensions for a specific Intel architecture.')
 
     depends_on('netcdf')
@@ -53,6 +53,7 @@ class Regcm(AutotoolsPackage):
 
         return (None, None, flags)
 
+
     def configure_args(self):
         args = ['--enable-shared']
 
@@ -60,10 +61,9 @@ class Regcm(AutotoolsPackage):
             if '+{0}'.format(opt) in self.spec:
                 args.append('--enable-' + opt)
 
-        for ext in self.extensions:
-            if 'extension={0}'.format(ext) in self.spec:
-                args.append('--enable-' + ext)
-                break
+        ext_to_enable = self.spec.variants['extension'].value
+        if ext_to_enable:
+            args.append('--enable-' + ext_to_enable)
 
         # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
         # is ignored by the configure, so we need to set the option in FCFLAGS.
