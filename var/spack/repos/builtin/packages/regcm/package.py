@@ -53,7 +53,6 @@ class Regcm(AutotoolsPackage):
 
         return (None, None, flags)
 
-
     def configure_args(self):
         args = ['--enable-shared']
 
