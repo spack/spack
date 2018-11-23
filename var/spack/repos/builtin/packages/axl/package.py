@@ -26,7 +26,7 @@ class Axl(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('0.1.1', sha256='7ec0417447c5a3cc0b6e46ff3f646984410c77e6c2081cf0c748781384be739b')
+    version('0.1.1', sha256='ebbf231bb542a6c91efb79fce05d4c8a346d5506d88ae1899fb670be52e81933')
 
     variant('async_api', default='daemon',
             description="Set of async transfer APIs to enable",
