@@ -70,4 +70,10 @@ class Regcm(AutotoolsPackage):
         if self.compiler.fc.endswith('gfortran'):
             args.append('FCFLAGS=-fno-range-check')
 
+        # The configure needs a hint on the Intel Fortran MPI compiler,
+        # otherwise it doesn't find it and tries to compile MPI Fortran code
+        # with the normal Fortran compiler.
+        if self.spec.satisfies('%intel'):
+            args.append('MPIFC=' + self.spec['mpi'].mpifc)
+
         return args
