@@ -15,5 +15,5 @@ class RSplancs(RPackage):
 
     version('2.01-40', 'dc08a5c9a1fd2098d78459152f4917ce')
 
-    depends_on('r@2.10:')
-    depends_on('r-sp@0.9:')
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-sp@0.9:', type=('build', 'run'))
