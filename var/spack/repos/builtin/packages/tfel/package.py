@@ -55,7 +55,7 @@ class Tfel(CMakePackage):
     variant('aster', default=True,
             description='Enables Code_Aster interface')
     variant('abaqus', default=True,
-            description='Enables Abaqus/Standard and '+
+            description='Enables Abaqus/Standard and ' +
             'Abaqus/Explicit interfaces')
     variant('ansys', default=True,
             description='Enables Ansys APDL interface')
