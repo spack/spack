@@ -23,6 +23,7 @@ class PyGeopandas(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-descartes', type=('build', 'run'), when='+plotting')
+    depends_on('py-matplotlib', type=('build', 'run'), when='+plotting')
     depends_on('py-fiona', type=('build', 'run'))
     depends_on('py-proj', type=('build', 'run'))
     depends_on('py-shapely', type=('build', 'run'))
