@@ -71,7 +71,10 @@ class Tfel(CMakePackage):
             description='Enables python interface')
     variant('python_bindings', default=True,
             description='Enables python bindings')
+    variant('java', default=False,
+            description='Enables java interface')
 
+    depends_on('jdk', when='+jdk')
     depends_on('python', when='+python')
     depends_on('python', when='+python_bindings')
     depends_on('boost+python', when='+python_bindings')
@@ -82,6 +85,8 @@ class Tfel(CMakePackage):
 
         if '+fortran' in self.spec:
             args.append("-Denable-fortran=ON")
+        if '+java' in self.spec:
+            args.append("-Denable-java=ON")
         if '+castem' in self.spec:
             args.append("-Denable-castem=ON")
         if '+aster' in self.spec:
