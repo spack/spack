@@ -49,31 +49,56 @@ class Tfel(CMakePackage):
     version('3.0.0', sha256='b2cfaa3d7900b4f32f327565448bf9cb8e4242763f651bff8f231f378a278f9e')
     version('2.0.4', sha256='cac078435aad73d9a795516f161b320d204d2099d6a286e786359f484355a43a')
 
+    # solvers interfaces
+    variant('castem',default=True,
+            description='Enables Cast3M interface')
+    variant('aster',default=True,
+            description='Enables Code_Aster interface')
+    variant('abaqus',default=True,
+            description='Enables Abaqus/Standard and Abaqus/Explicit interfaces')
+    variant('ansys',default=True,
+            description='Enables Ansys APDL interface')
+    variant('europlexus',default=True,
+            description='Enables Europlexus interface')
+    variant('cyrano',default=True,
+            description='Enables Cyrano interface')
+    variant('lsdyna',default=True,
+            description='Enables LS-DYNA interface')
+    variant('fortran',
+            default=True, description='Enables fortran interface')
     variant('python',
             default=True, description='Enables python interface')
     variant('python_bindings',
             default=True, description='Enables python bindings')
 
-    # dependency on boost python implies an dependency on boost,
-    # so explicit dependency on boost is discared
-    depends_on('boost~python', when='~python_bindings')
+    depends_on('python', when='+python')
+    depends_on('python', when='+python_bindings')
     depends_on('boost+python', when='+python_bindings')
 
     def cmake_args(self):
 
-        args = ["-Denable-fortran=ON",
-                "-Denable-castem=ON",
-                "-Denable-aster=ON",
-                "-Denable-abaqus=ON",
-                "-Denable-calculix=ON",
-                "-Denable-ansys=ON",
-                "-Denable-europlexus=ON",
-                "-Denable-cyrano=ON",
-                "-Denable-lsdyna=ON"]
+        args = []
 
-        if '+python_bindings' in self.spec:
+        if '+fortran' in self.spec:
+            args.append("-Denable-fortran=ON")
+        if '+castem' in self.spec:
+            args.append("-Denable-castem=ON")
+        if '+aster' in self.spec:
+            args.append("-Denable-aster=ON")
+        if '+abaqus' in self.spec:
+            args.append("-Denable-abaqus=ON")
+        if '+calculix' in self.spec:
+            args.append("-Denable-calculix=ON")
+        if '+ansys' in self.spec:
+            args.append("-Denable-ansys=ON")
+        if '+europlexus' in self.spec:
+            args.append("-Denable-europlexus=ON")
+        if '+cyrano' in self.spec:
+            args.append("-Denable-cyrano=ON")
+        if '+lsdyna' in self.spec:
+            args.append("-Denable-lsdyna=ON")
+        if '+python' in self.spec:
             args.append("-Denable-python=ON")
-
         if '+python_bindings' in self.spec:
             args.append("-Denable-python-bindings=ON")
 
