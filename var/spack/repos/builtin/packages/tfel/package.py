@@ -50,26 +50,27 @@ class Tfel(CMakePackage):
     version('2.0.4', sha256='cac078435aad73d9a795516f161b320d204d2099d6a286e786359f484355a43a')
 
     # solvers interfaces
-    variant('castem',default=True,
+    variant('castem', default=True,
             description='Enables Cast3M interface')
-    variant('aster',default=True,
+    variant('aster', default=True,
             description='Enables Code_Aster interface')
-    variant('abaqus',default=True,
-            description='Enables Abaqus/Standard and Abaqus/Explicit interfaces')
-    variant('ansys',default=True,
+    variant('abaqus', default=True,
+            description='Enables Abaqus/Standard and '+
+            'Abaqus/Explicit interfaces')
+    variant('ansys', default=True,
             description='Enables Ansys APDL interface')
-    variant('europlexus',default=True,
+    variant('europlexus', default=True,
             description='Enables Europlexus interface')
-    variant('cyrano',default=True,
+    variant('cyrano', default=True,
             description='Enables Cyrano interface')
-    variant('lsdyna',default=True,
+    variant('lsdyna', default=True,
             description='Enables LS-DYNA interface')
-    variant('fortran',
-            default=True, description='Enables fortran interface')
-    variant('python',
-            default=True, description='Enables python interface')
-    variant('python_bindings',
-            default=True, description='Enables python bindings')
+    variant('fortran', default=True,
+            description='Enables fortran interface')
+    variant('python', default=True,
+            description='Enables python interface')
+    variant('python_bindings', default=True,
+            description='Enables python bindings')
 
     depends_on('python', when='+python')
     depends_on('python', when='+python_bindings')
