@@ -17,8 +17,8 @@ class Tfel(CMakePackage):
     on top of the TFEL libraries. MFront handles material properties,
     mechanical behaviours and simple point-wise models. Interfaces
     are provided for several finite element solvers, such as:
-    Abaqus/Standard, Abaqus/Explicit, Ansys, Cast3M, Europlexus,
-    Code_Aster, CalculiX and a few others.
+    Abaqus/Standard, Abaqus/Explicit, Ansys APDL, Cast3M,
+    Europlexus, Code_Aster, CalculiX and a few others.
 
     MFront comes with an handy easy-to-use tool called MTest that can
     test the local behaviour of a material, by imposing independent
