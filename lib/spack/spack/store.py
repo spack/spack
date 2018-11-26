@@ -97,6 +97,7 @@ def retrieve_upstream_dbs():
 
     return _construct_upstream_dbs_from_install_roots(install_roots)
 
+
 def _construct_upstream_dbs_from_install_roots(
         install_roots, _test=False):
     accumulated_upstream_dbs = []

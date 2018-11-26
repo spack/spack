@@ -362,7 +362,6 @@ class Database(object):
         # form a full spec.
         spec = data[hash_key].spec
         spec_dict = installs[hash_key]['spec']
-
         if 'dependencies' in spec_dict[spec.name]:
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
@@ -381,7 +380,7 @@ class Database(object):
                 if not child:
                     msg = ("Missing dependency not in database: "
                            "%s needs %s-%s" % (
-                                 spec.cformat('$_$/'), dname, dhash[:7]))
+                               spec.cformat('$_$/'), dname, dhash[:7]))
                     if self._fail_when_missing_deps:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)
