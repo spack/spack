@@ -28,6 +28,7 @@ class Tfel(CMakePackage):
     homepage = "http://tfel.sourceforge.net"
     url      = "https://github.com/thelfer/tfel/archive/TFEL-3.2.0.tar.gz"
     git      = "https://github.com/thelfer/tfel.git"
+    maintainers = ['thelfer']
 
     # development branches
     version("master", branch="master")
@@ -74,7 +75,7 @@ class Tfel(CMakePackage):
     variant('java', default=False,
             description='Enables java interface')
 
-    depends_on('jdk', when='+jdk')
+    depends_on('java', when='+java')
     depends_on('python', when='+python')
     depends_on('python', when='+python_bindings')
     depends_on('boost+python', when='+python_bindings')
@@ -83,29 +84,13 @@ class Tfel(CMakePackage):
 
         args = []
 
-        if '+fortran' in self.spec:
-            args.append("-Denable-fortran=ON")
-        if '+java' in self.spec:
-            args.append("-Denable-java=ON")
-        if '+castem' in self.spec:
-            args.append("-Denable-castem=ON")
-        if '+aster' in self.spec:
-            args.append("-Denable-aster=ON")
-        if '+abaqus' in self.spec:
-            args.append("-Denable-abaqus=ON")
-        if '+calculix' in self.spec:
-            args.append("-Denable-calculix=ON")
-        if '+ansys' in self.spec:
-            args.append("-Denable-ansys=ON")
-        if '+europlexus' in self.spec:
-            args.append("-Denable-europlexus=ON")
-        if '+cyrano' in self.spec:
-            args.append("-Denable-cyrano=ON")
-        if '+lsdyna' in self.spec:
-            args.append("-Denable-lsdyna=ON")
-        if '+python' in self.spec:
-            args.append("-Denable-python=ON")
-        if '+python_bindings' in self.spec:
-            args.append("-Denable-python-bindings=ON")
+        for i in ['fortran', 'java', 'castem', 'aster',
+                  'abaqus', 'calculix', 'ansys',
+                  'europlexus', 'cyrano', 'lsdyna',
+                  'python', 'python_bindings',]:
+            if '+' + i in self.spec:
+                args.append("-Denable-{0}=ON".format(i))
+            else:
+                args.append("-Denable-{0}=OFF".format(i))
 
         return args
