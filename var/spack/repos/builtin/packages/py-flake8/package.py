@@ -45,11 +45,8 @@ class PyFlake8(PythonPackage):
     # mccabe >= 0.2.1, < 0.5
     depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=('build', 'run'))
 
-    # These dependencies breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-configparser', when='^python@:3.3', type=('build', 'run'))
-    # depends_on('py-enum34', when='^python@:3.1', type=('build', 'run'))
-    depends_on('py-configparser', type=('build', 'run'))
+    depends_on('py-configparser', when='^python@:3.3', type=('build', 'run'))
+    depends_on('py-enum34', when='^python@:3.1', type=('build', 'run'))
 
     # py-enum34 provides enum module from Python 3.4 for Python
     # versions 2.4, 2.5, 2.6, 2.7, 3.1, 3.2, and 3.3; use built-in enum
