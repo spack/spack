@@ -153,6 +153,38 @@ def test_removed_upstream_dep(tmpdir_factory, test_store):
             spack.store.layout = original_layout
 
 
+@pytest.mark.usefixtures('config')
+def test_recursive_upstream_dbs(tmpdir_factory, test_store):
+    roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
+    layouts = [MockLayout(x) for x in ['/ra/', '/rb/', '/rc/']]
+
+    default = ('build', 'link')
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    x = MockPackage('x', [y], [default])
+
+    mock_repo = MockPackageMultiRepo([x, y, z])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+        db_c = spack.database.Database(roots[2])
+        db_c.add(spec['z'], layouts[2])
+
+        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c])
+        db_b.add(spec['y'], layouts[1])
+
+        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
+        db_a.add(spec['x'], layouts[0])
+
+        dbs = spack.store._construct_upstream_dbs_from_install_roots(
+            roots, _test=True)
+
+        assert dbs[0].db_for_spec_hash(spec.dag_hash()) == dbs[0]
+        assert dbs[0].db_for_spec_hash(spec['y'].dag_hash()) == dbs[1]
+        assert dbs[0].db_for_spec_hash(spec['z'].dag_hash()) == dbs[2]
+
+
 @pytest.fixture()
 def usr_folder_exists(monkeypatch):
     """The ``/usr`` folder is assumed to be existing in some tests. This
