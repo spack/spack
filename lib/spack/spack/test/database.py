@@ -69,37 +69,29 @@ def test_installed_upstream(tmpdir_factory, test_store):
         spec = spack.spec.Spec('w')
         spec.concretize()
 
-        try:
-            original_db = spack.store.db
-            original_layout = spack.store.layout
-            spack.store.layout = mock_layout
+        for dep in spec.traverse(root=False):
+            prepared_db.add(dep, mock_layout)
 
-            for dep in spec.traverse(root=False):
-                prepared_db.add(dep, mock_layout)
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        downstream_db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        downstream_layout = MockLayout('/b/')
+        with open(downstream_db._index_path, 'w') as db_file:
+            downstream_db._write_to_file(db_file)
 
-            downstream_db_root = str(
-                tmpdir_factory.mktemp('mock_downstream_db_root'))
-            spack.store.db = spack.database.Database(
-                downstream_db_root, upstream_dbs=[prepared_db])
-            spack.store.layout = MockLayout('/b/')
-            with open(spack.store.db._index_path, 'w') as db_file:
-                spack.store.db._write_to_file(db_file)
-
-            new_spec = spack.spec.Spec('w')
-            new_spec.concretize()
-            spack.store.db.add(new_spec, spack.store.layout)
-            for dep in new_spec.traverse(root=False):
-                upstream, record = spack.store.db.query_by_spec_hash(
-                    dep.dag_hash())
-                assert upstream
-                assert record.path == mock_layout.path_for_spec(dep)
-            upstream, record = spack.store.db.query_by_spec_hash(
-                new_spec.dag_hash())
-            assert not upstream
-            assert record.installed
-        finally:
-            spack.store.db = original_db
-            spack.store.layout = original_layout
+        new_spec = spack.spec.Spec('w')
+        new_spec.concretize()
+        downstream_db.add(new_spec, downstream_layout)
+        for dep in new_spec.traverse(root=False):
+            upstream, record = downstream_db.query_by_spec_hash(
+                dep.dag_hash())
+            assert upstream
+            assert record.path == mock_layout.path_for_spec(dep)
+        upstream, record = downstream_db.query_by_spec_hash(
+            new_spec.dag_hash())
+        assert not upstream
+        assert record.installed
 
 
 @pytest.mark.usefixtures('config')
