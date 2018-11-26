@@ -35,6 +35,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.11.2', '042fba357210816160341f1002440550e952eb12678f7c9e7e9d389437942550')
     version('1.11.1', '558f8c169ae215e25b81421596e8de7572bd3ba824b79add22fba6e284db1117')
     version('1.11',   'afc1e12f5fe49a471e3aae7d906c73e9d5b1fdd36d52d72652dde8f6250152fb')
     version('1.10.3', '567b1cc66c9704d1c019c50bef946272e911ec6baf244310f87f4e678be155f2')
