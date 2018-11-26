@@ -26,6 +26,8 @@ class Hdf5(AutotoolsPackage):
     version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
+
+    version('1.8.21', '87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
     version('1.8.19', '7f568e2464d4ab0a74d16b23956d900b')
     version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c')
     version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
