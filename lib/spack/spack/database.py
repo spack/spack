@@ -221,6 +221,11 @@ class Database(object):
         # whether there was an error at the start of a read transaction
         self._error = None
 
+        # For testing: if this is true, an exception is thrown when missing
+        # dependencies are detected (rather than just printing a warning
+        # message)
+        self._fail_when_missing_deps = False
+
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
         return WriteTransaction(self.lock, self._read, self._write)
@@ -374,9 +379,12 @@ class Database(object):
                 child = record.spec if record else None
 
                 if not child:
-                    tty.warn("Missing dependency not in database: ",
-                             "%s needs %s-%s" % (
+                    msg = ("Missing dependency not in database: "
+                           "%s needs %s-%s" % (
                                  spec.cformat('$_$/'), dname, dhash[:7]))
+                    if self._fail_when_missing_deps:
+                        raise MissingDependenciesError(msg)
+                    tty.warn(msg)
                     continue
 
                 spec._add_dependency(child, dtypes)
@@ -466,6 +474,8 @@ class Database(object):
         for hash_key in data:
             try:
                 self._assign_dependencies(hash_key, installs, data)
+            except MissingDependenciesError:
+                raise
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -1065,6 +1075,10 @@ class CorruptDatabaseError(SpackError):
 
 class NonConcreteSpecAddError(SpackError):
     """Raised when attemptint to add non-concrete spec to DB."""
+
+
+class MissingDependenciesError(SpackError):
+    """Raised when DB cannot find records for dependencies"""
 
 
 class InvalidDatabaseVersionError(SpackError):
