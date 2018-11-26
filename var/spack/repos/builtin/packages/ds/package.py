@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from os import symlink
 
 
 class Ds(AutotoolsPackage):
@@ -28,8 +29,6 @@ class Ds(AutotoolsPackage):
     depends_on('tcl-tclxml', type=('build', 'link', 'run'))
     depends_on('tk', type=('build', 'link', 'run'))
 
-    phases = ['configure', 'build', 'install']
-
     def patch(self):
         # the package provides it's own TCL utilities
         # compiling and manually setting paths for all of them is contrived
@@ -44,12 +43,12 @@ class Ds(AutotoolsPackage):
                     join_path(self.spec['libxslt'].prefix, 'bin/xslt-config'),
                     'tclxml/configure', string=True)
 
-    def configure(self, spec, prefix):
-        # no args needed, we can't pass any to the dependency configures anyway
-        args = ['--prefix={0}'.format(prefix)]
+        # symlink the master configure script into the source directory
+        symlink('unix/configure', 'configure')
 
-        conf = Executable('unix/configure')
-        conf(*args)
+    def configure_args(self):
+        srcdir = join_path(self.stage.source_path, 'unix')
+        return ['--srcdir={0}'.format(srcdir)]
 
     def install(self, spec, prefix):
         # no install target provided in Makefile, install manually
