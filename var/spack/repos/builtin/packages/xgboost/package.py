@@ -22,7 +22,6 @@ class Xgboost(CMakePackage):
     depends_on('cuda', type=('build', 'link', 'run'), when='+cuda')
 
     def cmake_args(self):
-        if '+cuda' in self.spec:
-            return ['-DUSE_CUDA=YES']
-        else:
-            return ['-DUSE_CUDA=OFF']
+        return [
+            '-DUSE_CUDA={0}'.format('YES' if '+cuda' in self.spec else 'NO')
+        ]
