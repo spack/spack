@@ -30,7 +30,7 @@ class Ds(AutotoolsPackage):
 
     phases = ['configure', 'build', 'install']
 
-    def configure(self, spec, prefix):
+    def patch(self):
         # the package provides it's own TCL utilities
         # compiling and manually setting paths for all of them is contrived
         # (most of the utilities are small and not included in spack)
@@ -44,6 +44,7 @@ class Ds(AutotoolsPackage):
                     join_path(self.spec['libxslt'].prefix, 'bin/xslt-config'),
                     'tclxml/configure', string=True)
 
+    def configure(self, spec, prefix):
         # no args needed, we can't pass any to the dependency configures anyway
         args = ['--prefix={0}'.format(prefix)]
 
