@@ -73,6 +73,8 @@ class Glib(AutotoolsPackage):
                 os.path.basename(self.spec['python'].command.path))
             )
         args.extend(self.enable_or_disable('tracing'))
+        # SELinux is not available in Spack, so glib should not use it.
+        args.append('--disable-selinux')
         # glib should not use the globally installed gtk-doc. Otherwise,
         # gtk-doc can fail with Python errors such as "ImportError: No module
         # named site". This is due to the fact that Spack sets PYTHONHOME,
