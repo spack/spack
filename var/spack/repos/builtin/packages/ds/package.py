@@ -21,13 +21,13 @@ class Ds(AutotoolsPackage):
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
 
-    depends_on('libx11', type=('build', 'link', 'run'))
-    depends_on('libxml2', type=('build', 'link', 'run'))
-    depends_on('libxslt', type=('build', 'link', 'run'))
-    depends_on('openssl', type=('build', 'link', 'run'))
-    depends_on('tcl', type=('build', 'link', 'run'))
-    depends_on('tcl-tclxml', type=('build', 'link', 'run'))
-    depends_on('tk', type=('build', 'link', 'run'))
+    depends_on('libx11')
+    depends_on('libxml2')
+    depends_on('libxslt')
+    depends_on('openssl')
+    depends_on('tcl')
+    depends_on('tcl-tclxml')
+    depends_on('tk')
 
     def patch(self):
         # the package provides it's own TCL utilities
