@@ -87,7 +87,7 @@ class Tfel(CMakePackage):
         for i in ['fortran', 'java', 'castem', 'aster',
                   'abaqus', 'calculix', 'ansys',
                   'europlexus', 'cyrano', 'lsdyna',
-                  'python', 'python_bindings',]:
+                  'python', 'python_bindings']:
             if '+' + i in self.spec:
                 args.append("-Denable-{0}=ON".format(i))
             else:
