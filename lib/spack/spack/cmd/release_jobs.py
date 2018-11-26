@@ -408,7 +408,8 @@ def release_jobs(parser, args):
                     'image': build_image,
                     'artifacts': {
                         'paths': [
-                            'local_mirror/build_cache'
+                            'local_mirror/build_cache',
+                            'jobs_scratch_dir',
                         ],
                     },
                     'dependencies': job_dependencies,

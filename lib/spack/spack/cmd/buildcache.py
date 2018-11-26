@@ -164,11 +164,11 @@ def setup_parser(subparser):
         '-r', '--root-spec', default=None,
         help='Root spec of dependent spec')
     saveyaml.add_argument(
-        '-s', '--spec', default=None,
-        help='Dependent spec for which saved yaml is desired')
+        '-s', '--specs', default=None,
+        help='List of dependent specs for which saved yaml is desired')
     saveyaml.add_argument(
-        '-y', '--yaml-path', default=None,
-        help='Path to file where spec yaml should be saved')
+        '-y', '--yaml-dir', default=None,
+        help='Path to directory where spec yamls should be saved')
     saveyaml.set_defaults(func=save_dependent_spec_yaml)
 
     # Put buildcache entry somewhere (file system or s3)
@@ -488,28 +488,37 @@ def save_dependent_spec_yaml(args):
         tty.msg('No root spec provided, exiting.')
         sys.exit(1)
 
-    if not args.spec:
-        tty.msg('No dependent spec provided, exiting.')
+    if not args.specs:
+        tty.msg('No dependent specs provided, exiting.')
         sys.exit(1)
 
-    if not args.yaml_path:
-        tty.msg('No yaml path provided, exiting.')
+    if not args.yaml_dir:
+        tty.msg('No yaml directory provided, exiting.')
         sys.exit(1)
 
     try:
         rootSpec = Spec(args.root_spec)
         rootSpec.concretize()
         spec = rootSpec
-        if args.root_spec != args.spec:
-            spec = rootSpec[args.spec]
-            spec.concretize()
-    except Exception:
-        tty.error('Unable to get dependent spec {0} from root spec {1}'.format(
-            args.root_spec, args.spec))
+        for dep_spec in args.specs.split():
+            # if args.root_spec != dep_spec:
+            if dep_spec in rootSpec:
+                spec = rootSpec[dep_spec]
+                # spec.concretize()
+            yaml_path = os.path.join(args.yaml_dir, '{0}.yaml'.format(spec.name))
+            print('attempting to write spec yaml to {0}'.format(yaml_path))
+            with open(yaml_path, 'w') as fd:
+                fd.write(spec.to_yaml(all_deps=True))
+    except Exception as inst:
+        tty.error('Unable to write dependent specs {0} from root spec {1}'.format(
+            args.specs, args.root_spec))
+        tty.msg(inst)
         sys.exit(1)
 
-    with open(args.yaml_path, 'w') as fd:
-        fd.write(spec.to_yaml(all_deps=True))
+    # yaml_path = os.path.join(args.yaml_dir, '{0}.yaml'.format(spec.name))
+
+    # with open(args.yaml_path, 'w') as fd:
+    #     fd.write(spec.to_yaml(all_deps=True))
 
     sys.exit(0)
 
