@@ -114,35 +114,27 @@ def test_removed_upstream_dep(tmpdir_factory, test_store):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
-        try:
-            original_db = spack.store.db
-            original_layout = spack.store.layout
-            spack.store.layout = mock_layout
+        prepared_db.add(spec['z'], mock_layout)
 
-            prepared_db.add(spec['z'], mock_layout)
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        downstream_db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        downstream_layout = MockLayout('/b/')
+        with open(downstream_db._index_path, 'w') as db_file:
+            downstream_db._write_to_file(db_file)
 
-            downstream_db_root = str(
-                tmpdir_factory.mktemp('mock_downstream_db_root'))
-            spack.store.db = spack.database.Database(
-                downstream_db_root, upstream_dbs=[prepared_db])
-            spack.store.layout = MockLayout('/b/')
-            with open(spack.store.db._index_path, 'w') as db_file:
-                spack.store.db._write_to_file(db_file)
+        new_spec = spack.spec.Spec('y')
+        new_spec.concretize()
+        downstream_db.add(new_spec, downstream_layout)
 
-            new_spec = spack.spec.Spec('y')
-            new_spec.concretize()
-            spack.store.db.add(new_spec, spack.store.layout)
+        prepared_db.remove(new_spec['z'])
 
-            prepared_db.remove(new_spec['z'])
-
-            new_downstream = spack.database.Database(
-                downstream_db_root, upstream_dbs=[prepared_db])
-            new_downstream._fail_when_missing_deps = True
-            with pytest.raises(spack.database.MissingDependenciesError):
-                new_downstream._read()
-        finally:
-            spack.store.db = original_db
-            spack.store.layout = original_layout
+        new_downstream = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        new_downstream._fail_when_missing_deps = True
+        with pytest.raises(spack.database.MissingDependenciesError):
+            new_downstream._read()
 
 
 @pytest.mark.usefixtures('config')
