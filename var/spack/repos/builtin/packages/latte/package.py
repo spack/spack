@@ -17,7 +17,7 @@ class Latte(CMakePackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='master')
-    version('1.2.1', '56db44afaba2a89e6ca62ac565c3c012')
+    version('1.2.1', '9a0690bf4e0e1cab057475a67052b0a8')
     version('1.2.0', 'b9bf8f84a0e0cf7b0e278a1bc7751b3d')
     version('1.1.1', 'ab11867ba6235189681cf6e50a50cc50')
     version('1.0.1', 'd0b99edbcf7a19abe0a68a192d6f6234')
