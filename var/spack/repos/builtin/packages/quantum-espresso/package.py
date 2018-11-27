@@ -17,6 +17,7 @@ class QuantumEspresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
+    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.3/q-e-qe-6.3.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
     version('6.3',   '1b67687d90d1d16781d566d44d14634c')
@@ -102,10 +103,6 @@ class QuantumEspresso(Package):
     patch_url = 'https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff'
     patch_checksum = 'b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca'
     patch(patch_url, sha256=patch_checksum, when='@6.3')
-
-    def url_for_version(self, version):
-        url = 'http://gitlab.com/QEF/q-e/-/archive/qe-{0}/q-e-qe-{1}.tar.gz'
-        return url.format(version, version)
 
     def install(self, spec, prefix):
 
