@@ -1142,6 +1142,19 @@ class LibraryList(FileList):
         return list(dedupe(names))
 
     @property
+    def rpath_flags(self):
+        """Rpath flags for the libraries
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l.rpath_flags
+        '-Wl,-rpath,/dir1 -Wl,-rpath,/dir2'
+
+        Returns:
+            str: A joined list of rpath flags
+        """
+        return ' '.join(['-Wl,-rpath,' + x for x in self.directories])
+
+    @property
     def search_flags(self):
         """Search flags for the libraries
 

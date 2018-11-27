@@ -43,6 +43,8 @@ class Synapsetool(CMakePackage):
 
     variant('mpi', default=True, description="Enable MPI backend")
     variant('shared', default=True, description="Build shared library")
+    variant('python', default=False, description="Enable syntool Python package")
+    variant('sonata', default=False, description="Enable SONATA support")
 
     depends_on('boost@1.55:')
     depends_on('cmake@3.0:', type='build')
@@ -51,28 +53,44 @@ class Synapsetool(CMakePackage):
     depends_on('highfive+mpi', when='+mpi')
     depends_on('highfive~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
-    depends_on('python')
+    depends_on('python', when='+python')
 
     @property
     def libs(self):
-        """Export the synapse library (especially for neurodamus).
-        Sample usage: spec['synapsetool'].libs.ld_flags
+        """Export the synapse library
         """
         is_shared = '+shared' in self.spec
-        libs = find_libraries('libsyn2', root=self.prefix,
-                                  shared=is_shared, recursive=True)
-        if libs:
-            return libs
-        return None
+        return find_libraries('libsyn2', root=self.prefix, shared=is_shared, recursive=True)
+
+    def dependency_libs(self, spec=None):
+        """List of required libraries on linking, with the possibility of passing another
+           spec where all dependencies have specs. This enables Syntool to be external
+        """
+        spec = spec or self.spec
+        is_shared = '+shared' in self.spec['synapsetool']
+
+        boost_libs = ['libboost_system', 'libboost_filesystem']
+        if spec['boost'].satisfies('+multithreaded'):
+            boost_libs = [l + '-mt' for l in boost_libs]
+
+        libraries = find_libraries(boost_libs, spec['boost'].prefix, is_shared, True)
+        if '+sonata' in spec:
+            libraries += find_libraries("libsonata", spec['libsonata'].prefix, is_shared, True)
+        return libraries
 
     def cmake_args(self):
         args = []
-        if self.spec.satisfies('+mpi'):
+        spec = self.spec
+        if spec.satisfies('+mpi'):
             args.extend([
-                '-DCMAKE_C_COMPILER:STRING={}'.format(self.spec['mpi'].mpicc),
-                '-DCMAKE_CXX_COMPILER:STRING={}'.format(self.spec['mpi'].mpicxx),
+                '-DCMAKE_C_COMPILER:STRING={}'.format(spec['mpi'].mpicc),
+                '-DCMAKE_CXX_COMPILER:STRING={}'.format(spec['mpi'].mpicxx),
                 '-DSYNTOOL_WITH_MPI:BOOL=ON'
             ])
-        if self.spec.satisfies('~shared'):
+        if spec.satisfies('~shared'):
             args.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
+
+        if spec.satisfies('+sonata'):
+            args.append('-DSYNTOOL_WITH_SONATA:BOOL=ON')
+
         return args
