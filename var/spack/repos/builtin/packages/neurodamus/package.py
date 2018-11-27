@@ -73,6 +73,7 @@ class Neurodamus(NeurodamusBase):
     conflicts('@hippocampus', when='+coreneuron')
     conflicts('@master', when='+coreneuron')
     conflicts('^neuron~python', when='+coreneuron')
+    conflicts('+sonata', when='~syntool')
 
     phases = ['build', 'install']
 
@@ -87,24 +88,22 @@ class Neurodamus(NeurodamusBase):
     def build(self, spec, prefix):
         """ Build mod files from m dir
         """
-        profile_flag = '-DENABLE_TAU_PROFILER' if '+profile' in spec else ''
-        include_flag = ''
-        link_flag = '-Wl,--as-needed'  # Allow deps to not recurs bring their deps
+        dep_libs = ['reportinglib', 'hdf5',  'zlib']
         env['MAKEFLAGS'] = '-j{0}'.format(make_jobs)
+        profile_flag = '-DENABLE_TAU_PROFILER' if '+profile' in spec else ''
 
+        link_flag = '-Wl,--as-needed'  # Allow deps to not recurs bring their deps
+        include_flag = ' -I%s -I%s %s' % (spec['reportinglib'].prefix.include,
+                                          spec['hdf5'].prefix.include,
+                                          profile_flag)
         if '+syntool' in spec:
             include_flag += ' -DENABLE_SYNTOOL -I ' + spec['synapsetool'].prefix.include
-
+            dep_libs.append('synapsetool')
         if '+coreneuron' in spec:
             include_flag += ' -DENABLE_CORENEURON -I%s' % (spec['coreneuron'].prefix.include)
+            dep_libs.append('coreneuron')
 
-        include_flag += ' -I%s -I%s %s' % (spec['reportinglib'].prefix.include,
-                                           spec['hdf5'].prefix.include,
-                                           profile_flag)
-        # Handle dependencies. If shared use -rpath, -L, -l, otherwise lib path
-        dep_libs = ['reportinglib', 'hdf5',  'zlib']
-        if spec.satisfies('+syntool'):
-            dep_libs.append('synapsetool')
+        # link_flag. If shared use -rpath, -L, -l, otherwise lib path
         for dep in dep_libs:
             if spec[dep].satisfies('+shared'):
                 link_flag += " %s %s" % (spec[dep].libs.rpath_flags, spec[dep].libs.ld_flags)
