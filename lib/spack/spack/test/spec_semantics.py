@@ -743,3 +743,15 @@ class TestSpecSematics(object):
             expected = getattr(arch, prop, "")
             actual = spec.format(named_str)
             assert str(expected) == actual
+
+    @pytest.mark.regression('9908')
+    def test_spec_flags_maintain_order(self):
+        spec_str = 'libelf %gcc@4.7.2 os=redhat6'
+        hashes = set(
+            Spec(spec_str).concretized().dag_hash() for _ in range(100)
+        )
+
+        # The hash has been precomputed and should be the same
+        # on every architecture.
+        assert len(hashes) == 1
+        assert hashes.pop() == 'h76g3noivss5gdrs2il2ghaqw3fba22m'
