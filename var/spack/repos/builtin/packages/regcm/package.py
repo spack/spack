@@ -23,10 +23,13 @@ class Regcm(AutotoolsPackage):
 
     # On Intel and PGI compilers, multiple archs can be built at the same time,
     # producing a so-called fat binary. Unfortunately, gcc builds only the last
-    # architecture provided (in the configure), so we allow a single arch.
+    # architecture provided (in the configure), so we allow a single arch on
+    # GCC. Only GCC and Intel are supported.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
-    variant('extension', default=None, values=extensions,
-            description='Build extensions for a specific Intel architecture.')
+    variant('extension', default=None, values=extensions, multi=True,
+            description="Build extensions for a specific architecture. "
+                        "Only available on GCC and Intel; GCC allows a single "
+                        "architecture optimization.")
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
@@ -56,13 +59,19 @@ class Regcm(AutotoolsPackage):
     def configure_args(self):
         args = ['--enable-shared']
 
+        optimizations = self.spec.variants['extension'].value
+        if len(optimizations) > 1 and self.spec.satisfies('%gcc'):
+            # https://github.com/spack/spack/issues/974
+            raise InstallError("The GCC compiler does not support multiple "
+                               "architecture optimizations.")
+
+        if optimizations[0] and (self.spec.satisfies('%gcc') or
+                                 self.spec.satisfies('%intel')):
+            args += ('--enable-' + ext for ext in optimizations)
+
         for opt in ('debug', 'profile', 'singleprecision'):
             if '+{0}'.format(opt) in self.spec:
                 args.append('--enable-' + opt)
-
-        ext_to_enable = self.spec.variants['extension'].value
-        if ext_to_enable:
-            args.append('--enable-' + ext_to_enable)
 
         # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
         # is ignored by the configure, so we need to set the option in FCFLAGS.
