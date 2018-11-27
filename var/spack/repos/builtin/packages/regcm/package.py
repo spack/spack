@@ -69,6 +69,13 @@ class Regcm(AutotoolsPackage):
                                  self.spec.satisfies('%intel')):
             args += ('--enable-' + ext for ext in optimizations)
 
+        elif optimizations[0]:
+            # This means the user chose some optimizations on a different
+            # compiler from GCC and Intel, which are the only compiler
+            # supported in the RegCM 4.7.x versions.
+            raise InstallError("Architecture optimizations are available only "
+                               "with GCC and Intel compilers.")
+
         for opt in ('debug', 'profile', 'singleprecision'):
             if '+{0}'.format(opt) in self.spec:
                 args.append('--enable-' + opt)
