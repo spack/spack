@@ -137,11 +137,10 @@ class QuantumEspresso(Package):
             options.append(
                 'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
                                                     'include/fftw')))
-
         if '^fftw@3:' in spec:
             fftw_prefix = spec['fftw'].prefix
             options.append('FFTW_INCLUDE={0}'.format(fftw_prefix.include))
-            fftw_ld_flags = '-L{0}'.format(fftw_prefix) + ' -lfftw3'
+            fftw_ld_flags = spec['fftw'].libs.ld_flags
             options.append('FFT_LIBS={0}'.format(fftw_ld_flags))
 
         # External BLAS and LAPACK requires the correct link line into
