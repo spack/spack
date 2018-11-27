@@ -1429,13 +1429,6 @@ class Spec(object):
 
             self._full_hash = b32_hash
 
-            print('full_hash computation:')
-            print('yaml_text: {0}'.format(yaml_text))
-            print('package_hash: {0}'.format(package_hash))
-            print('sha.digest(): {0}'.format(sha.digest()))
-            print('b32_hash: {0}'.format(b32_hash))
-            print('  full_hash: {0}'.format(self._full_hash[:length]))
-
         return self._full_hash[:length]
 
     def to_node_dict(self, hash_function=None, all_deps=False):

@@ -1074,14 +1074,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             hash_content.append(''.encode('utf-8'))
         else:
             hash_content.append(source_id.encode('utf-8'))
-        patch_hashes = [':'.join((p.sha256, str(p.level))).encode('utf-8')
-            for p in self.spec.patches]
-        for phash in patch_hashes:
-            print('  next patch hash: {0}'.format(phash))
-        hash_content.extend(patch_hashes)
-        hashed_package = package_hash(self.spec, content)
-        print('hashed_package: {0}'.format(hashed_package))
-        hash_content.append(hashed_package)
+        hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
+                            for p in self.spec.patches)
+        hash_content.append(package_hash(self.spec, content))
         return base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
