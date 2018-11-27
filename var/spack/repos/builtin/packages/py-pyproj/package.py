@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyProj(PythonPackage):
+class PyPyproj(PythonPackage):
     """Python interface to the PROJ.4 Library."""
 
     homepage = "http://jswhit.github.io/pyproj/"
@@ -21,7 +21,7 @@ class PyProj(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-setuptools', type='build')
 
-    # NOTE: py-proj does NOT depends_on('proj').
+    # NOTE: py-pyproj does NOT depends_on('proj').
     # The py-proj git repo actually includes the correct version of PROJ.4,
     # which is built internally as part of the py-proj build.
     # Adding depends_on('proj') will cause mysterious build errors.

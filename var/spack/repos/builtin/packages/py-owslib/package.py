@@ -20,4 +20,4 @@ class PyOwslib(PythonPackage):
     depends_on('py-dateutil@1.5:',  type=('build', 'run'))
     depends_on('py-pytz',           type=('build', 'run'))
     depends_on('py-requests@1.0:',  type=('build', 'run'))
-    depends_on('py-proj',           type=('build', 'run'))
+    depends_on('py-pyproj',           type=('build', 'run'))
