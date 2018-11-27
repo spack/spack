@@ -19,7 +19,8 @@ class PyPygobject(PythonPackage):
 
     extends('python')
 
-    depends_on('py-setuptools', type=('build'))
+    depends_on('py-setuptools', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on("libffi")
     depends_on('glib')
     depends_on('python@2:2.99', when='@2:2.99', type=('build', 'run'))
