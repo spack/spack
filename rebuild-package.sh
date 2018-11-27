@@ -121,8 +121,8 @@ finalize() {
 
 check_error()
 {
-    local last_exit_code = $1
-    local last_cmd_output = $2
+    local last_exit_code=$1
+    local last_cmd_output=$2
     if [[ ${last_exit_code} -ne 0 ]]; then
         echo "Last command failed with output:"
         echo "${last_cmd_output}"
@@ -238,7 +238,7 @@ spack gpg list
 # sign and verify both
 set +x
 KEY_IMPORT_RESULT=`echo ${SPACK_SIGNING_KEY} | base64 --decode | gpg2 --import`
-check_error $? ${KEY_IMPORT_RESULT}
+check_error $? "${KEY_IMPORT_RESULT}"
 set -x
 
 # This line doesn't seem to add any extra trust levels
@@ -260,7 +260,7 @@ if [[ $? -ne 0 ]]; then
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
     INSTALL_OUTPUT=`spack -d -k install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${JOB_SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}"`
-    check_error $? ${INSTALL_OUTPUT}
+    check_error $? "${INSTALL_OUTPUT}"
     echo -e "spack install output:\n${INSTALL_OUTPUT}"
 
     # By parsing the output of the "spack install" command, we can get the
@@ -278,14 +278,14 @@ if [[ $? -ne 0 ]]; then
     # will be a spec that matches the name which is NOT the same as represented
     # in the yaml file
     BUILDCACHE_CREATE_OUTPUT=`spack -d buildcache create --spec-yaml "${SPEC_YAML_PATH}" -a -f -d "${LOCAL_MIRROR}" ${BUILD_ID_ARG}`
-    check_error $? ${BUILDCACHE_CREATE_OUTPUT}
+    check_error $? "${BUILDCACHE_CREATE_OUTPUT}"
     echo -e "spack buildcache create output:\n${BUILDCACHE_CREATE_OUTPUT}"
 
     # TODO: Now push buildcache entry to remote mirror, something like:
     # "spack buildcache put <mirror> <spec>", when that subcommand
     # is implemented
     UPLOAD_RESULT=`spack -d upload-s3 spec --base-dir "${LOCAL_MIRROR}" --spec-yaml "${SPEC_YAML_PATH}"`
-    check_error $? ${UPLOAD_RESULT}
+    check_error $? "${UPLOAD_RESULT}"
 else
     echo "spec ${JOB_SPEC_NAME} is already up to date on remote mirror, downloading it"
 
@@ -294,7 +294,7 @@ else
 
     # Now download it
     BUILDCACHE_DL_RESULT=`spack -d buildcache download --spec-yaml "${SPEC_YAML_PATH}" --path "${BUILD_CACHE_DIR}/"`
-    check_error $? ${BUILDCACHE_DL_RESULT}
+    check_error $? "${BUILDCACHE_DL_RESULT}"
 fi
 
 # Now, whether we had to build the spec or download it pre-built, we should have
