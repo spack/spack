@@ -11,6 +11,6 @@ spec-set:
         - compilers:
             gcc:
                 versions: [5.5.0]
-            # clang:
-            #     versions: ['6.0.0-1ubuntu2']
+            clang:
+                versions: ['6.0.0-1ubuntu2']
     cdash: ["https://spack.io/cdash/submit.php?project=spack"]
