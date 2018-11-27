@@ -137,7 +137,8 @@ class Neuron(Package):
                             'PYINCDIR=%s' % py_inc,
                             'PYLIBDIR=%s' % py_lib])
 
-            if spec.satisfies('~cross-compile'):
+            # use python dependency if not cross-compiling or on cray system
+            if spec.satisfies('~cross-compile') or 'cray' in spec.architecture:
                 options.append('PYTHON_BLD=%s' % python_exec)
 
         return options
