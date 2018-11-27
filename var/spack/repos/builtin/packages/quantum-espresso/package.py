@@ -54,7 +54,10 @@ class QuantumEspresso(Package):
 
     # Conflicts
     # MKL with 64-bit integers not supported.
-    conflicts('intel-mkl+ilp64')
+    conflicts(
+        '^intel-mkl+ilp64',
+        msg='Quantum ESPRESSO does not support MKL 64-bit integer variant'
+    )
 
     # We can't ask for scalapack or elpa if we don't want MPI
     conflicts(
