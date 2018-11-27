@@ -96,19 +96,26 @@ class Paraview(CMakePackage):
         else:
             lib_dir = self.prefix.lib
         paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
-        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
         run_env.set('PARAVIEW_VTK_DIR',
                     join_path(lib_dir, 'cmake', paraview_version))
-        if '+python' in self.spec:
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+        # Some python locations changed from 5.4 to 5.5
+        if self.spec.satisfies('@:5.4.99'):
+            # Only need this nonstandard library path in <= 5.4
+            run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
                                  paraview_version))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages'))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages', 'vtk'))
+            run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
+                             paraview_version))
+            if '+python' in self.spec:
+                run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                     paraview_version))
+                run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                     paraview_version, 'site-packages'))
+                run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                     paraview_version, 'site-packages', 'vtk'))
+        elif self.spec.satisfies('@5.5.0:'):
+            if '+python' in self.spec:
+                run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                     'python2.7', 'site-packages', 'vtkmodules'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
