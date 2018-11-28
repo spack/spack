@@ -1384,7 +1384,12 @@ class Spec(object):
     @property
     def prefix(self):
         if self._prefix is None:
-            self.prefix = spack.store.layout.path_for_spec(self)
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.dag_hash())
+            if upstream:
+                self.prefix = record.path
+            else:
+                self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -3259,7 +3264,9 @@ class Spec(object):
 
             if install_status:
                 status = node._install_status()
-                if status is None:
+                if node.package.installed_upstream:
+                    out += colorize("@g{[^]}  ", color=color)
+                elif status is None:
                     out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
                     out += colorize("@g{[+]}  ", color=color)  # installed

@@ -273,8 +273,15 @@ fi;
 #
 # set module system roots
 #
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+IFS=':' read -ra tcl_roots <<< "$_sp_tcl_roots"
+for tcl_root in "${tcl_roots[@]}"; do
+    _spack_pathadd MODULEPATH "${tcl_root}/$_sp_sys_type"
+done
+
+IFS=':' read -ra dotkit_roots <<< "$_sp_dotkit_roots"
+for dotkit_root in "${dotkit_roots[@]}"; do
+    _spack_pathadd DK_NODE "${dotkit_root}/$_sp_sys_type"
+done
 
 # Add programmable tab completion for Bash
 #

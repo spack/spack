@@ -33,6 +33,7 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.check_upstream = True
 
     @property
     def hidden_file_paths(self):
@@ -73,6 +74,13 @@ class DirectoryLayout(object):
     def path_for_spec(self, spec):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
+
+        if spec.external:
+            return spec.external_path
+        if self.check_upstream and spec.package.installed_upstream:
+            raise SpackError(
+                "Internal error: attempted to call path_for_spec on"
+                " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
@@ -171,7 +179,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
         if self.hash_len is not None:
-            if re.search('\${HASH:\d+}', self.path_scheme):
+            if re.search(r'\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
                     "Conflicting options for installation layout hash length")
             self.path_scheme = self.path_scheme.replace(
@@ -189,9 +197,6 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
-
-        if spec.external:
-            return spec.external_path
 
         path = spec.format(self.path_scheme)
         return path
@@ -223,19 +228,24 @@ class YamlDirectoryLayout(DirectoryLayout):
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
     def metadata_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir)
+        if self.check_upstream and spec.package.installed_upstream:
+            # TODO: This assumes that older spack versions use the same
+            # relative metadata directory as the current Spack, which is
+            # generally reasonable (since this is not user-configurable).
+            # If changes to this path are accompanied by a DB version
+            # increment, then there will never by an issue with this.
+            return os.path.join(spec.prefix, self.metadata_dir)
+        else:
+            return os.path.join(self.path_for_spec(spec), self.metadata_dir)
 
     def build_log_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.build_log_name)
+        return os.path.join(self.metadata_path(spec), self.build_log_name)
 
     def build_env_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.build_env_name)
+        return os.path.join(self.metadata_path(spec), self.build_env_name)
 
     def build_packages_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.packages_dir)
+        return os.path.join(self.metadata_path(spec), self.packages_dir)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)

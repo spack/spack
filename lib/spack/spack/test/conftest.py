@@ -719,6 +719,7 @@ class MockPackage(object):
         self.name = name
         self.spec = None
         self.dependencies = ordereddict_backport.OrderedDict()
+        self._installed_upstream = False
 
         assert len(dependencies) == len(dependency_types)
         for dep, dtype in zip(dependencies, dependency_types):

@@ -490,6 +490,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         super(PackageBase, self).__init__()
 
+    @property
+    def installed_upstream(self):
+        if not hasattr(self, '_installed_upstream'):
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.spec.dag_hash())
+            self._installed_upstream = upstream
+
+        return self._installed_upstream
+
     def possible_dependencies(
             self, transitive=True, expand_virtuals=True, visited=None):
         """Return set of possible dependencies of this package.
@@ -1364,6 +1373,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # consists in module file generation and registration in the DB
         if self.spec.external:
             return self._process_external_package(explicit)
+
+        if self.installed_upstream:
+            tty.msg("{0.name} is installed in an upstream Spack instance"
+                    " at {0.prefix}".format(self))
+            # Note this skips all post-install hooks. In the case of modules
+            # this is considered correct because we want to retrieve the
+            # module from the upstream Spack instance.
+            return
 
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)

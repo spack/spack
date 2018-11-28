@@ -17,11 +17,169 @@ from llnl.util.tty.colify import colify
 
 import spack.repo
 import spack.store
-from spack.test.conftest import MockPackageMultiRepo
+import spack.database
+import spack.spec
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
+
+
+class MockLayout(object):
+    def __init__(self, root):
+        self.root = root
+
+    def path_for_spec(self, spec):
+        return self.root + '/'.join(['test_upstream_root', spec.name])
+
+    def check_installed(self, spec):
+        return True
+
+
+@pytest.fixture()
+def test_store(tmpdir):
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
+
+    yield
+
+    spack.store.store = real_store
+
+
+@pytest.mark.usefixtures('config')
+def test_installed_upstream(tmpdir_factory, test_store):
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    # Generate initial DB file to avoid reindex
+    with open(prepared_db._index_path, 'w') as db_file:
+        prepared_db._write_to_file(db_file)
+
+    default = ('build', 'link')
+    x = MockPackage('x', [], [])
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    w = MockPackage('w', [x, y], [default, default])
+    mock_repo = MockPackageMultiRepo([w, x, y, z])
+
+    mock_layout = MockLayout('/a/')
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('w')
+        spec.concretize()
+
+        for dep in spec.traverse(root=False):
+            prepared_db.add(dep, mock_layout)
+
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        downstream_db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        downstream_layout = MockLayout('/b/')
+        with open(downstream_db._index_path, 'w') as db_file:
+            downstream_db._write_to_file(db_file)
+
+        new_spec = spack.spec.Spec('w')
+        new_spec.concretize()
+        downstream_db.add(new_spec, downstream_layout)
+        for dep in new_spec.traverse(root=False):
+            upstream, record = downstream_db.query_by_spec_hash(
+                dep.dag_hash())
+            assert upstream
+            assert record.path == mock_layout.path_for_spec(dep)
+        upstream, record = downstream_db.query_by_spec_hash(
+            new_spec.dag_hash())
+        assert not upstream
+        assert record.installed
+
+        prepared_db._check_ref_counts()
+        downstream_db._check_ref_counts()
+
+
+@pytest.mark.usefixtures('config')
+def test_removed_upstream_dep(tmpdir_factory, test_store):
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    # Generate initial DB file to avoid reindex
+    with open(prepared_db._index_path, 'w') as db_file:
+        prepared_db._write_to_file(db_file)
+
+    default = ('build', 'link')
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    mock_repo = MockPackageMultiRepo([y, z])
+
+    mock_layout = MockLayout('/a/')
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('y')
+        spec.concretize()
+
+        prepared_db.add(spec['z'], mock_layout)
+
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        downstream_db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        downstream_layout = MockLayout('/b/')
+        with open(downstream_db._index_path, 'w') as db_file:
+            downstream_db._write_to_file(db_file)
+
+        new_spec = spack.spec.Spec('y')
+        new_spec.concretize()
+        downstream_db.add(new_spec, downstream_layout)
+
+        prepared_db.remove(new_spec['z'])
+
+        new_downstream = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        new_downstream._fail_when_missing_deps = True
+        with pytest.raises(spack.database.MissingDependenciesError):
+            new_downstream._read()
+
+
+@pytest.mark.usefixtures('config')
+def test_recursive_upstream_dbs(tmpdir_factory, test_store):
+    roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
+    layouts = [MockLayout(x) for x in ['/ra/', '/rb/', '/rc/']]
+
+    default = ('build', 'link')
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    x = MockPackage('x', [y], [default])
+
+    mock_repo = MockPackageMultiRepo([x, y, z])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+        db_c = spack.database.Database(roots[2])
+        db_c.add(spec['z'], layouts[2])
+
+        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c])
+        db_b.add(spec['y'], layouts[1])
+
+        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
+        db_a.add(spec['x'], layouts[0])
+
+        dbs = spack.store._construct_upstream_dbs_from_install_roots(
+            roots, _test=True)
+
+        assert dbs[0].db_for_spec_hash(spec.dag_hash()) == dbs[0]
+        assert dbs[0].db_for_spec_hash(spec['y'].dag_hash()) == dbs[1]
+        assert dbs[0].db_for_spec_hash(spec['z'].dag_hash()) == dbs[2]
+
+        dbs[0]._check_ref_counts()
+        dbs[1]._check_ref_counts()
+        dbs[2]._check_ref_counts()
+
+        assert (dbs[0].installed_relatives(spec) ==
+                set(spec.traverse(root=False)))
+        assert (dbs[0].installed_relatives(spec['z'], direction='parents') ==
+                set([spec, spec['y']]))
+        assert not dbs[2].installed_relatives(spec['z'], direction='parents')
 
 
 @pytest.fixture()
