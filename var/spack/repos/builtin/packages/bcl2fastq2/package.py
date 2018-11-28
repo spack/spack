@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import shutil
 import glob
 import llnl.util.tty as tty
 
@@ -71,11 +72,10 @@ class Bcl2fastq2(Package):
                     tty.msg("The tarball has already been unpacked")
                 else:
                     tty.msg("Unpacking bcl2fastq2 tarball")
-                    tty.msg("cwd sez: {0}".format(os.getcwd()))
                     tarball = glob.glob(join_path('spack-expanded-archive',
                                         'bcl2fastq2*.tar.gz'))[0]
                     copy(tarball, '.')
-                    os.rmdir('spack-expanded-archive')
+                    shutil.rmtree('spack-expanded-archive')
                     tar = which('tar')
                     tarball = os.path.basename(tarball)
                     tar('-xf', tarball)
