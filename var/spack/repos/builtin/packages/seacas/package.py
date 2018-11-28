@@ -364,11 +364,6 @@ class Seacas(CMakePackage):
             '-DCMAKE_CXX_FLAGS:STRING=%s' % (' '.join(cxx_flags)),
         ])
 
-        # disable due to compiler / config errors:
-        options.extend([
-            '-DSEACAS_ENABLE_Pike=OFF'
-        ])
-
         return options
 
     
