@@ -109,7 +109,7 @@ class Neurodamus(NeurodamusBase):
                 link_flag += " %s %s" % (spec[dep].libs.rpath_flags, spec[dep].libs.ld_flags)
             else:
                 link_flag += " " + spec[dep].libs.joined()
-        if spec.satisfies('^synapsetool~shared'):
+        if spec.satisfies('+syntool') and spec.satisfies('^synapsetool~shared'):
             link_flag += ' ' + spec['synapsetool'].package.dependency_libs(spec).joined()
 
         nrnivmodl = which('nrnivmodl')
