@@ -32,7 +32,7 @@ class Exodusii(CMakePackage):
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
     depends_on('netcdf@4.6.1:+mpi', when='+mpi')
     depends_on('netcdf@4.6.1:~mpi', when='~mpi')
-    
+
     def cmake_args(self):
         spec = self.spec
 
