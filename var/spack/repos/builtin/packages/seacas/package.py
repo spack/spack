@@ -371,18 +371,4 @@ class Seacas(CMakePackage):
 
         return options
 
-    @run_after('install')
-    def filter_python(self):
-        # When trilinos is built with Python, libpytrilinos is included
-        # through cmake configure files. Namely, SEACAS_LIBRARIES in
-        # SEACASConfig.cmake contains pytrilinos. This leads to a
-        # run-time error: Symbol not found: _PyBool_Type and prevents
-        # SEACAS to be used in any C++ code, which links executable
-        # against the libraries listed in SEACAS_LIBRARIES.  See
-        # https://github.com/Homebrew/homebrew-science/issues/2148#issuecomment-103614509
-        # A workaround is to remove PySEACAS from the COMPONENTS_LIST :
-        if '+python' in self.spec:
-            filter_file(r'(SET\(COMPONENTS_LIST.*)(PySEACAS;)(.*)',
-                        (r'\1\3'),
-                        '%s/cmake/SEACAS/SEACASConfig.cmake' %
-                        self.prefix.lib)
+    
