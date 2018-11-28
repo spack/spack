@@ -1,5 +1,25 @@
 #!/bin/bash
 
+###
+### The following environment variables are expected to be set in order for
+### the various elements in this script to function properly.  Listed first
+### are two defaults we rely on from gitlab, then three we set up in the
+### variables section of gitlab ourselves, and finally four variables
+### written into the .gitlab-ci.yml file.
+###
+### CI_PROJECT_DIR
+### CI_JOB_NAME
+###
+### AWS_ACCESS_KEY_ID
+### AWS_SECRET_ACCESS_KEY
+### SPACK_SIGNING_KEY
+###
+### CDASH_BASE_URL
+### ROOT_SPEC
+### DEPENDENCIES
+### MIRROR_URL
+###
+
 export FORCE_UNSAFE_CONFIGURE=1
 
 # TEMP_DIR="$( mktemp -d )"
@@ -260,17 +280,20 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    INSTALL_OUTPUT=`spack -k install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${JOB_SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}"`
+    BUILD_ID_LINE=`spack -d -k install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${JOB_SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}" | grep "buildSummary\\.php"`
     check_error $? "spack install"
 
     # By parsing the output of the "spack install" command, we can get the
     # buildid generated for us by CDash
-    JOB_CDASH_ID=$(extract_build_id "${INSTALL_OUTPUT}")
+    JOB_CDASH_ID=$(extract_build_id "${BUILD_ID_LINE}")
 
     BUILD_ID_ARG=""
     if [ "${JOB_CDASH_ID}" != "NONE" ]; then
         echo "Found build id for ${JOB_SPEC_NAME} from 'spack install' output: ${JOB_CDASH_ID}"
         BUILD_ID_ARG="--cdash-build-id \"${JOB_CDASH_ID}\""
+    else
+        echo "Unable to find build id in install output, install probably failed."
+        exit 1
     fi
 
     # Create buildcache entry for this package.  We should eventually change
