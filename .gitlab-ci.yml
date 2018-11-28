@@ -1,6 +1,7 @@
 adol-c develop gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [automake 1.16.1 gcc@5.5.0 linux-centos7-x86_64, m4 1.4.18 gcc@5.5.0
       linux-centos7-x86_64, libtool 2.4.6 gcc@5.5.0 linux-centos7-x86_64, autoconf
       2.69 gcc@5.5.0 linux-centos7-x86_64]
@@ -16,6 +17,7 @@ adol-c develop gcc@5.5.0 linux-centos7-x86_64:
 adol-c develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [automake 1.16.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, m4 1.4.18 gcc@5.5.0
       linux-ubuntu18.04-x86_64, libtool 2.4.6 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     autoconf 2.69 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -31,6 +33,7 @@ adol-c develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
 alquimia develop gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, petsc 3.10.2 gcc@5.5.0
       linux-centos7-x86_64, pflotran develop gcc@5.5.0 linux-centos7-x86_64, cmake
       3.12.3 gcc@5.5.0 linux-centos7-x86_64, hdf5 1.10.4 gcc@5.5.0 linux-centos7-x86_64]
@@ -46,6 +49,7 @@ alquimia develop gcc@5.5.0 linux-centos7-x86_64:
 alquimia develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, petsc 3.10.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, pflotran develop gcc@5.5.0 linux-ubuntu18.04-x86_64,
     cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, hdf5 1.10.4 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -61,6 +65,7 @@ alquimia develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
 amrex 18.10.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [python 2.7.15 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -74,6 +79,7 @@ amrex 18.10.1 gcc@5.5.0 linux-centos7-x86_64:
 amrex 18.10.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [python 2.7.15 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -87,6 +93,7 @@ amrex 18.10.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 arpack-ng 3.6.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -100,6 +107,7 @@ arpack-ng 3.6.3 gcc@5.5.0 linux-centos7-x86_64:
 arpack-ng 3.6.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2
       gcc@5.5.0 linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -113,6 +121,7 @@ arpack-ng 3.6.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 autoconf 2.69 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [perl 5.26.2 gcc@5.5.0 linux-centos7-x86_64, m4 1.4.18 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -124,6 +133,7 @@ autoconf 2.69 gcc@5.5.0 linux-centos7-x86_64:
 autoconf 2.69 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [perl 5.26.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, m4 1.4.18 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -137,6 +147,7 @@ autoconf 2.69 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 automake 1.16.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [perl 5.26.2 gcc@5.5.0 linux-centos7-x86_64, autoconf 2.69 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -150,6 +161,7 @@ automake 1.16.1 gcc@5.5.0 linux-centos7-x86_64:
 automake 1.16.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [perl 5.26.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, autoconf 2.69 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -163,6 +175,7 @@ automake 1.16.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 boost 1.68.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [bzip2 1.0.6 gcc@5.5.0 linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -175,6 +188,7 @@ boost 1.68.0 gcc@5.5.0 linux-centos7-x86_64:
 boost 1.68.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [bzip2 1.0.6 gcc@5.5.0 linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -188,6 +202,7 @@ boost 1.68.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 bzip2 1.0.6 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [diffutils 3.6 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -199,6 +214,7 @@ bzip2 1.0.6 gcc@5.5.0 linux-centos7-x86_64:
 bzip2 1.0.6 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [diffutils 3.6 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -210,6 +226,7 @@ bzip2 1.0.6 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openssl 1.0.2o gcc@5.5.0 linux-centos7-x86_64, ncurses 6.1 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -222,6 +239,7 @@ cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64:
 cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openssl 1.0.2o gcc@5.5.0 linux-ubuntu18.04-x86_64, ncurses 6.1 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -235,6 +253,7 @@ cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 dealii 9.0.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [trilinos 12.14.0-rc1 gcc@5.5.0 linux-centos7-x86_64, nanoflann 1.2.3
       gcc@5.5.0 linux-centos7-x86_64, adol-c develop gcc@5.5.0 linux-centos7-x86_64,
     intel-tbb 2019 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64,
@@ -266,6 +285,7 @@ dealii 9.0.1 gcc@5.5.0 linux-centos7-x86_64:
 dealii 9.0.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [trilinos 12.14.0-rc1 gcc@5.5.0 linux-ubuntu18.04-x86_64, nanoflann
       1.2.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, adol-c develop gcc@5.5.0 linux-ubuntu18.04-x86_64,
     intel-tbb 2019 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64,
@@ -297,6 +317,7 @@ dealii 9.0.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 diffutils 3.6 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -307,6 +328,7 @@ diffutils 3.6 gcc@5.5.0 linux-centos7-x86_64:
 diffutils 3.6 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -317,6 +339,7 @@ diffutils 3.6 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 gdbm 1.14.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [readline 7.0 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -328,6 +351,7 @@ gdbm 1.14.1 gcc@5.5.0 linux-centos7-x86_64:
 gdbm 1.14.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -339,6 +363,7 @@ gdbm 1.14.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 glm 0.9.7.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -350,6 +375,7 @@ glm 0.9.7.1 gcc@5.5.0 linux-centos7-x86_64:
 glm 0.9.7.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -361,6 +387,7 @@ glm 0.9.7.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 gsl 2.5 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -371,6 +398,7 @@ gsl 2.5 gcc@5.5.0 linux-centos7-x86_64:
 gsl 2.5 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -381,6 +409,7 @@ gsl 2.5 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 hdf5 1.10.4 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, numactl 2.0.11 gcc@5.5.0
       linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -394,6 +423,7 @@ hdf5 1.10.4 gcc@5.5.0 linux-centos7-x86_64:
 hdf5 1.10.4 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, numactl 2.0.11
       gcc@5.5.0 linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -407,6 +437,7 @@ hdf5 1.10.4 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 hwloc 1.11.9 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libxml2 2.9.8 gcc@5.5.0 linux-centos7-x86_64, numactl 2.0.11 gcc@5.5.0
       linux-centos7-x86_64, pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64, libpciaccess
       0.13.5 gcc@5.5.0 linux-centos7-x86_64]
@@ -422,6 +453,7 @@ hwloc 1.11.9 gcc@5.5.0 linux-centos7-x86_64:
 hwloc 1.11.9 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libxml2 2.9.8 gcc@5.5.0 linux-ubuntu18.04-x86_64, numactl 2.0.11
       gcc@5.5.0 linux-ubuntu18.04-x86_64, pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     libpciaccess 0.13.5 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -437,6 +469,7 @@ hwloc 1.11.9 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 hypre 2.15.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -450,6 +483,7 @@ hypre 2.15.1 gcc@5.5.0 linux-centos7-x86_64:
 hypre 2.15.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2
       gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -463,6 +497,7 @@ hypre 2.15.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 intel-tbb 2019 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -474,6 +509,7 @@ intel-tbb 2019 gcc@5.5.0 linux-centos7-x86_64:
 intel-tbb 2019 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -485,6 +521,7 @@ intel-tbb 2019 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 libpciaccess 0.13.5 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [util-macros 1.19.1 gcc@5.5.0 linux-centos7-x86_64, libtool 2.4.6
       gcc@5.5.0 linux-centos7-x86_64, pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -498,6 +535,7 @@ libpciaccess 0.13.5 gcc@5.5.0 linux-centos7-x86_64:
 libpciaccess 0.13.5 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [util-macros 1.19.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, libtool 2.4.6
       gcc@5.5.0 linux-ubuntu18.04-x86_64, pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -511,6 +549,7 @@ libpciaccess 0.13.5 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 libsigsegv 2.11 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -521,6 +560,7 @@ libsigsegv 2.11 gcc@5.5.0 linux-centos7-x86_64:
 libsigsegv 2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -531,6 +571,7 @@ libsigsegv 2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 libtool 2.4.6 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [m4 1.4.18 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -542,6 +583,7 @@ libtool 2.4.6 gcc@5.5.0 linux-centos7-x86_64:
 libtool 2.4.6 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [m4 1.4.18 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -553,6 +595,7 @@ libtool 2.4.6 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 libxml2 2.9.8 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [xz 5.2.4 gcc@5.5.0 linux-centos7-x86_64, pkgconf 1.4.2 gcc@5.5.0
       linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -566,6 +609,7 @@ libxml2 2.9.8 gcc@5.5.0 linux-centos7-x86_64:
 libxml2 2.9.8 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [xz 5.2.4 gcc@5.5.0 linux-ubuntu18.04-x86_64, pkgconf 1.4.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -579,6 +623,7 @@ libxml2 2.9.8 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 m4 1.4.18 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libsigsegv 2.11 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -590,6 +635,7 @@ m4 1.4.18 gcc@5.5.0 linux-centos7-x86_64:
 m4 1.4.18 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libsigsegv 2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -601,6 +647,7 @@ m4 1.4.18 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 matio 1.5.9 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64, hdf5 1.10.4 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -613,6 +660,7 @@ matio 1.5.9 gcc@5.5.0 linux-centos7-x86_64:
 matio 1.5.9 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64, hdf5 1.10.4 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -626,6 +674,7 @@ matio 1.5.9 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 metis 5.1.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -637,6 +686,7 @@ metis 5.1.0 gcc@5.5.0 linux-centos7-x86_64:
 metis 5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -648,6 +698,7 @@ metis 5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 mfem develop gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [sundials 3.2.1 gcc@5.5.0 linux-centos7-x86_64, metis 5.1.0 gcc@5.5.0
       linux-centos7-x86_64, superlu-dist develop gcc@5.5.0 linux-centos7-x86_64, openmpi
       3.1.2 gcc@5.5.0 linux-centos7-x86_64, hypre 2.15.1 gcc@5.5.0 linux-centos7-x86_64,
@@ -665,6 +716,7 @@ mfem develop gcc@5.5.0 linux-centos7-x86_64:
 mfem develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [sundials 3.2.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, metis 5.1.0 gcc@5.5.0
       linux-ubuntu18.04-x86_64, superlu-dist develop gcc@5.5.0 linux-ubuntu18.04-x86_64,
     openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, hypre 2.15.1 gcc@5.5.0 linux-ubuntu18.04-x86_64,
@@ -682,6 +734,7 @@ mfem develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
 muparser 2.2.5 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -692,6 +745,7 @@ muparser 2.2.5 gcc@5.5.0 linux-centos7-x86_64:
 muparser 2.2.5 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -702,6 +756,7 @@ muparser 2.2.5 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 nanoflann 1.2.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -713,6 +768,7 @@ nanoflann 1.2.3 gcc@5.5.0 linux-centos7-x86_64:
 nanoflann 1.2.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -724,6 +780,7 @@ nanoflann 1.2.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -735,6 +792,7 @@ ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64:
 ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -746,6 +804,7 @@ ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 netcdf 4.6.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, hdf5 1.10.4 gcc@5.5.0
       linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64, m4 1.4.18
       gcc@5.5.0 linux-centos7-x86_64]
@@ -761,6 +820,7 @@ netcdf 4.6.1 gcc@5.5.0 linux-centos7-x86_64:
 netcdf 4.6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, hdf5 1.10.4 gcc@5.5.0
       linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64, m4
       1.4.18 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -776,6 +836,7 @@ netcdf 4.6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 netlib-scalapack 2.0.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, openblas 0.3.3 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -789,6 +850,7 @@ netlib-scalapack 2.0.2 gcc@5.5.0 linux-centos7-x86_64:
 netlib-scalapack 2.0.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, openblas 0.3.3
       gcc@5.5.0 linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -802,6 +864,7 @@ netlib-scalapack 2.0.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 numactl 2.0.11 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libtool 2.4.6 gcc@5.5.0 linux-centos7-x86_64, m4 1.4.18 gcc@5.5.0
       linux-centos7-x86_64, autoconf 2.69 gcc@5.5.0 linux-centos7-x86_64, automake
       1.16.1 gcc@5.5.0 linux-centos7-x86_64]
@@ -817,6 +880,7 @@ numactl 2.0.11 gcc@5.5.0 linux-centos7-x86_64:
 numactl 2.0.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libtool 2.4.6 gcc@5.5.0 linux-ubuntu18.04-x86_64, m4 1.4.18 gcc@5.5.0
       linux-ubuntu18.04-x86_64, autoconf 2.69 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     automake 1.16.1 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -832,6 +896,7 @@ numactl 2.0.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 oce 0.18.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64, intel-tbb 2019 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -845,6 +910,7 @@ oce 0.18.3 gcc@5.5.0 linux-centos7-x86_64:
 oce 0.18.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, intel-tbb 2019 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -858,6 +924,7 @@ oce 0.18.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 omega-h 9.19.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -871,6 +938,7 @@ omega-h 9.19.1 gcc@5.5.0 linux-centos7-x86_64:
 omega-h 9.19.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0
       linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -884,6 +952,7 @@ omega-h 9.19.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -894,6 +963,7 @@ openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64:
 openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -904,6 +974,7 @@ openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [hwloc 1.11.9 gcc@5.5.0 linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0
       linux-centos7-x86_64, numactl 2.0.11 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -917,6 +988,7 @@ openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64:
 openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [hwloc 1.11.9 gcc@5.5.0 linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0
       linux-ubuntu18.04-x86_64, numactl 2.0.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -930,6 +1002,7 @@ openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 openssl 1.0.2o gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64, perl 5.26.2 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -942,6 +1015,7 @@ openssl 1.0.2o gcc@5.5.0 linux-centos7-x86_64:
 openssl 1.0.2o gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64, perl 5.26.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -955,6 +1029,7 @@ openssl 1.0.2o gcc@5.5.0 linux-ubuntu18.04-x86_64:
 p4est 2.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libtool 2.4.6 gcc@5.5.0 linux-centos7-x86_64, autoconf 2.69 gcc@5.5.0
       linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, automake
       1.16.1 gcc@5.5.0 linux-centos7-x86_64, zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64]
@@ -970,6 +1045,7 @@ p4est 2.0 gcc@5.5.0 linux-centos7-x86_64:
 p4est 2.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [libtool 2.4.6 gcc@5.5.0 linux-ubuntu18.04-x86_64, autoconf 2.69 gcc@5.5.0
       linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     automake 1.16.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -985,6 +1061,7 @@ p4est 2.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 parmetis 4.0.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [metis 5.1.0 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -998,6 +1075,7 @@ parmetis 4.0.3 gcc@5.5.0 linux-centos7-x86_64:
 parmetis 4.0.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [metis 5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1011,6 +1089,7 @@ parmetis 4.0.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 perl 5.26.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [gdbm 1.14.1 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1022,6 +1101,7 @@ perl 5.26.2 gcc@5.5.0 linux-centos7-x86_64:
 perl 5.26.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [gdbm 1.14.1 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -1033,6 +1113,7 @@ perl 5.26.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 petsc 3.10.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, python 2.7.15 gcc@5.5.0
       linux-centos7-x86_64, hdf5 1.10.4 gcc@5.5.0 linux-centos7-x86_64, metis 5.1.0
       gcc@5.5.0 linux-centos7-x86_64, superlu-dist develop gcc@5.5.0 linux-centos7-x86_64,
@@ -1054,6 +1135,7 @@ petsc 3.10.2 gcc@5.5.0 linux-centos7-x86_64:
 petsc 3.10.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, python 2.7.15
       gcc@5.5.0 linux-ubuntu18.04-x86_64, hdf5 1.10.4 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     metis 5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64, superlu-dist develop gcc@5.5.0
@@ -1076,6 +1158,7 @@ petsc 3.10.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 pflotran develop gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [petsc 3.10.2 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64, hdf5 1.10.4 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -1089,6 +1172,7 @@ pflotran develop gcc@5.5.0 linux-centos7-x86_64:
 pflotran develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [petsc 3.10.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, hdf5 1.10.4 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1102,6 +1186,7 @@ pflotran develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
 phist 1.7.3 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, trilinos 12.14.0-rc1
       gcc@5.5.0 linux-centos7-x86_64, openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64,
     cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
@@ -1117,6 +1202,7 @@ phist 1.7.3 gcc@5.5.0 linux-centos7-x86_64:
 phist 1.7.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, trilinos 12.14.0-rc1
       gcc@5.5.0 linux-ubuntu18.04-x86_64, openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -1132,6 +1218,7 @@ phist 1.7.3 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1142,6 +1229,7 @@ pkgconf 1.4.2 gcc@5.5.0 linux-centos7-x86_64:
 pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -1152,6 +1240,7 @@ pkgconf 1.4.2 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 pumi 2.2.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -1165,6 +1254,7 @@ pumi 2.2.0 gcc@5.5.0 linux-centos7-x86_64:
 pumi 2.2.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1178,6 +1268,7 @@ pumi 2.2.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 python 2.7.15 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [readline 7.0 gcc@5.5.0 linux-centos7-x86_64, openssl 1.0.2o gcc@5.5.0
       linux-centos7-x86_64, ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64, gdbm 1.14.1
       gcc@5.5.0 linux-centos7-x86_64, sqlite 3.23.1 gcc@5.5.0 linux-centos7-x86_64,
@@ -1197,6 +1288,7 @@ python 2.7.15 gcc@5.5.0 linux-centos7-x86_64:
 python 2.7.15 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64, openssl 1.0.2o gcc@5.5.0
       linux-ubuntu18.04-x86_64, ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, gdbm
       1.14.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, sqlite 3.23.1 gcc@5.5.0 linux-ubuntu18.04-x86_64,
@@ -1216,6 +1308,7 @@ python 2.7.15 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 readline 7.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [ncurses 6.1 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1227,6 +1320,7 @@ readline 7.0 gcc@5.5.0 linux-centos7-x86_64:
 readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [ncurses 6.1 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -1244,6 +1338,7 @@ rebuild-index:
 slepc 3.10.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [python 2.7.15 gcc@5.5.0 linux-centos7-x86_64, petsc 3.10.2 gcc@5.5.0
       linux-centos7-x86_64, arpack-ng 3.6.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -1257,6 +1352,7 @@ slepc 3.10.1 gcc@5.5.0 linux-centos7-x86_64:
 slepc 3.10.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [python 2.7.15 gcc@5.5.0 linux-ubuntu18.04-x86_64, petsc 3.10.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, arpack-ng 3.6.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1270,6 +1366,7 @@ slepc 3.10.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 sqlite 3.23.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [readline 7.0 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1281,6 +1378,7 @@ sqlite 3.23.1 gcc@5.5.0 linux-centos7-x86_64:
 sqlite 3.23.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [readline 7.0 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -1294,6 +1392,7 @@ stages: [stage-0, stage-1, stage-2, stage-3, stage-4, stage-5, stage-6, stage-7,
 strumpack 3.1.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64, metis 5.1.0 gcc@5.5.0 linux-centos7-x86_64, netlib-scalapack
       2.0.2 gcc@5.5.0 linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
@@ -1309,6 +1408,7 @@ strumpack 3.1.1 gcc@5.5.0 linux-centos7-x86_64:
 strumpack 3.1.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2
       gcc@5.5.0 linux-ubuntu18.04-x86_64, metis 5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64,
     netlib-scalapack 2.0.2 gcc@5.5.0 linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0
@@ -1325,6 +1425,7 @@ strumpack 3.1.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 suite-sparse 5.3.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [metis 5.1.0 gcc@5.5.0 linux-centos7-x86_64, openblas 0.3.3 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -1338,6 +1439,7 @@ suite-sparse 5.3.0 gcc@5.5.0 linux-centos7-x86_64:
 suite-sparse 5.3.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [metis 5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64, openblas 0.3.3 gcc@5.5.0
       linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1351,6 +1453,7 @@ suite-sparse 5.3.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 sundials 3.2.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [hypre 2.15.1 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -1364,6 +1467,7 @@ sundials 3.2.1 gcc@5.5.0 linux-centos7-x86_64:
 sundials 3.2.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [hypre 2.15.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0
       linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1377,6 +1481,7 @@ sundials 3.2.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 superlu-dist develop gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, metis 5.1.0 gcc@5.5.0
       linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0 linux-centos7-x86_64, parmetis
       4.0.3 gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64]
@@ -1392,6 +1497,7 @@ superlu-dist develop gcc@5.5.0 linux-centos7-x86_64:
 superlu-dist develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, metis 5.1.0 gcc@5.5.0
       linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, parmetis
       4.0.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64]
@@ -1407,6 +1513,7 @@ superlu-dist develop gcc@5.5.0 linux-ubuntu18.04-x86_64:
 tasmanian 6.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, cmake 3.12.3 gcc@5.5.0
       linux-centos7-x86_64]
   image: scottwittenburg/spack_builder_centos_7
@@ -1420,6 +1527,7 @@ tasmanian 6.0 gcc@5.5.0 linux-centos7-x86_64:
 tasmanian 6.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, cmake 3.12.3 gcc@5.5.0
       linux-ubuntu18.04-x86_64]
   image: scottwittenburg/spack_builder_ubuntu_18.04
@@ -1433,6 +1541,7 @@ tasmanian 6.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 trilinos 12.14.0-rc1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-centos7-x86_64, hdf5 1.10.4 gcc@5.5.0
       linux-centos7-x86_64, glm 0.9.7.1 gcc@5.5.0 linux-centos7-x86_64, metis 5.1.0
       gcc@5.5.0 linux-centos7-x86_64, superlu-dist develop gcc@5.5.0 linux-centos7-x86_64,
@@ -1456,6 +1565,7 @@ trilinos 12.14.0-rc1 gcc@5.5.0 linux-centos7-x86_64:
 trilinos 12.14.0-rc1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [openblas 0.3.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, hdf5 1.10.4 gcc@5.5.0
       linux-ubuntu18.04-x86_64, glm 0.9.7.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, metis
       5.1.0 gcc@5.5.0 linux-ubuntu18.04-x86_64, superlu-dist develop gcc@5.5.0 linux-ubuntu18.04-x86_64,
@@ -1479,6 +1589,7 @@ trilinos 12.14.0-rc1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 util-macros 1.19.1 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1489,6 +1600,7 @@ util-macros 1.19.1 gcc@5.5.0 linux-centos7-x86_64:
 util-macros 1.19.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -1499,6 +1611,7 @@ util-macros 1.19.1 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 xsdk 0.4.0 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [phist 1.7.3 gcc@5.5.0 linux-centos7-x86_64, pumi 2.2.0 gcc@5.5.0
       linux-centos7-x86_64, glm 0.9.7.1 gcc@5.5.0 linux-centos7-x86_64, superlu-dist
       develop gcc@5.5.0 linux-centos7-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-centos7-x86_64,
@@ -1568,6 +1681,7 @@ xsdk 0.4.0 gcc@5.5.0 linux-centos7-x86_64:
 xsdk 0.4.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: [phist 1.7.3 gcc@5.5.0 linux-ubuntu18.04-x86_64, pumi 2.2.0 gcc@5.5.0
       linux-ubuntu18.04-x86_64, glm 0.9.7.1 gcc@5.5.0 linux-ubuntu18.04-x86_64, superlu-dist
       develop gcc@5.5.0 linux-ubuntu18.04-x86_64, openmpi 3.1.2 gcc@5.5.0 linux-ubuntu18.04-x86_64,
@@ -1638,6 +1752,7 @@ xsdk 0.4.0 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 xz 5.2.4 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1648,6 +1763,7 @@ xz 5.2.4 gcc@5.5.0 linux-centos7-x86_64:
 xz 5.2.4 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]
@@ -1658,6 +1774,7 @@ xz 5.2.4 gcc@5.5.0 linux-ubuntu18.04-x86_64:
 zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_centos_7
   script: [./rebuild-package.sh]
@@ -1668,6 +1785,7 @@ zlib 1.2.11 gcc@5.5.0 linux-centos7-x86_64:
 zlib 1.2.11 gcc@5.5.0 linux-ubuntu18.04-x86_64:
   artifacts:
     paths: [local_mirror/build_cache, jobs_scratch_dir]
+    when: always
   dependencies: []
   image: scottwittenburg/spack_builder_ubuntu_18.04
   script: [./rebuild-package.sh]

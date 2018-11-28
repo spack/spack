@@ -411,6 +411,7 @@ def release_jobs(parser, args):
                             'local_mirror/build_cache',
                             'jobs_scratch_dir',
                         ],
+                        'when': 'always',
                     },
                     'dependencies': job_dependencies,
                 }
