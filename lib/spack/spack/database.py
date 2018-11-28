@@ -1019,20 +1019,11 @@ class Database(object):
 
         return results
 
-    def query(
-            self,
-            query_spec=any,
-            known=any,
-            installed=True,
-            explicit=any,
-            start_date=None,
-            end_date=None,
-            hashes=None
-    ):
-        kwargs = {'query_spec': query_spec, 'known': known,
-                  'installed': installed, 'explicit': explicit,
-                  'start_date': start_date, 'end_date': end_date,
-                  'hashes': hashes}
+    def query_local(self, *args, **kwargs):
+        with self.read_transaction():
+            return sorted(self._query(*args, **kwargs))
+
+    def query(self, *args, **kwargs):
 
         results = []
         for upstream_db in self.upstream_dbs:
@@ -1041,8 +1032,7 @@ class Database(object):
             # us anyway (so e.g. they should never uninstall specs)
             results.extend(upstream_db._query(**kwargs) or [])
 
-        with self.read_transaction():
-            results.extend(self._query(**kwargs))
+        results.extend(self.query_local(*args, **kwargs))
 
         return sorted(results)
 
