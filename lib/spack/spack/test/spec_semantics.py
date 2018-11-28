@@ -743,3 +743,16 @@ class TestSpecSematics(object):
             expected = getattr(arch, prop, "")
             actual = spec.format(named_str)
             assert str(expected) == actual
+
+    @pytest.mark.regression('9908')
+    def test_spec_flags_maintain_order(self):
+        # Spack was assembling flags in a manner that could result in
+        # different orderings for repeated concretizations of the same
+        # spec and config
+        spec_str = 'libelf %gcc@4.7.2 os=redhat6'
+        for _ in range(25):
+            s = Spec(spec_str).concretized()
+            assert all(
+                s.compiler_flags[x] == ['-O0', '-g']
+                for x in ('cflags', 'cxxflags', 'fflags')
+            )
