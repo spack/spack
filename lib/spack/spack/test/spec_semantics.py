@@ -746,12 +746,13 @@ class TestSpecSematics(object):
 
     @pytest.mark.regression('9908')
     def test_spec_flags_maintain_order(self):
+        # Spack was assembling flags in a manner that could result in
+        # different orderings for repeated concretizations of the same
+        # spec and config
         spec_str = 'libelf %gcc@4.7.2 os=redhat6'
-        hashes = set(
-            Spec(spec_str).concretized().dag_hash() for _ in range(100)
-        )
-
-        # The hash has been precomputed and should be the same
-        # on every architecture.
-        assert len(hashes) == 1
-        assert hashes.pop() == 'h76g3noivss5gdrs2il2ghaqw3fba22m'
+        for _ in range(25):
+            s = Spec(spec_str).concretized()
+            assert all(
+                s.compiler_flags[x] == ['-O0', '-g']
+                for x in ('cflags', 'cxxflags', 'fflags')
+            )
