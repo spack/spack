@@ -22,9 +22,13 @@ class Netcdf(AutotoolsPackage):
     and sharing of array-oriented scientific data."""
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
-    url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
+    git      = "https://github.com/Unidata/netcdf-c"
+    url      = "https://github.com/Unidata/netcdf-c/archive/v4.6.2.tar.gz"
 
-    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
+    version('master', branch='master')
+    version('4.6.2',     sha256='673936c76ae0c496f6dde7e077f5be480afc1e300adb2c200bf56fbe22e5a82a')
+    version('4.6.1',     sha256='a2fabf27c72a5ee746e3843e1debbaad37cd035767eaede2045371322211eebb')
+    version('4.6.0',     sha256='6d740356399aac12290650325a05aec2fe92c1905df10761b2b0100994197725')
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
     version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
