@@ -38,8 +38,10 @@ modules:
       - neurodamus
       - parquet-converters
       - python
+      - reportinglib
       - spykfunc
       - steps
+      - synapsetool
       - touchdetector
     blacklist:
       - '%gcc'
