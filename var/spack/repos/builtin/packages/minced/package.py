@@ -17,6 +17,7 @@ class Minced(Package):
 
     version('0.3.2', sha256='334aee43292d0b657c4849f818ddfb3ac7811eb505502bf24a01d66719084b44')
     version('0.2.0', '32544f5a523f10fece6a127699e11245')
+    version('0.1.6', sha256='035e343591b4595c571e17b0b3f526a01a23c3a47ebafb66f20ba667b29b3ed7')
 
     depends_on('java', type=('build', 'run'))
 

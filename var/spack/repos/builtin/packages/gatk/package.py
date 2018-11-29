@@ -14,6 +14,7 @@ class Gatk(Package):
     homepage = "https://software.broadinstitute.org/gatk/"
     url      = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip"
 
+    version('4.0.11.0', sha256='5ee23159be7c65051335ac155444c6a49c4d8e3515d4227646c0686819934536')
     version('4.0.8.1', sha256='6d47463dfd8c16ffae82fd29e4e73503e5b7cd0fcc6fea2ed50ee3760dd9acd9',
             url='https://github.com/broadinstitute/gatk/archive/4.0.8.1.tar.gz')
     version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
