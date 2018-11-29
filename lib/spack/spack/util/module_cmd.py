@@ -125,7 +125,7 @@ def unload_module(mod):
 
     try:
         exec(compile(unload_output, '<string>', 'exec'))
-    except:
+    except Exception:
         tty.debug("Module unload output of {0}:\n{1}\n".format(
             mod, unload_output))
         raise
@@ -151,7 +151,7 @@ def load_module(mod):
         for i, word in enumerate(text):
             if word == 'conflict':
                 unload_module(text[i + 1])
-    except:
+    except Exception:
         tty.debug("Module show output of {0}:\n{1}\n".format(
             mod, module_content))
         raise
@@ -164,7 +164,7 @@ def load_module(mod):
 
     try:
         exec(compile(load, '<string>', 'exec'))
-    except:
+    except Exception:
         tty.debug("Module load output of {0}:\n{1}\n".format(mod, load))
         raise
 
