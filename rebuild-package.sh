@@ -54,12 +54,6 @@ cleanup() {
             exit_code=0
         fi
 
-        [ -n "$stdout_pid" ] && kill "$stdout_pid" ; unset stdout_pid
-        [ -n "$stderr_pid" ] && kill "$stderr_pid" ; unset stderr_pid
-        [ -n "$log_pid"    ] && kill "$log_pid"    ; unset log_pid
-
-        wait
-
         restore_io
 
         if [ "$( type -t finalize )" '=' 'function' ] ; then
@@ -82,41 +76,12 @@ begin_logging() {
 
     rm -rf "$JOB_LOG_DIR/cdash_log.txt"
 
-    mkfifo "$JOB_LOG_DIR/stdout"
-    mkfifo "$JOB_LOG_DIR/stderr"
-
-    (
-        stdbuf -o0 cat "$JOB_LOG_DIR/stdout" |
-        stdbuf -i0 -o0 sed -s 's/^/STDOUT: /g' >> "$JOB_LOG_DIR/cdash_log.txt"
-    ) &
-    stdout_pid="$!"
-
-    (
-        stdbuf -o0 cat "$JOB_LOG_DIR/stderr" |
-        stdbuf -i0 -o0 sed -s 's/^/STDERR: /g' >> "$JOB_LOG_DIR/cdash_log.txt"
-    ) &
-    stderr_pid="$!"
-
     # NOTE: Here, some redirects are set up
     exec 3>&1 # fd 3 is now a dup of stdout
     exec 4>&2 # fd 4 is now a dup of stderr
 
-    # fd 1 (formerly stdout) now goes to the named pipe set aside for
-    # redirecting stdout
-    exec  >"$JOB_LOG_DIR/stdout"
-
-    # fd 2 (formerly stderr) now goes to the named pipe set aside for
-    # redirecting stderr
-    exec 2>"$JOB_LOG_DIR/stderr"
-
-    # The named pipes are unlinked (*not* removed).
-    # Since all opened operations are complete, we don't need to actually keep
-    # them visible on the file system.  The OS will garbage collect their inodes
-    # once the last fd pointing to them is closed.
-    #
-    # BTW, this is, more-or-less, how python implements os.pipe() on linux
-    unlink "$JOB_LOG_DIR/stdout"
-    unlink "$JOB_LOG_DIR/stderr"
+    # stdout and stderr are joined and redirected to the log
+    exec &> "$JOB_LOG_DIR/cdash_log.txt"
 
     set -x
 }
