@@ -118,11 +118,17 @@ def get_module_cmd_from_bash(bashopts=''):
 def unload_module(mod):
     """Takes a module name and unloads the module from the environment. It does
     not check whether conflicts arise from the unloaded module"""
+    tty.debug("Unloading module: {0}".format(mod))
+
     modulecmd = get_module_cmd()
     unload_output = modulecmd('unload', mod, output=str, error=str)
-    tty.debug("Module unload output of {0}:\n".format(mod) +
-              unload_output + "\n")
-    exec(compile(unload_output, '<string>', 'exec'))
+
+    try:
+        exec(compile(unload_output, '<string>', 'exec'))
+    except:
+        tty.debug("Module unload output of {0}:\n{1}\n".format(
+            mod, unload_output))
+        raise
 
 
 def load_module(mod):
@@ -130,6 +136,8 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("Loading module: {0}".format(mod))
+
     # Create an executable of the module command that will output python code
     modulecmd = get_module_cmd()
 
@@ -138,18 +146,27 @@ def load_module(mod):
     # for ease of programming because unloading a module that is not
     # loaded does nothing.
     module_content = modulecmd('show', mod, output=str, error=str)
-    tty.debug("Module contents of {0}:\n".format(mod) + module_content + "\n")
     text = module_content.split()
-    for i, word in enumerate(text):
-        if word == 'conflict':
-            unload_module(text[i + 1])
+    try:
+        for i, word in enumerate(text):
+            if word == 'conflict':
+                unload_module(text[i + 1])
+    except:
+        tty.debug("Module show output of {0}:\n{1}\n".format(
+            mod, module_content))
+        raise
 
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr
     load = modulecmd('load', mod, output=str, error='/dev/null')
     if not load:
         load = modulecmd('load', mod, error=str)
-    exec(compile(load, '<string>', 'exec'))
+
+    try:
+        exec(compile(load, '<string>', 'exec'))
+    except:
+        tty.debug("Module load output of {0}:\n{1}\n".format(mod, load))
+        raise
 
 
 def get_path_arg_from_module_line(line):
