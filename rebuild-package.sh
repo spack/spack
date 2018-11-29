@@ -45,38 +45,36 @@ mkdir -p ${SPEC_DIR}
 cleanup() {
     set +x
 
-    if [ -n "$exit_code" ] ; then
-        return
+    if [ -z "$exit_code" ] ; then
+
+        exit_code=$1
+        if [ -z "$exit_code" ] ; then
+            exit_code=0
+        fi
+
+        [ -n "$stdout_pid" ] && kill "$stdout_pid" ; unset stdout_pid
+        [ -n "$stderr_pid" ] && kill "$stderr_pid" ; unset stderr_pid
+        [ -n "$log_pid"    ] && kill "$log_pid"    ; unset log_pid
+
+        wait
+
+        restore_io
+
+        if [ "$( type -t finalize )" '=' 'function' ] ; then
+            finalize "$JOB_LOG_DIR/cdash_log.txt"
+        fi
+
+        # We can clean these out later on, once we have a good sense for
+        # how the logging infrastructure is working
+        # rm -rf "$JOB_LOG_DIR"
     fi
 
-    exit_code=$1
-    if [ -n "$stdout_pid" ] ; then kill "$stdout_pid" ; unset stdout_pid ; fi
-    if [ -n "$stderr_pid" ] ; then kill "$stderr_pid" ; unset stderr_pid ; fi
-    if [ -n "$log_pid"    ] ; then kill "$log_pid"    ; unset log_pid    ; fi
-
-    wait
-
-    exec  >&-
-    exec 2>&-
-
-    exec  >&3
-    exec 2>&4
-
-    exec 3>&-
-    exec 4>&-
-
-    if [ "$( type -t finalize )" '=' 'function' ] ; then
-        finalize "$JOB_LOG_DIR/cdash_log.txt"
-    fi
-
-    # We can clean these out later on, once we have a good sense for
-    # how the logging infrastructure is working
-    # rm -rf "$JOB_LOG_DIR"
+    \exit $exit_code
 }
 
 begin_logging() {
-    trap "cleanup 1; \\exit $exit_code" INT TERM QUIT
-    trap "cleanup 0; \\exit $exit_code" EXIT
+    trap "cleanup 1; \\exit \$exit_code" INT TERM QUIT
+    trap "cleanup 0; \\exit \$exit_code" EXIT
 
     rm -rf "$JOB_LOG_DIR/cdash_log.txt"
 
