@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 from spack import *
 
 
@@ -62,5 +63,10 @@ class Cgns(CMakePackage):
                 ])
         else:
             options.extend(['-DCGNS_ENABLE_HDF5=OFF'])
+
+        if sys.platform == 'darwin':
+            options.extend([
+                '-DCMAKE_MACOSX_RPATH:BOOL=ON'
+            ])
 
         return options
