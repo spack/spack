@@ -67,9 +67,11 @@ class Scorep(AutotoolsPackage):
 
     depends_on("mpi")
     depends_on("papi")
-    depends_on('pdt')
 
     variant('shmem', default=False, description='Enable shmem tracing')
+    variant('pdt', default=False, description='Enable pdt automatic instrumentation')
+
+    depends_on('pdt', when='+pdt')
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
@@ -85,8 +87,10 @@ class Scorep(AutotoolsPackage):
             "--with-cube=%s" % spec['cube'].prefix.bin,
             "--with-papi-header=%s" % spec['papi'].prefix.include,
             "--with-papi-lib=%s" % spec['papi'].prefix.lib,
-            "--with-pdt=%s" % spec['pdt'].prefix.bin,
             "--enable-shared"]
+
+        if '+pdt' in spec:
+            config_args.append("--with-pdt=%s" % spec['pdt'].prefix.bin)
 
         cname = spec.compiler.name
         config_args.append('--with-nocross-compiler-suite={0}'.format(cname))

@@ -42,8 +42,19 @@ class Otf2(AutotoolsPackage):
     version('1.2.1', '8fb3e11fb7489896596ae2c7c83d7fc8')
 
     def configure_args(self):
-        return [
-            '--enable-shared',
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
-        ]
+
+        spec = self.spec
+        configure_args = ['--enable-shared',
+                          'CFLAGS={0}'.format(self.compiler.pic_flag),
+                          'CXXFLAGS={0}'.format(self.compiler.pic_flag)]
+
+        if '%intel' in spec:
+            configure_args.append('--with-nocross-compiler-suite=intel')
+        elif '%gcc' in spec:
+            configure_args.append('--with-nocross-compiler-suite=gcc')
+        elif '%pgi' in spec:
+            configure_args.append('--with-nocross-compiler-suite=pgi')
+        elif '%xl' in spec:
+            configure_args.append('--with-nocross-compiler-suite=ibm')
+
+        return configure_args

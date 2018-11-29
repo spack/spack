@@ -62,6 +62,15 @@ class Cube(AutotoolsPackage):
         if '+gui' not in spec:
             configure_args.append('--without-gui')
 
+        if '%intel' in spec:
+            configure_args.append('--with-nocross-compiler-suite=intel')
+        elif '%gcc' in spec:
+            configure_args.append('--with-nocross-compiler-suite=gcc')
+        elif '%pgi' in spec:
+            configure_args.append('--with-nocross-compiler-suite=pgi')
+        elif '%xl' in spec:
+            configure_args.append('--with-nocross-compiler-suite=ibm')
+
         return configure_args
 
     def install(self, spec, prefix):

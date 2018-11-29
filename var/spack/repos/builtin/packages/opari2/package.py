@@ -45,4 +45,19 @@ class Opari2(AutotoolsPackage):
     version('1.1.2', '9a262c7ca05ff0ab5f7775ae96f3539e')
 
     def configure_args(self):
-        return ["--enable-shared"]
+
+        spec = self.spec
+        configure_args = ['--enable-shared',
+                          'CFLAGS={0}'.format(self.compiler.pic_flag),
+                          'CXXFLAGS={0}'.format(self.compiler.pic_flag)]
+
+        if '%intel' in spec:
+            configure_args.append('--with-nocross-compiler-suite=intel')
+        elif '%gcc' in spec:
+            configure_args.append('--with-nocross-compiler-suite=gcc')
+        elif '%pgi' in spec:
+            configure_args.append('--with-nocross-compiler-suite=pgi')
+        elif '%xl' in spec:
+            configure_args.append('--with-nocross-compiler-suite=ibm')
+
+        return configure_args
