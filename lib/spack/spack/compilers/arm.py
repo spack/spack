@@ -20,10 +20,10 @@ class Arm(Compiler):
     fc_names = ['armflang']
 
     # Named wrapper links within lib/spack/env
-    link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++',
-                  'f77': 'clang/flang',
-                  'fc': 'clang/flang'}
+    link_paths = {'cc': 'arm/armclang',
+                  'cxx': 'arm/armclang++',
+                  'f77': 'arm/armflang',
+                  'fc': 'arm/armflang'}
 
     @property
     def openmp_flag(self):
