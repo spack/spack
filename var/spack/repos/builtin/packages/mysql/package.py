@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
+
 class Mysql(CMakePackage):
     homepage = "http://dev.mysql.com"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.11.tar.gz"
@@ -13,4 +14,3 @@ class Mysql(CMakePackage):
 
     depends_on('boost@1.66.0', when='@8.0.11')
     depends_on('boost@1.59.0', when='@5.7.22')
-
