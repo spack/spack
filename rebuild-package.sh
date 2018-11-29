@@ -20,6 +20,8 @@
 ### MIRROR_URL
 ###
 
+shopt -s expand_aliases
+
 export FORCE_UNSAFE_CONFIGURE=1
 
 # TEMP_DIR="$( mktemp -d )"
@@ -71,6 +73,8 @@ cleanup() {
 
     \exit $exit_code
 }
+
+alias exit='cleanup'
 
 begin_logging() {
     trap "cleanup 1; \\exit \$exit_code" INT TERM QUIT
