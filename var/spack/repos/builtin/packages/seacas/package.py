@@ -54,9 +54,16 @@ class Seacas(CMakePackage):
     # The I/O libraries (exodus, IOSS) are always built
     # -- required of both applications and legacy variants.
     variant('applications', default=True,
-            description='Build all "current" SEACAS applications. This includes a debatable list of essential applications: aprepro, conjoin, ejoin, epu, exo2mat, mat2exo, exo_format, exodiff, explore, grepos, mat2exo, nemslice, nemspread')
+            description='Build all "current" SEACAS applications. This'
+            ' includes a debatable list of essential applications: '
+            'aprepro, conjoin, ejoin, epu, exo2mat, mat2exo, '
+            'exo_format, exodiff, explore, grepos, mat2exo, '
+            'nemslice, nemspread')
     variant('legacy', default=True,
-            description='Build all "legacy" SEACAS applications. This includes a debatable list of "legacy" applications: algebra, blot, exomatlab, exotxt, fastq, gen3d, genshell, gjoin, mapvar, mapvar-kd, numbers, txtexo, nemesis')
+            description='Build all "legacy" SEACAS applications. This includes'
+            ' a debatable list of "legacy" applications: algebra, blot, '
+            'exomatlab, exotxt, fastq, gen3d, genshell, gjoin, mapvar, '
+            'mapvar-kd, numbers, txtexo, nemesis')
 
     # ###################### Dependencies ##########################
 
@@ -78,7 +85,6 @@ class Seacas(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cxx_flags = []
         options = []
 
         # #################### Base Settings #######################
@@ -114,15 +120,15 @@ class Seacas(CMakePackage):
 
         # Don't want everything; handle the subsets:
         options.extend([
-                '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=OFF',
-                '-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=OFF',
-                '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=OFF',
-                '-DSEACASProj_ENABLE_SEACASIoss:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASExodus:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
+            '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=OFF',
+            '-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=OFF',
+            '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=OFF',
+            '-DSEACASProj_ENABLE_SEACASIoss:BOOL=ON',
+            '-DSEACASProj_ENABLE_SEACASExodus:BOOL=ON',
+            '-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=%s' % (
+                'ON' if '+fortran' in spec else 'OFF'),
+            '-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=%s' % (
+                'ON' if '+fortran' in spec else 'OFF'),
         ])
 
         if '+applications' in spec:
