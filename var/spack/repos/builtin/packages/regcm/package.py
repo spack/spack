@@ -7,7 +7,7 @@ from spack import *
 
 
 class Regcm(AutotoolsPackage):
-    """RegCM ICTP Regional Climate Model."""
+    '''RegCM, ICTP Regional Climate Model (https://ictp.it).'''
 
     homepage = 'https://gforge.ictp.it/gf/project/regcm/'
 
@@ -27,9 +27,9 @@ class Regcm(AutotoolsPackage):
     # GCC. Only GCC and Intel are supported.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
     variant('extension', default=None, values=extensions, multi=True,
-            description="Build extensions for a specific architecture. "
-                        "Only available on GCC and Intel; GCC allows a single "
-                        "architecture optimization.")
+            description='Build extensions for a specific architecture. '
+                        'Only available on GCC and Intel; GCC allows a single '
+                        'architecture optimization.')
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
@@ -62,33 +62,36 @@ class Regcm(AutotoolsPackage):
         optimizations = self.spec.variants['extension'].value
         if len(optimizations) > 1 and self.spec.satisfies('%gcc'):
             # https://github.com/spack/spack/issues/974
-            raise InstallError("The GCC compiler does not support multiple "
-                               "architecture optimizations.")
+            raise InstallError('The GCC compiler does not support multiple '
+                               'architecture optimizations.')
 
         if optimizations[0] and (self.spec.satisfies('%gcc') or
                                  self.spec.satisfies('%intel')):
             args += ('--enable-' + ext for ext in optimizations)
-
         elif optimizations[0]:
             # This means the user chose some optimizations on a different
             # compiler from GCC and Intel, which are the only compiler
-            # supported in the RegCM 4.7.x versions.
-            raise InstallError("Architecture optimizations are available only "
-                               "with GCC and Intel compilers.")
+            # supported with RegCM 4.7.x.
+            raise InstallError('Architecture optimizations are available only '
+                               'for GCC and Intel compilers.')
 
         for opt in ('debug', 'profile', 'singleprecision'):
             if '+{0}'.format(opt) in self.spec:
                 args.append('--enable-' + opt)
 
-        # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
-        # is ignored by the configure, so we need to set the option in FCFLAGS.
-        if self.compiler.fc.endswith('gfortran'):
-            args.append('FCFLAGS=-fno-range-check')
+        # RegCM doesn't listen to the FFLAGS variable, so we have to convert it
+        # to FCFLAGS.
+        fcflags = list(self.spec.compiler_flags['fflags'])
 
-        # The configure needs a hint on the Intel Fortran MPI compiler,
-        # otherwise it doesn't find it and tries to compile MPI Fortran code
-        # with the normal Fortran compiler.
-        if self.spec.satisfies('%intel'):
-            args.append('MPIFC=' + self.spec['mpi'].mpifc)
+        # RegCM complains when compiled with gfortran.
+        if self.compiler.fc.endswith('gfortran'):
+            fcflags.append('-fno-range-check')
+
+        args.append('FCFLAGS=' + ' '.join(fcflags))
+
+        # The configure needs a hint on the MPI Fortran compiler, otherwise it
+        # doesn't find it and tries to compile MPI Fortran code with the system
+        # Fortran non-MPI compiler.
+        args.append('MPIFC=' + self.spec['mpi'].mpifc)
 
         return args
