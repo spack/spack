@@ -35,7 +35,7 @@ class Seacas(CMakePackage):
             description='Compile with Fortran support')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('mpi', default=False, description='Enables MPI parallelism.')
+    variant('mpi', default=True, description='Enables MPI parallelism.')
 
     variant('thread_safe',  default=False,
             description='Enable thread-safe exodus and IOSS libraries')
