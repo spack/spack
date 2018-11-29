@@ -12,7 +12,7 @@ class ParallelNetcdf(AutotoolsPackage):
     Unidata's NetCDF."""
 
     homepage = "https://trac.mcs.anl.gov/projects/parallel-netcdf"
-    url      = "http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-1.10.0.tar.gz"
+    url      = "http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-1.6.1.tar.gz"
     list_url = "http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html"
 
     version('1.10.0', sha256='ed189228b933cfeac3b7b4f8944eb00e4ff2b72cf143365b1a77890980663a09')
