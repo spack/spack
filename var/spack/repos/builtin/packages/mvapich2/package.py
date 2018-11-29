@@ -64,7 +64,7 @@ class Mvapich2(AutotoolsPackage):
         description='List of the process managers to activate',
         values=disjoint_sets(
             ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
-        ).with_error(
+        ).prohibit_empty_set().with_error(
             "'slurm' or 'auto' cannot be activated along with "
             "other process managers"
         ).with_default('auto'),

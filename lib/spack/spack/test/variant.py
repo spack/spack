@@ -714,14 +714,14 @@ def test_disjoint_set_initialization():
     # Test that no error is thrown when the sets are disjoint
     d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f'))
 
-    assert d.default is None
+    assert d.default is 'none'
     assert d.multi is True
-    assert set(x for x in d) == set(['a', 'b', 'c', 'e', 'f'])
+    assert set(x for x in d) == set(['none', 'a', 'b', 'c', 'e', 'f'])
 
 
 def test_disjoint_set_fluent_methods():
     # Construct an object without the empty set
-    d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f'))
+    d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f')).prohibit_empty_set()
     assert set(('none',)) not in d.sets
 
     # Call this 2 times to check that no matter whether

@@ -633,6 +633,9 @@ class DisjointSetsOfValues(Sequence):
         if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
             raise error.SpecError('sets in input must be disjoint')
 
+        #: Attribute used to track values which correspond to
+        #: features which can be enabled or disabled as understood by the
+        #: package's build system.
         self.feature_values = tuple(itertools.chain.from_iterable(self.sets))
         self.default = None
         self.multi = True
@@ -677,9 +680,9 @@ class DisjointSetsOfValues(Sequence):
         sets = [s for s in self.sets if s != self._empty_set]
         object_without_empty_set = type(self)(*sets)
         object_without_empty_set.error_fmt = self.error_fmt
-        object_without_empty_set.feature_values = [
+        object_without_empty_set.feature_values = tuple(
             x for x in self.feature_values if x != 'none'
-        ]
+        )
         return object_without_empty_set
 
     def __getitem__(self, idx):
@@ -751,7 +754,21 @@ def auto_or_any_combination_of(*values):
 
 #: Multi-valued variant that allows any combination picking
 #: from one of multiple disjoint sets
-disjoint_sets = DisjointSetsOfValues
+def disjoint_sets(*sets):
+    """Multi-valued variant that allows any combination picking from one
+    of multiple disjoint sets of values, and also allows the user to specify
+    'none' (as a string) to choose none of them.
+
+    It is up to the package implementation to handle the value 'none'
+    specially, if at all.
+
+    Args:
+        *sets:
+
+    Returns:
+        a properly initialized instance of DisjointSetsOfValues
+    """
+    return DisjointSetsOfValues(*sets).allow_empty_set().with_default('none')
 
 
 class DuplicateVariantError(error.SpecError):
