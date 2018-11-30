@@ -13,7 +13,7 @@ class SentieonGenomics(Package):
     The Sentieon tools are deployable on any CPU-based computing system.
     Please set the path to the sentieon license server with:
 
-    Please append the following to your license.dat file located in the
+    Please create the following license.dat file located in the
     $SPACK_ROOT/etc/spack/licenses/SentieonGenomics/license.dat
 
     SERVER [FQDN]:[PORT]
