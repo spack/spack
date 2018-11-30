@@ -71,6 +71,8 @@ class Rose(AutotoolsPackage):
     variant('z3', default=False, description='Enable z3 theorem prover')
     depends_on('z3', when='+z3')
 
+    variant('cxx11', default=True)
+
     build_directory = 'spack-build'
 
     def autoreconf(self, spec, prefix):
@@ -110,6 +112,7 @@ class Rose(AutotoolsPackage):
             "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
             '--disable-tests-directory' if '+tests' not in spec else '',
             '--enable-tutorial-directory={0}'.format('no'),
+            '--without-java',
         ]
         
         if '+cxx11' in spec:
