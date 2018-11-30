@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class Rocksdb(MakefilePackage):
     """RocksDB: A Persistent Key-Value Store for Flash and RAM Storage"""
@@ -37,20 +37,19 @@ class Rocksdb(MakefilePackage):
     version('5.16.6',  sha256='f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033')
     version('5.15.10', sha256='26d5d4259fa352ae1604b5b4d275f947cacc006f4f7d2ef0b815056601b807c0')
 
-
-
-    variant('static', default=True, description='Build static library')
-    variant('zlib', default=True, description='Enable zlib compression support')
     variant('bz2', default=False, description='Enable bz2 compression support')
     variant('lz4', default=True, description='Enable lz4 compression support')
     variant('snappy', default=False, description='Enable snappy compression support')
+    variant('static', default=True, description='Build static library')
+    variant('zlib', default=True, description='Enable zlib compression support')
     variant('zstd', default=False, description='Enable zstandard compression support')
-    depends_on('zlib', when='+zlib')
+
     depends_on('bzip2', when='+bzip2')
+    depends_on('gflags')
     depends_on('lz4', when='+lz4')
     depends_on('snappy', when='+snappy')
+    depends_on('zlib', when='+zlib')
     depends_on('zstd', when='+zstd')
-    depends_on('gflags')
 
     def build(self, spec, prefix):
         cflags = []
@@ -62,24 +61,21 @@ class Rocksdb(MakefilePackage):
         if '+bz2' in self.spec:
             cflags.append('-I' + self.spec['bz2'].prefix.include)
             ldflags.append(self.spec['bz2'].libs.ld_flags)
-        for pkg in ['lz4', 'snappy', 'zstd']: 
+
+        for pkg in ['lz4', 'snappy', 'zstd']:
             if '+' + pkg in self.spec:
                 cflags.append(self.spec[pkg].headers.cpp_flags)
                 ldflags.append(self.spec[pkg].libs.ld_flags)
-        
+
         cflags.append(self.spec['gflags'].headers.cpp_flags)
         ldflags.append(self.spec['gflags'].libs.ld_flags)
-            
+
         env['CFLAGS'] = ' '.join(cflags)
         env['PLATFORM_FLAGS'] = ' '.join(ldflags)
         env['INSTALL_PATH'] = self.spec.prefix
-        build_type = ''
-        if '+static' in spec: 
-            build_type = 'install-static'
-        else:
-            build_type = 'install-shared'
-        make(build_type)
 
+        build_type = 'install-static' if '+static' in spec else 'install-shared'
+        make(build_type)
 
     def install(self, spec, prefix):
         pass
