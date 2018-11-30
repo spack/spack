@@ -45,6 +45,7 @@ class Hwloc(AutotoolsPackage):
     version('1.11.1', 'feb4e416a1b25963ed565d8b42252fdc')
     version('1.9',    '1f9f9155682fe8946a97c08896109508')
 
+    variant('nvml', default=True, description="Support NVML device discovery")
     variant('cuda', default=False, description="Support CUDA devices")
     variant('libxml2', default=True, description="Build with libxml2")
     variant('pci', default=(sys.platform != 'darwin'),
@@ -78,6 +79,7 @@ class Hwloc(AutotoolsPackage):
             args.append('--enable-netloc')
 
         args.extend(self.enable_or_disable('cairo'))
+        args.extend(self.enable_or_disable('nvml'))
         args.extend(self.enable_or_disable('cuda'))
         args.extend(self.enable_or_disable('libxml2'))
         args.extend(self.enable_or_disable('pci'))
