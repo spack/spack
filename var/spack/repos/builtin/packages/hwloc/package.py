@@ -32,6 +32,8 @@ class Hwloc(AutotoolsPackage):
     version('2.0.2',  '71d1211eaa4b25ac7ad80cf326784e87')
     version('2.0.1',  '442b2482bb5b81983ed256522aadbf94')
     version('2.0.0',  '027e6928ae0b5b64c821d0a71a61cd82')
+    version('1.11.11', sha256='74329da3be1b25de8e98a712adb28b14e561889244bf3a8138afe91ab18e0b3a')
+    version('1.11.10', sha256='0a2530b739d9ebf60c4c1e86adb5451a20d9e78f7798cf78d0147cc6df328aac')
     version('1.11.9', '4d5f5da8b1d09731d82e865ecf3fa399')
     version('1.11.8', 'a0fa1c9109a4d8b4b6568e62cc9b6e30')
     version('1.11.7', '867a5266675e5bf1ef4ab66c459653f8')
