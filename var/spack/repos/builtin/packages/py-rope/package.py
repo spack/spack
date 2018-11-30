@@ -14,4 +14,6 @@ class PyRope(PythonPackage):
 
     version('0.10.5', '21882fd7c04c29d09f75995d8a088be7')
 
+    patch('fix_readme_unicode.patch')
+
     depends_on('py-setuptools', type='build')
