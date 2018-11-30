@@ -22,7 +22,7 @@ class Cgns(CMakePackage):
     variant('scoping', default=True, description='Enable scoping')
     variant('mpi', default=True, description='Enable parallel cgns')
     variant('int64', default=False, description='Build with 64-bit integers')    
-    
+
     depends_on('hdf5', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
