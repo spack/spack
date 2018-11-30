@@ -31,6 +31,8 @@ class MofemCephas(CMakePackage):
 
     maintainers = ['likask']
 
+    version('0.8.17', git='https://bitbucket.org/likask/mofem-cephas.git',
+        tag='v0.8.17')
     version('0.8.16', git='https://bitbucket.org/likask/mofem-cephas.git',
         tag='v0.8.16')
     version('0.8.15', git='https://bitbucket.org/likask/mofem-cephas.git',
@@ -58,7 +60,7 @@ class MofemCephas(CMakePackage):
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking to source')
-    variant('adol-c', default=True, description='Compile with Adol-C')
+    variant('adol-c', default=True, description='Compile with ADOL-C')
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
     variant('slepc', default=False, description='Compile with Slepc')
