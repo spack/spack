@@ -29,12 +29,15 @@ class Rocksdb(MakefilePackage):
     """RocksDB: A Persistent Key-Value Store for Flash and RAM Storage"""
 
     homepage = "https://github.com/facebook/rocksdb"
-    url      = "https://github.com/facebook/rocksdb.git"
+    url      = 'https://github.com/facebook/rocksdb/archive/v5.17.2.tar.gz'
+    git      = 'https://github.com/facebook/rocksdb.git'
 
-    version('master', git=url, submodules=True)
-    version('v5.17.2', git=url, submodules=True)
-    version('v5.15.10', git=url, submodules=True, preferred=True)
-    version('v5.8.8', git=url, submodules=True)
+    version('develop', git=git, branch='master', submodules=True)
+    version('5.17.2',  sha256='101f05858650a810c90e4872338222a1a3bf3b24de7b7d74466814e6a95c2d28')
+    version('5.16.6',  sha256='f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033')
+    version('5.15.10', sha256='26d5d4259fa352ae1604b5b4d275f947cacc006f4f7d2ef0b815056601b807c0')
+
+
 
     variant('static', default=True, description='Build static library')
     variant('zlib', default=True, description='Enable zlib compression support')
@@ -49,7 +52,7 @@ class Rocksdb(MakefilePackage):
     depends_on('zstd', when='+zstd')
     depends_on('gflags')
 
-    def setup_environment(self, spack_env, run_env):
+    def build(self, spec, prefix):
         cflags = []
         ldflags = []
 
@@ -67,11 +70,9 @@ class Rocksdb(MakefilePackage):
         cflags.append(self.spec['gflags'].headers.cpp_flags)
         ldflags.append(self.spec['gflags'].libs.ld_flags)
             
-        spack_env.append_flags('CFLAGS',' '.join(cflags))
-        spack_env.append_flags('PLATFORM_FLAGS',' '.join(ldflags))
-        spack_env.append_flags('INSTALL_PATH', self.spec.prefix)
-    
-    def build(self, spec, prefix):
+        env['CFLAGS'] = ' '.join(cflags)
+        env['PLATFORM_FLAGS'] = ' '.join(ldflags)
+        env['INSTALL_PATH'] = self.spec.prefix
         build_type = ''
         if '+static' in spec: 
             build_type = 'install-static'
