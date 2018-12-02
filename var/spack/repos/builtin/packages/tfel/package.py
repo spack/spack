@@ -114,7 +114,7 @@ class Tfel(CMakePackage):
             python = self.spec['python']
             python_prefix  = python.prefix
             python_full_version = str(python.version.dotted).split('.')
-            if(python_full_version[0] >= 3):
+            if(int(python_full_version[0]) >= 3):
                 python_version = '{0}.{1}m'.format(python_full_version[0],
                                                    python_full_version[1])
             else:
