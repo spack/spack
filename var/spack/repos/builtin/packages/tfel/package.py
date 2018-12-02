@@ -111,21 +111,21 @@ class Tfel(CMakePackage):
 
         if(('+python' in self.spec) or
            ('+python_bindings' in self.spec)):
-            python = self.spec['python'];
+            python = self.spec['python']
             python_prefix  = python.prefix
             python_full_version = str(python.version.dotted).split('.')
             if(python_full_version[0] >= 3):
-                python_version = python_full_version[0] + '.' + \
-                                 python_full_version[1] + 'm'
+                python_version = '{0}.{1}m'.format(python_full_version[0],
+                                                   python_full_version[1])
             else:
-                python_version = python_full_version[0] + '.' + \
-                                 python_full_version[1]
+                python_version = '{0}.{1}'.format(python_full_version[0],
+                                                  python_full_version[1])
             args.append('-DPYTHON_LIBRARY={0}'.
                         format(python_prefix.lib +
-                               '/libpython'+str(python_version)+'.so'))
+                               '/libpython' + str(python_version)+'.so'))
             args.append('-DPYTHON_INCLUDE_DIR={0}'.
                         format(python_prefix.include) +
-                        "/python"+str(python_version))
+                        "/python" + str(python_version))
             args.append('-DPython_ADDITIONAL_VERSIONS={0}.{1}'.
                         format(python_full_version[0],
                                python_full_version[1]))
