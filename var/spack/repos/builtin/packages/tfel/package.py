@@ -122,7 +122,7 @@ class Tfel(CMakePackage):
                                                   python_full_version[1])
             args.append('-DPYTHON_LIBRARY={0}'.
                         format(python_prefix.lib +
-                               '/libpython' + str(python_version)+'.so'))
+                               '/libpython' + str(python_version) + '.so'))
             args.append('-DPYTHON_INCLUDE_DIR={0}'.
                         format(python_prefix.include) +
                         "/python" + str(python_version))
