@@ -81,7 +81,7 @@ class Phist(CMakePackage):
     conflicts('~openmp', when='@:1.7.3')
     # in older versions, it is not possible to turn off the use of host-
     # specific compiler flags in Release mode.
-    conflicts('~host', when='@:1.7.4')
+    conflicts('~host', when='@:1.7.3')
 
     # ###################### Dependencies ##########################
 
