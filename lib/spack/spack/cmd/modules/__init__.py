@@ -38,6 +38,11 @@ def setup_parser(subparser):
         action='store_true'
     )
     refresh_parser.add_argument(
+        '--latest',
+        help='use the last installed package when multiple ones match',
+        action='store_true'
+    )
+    refresh_parser.add_argument(
         '--start-date',
         help='earliest date of installation [YYYY-MM-DD]'
     )
@@ -244,6 +249,15 @@ def rm(module_type, specs, args):
         s.remove()
 
 
+def keep_latest(writers):
+    """Keep the module writer with the most recently installed package
+    """
+    def install_date(w):
+        _, record = spack.store.db.query_by_spec_hash(w.spec.dag_hash())
+        return record.installation_time
+    return sorted(writers, key=install_date, reverse=True)[0]
+
+
 def refresh(module_type, specs, args):
     """Regenerates the module files for every spec in specs and every module
     type in module types.
@@ -283,7 +297,11 @@ def refresh(module_type, specs, args):
     for item in writers:
         file2writer[item.layout.filename].append(item)
 
-    if len(file2writer) != len(writers):
+    if args.latest:
+        writers = []
+        for fn, matches in file2writer.items():
+            writers.append(keep_latest(matches))
+    elif len(file2writer) != len(writers):
         message = 'Name clashes detected in module files:\n'
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
