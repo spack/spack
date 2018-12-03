@@ -45,6 +45,11 @@ class Atlas(Package):
         values=('pthreads', 'none'),
         multi=False
     )
+    
+    variant('tune_cpu', default=-1,
+        multi=False,
+        description="Number of threads to tune to, -1 for autodetect, 0 for no threading"
+    )
 
     provides('blas')
     provides('lapack')
@@ -75,6 +80,11 @@ class Atlas(Package):
         # configure for 64-bit build
         options.extend([
             '-b', '64'
+        ])
+        
+        # set number of cpu's to tune to
+        options.extend([
+            '-t', spec.variants['tune_cpu'].value
         ])
 
         # set compilers:
