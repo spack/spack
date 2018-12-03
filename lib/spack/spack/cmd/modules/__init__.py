@@ -10,7 +10,7 @@ import os.path
 import shutil
 import sys
 
-from llnl.util import filesystem, tty
+from llnl.util import filesystem, lang, tty
 
 import spack.cmd
 import spack.modules
@@ -31,6 +31,13 @@ def setup_parser(subparser):
         '--delete-tree',
         help='delete the module file tree before refresh',
         action='store_true'
+    )
+    refresh_parser.add_argument(
+        '--start-date',
+        help='earliest date of installation [YYYY-MM-DD]'
+    )
+    refresh_parser.add_argument(
+        '--end-date', help='latest date of installation [YYYY-MM-DD]'
     )
     arguments.add_common_arguments(
         refresh_parser, ['constraint', 'yes_to_all']
@@ -304,8 +311,9 @@ callbacks = {
 }
 
 
-def modules_cmd(parser, args, module_type, callbacks=callbacks):
-
+def query_arguments(args):
+    """Set up query arguments
+    """
     # Qualifiers to be used when querying the db for specs
     constraint_qualifiers = {
         'refresh': {
@@ -313,7 +321,21 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
             'known': True
         },
     }
-    query_args = constraint_qualifiers.get(args.subparser_name, {})
+
+    q_args = constraint_qualifiers.get(args.subparser_name, {})
+
+    # Time window of installation
+    for attribute in ('start_date', 'end_date'):
+        date = getattr(args, attribute)
+        if date:
+            q_args[attribute] = lang.pretty_string_to_date(date)
+
+    return q_args
+
+
+def modules_cmd(parser, args, module_type, callbacks=callbacks):
+
+    query_args = query_arguments(args)
 
     # Get the specs that match the query from the DB
     specs = args.specs(**query_args)
