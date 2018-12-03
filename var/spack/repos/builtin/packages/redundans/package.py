@@ -11,8 +11,11 @@ class Redundans(Package):
 
     homepage = "https://github.com/Gabaldonlab/redundans"
     url      = "https://github.com/Gabaldonlab/redundans/archive/v0.13c.tar.gz"
+    git      = "https://github.com/Gabaldonlab/redundans.git"
 
-    version('0.13c', '2003fb7c70521f5e430553686fd1a594')
+    version('0.14a', commit='a20215a862aed161cbfc79df9133206156a1e9f0')
+    version('0.13c', '2003fb7c70521f5e430553686fd1a594',
+            preferred=True)
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyscaf', type=('build', 'run'))
@@ -33,12 +36,16 @@ class Redundans(Package):
         filter_file(r'sspacebin = os.path.join(.*)$',
                     'sspacebin = \'' + sspace_location + '\'',
                     'redundans.py')
-        install('redundans.py', prefix.bin)
+
+        binfiles = ['fasta2homozygous.py', 'fasta2split.py',
+                    'fastq2insert_size.py', 'fastq2mates.py',
+                    'fastq2shuffled.py', 'fastq2sspace.py',
+                    'filterReads.py', 'redundans.py']
+
+        # new internal dep with 0.14a
+        if spec.satisfies('@0.14a:'):
+            binfiles.extend(['denovo.py'])
+
         with working_dir('bin'):
-            install('fasta2homozygous.py', prefix.bin)
-            install('fasta2split.py', prefix.bin)
-            install('fastq2insert_size.py', prefix.bin)
-            install('fastq2mates.py', prefix.bin)
-            install('fastq2shuffled.py', prefix.bin)
-            install('fastq2sspace.py', prefix.bin)
-            install('filterReads.py', prefix.bin)
+            for f in binfiles:
+                install(f, prefix.bin)
