@@ -9,6 +9,7 @@ import sys
 import shutil
 
 import ruamel.yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -20,6 +21,7 @@ import spack.spec
 import spack.util.spack_json as sjson
 import spack.config
 from spack.spec import Spec
+from spack.filesystem_view import YamlFilesystemView
 
 
 #: environment variable used to indicate the active environment
@@ -56,6 +58,7 @@ spack:
   # add package specs to the `specs` list
   specs:
   -
+  view: true
 """
 #: regex for validating enviroment names
 valid_environment_name_re = r'^\w[\w-]*$'
@@ -327,7 +330,7 @@ def _write_yaml(data, str_or_file):
 
 
 class Environment(object):
-    def __init__(self, path, init_file=None):
+    def __init__(self, path, init_file=None, with_view=None):
         """Create a new environment.
 
         The environment can be optionally initialized with either a
@@ -371,12 +374,30 @@ class Environment(object):
                 # if there's no manifest or lockfile, use the default
                 self._read_manifest(default_manifest_yaml)
 
+        #a. read the default (it is set), user enabled with cmd line
+        #b. read the default (it is set), user disabled with cmd line
+        #b. read explicit and it was set False, user enabled with cmd-line
+        #c. read explicit and it was set True, user disabled with cmd-line
+        #c. read explicit and it was not set, and user did not specify
+        #d. read explicit and it was set False, and user did not specify
+        #(on account of [d], you must distinguish true, false, and None)
+        if with_view is False:
+            self._vew_path = None
+
     def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
         self.yaml = _read_yaml(f)
         spec_list = config_dict(self.yaml).get('specs')
         if spec_list:
             self.user_specs = [Spec(s) for s in spec_list if s]
+
+        enable_view = config_dict(self.yaml).get('view')
+        if enable_view is False:
+            self._view_path = None
+        elif isinstance(enable_view, six.string_types):
+            self._view_path = enable_view
+        else:
+            self._view_path = self.default_view_path
 
     def _set_user_specs_from_lockfile(self):
         """Copy user_specs from a read-in lockfile."""
@@ -435,6 +456,10 @@ class Environment(object):
     @property
     def log_path(self):
         return os.path.join(self.path, env_subdir_name, 'logs')
+
+    @property
+    def default_view_path(self):
+        return os.path.join(self.env_subdir_path, 'view')
 
     @property
     def repo(self):
@@ -617,7 +642,43 @@ class Environment(object):
                 concrete = spec.concretized()
                 self._add_concrete_spec(spec, concrete)
 
-        concrete.package.do_install(**install_args)
+        self._install(concrete, **install_args)
+        self.update_view()
+
+    def _install(self, spec, **install_args):
+        # Make sure log directory exists
+        log_path = self.log_path
+        fs.mkdirp(log_path)
+
+        with fs.working_dir(self.path):
+            spec.package.do_install(**install_args)
+
+            # Link the resulting log file into logs dir
+            build_log_link = os.path.join(
+                log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+            if os.path.exists(build_log_link):
+                os.remove(build_log_link)
+            os.symlink(spec.package.build_log_path, build_log_link)
+
+    def update_view(self):
+        if not self._view_path:
+            tty.debug("Skip view update, this environment does not"
+                      " maintain a view")
+            return
+
+        view_specs = {}
+        for root_hash in self.concretized_order:
+            root = self.specs_by_hash[root_hash]
+            view_specs[root.name] = root
+            for dep in root.traverse(root=False, deptype=('link', 'run')):
+                if dep.name not in view_specs:
+                    view_specs[dep.name] = dep
+        view = self.view()
+        view.add_specs(*view_specs.values(), with_dependencies=False)
+
+    def view(self):
+        return YamlFilesystemView(
+            self._view_path, spack.store.layout, ignore_conflicts=True)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
@@ -646,11 +707,6 @@ class Environment(object):
 
     def install_all(self, args=None):
         """Install all concretized specs in an environment."""
-
-        # Make sure log directory exists
-        log_path = self.log_path
-        fs.mkdirp(log_path)
-
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
 
@@ -660,8 +716,7 @@ class Environment(object):
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
-            with fs.working_dir(self.path):
-                spec.package.do_install(**kwargs)
+            self._install(spec, **kwargs)
 
             if not spec.external:
                 # Link the resulting log file into logs dir
@@ -670,6 +725,8 @@ class Environment(object):
                 if os.path.exists(build_log_link):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
+
+        self.update_view()
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""

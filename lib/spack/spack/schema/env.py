@@ -47,6 +47,9 @@ schema = {
                                 {'type': 'object'},
                             ]
                         }
+                    },
+                    'view': {
+                        'type': ['boolean', 'string']
                     }
                 }
             )

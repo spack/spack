@@ -173,19 +173,28 @@ def env_create_setup_parser(subparser):
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
     subparser.add_argument(
+        '--without-view', action='store_true',
+        help='do not maintain a view for this environment')
+    subparser.add_argument(
         'envfile', nargs='?', default=None,
         help='optional init file; can be spack.yaml or spack.lock')
 
 
 def env_create(args):
+    if args.without_view:
+        with_view = False
+    else:
+        with_view = None
     if args.envfile:
         with open(args.envfile) as f:
-            _env_create(args.create_env, f, args.dir)
+            _env_create(args.create_env, f, args.dir,
+                        with_view=with_view)
     else:
-        _env_create(args.create_env, None, args.dir)
+        _env_create(args.create_env, None, args.dir,
+                    with_view=with_view)
 
 
-def _env_create(name_or_path, init_file=None, dir=False):
+def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
