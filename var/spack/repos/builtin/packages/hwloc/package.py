@@ -45,8 +45,8 @@ class Hwloc(AutotoolsPackage):
     version('1.11.1', 'feb4e416a1b25963ed565d8b42252fdc')
     version('1.9',    '1f9f9155682fe8946a97c08896109508')
 
-    variant('nvml', default=True, description="Support NVML device discovery")
-    variant('gl', default=True, description="Support GL device discovery")
+    variant('nvml', default=False, description="Support NVML device discovery")
+    variant('gl', default=False, description="Support GL device discovery")
     variant('cuda', default=False, description="Support CUDA devices")
     variant('libxml2', default=True, description="Build with libxml2")
     variant('pci', default=(sys.platform != 'darwin'),
@@ -62,10 +62,11 @@ class Hwloc(AutotoolsPackage):
 
     depends_on('cuda', when='+nvml')
     depends_on('cuda', when='+cuda')
+    depends_on('opengl', when='+gl')
     depends_on('libpciaccess', when='+pci')
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
-    depends_on('numactl', when='@:1.11.9 platform=linux')
+    depends_on('numactl', when='@:1.11.11 platform=linux')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
