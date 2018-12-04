@@ -670,12 +670,18 @@ class Environment(object):
         view_specs = {}
         for root_hash in self.concretized_order:
             root = self.specs_by_hash[root_hash]
+            # If a spec appears as a root and as a dependency, the root always
+            # overrides the dependency
             view_specs[root.name] = root
             for dep in root.traverse(root=False, deptype=('link', 'run')):
                 if dep.name not in view_specs:
                     view_specs[dep.name] = dep
         view = self.view()
-        view.add_specs(*view_specs.values(), with_dependencies=False)
+        specs_without_build_deps = list()
+        for spec in view_specs.values():
+            specs_without_build_deps.append(
+                spack.spec.Spec.from_dict(spec.to_dict(all_deps=False)))
+        view.add_specs(*specs_without_build_deps, with_dependencies=False)
 
     def view(self):
         return YamlFilesystemView(
