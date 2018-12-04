@@ -191,6 +191,7 @@ class Dealii(CMakePackage, CudaPackage):
         cxx_flags = []
 
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
@@ -199,8 +200,8 @@ class Dealii(CMakePackage, CudaPackage):
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                spec['lapack'].prefix.include, spec['blas'].prefix.include),
+            '-DLAPACK_INCLUDE_DIRS=%s' % ';'.join(
+                lapack_blas_headers.directories),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
