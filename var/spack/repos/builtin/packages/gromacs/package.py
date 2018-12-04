@@ -60,7 +60,7 @@ class Gromacs(CMakePackage):
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw')
-    depends_on('cmake@2.8.8:3.9.99', type='build')
+    depends_on('cmake@2.8.8:', type='build')
     depends_on('cmake@3.4.3:', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
 
@@ -86,8 +86,9 @@ class Gromacs(CMakePackage):
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
 
-        options.append('-DGMX_SIMD:STRING=' +
-                       self.spec.variants['simd'].value)
+        if self.spec.variants['simd'].value != 'AUTO':
+            options.append('-DGMX_SIMD:STRING=' +
+                           self.spec.variants['simd'].value)
 
         if '-rdtscp' in self.spec:
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
