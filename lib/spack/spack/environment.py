@@ -346,12 +346,12 @@ class Environment(object):
 
         if init_file:
             with fs.open_if_filename(init_file) as f:
-                if hasattr(f, 'name') and f.name.endswith('.yaml'):
-                    self._read_manifest(f, init=True)
-                else:
+                if hasattr(f, 'name') and f.name.endswith('.lock'):
                     self._read_manifest(default_manifest_yaml, init=True)
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
+                else:
+                    self._read_manifest(f, init=True)
         else:
             init = not any(os.path.exists(x)
                            for x in (self.lock_path, self.manifest_path))
