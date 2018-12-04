@@ -50,8 +50,8 @@ class Cgns(CMakePackage):
             ])
 
         options.append(
-        '-DCGNS_ENABLE_64BIT:BOOL={0}'.format(
-            'ON' if '+int64' in spec else 'OFF'))
+            '-DCGNS_ENABLE_64BIT:BOOL={0}'.format(
+                'ON' if '+int64' in spec else 'OFF'))
 
         if '+hdf5' in spec:
             options.extend([
