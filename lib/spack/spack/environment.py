@@ -268,12 +268,12 @@ def read(name):
     return Environment(root(name))
 
 
-def create(name, init_file=None):
+def create(name, init_file=None, with_view=None):
     """Create a named environment in Spack."""
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
-    return Environment(root(name), init_file)
+    return Environment(root(name), init_file, with_view)
 
 
 def config_dict(yaml_data):
@@ -345,34 +345,28 @@ class Environment(object):
         self.clear()
 
         if init_file:
-            # initialize the environment from a file if provided
             with fs.open_if_filename(init_file) as f:
-                if hasattr(f, 'name') and f.name.endswith('.lock'):
-                    # Initialize the environment from a lockfile
+                if hasattr(f, 'name') and f.name.endswith('.yaml'):
+                    self._read_manifest(f, init=True)
+                else:
+                    self._read_manifest(default_manifest_yaml, init=True)
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
-                    self.yaml = _read_yaml(default_manifest_yaml)
-                else:
-                    # Initialize the environment from a spack.yaml file
-                    self._read_manifest(f)
         else:
-            # read lockfile, if it exists
+            init = not any(os.path.exists(x)
+                           for x in (self.lock_path, self.manifest_path))
+            default_manifest = not os.path.exists(self.manifest_path)
+            if not default_manifest:
+                with open(self.manifest_path) as f:
+                    self._read_manifest(f, init=init)
+            else:
+                self._read_manifest(default_manifest_yaml, init=init)
+
             if os.path.exists(self.lock_path):
                 with open(self.lock_path) as f:
                     self._read_lockfile(f)
-
-            if os.path.exists(self.manifest_path):
-                # read the spack.yaml file, if exists
-                with open(self.manifest_path) as f:
-                    self._read_manifest(f)
-
-            elif self.concretized_user_specs:
-                # if not, take user specs from the lockfile
-                self._set_user_specs_from_lockfile()
-                self.yaml = _read_yaml(default_manifest_yaml)
-            else:
-                # if there's no manifest or lockfile, use the default
-                self._read_manifest(default_manifest_yaml)
+                if default_manifest:
+                    self._set_user_specs_from_lockfile()
 
         if with_view is False:
             self._view_path = None
@@ -381,7 +375,7 @@ class Environment(object):
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
-    def _read_manifest(self, f):
+    def _read_manifest(self, f, init=False):
         """Read manifest file and set up user specs."""
         self.yaml = _read_yaml(f)
         spec_list = config_dict(self.yaml).get('specs')
@@ -389,14 +383,15 @@ class Environment(object):
             self.user_specs = [Spec(s) for s in spec_list if s]
 
         enable_view = config_dict(self.yaml).get('view')
-        if enable_view is False:
-            self._view_path = None
+        # enable_view can be true/false, a string, or None (if the manifest did
+        # not specify it)
+        if enable_view is True or (enable_view is None and init):
+            self._view_path = self.default_view_path
         elif isinstance(enable_view, six.string_types):
             self._view_path = enable_view
         else:
-            # If this option is not specified, it is treated as if it was
-            # enabled
-            self._view_path = self.default_view_path
+            # enable_view is False, or (enable_view, init) == (None, False)
+            self._view_path = None
 
     def _set_user_specs_from_lockfile(self):
         """Copy user_specs from a read-in lockfile."""
@@ -919,8 +914,17 @@ class Environment(object):
         self._repo = None
 
         # put the new user specs in the YAML
-        yaml_spec_list = config_dict(self.yaml).setdefault('specs', [])
+        yaml_dict = config_dict(self.yaml)
+        yaml_spec_list = yaml_dict.setdefault('specs', [])
         yaml_spec_list[:] = [str(s) for s in self.user_specs]
+
+        if self._view_path == self.default_view_path:
+            view = True
+        elif self._view_path:
+            view = self._view_path
+        else:
+            view = False
+        config_dict(self.yaml)['view'] = view
 
         # if all that worked, write out the manifest file at the top level
         with fs.write_tmp_and_move(self.manifest_path) as f:

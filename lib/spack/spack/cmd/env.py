@@ -213,11 +213,11 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
             of a named environment
     """
     if dir:
-        env = ev.Environment(name_or_path, init_file)
+        env = ev.Environment(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment in %s" % env.path)
     else:
-        env = ev.create(name_or_path, init_file)
+        env = ev.create(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
     return env
