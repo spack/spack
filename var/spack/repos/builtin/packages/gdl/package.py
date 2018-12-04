@@ -61,7 +61,7 @@ class Gdl(CMakePackage):
     conflicts('+python', when='~embed-python')
 
     # Building the Python module requires patches currently targetting 0.9.8
-    # othwerwise asking for the Python module *only* builds the Pyhton module
+    # othwerwise asking for the Python module *only* builds the Python module
     conflicts('+python', when='@:0.9.7,0.9.9:')
 
     # Allows building gdl as a shared library to in turn allow building
