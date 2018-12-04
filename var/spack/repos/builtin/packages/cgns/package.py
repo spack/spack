@@ -49,10 +49,9 @@ class Cgns(CMakePackage):
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
             ])
 
-        if '+int64' in spec:
-            options.extend([
-                '-DCGNS_ENABLE_64BIT:BOOL=ON'
-            ])
+        options.append(
+        '-DCGNS_ENABLE_64BIT:BOOL={0}'.format(
+            'ON' if '+int64' in spec else 'OFF'))
 
         if '+hdf5' in spec:
             options.extend([
