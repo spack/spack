@@ -62,7 +62,7 @@ class Hwloc(AutotoolsPackage):
 
     depends_on('cuda', when='+nvml')
     depends_on('cuda', when='+cuda')
-    depends_on('opengl', when='+gl')
+    depends_on('gl', when='+gl')
     depends_on('libpciaccess', when='+pci')
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
