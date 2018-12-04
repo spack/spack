@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from os.path import join
 
 
 class Rust(Package):
@@ -40,7 +39,7 @@ class Rust(Package):
           # https://github.com/rust-lang/cargo/issues/3772#issuecomment-283109482
           '--enable-extended',
           # Prevent build from writing bash completion into system path
-          '--sysconfdir=%s' % join(prefix, 'etc/')
+          '--sysconfdir=%s' % join_path(prefix, 'etc/')
           ]
 
         configure(*configure_args)
@@ -49,7 +48,7 @@ class Rust(Package):
         # compiler wrappers which causes the build to fail
         filter_file(
             '#ar = "ar"',
-            'ar = "%s"' % join(spec['binutils'].prefix.bin, 'ar'),
+            'ar = "%s"' % join_path(spec['binutils'].prefix.bin, 'ar'),
             'config.toml')
 
     def install(self, spec, prefix):
