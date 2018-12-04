@@ -172,16 +172,24 @@ def env_create_setup_parser(subparser):
     subparser.add_argument(
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
-    subparser.add_argument(
+    view_opts = subparser.add_mutually_exclusive_group()
+    view_opts.add_argument(
         '--without-view', action='store_true',
         help='do not maintain a view for this environment')
+    view_opts.add_argument(
+        '--with-view',
+        help='specify that this environment should maintain a view at the'
+             ' specified path (by default the view is maintained in the'
+             ' environment directory)')
     subparser.add_argument(
         'envfile', nargs='?', default=None,
         help='optional init file; can be spack.yaml or spack.lock')
 
 
 def env_create(args):
-    if args.without_view:
+    if args.with_view:
+        with_view = args.with_view
+    elif args.without_view:
         with_view = False
     else:
         with_view = None

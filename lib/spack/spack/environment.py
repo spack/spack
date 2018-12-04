@@ -374,15 +374,12 @@ class Environment(object):
                 # if there's no manifest or lockfile, use the default
                 self._read_manifest(default_manifest_yaml)
 
-        #a. read the default (it is set), user enabled with cmd line
-        #b. read the default (it is set), user disabled with cmd line
-        #b. read explicit and it was set False, user enabled with cmd-line
-        #c. read explicit and it was set True, user disabled with cmd-line
-        #c. read explicit and it was not set, and user did not specify
-        #d. read explicit and it was set False, and user did not specify
-        #(on account of [d], you must distinguish true, false, and None)
         if with_view is False:
-            self._vew_path = None
+            self._view_path = None
+        elif isinstance(with_view, six.string_types):
+            self._view_path = with_view
+        # If with_view is None, then defer to the view settings determined by
+        # the manifest file
 
     def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
@@ -397,6 +394,8 @@ class Environment(object):
         elif isinstance(enable_view, six.string_types):
             self._view_path = enable_view
         else:
+            # If this option is not specified, it is treated as if it was
+            # enabled
             self._view_path = self.default_view_path
 
     def _set_user_specs_from_lockfile(self):
