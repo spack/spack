@@ -665,6 +665,8 @@ class Environment(object):
                       " maintain a view")
             return
 
+        tty.msg("Updating view at {0}".format(self._view_path))
+
         view_specs = {}
         for root_hash in self.concretized_order:
             root = self.specs_by_hash[root_hash]
