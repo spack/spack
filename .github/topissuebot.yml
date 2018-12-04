@@ -1,0 +1,4 @@
+# Configuration for top-issue-bot
+labelName: "Top 10"
+labelColor: "c0c0c0"
+numberOfIssuesToLabel: 10
