@@ -2053,8 +2053,14 @@ class Spec(object):
                 try:
                     dep.merge(dependency)
                 except UnsatisfiableSpecError as e:
-                    e.message = ("Conflicting conditional dependencies on"
-                                 "package %s for spec %s" % (self.name, self))
+                    e.message = (
+                        "Conflicting conditional dependencies for spec"
+                        "\n\n\t{0}\n\n"
+                        "Cannot merge constraint"
+                        "\n\n\t{1}\n\n"
+                        "into"
+                        "\n\n\t{2}"
+                        .format(self, dependency.spec, dep.spec))
                     raise e
 
         return dep
