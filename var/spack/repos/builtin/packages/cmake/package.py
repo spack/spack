@@ -12,6 +12,7 @@ class Cmake(Package):
     homepage = 'https://www.cmake.org'
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
 
+    version('3.13.1',   'befe1ce6d672f2881350e94d4e3cc809697dd2c09e5b708b76c1dae74e1b2210')
     version('3.13.0',   '4058b2f1a53c026564e8936698d56c3b352d90df067b195cb749a97a3d273c90')
     version('3.12.4',   '5255584bfd043eb717562cff8942d472f1c0e4679c4941d84baadaa9b28e3194')
     version('3.12.3',   'acbf13af31a741794106b76e5d22448b004a66485fc99f6d7df4d22e99da164a')
