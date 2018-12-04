@@ -28,6 +28,9 @@ class Bcl2fastq2(Package):
     # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
     version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
 
+    conflicts('platform=darwin',
+              msg='malloc.h/etc requirements break build on macs')
+
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
     depends_on('libxml2@2.7.8')
