@@ -22,6 +22,7 @@ class Exodusii(CMakePackage):
     git      = "https://github.com/gsjaardema/seacas.git"
 
     version('2016-08-09', commit='2ffeb1b')
+    version('master', branch='master')
 
     variant('mpi', default=True, description='Enables MPI parallelism.')
 
@@ -29,10 +30,8 @@ class Exodusii(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
-    depends_on('netcdf+mpi maxdims=65536 maxvars=524288', when='+mpi')
-    depends_on('netcdf~mpi maxdims=65536 maxvars=524288', when='~mpi')
-    depends_on('hdf5+shared+mpi', when='+mpi')
-    depends_on('hdf5+shared~mpi', when='~mpi')
+    depends_on('netcdf@4.6.1:+mpi', when='+mpi')
+    depends_on('netcdf@4.6.1:~mpi', when='~mpi')
 
     def cmake_args(self):
         spec = self.spec
@@ -50,7 +49,6 @@ class Exodusii(CMakePackage):
             '-DSEACASProj_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=ON',
             '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
             '-DSEACASProj_ENABLE_Zoltan:BOOL=OFF',
-            '-DHDF5_ROOT:PATH={0}'.format(spec['hdf5'].prefix),
             '-DNetCDF_DIR:PATH={0}'.format(spec['netcdf'].prefix),
 
             # MPI Flags #
