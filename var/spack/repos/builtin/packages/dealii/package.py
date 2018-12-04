@@ -190,7 +190,7 @@ class Dealii(CMakePackage, CudaPackage):
         # debug and release flags
         cxx_flags = []
 
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
         lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
@@ -202,7 +202,7 @@ class Dealii(CMakePackage, CudaPackage):
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s' % ';'.join(
                 lapack_blas_headers.directories),
-            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
