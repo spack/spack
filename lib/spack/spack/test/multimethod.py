@@ -107,3 +107,7 @@ def test_multimethod_with_base_class(mock_packages):
 
     pkg = spack.repo.get('multimethod@1')
     assert pkg.base_method() == "base_method"
+
+def test_multimethod_inheritance(mock_packages):
+    pkg = spack.repo.get('multimethod-inheritor@1.0')
+    assert pkg.no_version_2() == 1
