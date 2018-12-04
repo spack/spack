@@ -326,7 +326,7 @@ def query_arguments(args):
 
     # Time window of installation
     for attribute in ('start_date', 'end_date'):
-        date = getattr(args, attribute)
+        date = getattr(args, attribute, None)
         if date:
             q_args[attribute] = lang.pretty_string_to_date(date)
 
