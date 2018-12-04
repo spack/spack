@@ -340,6 +340,9 @@ class Environment(object):
             path (str): path to the root directory of this environment
             init_file (str or file object): filename or file object to
                 initialize the environment
+            with_view (str or bool): whether a view should be maintained for
+                the environment. If the value is a string, it specifies the
+                path to the view.
         """
         self.path = os.path.abspath(path)
         self.clear()
@@ -356,11 +359,11 @@ class Environment(object):
             init = not any(os.path.exists(x)
                            for x in (self.lock_path, self.manifest_path))
             default_manifest = not os.path.exists(self.manifest_path)
-            if not default_manifest:
+            if default_manifest:
+                self._read_manifest(default_manifest_yaml, init=init)
+            else:
                 with open(self.manifest_path) as f:
                     self._read_manifest(f, init=init)
-            else:
-                self._read_manifest(default_manifest_yaml, init=init)
 
             if os.path.exists(self.lock_path):
                 with open(self.lock_path) as f:
