@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
 
 
 class Redundans(Package):
@@ -31,20 +32,18 @@ class Redundans(Package):
     def install(self, spec, prefix):
         sspace_location = join_path(spec['sspace-standard'].prefix,
                                     'SSPACE_Standard_v3.0.pl')
-        mkdirp(prefix.bin)
+
         filter_file(r'sspacebin = os.path.join(.*)$',
                     'sspacebin = \'' + sspace_location + '\'',
                     'redundans.py')
 
-        binfiles = ['fasta2homozygous.py', 'fasta2split.py',
-                    'fastq2insert_size.py', 'fastq2mates.py',
-                    'fastq2shuffled.py', 'fastq2sspace.py',
-                    'filterReads.py', 'redundans.py']
+        binfiles = ['redundans.py', 'bin/filterReads.py']
+        binfiles.extend(glob.glob('bin/fast?2*.py'))
 
         # new internal dep with 0.14a
         if spec.satisfies('@0.14a:'):
-            binfiles.extend(['denovo.py'])
+            binfiles.append('bin/denovo.py')
 
-        with working_dir('bin'):
-            for f in binfiles:
-                install(f, prefix.bin)
+        mkdirp(prefix.bin)
+        for f in binfiles:
+            install(f, prefix.bin)
