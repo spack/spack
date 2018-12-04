@@ -14,8 +14,7 @@ class Redundans(Package):
     git      = "https://github.com/Gabaldonlab/redundans.git"
 
     version('0.14a', commit='a20215a862aed161cbfc79df9133206156a1e9f0')
-    version('0.13c', '2003fb7c70521f5e430553686fd1a594',
-            preferred=True)
+    version('0.13c', '2003fb7c70521f5e430553686fd1a594')
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyscaf', type=('build', 'run'))
