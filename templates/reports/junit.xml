@@ -24,23 +24,23 @@
                   time="{{ test.elapsed_time }}">
 {% if test.result == 'failure' %}
             <failure message="{{ test.message }}">
-{{ test.exception }}
+{{ test.exception|e }}
             </failure>
 {% elif test.result == 'error' %}
             <error message="{{ test.message }}">
-{{ test.exception }}
+{{ test.exception|e }}
             </error>
 {% elif test.result == 'skipped' %}
             <skipped />
 {% endif %}
 {% if test.stdout %}
             <system-out>
-{{ test.stdout }}
+{{ test.stdout|e }}
             </system-out>
 {% endif %}
 {% if test.stderr %}
             <system-err>
-{{ test.stderr }}
+{{ test.stderr|e }}
             </system-err>
 {% endif %}
         </testcase>
