@@ -117,7 +117,44 @@ def test_virtual_dep_match(pkg_name):
 
 def test_multimethod_with_base_class(pkg_name):
     pkg = spack.repo.get(pkg_name + '@3')
-    assert pkg.base_method() == "subclass_method"
+    assert pkg.base_method() == pkg.spec.name
 
     pkg = spack.repo.get(pkg_name + '@1')
     assert pkg.base_method() == "base_method"
+
+
+def test_multimethod_inherited_and_overridden():
+    pkg = spack.repo.get('multimethod-inheritor@1.0')
+    assert pkg.inherited_and_overridden() == 'inheritor@1.0'
+
+    pkg = spack.repo.get('multimethod-inheritor@2.0')
+    assert pkg.inherited_and_overridden() == 'base@2.0'
+
+    pkg = spack.repo.get('multimethod@1.0')
+    assert pkg.inherited_and_overridden() == 'base@1.0'
+
+    pkg = spack.repo.get('multimethod@2.0')
+    assert pkg.inherited_and_overridden() == 'base@2.0'
+
+
+def test_multimethod_diamond_inheritance():
+    pkg = spack.repo.get('multimethod-diamond@1.0')
+    assert pkg.diamond_inheritance() == 'base_package'
+
+    pkg = spack.repo.get('multimethod-base@1.0')
+    assert pkg.diamond_inheritance() == 'base_package'
+
+    pkg = spack.repo.get('multimethod-diamond@2.0')
+    assert pkg.diamond_inheritance() == 'first_parent'
+
+    pkg = spack.repo.get('multimethod-inheritor@2.0')
+    assert pkg.diamond_inheritance() == 'first_parent'
+
+    pkg = spack.repo.get('multimethod-diamond@3.0')
+    assert pkg.diamond_inheritance() == 'second_parent'
+
+    pkg = spack.repo.get('multimethod-diamond-parent@3.0')
+    assert pkg.diamond_inheritance() == 'second_parent'
+
+    pkg = spack.repo.get('multimethod-diamond@4.0')
+    assert pkg.diamond_inheritance() == 'subclass'

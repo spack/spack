@@ -25,6 +25,7 @@ depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
 import functools
+import inspect
 
 from llnl.util.lang import caller_locals
 
@@ -107,14 +108,26 @@ class SpecMultiMethod(object):
             return self.default(package_self, *args, **kwargs)
 
         else:
-            superclass = super(package_self.__class__, package_self)
-            superclass_fn = getattr(superclass, self.__name__, None)
-            if callable(superclass_fn):
-                return superclass_fn(*args, **kwargs)
-            else:
-                raise NoSuchMethodError(
-                    type(package_self), self.__name__, spec,
-                    [m[0] for m in self.method_list])
+            # Unwrap MRO by hand because super binds to the subclass
+            # and causes infinite recursion for inherited methods
+            for cls in inspect.getmro(package_self.__class__)[1:]:
+                superself = cls.__dict__.get(self.__name__, None)
+                if isinstance(superself, self.__class__):
+                    # Parent class method is a multimethod
+                    # check it locally for methods, conditional or default
+                    # Do not recurse, that will mess up MRO
+                    for spec, method in superself.method_list:
+                        if package_self.spec.satisfies(spec):
+                            return method(package_self, *args, **kwargs)
+                    if superself.default:
+                        return superself.default(package_self, *args, **kwargs)
+                elif superself:
+                    return superself(package_self, *args, **kwargs)
+
+            raise NoSuchMethodError(
+                type(package_self), self.__name__, package_self.spec,
+                [m[0] for m in self.method_list]
+            )
 
     def __str__(self):
         return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
