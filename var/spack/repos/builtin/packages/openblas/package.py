@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 from spack import *
@@ -77,7 +58,8 @@ class Openblas(MakefilePackage):
     provides('blas')
     provides('lapack')
 
-    patch('make.patch', when='@0.2.16:')
+    # OpenBLAS >=3.0 has an official way to disable internal parallel builds
+    patch('make.patch', when='@0.2.16:0.2.20')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     #  UPD: the patch has been merged starting version 0.2.20
@@ -98,9 +80,26 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/pull/1703
     patch('openblas-0.3.2-cmake.patch', when='@0.3.1:0.3.2')
 
-    parallel = False
+    # Disable experimental TLS code that lead to many threading issues
+    # https://github.com/xianyi/OpenBLAS/issues/1735#issuecomment-422954465
+    # https://github.com/xianyi/OpenBLAS/issues/1761#issuecomment-421039174
+    # https://github.com/xianyi/OpenBLAS/pull/1765
+    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch',
+          sha256='714aea33692304a50bd0ccde42590c176c82ded4a8ac7f06e573dc8071929c33',
+          when='@0.3.3')
+
+    # Fix parallel build issues on filesystems
+    # with missing sub-second timestamp resolution
+    patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch',
+          sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
+          when='@0.3.0:0.3.3')
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
+
+    @property
+    def parallel(self):
+        # unclear whether setting `-j N` externally was supported before 0.3
+        return self.spec.version >= Version('0.3.0')
 
     @run_before('edit')
     def check_compilers(self):
@@ -135,13 +134,19 @@ class Openblas(MakefilePackage):
         make_defs = [
             'CC={0}'.format(spack_cc),
             'FC={0}'.format(spack_fc),
-            'MAKE_NO_J=1'
         ]
+
+        # force OpenBLAS to use externally defined parallel build
+        if self.spec.version < Version('0.3'):
+            make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
+        else:
+            make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
 
         if self.spec.variants['virtual_machine'].value:
             make_defs += [
                 'DYNAMIC_ARCH=1',
-                'NO_AVX2=1'
+                'NO_AVX2=1',
+                'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
         if self.spec.variants['cpu_target'].value:
@@ -182,6 +187,15 @@ class Openblas(MakefilePackage):
         return make_defs
 
     @property
+    def headers(self):
+        # As in netlib-lapack, the only public headers for cblas and lapacke in
+        # openblas are cblas.h and lapacke.h. The remaining headers are private
+        # headers either included in one of these two headers, or included in
+        # one of the source files implementing functions declared in these
+        # headers.
+        return find_headers(['cblas', 'lapacke'], self.prefix.include)
+
+    @property
     def build_targets(self):
         targets = ['libs', 'netlib']
 
@@ -194,7 +208,7 @@ class Openblas(MakefilePackage):
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('tests', *self.make_defs)
+        make('tests', *self.make_defs, parallel=False)
 
     @property
     def install_targets(self):

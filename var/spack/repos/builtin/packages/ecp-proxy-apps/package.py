@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 from spack import *
@@ -44,6 +25,9 @@ class EcpProxyApps(Package):
     version('1.1', '15825c318acd3726fd8e72803b1c1090')
     version('1.0', '8b3f00f05e6cde88d8d913da4293ee62')
 
+    variant('candle', default=False,
+            description='Also build CANDLE Benchmarks')
+
     # Added with release 2.0
     depends_on('ember@1.0.0', when='@2.0:')
     depends_on('miniqmc@0.4.0', when='@2.0:')
@@ -52,7 +36,7 @@ class EcpProxyApps(Package):
     depends_on('thornado-mini@1.0', when='@2.0:')
 
     depends_on('amg@1.1', when='@2.0:')
-    depends_on('candle-benchmarks@0.1', when='@2.0:')
+    depends_on('candle-benchmarks@0.1', when='+candle @2.0:')
     depends_on('laghos@1.1', when='@2.0:')
     depends_on('macsio@1.1', when='@2.0:')
     depends_on('miniamr@1.4.1', when='@2.0:')
@@ -67,7 +51,7 @@ class EcpProxyApps(Package):
 
     # Dependencies for versions 1.0:1.1
     depends_on('amg@1.0', when='@1.0:1.1')
-    depends_on('candle-benchmarks@0.0', when='@1.0:1.1')
+    depends_on('candle-benchmarks@0.0', when='+candle @1.0:1.1')
     depends_on('laghos@1.0', when='@1.0:1.1')
     depends_on('macsio@1.0', when='@1.0:1.1')
     depends_on('miniamr@1.4.0', when='@1.0:1.1')

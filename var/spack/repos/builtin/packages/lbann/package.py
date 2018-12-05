@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import sys
 from spack import *
@@ -37,6 +18,8 @@ class Lbann(CMakePackage):
     git      = "https://github.com/LLNL/lbann.git"
 
     version('develop', branch='develop')
+    version('0.95', sha256='d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2')
+    version('0.94', sha256='567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf')
     version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
     version('0.92', 'c0eb1595a7c74640e96f280beb497564')
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
@@ -51,32 +34,44 @@ class Lbann(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
+    variant('al', default=True, description='Builds with support for Aluminum Library')
+    variant('conduit', default=False, description='Builds with support for Conduit Library')
 
     # It seems that there is a need for one statement per version bounds
-    depends_on('hydrogen +openmp_blas +shared +int64', when='@0.95:')
-    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90')
+    depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
+    depends_on('hydrogen +openmp_blas +shared +int64 +al', when='@:0.90,0.95: +al')
+
     depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@0.95:'))
-    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@:0.90'))
+               when='build_type=Debug @:0.90,0.95: ~al')
+    depends_on('hydrogen +openmp_blas +shared +int64 build_type=Debug +al',
+               when='build_type=Debug @:0.90,0.95: +al')
+
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
-               when=('+gpu' '@0.95:'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda',
-               when=('+gpu' '@:0.90'))
+               when='+gpu @:0.90,0.95: ~al')
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda +al',
+               when='+gpu @:0.90,0.95: +al')
+
     depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when=('build_type=Debug' '@0.95:' '+gpu'))
-    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when=('build_type=Debug' '@:0.90' '+gpu'))
-    depends_on('elemental +openmp_blas +shared +int64', when=('@0.91:0.94'))
+               when='build_type=Debug @:0.90,0.95: +gpu')
+    depends_on('hydrogen +openmp_blas +shared +int64 +cuda build_type=Debug +al',
+               when='build_type=Debug @:0.90,0.95: +gpu +al')
+
+    # Older versions depended on Elemental not Hydrogen
+    depends_on('elemental +openmp_blas +shared +int64', when='@0.91:0.94')
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
-               when=('build_type=Debug' '@0.91:0.94'))
+               when='build_type=Debug @0.91:0.94')
+
+    depends_on('aluminum@master', when='@:0.90,0.95: +al ~gpu')
+    depends_on('aluminum@master +gpu +mpi-cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
     depends_on('mpi', when='~gpu')
     depends_on('mpi +cuda', when='+gpu')
-    depends_on('hwloc ~pci ~libxml2')
+    depends_on('hwloc')
+
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
@@ -90,6 +85,8 @@ class Lbann(CMakePackage):
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')
+
+    depends_on('conduit@master +hdf5', when='+conduit')
 
     @property
     def common_config_args(self):
@@ -128,6 +125,15 @@ class Lbann(CMakePackage):
             args.extend([
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
+
+        if '+al' in spec:
+            args.extend(['-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
+                         '-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
+
+        if '+conduit' in spec:
+            args.extend(['-DLBANN_CONDUIT_DIR:BOOL=%s' % ('+conduit' in spec),
+                         '-DLBANN_CONDUIT_DIR={0}'.format(
+                             spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):

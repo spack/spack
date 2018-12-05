@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -51,3 +32,32 @@ class Findutils(AutotoolsPackage):
     version('4.2.15', 'a881b15aa7170aea045bf35cc92d48e7')
     version('4.1.20', 'e90ce7222daadeb8616b8db461e17cbc')
     version('4.1',    '3ea8fe58ef5386da75f6c707713aa059')
+
+    depends_on('autoconf', type='build', when='@4.6.0')
+    depends_on('automake', type='build', when='@4.6.0')
+    depends_on('libtool', type='build', when='@4.6.0')
+    depends_on('m4', type='build', when='@4.6.0')
+    depends_on('texinfo', type='build', when='@4.6.0')
+
+    # findutils does not build with newer versions of glibc
+    patch('https://src.fedoraproject.org/rpms/findutils/raw/97ba2d7a18d1f9ae761b6ff0b4f1c4d33d7a8efc/f/findutils-4.6.0-gnulib-fflush.patch', sha256='84b916c0bf8c51b7e7b28417692f0ad3e7030d1f3c248ba77c42ede5c1c5d11e', when='@4.6.0')
+    patch('https://src.fedoraproject.org/rpms/findutils/raw/97ba2d7a18d1f9ae761b6ff0b4f1c4d33d7a8efc/f/findutils-4.6.0-gnulib-makedev.patch', sha256='bd9e4e5cc280f9753ae14956c4e4aa17fe7a210f55dd6c84aa60b12d106d47a2', when='@4.6.0')
+
+    build_directory = 'spack-build'
+
+    @property
+    def force_autoreconf(self):
+        # Run autoreconf due to build system patch (gnulib-makedev)
+        return self.spec.satisfies('@4.6.0')
+
+    @when('@4.6.0')
+    def patch(self):
+        # We have to patch out gettext support, otherwise autoreconf tries to
+        # call autopoint, which depends on find, which is part of findutils.
+        filter_file('^AM_GNU_GETTEXT.*',
+                    '',
+                    'configure.ac')
+
+        filter_file(r'^SUBDIRS = (.*) po (.*)',
+                    r'SUBDIRS = \1 \2',
+                    'Makefile.am')
