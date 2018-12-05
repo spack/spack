@@ -26,11 +26,11 @@ so package authors should use their judgement.
 """
 import functools
 
-from llnl.util.lang import caller_locals, get_calling_module_name
+from llnl.util.lang import caller_locals
 
 import spack.architecture
 import spack.error
-from spack.spec import parse_anonymous_spec
+from spack.spec import Spec
 
 
 class SpecMultiMethod(object):
@@ -45,11 +45,6 @@ class SpecMultiMethod(object):
        registered methods and their associated specs, and it tries
        to find one that matches the package's spec.  If it finds one
        (and only one), it will call that method.
-
-       The package author is responsible for ensuring that only one
-       condition on multi-methods ever evaluates to true.  If
-       multiple methods evaluate to true, this will raise an
-       exception.
 
        This is intended for use with decorators (see below).  The
        decorator (see docs below) creates SpecMultiMethods and
@@ -76,7 +71,7 @@ class SpecMultiMethod(object):
             functools.update_wrapper(self, default)
 
     def register(self, spec, method):
-        """Register a version of a method for a particular sys_type."""
+        """Register a version of a method for a particular spec."""
         self.method_list.append((spec, method))
 
         if not hasattr(self, '__name__'):
@@ -91,6 +86,7 @@ class SpecMultiMethod(object):
         # element in the list. The first registered function
         # will be the one 'wrapped'.
         wrapped_method = self.method_list[0][1]
+
         # Call functools.wraps manually to get all the attributes
         # we need to be disguised as the wrapped_method
         func = functools.wraps(wrapped_method)(
@@ -178,10 +174,6 @@ class when(object):
                   self.setup()
                   # Do more common install stuff
 
-       There must be one (and only one) @when clause that matches the
-       package's spec.  If there is more than one, or if none match,
-       then the method will raise an exception when it's called.
-
        Note that the default version of decorated methods must
        *always* come first.  Otherwise it will override all of the
        platform-specific versions.  There's not much we can do to get
@@ -189,11 +181,12 @@ class when(object):
     """
 
     def __init__(self, spec):
-        pkg = get_calling_module_name()
         if spec is True:
-            spec = pkg
-        self.spec = (parse_anonymous_spec(spec, pkg)
-                     if spec is not False else None)
+            self.spec = Spec()
+        elif spec is not False:
+            self.spec = Spec(spec)
+        else:
+            self.spec = None
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope

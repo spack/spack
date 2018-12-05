@@ -21,7 +21,7 @@ class Multimethod(MultimethodBase):
     url      = 'http://www.example.com/example-1.0.tar.gz'
 
     #
-    # These functions are only valid for versions 1, 2, and 3.
+    # These functions are only valid for versions 1, 3, and 4.
     #
     @when('@1.0')
     def no_version_2(self):
