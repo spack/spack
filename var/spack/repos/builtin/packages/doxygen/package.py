@@ -13,8 +13,8 @@ class Doxygen(CMakePackage):
     Microsoft, and UNO/OpenOffice flavors), Fortran, VHDL, Tcl, and to some
     extent D.."""
 
-    homepage = "http://www.stack.nl/~dimitri/doxygen/"
-    url      = "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.src.tar.gz"
+    homepage = "http://www.doxygen.nl"
+    url      = "https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz"
 
     version('1.8.14', '41d8821133e8d8104280030553e2b42b')
     version('1.8.12', '08e0f7850c4d22cb5188da226b209a96')
