@@ -73,7 +73,7 @@ class Gcc(AutotoolsPackage):
     # of gcc7. Correctly specifying conflicts() and depends_on() in such a
     # case is a PITA.
     variant('languages',
-            default='c,c++,fortran',
+            default='c,c++,fortran,lto',
             values=('ada', 'brig', 'c', 'c++', 'fortran',
                     'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
             multi=True,
@@ -101,7 +101,6 @@ class Gcc(AutotoolsPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
-    depends_on('nvptx-tools', when='+nvptx')
     depends_on('cuda', when='+nvptx')
 
     resource(
@@ -111,6 +110,11 @@ class Gcc(AutotoolsPackage):
              destination='newlibsource',
              when='+nvptx'
             )
+
+    resource(
+       name='nvptx-tools',
+       git='https://github.com/MentorEmbedded/nvptx-tools',
+    )
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -252,8 +256,6 @@ class Gcc(AutotoolsPackage):
                 ','.join(spec.variants['languages'].value)),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
-            '--enable-lto',
-            '--with-quad'
         ]
 
         # Use installed libz
@@ -301,7 +303,6 @@ class Gcc(AutotoolsPackage):
                            spec['cuda'].prefix.lib64))
             options.append('--disable-bootstrap')
             options.append('--disable-multilib')
-            options.append('--disable-lto')
 
         return options
 
@@ -310,8 +311,24 @@ class Gcc(AutotoolsPackage):
     @run_before('configure')
     def nvptx_install(self):
         spec = self.spec
+        prefix = self.prefix
 
         if spec.satisfies('+nvptx'):
+
+            options = getattr(self, 'configure_flag_args', [])
+            options += ['--prefix={0}'.format(prefix)]
+
+            options += [
+                '--with-cuda-driver-include={0}'.format(spec['cuda'].prefix.include),
+                '--with-cuda-driver-lib={0}'.format(spec['cuda'].prefix.lib64), 
+            ]
+
+
+            with working_dir('nvptx-tools'):
+                configure = Executable("./configure")
+                configure(*options)
+                make()
+                make('install')
 
             pattern = join_path(self.stage.source_path, 'newlibsource', '*')
             files = glob.glob(pattern)
@@ -324,21 +341,21 @@ class Gcc(AutotoolsPackage):
             cd('spack-build-nvptx')
 
             options = ['--prefix={0}'.format(prefix),
-                       '--disable-multilib',
                        '--enable-languages={0}'.format(
-                       ','.join(spec.variants['languages'].value)), ]
+                       ','.join(spec.variants['languages'].value)), 
+                        '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+                        '--with-gmp={0}'.format(spec['gmp'].prefix),
+                       ]
 
             options.append('--target=nvptx-none')
             options.append('--with-build-time-tools={0}'.format(
-                           join_path(spec['nvptx-tools'].prefix,
+                           join_path(prefix,
                                      'nvptx-none', 'bin')))
-            options.append('--enable-as-accelerator-for={0}'.format(
-                           spec.architecture.target + '-' +
-                           spec.architecture.platform))
+            options.append('--enable-as-accelerator-for=x86_64-pc-linux-gnu')
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
-            options.append('--disable-lto')
 
+            configure = Executable("../configure")
             configure(*options)
             make()
             make('install')
@@ -387,3 +404,4 @@ class Gcc(AutotoolsPackage):
         run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
         run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
         run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))
+
