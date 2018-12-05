@@ -108,12 +108,12 @@ class Fftw(AutotoolsPackage):
         return find_libraries(libraries, root=self.prefix, recursive=True)
 
     def patch(self):
-        #If fftw/config.h exists in the source tree, it will take precedence 
-        #over the copy in build dir.  As only the latter has proper config 
+        #If fftw/config.h exists in the source tree, it will take precedence
+        #over the copy in build dir.  As only the latter has proper config
         #for our build, this is a problem.  See e.g. issue #7372 on github
         import os
         if os.path.isfile('fftw/config.h'):
-            os.rename('fftw/config.h','fftw/config.h.SPACK_RENAMED')
+            os.rename('fftw/config.h', 'fftw/config.h.SPACK_RENAMED')
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:
