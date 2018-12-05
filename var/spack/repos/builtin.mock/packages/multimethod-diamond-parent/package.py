@@ -3,22 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkg.builtin.mock.multimethod import Multimethod
+from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
 
 
-class MultimethodInheritor(Multimethod):
+class MultimethodDiamondParent(MultimethodBase):
     """This package is designed for use with Spack's multimethod test.
        It has a bunch of test cases for the @when decorator that the
        test uses.
     """
 
-    @when('@1.0')
-    def inherited_and_overridden(self):
-        return "inheritor@1.0"
+    @when('@3.0')
+    def diamond_inheritance(self):
+        return "second_parent"
 
-    #
-    # Test multi-level inheritance
-    #
-    @when('@2:')
-    def base_method(self):
-        return 'multimethod-inheritor'
+    @when('@4.0, 2.0')
+    def diamond_inheritance(self):
+        return "should never be reached"
