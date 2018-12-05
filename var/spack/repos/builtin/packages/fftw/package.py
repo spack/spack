@@ -169,10 +169,10 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make()
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make()
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make()
 
@@ -184,10 +184,10 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make("check")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make("check")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make("check")
 
@@ -198,9 +198,9 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make("install")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make("install")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make("install")
