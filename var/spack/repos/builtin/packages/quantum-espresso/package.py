@@ -97,12 +97,12 @@ class QuantumEspresso(Package):
     # There may still be problems on Mac with MKL detection
     patch_url = 'https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff'
     patch_checksum = 'bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b'
-    patch(patch_url, sha256=patch_checksum, when='@6.3')
+    patch(patch_url, sha256=patch_checksum, when='@6.3:6.3.0')
 
     # QE 6.3 `make install` broken and a patch must be applied
     patch_url = 'https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff'
     patch_checksum = 'b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca'
-    patch(patch_url, sha256=patch_checksum, when='@6.3')
+    patch(patch_url, sha256=patch_checksum, when='@6.3:6.3.0')
 
     def install(self, spec, prefix):
 
