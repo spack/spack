@@ -14,7 +14,7 @@ from spack.variant import MultipleValuesInExclusiveVariantError
 
 def target_factory(spec_string, target_concrete):
     spec = Spec(spec_string) if spec_string else Spec()
-    print spec, spec_string, "AAAAA"
+
     if target_concrete:
         spec._mark_concrete()
         substitute_abstract_variants(spec)
@@ -27,18 +27,15 @@ def argument_factory(argument_spec, left):
         # If it's not anonymous, allow it
         right = target_factory(argument_spec, False)
     except Exception:
-        print "HAHA"
         right = parse_anonymous_spec(argument_spec, left.name)
     return right
 
 
 def check_satisfies(target_spec, argument_spec, target_concrete=False):
-    
+
     left = target_factory(target_spec, target_concrete)
     right = argument_factory(argument_spec, left)
 
-    print left, 'left', left.name
-    print right, right.name
     # Satisfies is one-directional.
     assert left.satisfies(right)
     if argument_spec:
