@@ -21,7 +21,8 @@ class Gcc(AutotoolsPackage):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
+    version('develop', svn='svn://gcc.gnu.org/svn/gcc/trunk')
+    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed', default=True)
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
     version('7.3.0', 'be2da21680f27624f3a87055c4ba5af2')
     version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
