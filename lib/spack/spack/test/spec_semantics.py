@@ -13,8 +13,8 @@ from spack.variant import MultipleValuesInExclusiveVariantError
 
 
 def target_factory(spec_string, target_concrete):
-    spec = Spec(spec_string)
-
+    spec = Spec(spec_string) if spec_string else Spec()
+    print spec, spec_string, "AAAAA"
     if target_concrete:
         spec._mark_concrete()
         substitute_abstract_variants(spec)
@@ -27,18 +27,22 @@ def argument_factory(argument_spec, left):
         # If it's not anonymous, allow it
         right = target_factory(argument_spec, False)
     except Exception:
+        print "HAHA"
         right = parse_anonymous_spec(argument_spec, left.name)
     return right
 
 
 def check_satisfies(target_spec, argument_spec, target_concrete=False):
-
+    
     left = target_factory(target_spec, target_concrete)
     right = argument_factory(argument_spec, left)
 
+    print left, 'left', left.name
+    print right, right.name
     # Satisfies is one-directional.
     assert left.satisfies(right)
-    assert left.satisfies(argument_spec)
+    if argument_spec:
+        assert left.satisfies(argument_spec)
 
     # If left satisfies right, then we should be able to constrain
     # right by left.  Reverse is not always true.
@@ -90,6 +94,34 @@ class TestSpecSematics(object):
     def test_satisfies(self):
         check_satisfies('libelf@0.8.13', '@0:1')
         check_satisfies('libdwarf^libelf@0.8.13', '^libelf@0:1')
+
+    def test_empty_satisfies(self):
+        # Basic satisfaction
+        check_satisfies('libelf', '')
+        check_satisfies('libdwarf', '')
+        check_satisfies('%intel', '')
+        check_satisfies('^mpi', '')
+        check_satisfies('+debug', '')
+        check_satisfies('@3:', '')
+
+        # Concrete (strict) satisfaction
+        check_satisfies('libelf', '', True)
+        check_satisfies('libdwarf', '', True)
+        check_satisfies('%intel', '', True)
+        check_satisfies('^mpi', '', True)
+        # TODO: Variants can't be called concrete while anonymous
+        # check_satisfies('+debug', '', True)
+        check_satisfies('@3:', '', True)
+
+        # Reverse (non-strict) satisfaction
+        check_satisfies('', 'libelf')
+        check_satisfies('', 'libdwarf')
+        check_satisfies('', '%intel')
+        check_satisfies('', '^mpi')
+        # TODO: Variant matching is auto-strict
+        # we should rethink this
+        # check_satisfies('', '+debug')
+        check_satisfies('', '@3:')
 
     def test_satisfies_namespace(self):
         check_satisfies('builtin.mpich', 'mpich')
