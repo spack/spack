@@ -31,10 +31,6 @@ class Zlib(Package):
 
     patch('w_patch.patch', when="@1.2.11%cce")
 
-    @when('%pgi')
-    def patch(self):
-        print "patching"
-
     @property
     def libs(self):
         shared = '+shared' in self.spec
