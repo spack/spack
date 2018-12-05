@@ -22,6 +22,7 @@ class Gromacs(CMakePackage):
     homepage = 'http://www.gromacs.org'
     url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
+    maintainers = ['junghans', 'marvinbernhardt']
 
     version('develop', branch='master')
     version('2018.4', sha256='6f2ee458c730994a8549d6b4f601ecfc9432731462f8bd4ffa35d330d9aaa891')
@@ -92,5 +93,7 @@ class Gromacs(CMakePackage):
 
         if '-rdtscp' in self.spec:
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
+        else:
+            options.append('-DGMX_USE_RDTSCP:BOOL=ON')
 
         return options
