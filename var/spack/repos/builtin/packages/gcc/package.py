@@ -54,7 +54,7 @@ class Gcc(AutotoolsPackage):
     # of gcc7. Correctly specifying conflicts() and depends_on() in such a
     # case is a PITA.
     variant('languages',
-            default='c,c++,fortran,lto',
+            default='c,c++,fortran',
             values=('ada', 'brig', 'c', 'c++', 'fortran',
                     'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
             multi=True,
@@ -99,9 +99,14 @@ class Gcc(AutotoolsPackage):
              when='+nvptx'
             )
 
+    # nvptx-tools does not seem to work as a dependency,
+    # but does fine when the source is inside the gcc build directory
+    # nvptx-tools doesn't have any releases, so grabbing the last commit
     resource(
        name='nvptx-tools',
        git='https://github.com/MentorEmbedded/nvptx-tools',
+       commit='5f6f343a302d620b0868edab376c00b15741e39e',
+       when='+nvptx'
     )
 
     # TODO: integrate these libraries.
@@ -244,6 +249,8 @@ class Gcc(AutotoolsPackage):
                 ','.join(spec.variants['languages'].value)),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--enable-lto',
+            '--with-quad'
         ]
 
         # Use installed libz
@@ -307,10 +314,10 @@ class Gcc(AutotoolsPackage):
             options += ['--prefix={0}'.format(prefix)]
 
             options += [
-                '--with-cuda-driver-include={0}'.format(spec['cuda'].prefix.include),
-                '--with-cuda-driver-lib={0}'.format(spec['cuda'].prefix.lib64), 
+                '--with-cuda-driver-include={0}'.format(
+                    spec['cuda'].prefix.include),
+                '--with-cuda-driver-lib={0}'.format(spec['cuda'].prefix.lib64),
             ]
-
 
             with working_dir('nvptx-tools'):
                 configure = Executable("./configure")
@@ -330,16 +337,18 @@ class Gcc(AutotoolsPackage):
 
             options = ['--prefix={0}'.format(prefix),
                        '--enable-languages={0}'.format(
-                       ','.join(spec.variants['languages'].value)), 
-                        '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-                        '--with-gmp={0}'.format(spec['gmp'].prefix),
+                       ','.join(spec.variants['languages'].value)),
+                       '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+                       '--with-gmp={0}'.format(spec['gmp'].prefix),
                        ]
 
             options.append('--target=nvptx-none')
             options.append('--with-build-time-tools={0}'.format(
                            join_path(prefix,
                                      'nvptx-none', 'bin')))
-            options.append('--enable-as-accelerator-for=x86_64-pc-linux-gnu')
+            options.append('--enable-as-accelerator-for={0}'.format(
+                           spec.architecture.target + '-' +
+                           spec.architecture.platform))
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
 
@@ -392,4 +401,3 @@ class Gcc(AutotoolsPackage):
         run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
         run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
         run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))
-
