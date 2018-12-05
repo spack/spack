@@ -37,6 +37,13 @@ class Bzip2(Package):
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
         filter_file(r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile')
+        for f in ["bzegrep", "bzfgrep", "bzcmp", "bzless"]:
+            filter_file(
+                r'^\tln -s -f \$\(PREFIX\)/bin/(.*) \$\(PREFIX\)/bin/%s$'
+                % (f),
+                '\tln -s -f \\1 $(PREFIX)/bin/%s' % (f), 'Makefile'
+            )
+
         filter_file(
             r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile-libbz2_so'
         )
