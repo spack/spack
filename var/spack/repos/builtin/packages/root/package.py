@@ -235,15 +235,6 @@ class Root(CMakePackage):
     depends_on('xrootd',    when='+xrootd')
     # depends_on('hdfs') - supported (TODO)
 
-    # Old dependencies
-
-    # depends_on('binutils')
-    # depends_on('gif')  - provided by builtin afterimage
-    # depends_on('jpeg') - provided by builtin afterimage
-    # depends_on('libice')
-    # depends_on('libsm')
-    # depends_on('libxml2+python')
-
     # Not supported
     # depends_on('monalisa')
 
