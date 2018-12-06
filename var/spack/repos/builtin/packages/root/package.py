@@ -191,7 +191,7 @@ class Root(CMakePackage):
     depends_on('gl2ps', when="+x+opengl")
 
     # Qt4
-    depends_on('qt', when='+qt4')
+    depends_on('qt@:4.999', when='+qt4')
 
     # TMVA
     depends_on('py-numpy', when='+tmva')
