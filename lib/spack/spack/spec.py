@@ -3528,7 +3528,6 @@ class SpecParser(spack.parse.Parser):
             self.check_identifier(spec_name)
 
         if self._initial is None:
-            # This will init the spec without calling Spec.__init__
             spec = Spec()
         else:
             # this is used by Spec.__init__

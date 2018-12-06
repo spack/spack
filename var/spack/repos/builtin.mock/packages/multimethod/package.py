@@ -148,4 +148,23 @@ class Multimethod(MultimethodBase):
 
     @when('@4.0')
     def diamond_inheritance(self):
-        return "should_not_be_reached"
+        return "should_not_be_reached by diamond inheritance test"
+
+    #
+    # Check that multimethods work with boolean values
+    #
+    @when(True)
+    def boolean_true_first(self):
+        return 'True'
+
+    @when(False)
+    def boolean_true_first(self):
+        return 'False'
+
+    @when(False)
+    def boolean_false_first(self):
+        return 'False'
+
+    @when(True)
+    def boolean_false_first(self):
+        return 'True'
