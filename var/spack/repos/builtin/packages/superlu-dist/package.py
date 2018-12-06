@@ -16,6 +16,7 @@ class SuperluDist(CMakePackage):
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('6.1.0', '3bf477279677da26ab999ae5aca82ebb02fa656079d51b1061a682fdd7316cec')
     version('6.0.0', 'ff6cdfa0263d595708bbb6d11fb780915d8cfddab438db651e246ea292f37ee4')
     version('5.4.0', '3ac238fe082106a2c4dbaf0c22af1ff1247308ffa8f053de9d78c3ec7dd0d801')
     version('5.3.0', '49ed110bdef1e284a0181d6c7dd1fae3aa110cb45f67c6aa5cb791070304d670')
