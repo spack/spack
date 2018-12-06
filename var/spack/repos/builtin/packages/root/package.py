@@ -99,8 +99,8 @@ class Root(CMakePackage):
         description='Enable postgres support')
     variant('pythia6', default=False,
         description='Enable pythia6 support')
-    variant('pythia8', default=False,
-        description='Enable pythia8 support')
+    # variant('pythia8', default=False, - not suported by spack
+    #    description='Enable pythia8 support')
     variant('python', default=True,
         description='Enable Python ROOT bindings')
     variant('qt4', default=False,
@@ -219,7 +219,7 @@ class Root(CMakePackage):
     depends_on('openssl',   when='+ssl')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6@6:6.999+root',  when='+pythia6')
-    depends_on('pythia@8:8.999',  when='+pythia8')
+    # depends_on('pythia@8:8.999',  when='+pythia8') - not supported on Spack
     depends_on('python@2.7:',     when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-cpp',     when='+r', type=('build', 'run'))
@@ -370,8 +370,8 @@ class Root(CMakePackage):
                 'ON' if '+postgres' in spec else 'OFF'),
             '-Dpythia6:BOOL=%s' % (
                 'ON' if '+pythia6' in spec else 'OFF'),
-            '-Dpythia8:BOOL=%s' % (
-                'ON' if '+pythia8' in spec else 'OFF'),
+            # '-Dpythia8:BOOL=%s' % ( - not suported by spack
+            #     'ON' if '+pythia8' in spec else 'OFF'),
             '-Dpython:BOOL=%s' % (
                 'ON' if '+python' in spec else 'OFF'),
             '-Dqt:BOOL=%s' % (
