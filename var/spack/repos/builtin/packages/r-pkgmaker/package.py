@@ -19,7 +19,7 @@ class RPkgmaker(RPackage):
     url      = "https://cran.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/pkgmaker"
 
-    version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
+    version('0.22', sha256='05da8b6c0e6828676aeb3faa05ea6e1025b95efffde4820e9ae2b938dbb3027e')
 
     depends_on('r-registry', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))

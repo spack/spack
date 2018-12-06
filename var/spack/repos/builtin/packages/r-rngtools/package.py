@@ -17,7 +17,7 @@ class RRngtools(RPackage):
     url      = "https://cran.r-project.org/src/contrib/rngtools_1.2.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rngtools"
 
-    version('1.2.4', '715967f8b3af2848a76593a7c718c1cd')
+    version('1.2.4', sha256='17409ada52a2405efa931b5895254cac0e28518a0d41f05012ba3f8af8af3556')
 
     depends_on('r-pkgmaker', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
