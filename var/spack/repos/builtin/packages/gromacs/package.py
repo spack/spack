@@ -49,9 +49,9 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('simd', default='AUTO',
+    variant('simd', default='auto',
             description='The SIMD instruction set to use',
-            values=('AUTO', 'None', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
+            values=('auto', 'none', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
                     'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
                     'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
@@ -87,9 +87,13 @@ class Gromacs(CMakePackage):
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
 
-        if self.spec.variants['simd'].value != 'AUTO':
-            options.append('-DGMX_SIMD:STRING=' +
-                           self.spec.variants['simd'].value)
+        simd_value = self.spec.variants['simd'].value
+        if simd_value == 'auto':
+            pass
+        elif simd_value == 'none':
+            options.append('-DGMX_SIMD:STRING=None')
+        else:
+            options.append('-DGMX_SIMD:STRING=' + simd_value)
 
         if '-rdtscp' in self.spec:
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
