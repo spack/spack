@@ -448,7 +448,7 @@ def pretty_string_to_date(date_str, now=None):
 
     Args:
         date_str (str): string representing a date. This string might be
-            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``, ``YYYY-MM-DD HH:MM``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
@@ -466,6 +466,12 @@ def pretty_string_to_date(date_str, now=None):
     )
     pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
+    )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m-%d %H:%M'
+    )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m-%d %H:%M:%S'
     )
 
     pretty_regex = re.compile(
