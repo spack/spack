@@ -95,43 +95,45 @@ class SpecMultiMethod(object):
         )
         return func
 
+    def _get_method_by_spec(self, spec):
+        """Find the method of this SpecMultiMethod object that satisfies the
+           given spec, if one exists
+        """
+        for condition, method in self.method_list:
+            if spec.satisfies(condition):
+                return method
+        return self.default or None
+
     def __call__(self, package_self, *args, **kwargs):
         """Find the first method with a spec that matches the
            package's spec.  If none is found, call the default
            or if there is none, then raise a NoSuchMethodError.
         """
-        for spec, method in self.method_list:
-            if package_self.spec.satisfies(spec):
-                return method(package_self, *args, **kwargs)
+        spec_method = self._get_method_by_spec(package_self.spec)
+        if spec_method:
+            return spec_method(package_self, *args, **kwargs)
+        # Unwrap the MRO of `package_self by hand. Note that we can't
+        # use `super()` here, because using `super()` recursively
+        # requires us to know the class of `package_self`, as well as
+        # its superclasses for successive calls. We don't have that
+        # information within `SpecMultiMethod`, because it is not
+        # associated with the package class.
+        for cls in inspect.getmro(package_self.__class__)[1:]:
+            superself = cls.__dict__.get(self.__name__, None)
+            if isinstance(superself, SpecMultiMethod):
+                # Check parent multimethod for method for spec.
+                superself_method = superself._get_method_by_spec(
+                    package_self.spec
+                )
+                if superself_method:
+                    return superself_method(package_self, *args, **kwargs)
+            elif superself:
+                return superself(package_self, *args, **kwargs)
 
-        if self.default:
-            return self.default(package_self, *args, **kwargs)
-
-        else:
-            # Unwrap MRO by hand because super binds to the subclass
-            # and causes infinite recursion for inherited methods
-            for cls in inspect.getmro(package_self.__class__)[1:]:
-                superself = cls.__dict__.get(self.__name__, None)
-                if isinstance(superself, self.__class__):
-                    # Parent class method is a multimethod
-                    # check it locally for methods, conditional or default
-                    # Do not recurse, that will mess up MRO
-                    for spec, method in superself.method_list:
-                        if package_self.spec.satisfies(spec):
-                            return method(package_self, *args, **kwargs)
-                    if superself.default:
-                        return superself.default(package_self, *args, **kwargs)
-                elif superself:
-                    return superself(package_self, *args, **kwargs)
-
-            raise NoSuchMethodError(
-                type(package_self), self.__name__, package_self.spec,
-                [m[0] for m in self.method_list]
-            )
-
-    def __str__(self):
-        return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
-            self.default, self.method_list)
+        raise NoSuchMethodError(
+            type(package_self), self.__name__, package_self.spec,
+            [m[0] for m in self.method_list]
+        )
 
 
 class when(object):
@@ -193,13 +195,11 @@ class when(object):
        around this because of the way decorators work.
     """
 
-    def __init__(self, spec):
-        if spec is True:
-            self.spec = Spec()
-        elif spec is not False:
-            self.spec = Spec(spec)
+    def __init__(self, condition):
+        if isinstance(condition, bool):
+            self.spec = Spec() if condition else None
         else:
-            self.spec = None
+            self.spec = Spec(condition)
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope

@@ -158,3 +158,9 @@ def test_multimethod_diamond_inheritance():
 
     pkg = spack.repo.get('multimethod-diamond@4.0')
     assert pkg.diamond_inheritance() == 'subclass'
+
+
+def test_multimethod_boolean(pkg_name):
+    pkg = spack.repo.get(pkg_name)
+    assert pkg.boolean_true_first() == 'True'
+    assert pkg.boolean_false_first() == 'True'
