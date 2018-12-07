@@ -113,6 +113,9 @@ class Paraview(CMakePackage):
                 run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
                                      paraview_version, 'site-packages', 'vtk'))
         elif self.spec.satisfies('@5.5.0:'):
+            # Note the python2.7 directory likely needs to be smarter if the
+            # strict python 2:2.8 dependency goes away for Paraview in the
+            # future
             if '+python' in self.spec:
                 run_env.prepend_path('PYTHONPATH',
                                      join_path(lib_dir,
