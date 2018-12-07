@@ -12,6 +12,7 @@ import spack.repo
 import spack.store
 import spack.spec
 import spack.binary_distribution as bindist
+import spack.cmd.common.arguments as arguments
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -40,6 +41,10 @@ def setup_parser(subparser):
     create.add_argument('-d', '--directory', metavar='directory',
                         type=str, default='.',
                         help="directory in which to save the tarballs.")
+    create.add_argument('--no-dependencies',
+                        action='store_false',
+                        dest='recurse_dependencies',
+                        help='do not recursively traverse spec dependencies')
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to create buildcache for")
@@ -187,6 +192,8 @@ def createtarball(args):
         else:
             tty.msg('adding matching spec %s' % match.format())
             specs.add(match)
+            if not args.recurse_dependencies:
+                continue
             tty.msg('recursing dependencies')
             for d, node in match.traverse(order='post',
                                           depth=True,
