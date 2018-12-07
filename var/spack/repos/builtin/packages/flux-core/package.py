@@ -32,11 +32,13 @@ class FluxCore(AutotoolsPackage):
     depends_on("czmq@3.0.1:", when="@0.7:,master")
     depends_on("hwloc@1.11.1:1.99")
     depends_on("hwloc +cuda", when='+cuda')
-    depends_on("lua", type=('build', 'run', 'link'))
+    # Provide version hints for lua so that the concretizer succeeds when no
+    # explicit flux-core version is given. See issue #10000 for details
+    depends_on("lua@5.1:5.2.99", type=('build', 'run', 'link'))
     depends_on("lua@5.1:5.1.99", when="@0.1.0:0.9.0")
     depends_on("lua@5.1:5.2.99", when="@0.10.0:,master")
     depends_on("lua-luaposix")
-    depends_on("munge")
+    depends_on("munge", when="@0.1.0:0.10.0")
     depends_on("libuuid")
     depends_on("python", type=('build', 'run'))
     depends_on("python@2.7:2.99", when="@0.1.0:0.10.0")
