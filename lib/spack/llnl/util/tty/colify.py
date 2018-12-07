@@ -13,7 +13,6 @@ import sys
 from six import StringIO, text_type
 
 from llnl.util.tty import terminal_size
-import llnl.util.tty as tty
 from llnl.util.tty.color import clen, cextra
 
 
