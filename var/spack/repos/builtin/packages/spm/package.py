@@ -32,7 +32,7 @@ class Spm(Package):
 
     version('12_r7219', sha256='b46fe8ce5ab537caeea7634c650f3a12fe2716f6a2e8ac15aa0d62b3652fe764')
 
-    depends_on('zip', type ='build')
+    depends_on('zip', type='build')
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
