@@ -294,4 +294,4 @@ class SimmetrixSimmodsuite(Package):
                      "OPTFLAGS=-O2 -DNDEBUG " + self.compiler.pic_flag)
                 libname = 'libSimPartitionWrapper-' + mpi_id + '.a'
                 wrapperlibpath = join_path(workdir, 'lib', libname)
-                install(wrapperlibpath, join_path(prefix.lib, oslib))
+                install(wrapperlibpath, join_path(prefix.lib, self.oslib))
