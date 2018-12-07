@@ -141,7 +141,7 @@ def colify(elts, **options):
     for elt in elts:
         try:
             converted_elts.append(text_type(elt))
-        except UnicodeDecodeError, e:
+        except UnicodeDecodeError as e:
             msg = "Failed conversion: {0}\n{1}".format(elt, e.message)
             raise ValueError(msg)
     elts = converted_elts
