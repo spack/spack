@@ -10,7 +10,7 @@ from __future__ import division
 
 import os
 import sys
-from six import StringIO, text_type
+from six import StringIO, text_type, string_types
 
 from llnl.util.tty import terminal_size
 from llnl.util.tty.color import clen, cextra
@@ -140,7 +140,10 @@ def colify(elts, **options):
     converted_elts = []
     for elt in elts:
         try:
-            converted_elts.append(text_type(elt, 'utf-8'))
+            if isinstance(elt, string_types):
+                converted_elts.append(text_type(elt, 'utf-8'))
+            else:
+                converted_elts.append(str(elt))
         except UnicodeDecodeError as e:
             msg = "Failed conversion: {0}\n{1}".format(elt, e.message)
             raise ValueError(msg)
