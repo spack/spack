@@ -1030,7 +1030,7 @@ class Database(object):
             # queries for upstream DBs need to *not* lock - we may not
             # have permissions to do this and the upstream DBs won't know about
             # us anyway (so e.g. they should never uninstall specs)
-            results.extend(upstream_db._query(**kwargs) or [])
+            results.extend(upstream_db._query(*args, **kwargs) or [])
 
         results.extend(self.query_local(*args, **kwargs))
 
