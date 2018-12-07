@@ -115,9 +115,16 @@ class Lbann(CMakePackage):
         args = self.common_config_args
         args.extend([
             '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+gpu +nccl' in spec),
+            '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
+            '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
+            '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
+            '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
+            '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
+            '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
+            '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
 
@@ -131,16 +138,13 @@ class Lbann(CMakePackage):
                     spec['elemental'].prefix)])
 
         if '+vtune' in spec:
-            args.extend(['-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
-                         '-DVTUNE_DIR={0}'.format(spec['vtune'].prefix)])
+            args.extend(['-DVTUNE_DIR={0}'.format(spec['vtune'].prefix)])
 
         if '+al' in spec:
-            args.extend(['-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
-                         '-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
+            args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
 
         if '+conduit' in spec:
-            args.extend(['-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
-                         '-DLBANN_CONDUIT_DIR={0}'.format(
+            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
                              spec['conduit'].prefix)])
 
         # Add support for OpenMP
@@ -161,19 +165,15 @@ class Lbann(CMakePackage):
 
         if '+gpu' in spec:
             args.extend([
-                '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
-                '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
                 '-DCUDA_TOOLKIT_ROOT_DIR={0}'.format(
                     spec['cuda'].prefix)])
             args.extend([
-                '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
                 '-DcuDNN_DIR={0}'.format(
                     spec['cudnn'].prefix)])
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
             if '+nccl' in spec:
                 args.extend([
-                    '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
                     '-DNCCL_DIR={0}'.format(
                         spec['nccl'].prefix)])
 
