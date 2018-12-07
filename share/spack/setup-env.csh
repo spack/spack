@@ -24,10 +24,16 @@ if ($?SPACK_ROOT) then
     _spack_pathadd PATH "$SPACK_ROOT/bin"
     eval `spack --print-shell-vars csh`
 
-    # TODO: this needs to be updated the same way as setup-env.sh
     # Set up modules and dotkit search paths in the user environment
-    _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
-    _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
+    set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
+    foreach tcl_root ($tcl_roots:q)
+        _spack_pathadd MODULEPATH "$tcl_root/$_sp_sys_type"
+    end
+
+    set dotkit_roots = `echo $_sp_dotkit_roots:q | sed 's/:/ /g'`
+    foreach dotkit_root ($dotkit_roots)
+        _spack_pathadd DK_NODE "$dotkit_root/$_sp_sys_type"
+    end
 else
     echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to "
     echo "       the root of your spack installation."
