@@ -30,11 +30,21 @@ class Libxc(AutotoolsPackage):
     density-functional theory."""
 
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
-    url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
+    url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/4.2.3/libxc-4.2.3.tar.gz"
 
+    version('4.2.3', '6176ac7edf234425d973903f82199350')
+    version('4.0.3', '44d2a4873a58e6b99fb45b01571b20cb')
+    version('4.0.0', '7b987677700cebc3e30584923efd240f')
+    version('3.0.1', '7891522833953f82f3ac9118dd3bb893')
     version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
-    version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
-    version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
+    version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec',
+            url='http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz')
+    version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f',
+            url='http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.1.tar.gz')
+
+    def url_for_version(self, version):
+        url = "http://www.tddft.org/programs/octopus/down.php?file=libxc/{0}/libxc-{0}.tar.gz"
+        return url.format(version)
 
     @property
     def libs(self):
@@ -57,7 +67,10 @@ class Libxc(AutotoolsPackage):
         # Libxc has a fortran90 interface: give clients the
         # possibility to query for it
         if 'fortran' in query_parameters:
-            libraries = ['libxcf90'] + libraries
+            if self.spec.satisfies('@:3.999'):
+                libraries = ['libxcf90'] + libraries
+            elif self.spec.satisfies('@4.0:'):
+                libraries = ['libxcf03', 'libxcf90'] + libraries
 
         return find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
