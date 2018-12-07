@@ -13,6 +13,7 @@ import sys
 from six import StringIO, text_type
 
 from llnl.util.tty import terminal_size
+import llnl.util.tty as tty
 from llnl.util.tty.color import clen, cextra
 
 
@@ -137,7 +138,14 @@ def colify(elts, **options):
             % next(options.iterkeys()))
 
     # elts needs to be an array of strings so we can count the elements
-    elts = [text_type(elt) for elt in elts]
+    converted_elts = []
+    for elt in elts:
+        try:
+            converted_elts.append(text_type(elt))
+        except UnicodeDecodeError, e:
+            msg = "Failed conversion: {0}\n{1}".format(elt, e.message)
+            raise ValueError(msg)
+    elts = converted_elts
     if not elts:
         return (0, ())
 
