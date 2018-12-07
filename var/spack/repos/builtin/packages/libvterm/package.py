@@ -13,6 +13,8 @@ class Libvterm(Package):
 
     version('681', '7a4325a7350b7092245c04e8ee185ac3')
 
+    depends_on('libtool', type='build')
+
     def install(self, spec, prefix):
         make()
         make("install", "PREFIX=" + prefix)

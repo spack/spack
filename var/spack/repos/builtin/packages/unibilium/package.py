@@ -13,6 +13,8 @@ class Unibilium(Package):
 
     version('1.2.0', '9b1c97839a880a373da6c097443b43c4')
 
+    depends_on('libtool', type='build')
+
     def install(self, spec, prefix):
         make("PREFIX=" + prefix)
         make("install", "PREFIX=" + prefix)

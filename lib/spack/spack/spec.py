@@ -889,187 +889,70 @@ class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
-    @staticmethod
-    def from_literal(spec_dict, normal=True):
-        """Builds a Spec from a dictionary containing the spec literal.
+    def __init__(self, spec_like=None,
+                 normal=False, concrete=False, external_path=None,
+                 external_module=None, full_hash=None):
+        """Create a new Spec.
 
-        The dictionary must have a single top level key, representing the root,
-        and as many secondary level keys as needed in the spec.
+        Arguments:
+            spec_like (optional string): if not provided, we initialize
+                an anonymous Spec that matches any Spec object; if
+                provided we parse this as a Spec string.
 
-        The keys can be either a string or a Spec or a tuple containing the
-        Spec and the dependency types.
-
-        Args:
-            spec_dict (dict): the dictionary containing the spec literal
-            normal (bool): if True the same key appearing at different levels
-                of the ``spec_dict`` will map to the same object in memory.
-
-        Examples:
-            A simple spec ``foo`` with no dependencies:
-
-            .. code-block:: python
-
-                {'foo': None}
-
-            A spec ``foo`` with a ``(build, link)`` dependency ``bar``:
-
-            .. code-block:: python
-
-                {'foo':
-                    {'bar:build,link': None}}
-
-            A spec with a diamond dependency and various build types:
-
-            .. code-block:: python
-
-                {'dt-diamond': {
-                    'dt-diamond-left:build,link': {
-                        'dt-diamond-bottom:build': None
-                    },
-                    'dt-diamond-right:build,link': {
-                        'dt-diamond-bottom:build,link,run': None
-                    }
-                }}
-
-            The same spec with a double copy of ``dt-diamond-bottom`` and
-            no diamond structure:
-
-            .. code-block:: python
-
-                {'dt-diamond': {
-                    'dt-diamond-left:build,link': {
-                        'dt-diamond-bottom:build': None
-                    },
-                    'dt-diamond-right:build,link': {
-                        'dt-diamond-bottom:build,link,run': None
-                    }
-                }, normal=False}
-
-            Constructing a spec using a Spec object as key:
-
-            .. code-block:: python
-
-                mpich = Spec('mpich')
-                libelf = Spec('libelf@1.8.11')
-                expected_normalized = Spec.from_literal({
-                    'mpileaks': {
-                        'callpath': {
-                            'dyninst': {
-                                'libdwarf': {libelf: None},
-                                libelf: None
-                            },
-                            mpich: None
-                        },
-                        mpich: None
-                    },
-                })
+        Keyword arguments:
+        # assign special fields from constructor
+        self._normal = normal
+        self._concrete = concrete
+        self.external_path = external_path
+        self.external_module = external_module
+        self._full_hash = full_hash
 
         """
 
-        # Maps a literal to a Spec, to be sure we are reusing the same object
-        spec_cache = LazySpecCache()
-
-        def spec_builder(d):
-            # The invariant is that the top level dictionary must have
-            # only one key
-            assert len(d) == 1
-
-            # Construct the top-level spec
-            spec_like, dep_like = next(iter(d.items()))
-
-            # If the requirements was for unique nodes (default)
-            # then re-use keys from the local cache. Otherwise build
-            # a new node every time.
-            if not isinstance(spec_like, Spec):
-                spec = spec_cache[spec_like] if normal else Spec(spec_like)
-            else:
-                spec = spec_like
-
-            if dep_like is None:
-                return spec
-
-            def name_and_dependency_types(s):
-                """Given a key in the dictionary containing the literal,
-                extracts the name of the spec and its dependency types.
-
-                Args:
-                    s (str): key in the dictionary containing the literal
-
-                """
-                t = s.split(':')
-
-                if len(t) > 2:
-                    msg = 'more than one ":" separator in key "{0}"'
-                    raise KeyError(msg.format(s))
-
-                n = t[0]
-                if len(t) == 2:
-                    dtypes = tuple(dt.strip() for dt in t[1].split(','))
-                else:
-                    dtypes = ()
-
-                return n, dtypes
-
-            def spec_and_dependency_types(s):
-                """Given a non-string key in the literal, extracts the spec
-                and its dependency types.
-
-                Args:
-                    s (spec or tuple): either a Spec object or a tuple
-                        composed of a Spec object and a string with the
-                        dependency types
-
-                """
-                if isinstance(s, Spec):
-                    return s, ()
-
-                spec_obj, dtypes = s
-                return spec_obj, tuple(dt.strip() for dt in dtypes.split(','))
-
-            # Recurse on dependencies
-            for s, s_dependencies in dep_like.items():
-
-                if isinstance(s, string_types):
-                    dag_node, dependency_types = name_and_dependency_types(s)
-                else:
-                    dag_node, dependency_types = spec_and_dependency_types(s)
-
-                dependency_spec = spec_builder({dag_node: s_dependencies})
-                spec._add_dependency(dependency_spec, dependency_types)
-
-            return spec
-
-        return spec_builder(spec_dict)
-
-    def __init__(self, spec_like, **kwargs):
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
             return
 
-        # Parse if the spec_like is a string.
-        if not isinstance(spec_like, string_types):
+        # init an empty spec that matches anything.
+        self.name = None
+        self.versions = VersionList(':')
+        self.variants = VariantMap(self)
+        self.architecture = None
+        self.compiler = None
+        self.external_path = None
+        self.external_module = None
+        self.compiler_flags = FlagMap(self)
+        self._dependents = DependencyMap()
+        self._dependencies = DependencyMap()
+        self.namespace = None
+
+        self._hash = None
+        self._cmp_key_cache = None
+        self._package = None
+
+        # Most of these are internal implementation details that can be
+        # set by internal Spack calls in the constructor.
+        #
+        # For example, Specs are by default not assumed to be normal, but
+        # in some cases we've read them from a file want to assume
+        # normal.  This allows us to manipulate specs that Spack doesn't
+        # have package.py files for.
+        self._normal = normal
+        self._concrete = concrete
+        self.external_path = external_path
+        self.external_module = external_module
+        self._full_hash = full_hash
+
+        if isinstance(spec_like, string_types):
+            spec_list = SpecParser(self).parse(spec_like)
+            if len(spec_list) > 1:
+                raise ValueError("More than one spec in string: " + spec_like)
+            if len(spec_list) < 1:
+                raise ValueError("String contains no specs: " + spec_like)
+
+        elif spec_like is not None:
             raise TypeError("Can't make spec out of %s" % type(spec_like))
-
-        # parse string types *into* this spec
-        spec_list = SpecParser(self).parse(spec_like)
-        if len(spec_list) > 1:
-            raise ValueError("More than one spec in string: " + spec_like)
-        if len(spec_list) < 1:
-            raise ValueError("String contains no specs: " + spec_like)
-
-        # Specs are by default not assumed to be normal, but in some
-        # cases we've read them from a file want to assume normal.
-        # This allows us to manipulate specs that Spack doesn't have
-        # package.py files for.
-        self._normal = kwargs.get('normal', False)
-        self._concrete = kwargs.get('concrete', False)
-
-        # Allow a spec to be constructed with an external path.
-        self.external_path = kwargs.get('external_path', None)
-        self.external_module = kwargs.get('external_module', None)
-
-        self._full_hash = kwargs.get('full_hash', None)
 
     @property
     def external(self):
@@ -1503,9 +1386,9 @@ class Spec(object):
 
         return syaml_dict([('spec', node_list)])
 
-    def to_yaml(self, stream=None):
+    def to_yaml(self, stream=None, all_deps=False):
         return syaml.dump(
-            self.to_dict(), stream=stream, default_flow_style=False)
+            self.to_dict(all_deps), stream=stream, default_flow_style=False)
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -1609,6 +1492,158 @@ class Spec(object):
                 raise SpecError("Couldn't parse dependency types in spec.")
 
             yield dep_name, dag_hash, list(deptypes)
+
+    @staticmethod
+    def from_literal(spec_dict, normal=True):
+        """Builds a Spec from a dictionary containing the spec literal.
+
+        The dictionary must have a single top level key, representing the root,
+        and as many secondary level keys as needed in the spec.
+
+        The keys can be either a string or a Spec or a tuple containing the
+        Spec and the dependency types.
+
+        Args:
+            spec_dict (dict): the dictionary containing the spec literal
+            normal (bool): if True the same key appearing at different levels
+                of the ``spec_dict`` will map to the same object in memory.
+
+        Examples:
+            A simple spec ``foo`` with no dependencies:
+
+            .. code-block:: python
+
+                {'foo': None}
+
+            A spec ``foo`` with a ``(build, link)`` dependency ``bar``:
+
+            .. code-block:: python
+
+                {'foo':
+                    {'bar:build,link': None}}
+
+            A spec with a diamond dependency and various build types:
+
+            .. code-block:: python
+
+                {'dt-diamond': {
+                    'dt-diamond-left:build,link': {
+                        'dt-diamond-bottom:build': None
+                    },
+                    'dt-diamond-right:build,link': {
+                        'dt-diamond-bottom:build,link,run': None
+                    }
+                }}
+
+            The same spec with a double copy of ``dt-diamond-bottom`` and
+            no diamond structure:
+
+            .. code-block:: python
+
+                {'dt-diamond': {
+                    'dt-diamond-left:build,link': {
+                        'dt-diamond-bottom:build': None
+                    },
+                    'dt-diamond-right:build,link': {
+                        'dt-diamond-bottom:build,link,run': None
+                    }
+                }, normal=False}
+
+            Constructing a spec using a Spec object as key:
+
+            .. code-block:: python
+
+                mpich = Spec('mpich')
+                libelf = Spec('libelf@1.8.11')
+                expected_normalized = Spec.from_literal({
+                    'mpileaks': {
+                        'callpath': {
+                            'dyninst': {
+                                'libdwarf': {libelf: None},
+                                libelf: None
+                            },
+                            mpich: None
+                        },
+                        mpich: None
+                    },
+                })
+
+        """
+
+        # Maps a literal to a Spec, to be sure we are reusing the same object
+        spec_cache = LazySpecCache()
+
+        def spec_builder(d):
+            # The invariant is that the top level dictionary must have
+            # only one key
+            assert len(d) == 1
+
+            # Construct the top-level spec
+            spec_like, dep_like = next(iter(d.items()))
+
+            # If the requirements was for unique nodes (default)
+            # then re-use keys from the local cache. Otherwise build
+            # a new node every time.
+            if not isinstance(spec_like, Spec):
+                spec = spec_cache[spec_like] if normal else Spec(spec_like)
+            else:
+                spec = spec_like
+
+            if dep_like is None:
+                return spec
+
+            def name_and_dependency_types(s):
+                """Given a key in the dictionary containing the literal,
+                extracts the name of the spec and its dependency types.
+
+                Args:
+                    s (str): key in the dictionary containing the literal
+
+                """
+                t = s.split(':')
+
+                if len(t) > 2:
+                    msg = 'more than one ":" separator in key "{0}"'
+                    raise KeyError(msg.format(s))
+
+                n = t[0]
+                if len(t) == 2:
+                    dtypes = tuple(dt.strip() for dt in t[1].split(','))
+                else:
+                    dtypes = ()
+
+                return n, dtypes
+
+            def spec_and_dependency_types(s):
+                """Given a non-string key in the literal, extracts the spec
+                and its dependency types.
+
+                Args:
+                    s (spec or tuple): either a Spec object or a tuple
+                        composed of a Spec object and a string with the
+                        dependency types
+
+                """
+                if isinstance(s, Spec):
+                    return s, ()
+
+                spec_obj, dtypes = s
+                return spec_obj, tuple(dt.strip() for dt in dtypes.split(','))
+
+            # Recurse on dependencies
+            for s, s_dependencies in dep_like.items():
+
+                if isinstance(s, string_types):
+                    dag_node, dependency_types = name_and_dependency_types(s)
+                else:
+                    dag_node, dependency_types = spec_and_dependency_types(s)
+
+                dependency_spec = spec_builder({dag_node: s_dependencies})
+                spec._add_dependency(dependency_spec, dependency_types)
+
+            return spec
+
+        return spec_builder(spec_dict)
 
     @staticmethod
     def from_dict(data):
@@ -2053,8 +2088,14 @@ class Spec(object):
                 try:
                     dep.merge(dependency)
                 except UnsatisfiableSpecError as e:
-                    e.message = ("Conflicting conditional dependencies on"
-                                 "package %s for spec %s" % (self.name, self))
+                    e.message = (
+                        "Conflicting conditional dependencies for spec"
+                        "\n\n\t{0}\n\n"
+                        "Cannot merge constraint"
+                        "\n\n\t{1}\n\n"
+                        "into"
+                        "\n\n\t{2}"
+                        .format(self, dependency.spec, dep.spec))
                     raise e
 
         return dep
@@ -3478,52 +3519,30 @@ class SpecParser(spack.parse.Parser):
     def spec(self, name):
         """Parse a spec out of the input. If a spec is supplied, initialize
            and return it instead of creating a new one."""
+        spec_namespace = None
+        spec_name = None
         if name:
             spec_namespace, dot, spec_name = name.rpartition('.')
             if not spec_namespace:
                 spec_namespace = None
             self.check_identifier(spec_name)
-        else:
-            spec_namespace = None
-            spec_name = None
 
         if self._initial is None:
-            # This will init the spec without calling Spec.__init__
-            spec = Spec.__new__(Spec)
+            spec = Spec()
         else:
             # this is used by Spec.__init__
             spec = self._initial
             self._initial = None
 
-        spec.name = spec_name
-        spec.versions = VersionList()
-        spec.variants = VariantMap(spec)
-        spec.architecture = None
-        spec.compiler = None
-        spec.external_path = None
-        spec.external_module = None
-        spec.compiler_flags = FlagMap(spec)
-        spec._dependents = DependencyMap()
-        spec._dependencies = DependencyMap()
         spec.namespace = spec_namespace
-        spec._hash = None
-        spec._cmp_key_cache = None
-
-        spec._package = None
-        spec._normal = False
-        spec._concrete = False
-        spec._full_hash = None
-
-        # record this so that we know whether version is
-        # unspecified or not.
-        added_version = False
+        spec.name = spec_name
 
         while self.next:
             if self.accept(AT):
                 vlist = self.version_list()
+                spec.versions = VersionList()
                 for version in vlist:
                     spec._add_version(version)
-                added_version = True
 
             elif self.accept(ON):
                 name = self.variant()
@@ -3561,10 +3580,6 @@ class SpecParser(spack.parse.Parser):
 
             else:
                 break
-
-        # If there was no version in the spec, consier it an open range
-        if not added_version and not spec._hash:
-            spec.versions = VersionList(':')
 
         return spec
 
