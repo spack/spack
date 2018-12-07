@@ -30,11 +30,15 @@ class Vtkm(CMakePackage, CudaPackage):
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant("cuda", default=False, description="build cuda support")
+    variant("doubleprecision", default=True,
+            description='enable double precision')
     variant("logging", default=False, description="build logging support")
     variant("mpi", default=True, description="build mpi support")
     variant("openmp", default=False, description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
     variant("tbb", default=True, description="build TBB support")
+    variant("64bitids", default=False,
+            description="enable 64 bits ids")
 
     depends_on("cmake")
     depends_on("tbb", when="+tbb")
@@ -46,9 +50,7 @@ class Vtkm(CMakePackage, CudaPackage):
         options = []
         with working_dir('spack-build', create=True):
             options = ["../",
-                       "-DVTKm_ENABLE_TESTING:BOOL=OFF",
-                       "-DVTKm_USE_64BIT_IDS:BOOL=OFF",
-                       "-DVTKm_USE_DOUBLE_PRECISION:BOOL=ON"]
+                       "-DVTKm_ENABLE_TESTING:BOOL=OFF"]
 
             # cuda support
             if "+cuda" in spec:
@@ -65,6 +67,12 @@ class Vtkm(CMakePackage, CudaPackage):
                     options.append("-DVTKm_CUDA_Architecture=kepler")
             else:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
+
+            # double precision
+            if "+doubleprecision" in spec:
+                options.append("-DVTKm_USE_DOUBLE_PRECISION:BOOL=ON")
+            else:
+                options.append("-DVTKm_USE_DOUBLE_PRECISION:BOOL=OFF")
 
             # logging support
             if "+logging" in spec:
@@ -93,11 +101,6 @@ class Vtkm(CMakePackage, CudaPackage):
                         spec['vtkm'].version.string != 'master':
                     raise InstallError('OpenMP is not supported for\
                             vtkm version lower than 1.3')
-                # vtkm requires openmp no less than 4.0.0
-                if not spec.compiler.satisfies('gcc'):
-                    raise InstallError('Enabling OpenMP in vtkm requires gcc\
-                            compiler')
-                conflicts('%gcc@:4.8.9', None, 'The required OpenMP 4.0.0 is only supported with gcc no less than 4.9')
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=OFF")
@@ -115,4 +118,11 @@ class Vtkm(CMakePackage, CudaPackage):
                 options.append("-DVTKm_ENABLE_TBB:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_TBB:BOOL=OFF")
+
+            # 64 bit ids
+            if "+64bitids" in spec:
+                options.append("-DVTKm_USE_64BIT_IDS:BOOL=ON")
+                print("64 bit ids enabled")
+            else:
+                options.append("-DVTKm_USE_64BIT_IDS:BOOL=OFF")
             return options
