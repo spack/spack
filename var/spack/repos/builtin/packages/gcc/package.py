@@ -347,9 +347,11 @@ class Gcc(AutotoolsPackage):
             options.append('--with-build-time-tools={0}'.format(
                            join_path(prefix,
                                      'nvptx-none', 'bin')))
+
+            guess = Executable('./config.guess')
+            target-guess = guess()
             options.append('--enable-as-accelerator-for={0}'.format(
-                           spec.architecture.target + '-' +
-                           spec.architecture.platform))
+                           target-guess))
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
 
