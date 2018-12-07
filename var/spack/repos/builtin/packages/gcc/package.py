@@ -349,9 +349,9 @@ class Gcc(AutotoolsPackage):
                                      'nvptx-none', 'bin')))
 
             guess = Executable('./config.guess')
-            target-guess = guess()
+            targetguess = guess()
             options.append('--enable-as-accelerator-for={0}'.format(
-                           target-guess))
+                           targetguess))
             options.append('--disable-sjlj-exceptions')
             options.append('--enable-newlib-io-long-long')
 
