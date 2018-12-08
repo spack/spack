@@ -29,6 +29,7 @@ class Pumi(CMakePackage):
     version('2.2.0', commit='8c7e6f13943893b2bc1ece15003e4869a0e9634f')  # tag 2.2.0
     version('2.1.0', commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
 
+    variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
 
@@ -44,6 +45,7 @@ class Pumi(CMakePackage):
             '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DPUMI_FORTRAN_INTERFACE=%s' %
             ('ON' if '+fortran' in spec else 'OFF')
