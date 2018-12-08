@@ -31,9 +31,9 @@ class MofemMinimalSurfaceEquation(CMakePackage):
 
     maintainers = ['likask']
 
+    version('develop', branch='develop')
     version('0.3.10', tag='v0.3.10')
     version('0.3.9', tag='v0.3.9')
-    version('develop', branch='develop')
 
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')

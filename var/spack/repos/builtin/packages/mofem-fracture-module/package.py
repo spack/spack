@@ -31,6 +31,7 @@ class MofemFractureModule(CMakePackage):
 
     maintainers = ['likask']
 
+    version('develop', branch='develop')
     version('0.9.50', tag='v0.9.50')
     version('0.9.49', tag='v0.9.49')
     version('0.9.48', tag='v0.9.48')
@@ -39,7 +40,6 @@ class MofemFractureModule(CMakePackage):
     version('0.9.45', tag='v0.9.45')
     version('0.9.44', tag='v0.9.44')
     version('0.9.42', tag='v0.9.42')
-    version('develop', branch='develop')
 
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')

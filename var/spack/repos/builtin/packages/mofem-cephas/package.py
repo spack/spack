@@ -31,6 +31,7 @@ class MofemCephas(CMakePackage):
 
     maintainers = ['likask']
 
+    version('develop', branch='develop')
     version('0.8.17', tag='v0.8.17')
     version('0.8.16', tag='v0.8.16')
     version('0.8.15', tag='v0.8.15')
@@ -42,7 +43,6 @@ class MofemCephas(CMakePackage):
     version('0.8.9', tag='v0.8.9')
     version('0.8.8', tag='v0.8.8')
     version('0.8.7', tag='v0.8.7')
-    version('develop', branch='develop')
 
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
