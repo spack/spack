@@ -116,6 +116,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     """
     text_to_relocate = []
     binary_to_relocate = []
+    link_to_relocate = []
     blacklist = (".spack", "man")
     os_id = platform.system()
     # Do this at during tarball creation to save time when tarball unpacked.
@@ -127,7 +128,12 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  Check if the file contains a string with the installroot.
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
-            if relocate.strings_contains_installroot(
+            if os.path.islink(path_name):
+                # If the destination starts with the old prefix
+                if os.path.realpath(path_name).find(spack.store.layout.root) == 0:
+                    rel_path_name = os.path.relpath(path_name, prefix)
+                    link_to_relocate.append(rel_path_name)
+            elif relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
                 filetype = get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
@@ -145,6 +151,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
         prefix, spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
+    buildinfo['relocate_links'] = link_to_relocate
     filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
@@ -377,6 +384,13 @@ def make_package_relative(workdir, prefix, allow_root):
         cur_path_names.append(os.path.join(workdir, filename))
     relocate.make_binary_relative(cur_path_names, orig_path_names,
                                   old_path, allow_root)
+    orig_path_names = list()
+    cur_path_names = list()
+    for filename in buildinfo['relocate_links']:
+        orig_path_names.append(os.path.join(prefix, filename))
+        cur_path_names.append(os.path.join(workdir, filename))
+    relocate.make_link_relative(cur_path_names, orig_path_names,
+                                  old_path, allow_root)
 
 
 def make_package_placeholder(workdir, allow_root):
@@ -419,6 +433,11 @@ def relocate_package(workdir, allow_root):
             path_names.add(path_name)
         relocate.relocate_binary(path_names, old_path, new_path,
                                  allow_root)
+        path_names = set()
+        for filename in buildinfo['relocate_links']:
+            path_name = os.path.join(workdir, filename)
+            path_names.add(path_name)
+        relocate.relocate_link(path_names, old_path, new_path)
 
 
 def extract_tarball(spec, filename, allow_root=False, unsigned=False,
