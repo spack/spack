@@ -63,6 +63,9 @@ class Catch(CMakePackage):
     @when('+single_header')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        install(join_path('single_include', 'catch.hpp'), prefix.include)
+        if spec.satisfies('@2.3.0:'):
+            install_tree('single_include', prefix.include)
+        else:
+            install(join_path('single_include', 'catch.hpp'), prefix.include)
         # fakes out spack so it installs a module file
         mkdirp(join_path(prefix, 'bin'))
