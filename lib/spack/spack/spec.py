@@ -1054,6 +1054,8 @@ class Spec(object):
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
         if spec.name in self._dependencies:
+            for dep in self.traverse(root=True):
+                print dep
             raise DuplicateDependencyError(
                 "Cannot depend on '%s' twice" % spec)
 
@@ -2780,7 +2782,8 @@ class Spec(object):
                 deptypes = deps
             self._dup_deps(other, deptypes, caches)
 
-        self._concrete = other._concrete
+        if hasattr(other, '_concrete'):
+            self._concrete = other._concrete
 
         if caches:
             self._hash = other._hash
