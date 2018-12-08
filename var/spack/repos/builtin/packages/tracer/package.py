@@ -15,6 +15,7 @@ class Tracer(MakefilePackage):
     maintainers = ['bhatele']
 
     version('develop', branch='master')
+    version('2.2', tag='v2.2')
 
     variant('otf2', default=True, description='Use OTF2 traces for simulation')
 
