@@ -50,7 +50,7 @@ class Zee(CMakePackage):
     depends_on('pkg-config', type='build')
     depends_on('gmsh@:3 +oce -mpi %gcc')
     depends_on('mpi')
-    depends_on('omega-h')
+    depends_on('omega-h+trilinos')
     depends_on('petsc +int64', when='+petsc')
 
     def _bob_options(self):

@@ -18,6 +18,7 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/ibaned/omega_h.git"
 
     version('develop', branch='master')
+    version('9.22.2', sha256='ab5636be9dc171a514a7015df472bd85ab86fa257806b41696170842eabea37d')
     version('9.22.1', sha256='e45907210b7992aa6168e8e8435482d032c2a504b0c0fe222715ce67e7998bf4')
     version('9.21.1', sha256='750415614747681c0094d3103e7683c74edcd95819ef9477f2179c805c416cfa')
     version('9.20.2', sha256='e1491969ccb170a92018a8b7d02f34b6177deffcbba74bc7c2ee862793a846c8')
