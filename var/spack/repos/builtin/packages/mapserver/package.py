@@ -43,13 +43,15 @@ class Mapserver(CMakePackage):
 
     @when('+python')
     def patch(self):
-        # The Python bindings install themselves into the main python site-packages
-        # directory, instead of under the current package prefix. This hack patches
-        # the CMakeLists.txt for the Python bindings and hard-wires in the right
-        # destination. A bit ugly, sorry, but I don't speak cmake.
+        # The Python bindings install themselves into the main python
+        # site-packages directory, instead of under the current package
+        # prefix. This hack patches the CMakeLists.txt for the Python
+        # bindings and hard-wires in the right destination. A bit ugly,
+        # sorry, but I don't speak cmake.
+        pyversiondir = "python{0}".format(self.spec['python'].version.up_to(2))
         sitepackages = os.path.join(self.spec.prefix.lib,
-                "python{0}".format(self.spec['python'].version.up_to(2)),
-                "site-packages")
+                                    pyversiondir,
+                                    "site-packages")
         filter_file('\${PYTHON_SITE_PACKAGES}',
                     sitepackages,
                     'mapscript/python/CMakeLists.txt')
