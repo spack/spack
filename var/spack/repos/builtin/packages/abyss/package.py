@@ -24,6 +24,7 @@ class Abyss(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
+    depends_on('bwa', type='run')
 
     depends_on('mpi')
     depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2:')

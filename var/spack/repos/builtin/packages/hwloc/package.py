@@ -32,6 +32,8 @@ class Hwloc(AutotoolsPackage):
     version('2.0.2',  '71d1211eaa4b25ac7ad80cf326784e87')
     version('2.0.1',  '442b2482bb5b81983ed256522aadbf94')
     version('2.0.0',  '027e6928ae0b5b64c821d0a71a61cd82')
+    version('1.11.11', sha256='74329da3be1b25de8e98a712adb28b14e561889244bf3a8138afe91ab18e0b3a')
+    version('1.11.10', sha256='0a2530b739d9ebf60c4c1e86adb5451a20d9e78f7798cf78d0147cc6df328aac')
     version('1.11.9', '4d5f5da8b1d09731d82e865ecf3fa399')
     version('1.11.8', 'a0fa1c9109a4d8b4b6568e62cc9b6e30')
     version('1.11.7', '867a5266675e5bf1ef4ab66c459653f8')
@@ -43,6 +45,8 @@ class Hwloc(AutotoolsPackage):
     version('1.11.1', 'feb4e416a1b25963ed565d8b42252fdc')
     version('1.9',    '1f9f9155682fe8946a97c08896109508')
 
+    variant('nvml', default=False, description="Support NVML device discovery")
+    variant('gl', default=False, description="Support GL device discovery")
     variant('cuda', default=False, description="Support CUDA devices")
     variant('libxml2', default=True, description="Build with libxml2")
     variant('pci', default=(sys.platform != 'darwin'),
@@ -56,11 +60,13 @@ class Hwloc(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
 
+    depends_on('cuda', when='+nvml')
     depends_on('cuda', when='+cuda')
+    depends_on('gl', when='+gl')
     depends_on('libpciaccess', when='+pci')
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
-    depends_on('numactl', when='@:1.11.9 platform=linux')
+    depends_on('numactl', when='@:1.11.11 platform=linux')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
@@ -76,6 +82,8 @@ class Hwloc(AutotoolsPackage):
             args.append('--enable-netloc')
 
         args.extend(self.enable_or_disable('cairo'))
+        args.extend(self.enable_or_disable('nvml'))
+        args.extend(self.enable_or_disable('gl'))
         args.extend(self.enable_or_disable('cuda'))
         args.extend(self.enable_or_disable('libxml2'))
         args.extend(self.enable_or_disable('pci'))

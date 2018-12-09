@@ -19,3 +19,6 @@ class MultimethodBase(Package):
 
     def base_method(self):
         return "base_method"
+
+    def diamond_inheritance(self):
+        return "base_package"
