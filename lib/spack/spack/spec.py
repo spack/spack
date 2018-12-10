@@ -1054,8 +1054,6 @@ class Spec(object):
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
         if spec.name in self._dependencies:
-            for dep in self.traverse(root=True):
-                print dep
             raise DuplicateDependencyError(
                 "Cannot depend on '%s' twice" % spec)
 

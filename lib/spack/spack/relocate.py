@@ -432,7 +432,7 @@ def relocate_link(path_names, old_dir, new_dir):
     """
     for path_name in path_names:
         old_src = os.path.realpath(path_name)
-        new_src = old_dest.replace(old_dir, new_dir, 1)
+        new_src = old_src.replace(old_dir, new_dir, 1)
         os.unlink(path_name)
         os.symlink(new_src, path_name)
 
