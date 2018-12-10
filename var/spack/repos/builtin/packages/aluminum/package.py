@@ -34,6 +34,9 @@ class Aluminum(CMakePackage):
     depends_on('nccl', when='+nccl')
     depends_on('hwloc')
 
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
+
     def cmake_args(self):
         spec = self.spec
         args = [
