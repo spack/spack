@@ -15,6 +15,7 @@ import spack.environment as ev
 from spack.cmd.env import _env_create
 from spack.spec import Spec
 from spack.main import SpackCommand
+from spack.spec_list import SpecListError
 
 
 # everything here uses the mock_env_path
@@ -763,3 +764,271 @@ def test_env_activate_view_fails(
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
     assert "To initialize spack's shell commands:" in out
+
+
+def test_stack_yaml_definitions(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_yaml_add_to_list(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            add('-l', 'packages', 'libelf')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') in test.user_specs
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_yaml_remove_from_list(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            remove('-l', 'packages', 'mpileaks')
+
+        test = ev.read('test')
+
+        assert Spec('mpileaks') not in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_yaml_attempt_remove_from_matrix(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages:
+        - matrix:
+            - [mpileaks, callpath]
+            - [target=be]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with pytest.raises(SpecListError):
+            with ev.read('test'):
+                remove('-l', 'packages', 'mpileaks')
+
+
+def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - install:
+        - matrix:
+            - [$packages]
+            - ['^zmpi', '^mpich']
+  specs:
+    - $install
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            concretize()
+
+        test = ev.read('test')
+
+        for user, concrete in test.concretized_specs():
+            assert concrete.concrete
+            assert not user.concrete
+            if user.name == 'libelf':
+                assert not concrete.satisfies('^mpi', strict=True)
+            elif user.name == 'mpileaks':
+                assert concrete.satisfies('^mpi', strict=True)
+
+
+def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - install:
+        - matrix:
+            - [$packages]
+            - ['~shared', '+shared']
+  specs:
+    - $install
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            concretize()
+
+        test = ev.read('test')
+
+        for user, concrete in test.concretized_specs():
+            assert concrete.concrete
+            assert not user.concrete
+            if user.name == 'libelf':
+                assert 'shared' not in concrete.variants
+            if user.name  == 'mpileaks':
+                assert (concrete.variants['shared'].value ==
+                        user.variants['shared'].value)
+
+
+def test_stack_definition_extension(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') in test.user_specs
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_definition_conditional_false(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+      when: 'False'
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') in test.user_specs
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') not in test.user_specs
+
+
+def test_stack_definition_conditional_true(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+      when: 'True'
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') in test.user_specs
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_definition_conditional_with_variable(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+      when: platform == 'test'
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') in test.user_specs
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_definition_complex_conditional(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+      when: re.search(r'foo', hostname) and env['test'] == 'THISSHOULDBEFALSE'
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') in test.user_specs
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') not in test.user_specs
+
+
+def test_stack_definition_conditional_invalid_variable(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+      when: bad_variable == 'test'
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        with pytest.raises(NameError):
+            env('create', 'test', './spack.yaml')

@@ -175,6 +175,7 @@ def find(parser, args):
             tty.msg('No root specs')
         else:
             tty.msg('Root specs')
+            # TODO: Change this to not print extraneous deps and variants
             display_specs(
                 env.user_specs, args,
                 decorator=lambda s, f: color.colorize('@*{%s}' % f))
