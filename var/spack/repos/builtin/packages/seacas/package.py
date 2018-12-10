@@ -109,7 +109,7 @@ class Seacas(CMakePackage):
                 'ON' if '+thread_safe' in spec else 'OFF'),
             '-DSEACASIoss_ENABLE_THREADSAFE:BOOL=%s' % (
                 'ON' if '+thread_safe' in spec else 'OFF'),
-            '-DSEACASProj_ENABLE_Fortran:BOOL=%s'% (
+            '-DSEACASProj_ENABLE_Fortran:BOOL=%s' % (
                 'ON' if '+fortran' in spec else 'OFF'),
             '-DTPL_ENABLE_X11:BOOL=%s' % (
                 'ON' if '+x11' in spec else 'OFF'),
