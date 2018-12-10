@@ -25,10 +25,23 @@ class Seacas(CMakePackage):
     maintainers = ['gsjaardema']
 
     # ###################### Versions ##########################
-
     version('master', branch='master')
 
     # ###################### Variants ##########################
+    # Package options
+    # The I/O libraries (exodus, IOSS) are always built
+    # -- required of both applications and legacy variants.
+    variant('applications', default=True,
+            description='Build all "current" SEACAS applications. This'
+            ' includes a debatable list of essential applications: '
+            'aprepro, conjoin, ejoin, epu, exo2mat, mat2exo, '
+            'exo_format, exodiff, explore, grepos, '
+            'nemslice, nemspread')
+    variant('legacy', default=True,
+            description='Build all "legacy" SEACAS applications. This includes'
+            ' a debatable list of "legacy" applications: algebra, blot, '
+            'exomatlab, exotxt, fastq, gen3d, genshell, gjoin, mapvar, '
+            'mapvar-kd, numbers, txtexo, nemesis')
 
     # Build options
     variant('fortran',      default=True,
@@ -49,21 +62,6 @@ class Seacas(CMakePackage):
             description='Compile with METIS and ParMETIS')
     variant('x11',          default=True,
             description='Compile with X11')
-
-    # Package options
-    # The I/O libraries (exodus, IOSS) are always built
-    # -- required of both applications and legacy variants.
-    variant('applications', default=True,
-            description='Build all "current" SEACAS applications. This'
-            ' includes a debatable list of essential applications: '
-            'aprepro, conjoin, ejoin, epu, exo2mat, mat2exo, '
-            'exo_format, exodiff, explore, grepos, mat2exo, '
-            'nemslice, nemspread')
-    variant('legacy', default=True,
-            description='Build all "legacy" SEACAS applications. This includes'
-            ' a debatable list of "legacy" applications: algebra, blot, '
-            'exomatlab, exotxt, fastq, gen3d, genshell, gjoin, mapvar, '
-            'mapvar-kd, numbers, txtexo, nemesis')
 
     # ###################### Dependencies ##########################
 
@@ -106,99 +104,98 @@ class Seacas(CMakePackage):
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
             '-DSEACASProj_ENABLE_Kokkos:BOOL=OFF',
-            '-DSEACASProj_HIDE_DEPRECATED_CODE:BOOL=OFF'
+            '-DSEACASProj_HIDE_DEPRECATED_CODE:BOOL=OFF',
+            '-DSEACASExodus_ENABLE_THREADSAFE:BOOL=%s' % (
+                'ON' if '+thread_safe' in spec else 'OFF'),
+            '-DSEACASIoss_ENABLE_THREADSAFE:BOOL=%s' % (
+                'ON' if '+thread_safe' in spec else 'OFF'),
+            '-DSEACASProj_ENABLE_Fortran:BOOL=%s'% (
+                'ON' if '+fortran' in spec else 'OFF'),
+            '-DTPL_ENABLE_X11:BOOL=%s' % (
+                'ON' if '+x11' in spec else 'OFF'),
         ])
 
+        # ########## What applications should be built #############
         # Check whether they want everything; if so, do the easy way...
-        if '+applications' in spec:
-            if '+legacy' in spec:
+        if '+applications' in spec and '+legacy' in spec:
+            options.extend([
+                '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=ON',
+                '-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
+                '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON',
+            ])
+        else:
+            # Don't want everything; handle the subsets:
+            options.extend([
+                '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=OFF',
+                '-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=OFF',
+                '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=OFF',
+                '-DSEACASProj_ENABLE_SEACASIoss:BOOL=ON',
+                '-DSEACASProj_ENABLE_SEACASExodus:BOOL=ON',
+                '-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=%s' % (
+                    'ON' if '+fortran' in spec else 'OFF'),
+                '-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=%s' % (
+                    'ON' if '+fortran' in spec else 'OFF'),
+            ])
+
+            if '+applications' in spec:
                 options.extend([
-                    '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=ON',
-                    '-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
-                    '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASAprepro:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASAprepro_lib:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASConjoin:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASEjoin:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASEpu:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASExo2mat:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASExo_format:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASExodiff:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASExplore:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASGrepos:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASMat2exo:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASNemslice:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASNemspread:BOOL=ON',
                 ])
 
-        # Don't want everything; handle the subsets:
-        options.extend([
-            '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=OFF',
-            '-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=OFF',
-            '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=OFF',
-            '-DSEACASProj_ENABLE_SEACASIoss:BOOL=ON',
-            '-DSEACASProj_ENABLE_SEACASExodus:BOOL=ON',
-            '-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=%s' % (
-                'ON' if '+fortran' in spec else 'OFF'),
-            '-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=%s' % (
-                'ON' if '+fortran' in spec else 'OFF'),
-        ])
+            if '+legacy' in spec:
+                options.extend([
+                    '-DSEACASProj_ENABLE_SEACASAlgebra:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASBlot:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASEx1ex2v2:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASEx2ex1v2:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASExomatlab:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASExotec2:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASExotxt:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASFastq:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASGen3D:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASGenshell:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASGjoin:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASMapvar:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASMapvar-kd:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASNemesis:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASNumbers:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                    '-DSEACASProj_ENABLE_SEACASTxtexo:BOOL=%s' % (
+                        'ON' if '+fortran' in spec else 'OFF'),
+                ])
 
-        if '+applications' in spec:
-            options.extend([
-                '-DSEACASProj_ENABLE_SEACASAprepro:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASAprepro_lib:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASConjoin:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASEjoin:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASEpu:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASExo2mat:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASExo_format:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASExodiff:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASExplore:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASGrepos:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASMat2exo:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASNemslice:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASNemspread:BOOL=ON',
-            ])
-
-        if '+legacy' in spec:
-            options.extend([
-                '-DSEACASProj_ENABLE_SEACASAlgebra:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASBlot:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASEx1ex2v2:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASEx2ex1v2:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASExomatlab:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASExotec2:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASExotxt:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASFastq:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASGen3D:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASGenshell:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASGjoin:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASMapvar:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASMapvar-kd:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASNemesis:BOOL=ON',
-                '-DSEACASProj_ENABLE_SEACASNumbers:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-                '-DSEACASProj_ENABLE_SEACASTxtexo:BOOL=%s' % (
-                    'ON' if '+fortran' in spec else 'OFF'),
-            ])
-
-        if '+thread_safe' in spec:
-            options.extend([
-                '-DSEACASExodus_ENABLE_THREADSAFE:BOOL=ON',
-                '-DSEACASIoss_ENABLE_THREADSAFE:BOOL=ON',
-            ])
-
-        # ######################### TPLs #############################
-
-        # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
+        # ##################### Dependencies ##########################
+        # Always need NetCDF
         options.extend([
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
             '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
-            '-DTPL_ENABLE_X11:BOOL=%s' % (
-                'ON' if '+x11' in spec else 'OFF'),
         ])
 
         if '+metis' in spec:
@@ -241,18 +238,7 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
             ])
 
-        # ################# Miscellaneous Stuff ######################
-
-        # Fortran lib
-        if '~fortran' in spec:
-            options.extend([
-                '-DSEACASProj_ENABLE_Fortran=OFF'
-            ])
-        else:
-            options.extend([
-                '-DSEACASProj_ENABLE_Fortran=ON'
-            ])
-
+        # ################# RPath Handling ######################
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
