@@ -2494,7 +2494,7 @@ class Spec(object):
         """Apply constraints of other spec's dependencies to this spec."""
         other = self._autospec(other)
 
-        if not self._dependencies or not other._dependencies:
+        if not other._dependencies:
             return False
 
         # TODO: might want more detail than this, e.g. specific deps

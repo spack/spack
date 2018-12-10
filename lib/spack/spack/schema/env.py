@@ -11,7 +11,40 @@
 from llnl.util.lang import union_dicts
 
 import spack.schema.merged
+import spack.schema.projections
 
+
+spec_list_schema = {
+    'type': 'array',
+    'default': [],
+    'items': {
+        'anyOf': [
+            {'type': 'object',
+             'additionalProperties': False,
+             'properties': {
+                 'matrix': {
+                     'type': 'array',
+                     'items': {
+                         'type': 'array',
+                         'items': {
+                             'type': 'string',
+                         }
+                     }
+                 },
+                 'exclude': {
+                     'type': 'array',
+                     'items': {
+                         'type': 'string'
+                     }
+                 }
+             }},
+            {'type': 'string'},
+            {'type': 'null'}
+        ]
+    }
+}
+
+projections_scheme = spack.schema.projections.properties['projections']
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
@@ -34,22 +67,52 @@ schema = {
                             'type': 'string'
                         },
                     },
-                    'specs': {
-                        # Specs is a list of specs, which can have
-                        # optional additional properties in a sub-dict
-                        'type': 'array',
-                        'default': [],
-                        'additionalProperties': False,
-                        'items': {
-                            'anyOf': [
-                                {'type': 'string'},
-                                {'type': 'null'},
-                                {'type': 'object'},
-                            ]
-                        }
-                    },
                     'view': {
                         'type': ['boolean', 'string']
+                    },
+                    'definitions': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'when': {
+                                    'type': 'string'
+                                }
+                            },
+                            'patternProperties': {
+                                '^(?!when$)\w*': spec_list_schema
+                            }
+                        }
+                    },
+                    'specs': spec_list_schema,
+                    'view': {
+                        'anyOf': [
+                            {'type': 'boolean'},
+                            {'type': 'string'},
+                            {'type': 'object',
+                             'required': ['root'],
+                             'additionalProperties': False,
+                             'properties': {
+                                 'root': {
+                                     'type': 'string'
+                                 },
+                                 'select': {
+                                     'type': 'array',
+                                     'items': {
+                                         'type': 'string'
+                                     }
+                                 },
+                                 'exclude': {
+                                     'type': 'array',
+                                     'items': {
+                                         'type': 'string'
+                                     }
+                                 },
+                                 'projections': projections_scheme
+                             }
+                            }
+                        ]
                     }
                 }
             )
