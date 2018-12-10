@@ -13,10 +13,11 @@ class Hydrogen(CMakePackage):
        and optimization library. Based on the Elemental library."""
 
     homepage = "http://libelemental.org"
-    url      = "https://github.com/LLNL/Elemental/archive/0.99.tar.gz"
+    url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
 
     version('develop', branch='hydrogen')
+    version('1.0.1', sha256='27cf76e1ef1d58bd8f9b1e34081a14a682b7ff082fb5d1da56713e5e0040e528')
     version('1.0', sha256='d8a97de3133f2c6b6bb4b80d32b4a4cc25eb25e0df4f0cec0f8cb19bf34ece98')
     version('0.99', 'b678433ab1d498da47acf3dc5e056c23')
 
@@ -92,6 +93,9 @@ class Hydrogen(CMakePackage):
 
     conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +
               "Did you mean to use Elemental instead?")
+
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
 
     @property
     def libs(self):
