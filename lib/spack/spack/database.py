@@ -890,8 +890,11 @@ class Database(object):
                 if not record:
                     reltype = ('Dependent' if direction == 'parents'
                                else 'Dependency')
-                    tty.warn("Inconsistent state! %s %s of %s not in DB"
-                             % (reltype, hash_key, spec.dag_hash()))
+                    msg = ("Inconsistent state! %s %s of %s not in DB"
+                           % (reltype, hash_key, spec.dag_hash()))
+                    if self._fail_when_missing_deps:
+                        raise MissingDependenciesError(msg)
+                    tty.warn(msg)
                     continue
 
                 if not record.installed:

@@ -175,6 +175,12 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store):
         dbs[1]._check_ref_counts()
         dbs[2]._check_ref_counts()
 
+        assert (dbs[0].installed_relatives(spec) ==
+                set(spec.traverse(root=False)))
+        assert (dbs[0].installed_relatives(spec['z'], direction='parents') ==
+                set([spec, spec['y']]))
+        assert not dbs[2].installed_relatives(spec['z'], direction='parents')
+
 
 @pytest.fixture()
 def usr_folder_exists(monkeypatch):
