@@ -133,44 +133,50 @@ function spack {
             while [[ "$1" =~ ^- ]]; do
                 if [ "$1" = "-r" -o "$1" = "--dependencies" ]; then
                     _sp_subcommand_args="$_sp_subcommand_args $1"
+                elif [[ "$1" = "-h" || "$1" = "--help" ]]; then
+                    command spack $_sp_subcommand -h
+                    help_shown=1
                 else
                     _sp_module_args="$_sp_module_args $1"
                 fi
                 shift
             done
 
-            _sp_spec=("$@")
+            if [[ $help_shown -ne 1 ]]; then
 
-            # Here the user has run use or unuse with a spec.  Find a matching
-            # spec using 'spack module find', then use the appropriate module
-            # tool's commands to add/remove the result from the environment.
-            # If spack module command comes back with an error, do nothing.
-            case $_sp_subcommand in
-                "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
-                        use $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi ;;
-                "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
-                        unuse $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi ;;
-                "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
-                        module load $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi ;;
-                "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
-                        module unload $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi ;;
-            esac
+                _sp_spec=("$@")
+
+                # Here the user has run use or unuse with a spec.  Find a matching
+                # spec using 'spack module find', then use the appropriate module
+                # tool's commands to add/remove the result from the environment.
+                # If spack module command comes back with an error, do nothing.
+                case $_sp_subcommand in
+                    "use")
+                        if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
+                            use $_sp_module_args $_sp_full_spec
+                        else
+                            $(exit 1)
+                        fi ;;
+                    "unuse")
+                        if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "${_sp_spec[@]}"); then
+                            unuse $_sp_module_args $_sp_full_spec
+                        else
+                            $(exit 1)
+                        fi ;;
+                    "load")
+                        if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
+                            module load $_sp_module_args $_sp_full_spec
+                        else
+                            $(exit 1)
+                        fi ;;
+                    "unload")
+                        if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "${_sp_spec[@]}"); then
+                            module unload $_sp_module_args $_sp_full_spec
+                        else
+                            $(exit 1)
+                        fi ;;
+                esac
+            fi
             ;;
         *)
             command spack "${args[@]}"
