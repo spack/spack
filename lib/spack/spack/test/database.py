@@ -93,6 +93,9 @@ def test_installed_upstream(tmpdir_factory, test_store):
         assert not upstream
         assert record.installed
 
+        prepared_db._check_ref_counts()
+        downstream_db._check_ref_counts()
+
 
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(tmpdir_factory, test_store):
@@ -167,6 +170,10 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store):
         assert dbs[0].db_for_spec_hash(spec.dag_hash()) == dbs[0]
         assert dbs[0].db_for_spec_hash(spec['y'].dag_hash()) == dbs[1]
         assert dbs[0].db_for_spec_hash(spec['z'].dag_hash()) == dbs[2]
+
+        dbs[0]._check_ref_counts()
+        dbs[1]._check_ref_counts()
+        dbs[2]._check_ref_counts()
 
 
 @pytest.fixture()
