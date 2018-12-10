@@ -8,31 +8,41 @@ from spack import *
 
 
 class MofemCephas(CMakePackage):
-    """mofem-cephas core library"""
+    """MoFEM is finite element core library"""
 
     homepage = "http://mofem.eng.gla.ac.uk"
-    git      = "https://bitbucket.org/likask/mofem-cephas.git"
+    git = "https://bitbucket.org/likask/mofem-cephas.git"
 
     maintainers = ['likask']
 
-    version('develop', branch='develop', submodules=True)
-    version('0.8.7', tag='v0.8.7', submodules=True)
+    version('develop', branch='develop')
+    version('0.8.17', tag='v0.8.17')
+    version('0.8.16', tag='v0.8.16')
+    version('0.8.15', tag='v0.8.15')
+    version('0.8.14', tag='v0.8.14')
+    version('0.8.13', tag='v0.8.13')
+    version('0.8.12', tag='v0.8.12')
+    version('0.8.11', tag='v0.8.11')
+    version('0.8.10', tag='v0.8.10')
+    version('0.8.9', tag='v0.8.9')
+    version('0.8.8', tag='v0.8.8')
+    version('0.8.7', tag='v0.8.7')
 
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking to source')
-    variant('adol-c', default=True, description='Compile with Adol-C')
+    variant('adol-c', default=True, description='Compile with ADOL-C')
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
     variant('slepc', default=False, description='Compile with Slepc')
 
     depends_on("mpi")
-    depends_on("boost")
+    depends_on("boost@:1.68")
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
     depends_on("hdf5@:1.8.19+hl+mpi")
-    depends_on("petsc@:3.9.2+mumps+mpi")
+    depends_on("petsc@:3.9.3+mumps+mpi")
     depends_on('slepc', when='+slepc')
     depends_on("moab")
     # Upper bound set to ADOL-C until issues with memory leaks
@@ -58,7 +68,7 @@ class MofemCephas(CMakePackage):
             '-DBOOST_DIR=%s' % spec['boost'].prefix])
 
         # build tests
-        options.append('-DMOFEM_BUILD_TETS={0}'.format(
+        options.append('-DMOFEM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         # variant packages
