@@ -24,6 +24,8 @@ class Freetype(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('pkgconfig', type='build')
 
+    patch('windows.patch', when='@2.9.1')
+
     def configure_args(self):
         args = ['--with-harfbuzz=no']
         if self.spec.satisfies('@2.9.1:'):

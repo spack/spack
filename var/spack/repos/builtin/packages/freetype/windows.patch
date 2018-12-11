@@ -1,0 +1,36 @@
+--- a/builds/unix/configure	2018-05-01 16:34:47.000000000 -0500
++++ b/builds/unix/configure	2018-12-10 23:15:30.000000000 -0600
+@@ -13268,32 +13268,7 @@
+ _ACEOF
+ 
+ 
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for munmap's first parameter type" >&5
+-$as_echo_n "checking for munmap's first parameter type... " >&6; }
+-   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-
+-
+-#include <unistd.h>
+-#include <sys/mman.h>
+-int munmap(void *, size_t);
+-
+-
+-
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: void *" >&5
+-$as_echo "void *" >&6; }
+-
+-$as_echo "#define MUNMAP_USES_VOIDP /**/" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: char *" >&5
+-$as_echo "char *" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-
++  FT_MUNMAP_PARAM
+ fi
+ 
+ 
