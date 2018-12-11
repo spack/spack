@@ -6,6 +6,8 @@
 from spack import *
 
 import llnl.util.lang
+# os is used for rename, etc in patch()
+import os
 
 
 class Fftw(AutotoolsPackage):
@@ -111,7 +113,6 @@ class Fftw(AutotoolsPackage):
         # If fftw/config.h exists in the source tree, it will take precedence
         # over the copy in build dir.  As only the latter has proper config
         # for our build, this is a problem.  See e.g. issue #7372 on github
-        import os
         if os.path.isfile('fftw/config.h'):
             os.rename('fftw/config.h', 'fftw/config.h.SPACK_RENAMED')
 
