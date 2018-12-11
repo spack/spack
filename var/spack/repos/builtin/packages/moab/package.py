@@ -19,6 +19,7 @@ class Moab(AutotoolsPackage):
     homepage = "https://bitbucket.org/fathomteam/moab"
     url = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
+    version('5.0.2', '00a6f96f2e6591ab087548839fa3825e')
     version('5.0.0', '1840ca02366f4d3237d44af63e239e3b')
     version('4.9.2', '540931a604c180bbd3c1bb3ee8c51dd0')
     version('4.9.1', '19cc2189fa266181ad9109b18d0b2ab8')

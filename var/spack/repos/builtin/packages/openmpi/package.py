@@ -359,8 +359,12 @@ class Openmpi(AutotoolsPackage):
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
         #
         # adding --enable-static silently disables slurm support via pmi/pmi2
+        # for versions older than 3.0.3,3.1.3,4.0.0
+        # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
+                config_args.append('--enable-static')
         else:
             config_args.append('--enable-static')
             config_args.extend(self.with_or_without('pmi'))
