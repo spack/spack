@@ -130,7 +130,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  of files potentially needing relocation
             if os.path.islink(path_name):
                 # If the destination starts with the old prefix
-                if os.path.realpath(path_name).find(spack.store.layout.root) == 0:
+                realpath = os.path.realpath(path_name)
+                if realpath.find(spack.store.layout.root) == 0:
                     rel_path_name = os.path.relpath(path_name, prefix)
                     link_to_relocate.append(rel_path_name)
             elif relocate.strings_contains_installroot(
@@ -390,7 +391,7 @@ def make_package_relative(workdir, prefix, allow_root):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
     relocate.make_link_relative(cur_path_names, orig_path_names,
-                                  old_path)
+                                old_path)
 
 
 def make_package_placeholder(workdir, allow_root):
