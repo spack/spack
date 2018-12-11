@@ -351,11 +351,12 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def make_link_relative(cur_path_names, orig_path_names, old_dir):
+def make_link_relative(cur_path_names, orig_path_names):
     """
-    Change links to be relative to old_dir
+    Change absolute links to be relative to old_dir
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+        # We can safely call realpath, all links absolute
         old_src = os.path.realpath(orig_path)
         new_src = os.path.relpath(old_src, orig_path)
         os.unlink(cur_path)
@@ -426,11 +427,12 @@ def make_binary_placeholder(cur_path_names, allow_root):
         tty.die("Placeholder not implemented for %s" % platform.system())
 
 
-def relocate_link(path_names, old_dir, new_dir):
+def relocate_links(path_names, old_dir, new_dir):
     """
     Replace old path with new path in link sources
     """
     for path_name in path_names:
+        # realpath is safe, previously ensured absolute
         old_src = os.path.realpath(path_name)
         new_src = old_src.replace(old_dir, new_dir, 1)
         os.unlink(path_name)

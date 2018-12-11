@@ -82,6 +82,12 @@ class NewLayoutException(spack.error.SpackError):
     pass
 
 
+class UnrelocatableLinkException(spack.error.SpackError):
+    """
+    Raised if the package has absolute symlinks outside of the prefix
+    """
+
+
 def has_gnupg2():
     try:
         gpg_util.Gpg.gpg()('--version', output=os.devnull)
@@ -129,11 +135,16 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
             if os.path.islink(path_name):
-                # If the destination starts with the old prefix
-                realpath = os.path.realpath(path_name)
-                if realpath.find(spack.store.layout.root) == 0:
-                    rel_path_name = os.path.relpath(path_name, prefix)
-                    link_to_relocate.append(rel_path_name)
+                link = os.readlink(path_name)
+                spack_prefix = spack.store.layout.root
+                if os.path.isabs(link):
+                    if os.readlink(path_name).startswith(spack_prefix):
+                        rel_path_name = os.path.relpath(path_name, prefix)
+                        link_to_relocate.append(rel_path_name)
+                else:
+                    msg = 'Absolute link %s to %s ' % (path_name, link)
+                    msg += 'outside of spack cannot be relocated.'
+                    raise UnrelocatableLinkException(msg)
             elif relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
                 filetype = get_filetype(path_name)
@@ -277,9 +288,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    # set symlinks=False here to avoid broken symlinks when archiving and
-    # moving the package
-    install_tree(spec.prefix, workdir, symlinks=False)
+    install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -390,8 +399,7 @@ def make_package_relative(workdir, prefix, allow_root):
     for filename in buildinfo['relocate_links']:
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.make_link_relative(cur_path_names, orig_path_names,
-                                old_path)
+    relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
 def make_package_placeholder(workdir, allow_root):
@@ -438,7 +446,7 @@ def relocate_package(workdir, allow_root):
         for filename in buildinfo['relocate_links']:
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
-        relocate.relocate_link(path_names, old_path, new_path)
+        relocate.relocate_links(path_names, old_path, new_path)
 
 
 def extract_tarball(spec, filename, allow_root=False, unsigned=False,

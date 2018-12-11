@@ -25,7 +25,7 @@ from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
-from spack.relocate import get_patchelf, relocate_text, relocate_link
+from spack.relocate import get_patchelf, relocate_text, relocate_links
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -84,6 +84,10 @@ echo $PATH"""
     filename = os.path.join(spec.prefix, "dummy.txt")
     with open(filename, "w") as script:
         script.write(spec.prefix)
+
+    # Create an absolute symlink
+    linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
+    os.symlink(filename, linkname)
 
     # Create the build cache  and
     # put it directly into the mirror
@@ -172,6 +176,7 @@ echo $PATH"""
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
+    assert(buildinfo['relocate_links'] == ['link_to_dummy.txt'])
 
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
@@ -219,7 +224,7 @@ def test_relocate_text(tmpdir):
         assert(strings_contains_installroot(filename, old_dir) is False)
 
 
-def test_relocate_link(tmpdir):
+def test_relocate_links(tmpdir):
     with tmpdir.as_cwd():
         old_dir = '/home/spack/opt/spack'
         filename = 'link.ln'
@@ -227,7 +232,7 @@ def test_relocate_link(tmpdir):
         os.symlink(old_src, filename)
         filenames = [filename]
         new_dir = '/opt/rh/devtoolset/'
-        relocate_link(filenames, old_dir, new_dir)
+        relocate_links(filenames, old_dir, new_dir)
         assert os.path.realpath(filename) == os.path.join(new_dir, filename)
 
 
