@@ -311,6 +311,9 @@ class Gcc(AutotoolsPackage):
 
         if spec.satisfies('+nvptx'):
 
+            guess = Executable('./config.guess')
+            targetguess = guess(output=str).rstrip('\n')
+
             options = getattr(self, 'configure_flag_args', [])
             options += ['--prefix={0}'.format(prefix)]
 
@@ -347,9 +350,6 @@ class Gcc(AutotoolsPackage):
             options.append('--with-build-time-tools={0}'.format(
                            join_path(prefix,
                                      'nvptx-none', 'bin')))
-
-            guess = Executable('./config.guess')
-            targetguess = guess()
             options.append('--enable-as-accelerator-for={0}'.format(
                            targetguess))
             options.append('--disable-sjlj-exceptions')
