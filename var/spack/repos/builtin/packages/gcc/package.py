@@ -77,7 +77,7 @@ class Gcc(AutotoolsPackage):
             description='Strip executables to reduce installation size')
     variant('nvptx',
             default=False,
-            description='Configure to target nvptx for offloading')
+            description='Target nvptx offloading to NVIDIA GPUs')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -110,10 +110,10 @@ class Gcc(AutotoolsPackage):
     # but does fine when the source is inside the gcc build directory
     # nvptx-tools doesn't have any releases, so grabbing the last commit
     resource(
-       name='nvptx-tools',
-       git='https://github.com/MentorEmbedded/nvptx-tools',
-       commit='5f6f343a302d620b0868edab376c00b15741e39e',
-       when='+nvptx'
+             name='nvptx-tools',
+             git='https://github.com/MentorEmbedded/nvptx-tools',
+             commit='5f6f343a302d620b0868edab376c00b15741e39e',
+             when='+nvptx'
     )
 
     # TODO: integrate these libraries.
