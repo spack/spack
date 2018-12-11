@@ -12,10 +12,51 @@ class PyPynio(PythonPackage):
        climate and weather"""
 
     homepage = "https://www.pyngl.ucar.edu/Nio.shtml"
-    url      = "https://github.com/NCAR/pynio/archive/1.5.4.tar.gz"
+    url = "https://github.com/NCAR/pynio/archive/1.5.4.tar.gz"
 
     version('1.5.4', sha256='e5bb57d902740d25e4781a9f89e888149f55f2ffe60f9a5ad71069f017c89e1a')
 
-    depends_on('netcdf')
     depends_on('libpng')
+    # Spack does not currently have netcdf below 4.x, and 3.x is a
+    # fundamentally different format. So, currently this is only providing
+    # support for netcdf4.
+    depends_on('netcdf@3.6.0:')
+
+    # Turning on the hdf (i.e. hdf4) dependency causes it not to build, with
+    # compile errors that (weirdly) relate to the declarations of HDF5.
+    # Very odd, so I have put it in as a comment, for some brave soul to take
+    # on later.
+    # depends_on('hdf')
+
+    # This one works, though.
+    depends_on('hdf5')
+
+    # Turning on the GDAL dependency apparently forces it to link with
+    # -ljasper, meaning that really it depends on gdal+jasper. However,
+    # I was reluctant to force this to happen unless people really need it,
+    # as it should not require this. So, I have left this commented out until
+    # someone who wants it turns it on. It might be better if the link was
+    # patched so it would just link with gdal as it was built.
+    # depends_on('gdal+jasper')
+
+    # I have left off a few other optional dependencies, as they are not yet
+    # in Spack. HDFEOS, HDFEOS5, GRIB. See the pynio setup.py for details.
+
     depends_on('py-numpy', type=('build', 'run'))
+
+    def setup_environment(self, spack_env, run_env):
+        """
+        These environment variables are how the setup.py knows which options
+        to turn on, and how to find them.
+        """
+        spack_env.set('F2CLIBS', 'gfortran')
+        spack_env.set('HAS_NETCDF4', '1')
+        spack_env.set('NETCDF4_PREFIX', self.spec['netcdf'].prefix)
+        spack_env.set('HAS_HDF5', '1')
+        spack_env.set('HDF5_PREFIX', self.spec['hdf5'].prefix)
+
+#        These ones are trouble - see comments above.
+#        spack_env.set('HAS_HDF4', '1')
+#        spack_env.set('HDF4_PREFIX', self.spec['hdf'].prefix)
+#        spack_env.set('HAS_GDAL', '1')
+#        spack_env.set('GDAL_PREFIX', self.spec['gdal'].prefix)
