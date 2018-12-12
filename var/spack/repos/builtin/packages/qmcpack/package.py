@@ -57,9 +57,27 @@ class Qmcpack(CMakePackage):
     # variant('+mixed', default=True, when='+cuda', description="...")
 
     # conflicts
-    conflicts('+soa', when='+cuda')
-    conflicts('^openblas+ilp64')
-    conflicts('^intel-mkl+ilp64')
+    conflicts(
+        '+soa',
+        when='+cuda',
+        msg='QMCPACK SOA variant does not exist for CUDA'
+    )
+    conflicts(
+        '^openblas+ilp64',
+        msg='QMCPACK does not support OpenBLAS 64-bit integer variant'
+    )
+    conflicts(
+        '^intel-mkl+ilp64',
+        msg='QMCPACK does not support MKL 64-bit integer variant'
+    )
+
+    # QMCPACK 3.6.0 or later requires support for C++14
+    compiler_warning = 'QMCPACK 3.6.0 or later requires a \
+    compiler with support for C++14'
+    conflicts('%gcc@:5', when='@3.6.0:', msg=compiler_warning)
+    conflicts('%intel@:18', when='@3.6.0', msg=compiler_warning)
+    conflicts('%pgi@:18', when='@3.6.0:', msg=compiler_warning)
+    conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
