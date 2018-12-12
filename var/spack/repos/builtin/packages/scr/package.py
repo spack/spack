@@ -23,7 +23,9 @@ class Scr(CMakePackage):
     # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
 
     version('master', branch='master')
-    version('1.2.0', '060e9e9c7604c1765f3991f9cd6e9d2d')
+    version('1.2.2', sha256='764a85638a9e8762667ec1f39fa5f7da7496fca78de379a22198607b3e027847')
+    version('1.2.1', sha256='23acab2dc7203e9514455a5168f2fd57bc590affb7a1876912b58201513628fe')
+    version('1.2.0', sha256='e3338ab2fa6e9332d2326c59092b584949a083a876adf5a19d4d5c7a1bbae047')
 
     depends_on('pdsh+static_modules', type=('build', 'run'))
     depends_on('zlib')
