@@ -12,6 +12,8 @@ properties = {
         'patternProperties': {
             r'\w[\w-]*': {
                 'type': 'object',
+                'default': {},
+                'additionalProperties': False,
                 'properties': {
                     'install_tree': {'type': 'string'},
                     'modules': {
