@@ -81,8 +81,8 @@ class Qmcpack(CMakePackage):
 
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
-    # dependencies the some of the '~mpi' will not be necessary.
-    depends_on('cmake@3.4.3:', type='build')
+    # dependencies, some of the '~mpi' variants below will not be necessary.
+    depends_on('cmake@3.6.0:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('libxml2')
     depends_on('hdf5')
