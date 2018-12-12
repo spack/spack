@@ -96,8 +96,10 @@ class Qmcpack(CMakePackage):
 
     # qmcpack data analysis tools
     # basic command line tool based on Python and NumPy
-    # blas and lapack patching fails often and so are disabled at this time
-    depends_on('py-numpy~blas~lapack', when='+da', type='run')
+    # It may be necesseary to disable the blas and lapack
+    # when building the 'py-numpy' package, but it should not be a hard
+    # dependency on the 'py-numpy~blas~lapack' variant
+    depends_on('py-numpy', when='+da', type='run')
 
     # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
