@@ -581,8 +581,8 @@ def print_setup_info(*info):
         module_to_roots[name].append(path)
 
     other_spack_instances = spack.config.get(
-        'config:upstream_spack_installations') or []
-    for install_properties in other_spack_instances:
+        'upstreams') or {}
+    for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get('modules', {})
         for module_type, root in upstream_module_roots.items():
             module_to_roots[module_type].append(root)
