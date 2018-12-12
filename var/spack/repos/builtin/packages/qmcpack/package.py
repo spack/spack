@@ -91,9 +91,7 @@ class Qmcpack(CMakePackage):
     depends_on('boost')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('fftw')
-    depends_on('fftw+mpi', when='+mpi')
-    depends_on('fftw~mpi', when='~mpi')
+    depends_on('fftw-api@3')
     depends_on('cuda', when='+cuda')
 
     # qmcpack data analysis tools
