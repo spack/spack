@@ -175,7 +175,8 @@ class Gcc(AutotoolsPackage):
     # https://bugs.busybox.net/show_bug.cgi?id=10061
     patch('signal.patch', when='@4.9,5.1:5.4')
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85835
-    patch('sys_ustat.h.patch', when='@4:6.4,7:7.3')
+    patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
+    patch('sys_ustat-4.9.patch', when='@4.9')
 
     build_directory = 'spack-build'
 
