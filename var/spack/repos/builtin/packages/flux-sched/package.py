@@ -19,6 +19,10 @@ class FluxSched(AutotoolsPackage):
     version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
     version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
 
+    # Avoid the infinite symlink issue
+    # This workaround is documented in PR #3543
+    build_directory = 'spack-build'
+
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     depends_on("boost+graph", when='@0.5.0:,master')
@@ -52,7 +56,10 @@ class FluxSched(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         self.setup()
-        if not os.path.exists('configure'):
+        if os.path.exists(self.configure_abs_path):
+            return
+        # make sure configure doesn't get confused by the staging symlink
+        with working_dir(self.configure_directory):
             # Bootstrap with autotools
             bash = which('bash')
             bash('./autogen.sh')
