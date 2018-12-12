@@ -64,17 +64,16 @@ class SagaGis(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if self.spec.satisfies('@5:'):
-            args += self.enable_or_disable('gui')
-            args += self.enable_or_disable('odbc')
-            # FIXME Saga-gis configure file disables triangle even if
-            # --enable-triangle flag is used
-            # args += self.enable_or_disable('triangle')
-            # FIXME SAGA-GIS uses a wrong include path
-            # if '~triangle' in self.spec:
-            #    args.append('--disable-triangle')
-            args += self.enable_or_disable('libfire')
-            args += self.enable_or_disable('openmp')
-            args += self.enable_or_disable('python')
+        args += self.enable_or_disable('gui')
+        args += self.enable_or_disable('odbc')
+        # FIXME Saga-gis configure file disables triangle even if
+        # --enable-triangle flag is used
+        # args += self.enable_or_disable('triangle')
+        # FIXME SAGA-GIS uses a wrong include path
+        # if '~triangle' in self.spec:
+        #    args.append('--disable-triangle')
+        args += self.enable_or_disable('libfire')
+        args += self.enable_or_disable('openmp')
+        args += self.enable_or_disable('python')
 
         return args
