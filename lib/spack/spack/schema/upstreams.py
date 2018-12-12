@@ -7,18 +7,20 @@
 #: Properties for inclusion in other schemas
 properties = {
     'upstreams': {
-        'type': 'array',
-        'items': {
-            'type': 'object',
-            'properties': {
-                'name': {'type': 'string'},
-                'spack-install-prefix': {'type': 'string'},
-                'modules': {
-                    'type': 'object',
-                    'properties': {
-                        'tcl': {'type': 'string'},
-                        'lmod': {'type': 'string'},
-                        'dotkit': {'type': 'string'}
+        'type': 'object',
+        'default': {},
+        'patternProperties': {
+            r'\w[\w-]*': {
+                'type': 'object',
+                'properties': {
+                    'install_tree': {'type': 'string'},
+                    'modules': {
+                        'type': 'object',
+                        'properties': {
+                            'tcl': {'type': 'string'},
+                            'lmod': {'type': 'string'},
+                            'dotkit': {'type': 'string'}
+                        }
                     }
                 }
             }
