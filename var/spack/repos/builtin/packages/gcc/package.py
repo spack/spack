@@ -171,7 +171,8 @@ class Gcc(AutotoolsPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
-    # NVPTX offloading supported by limited languages
+    # NVPTX offloading supported in 7 and later by limited languages
+    conflicts('+nvptx', when='@:6')
     conflicts('languages=ada', when='+nvptx')
     conflicts('languages=brig', when='+nvptx')
     conflicts('languages=go', when='+nvptx')
