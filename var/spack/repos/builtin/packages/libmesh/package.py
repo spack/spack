@@ -180,7 +180,7 @@ class Libmesh(AutotoolsPackage):
 
         # and, finally, other things:
         if '+debug' in self.spec:
-            options.append('--with-methods=dbg')
+            options.append('--with-methods="dbg opt"')
         else:
             options.append('--with-methods=opt')
 
