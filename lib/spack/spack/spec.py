@@ -2780,8 +2780,7 @@ class Spec(object):
                 deptypes = deps
             self._dup_deps(other, deptypes, caches)
 
-        if hasattr(other, '_concrete'):
-            self._concrete = other._concrete
+        self._concrete = other._concrete
 
         if caches:
             self._hash = other._hash
