@@ -24,6 +24,7 @@ class Boost(Package):
     list_depth = 1
 
     version('develop', branch='develop', submodules=True)
+    version('1.69.0', 'ea6eee4b5999f9c02105386850f63a53f0250eaa')
     version('1.68.0', '18863a7cae4d58ae85eb63d400f774f60a383411')
     version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae')
     version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459')
@@ -365,6 +366,8 @@ class Boost(Package):
             return
 
         # Remove libraries that the release version does not support
+        if spec.satisfies('@1.69.0:'):
+            with_libs.remove('signals')
         if not spec.satisfies('@1.54.0:'):
             with_libs.remove('log')
         if not spec.satisfies('@1.53.0:'):
