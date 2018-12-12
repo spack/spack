@@ -16,6 +16,9 @@ class PyPynio(PythonPackage):
 
     version('1.5.4', sha256='e5bb57d902740d25e4781a9f89e888149f55f2ffe60f9a5ad71069f017c89e1a')
 
+    variant('hdf5', default=False, description='Include HDF5 support')
+    variant('gdal', default=False, description='Include GDAL support')
+
     # The setup.py claims it requires these abolutely.
     depends_on('libpng')
     depends_on('jpeg')
@@ -46,9 +49,6 @@ class PyPynio(PythonPackage):
     # in Spack. HDFEOS, HDFEOS5, GRIB. See the pynio setup.py for details.
 
     depends_on('py-numpy', type=('build', 'run'))
-
-    variant('hdf5', default=False)
-    variant('gdal', default=False)
 
     def setup_environment(self, spack_env, run_env):
         """
