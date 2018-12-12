@@ -35,7 +35,8 @@ class SagaGis(AutotoolsPackage):
 
     variant('gui',      default=True,   description='Build GUI and interactive SAGA tools')
     variant('odbc',     default=True,   description='Build with ODBC support')
-    # FIXME Saga-Gis uses a wrong include path for qhull
+    # FIXME Saga-gis configure file disables triangle even if
+    # --enable-triangle flag is used
     # variant('triangle', default=True,   description='Build with triangle.c
     # non free for commercial use otherwise use qhull')
     variant('libfire',  default=True,   description='Build with libfire (non free for commercial usage)')
