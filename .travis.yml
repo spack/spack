@@ -130,6 +130,7 @@ sudo: false
 addons:
   apt:
     packages:
+      - ccache
       - gfortran
       - mercurial
       - graphviz
@@ -144,6 +145,7 @@ addons:
 
 cache:
   pip: true
+  ccache: true
   directories:
     - ~/.mirror
 
@@ -156,11 +158,13 @@ before_install:
         brew ls --versions python@2 > /dev/null || brew install python@2;
         brew ls --versions gcc      > /dev/null || brew install gcc;
         brew ls --versions gnupg2   > /dev/null || brew install gnupg2;
+        brew ls --versions ccache   > /dev/null || brew install ccache;
         pip2 install --upgrade pip;
         pip2 install virtualenv;
         virtualenv venv;
         source venv/bin/activate;
     fi
+  - ccache -M 2G && ccache -z
 
 # Install various dependencies
 install:
@@ -183,8 +187,8 @@ before_script:
   - git fetch origin develop:develop
 
   # Set up external deps for build tests, b/c they take too long to compile
-  - if [[ "$TEST_SUITE" == "build" ]]; then cp
-        share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml;
+  - if [[ "$TEST_SUITE" == "build" ]]; then
+        cp share/spack/qa/configuration/*.yaml etc/spack/;
     fi
 
 #=============================================================================
@@ -217,6 +221,9 @@ script:
         codecov --env PYTHON_VERSION
                 --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
     fi
+
+after_success:
+  - ccache -s
 
 #=============================================================================
 # Notifications
