@@ -20,6 +20,4 @@ class Dtcmp(AutotoolsPackage):
     depends_on('lwgrp')
 
     def configure_args(self):
-        args = []
-        args.append("--with-lwgrp=" + self.spec['lwgrp'].prefix)
-        return args
+        return ["--with-lwgrp=" + self.spec['lwgrp'].prefix]
