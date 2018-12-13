@@ -15,3 +15,13 @@ class Mcl(AutotoolsPackage):
     url      = "https://www.micans.org/mcl/src/mcl-14-137.tar.gz"
 
     version('14-137', 'bc8740456cf51019d0a9ac5eba665bb5')
+
+    depends_on('perl')
+
+    def configure_args(self):
+        return ['--enable-blast']
+
+    @run_after('build')
+    def fix_perl_scripts(self):
+        filter_file(r'#!/usr/local/bin/perl -w',
+                    '#!/usr/bin/env perl', prefix.bin.mcxdeblast)
