@@ -26,8 +26,10 @@ class Trf(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        trfname = 'trf{}.linux64'.format(str(spec.version).replace('.',''))
+
+        trfname = 'trf{0}.linux64'.format(self.version.joined)
+
         install(trfname, prefix.bin)
         chmod = which('chmod')
         chmod('+x', os.path.join(prefix.bin, trfname))
-        os.symlink(trfname, os.path.join(prefix.bin, 'trf'))
+        os.symlink(trfname, prefix.bin.trf)
