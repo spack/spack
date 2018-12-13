@@ -37,6 +37,7 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 
 _projections_path = '.spack/projections.yaml'
 
+
 class FilesystemView(object):
     """
         Governs a filesystem view that is located at certain root-directory.
