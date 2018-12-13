@@ -25,6 +25,7 @@ jobs:
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
+      dist: trusty
       sudo: required
       os: linux
       language: python
