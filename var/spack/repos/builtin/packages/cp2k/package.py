@@ -38,6 +38,7 @@ class Cp2k(Package):
     url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
     list_url = 'https://sourceforge.net/projects/cp2k/files/'
 
+    version('6.1', '573a4de5a0ee2aaabb213e04543cb10f')
     version('5.1', 'f25cf301aec471d7059179de4dac3ee7')
     version('4.1', 'b0534b530592de15ac89828b1541185e')
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
@@ -52,9 +53,10 @@ class Cp2k(Package):
     depends_on('lapack')
     depends_on('blas')
     depends_on('fftw@3:')
-    depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
+    depends_on('libint@1.1.4:1.2', when='@3.0:6.999')
     depends_on('libxsmm', when='smm=libxsmm')
-    depends_on('libxc@2.2.2:')
+    depends_on('libxc@2.2.2:3.0', when='@:5.999')
+    depends_on('libxc@4.0.3:', when='@6.0:')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -72,6 +74,11 @@ class Cp2k(Package):
     # TODO : add dependency on CUDA
 
     parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        # The trailing slash in the data_path has to be there.
+        data_path = os.path.join(self.prefix, 'data{0}'.format(os.path.sep))
+        run_env.set('CP2K_DATA_DIR', data_path)
 
     def install(self, spec, prefix):
         # Construct a proper filename for the architecture file
@@ -260,7 +267,14 @@ class Cp2k(Package):
 
             ldflags.append(libxc.libs.search_flags)
 
-            libs.extend([str(x) for x in (fftw, lapack, blas, libxc.libs)])
+            libs.extend([str(x) for x in (fftw, lapack, blas)])
+
+            if libxc.satisfies('@4.0:'):
+                libs.extend([join_path(spec['libxc'].prefix.lib, 'libxcf03.a'),
+                            join_path(spec['libxc'].prefix.lib, 'libxc.a')])
+            elif libxc.satisfies('@:3.99'):
+                libs.extend([join_path(spec['libxc'].prefix.lib, 'libxcf90.a'),
+                            join_path(spec['libxc'].prefix.lib, 'libxc.a')])
 
             if 'smm=libsmm' in spec:
                 lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
@@ -305,6 +319,9 @@ class Cp2k(Package):
                     ' '.join(ldflags) + ' -nofor_main')
                 )
             mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
+
+        # Copy the DATA directory to the final destination before make
+        shutil.copytree('data', self.prefix.data)
 
         with working_dir('makefiles'):
             # Apparently the Makefile bases its paths on PWD
