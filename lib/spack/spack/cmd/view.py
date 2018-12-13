@@ -42,6 +42,8 @@ from llnl.util.tty.color import colorize
 import spack.environment as ev
 import spack.cmd
 import spack.store
+import spack.schema.projections
+from spack.config import validate
 from spack.filesystem_view import YamlFilesystemView
 from spack.util import spack_yaml as s_yaml
 
@@ -166,7 +168,9 @@ def view(parser, args):
     if args.projection_file:
         if os.path.exists(args.projection_file):
             with open(args.projection_file, 'r') as f:
-                ordered_projections = s_yaml.load(f)['projections']
+                projections_data = s_yaml.load(f)
+                validate(projections_data, spack.schema.projections.schema)
+                ordered_projections = projections_data['projections']
         else:
             tty.error('Specified projection file does not exist.')
     else:
