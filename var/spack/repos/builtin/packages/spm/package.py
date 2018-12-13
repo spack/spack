@@ -14,8 +14,10 @@ class Spm(Package):
 
     homepage = "https://www.fil.ion.ucl.ac.uk/spm/"
     url      = "https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/spm12_r7219.zip"
+    list_url = "https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/previous/"
 
-    version('12_r7219', sha256='b46fe8ce5ab537caeea7634c650f3a12fe2716f6a2e8ac15aa0d62b3652fe764')
+    version('12_r7219', sha256='b46fe8ce5ab537caeea7634c650f3a12fe2716f6a2e8ac15aa0d62b3652fe764',
+            url='https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/previous/spm12_r7219_R2010a.zip')
 
     depends_on('zip', type='build')
     depends_on('matlab', type='run')
