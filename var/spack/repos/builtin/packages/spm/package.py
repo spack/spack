@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install spm
-#
-# You can edit this file again by typing:
-#
-#     spack edit spm
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -35,6 +18,7 @@ class Spm(Package):
     version('12_r7219', sha256='b46fe8ce5ab537caeea7634c650f3a12fe2716f6a2e8ac15aa0d62b3652fe764')
 
     depends_on('zip', type='build')
+    depends_on('matlab', type='run')
 
     def install(self, spec, prefix):
         unzip = which('unzip')
