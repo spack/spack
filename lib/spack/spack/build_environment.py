@@ -650,6 +650,9 @@ def setup_package(pkg, dirty):
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
+    parent_modules = parent_class_modules(pkg.__class__)
+    for mod in parent_modules:
+        set_module_variables_for_package(pkg, mod)
     set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
 
