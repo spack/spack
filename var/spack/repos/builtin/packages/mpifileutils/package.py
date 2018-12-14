@@ -26,6 +26,8 @@ class Mpifileutils(AutotoolsPackage):
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 
+    conflicts('platform=darwin')
+
     depends_on('mpi')
     depends_on('libcircle')
     depends_on('lwgrp')
