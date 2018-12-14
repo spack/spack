@@ -25,4 +25,4 @@ class Pbsuite(Package):
         install_tree('bin', prefix.bin)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('PYTHONPATH', self.prefix)
+        run_env.prepend_path('PYTHONPATH', self.prefix)
