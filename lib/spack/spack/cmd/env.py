@@ -34,6 +34,7 @@ subcommands = [
     ['list', 'ls'],
     ['status', 'st'],
     'loads',
+    'view',
 ]
 
 
@@ -287,6 +288,39 @@ def env_list(args):
             tty.msg('%d environments' % len(names))
 
     colify(color_names, indent=4)
+
+
+#
+# env view
+#
+def env_view_setup_parser(subparser):
+    """manage a view associated with the environment"""
+    views = subparser.add_mutually_exclusive_group()
+    views.add_argument(
+        '--regenerate', action='store_true',
+        help="regenerate the view for the environment")
+    views.add_argument(
+        '--enable', action='store_true',
+        help="enable a view for the environment")
+    views.add_argument(
+        '--disable', action='store_true',
+        help="disable view for the environment")
+
+
+def env_view(args):
+    env = ev.get_env(args, 'env view')
+
+    if env:
+        if args.regenerate:
+            env.regenerate_view()
+        elif args.enable:
+            env._view_path = True
+            env.write()
+        elif args.disable:
+            env._view_path = False
+            env.write()
+    else:
+        tty.msg("No active environment")
 
 
 #

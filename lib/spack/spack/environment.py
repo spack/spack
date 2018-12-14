@@ -685,6 +685,14 @@ class Environment(object):
         return YamlFilesystemView(
             self._view_path, spack.store.layout, ignore_conflicts=True)
 
+    def regenerate_view(self):
+        if not self._view_path:
+            raise SpackEnvironmentError(
+                "The environment '{0}' does not maintain a view"
+                .format(self.name))
+        shutil.rmtree(self._view_path)
+        self.update_view()
+
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
 
