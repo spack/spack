@@ -1,0 +1,20 @@
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import spack.pkg.builtin.mock.simple_inheritance as si
+
+
+class MultimoduleInheritance(si.BaseWithDirectives):
+    """Simple package which inherits a method and several directives"""
+
+    homepage = "http://www.example.com"
+    url = "http://www.example.com/multimodule-1.0.tar.gz"
+
+    version('1.0', '0123456789abcdef0123456789abcdef')
+
+    depends_on('openblas', when='+openblas')
+
+    def install(self, spec, prefix):
+        pass
