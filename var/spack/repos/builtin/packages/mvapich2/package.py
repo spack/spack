@@ -67,7 +67,7 @@ class Mvapich2(AutotoolsPackage):
         ).prohibit_empty_set().with_error(
             "'slurm' or 'auto' cannot be activated along with "
             "other process managers"
-        ).with_default('auto'),
+        ).with_default('auto').with_non_feature_values('auto'),
     )
 
     variant(
