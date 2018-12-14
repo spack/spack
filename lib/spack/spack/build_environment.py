@@ -370,6 +370,78 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
+def _set_variables_for_single_module(pkg, module):
+    """Helper function to set module variables for single module."""
+    # number of jobs spack will build with.
+    jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
+    if not pkg.parallel:
+        jobs = 1
+    elif pkg.make_jobs:
+        jobs = pkg.make_jobs
+
+    m = module
+    m.make_jobs = jobs
+
+    # TODO: make these build deps that can be installed if not found.
+    m.make = MakeExecutable('make', jobs)
+    m.gmake = MakeExecutable('gmake', jobs)
+    m.scons = MakeExecutable('scons', jobs)
+    m.ninja = MakeExecutable('ninja', jobs)
+
+    # easy shortcut to os.environ
+    m.env = os.environ
+
+    # Find the configure script in the archive path
+    # Don't use which for this; we want to find it in the current dir.
+    m.configure = Executable('./configure')
+
+    m.meson = Executable('meson')
+    m.cmake = Executable('cmake')
+    m.ctest = MakeExecutable('ctest', jobs)
+
+    # Standard CMake arguments
+    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
+    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+
+    # Put spack compiler paths in module scope.
+    link_dir = spack.paths.build_env_path
+    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
+    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths['cxx'])
+    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
+    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
+
+    # Emulate some shell commands for convenience
+    m.pwd = os.getcwd
+    m.cd = os.chdir
+    m.mkdir = os.mkdir
+    m.makedirs = os.makedirs
+    m.remove = os.remove
+    m.removedirs = os.removedirs
+    m.symlink = os.symlink
+
+    m.mkdirp = mkdirp
+    m.install = install
+    m.install_tree = install_tree
+    m.rmtree = shutil.rmtree
+    m.move = shutil.move
+
+    # Useful directories within the prefix are encapsulated in
+    # a Prefix object.
+    m.prefix = pkg.prefix
+
+    # Platform-specific library suffix.
+    m.dso_suffix = dso_suffix
+
+    def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
+        compiler_path = kwargs.get('compiler', m.spack_cc)
+        compiler = Executable(compiler_path)
+
+        return _static_to_shared_library(pkg.spec.architecture, compiler,
+                                         static_lib, shared_lib, **kwargs)
+
+    m.static_to_shared_library = static_to_shared_library
+
+
 def set_module_variables_for_package(pkg):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
@@ -381,78 +453,7 @@ def set_module_variables_for_package(pkg):
     # called. parent_class_modules includes pkg.module.
     modules = parent_class_modules(pkg.__class__)
     for mod in modules:
-        # number of jobs spack will build with.
-        jobs = spack.config.get('config:build_jobs')
-        if not jobs:
-            jobs = multiprocessing.cpu_count()
-        if not pkg.parallel:
-            jobs = 1
-        elif pkg.make_jobs:
-            jobs = pkg.make_jobs
-
-        m = mod
-        m.make_jobs = jobs
-
-        # TODO: make these build deps that can be installed if not found.
-        m.make = MakeExecutable('make', jobs)
-        m.gmake = MakeExecutable('gmake', jobs)
-        m.scons = MakeExecutable('scons', jobs)
-        m.ninja = MakeExecutable('ninja', jobs)
-
-        # easy shortcut to os.environ
-        m.env = os.environ
-
-        # Find the configure script in the archive path
-        # Don't use which for this; we want to find it in the current dir.
-        m.configure = Executable('./configure')
-
-        m.meson = Executable('meson')
-        m.cmake = Executable('cmake')
-        m.ctest = MakeExecutable('ctest', jobs)
-
-        # Standard CMake arguments
-        m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(
-            pkg)
-        m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(
-            pkg)
-
-        # Put spack compiler paths in module scope.
-        link_dir = spack.paths.build_env_path
-        m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
-        m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths['cxx'])
-        m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
-        m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
-
-        # Emulate some shell commands for convenience
-        m.pwd = os.getcwd
-        m.cd = os.chdir
-        m.mkdir = os.mkdir
-        m.makedirs = os.makedirs
-        m.remove = os.remove
-        m.removedirs = os.removedirs
-        m.symlink = os.symlink
-
-        m.mkdirp = mkdirp
-        m.install = install
-        m.install_tree = install_tree
-        m.rmtree = shutil.rmtree
-        m.move = shutil.move
-
-        # Useful directories within the prefix are encapsulated in
-        # a Prefix object.
-        m.prefix = pkg.prefix
-
-        # Platform-specific library suffix.
-        m.dso_suffix = dso_suffix
-
-        def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
-            compiler_path = kwargs.get('compiler', m.spack_cc)
-            compiler = Executable(compiler_path)
-
-            return _static_to_shared_library(pkg.spec.architecture, compiler,
-                                             static_lib, shared_lib, **kwargs)
-
-        m.static_to_shared_library = static_to_shared_library
+        _set_variables_for_single_module(pkg, mod)
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
