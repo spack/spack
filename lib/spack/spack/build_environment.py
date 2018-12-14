@@ -370,78 +370,85 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
-def set_module_variables_for_package(pkg, module):
+def set_module_variables_for_package(pkg):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
-    # number of jobs spack will build with.
-    jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
-    if not pkg.parallel:
-        jobs = 1
-    elif pkg.make_jobs:
-        jobs = pkg.make_jobs
+    # If a user makes their own package repo, e.g.
+    # spack.pkg.mystuff.libelf.Libelf, and they inherit from an existing class
+    # like spack.pkg.original.libelf.Libelf, then set the module variables
+    # for both classes so the parent class can still use them if it gets
+    # called. parent_class_modules includes pkg.module.
+    modules = parent_class_modules(pkg.__class__)
+    for mod in modules:
+        # number of jobs spack will build with.
+        jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
+        if not pkg.parallel:
+            jobs = 1
+        elif pkg.make_jobs:
+            jobs = pkg.make_jobs
 
-    m = module
-    m.make_jobs = jobs
+        m = mod
+        m.make_jobs = jobs
 
-    # TODO: make these build deps that can be installed if not found.
-    m.make = MakeExecutable('make', jobs)
-    m.gmake = MakeExecutable('gmake', jobs)
-    m.scons = MakeExecutable('scons', jobs)
-    m.ninja = MakeExecutable('ninja', jobs)
+        # TODO: make these build deps that can be installed if not found.
+        m.make = MakeExecutable('make', jobs)
+        m.gmake = MakeExecutable('gmake', jobs)
+        m.scons = MakeExecutable('scons', jobs)
+        m.ninja = MakeExecutable('ninja', jobs)
 
-    # easy shortcut to os.environ
-    m.env = os.environ
+        # easy shortcut to os.environ
+        m.env = os.environ
 
-    # Find the configure script in the archive path
-    # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable('./configure')
+        # Find the configure script in the archive path
+        # Don't use which for this; we want to find it in the current dir.
+        m.configure = Executable('./configure')
 
-    m.meson = Executable('meson')
-    m.cmake = Executable('cmake')
-    m.ctest = MakeExecutable('ctest', jobs)
+        m.meson = Executable('meson')
+        m.cmake = Executable('cmake')
+        m.ctest = MakeExecutable('ctest', jobs)
 
-    # Standard CMake arguments
-    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
-    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+        # Standard CMake arguments
+        m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
+        m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
 
-    # Put spack compiler paths in module scope.
-    link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths['cxx'])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
+        # Put spack compiler paths in module scope.
+        link_dir = spack.paths.build_env_path
+        m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
+        m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths['cxx'])
+        m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
+        m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
 
-    # Emulate some shell commands for convenience
-    m.pwd = os.getcwd
-    m.cd = os.chdir
-    m.mkdir = os.mkdir
-    m.makedirs = os.makedirs
-    m.remove = os.remove
-    m.removedirs = os.removedirs
-    m.symlink = os.symlink
+        # Emulate some shell commands for convenience
+        m.pwd = os.getcwd
+        m.cd = os.chdir
+        m.mkdir = os.mkdir
+        m.makedirs = os.makedirs
+        m.remove = os.remove
+        m.removedirs = os.removedirs
+        m.symlink = os.symlink
 
-    m.mkdirp = mkdirp
-    m.install = install
-    m.install_tree = install_tree
-    m.rmtree = shutil.rmtree
-    m.move = shutil.move
+        m.mkdirp = mkdirp
+        m.install = install
+        m.install_tree = install_tree
+        m.rmtree = shutil.rmtree
+        m.move = shutil.move
 
-    # Useful directories within the prefix are encapsulated in
-    # a Prefix object.
-    m.prefix = pkg.prefix
+        # Useful directories within the prefix are encapsulated in
+        # a Prefix object.
+        m.prefix = pkg.prefix
 
-    # Platform-specific library suffix.
-    m.dso_suffix = dso_suffix
+        # Platform-specific library suffix.
+        m.dso_suffix = dso_suffix
 
-    def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
-        compiler_path = kwargs.get('compiler', m.spack_cc)
-        compiler = Executable(compiler_path)
+        def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
+            compiler_path = kwargs.get('compiler', m.spack_cc)
+            compiler = Executable(compiler_path)
 
-        return _static_to_shared_library(pkg.spec.architecture, compiler,
-                                         static_lib, shared_lib, **kwargs)
+            return _static_to_shared_library(pkg.spec.architecture, compiler,
+                                             static_lib, shared_lib, **kwargs)
 
-    m.static_to_shared_library = static_to_shared_library
+        m.static_to_shared_library = static_to_shared_library
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
@@ -591,6 +598,8 @@ def get_std_meson_args(pkg):
 def parent_class_modules(cls):
     """
     Get list of superclass modules that descend from spack.package.PackageBase
+
+    Includes cls.__module__
     """
     if (not issubclass(cls, spack.package.PackageBase) or
         issubclass(spack.package.PackageBase, cls)):
@@ -634,26 +643,15 @@ def setup_package(pkg, dirty):
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False,
                                    deptype=('build', 'test')):
-        # If a user makes their own package repo, e.g.
-        # spack.pkg.mystuff.libelf.Libelf, and they inherit from
-        # an existing class like spack.pkg.original.libelf.Libelf,
-        # then set the module variables for both classes so the
-        # parent class can still use them if it gets called.
         spkg = dspec.package
-        modules = parent_class_modules(spkg.__class__)
-        for mod in modules:
-            set_module_variables_for_package(spkg, mod)
-        set_module_variables_for_package(spkg, spkg.module)
+        set_module_variables_for_package(spkg)
 
         # Allow dependencies to modify the module
         dpkg = dspec.package
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    parent_modules = parent_class_modules(pkg.__class__)
-    for mod in parent_modules:
-        set_module_variables_for_package(pkg, mod)
-    set_module_variables_for_package(pkg, pkg.module)
+    set_module_variables_for_package(pkg)
     pkg.setup_environment(spack_env, run_env)
 
     # Loading modules, in particular if they are meant to be used outside
