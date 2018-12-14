@@ -12,11 +12,7 @@ branches:
 # Build matrix
 #=============================================================================
 
-# Adding the keyword dist to permit an `allow_failures` section
-# under `matrix.include`. More information here:
-#
-# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
-dist: trusty
+dist: xenial
 
 jobs:
   fast_finish: true
@@ -29,6 +25,7 @@ jobs:
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
+      dist: trusty
       sudo: required
       os: linux
       language: python
@@ -56,7 +53,6 @@ jobs:
     - python: '3.7'
       sudo: required
       os: linux
-      dist: xenial
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
@@ -114,10 +110,7 @@ jobs:
       language: generic
       env: TEST_SUITE=docker
   allow_failures:
-    - dist: xenial
     - env: TEST_SUITE=docker
-    # temporary Python 2.6 exception while we figure out why Travis is hanging
-    - python: '2.6'
 
 stages:
   - 'style checks'
