@@ -184,7 +184,7 @@ def find_environment(args):
     raise SpackEnvironmentError('no environment in %s' % env)
 
 
-def get_env(args, cmd_name, required=True):
+def get_env(args, cmd_name, required=False):
     """Used by commands to get the active environment.
 
     This first checks for an ``env`` argument, then looks at the
@@ -202,8 +202,8 @@ def get_env(args, cmd_name, required=True):
     Arguments:
         args (Namespace): argparse namespace wtih command arguments
         cmd_name (str): name of calling command
-        required (bool): if ``False``, return ``None`` if no environment
-            is found instead of raising an exception.
+        required (bool): if ``True``, raise an exception when no environment
+            is found; if ``False``, just return ``None``
 
     Returns:
         (Environment): if there is an arg or active environment

@@ -8,6 +8,7 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.environment as ev
 import spack.cmd
 import spack.cmd.find
 import spack.repo
@@ -75,7 +76,8 @@ def extensions(parser, args):
     if not spec[0].package.extendable:
         tty.die("%s is not an extendable package." % spec[0].name)
 
-    spec = spack.cmd.disambiguate_spec(spec[0])
+    env = ev.get_env(args, 'extensions')
+    spec = spack.cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:
         tty.die("%s does not have extensions." % spec.short_spec)

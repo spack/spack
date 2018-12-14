@@ -38,6 +38,7 @@ import os
 import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
 
+import spack.environment as ev
 import spack.cmd
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
@@ -172,7 +173,8 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        specs = [spack.cmd.disambiguate_spec(s) for s in specs]
+        env = ev.get_env(args, 'view link')
+        specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:
         # no specs implies all

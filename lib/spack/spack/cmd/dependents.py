@@ -8,6 +8,7 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.environment as ev
 import spack.repo
 import spack.store
 import spack.cmd
@@ -81,7 +82,8 @@ def dependents(parser, args):
         tty.die("spack dependents takes only one spec.")
 
     if args.installed:
-        spec = spack.cmd.disambiguate_spec(specs[0])
+        env = ev.get_env(args, 'dependents')
+        spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
         deps = spack.store.db.installed_relatives(

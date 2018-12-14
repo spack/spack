@@ -29,7 +29,7 @@ def setup_parser(subparser):
 
 def stage(parser, args):
     if not args.specs:
-        env = ev.get_env(args, 'stage', required=False)
+        env = ev.get_env(args, 'stage')
         if env:
             tty.msg("Staging specs from environment %s" % env.name)
             for spec in env.specs_by_hash.values():
