@@ -21,7 +21,10 @@ class Mcl(AutotoolsPackage):
     def configure_args(self):
         return ['--enable-blast']
 
-    @run_after('build')
-    def fix_perl_scripts(self):
-        filter_file(r'#!/usr/local/bin/perl -w',
-                    '#!/usr/bin/env perl', prefix.bin.mcxdeblast)
+    @run_after('install')
+    def filter_sbang(self):
+        with working_dir(prefix.bin):
+            substitute = "#!{perl}".format(perl=self.spec['perl'].command.path)
+            kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
+            filter_file('^#!/usr/bin/env perl', substitute, 'mclpipeline', **kwargs)
+            filter_file('^#!/usr/local/bin/perl -w', substitute, 'mcxdeblast', **kwargs)
