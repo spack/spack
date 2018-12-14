@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Dtcmp(Package):
+class Dtcmp(AutotoolsPackage):
     """The Datatype Comparison Library provides comparison operations and
        parallel sort algorithms for MPI applications."""
 
@@ -19,8 +19,5 @@ class Dtcmp(Package):
     depends_on('mpi')
     depends_on('lwgrp')
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--with-lwgrp=" + spec['lwgrp'].prefix)
-        make()
-        make("install")
+    def configure_args(self):
+        return ["--with-lwgrp=" + self.spec['lwgrp'].prefix]
