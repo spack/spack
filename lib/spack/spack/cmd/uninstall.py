@@ -301,7 +301,7 @@ def get_uninstall_list(args, specs, env):
 
 
 def uninstall_specs(args, specs):
-    env = ev.get_env(args, 'uninstall', required=False)
+    env = ev.get_env(args, 'uninstall')
 
     uninstall_list, remove_list = get_uninstall_list(args, specs, env)
     anything_to_do = set(uninstall_list).union(set(remove_list))

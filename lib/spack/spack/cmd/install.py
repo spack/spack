@@ -160,7 +160,7 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
     # handle active environment, if any
     def install(spec, kwargs):
-        env = ev.get_env(cli_args, 'install', required=False)
+        env = ev.get_env(cli_args, 'install')
         if env:
             env.install(abstract_spec, spec, **kwargs)
             env.write()
@@ -194,7 +194,7 @@ def install(parser, args, **kwargs):
     if not args.package and not args.specfiles:
         # if there are no args but an active environment or spack.yaml file
         # then install the packages from it.
-        env = ev.get_env(args, 'install', required=False)
+        env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
                 env.concretize()
