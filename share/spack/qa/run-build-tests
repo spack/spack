@@ -33,8 +33,12 @@ if [ -z "$SPEC" ]; then
     exit 1
 fi
 
+if [ "${SPEC}" = "mpich" ] ; then
+    OPTIONS="-v"
+fi
+
 # Print compiler information
 spack config get compilers
 
 # Run some build smoke tests, potentially with code coverage
-${coverage_run} bin/spack install ${SPEC}
+${coverage_run} bin/spack install ${OPTIONS} ${SPEC}
