@@ -14,3 +14,8 @@ class Clp(AutotoolsPackage):
     url      = "https://www.coin-or.org/download/source/Clp/Clp-1.16.11.tgz"
 
     version('1.16.11', sha256='b525451423a9a09a043e6a13d9436e13e3ee7a7049f558ad41a110742fa65f39')
+
+    def configure_args(self):
+        return [
+            '--with-clp-datadir={0}/Data'.format(self.build_directory),
+        ]
