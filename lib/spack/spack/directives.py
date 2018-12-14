@@ -476,6 +476,9 @@ def variant(
     # all the other arguments. Ensure we have no conflicting definitions
     # in place.
     for argument in ('default', 'multi', 'validator'):
+        # TODO: we can consider treating 'default' differently from other
+        # TODO: attributes and let a packager decide whether to use the fluent
+        # TODO: interface or the directive argument
         if hasattr(values, argument) and locals()[argument] is not None:
             def _raise_argument_error(pkg):
                 msg = "Remove specification of {0} argument: it is handled " \
