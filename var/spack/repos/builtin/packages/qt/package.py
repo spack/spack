@@ -79,6 +79,7 @@ class Qt(Package):
     patch('qt4-gcc-and-webkit.patch', when='@4')
 
     # Use system openssl for security.
+    depends_on("openssl@:1.0", when='@:5.9')
     depends_on("openssl")
     depends_on("glib", when='@4:')
     depends_on("gtkplus", when='+gtk')
