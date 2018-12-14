@@ -5,6 +5,7 @@
 
 import spack.pkg.builtin.mock.simple_inheritance as si
 
+
 class MultimoduleInheritance(si.BaseWithDirectives):
     """Simple package which inherits a method and several directives"""
 

@@ -382,7 +382,9 @@ def set_module_variables_for_package(pkg):
     modules = parent_class_modules(pkg.__class__)
     for mod in modules:
         # number of jobs spack will build with.
-        jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
+        jobs = spack.config.get('config:build_jobs')
+        if not jobs:
+            jobs = multiprocessing.cpu_count()
         if not pkg.parallel:
             jobs = 1
         elif pkg.make_jobs:
@@ -409,8 +411,10 @@ def set_module_variables_for_package(pkg):
         m.ctest = MakeExecutable('ctest', jobs)
 
         # Standard CMake arguments
-        m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
-        m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+        m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(
+            pkg)
+        m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(
+            pkg)
 
         # Put spack compiler paths in module scope.
         link_dir = spack.paths.build_env_path
