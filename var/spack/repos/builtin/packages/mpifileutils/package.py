@@ -51,7 +51,8 @@ class Mpifileutils(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-
+        args.append("libarchive_CFLAGS=-I%s" % self.spec['libarchive'].prefix.include)
+        args.append("libarchive_LIBS=%s" % self.spec['libarchive'].libs.search_flags)
         if '+lustre' in self.spec:
             args.append('--enable-lustre')
         else:
