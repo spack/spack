@@ -64,7 +64,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not args.section:
-        env = ev.get_env(args, 'config edit', required=False)
+        env = ev.get_env(args, 'config edit')
         if env:
             scope = env.env_file_config_scope_name()
 

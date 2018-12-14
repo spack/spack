@@ -8,6 +8,7 @@ import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.environment as ev
 import spack.repo
 import spack.store
 import spack.spec
@@ -81,7 +82,8 @@ def setup_parser(subparser):
     dlkeys.set_defaults(func=getkeys)
 
 
-def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
+def find_matching_specs(
+        pkgs, allow_multiple_matches=False, force=False, env=None):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -92,12 +94,14 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     Return:
         list of specs
     """
+    hashes = env.all_hashes() if env else None
+
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
     specs = spack.cmd.parse_specs(pkgs)
     for spec in specs:
-        matching = spack.store.db.query(spec)
+        matching = spack.store.db.query(spec, hashes=hashes)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -179,7 +183,10 @@ def createtarball(args):
     if args.key:
         signkey = args.key
 
-    matches = find_matching_specs(pkgs, False, False)
+    # restrict matching to current environment if one is active
+    env = ev.get_env(args, 'buildcache create')
+
+    matches = find_matching_specs(pkgs, False, False, env=env)
     for match in matches:
         if match.external or match.virtual:
             tty.msg('skipping external or virtual spec %s' %
