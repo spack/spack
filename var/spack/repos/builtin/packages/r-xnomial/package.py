@@ -13,6 +13,7 @@ class RXnomial(RPackage):
 
     homepage = "https://cran.r-project.org/package=XNomial"
     url      = "https://cran.r-project.org/src/contrib/XNomial_1.0.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/XNomial/"
 
     version('1.0.4', sha256='e6237f79d96f02bb30af1cf055ae9f70541abba34ce045a9d4359b5304189dd7')
 
