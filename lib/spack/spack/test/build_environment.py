@@ -218,7 +218,7 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
 
 
 def test_package_inheritance_module_setup(config, mock_packages):
-    s = spack.spec.Spec('simple-inheritance')
+    s = spack.spec.Spec('multimodule-inheritance')
     s.concretize()
     pkg = s.package
 
