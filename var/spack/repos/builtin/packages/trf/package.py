@@ -21,9 +21,15 @@ class Trf(Package):
 
     version('4.09', '0c594fe666e0332db1df9d160d7fabc8', expand=False,
             url='file://{0}/trf409.linux64'.format(os.getcwd()))
+    version('4.07b', sha256='a3a760c7b74c9603fbc08d95e8fa696c00f35a2f179b0bd63b2b13757ad3b471', expand=False,
+            url='file://{0}/trf407b.linux64'.format(os.getcwd()))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('trf409.linux64', prefix.bin.trf)
+
+        trfname = 'trf{0}.linux64'.format(self.version.joined)
+
+        install(trfname, prefix.bin)
         chmod = which('chmod')
-        chmod('+x', prefix.bin.trf)
+        chmod('+x', os.path.join(prefix.bin, trfname))
+        os.symlink(trfname, prefix.bin.trf)

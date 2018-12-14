@@ -57,13 +57,10 @@ class PySphinx(PythonPackage):
     # http://www.sphinx-doc.org/en/stable/changes.html
     depends_on('py-sphinxcontrib-websupport', when='@1.6:',
                type=('build', 'run'))
-    # TODO: incorporate the proper dependencies when concretizer is capable
     # Build dep for 1.6.1 all python (bug), see:
     # https://github.com/sphinx-doc/sphinx/pull/3789
-    # depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
-    # depends_on('py-typing', when='@1.6.2:^python@2.7:3.4',
-    #            type=('build', 'run'))
-    depends_on('py-typing', when='@1.6:', type=('build', 'run'))
+    depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
+    depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
 
     depends_on('py-pytest',     type='test')
     depends_on('py-mock',       type='test')

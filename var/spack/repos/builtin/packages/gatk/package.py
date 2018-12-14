@@ -4,9 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import glob
 import os.path
-import re
 
 
 class Gatk(Package):
@@ -16,10 +14,13 @@ class Gatk(Package):
     homepage = "https://software.broadinstitute.org/gatk/"
     url      = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip"
 
+    version('4.0.11.0', sha256='5ee23159be7c65051335ac155444c6a49c4d8e3515d4227646c0686819934536')
     version('4.0.8.1', sha256='6d47463dfd8c16ffae82fd29e4e73503e5b7cd0fcc6fea2ed50ee3760dd9acd9',
             url='https://github.com/broadinstitute/gatk/archive/4.0.8.1.tar.gz')
     version('4.0.4.0', '083d655883fb251e837eb2458141fc2b',
             url="https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip")
+    version('3.8-1', 'a0829534d2d0ca3ebfbd3b524a9b50427ff238e0db400d6e9e479242d98cbe5c', extension='tar.bz2',
+            url="https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef")
     version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
             url="https://software.broadinstitute.org/gatk/download/auth?package=GATK")
 
@@ -31,10 +32,8 @@ class Gatk(Package):
         mkdirp(prefix.bin)
 
         # Install all executable non-script files to prefix bin
-        files = [x for x in glob.glob("*")
-                 if not re.match("^.*\.sh$", x) and is_exe(x)]
-        for f in files:
-            install(f, prefix.bin)
+        jar_file = 'GenomeAnalysisTK.jar'
+        install(jar_file, prefix.bin)
 
         # Skip helper script settings
         if spec.satisfies('@:4.0'):
