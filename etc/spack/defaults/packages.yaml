@@ -22,6 +22,7 @@ packages:
       blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
+      fftw-api: [fftw]
       gl: [mesa, opengl]
       glu: [mesa-glu, openglu]
       golang: [gcc]

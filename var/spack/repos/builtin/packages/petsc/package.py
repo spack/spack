@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 import sys
@@ -99,6 +80,9 @@ class Petsc(Package):
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
 
+    variant('X', default=False,
+            description='Activate X support')
+
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
 
@@ -132,7 +116,7 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.
@@ -165,6 +149,7 @@ class Petsc(Package):
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('libx11', when='+X')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -202,7 +187,6 @@ class Petsc(Package):
 
     def install(self, spec, prefix):
         options = ['--with-ssl=0',
-                   '--with-x=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
                    '--download-hwloc=0',
@@ -228,6 +212,11 @@ class Petsc(Package):
         options.extend([
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
+
+        if '+X' in spec:
+            options.append('--with-x=1')
+        else:
+            options.append('--with-x=0')
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')

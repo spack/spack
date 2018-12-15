@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import collections
 import errno
 import hashlib
@@ -433,13 +414,22 @@ def get_filetype(path_name):
 
 
 def mkdirp(*paths, **kwargs):
-    """Creates a directory, as well as parent directories if needed."""
-    mode = kwargs.get('mode', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    """Creates a directory, as well as parent directories if needed.
+
+    Arguments:
+        paths (str): paths to create with mkdirp
+
+    Keyword Aguments:
+        mode (permission bits or None, optional): optional permissions to
+            set on the created directory -- use OS default if not provided
+    """
+    mode = kwargs.get('mode', None)
     for path in paths:
         if not os.path.exists(path):
             try:
-                os.makedirs(path, mode)
-                os.chmod(path, mode)  # For systems that ignore makedirs mode
+                os.makedirs(path)
+                if mode is not None:
+                    os.chmod(path, mode)
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
@@ -546,6 +536,30 @@ def hash_directory(directory):
                 md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
+
+
+@contextmanager
+def write_tmp_and_move(filename):
+    """Write to a temporary file, then move into place."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    tmp = os.path.join(dirname, '.%s.tmp' % basename)
+    with open(tmp, 'w') as f:
+        yield f
+    shutil.move(tmp, filename)
+
+
+@contextmanager
+def open_if_filename(str_or_file, mode='r'):
+    """Takes either a path or a file object, and opens it if it is a path.
+
+    If it's a file object, just yields the file object.
+    """
+    if isinstance(str_or_file, six.string_types):
+        with open(str_or_file, mode) as f:
+            yield f
+    else:
+        yield str_or_file
 
 
 def touch(path):
