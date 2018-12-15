@@ -662,6 +662,7 @@ class Environment(object):
                       " maintain a view")
             return
 
+        # TODO: this is too verbose: it is printed in the middle of testing
         tty.msg("Updating view at {0}".format(self._view_path))
 
         view_specs = self._get_environment_specs()
