@@ -679,10 +679,12 @@ class Environment(object):
 
     def regenerate_view(self):
         if not self._view_path:
-            raise SpackEnvironmentError(
-                "The environment '{0}' does not maintain a view"
-                .format(self.name))
+            tty.debug("Skip view update, this environment does not"
+                      " maintain a view")
+            return
+
         if os.path.exists(self._view_path):
+            tty.msg("Clearing view at {0}".format(self._view_path))
             shutil.rmtree(self._view_path)
         self.update_view()
 
