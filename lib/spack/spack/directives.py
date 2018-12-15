@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
@@ -48,7 +29,6 @@ The available directives are:
 
 import collections
 import functools
-import inspect
 import os.path
 import re
 from six import string_types
@@ -115,11 +95,11 @@ class DirectiveMeta(type):
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure
         # that the directives are called on the class to set it up
-        module = inspect.getmodule(cls)
-        if 'spack.pkg' in module.__name__:
+
+        if 'spack.pkg' in cls.__module__:
             # Package name as taken
             # from llnl.util.lang.get_calling_module_name
-            pkg_name = module.__name__.split('.')[-1]
+            pkg_name = cls.__module__.split('.')[-1]
             setattr(cls, 'name', pkg_name)
 
             # Ensure the presence of the dictionaries associated

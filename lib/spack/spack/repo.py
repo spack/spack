@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import collections
 import os
 import stat
@@ -29,10 +10,8 @@ import shutil
 import errno
 import sys
 import inspect
-import imp
 import re
 import traceback
-import tempfile
 import json
 from contextlib import contextmanager
 from six import string_types
@@ -44,7 +23,7 @@ except ImportError:
 
 from types import ModuleType
 
-import yaml
+import ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -54,10 +33,12 @@ import spack.config
 import spack.caches
 import spack.error
 import spack.spec
+import spack.util.imp as simp
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
 from spack.util.naming import NamespaceTrie, valid_module_name
 from spack.util.naming import mod_to_class, possible_spack_module_names
+
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -376,7 +357,6 @@ class RepoPath(object):
 
         self.repos = []
         self.by_namespace = NamespaceTrie()
-        self.by_path = {}
 
         self._all_package_names = None
         self._provider_index = None
@@ -393,35 +373,28 @@ class RepoPath(object):
                          "To remove the bad repository, run this command:",
                          "    spack repo rm %s" % repo)
 
-    def _add(self, repo):
-        """Add a repository to the namespace and path indexes.
-
-        Checks for duplicates -- two repos can't have the same root
-        directory, and they provide have the same namespace.
-
-        """
-        if repo.root in self.by_path:
-            raise DuplicateRepoError("Duplicate repository: '%s'" % repo.root)
-
-        if repo.namespace in self.by_namespace:
-            raise DuplicateRepoError(
-                "Package repos '%s' and '%s' both provide namespace %s"
-                % (repo.root, self.by_namespace[repo.namespace].root,
-                   repo.namespace))
-
-        # Add repo to the pkg indexes
-        self.by_namespace[repo.full_namespace] = repo
-        self.by_path[repo.root] = repo
-
     def put_first(self, repo):
         """Add repo first in the search path."""
-        self._add(repo)
+        if isinstance(repo, RepoPath):
+            for r in reversed(repo.repos):
+                self.put_first(r)
+            return
+
         self.repos.insert(0, repo)
+        self.by_namespace[repo.full_namespace] = repo
 
     def put_last(self, repo):
         """Add repo last in the search path."""
-        self._add(repo)
+        if isinstance(repo, RepoPath):
+            for r in repo.repos:
+                self.put_last(r)
+            return
+
         self.repos.append(repo)
+
+        # don't mask any higher-precedence repos with same namespace
+        if repo.full_namespace not in self.by_namespace:
+            self.by_namespace[repo.full_namespace] = repo
 
     def remove(self, repo):
         """Remove a repo from the search path."""
@@ -994,9 +967,8 @@ class Repo(object):
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
             try:
-                with import_lock():
-                    with prepend_open(file_path, text=_package_prepend) as f:
-                        module = imp.load_source(fullname, file_path, f)
+                module = simp.load_source(fullname, file_path,
+                                          prepend=_package_prepend)
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename so we need to
                 # manually construct the error message in order to give the
@@ -1099,6 +1071,14 @@ def create_repo(root, namespace=None):
     return full_path, namespace
 
 
+def create_or_construct(path, namespace=None):
+    """Create a repository, or just return a Repo if it already exists."""
+    if not os.path.exists(path):
+        mkdirp(path)
+        create_repo(path, namespace)
+    return Repo(path, namespace)
+
+
 def _path():
     """Get the singleton RepoPath instance for Spack.
 
@@ -1147,31 +1127,6 @@ def set_path(repo):
 
 
 @contextmanager
-def import_lock():
-    imp.acquire_lock()
-    yield
-    imp.release_lock()
-
-
-@contextmanager
-def prepend_open(f, *args, **kwargs):
-    """Open a file for reading, but prepend with some text prepended
-
-    Arguments are same as for ``open()``, with one keyword argument,
-    ``text``, specifying the text to prepend.
-    """
-    text = kwargs.get('text', None)
-
-    with open(f, *args) as f:
-        with tempfile.NamedTemporaryFile(mode='w+') as tf:
-            if text:
-                tf.write(text + '\n')
-            tf.write(f.read())
-            tf.seek(0)
-            yield tf.file
-
-
-@contextmanager
 def swap(repo_path):
     """Temporarily use another RepoPath."""
     global path
@@ -1202,10 +1157,6 @@ class InvalidNamespaceError(RepoError):
 
 class BadRepoError(RepoError):
     """Raised when repo layout is invalid."""
-
-
-class DuplicateRepoError(RepoError):
-    """Raised when duplicate repos are added to a RepoPath."""
 
 
 class UnknownEntityError(RepoError):

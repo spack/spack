@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,18 +12,33 @@ class Fmt(CMakePackage):
     to C++ IOStreams."""
 
     homepage = "http://fmtlib.net/latest/index.html"
-    url      = "https://github.com/fmtlib/fmt/releases/download/4.0.0/fmt-4.0.0.zip"
+    url      = "https://github.com/fmtlib/fmt/releases/download/5.2.1/fmt-5.2.1.zip"
 
-    version('4.1.0', 'ded3074a9405a07604d6355fdb592484')
-    version('4.0.0', '605b5abee11b83195191234f4f414cf1')
-    version('3.0.2', 'b190a7b8f2a5e522ee70cf339a53d3b2')
-    version('3.0.1', '14505463b838befe1513b09cae112715')
-    version('3.0.0', 'c099561e70fa194bb03b3fd5de2d3fd0')
+    version('5.2.1', sha256='43894ab8fe561fc9e523a8024efc23018431fa86b95d45b06dbe6ddb29ffb6cd')
+    version('5.2.0', sha256='c016db7f825bce487a7929e1edb747b9902a2935057af6512cad3df3a080a027')
+    version('5.1.0', sha256='77ef9fea638dc846e484409fbc1ea710bb9bcea042e7b35b8805041bf7655ad5')
+    version('5.0.0', sha256='8dd58daf13e7e8adca99f8725ef3ae598f9c97efda7d6d8d4c49db5047879097')
+    version('4.1.0', sha256='9d49bf02ceb9d0eec51144b203b63b77e69d3798bb402fb82e7d0bdb06c79eeb')
+    version('4.0.0', sha256='10a9f184d4d66f135093a08396d3b0a0ebe8d97b79f8b3ddb8559f75fe4fcbc3')
+    version('3.0.2', sha256='51407b62a202b29d1a9c0eb5ecd4095d30031aea65407c42c25cb10cb5c59ad4')
+    version('3.0.1', sha256='4c9af0dc919a8ae7022b44e1a03c435e42d65c866f44667d8d920d342b098550')
+    version('3.0.0', sha256='1b050b66fa31b74f1d75a14f15e99e728ab79572f176a53b2f8ad7c201c30ceb')
 
-    depends_on('cmake@2.8.12:', type='build')
+    depends_on('cmake@3.1.0:', type='build')
+
+    # Supported compilers are detailed here:
+    # http://fmtlib.net/latest/index.html#portability
+    conflicts('%gcc@:4.3.999', when='@5:')
+    conflicts('%llvm@:2.8.999', when='@5:')
+
+    variant('pic', default=True, description='Enable generation of position-independent code')
 
     def cmake_args(self):
-        return [
-            '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
-            '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.pic_flag),
-        ]
+        spec = self.spec
+        args = []
+        if '+pic' in spec:
+            args.append([
+                '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
+                '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.pic_flag)
+            ])
+        return args

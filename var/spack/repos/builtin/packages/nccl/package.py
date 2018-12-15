@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,6 +12,9 @@ class Nccl(MakefilePackage):
     homepage = "https://github.com/NVIDIA/nccl"
     url      = "https://github.com/NVIDIA/nccl/archive/v1.3.4-1.tar.gz"
 
+    version('2.3.5-5',
+            sha256='bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f')
+    version('2.2', '5b9ce7fbdce0fde68e0f66318e6ff422')
     version('1.3.4-1', '5b9ce7fbdce0fde68e0f66318e6ff422')
     version('1.3.0-1', 'f6fb1d56913a7d212ca0c300e76f01fb')
 
@@ -42,4 +26,7 @@ class Nccl(MakefilePackage):
 
     @property
     def install_targets(self):
-        return ['PREFIX={0}'.format(self.prefix), 'install']
+        if self.version >= Version('2.3.5-5'):
+            return ['PREFIX={0}'.format(self.prefix), 'src.install']
+        else:
+            return ['PREFIX={0}'.format(self.prefix), 'install']

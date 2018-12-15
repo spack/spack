@@ -1,33 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
+import stat
 
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigScope
+from spack.config import ConfigScope, ConfigError
 from spack.spec import Spec
 
 
@@ -43,6 +25,31 @@ def concretize_scope(config, tmpdir):
     config.pop_scope()
     spack.package_prefs.PackagePrefs.clear_caches()
     spack.repo.path._provider_index = None
+
+
+@pytest.fixture()
+def configure_permissions():
+    conf = syaml.load("""\
+all:
+  permissions:
+    read: group
+    write: group
+    group: all
+mpich:
+  permissions:
+    read: user
+    write: user
+mpileaks:
+  permissions:
+    write: user
+    group: mpileaks
+callpath:
+  permissions:
+    write: world
+""")
+    spack.config.set('packages', conf, scope='concretize')
+
+    yield
 
 
 def concretize(abstract_spec):
@@ -174,3 +181,50 @@ mpich:
         spec = Spec('mpi')
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
+
+    def test_config_permissions_from_all(self, configure_permissions):
+        # Although these aren't strictly about concretization, they are
+        # configured in the same file and therefore convenient to test here.
+        # Make sure we can configure readable and writable
+
+        # Test inheriting from 'all'
+        spec = Spec('zmpi')
+        perms = spack.package_prefs.get_package_permissions(spec)
+        assert perms == stat.S_IRWXU | stat.S_IRWXG
+
+        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        assert dir_perms == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
+
+        group = spack.package_prefs.get_package_group(spec)
+        assert group == 'all'
+
+    def test_config_permissions_from_package(self, configure_permissions):
+        # Test overriding 'all'
+        spec = Spec('mpich')
+        perms = spack.package_prefs.get_package_permissions(spec)
+        assert perms == stat.S_IRWXU
+
+        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        assert dir_perms == stat.S_IRWXU
+
+        group = spack.package_prefs.get_package_group(spec)
+        assert group == 'all'
+
+    def test_config_permissions_differ_read_write(self, configure_permissions):
+        # Test overriding group from 'all' and different readable/writable
+        spec = Spec('mpileaks')
+        perms = spack.package_prefs.get_package_permissions(spec)
+        assert perms == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
+
+        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        expected = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_ISGID
+        assert dir_perms == expected
+
+        group = spack.package_prefs.get_package_group(spec)
+        assert group == 'mpileaks'
+
+    def test_config_perms_fail_write_gt_read(self, configure_permissions):
+        # Test failure for writable more permissive than readable
+        spec = Spec('callpath')
+        with pytest.raises(ConfigError):
+            spack.package_prefs.get_package_permissions(spec)

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This is where most of the action happens in Spack.
 
 The spack package class structure is based strongly on Homebrew
@@ -66,7 +47,7 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, touch
+from llnl.util.filesystem import mkdirp, touch, chgrp
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
@@ -78,6 +59,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
+from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1139,7 +1121,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
-    def _if_make_target_execute(self, target):
+    def _has_make_target(self, target):
+        """Checks to see if 'target' is a valid target in a Makefile.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
         make = inspect.getmodule(self).make
 
         # Check if we have a Makefile
@@ -1148,49 +1138,70 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 break
         else:
             tty.msg('No Makefile found in the build directory')
-            return
+            return False
 
-        # Check if 'target' is a valid target
+        # Check if 'target' is a valid target.
         #
-        # -q, --question
-        #       ``Question mode''. Do not run any commands, or print anything;
-        #       just return an exit status that is zero if the specified
-        #       targets are already up to date, nonzero otherwise.
+        # `make -n target` performs a "dry run". It prints the commands that
+        # would be run but doesn't actually run them. If the target does not
+        # exist, you will see one of the following error messages:
         #
-        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        # GNU Make:
+        #     make: *** No rule to make target `test'.  Stop.
+        #           *** No rule to make target 'test'.  Stop.
         #
-        # The exit status of make is always one of three values:
-        #
-        # 0     The exit status is zero if make is successful.
-        #
-        # 2     The exit status is two if make encounters any errors.
-        #       It will print messages describing the particular errors.
-        #
-        # 1     The exit status is one if you use the '-q' flag and make
-        #       determines that some target is not already up to date.
-        #
-        # https://www.gnu.org/software/make/manual/html_node/Running.html
-        #
-        # NOTE: This only works for GNU Make, not NetBSD Make.
-        make('-q', target, fail_on_error=False)
-        if make.returncode == 2:
-            tty.msg("Target '" + target + "' not found in " + makefile)
-            return
+        # BSD Make:
+        #     make: don't know how to make test. Stop
+        missing_target_msgs = [
+            "No rule to make target `{0}'.  Stop.",
+            "No rule to make target '{0}'.  Stop.",
+            "don't know how to make {0}. Stop",
+        ]
 
-        # Execute target
-        make(target)
+        kwargs = {
+            'fail_on_error': False,
+            'output': os.devnull,
+            'error': str,
+        }
 
-    def _if_ninja_target_execute(self, target):
+        stderr = make('-n', target, **kwargs)
+
+        for missing_target_msg in missing_target_msgs:
+            if missing_target_msg.format(target) in stderr:
+                tty.msg("Target '" + target + "' not found in " + makefile)
+                return False
+
+        return True
+
+    def _if_make_target_execute(self, target, *args, **kwargs):
+        """Runs ``make target`` if 'target' is a valid target in the Makefile.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
+        if self._has_make_target(target):
+            # Execute target
+            inspect.getmodule(self).make(target, *args, **kwargs)
+
+    def _has_ninja_target(self, target):
+        """Checks to see if 'target' is a valid target in a Ninja build script.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No Ninja build script found in the build directory')
-            return
+            return False
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
-        all_targets = ninja('-t', 'targets', output=str).split('\n')
+        all_targets = ninja('-t', 'targets', 'all', output=str).split('\n')
 
         # Check if 'target' is a valid target
         matches = [line for line in all_targets
@@ -1198,10 +1209,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not matches:
             tty.msg("Target '" + target + "' not found in build.ninja")
-            return
+            return False
 
-        # Execute target
-        ninja(target)
+        return True
+
+    def _if_ninja_target_execute(self, target, *args, **kwargs):
+        """Runs ``ninja target`` if 'target' is a valid target in the Ninja
+        build script.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
+        if self._has_ninja_target(target):
+            # Execute target
+            inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         resources = []
@@ -1382,7 +1403,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
-        if kwargs.get('use_cache', False):
+        if kwargs.get('use_cache', True):
             if self.try_install_from_binary_cache(explicit):
                 tty.msg('Successfully installed %s from binary cache'
                         % self.name)
@@ -1488,6 +1509,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
+            else:
+                # Set the proper group for the prefix
+                group = get_package_group(self.spec)
+                if group:
+                    chgrp(self.prefix, group)
+                # Set the proper permissions.
+                # This has to be done after group because changing groups blows
+                # away the sticky group bit on the directory
+                mode = os.stat(self.prefix).st_mode
+                perms = get_package_dir_permissions(self.spec)
+                if mode != perms:
+                    os.chmod(self.prefix, perms)
 
             # Fork a child to do the actual installation
             # we preserve verbosity settings across installs.
@@ -1699,6 +1732,31 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
+    @classmethod
+    def inject_flags(cls, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
+        return (flags, None, None)
+
+    @classmethod
+    def env_flags(cls, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
+        return (None, flags, None)
+
+    @classmethod
+    def build_system_flags(cls, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.  Any
+        package using `build_system_flags` must also implement
+        `flags_to_build_system_args`, or derive from a class that
+        implements it.  Currently, AutotoolsPackage and CMakePackage
+        implement it.
+        """
+        return (None, None, flags)
+
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package.
 
@@ -1799,28 +1857,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         pass
 
-    def inject_flags(self, name, flags):
-        """
-        flag_handler that injects all flags through the compiler wrapper.
-        """
-        return (flags, None, None)
-
-    def env_flags(self, name, flags):
-        """
-        flag_handler that adds all flags to canonical environment variables.
-        """
-        return (None, flags, None)
-
-    def build_system_flags(self, name, flags):
-        """
-        flag_handler that passes flags to the build system arguments.  Any
-        package using `build_system_flags` must also implement
-        `flags_to_build_system_args`, or derive from a class that
-        implements it.  Currently, AutotoolsPackage and CMakePackage
-        implement it.
-        """
-        return (None, None, flags)
-
     flag_handler = inject_flags
     # The flag handler method is called for each of the allowed compiler flags.
     # It returns a triple of inject_flags, env_flags, build_system_flags.
@@ -1918,8 +1954,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         activate() directly.
         """
         if verbose:
-            tty.msg("Activating extension %s for %s" %
-                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.msg('Activating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         self._sanity_check_extension()
         if not view:
@@ -1945,10 +1981,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Activated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Activated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1976,8 +2010,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         self._sanity_check_extension()
         force = kwargs.get('force', False)
-        verbose = kwargs.get("verbose", True)
-        remove_dependents = kwargs.get("remove_dependents", False)
+        verbose = kwargs.get('verbose', True)
+        remove_dependents = kwargs.get('remove_dependents', False)
+
+        if verbose:
+            tty.msg('Deactivating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         if not view:
             view = YamlFilesystemView(
@@ -2000,11 +2038,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         if remove_dependents:
                             aspec.package.do_deactivate(**kwargs)
                         else:
-                            msg = ("Cannot deactivate %s because %s is "
-                                   "activated and depends on it.")
-                            raise ActivationError(
-                                msg % (self.spec.cshort_spec,
-                                       aspec.cshort_spec))
+                            msg = ('Cannot deactivate {0} because {1} is '
+                                   'activated and depends on it')
+                            raise ActivationError(msg.format(
+                                self.spec.cshort_spec, aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
             self, view, **self.extendee_args)
@@ -2016,10 +2053,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Deactivated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Deactivated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def deactivate(self, extension, view, **kwargs):
         """
@@ -2063,8 +2098,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def all_urls(self):
+        """A list of all URLs in a package.
+
+        Check both class-level and version-specific URLs.
+
+        Returns:
+            list: a list of URLs
+        """
         urls = []
-        if self.url:
+        if hasattr(self, 'url') and self.url:
             urls.append(self.url)
 
         for args in self.versions.values():
@@ -2073,10 +2115,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return urls
 
     def fetch_remote_versions(self):
-        """Try to find remote versions of this package using the
-           list_url and any other URLs described in the package file."""
+        """Find remote versions of this package.
+
+        Uses ``list_url`` and any other URLs listed in the package file.
+
+        Returns:
+            dict: a dictionary mapping versions to URLs
+        """
         if not self.all_urls:
-            raise spack.util.web.VersionFetchError(self.__class__)
+            return {}
 
         try:
             return spack.util.web.find_versions_of_archive(
@@ -2144,6 +2191,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+
+
+inject_flags = PackageBase.inject_flags
+env_flags = PackageBase.env_flags
+build_system_flags = PackageBase.build_system_flags
 
 
 class Package(PackageBase):
