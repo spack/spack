@@ -640,7 +640,6 @@ class Environment(object):
                 self._add_concrete_spec(spec, concrete)
 
         self._install(concrete, **install_args)
-        self.update_view()
 
     def _install(self, spec, **install_args):
         # Make sure log directory exists
@@ -934,6 +933,10 @@ class Environment(object):
         # if all that worked, write out the manifest file at the top level
         with fs.write_tmp_and_move(self.manifest_path) as f:
             _write_yaml(self.yaml, f)
+
+        # TODO: for operations that just add to the env (install etc.) this
+        # could just call update_view
+        self.regenerate_view()
 
     def __enter__(self):
         self._previous_active = _active_environment
