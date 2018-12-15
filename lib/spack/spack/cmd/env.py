@@ -5,6 +5,7 @@
 
 import os
 import sys
+from collections import namedtuple
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
@@ -19,6 +20,8 @@ import spack.cmd.modules
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.util.string as string
+from spack.util.environment import (
+    BashShellPathModifications, CshShellPathModifications)
 
 description = "manage virtual environments"
 section = "environments"
@@ -54,6 +57,9 @@ def env_activate_setup_parser(subparser):
         '-d', '--dir', action='store_true', default=False,
         help="force spack to treat env as a directory, not a name")
 
+    subparser.add_argument(
+        '-v', '--with-view', action='store_true', default=False,
+        help="Update PATH etc. with associated view")
     subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
@@ -102,7 +108,7 @@ def env_activate(args):
             sys.stdout.write('if (! $?SPACK_OLD_PROMPT ) '
                              'setenv SPACK_OLD_PROMPT "${prompt}";\n')
             sys.stdout.write('set prompt="%s ${prompt}";\n' % env_prompt)
-
+        shell_modifications = CshShellPathModifications()
     else:
         if 'color' in os.environ['TERM']:
             env_prompt = colorize('@G{%s} ' % env_prompt, color=True)
@@ -113,6 +119,13 @@ def env_activate(args):
             sys.stdout.write('if [ -z "${SPACK_OLD_PS1}" ]; then\n')
             sys.stdout.write('export SPACK_OLD_PS1="${PS1}"; fi;\n')
             sys.stdout.write('export PS1="%s ${PS1}";\n' % env_prompt)
+        shell_modifications = BashShellPathModifications()
+
+    active_env = ev.get_env(namedtuple('args', ['env'])(env), 'activate')
+    if args.with_view and active_env._view_path:
+        active_env.add_view_to_shell(shell_modifications)
+        for cmd in shell_modifications.as_shell_commands():
+            sys.stdout.write(cmd + ';\n')
 
 
 #
@@ -153,7 +166,7 @@ def env_deactivate(args):
                          'set prompt="$SPACK_OLD_PROMPT" && '
                          'unsetenv SPACK_OLD_PROMPT;\n')
         sys.stdout.write('unalias despacktivate;\n')
-
+        shell_modifications = CshShellPathModifications()
     else:
         sys.stdout.write('unset SPACK_ENV; export SPACK_ENV;\n')
         sys.stdout.write('unalias despacktivate;\n')
@@ -161,6 +174,12 @@ def env_deactivate(args):
         sys.stdout.write('export PS1="$SPACK_OLD_PS1";\n')
         sys.stdout.write('unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n')
         sys.stdout.write('fi;\n')
+        shell_modifications = BashShellPathModifications()
+
+    active_env = ev.get_env(namedtuple('args', [])(), 'deactivate')
+    active_env.rm_view_from_shell(shell_modifications)
+    for cmd in shell_modifications.as_shell_commands():
+        sys.stdout.write(cmd + ';\n')
 
 
 #

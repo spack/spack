@@ -688,6 +688,26 @@ class Environment(object):
             shutil.rmtree(self._view_path)
         self.update_view()
 
+    def _shell_vars(self):
+        updates = [
+            ('PATH', ['bin'])
+        ]
+        path_updates = list()
+        for var, subdirs in updates:
+            paths = list(os.path.join(self._view_path, x) for x in subdirs)
+            path_updates.append((var, paths))
+        return path_updates
+
+    def add_view_to_shell(self, shell_modifications):
+        for var, paths in self._shell_vars():
+            for path in paths:
+                shell_modifications.prepend_path(var, path)
+
+    def rm_view_from_shell(self, shell_modifications):
+        for var, paths in self._shell_vars():
+            for path in paths:
+                shell_modifications.remove_path(var, path)
+
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
 
