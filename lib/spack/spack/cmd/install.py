@@ -216,9 +216,9 @@ def install(parser, args, **kwargs):
         if env:
             if not args.only_concrete:
                 env.concretize()
-                env.write()
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
+            env.write()
             return
         else:
             tty.die("install requires a package argument or a spack.yaml file")

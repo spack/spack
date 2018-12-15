@@ -674,7 +674,10 @@ class Environment(object):
             # they need to be stripped
             specs_without_build_deps.append(
                 spack.spec.Spec.from_dict(spec.to_dict(all_deps=False)))
-        view.add_specs(*specs_without_build_deps, with_dependencies=False)
+
+        specs_to_add = list(x for x in specs_without_build_deps
+                            if x.package.installed)
+        view.add_specs(*specs_to_add, with_dependencies=False)
 
     def view(self):
         return YamlFilesystemView(
