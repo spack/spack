@@ -669,6 +669,9 @@ class Environment(object):
         view = self.view()
         specs_without_build_deps = list()
         for spec in view_specs:
+            # The view does not store build deps, so if we want it to
+            # recognize environment specs (which do store build deps), then
+            # they need to be stripped
             specs_without_build_deps.append(
                 spack.spec.Spec.from_dict(spec.to_dict(all_deps=False)))
         view.add_specs(*specs_without_build_deps, with_dependencies=False)
