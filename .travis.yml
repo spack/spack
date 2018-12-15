@@ -148,6 +148,7 @@ cache:
   ccache: true
   directories:
     - ~/.mirror
+    - ~/.ccache
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
