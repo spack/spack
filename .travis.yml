@@ -143,6 +143,8 @@ addons:
       - perl
       - perl-base
 
+# ~/.ccache needs to be cached directly as Travis is not taking care of it
+# (possibly because we use 'language: python' and not 'language: c')
 cache:
   pip: true
   ccache: true
