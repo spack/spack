@@ -71,6 +71,7 @@ def list_packages(rev):
 
 
 def pkg_add(args):
+    """Add a package to the git stage."""
     for pkg_name in args.packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
