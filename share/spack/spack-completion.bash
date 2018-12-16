@@ -719,7 +719,7 @@ function _spack_mirror_create {
     if $list_options
     then
         compgen -W "-h --help -d --directory -f --file
-                    -D --dependencies -o --one-version-per-spec" -- "$cur"
+                    -D --dependencies -n --versions-per-spec" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
