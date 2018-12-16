@@ -429,11 +429,14 @@ class Stage(object):
                      "mirror.  This means we cannot know a checksum for the "
                      "tarball in advance. Be sure that your connection to "
                      "this mirror is secure!")
-        else:
+        elif spack.config.get('config:checksum'):
             self.fetcher.check()
 
     def cache_local(self):
         spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
+
+        if spack.caches.mirror_cache:
+            spack.caches.mirror_cache.store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded

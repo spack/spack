@@ -51,7 +51,8 @@ def check_mirror():
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.set('mirrors', mirrors)
-        spack.mirror.create(mirror_root, repos, no_checksum=True)
+        with spack.config.override('config:checksum', False):
+            spack.mirror.create(mirror_root, repos)
 
         # Stage directory exists
         assert os.path.isdir(mirror_root)
@@ -138,3 +139,42 @@ def test_all_mirror(
     set_up_package('trivial-install-test-package', mock_archive, 'url')
     check_mirror()
     repos.clear()
+
+
+def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
+    spec = Spec('patch-several-dependencies')
+    spec.concretize()
+
+    files_cached_in_mirror = set()
+
+    def record_store(_class, fetcher, relative_dst):
+        files_cached_in_mirror.add(os.path.basename(relative_dst))
+
+    def successful_fetch(_class):
+        with open(_class.stage.save_filename, 'w'):
+            pass
+
+    def successful_expand(_class):
+        expanded_path = os.path.join(_class.stage.path, 'expanded-dir')
+        os.mkdir(expanded_path)
+        with open(os.path.join(expanded_path, 'test.patch'), 'w'):
+            pass
+
+    def successful_apply(_class, stage):
+        pass
+
+    with Stage('spack-mirror-test') as stage:
+        mirror_root = os.path.join(stage.path, 'test-mirror')
+
+        monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, 'fetch',
+                            successful_fetch)
+        monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy,
+                            'expand', successful_expand)
+        monkeypatch.setattr(spack.patch.Patch, 'apply', successful_apply)
+        monkeypatch.setattr(spack.caches.MirrorCache, 'store', record_store)
+
+        with spack.config.override('config:checksum', False):
+            spack.mirror.create(mirror_root, list(spec.traverse()))
+
+        assert not (set(['urlpatch.patch', 'urlpatch2.patch.gz']) -
+                    files_cached_in_mirror)
