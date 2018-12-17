@@ -20,6 +20,7 @@ class AtSpi2Core(MesonPackage):
 
     depends_on('glib@2.56.1:')
     depends_on('dbus@1.12.8:')
+    depends_on('gettext')
     depends_on('libx11')
     depends_on('libxi')
     depends_on('libxtst', type='build')
