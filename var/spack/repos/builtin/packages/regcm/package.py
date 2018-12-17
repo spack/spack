@@ -11,6 +11,12 @@ class Regcm(AutotoolsPackage):
 
     homepage = 'https://gforge.ictp.it/gf/project/regcm/'
 
+    version('4.7.1-SVN6884',
+            sha256='fd4eb0fbe911c6c4dacbaaf2a952a45ac8c1fa54a5d905972ffe592e47818c00',
+            url='http://clima-dods.ictp.it/Users/ggiulian/RegCM-SVN6884.tar.gz')
+    version('4.7.1-SVN6875',
+            sha256='112c9cc2e234197c70688bb31b187da3298eb2a2ff15a119838ae8d64338f296',
+            url='file:///lustre/exact/achiusole/regcm/RegCM-4.7.1-SVN6875.tar.gz')
     version('4.7.0', sha256='456631c10dcb83d70e51c3babda2f7a1aa41ed9e60cb4209deb3764655267519',
             url='https://gforge.ictp.it/gf/download/frsrelease/259/1845/RegCM-4.7.0.tar.gz')
 
@@ -32,7 +38,8 @@ class Regcm(AutotoolsPackage):
                         'architecture optimization.')
 
     variant('pnetcdf', default=False,
-            description='Build NetCDF using the high performance parallel NetCDF.')
+            description='Build NetCDF using the high performance parallel '
+                        'NetCDF implementation.')
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
