@@ -31,10 +31,14 @@ class Regcm(AutotoolsPackage):
                         'Only available on GCC and Intel; GCC allows a single '
                         'architecture optimization.')
 
+    variant('pnetcdf', default=False,
+            description='Build NetCDF using the high performance parallel NetCDF.')
+
     depends_on('netcdf')
     depends_on('netcdf-fortran')
     depends_on('hdf5')
     depends_on('mpi')
+    depends_on('netcdf +parallel-netcdf', when='+pnetcdf')
 
     # 'make' sometimes crashes when compiling with more than 10-12 cores.
     # Moreover, parallel compile time is ~ 1m 30s, while serial is ~ 50s.
