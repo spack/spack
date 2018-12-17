@@ -138,13 +138,15 @@ def write_buildinfo_file(prefix, workdir, rel=False):
                 link = os.readlink(path_name)
                 spack_prefix = spack.store.layout.root
                 if os.path.isabs(link):
-                    if os.readlink(path_name).startswith(spack_prefix):
+                    if link.startswith(prefix):
                         rel_path_name = os.path.relpath(path_name, prefix)
                         link_to_relocate.append(rel_path_name)
-                else:
-                    msg = 'Absolute link %s to %s ' % (path_name, link)
-                    msg += 'outside of spack cannot be relocated.'
-                    raise UnrelocatableLinkException(msg)
+                    else:
+                        msg = 'Absolute link %s to %s ' % (path_name, link)
+                        msg += 'outside of stage %s ' % prefix
+                        msg += 'cannot be relocated.'
+                        msg += '\n\n prefix=%s \n workdir=%s \n spack_prefix=%s' % (prefix, workdir, spack_prefix)
+                        raise UnrelocatableLinkException(msg)
             elif relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
                 filetype = get_filetype(path_name)
