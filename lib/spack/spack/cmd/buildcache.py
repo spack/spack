@@ -31,7 +31,7 @@ def setup_parser(subparser):
     create.add_argument('-u', '--unsigned', action='store_true',
                         help="create unsigned buildcache" +
                              " tarballs for testing")
-    create.add_argument('-a', '--allow_root', action='store_true',
+    create.add_argument('-a', '--allow-root', action='store_true',
                         help="allow install root string in binary files " +
                              "after RPATH substitution")
     create.add_argument('-k', '--key', metavar='key',
@@ -50,7 +50,7 @@ def setup_parser(subparser):
                          help="overwrite install directory if it exists.")
     install.add_argument('-m', '--multiple', action='store_true',
                          help="allow all matching packages ")
-    install.add_argument('-a', '--allow_root', action='store_true',
+    install.add_argument('-a', '--allow-root', action='store_true',
                          help="allow install root string in binary files " +
                               "after RPATH substitution")
     install.add_argument('-u', '--unsigned', action='store_true',
