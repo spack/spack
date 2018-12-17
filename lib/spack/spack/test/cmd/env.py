@@ -232,7 +232,7 @@ def test_env_repo():
 
     package = e.repo.get('mpileaks')
     assert package.name == 'mpileaks'
-    assert package.namespace == 'spack.pkg.builtin.mock'
+    assert package.namespace == 'builtin.mock'
 
 
 def test_user_removed_spec():
