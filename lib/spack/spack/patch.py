@@ -5,96 +5,92 @@
 
 import os
 import os.path
-import inspect
 import hashlib
+
+import llnl.util.filesystem
 
 import spack.error
 import spack.fetch_strategy as fs
 import spack.stage
 from spack.util.crypto import checksum, Checker
-from llnl.util.filesystem import working_dir
+
 from spack.util.executable import which
 from spack.util.compression import allowed_archive
 
 
-def absolute_path_for_package(pkg):
-    """Returns the absolute path to the ``package.py`` file implementing
-    the recipe for the package passed as argument.
+def create(pkg, path_or_url, level=1, working_dir=".", **kwargs):
+    """Make either a FilePatch or a UrlPatch, depending on arguments.
+
+      Args:
+          pkg: package that needs to be patched
+          path_or_url: path or url where the patch is found
+          level: patch level (default 1)
+          working_dir (str): relative path within the package stage;
+              change to this before before applying (default '.')
+
+      Returns:
+          (Patch): a patch object on which ``apply(stage)`` can be called
+    """
+    # Check if we are dealing with a URL (which will be fetched)
+    if '://' in path_or_url:
+        return UrlPatch(path_or_url, level, working_dir, **kwargs)
+
+    # If not, it's a file patch, which is stored within the repo directory.
+    patch_path = os.path.join(pkg.package_dir, path_or_url)
+    return FilePatch(patch_path, level, working_dir)
+
+
+def apply_patch(stage, patch_path, level=1, working_dir='.'):
+    """Apply the patch at patch_path to code in the stage.
 
     Args:
-        pkg: a valid package object, or a Dependency object.
+        stage (spack.stage.Stage): stage with code that will be patched
+        patch_path (str): filesystem location for the patch to apply
+        level (int, optional): patch level (default 1)
+        working_dir (str): relative path *within* the stage to change to
+            (default '.')
     """
-    if isinstance(pkg, spack.dependency.Dependency):
-        pkg = pkg.pkg
-    m = inspect.getmodule(pkg)
-    return os.path.abspath(m.__file__)
+    patch = which("patch", required=True)
+    with llnl.util.filesystem.working_dir(stage.source_path):
+        patch('-s',
+              '-p', str(level),
+              '-i', patch_path,
+              '-d', working_dir)
 
 
 class Patch(object):
-    """Base class to describe a patch that needs to be applied to some
-    expanded source code.
+    """Base class for patches.
+
+    Defines the interface (basically just ``apply()``, at the moment) and
+    common variables.
     """
-
-    @staticmethod
-    def create(pkg, path_or_url, level=1, working_dir=".", **kwargs):
-        """
-        Factory method that creates an instance of some class derived from
-        Patch
-
-        Args:
-            pkg: package that needs to be patched
-            path_or_url: path or url where the patch is found
-            level: patch level (default 1)
-            working_dir (str): dir to change to before applying (default '.')
-
-        Returns:
-            instance of some Patch class
-        """
-        # Check if we are dealing with a URL
-        if '://' in path_or_url:
-            return UrlPatch(path_or_url, level, working_dir, **kwargs)
-        # Assume patches are stored in the repository
-        return FilePatch(pkg, path_or_url, level, working_dir)
-
     def __init__(self, path_or_url, level, working_dir):
-        # Check on level (must be an integer > 0)
+        # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
             raise ValueError("Patch level needs to be a non-negative integer.")
+
         # Attributes shared by all patch subclasses
-        self.path_or_url = path_or_url
+        self.path_or_url = path_or_url  # needed for debug output
         self.level = level
         self.working_dir = working_dir
-        # self.path needs to be computed by derived classes
-        # before a call to apply
+
+        # path needs to be set by subclasses before calling self.apply()
         self.path = None
 
-        if not isinstance(self.level, int) or not self.level >= 0:
-            raise ValueError("Patch level needs to be a non-negative integer.")
-
     def apply(self, stage):
-        """Apply the patch at self.path to the source code in the
-        supplied stage
-
-        Args:
-            stage: stage for the package that needs to be patched
-        """
-        patch = which("patch", required=True)
-        with working_dir(stage.source_path):
-            # Use -N to allow the same patches to be applied multiple times.
-            patch('-s', '-p', str(self.level), '-i', self.path,
-                  "-d", self.working_dir)
+        """Apply this patch to code in a stage."""
+        assert self.path, "self.path must be set before Patch.apply()"
+        apply_patch(stage, self.path, self.level, self.working_dir)
 
 
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository"""
-    def __init__(self, pkg, path_or_url, level, working_dir):
-        super(FilePatch, self).__init__(path_or_url, level, working_dir)
+    def __init__(self, path, level, working_dir):
+        super(FilePatch, self).__init__(path, level, working_dir)
 
-        pkg_dir = os.path.dirname(absolute_path_for_package(pkg))
-        self.path = os.path.join(pkg_dir, path_or_url)
-        if not os.path.isfile(self.path):
-            raise NoSuchPatchError(
-                "No such patch for package %s: %s" % (pkg.name, self.path))
+        if not os.path.isfile(path):
+            raise NoSuchPatchError("No such patch: %s" % path)
+        self.path = path
         self._sha256 = None
 
     @property
@@ -106,21 +102,20 @@ class FilePatch(Patch):
 
 class UrlPatch(Patch):
     """Describes a patch that is retrieved from a URL"""
-    def __init__(self, path_or_url, level, working_dir, **kwargs):
-        super(UrlPatch, self).__init__(path_or_url, level, working_dir)
-        self.url = path_or_url
+    def __init__(self, url, level, working_dir, **kwargs):
+        super(UrlPatch, self).__init__(url, level, working_dir)
 
-        self.archive_sha256 = None
-        if allowed_archive(self.url):
-            if 'archive_sha256' not in kwargs:
-                raise PatchDirectiveError(
-                    "Compressed patches require 'archive_sha256' "
-                    "and patch 'sha256' attributes: %s" % self.url)
-            self.archive_sha256 = kwargs.get('archive_sha256')
+        self.url = url
 
-        if 'sha256' not in kwargs:
-            raise PatchDirectiveError("URL patches require a sha256 checksum")
+        self.archive_sha256 = kwargs.get('archive_sha256')
+        if allowed_archive(self.url) and not self.archive_sha256:
+            raise PatchDirectiveError(
+                "Compressed patches require 'archive_sha256' "
+                "and patch 'sha256' attributes: %s" % self.url)
+
         self.sha256 = kwargs.get('sha256')
+        if not self.sha256:
+            raise PatchDirectiveError("URL patches require a sha256 checksum")
 
     def apply(self, stage):
         """Retrieve the patch in a temporary stage, computes

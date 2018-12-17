@@ -200,6 +200,29 @@ class PackageMeta(
             return func
         return _decorator
 
+    @property
+    def package_dir(self):
+        """Directory where the package.py file lives."""
+        return os.path.abspath(os.path.dirname(self.module.__file__))
+
+    @property
+    def module(self):
+        """Module object (not just the name) that this package is defined in.
+
+        We use this to add variables to package modules.  This makes
+        install() methods easier to write (e.g., can call configure())
+        """
+        return __import__(self.__module__, fromlist=[self.__name__])
+
+    @property
+    def namespace(self):
+        """Spack namespace for the package, which identifies its repo."""
+        namespace, dot, module = self.__module__.rpartition('.')
+        prefix = '%s.' % spack.repo.repo_namespace
+        if namespace.startswith(prefix):
+            namespace = namespace[len(prefix):]
+        return namespace
+
 
 def run_before(*phases):
     """Registers a method of a package to be run before a given phase"""
@@ -527,10 +550,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return visited
 
+    # package_dir and module are *class* properties (see PackageMeta),
+    # but to make them work on instances we need these defs as well.
     @property
     def package_dir(self):
-        """Return the directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(self.module.__file__))
+        """Directory where the package.py file lives."""
+        return type(self).package_dir
+
+    @property
+    def module(self):
+        """Module object that this package is defined in."""
+        return type(self).module
+
+    @property
+    def namespace(self):
+        """Spack namespace for the package, which identifies its repo."""
+        return type(self).namespace
 
     @property
     def global_license_dir(self):
@@ -1080,11 +1115,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
-
-    @property
-    def namespace(self):
-        namespace, dot, module = self.__module__.rpartition('.')
-        return namespace
 
     def do_fake_install(self):
         """Make a fake install directory containing fake executables,
@@ -1723,14 +1753,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return spack.store.layout.build_log_path(self.spec)
         else:
             return os.path.join(self.stage.source_path, 'spack-build.out')
-
-    @property
-    def module(self):
-        """Use this to add variables to the class's module's scope.
-           This lets us use custom syntax in the install method.
-        """
-        return __import__(self.__class__.__module__,
-                          fromlist=[self.__class__.__name__])
 
     @classmethod
     def inject_flags(cls, name, flags):

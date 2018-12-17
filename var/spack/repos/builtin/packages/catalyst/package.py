@@ -7,7 +7,6 @@ from spack import *
 import os
 import subprocess
 import llnl.util.tty as tty
-from spack.patch import absolute_path_for_package
 
 
 class Catalyst(CMakePackage):
@@ -18,7 +17,7 @@ class Catalyst(CMakePackage):
     homepage = 'http://www.paraview.org'
     url      = "http://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
     _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
-    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz' 
+    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
@@ -52,11 +51,10 @@ class Catalyst(CMakePackage):
         at the package dir to the source code in
         root_cmakelists_dir."""
         patch_name = 'vtkm-catalyst-pv551.patch'
-        pkg_dir = os.path.dirname(absolute_path_for_package(self))
         patch = which("patch", required=True)
         with working_dir(self.root_cmakelists_dir):
             patch('-s', '-p', '1', '-i',
-                  join_path(pkg_dir, patch_name),
+                  join_path(self.package_dir, patch_name),
                   "-d", '.')
 
     def url_for_version(self, version):
