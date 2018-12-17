@@ -19,12 +19,13 @@ class Ncl(Package):
 
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
 
+    version('6.5.0', '133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
     version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
 
-    patch('spack_ncl.patch', when="@6.4.0")
-    # Make ncl compile with hdf5 1.10
+    patch('spack_ncl.patch')
+    # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
     patch('hdf5.patch', when="@6.4.0")
-    # ymake-filter's buffer may overflow
+    # ymake-filter's buffer may overflow (upstream as of 6.5.0)
     patch('ymake-filter.patch', when="@6.4.0")
 
     # This installation script is implemented according to this manual:

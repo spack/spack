@@ -15,6 +15,7 @@ class Trimmomatic(Package):
 
     # Older version aren't explicitly made available, but the URL
     # works as we'd like it to, so...
+    version('0.38', sha256='d428af42b6c400a2e7ee5e6b4cab490eddc621f949b086bd7dddb698dcf1647c')
     version('0.36', '8549130d86b6f0382b1a71a2eb45de39')
     version('0.33', '924fc8eb38fdff71740a0e05d32d6a2b')
 

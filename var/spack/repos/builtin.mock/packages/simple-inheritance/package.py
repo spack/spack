@@ -13,6 +13,12 @@ class BaseWithDirectives(Package):
     variant('openblas', description='Activates openblas', default=True)
     provides('service1')
 
+    def use_module_variable(self):
+        """Must be called in build environment. Allows us to test parent class
+         using module variables set up by build_environment."""
+        env['TEST_MODULE_VAR'] = 'test_module_variable'
+        return env['TEST_MODULE_VAR']
+
 
 class SimpleInheritance(BaseWithDirectives):
     """Simple package which acts as a build dependency"""

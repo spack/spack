@@ -7,7 +7,7 @@ import argparse
 from spack.cmd.common import print_module_placeholder_help
 
 description = "remove package from environment using `module unload`"
-section = "environment"
+section = "modules"
 level = "short"
 
 

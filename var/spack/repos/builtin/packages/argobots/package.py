@@ -17,6 +17,25 @@ class Argobots(AutotoolsPackage):
 
     homepage = "http://www.argobots.org/"
     url      = "https://github.com/pmodels/argobots/releases/download/v1.0b1/argobots-1.0b1.tar.gz"
+    git      = "https://github.com/pmodels/argobots.git"
 
+    version("develop", branch="master")
     version("1.0b1", "5eeab7b2c639d08bbea22db3026cdf39")
     version("1.0a1", "9d29d57d14d718f93b505178f6ba3e08")
+
+    variant("valgrind", default=False, description="Enable Valgrind")
+
+    depends_on("m4", type=("build"), when="@develop")
+    depends_on("autoconf", type=("build"), when="@develop")
+    depends_on("automake", type=("build"), when="@develop")
+    depends_on("libtool", type=("build"), when="@develop")
+    depends_on("valgrind", when="+valgrind")
+
+    def configure_args(self):
+        args = ["--enable-perf-opt"]
+        if '+valgrind' in self.spec:
+            args.append('--enable-valgrind')
+        else:
+            args.append('--disable-valgrind')
+
+        return args

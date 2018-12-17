@@ -60,29 +60,35 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.2.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
-    version('3.1.2', '210df69fafd964158527e7f37e333239')  # libmpi.so.40.10.2
-    version('3.1.1', '493f1db2f75afaab1c8ecba78d2f5aab')  # libmpi.so.40.10.1
-    version('3.1.0', '0895e268ca27735d7654bf64cee6c256')  # libmpi.so.40.10.0
+    version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
 
     # Still supported
-    version('3.0.2', '098fa89646f5b4438d9d8534bc960cd6')  # libmpi.so.40.00.2
-    version('3.0.1', '565f5060e080b0871a64b295c3d4426a')  # libmpi.so.40.00.1
-    version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
-    version('2.1.5', '6019c8b67d4975d833801e72ba290918')  # libmpi.so.20.10.3 
-    version('2.1.4', '003b356a24a5b7bd1705a23ddc69d9a0')  # libmpi.so.20.10.3
-    version('2.1.3', '46079b6f898a412240a0bf523e6cd24b')  # libmpi.so.20.10.2
-    version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
-    version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
-    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
-    version('2.0.4', '7e3c71563787a67dce9acc4d639ef3f8')  # libmpi.so.20.0.4
-    version('2.0.3', '6c09e56ac2230c4f9abd8ba029f03edd')  # libmpi.so.20.0.3
-    version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')  # libmpi.so.20.0.2
-    version('2.0.1', '6f78155bd7203039d2448390f3b51c96')  # libmpi.so.20.0.1
-    version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')  # libmpi.so.20.0.0
+    version('3.1.3', preferred=True, sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
+    version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
+    version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
+    version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
+    version('3.0.3', sha256='fb228e42893fe6a912841a94cd8a0c06c517701ae505b73072409218a12cf066')  # libmpi.so.40.00.4
+    version('3.0.2', sha256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
+    version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
+    version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
+
+    version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
+    version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
+    version('2.1.3', sha256='285b3e2a69ed670415524474496043ecc61498f2c63feb48575f8469354d79e8')  # libmpi.so.20.10.2
+    version('2.1.2', sha256='3cc5804984c5329bdf88effc44f2971ed244a29b256e0011b8deda02178dd635')  # libmpi.so.20.10.2
+    version('2.1.1', sha256='bd7badd4ff3afa448c0d7f3ca0ee6ce003b957e9954aa87d8e4435759b5e4d16')  # libmpi.so.20.10.1
+    version('2.1.0', sha256='b169e15f5af81bf3572db764417670f508c0df37ce86ff50deb56bd3acb43957')  # libmpi.so.20.10.0
+
+    # Retired
+    version('2.0.4', sha256='4f82d5f7f294becbd737319f74801206b08378188a95b70abe706fdc77a0c20b')  # libmpi.so.20.0.4
+    version('2.0.3', sha256='b52c0204c0e5954c9c57d383bb22b4181c09934f97783292927394d29f2a808a')  # libmpi.so.20.0.3
+    version('2.0.2', sha256='cae396e643f9f91f0a795f8d8694adf7bacfb16f967c22fb39e9e28d477730d3')  # libmpi.so.20.0.2
+    version('2.0.1', sha256='fed74f4ae619b7ebcc18150bb5bdb65e273e14a8c094e78a3fea0df59b9ff8ff')  # libmpi.so.20.0.1
+    version('2.0.0', sha256='08b64cf8e3e5f50a50b4e5655f2b83b54653787bd549b72607d9312be44c18e0')  # libmpi.so.20.0.0
 
     version('1.10.7', 'c87c613f9acb1a4eee21fa1ac8042579')  # libmpi.so.12.0.7
     version('1.10.6', '2e65008c1867b1f47c32f9f814d41706')  # libmpi.so.12.0.6
@@ -93,7 +99,6 @@ class Openmpi(AutotoolsPackage):
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')  # libmpi.so.12.0.1
     version('1.10.0', '280cf952de68369cebaca886c5ce0304')  # libmpi.so.12.0.0
 
-    # Retired
     version('1.8.8', '0dab8e602372da1425e9242ae37faf8c')  # libmpi.so.1.6.3
     version('1.8.7', '2485ed6fa0fab9bb5b4e7a9f63718630')  # libmpi.so.1.6.2
     version('1.8.6', 'eb569e7dc97eeaa5b1876cccf114f377')  # libmpi.so.1.6.1
@@ -165,6 +170,14 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
+
+    # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
+    # Haven't release fix for 2.1.x
+    patch('btl_vader.patch', when='@2.1.3:2.1.5')
+
+    # Fixed in 3.0.3 and 3.1.3
+    patch('btl_vader.patch', when='@3.0.1:3.0.2')
+    patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
     fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
 
@@ -346,8 +359,12 @@ class Openmpi(AutotoolsPackage):
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
         #
         # adding --enable-static silently disables slurm support via pmi/pmi2
+        # for versions older than 3.0.3,3.1.3,4.0.0
+        # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
+                config_args.append('--enable-static')
         else:
             config_args.append('--enable-static')
             config_args.extend(self.with_or_without('pmi'))

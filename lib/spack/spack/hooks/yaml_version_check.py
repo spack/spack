@@ -27,8 +27,8 @@ def check_compiler_yaml_version():
                 data = syaml.load(f)
 
         if data:
-            compilers = data['compilers']
-            if len(compilers) > 0:
+            compilers = data.get('compilers')
+            if compilers and len(compilers) > 0:
                 if (not isinstance(compilers, list) or
                     'operating_system' not in compilers[0]['compiler']):
                     new_file = os.path.join(scope.path, '_old_compilers.yaml')

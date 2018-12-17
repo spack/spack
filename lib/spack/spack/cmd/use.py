@@ -7,7 +7,7 @@ import argparse
 from spack.cmd.common import print_module_placeholder_help, arguments
 
 description = "add package to environment using dotkit"
-section = "environment"
+section = "modules"
 level = "long"
 
 

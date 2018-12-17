@@ -82,6 +82,8 @@ class Caliper(CMakePackage):
             args.append('-DLIBPFM_INSTALL=%s' % spec['libpfm4'].prefix)
         if '+sosflow' in spec:
             args.append('-DSOS_PREFIX=%s'     % spec['sosflow'].prefix)
+        if '+callpath' in spec:
+            args.append('-DLIBUNWIND_PREFIX=%s' % spec['libunwind'].prefix)
 
         if '+mpi' in spec:
             args.append('-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc)

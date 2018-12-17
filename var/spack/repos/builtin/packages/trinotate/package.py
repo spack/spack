@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import glob
 
 
 class Trinotate(Package):
@@ -27,6 +28,12 @@ class Trinotate(Package):
     depends_on('perl-dbi', type='run')
     depends_on('perl-dbd-mysql', type='run')
     depends_on('perl-cgi', type='run')
+    depends_on('perl-dbd-sqlite', type='run')
+
+    def patch(self):
+        with working_dir(join_path(self.stage.source_path, 'admin/util')):
+            perlscripts = glob.glob('*.pl')
+            filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', *perlscripts)
 
     def install(self, spec, prefix):
         # most of the perl modules have local deps, install the whole tree

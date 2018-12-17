@@ -30,6 +30,7 @@ class RDelayedarray(RPackage):
     version('0.4.1', commit='ffe932ef8c255614340e4856fc6e0b44128a27a1')
     version('0.2.7', commit='909c2ce1665ebae2543172ead50abbe10bd42bc4')
 
+    depends_on('r-biocparallel', when='@0.6.5:', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biocgenerics@0.25.1:', when='@0.6.5', type=('build', 'run'))
     depends_on('r-s4vectors@0.14.3:', when='@0.2.7', type=('build', 'run'))

@@ -19,33 +19,65 @@ class Visit(CMakePackage):
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
 
+    variant('gui',    default=True, description='Enable VisIt\'s GUI')
+    variant('hdf5',   default=True, description='Enable HDF5 file format')
+    variant('silo',   default=True, description='Enable Silo file format')
+    variant('python', default=True, description='Enable Python support')
+    variant('mpi',    default=True, description='Enable parallel engine')
+
     depends_on('cmake@3.0:', type='build')
-    depends_on('vtk@6.1.0~opengl2')
-    depends_on('qt@4.8.6')
-    depends_on('qwt')
-    depends_on('python')
-    depends_on('silo+shared')
-    depends_on('hdf5')
+    depends_on('vtk@6.1.0~opengl2~mpi')
+    depends_on('qt@4.8.6', when='+gui')
+    depends_on('qwt', when='+gui')
+    depends_on('python', when='+python')
+    depends_on('silo+shared', when='+silo')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('mpi', when='+mpi')
+
+    conflicts('+hdf5', when='~gui')
+    conflicts('+silo', when='~gui')
 
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
         spec = self.spec
-        qt_bin = spec['qt'].prefix.bin
+
         args = [
             '-DVTK_MAJOR_VERSION={0}'.format(spec['vtk'].version[0]),
             '-DVTK_MINOR_VERSION={0}'.format(spec['vtk'].version[1]),
             '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
             '-DVISIT_USE_GLEW=OFF',
-            '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
-            '-DPYTHON_DIR:PATH={0}'.format(spec['python'].home),
-            '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
-            '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
-            '-DVISIT_QWT_DIR:PATH={0}'.format(spec['qwt'].prefix)
+            '-DCMAKE_CXX_FLAGS=-fPIC',
+            '-DCMAKE_C_FLAGS=-fPIC'
         ]
 
-        if spec.satisfies('^hdf5+mpi', strict=True):
-            args.append('-DVISIT_HDF5_MPI_DIR:PATH={0}'.format(
-                spec['hdf5'].prefix))
+        if(spec.variants['python'].value):
+            args.append('-DPYTHON_DIR:PATH={0}'.format(spec['python'].home))
+
+        if(spec.variants['gui'].value):
+            qt_bin = spec['qt'].prefix.bin
+            args.append(
+                '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin))
+            args.append('-DVISIT_QWT_DIR:PATH={0}'.format(spec['qwt'].prefix))
+        else:
+            args.append('-DVISIT_SERVER_COMPONENTS_ONLY=ON')
+            args.append('-DVISIT_ENGINE_ONLY=ON')
+
+        if(spec.variants['hdf5'].value):
+            args.append(
+                '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix))
+            if spec.satisfies('^hdf5+mpi', strict=True):
+                args.append('-DVISIT_HDF5_MPI_DIR:PATH={0}'.format(
+                    spec['hdf5'].prefix))
+
+        if(spec.variants['silo'].value):
+            args.append(
+                '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix))
+
+        if(spec.variants['mpi'].value):
+            args.append('-DVISIT_PARALLEL=ON')
+            args.append('-DVISIT_C_COMPILER={0}'.format(spec['mpi'].mpicc))
+            args.append('-DVISIT_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
+            args.append('-DVISIT_MPI_COMPILER={0}'.format(spec['mpi'].mpicxx))
 
         return args

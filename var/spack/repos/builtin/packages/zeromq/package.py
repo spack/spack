@@ -24,8 +24,10 @@ class Zeromq(AutotoolsPackage):
     version('4.0.6', 'd47dd09ed7ae6e7fd6f9a816d7f5fdf6')
     version('4.0.5', '73c39f5eb01b9d7eaf74a5d899f1d03d')
 
-    depends_on("libsodium")
-    depends_on("libsodium@:1.0.3", when='@:4.1.2')
+    variant("libsodium", default=True, description="Build with libsodium support")
+
+    depends_on("libsodium", when='+libsodium')
+    depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
@@ -40,7 +42,9 @@ class Zeromq(AutotoolsPackage):
         bash('./autogen.sh')
 
     def configure_args(self):
-        config_args = ['--with-libsodium']
+        config_args = []
+        if '+libsodium' in self.spec:
+            config_args.append('--with-libsodium')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

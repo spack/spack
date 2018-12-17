@@ -10,10 +10,12 @@ class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage = 'https://www.cmake.org'
-    url      = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
-    list_url = 'https://cmake.org/files/'
-    list_depth = 1
+    url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
 
+    version('3.13.2',   'c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
+    version('3.13.1',   'befe1ce6d672f2881350e94d4e3cc809697dd2c09e5b708b76c1dae74e1b2210')
+    version('3.13.0',   '4058b2f1a53c026564e8936698d56c3b352d90df067b195cb749a97a3d273c90')
+    version('3.12.4',   '5255584bfd043eb717562cff8942d472f1c0e4679c4941d84baadaa9b28e3194')
     version('3.12.3',   'acbf13af31a741794106b76e5d22448b004a66485fc99f6d7df4d22e99da164a')
     version('3.12.2',   '6e7c550cfa1c2e216b35903dc70d80af')
     version('3.12.1',   '10109246a51102bfda45ff3935275fbf')
@@ -82,11 +84,6 @@ class Cmake(Package):
     conflicts('%intel', when='@3.11.0:3.11.4')
 
     phases = ['bootstrap', 'build', 'install']
-
-    def url_for_version(self, version):
-        """Handle CMake's version-based custom URLs."""
-        url = 'https://cmake.org/files/v{0}/cmake-{1}.tar.gz'
-        return url.format(version.up_to(2), version)
 
     def bootstrap_args(self):
         spec = self.spec
