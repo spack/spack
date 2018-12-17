@@ -57,6 +57,5 @@ class Rocksdb(MakefilePackage):
         env['PLATFORM_FLAGS'] = ' '.join(ldflags)
         env['INSTALL_PATH'] = self.spec.prefix
 
-        build_type = 'install-static' if '+static' in spec else 'install-shared'
-        make(build_type)
-
+        buildtype = 'install-static' if '+static' in spec else 'install-shared'
+        make(buildtype)
