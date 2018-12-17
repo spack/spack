@@ -35,6 +35,9 @@ class Cuda(Package):
     version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('CUDA_HOME', self.prefix)
+
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.path, 'cuda*_linux*'))[0]
         chmod = which('chmod')

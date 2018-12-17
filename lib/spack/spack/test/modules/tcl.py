@@ -276,3 +276,20 @@ class TestTcl(object):
         for item in callpath_specs:
             writer = writer_cls(item)
             assert writer.conf.blacklisted
+
+    @pytest.mark.regression('9624')
+    @pytest.mark.db
+    def test_autoload_with_constraints(
+            self, modulefile_content, module_configuration, database
+    ):
+        """Tests the automatic loading of direct dependencies."""
+
+        module_configuration('autoload_with_constraints')
+
+        # Test the mpileaks that should have the autoloaded dependencies
+        content = modulefile_content('mpileaks ^mpich2')
+        assert len([x for x in content if 'is-loaded' in x]) == 2
+
+        # Test the mpileaks that should NOT have the autoloaded dependencies
+        content = modulefile_content('mpileaks ^mpich')
+        assert len([x for x in content if 'is-loaded' in x]) == 0

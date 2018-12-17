@@ -7,7 +7,7 @@ import argparse
 from spack.cmd.common import print_module_placeholder_help
 
 description = "remove package from environment using dotkit"
-section = "environment"
+section = "modules"
 level = "long"
 
 

@@ -16,6 +16,7 @@ class Slepc(Package):
     git      = "https://bitbucket.org/slepc/slepc.git"
 
     version('develop', branch='master')
+    version('3.10.1', 'f64787c8c2ab3d2f6db3c67d2bfe6ee84f741ce3dfde1d2f8221e131820a12a1')
     version('3.10.0', '069d7a579995e0be1567c5bc869251e29c00044369a786933ca3040149d0412a')
     version('3.9.2', '247585b3f8c10bf50b9464cb8ef7b5f22bead6f96524384897a37ec4146eb03e')
     version('3.9.1', 'e174ea7c127d9161eef976b0288f0c56d443a58d6ab2dc8af1e8bd66f156ce17')

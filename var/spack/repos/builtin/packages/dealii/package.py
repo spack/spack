@@ -46,6 +46,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
+    variant('muparser', default=True,  description='Compile with muParser')
     variant('nanoflann', default=True, description='Compile with Nanoflann')
     variant('netcdf',   default=True,
             description='Compile with Netcdf (only with MPI)')
@@ -103,9 +104,7 @@ class Dealii(CMakePackage, CudaPackage):
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
-    depends_on('muparser')
     depends_on('suite-sparse')
-    depends_on('suite-sparse@:5.1.0', when='%gcc@:4.8.99')
     depends_on('tbb')
     depends_on('zlib')
 
@@ -128,6 +127,7 @@ class Dealii(CMakePackage, CudaPackage):
     # but we should not need it
     depends_on('metis@5:+int64+real64',   when='+metis+int64')
     depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
     depends_on('netcdf+mpi',       when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
@@ -190,7 +190,8 @@ class Dealii(CMakePackage, CudaPackage):
         # debug and release flags
         cxx_flags = []
 
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
@@ -199,10 +200,9 @@ class Dealii(CMakePackage, CudaPackage):
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                spec['lapack'].prefix.include, spec['blas'].prefix.include),
-            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
-            '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
+            '-DLAPACK_INCLUDE_DIRS=%s' % ';'.join(
+                lapack_blas_headers.directories),
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
@@ -302,7 +302,7 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp', 'gmsh'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser'):
             if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),

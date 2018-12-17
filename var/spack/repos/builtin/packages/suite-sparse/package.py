@@ -46,6 +46,8 @@ class SuiteSparse(Package):
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
     patch('graphblas_libm_dep.patch', when='@5.2.0:5.2.99%clang')
 
+    conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
+
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header

@@ -60,18 +60,30 @@ class LinkParser(HTMLParser):
 
 class NonDaemonProcess(multiprocessing.Process):
     """Process tha allows sub-processes, so pools can have sub-pools."""
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
 
-    def _set_daemon(self, value):
+    @daemon.setter
+    def daemon(self, value):
         pass
 
-    daemon = property(_get_daemon, _set_daemon)
 
+if sys.version_info[0] < 3:
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+        Process = NonDaemonProcess
+else:
 
-class NonDaemonPool(multiprocessing.pool.Pool):
-    """Pool that uses non-daemon processes"""
-    Process = NonDaemonProcess
+    class NonDaemonContext(type(multiprocessing.get_context())):
+        Process = NonDaemonProcess
+
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+
+        def __init__(self, *args, **kwargs):
+            kwargs['context'] = NonDaemonContext()
+            super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -310,13 +322,13 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += '(\/download)?$'
+        url_regex += r'(\/download)?$'
 
         regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
     versions = {}
-    for url in links:
+    for url in sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

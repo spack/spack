@@ -51,7 +51,7 @@ class HoomdBlue(CMakePackage):
     extends('python')
     depends_on('python@2.7:')
     depends_on('py-numpy@1.7:', type=('build', 'run'))
-    depends_on('cmake@2.8.0:', type='build')
+    depends_on('cmake@2.8.0:3.9.6', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('cuda@7.0:', when='+cuda')
@@ -59,9 +59,12 @@ class HoomdBlue(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        install_dir = spec['python'].package.site_packages_dir
+        install_path = os.path.join(spec.prefix, install_dir)
 
         cmake_args = [
             '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
+            '-DCMAKE_INSTALL_PREFIX={0}'.format(install_path)
         ]
 
         # MPI support

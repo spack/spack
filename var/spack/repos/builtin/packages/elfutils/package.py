@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
+import os.path
 
 
 class Elfutils(AutotoolsPackage):
@@ -20,6 +22,7 @@ class Elfutils(AutotoolsPackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.174', '48bec24c0c8b2c16820326956dff9378')
     version('0.173', '35decb1ebfb90d565e4c411bee4185cc')
     version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
     version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
@@ -50,6 +53,14 @@ class Elfutils(AutotoolsPackage):
     # elfutils with gcc, and then link it to clang-built libraries.
     conflicts('%clang')
 
+    # Elfutils uses -Wall and we don't want to fail the build over a
+    # stray warning.
+    def patch(self):
+        files = glob.glob(os.path.join('*', 'Makefile.in'))
+        filter_file('-Werror', '', *files)
+
+    flag_handler = AutotoolsPackage.build_system_flags
+
     def configure_args(self):
         spec = self.spec
         args = []
@@ -75,3 +86,8 @@ class Elfutils(AutotoolsPackage):
             args.append('--disable-nls')
 
         return args
+
+    # Provide location of libelf.so to match libelf.
+    @property
+    def libs(self):
+        return find_libraries('libelf', self.prefix, recursive=True)
