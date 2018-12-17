@@ -6,6 +6,7 @@
 import os
 import pytest
 
+import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
@@ -96,14 +97,12 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
-    import sys
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()
 
     dependency.package.patches['dependency-install'] = [
-        sys.modules['spack.patch'].Patch.create(
-            None, 'file://fake.patch', sha256='unused-hash')]
+        spack.patch.create(None, 'file://fake.patch', sha256='unused-hash')]
 
     dependency_hash = dependency.dag_hash()
     dependent = Spec('dependent-install ^/' + dependency_hash)

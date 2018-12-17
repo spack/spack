@@ -36,12 +36,12 @@ from six import string_types
 import llnl.util.lang
 
 import spack.error
+import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
-from spack.patch import Patch
 from spack.resource import Resource
 from spack.version import Version
 
@@ -416,9 +416,14 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         # if this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-        cur_patches.append(
-            Patch.create(pkg_or_dep, url_or_filename, level,
-                         working_dir, **kwargs))
+
+        # if pkg_or_dep is a Dependency, make it a Package
+        pkg = pkg_or_dep
+        if isinstance(pkg, Dependency):
+            pkg = pkg.pkg
+
+        cur_patches.append(spack.patch.create(
+            pkg, url_or_filename, level, working_dir, **kwargs))
 
     return _execute_patch
 

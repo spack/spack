@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 import filecmp
 import pytest
 
 from llnl.util.filesystem import working_dir, mkdirp
 
+import spack.patch
 import spack.paths
 import spack.util.compression
 from spack.util.executable import Executable
@@ -41,8 +41,7 @@ data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
 def test_url_patch(mock_stage, filename, sha256, archive_sha256):
     # Make a patch object
     url = 'file://' + filename
-    m = sys.modules['spack.patch']
-    patch = m.Patch.create(
+    patch = spack.patch.create(
         None, url, sha256=sha256, archive_sha256=archive_sha256)
 
     # make a stage
