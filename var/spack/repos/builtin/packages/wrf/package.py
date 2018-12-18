@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import glob
 
+import glob
+import tempfile
+from os.path import dirname
+import multiprocessing as mp
 
 class Wrf(AutotoolsPackage):
     """The Weather Research and Forecasting (WRF) Model
@@ -54,7 +57,7 @@ class Wrf(AutotoolsPackage):
     depends_on('perl')
     # not sure if +fortran is required, but seems like a good idea
     depends_on('hdf5+fortran')
-    # build scripts use csh
+    # build script use csh
     depends_on('tcsh', type=('build'))
     # time is not installed on all systems b/c bash provides it
     # this fixes that for csh install scripts
@@ -70,14 +73,7 @@ class Wrf(AutotoolsPackage):
         # This gets used via the applied patch files
         spack_env.set('NETCDFF', self.spec['netcdf-fortran'].prefix)
 
-        #ss = self.spec
-        #print(dir(ss.compiler))
-        #import pdb; pdb.set_trace()
-        spack_env.set('SCC', self.compiler.cc)
-        spack_env.set('SFC', self.compiler.fc)
-
-        spack_env.set('SCC', self.compiler.cc)
-        spack_env.set('SFC', self.compiler.fc)
+        spack_env.prepend_path('PATH', dirname(self.compiler.fc))
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -115,17 +111,14 @@ class Wrf(AutotoolsPackage):
 
         nesting_value = nesting_opts[spec.variants['nesting'].value]
 
-        install_answer = [build_type + '\n', nesting_value + '\n']
-        install_answer_input = 'spack-config.in'
-        with open(install_answer_input, 'w') as f:
-            f.writelines(install_answer)
-        with open(install_answer_input, 'r') as f:
-            bash = which('bash')
-            bash('./configure', input=f)
+        with tempfile.TemporaryFile() as fp:
+            fp.write(build_type + '\n' + nesting_value + '\n')
+            fp.seek(0)
+            Executable('./configure')(input=fp)
 
     def build(self, spec, prefix):
-        sh = which('csh')
-        sh('./compile', spec.variants['compile_type'].value)
+        csh = which('csh')
+        csh('./compile', '-j', str(mp.cpu_count()), spec.variants['compile_type'].value)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
