@@ -10,7 +10,7 @@ class Tfel(CMakePackage):
     """
     The TFEL project is a collaborative development of CEA
     (French Alternative Energies and Atomic Energy Commission) and
-    EDF (Électricite de France).
+    EDF (Electricite de France).
 
     It mostly contains the MFront code generator which translates
     a set of closely related domain specific languages into plain C++
