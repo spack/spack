@@ -57,7 +57,7 @@ like build instructions and dependencies.
 One thing to look for is the ``meson_version`` key that gets passed
 to the ``project`` function:
 
-.. code-block::
+.. code-block:: none
    :emphasize-lines: 10
 
    project('gtk+', 'c',
