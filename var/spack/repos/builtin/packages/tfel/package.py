@@ -86,7 +86,7 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('boost+python', when='+python_bindings')
 
-    extends('python', when='+python')
+    extends('python', when='+python_bindings')
 
     def cmake_args(self):
 
@@ -112,25 +112,14 @@ class Tfel(CMakePackage):
         if(('+python' in self.spec) or
            ('+python_bindings' in self.spec)):
             python = self.spec['python']
-            python_prefix  = python.prefix
-            python_full_version = str(python.version.dotted).split('.')
-            if(int(python_full_version[0]) >= 3):
-                python_version = '{0}.{1}m'.format(python_full_version[0],
-                                                   python_full_version[1])
-            else:
-                python_version = '{0}.{1}'.format(python_full_version[0],
-                                                  python_full_version[1])
             args.append('-DPYTHON_LIBRARY={0}'.
-                        format(python_prefix.lib +
-                               '/libpython' + str(python_version) + '.so'))
+                        format(python.libs[0]))
             args.append('-DPYTHON_INCLUDE_DIR={0}'.
-                        format(python_prefix.include) +
-                        "/python" + str(python_version))
-            args.append('-DPython_ADDITIONAL_VERSIONS={0}.{1}'.
-                        format(python_full_version[0],
-                               python_full_version[1]))
+                        format(python.headers.directories[0]))
+            args.append('-DPython_ADDITIONAL_VERSION={0}'.
+                        format(python.version.up_to(2)))
 
-        if('+python_bindings' in self.spec):
+        if '+python_bindings' in self.spec:
             args.append('-DBOOST_ROOT={0}'.
                         format(self.spec['boost'].prefix))
 
