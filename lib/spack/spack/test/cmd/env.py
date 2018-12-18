@@ -605,7 +605,9 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     assert not test.user_specs
 
 
-def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_install(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -617,7 +619,9 @@ def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
 
 
-def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_install_package(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -628,7 +632,9 @@ def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, instal
     assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
 
 
-def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_add_concretize(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -641,7 +647,9 @@ def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install
     assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
 
 
-def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_uninstall(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -658,7 +666,9 @@ def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mock
             os.listdir(str(view_dir.join('.spack'))) == [])
 
 
-def test_env_updates_view_uninstall_referenced_elsewhere(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_uninstall_referenced_elsewhere(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -677,7 +687,9 @@ def test_env_updates_view_uninstall_referenced_elsewhere(tmpdir, mock_stage, moc
             os.listdir(str(view_dir.join('.spack'))) == [])
 
 
-def test_env_updates_view_remove_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_remove_concretize(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -697,7 +709,9 @@ def test_env_updates_view_remove_concretize(tmpdir, mock_stage, mock_fetch, inst
             os.listdir(str(view_dir.join('.spack'))) == [])
 
 
-def test_env_updates_view_force_remove(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_force_remove(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     view_dir = tmpdir.mkdir('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
