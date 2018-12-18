@@ -16,5 +16,6 @@ class PyCftime(PythonPackage):
 
     version('1.0.3.4', sha256='f261ff8c65ceef4799784cd999b256d608c177d4c90b083553aceec3b6c23fd3')
 
-    depends_on('py-cython', type='build')
+    depends_on('py-setuptools@18.0:', type='build')
+    depends_on('py-cython@0.19:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
