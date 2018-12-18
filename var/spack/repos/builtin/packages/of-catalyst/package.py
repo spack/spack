@@ -23,7 +23,7 @@ class OfCatalyst(CMakePackage):
 
     # Currently only via git
     homepage = "https://develop.openfoam.com/Community/catalyst"
-    gitrepo  = "https://develop.openfoam.com/Community/catalyst.git"
+    git = "https://develop.openfoam.com/Community/catalyst.git"
 
     version('develop', branch='develop', git=gitrepo)
     version('1806', git=gitrepo, tag='v1806')
