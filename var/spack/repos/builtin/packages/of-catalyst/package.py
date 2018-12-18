@@ -25,8 +25,8 @@ class OfCatalyst(CMakePackage):
     homepage = "https://develop.openfoam.com/Community/catalyst"
     gitrepo  = "https://develop.openfoam.com/Community/catalyst.git"
 
-    version('1806', git=gitrepo, tag='v1806')
     version('develop', branch='develop', git=gitrepo)
+    version('1806', git=gitrepo, tag='v1806')
 
     variant('full', default=False, description='Build against paraview (full) or catalyst (light)')
 
@@ -35,28 +35,14 @@ class OfCatalyst(CMakePackage):
     depends_on('catalyst@5.5:', when='~full')
     depends_on('paraview@5.5:+osmesa~qt', when='+full')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
-                             'lib'))
-
-    @property
-    def root_cmakelists_dir(self):
-        """The relative path to the directory containing CMakeLists.txt
-
-        This path is relative to the root of the extracted tarball,
-        not to the ``build_directory``. Defaults to the current directory.
-
-        :return: directory containing CMakeLists.txt
-        """
-        return join_path(self.stage.source_path, join_path('src', 'catalyst'))
+    root_cmakelists_dir = 'src/catalyst'
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
         cmake_args = [
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=%s' % join_path(
                 self.stage.source_path,
-                'spack-build'),
-            '-DCMAKE_INSTALL_PREFIX:PATH=%s' % self.prefix
+                'spack-build')
         ]
 
         return cmake_args
