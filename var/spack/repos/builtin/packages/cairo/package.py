@@ -44,9 +44,6 @@ class Cairo(AutotoolsPackage):
         else:
             args.extend(['--disable-xlib', '--disable-xcb'])
 
-        if '+pdf' in self.spec:
-            args.append('--enable-pdf')
-        else:
-            args.append('--disable-pdf')
+        args.extend(self.enable_or_disable('pdf'))
 
         return args
