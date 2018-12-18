@@ -1,0 +1,67 @@
+>> spack install tfel@master
+==> Installing diffutils
+==> Searching for binary cache of diffutils
+==> Warning: No Spack mirrors are currently configured
+==> No binary for diffutils found: installing from source
+==> Fetching https://ftp.gnu.org/gnu/diffutils/diffutils-3.6.tar.xz
+                                                                           1##                                                                         3####                                                                       5##########                                                                14################                                                          22#####################                                                     29###########################                                               38#################################                                         46########################################                                  56###############################################                           65######################################################                    76############################################################              84####################################################################      94######################################################################## 100.0%
+==> Staging archive: /Users/rafael/downloads/tfel-3.2.0/spack/var/spack/stage/diffutils-3.6-te2wy74ojq3v53ovt7s77jaxqxsmv3ly/diffutils-3.6.tar.xz
+==> Created stage in /Users/rafael/downloads/tfel-3.2.0/spack/var/spack/stage/diffutils-3.6-te2wy74ojq3v53ovt7s77jaxqxsmv3ly
+==> No patches needed for diffutils
+==> Building diffutils [AutotoolsPackage]
+==> Executing phase: 'autoreconf'
+==> Executing phase: 'configure'
+==> Executing phase: 'build'
+==> Executing phase: 'install'
+==> Successfully installed diffutils
+  Fetch: 3.94s.  Build: 3m 40.98s.  Total: 3m 44.92s.
+[+] /Users/rafael/downloads/tfel-3.2.0/spack/opt/spack/darwin-mojave-x86_64/clang-10.0.0-apple/diffutils-3.6-te2wy74ojq3v53ovt7s77jaxqxsmv3ly
+==> Installing bzip2
+==> Searching for binary cache of bzip2
+==> Warning: No Spack mirrors are currently configured
+==> No binary for bzip2 found: installing from source
+==> Fetching https://fossies.org/linux/misc/bzip2-1.0.6.tar.gz
+#                                                                          2####                                                                       6#########                                                                 12###################                                                       27#################################                                         46###################################################                       71######################################################################## 100.0%
+==> Staging archive: /Users/rafael/downloads/tfel-3.2.0/spack/var/spack/stage/bzip2-1.0.6-syohzw57v2jfag5du2x4bowziw3m5p67/bzip2-1.0.6.tar.gz
+==> Created stage in /Users/rafael/downloads/tfel-3.2.0/spack/var/spack/stage/bzip2-1.0.6-syohzw57v2jfag5du2x4bowziw3m5p67
+==> Ran patch() for bzip2
+==> Building bzip2 [Package]
+==> Executing phase: 'install'
+==> Successfully installed bzip2
+  Fetch: 3.33s.  Build: 5.89s.  Total: 9.22s.
+[+] /Users/rafael/downloads/tfel-3.2.0/spack/opt/spack/darwin-mojave-x86_64/clang-10.0.0-apple/bzip2-1.0.6-syohzw57v2jfag5du2x4bowziw3m5p67
+==> Installing pkgconf
+==> Searching for binary cache of pkgconf
+==> Warning: No Spack mirrors are currently configured
+==> No binary for pkgconf found: installing from source
+==> Fetching http://distfiles.alpinelinux.org/distfiles/pkgconf-1.5.4.tar.xz
+###                                                                        4#######                                                                   10##############                                                            20#########################                                                 34##################################################                        70######################################################################## 100.0%
+==> Staging archive: /Users/rafael/downloads/tfel-3.2.0/spack/var/spack/stage/pkgconf-1.5.4-5lntwitdekpyj43kxfincaipd3fdgmtj/pkgconf-1.5.4.tar.xz
+==> Created stage in /Users/rafael/downloads/tfel-3.2.0/spack/var/spack/stage/pkgconf-1.5.4-5lntwitdekpyj43kxfincaipd3fdgmtj
+==> No patches needed for pkgconf
+==> Building pkgconf [AutotoolsPackage]
+==> Executing phase: 'autoreconf'
+==> Executing phase: 'configure'
+==> Executing phase: 'build'
+==> Executing phase: 'install'
+==> Successfully installed pkgconf
+  Fetch: 2.14s.  Build: 41.49s.  Total: 43.63s.
+[+] /Users/rafael/downloads/tfel-3.2.0/spack/opt/spack/darwin-mojave-x86_64/clang-10.0.0-apple/pkgconf-1.5.4-5lntwitdekpyj43kxfincaipd3fdgmtj
+==> Installing ncurses
+==> Searching for binary cache of ncurses
+==> Warning: No Spack mirrors are currently configured
+==> No binary for ncurses found: installing from source
+==> Fetching https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz
+                                                                           0#                                                                          1##                                                                         3####                                                                       5#####                                                                      7#######                                                                    9########                                                                  11#########                                                                 13##########                                                                15###########                                                               16############                                                              18#############                                                             18##############                                                            20##############                                                            20.4%
+curl: (56) LibreSSL SSL_read: SSL_ERROR_SYSCALL, errno 54
+==> Fetching from https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz failed.
+==> Error: FetchError: All fetchers failed for ncurses-6.1-zvaa4lhlhilypw5quj3akyd3apbq5gap
+
+/Users/rafael/downloads/tfel-3.2.0/spack/lib/spack/spack/package.py:916, in do_fetch:
+        913                raise FetchError("Will not fetch %s" %
+        914                                 self.spec.format('$_$@'), ck_msg)
+        915
+  >>    916        self.stage.create()
+        917        self.stage.fetch(mirror_only)
+        918        self._fetch_time = time.time() - start_time
+        919
