@@ -119,7 +119,7 @@ class Tfel(CMakePackage):
                         format(python.libs[0]))
             args.append('-DPYTHON_INCLUDE_DIR={0}'.
                         format(python.headers.directories[0]))
-            args.append('-DPython_ADDITIONAL_VERSION={0}'.
+            args.append('-DPython_ADDITIONAL_VERSIONS={0}'.
                         format(python.version.up_to(2)))
 
         if '+python_bindings' in self.spec:
