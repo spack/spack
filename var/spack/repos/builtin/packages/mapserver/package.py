@@ -18,6 +18,12 @@ class Mapserver(CMakePackage):
 
     version('7.2.1', sha256='9459a7057d5a85be66a41096a5d804f74665381186c37077c94b56e784db6102')
 
+    variant('python', default=False)
+    variant('curl', default=False)
+    variant('ruby', default=False)
+    variant('java', default=False)
+    variant('perl', default=False)
+
     depends_on('libpng')
     depends_on('freetype')
     depends_on('jpeg')
@@ -32,12 +38,6 @@ class Mapserver(CMakePackage):
     depends_on('ruby', when='+ruby')
     depends_on('java', when='+java')
     depends_on('perl', when='+perl')
-
-    variant('python', default=False)
-    variant('curl', default=False)
-    variant('ruby', default=False)
-    variant('java', default=False)
-    variant('perl', default=False)
 
     extends('python', when='+python')
 
@@ -79,9 +79,13 @@ class Mapserver(CMakePackage):
         else:
             args.append('-DWITH_PERL=OFF')
 
+        if '+curl' in self.spec:
+            args.append('-DWITH_CURL=ON')
+        else:
+            args.append('-DWITH_CURL=OFF')
+
         # These things are switched on by default, although possibly some
         # should be variants.
-        args.append('-DWITH_CURL=ON')
         args.append('-DWITH_WCS=ON')
         args.append('-DWITH_WFS=ON')
         args.append('-DWITH_WMS=ON')
