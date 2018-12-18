@@ -656,30 +656,6 @@ class Environment(object):
                 os.remove(build_log_link)
             os.symlink(spec.package.build_log_path, build_log_link)
 
-    def update_view(self):
-        if not self._view_path:
-            tty.debug("Skip view update, this environment does not"
-                      " maintain a view")
-            return
-
-        # TODO: this is too verbose: it is printed in the middle of testing
-        tty.msg("Updating view at {0}".format(self._view_path))
-
-        view_specs = self._get_environment_specs()
-
-        view = self.view()
-        specs_without_build_deps = list()
-        for spec in view_specs:
-            # The view does not store build deps, so if we want it to
-            # recognize environment specs (which do store build deps), then
-            # they need to be stripped
-            specs_without_build_deps.append(
-                spack.spec.Spec.from_dict(spec.to_dict(all_deps=False)))
-
-        specs_to_add = list(x for x in specs_without_build_deps
-                            if x.package.installed)
-        view.add_specs(*specs_to_add, with_dependencies=False)
-
     def view(self):
         return YamlFilesystemView(
             self._view_path, spack.store.layout, ignore_conflicts=True)
@@ -690,10 +666,28 @@ class Environment(object):
                       " maintain a view")
             return
 
-        if os.path.exists(self._view_path):
-            tty.msg("Clearing view at {0}".format(self._view_path))
-            shutil.rmtree(self._view_path)
-        self.update_view()
+        specs_for_view = list()
+        for spec in self._get_environment_specs():
+            # The view does not store build deps, so if we want it to
+            # recognize environment specs (which do store build deps), then
+            # they need to be stripped
+            specs_for_view.append(spack.spec.Spec.from_dict(
+                spec.to_dict(all_deps=False)
+            ))
+        installed_specs_for_view = set(s for s in specs_for_view
+                                       if s.package.installed)
+
+        view = self.view()
+        view.purge_broken_links()
+        view.purge_empty_directories()
+        specs_in_view = set(view.get_all_specs())
+        tty.msg("Updating view at {0}".format(self._view_path))
+
+        rm_specs = specs_in_view - installed_specs_for_view
+        view.remove_specs(*rm_specs, with_dependents=False)
+
+        add_specs = installed_specs_for_view - specs_in_view
+        view.add_specs(*add_specs, with_dependencies=False)
 
     def _shell_vars(self):
         updates = [

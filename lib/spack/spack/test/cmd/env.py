@@ -603,3 +603,112 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     assert not test.specs_by_hash
     assert not test.concretized_order
     assert not test.user_specs
+
+
+def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('mpileaks')
+        install('--fake')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        install('--fake', 'mpileaks')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    install('--fake', 'mpileaks')
+    with ev.read('test'):
+        add('mpileaks')
+        concretize()
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        install('--fake', 'mpileaks')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        uninstall('-ay')
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == [])
+
+
+def test_env_updates_view_uninstall_referenced_elsewhere(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    install('--fake', 'mpileaks')
+    with ev.read('test'):
+        add('mpileaks')
+        concretize()
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        uninstall('-ay')
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == [])
+
+
+def test_env_updates_view_remove_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    install('--fake', 'mpileaks')
+    with ev.read('test'):
+        add('mpileaks')
+        concretize()
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        remove('mpileaks')
+        concretize()
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == [])
+
+
+def test_env_updates_view_force_remove(tmpdir, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        install('--fake', 'mpileaks')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        remove('-f', 'mpileaks')
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == [])

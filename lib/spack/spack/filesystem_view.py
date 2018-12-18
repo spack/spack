@@ -588,6 +588,17 @@ class YamlFilesystemView(FilesystemView):
                 except OSError:
                     pass
 
+    def purge_broken_links(self):
+        """
+            Ascend up from the leaves accessible from `path`
+            and remove broken links (uninstalled packages).
+        """
+        for dirpath, subdirs, files in os.walk(self.root, topdown=False):
+            for f in files:
+                filename = os.path.join(dirpath, f)
+                if not os.path.exists(filename):  # filename is broken link
+                    os.unlink(filename)
+
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)
         assert os.path.exists(path)
