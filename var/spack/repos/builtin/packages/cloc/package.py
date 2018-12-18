@@ -13,6 +13,7 @@ class Cloc(Package):
     homepage = "https://github.com/AlDanial/cloc/"
     url      = "https://github.com/AlDanial/cloc/releases/download/1.74/cloc-1.74.tar.gz"
 
+    version('1.80', sha256='082f53530eee3f9ee84ec449eca59a77ff114250cd7daf9519679537b5b21d67')
     version('1.74', '1372da13a83862c186aa0b6b0c9b86f5')
 
     depends_on('perl')

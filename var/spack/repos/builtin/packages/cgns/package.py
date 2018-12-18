@@ -21,6 +21,7 @@ class Cgns(CMakePackage):
     variant('fortran', default=False, description='Enable Fortran interface')
     variant('scoping', default=True, description='Enable scoping')
     variant('mpi', default=True, description='Enable parallel cgns')
+    variant('int64', default=False, description='Build with 64-bit integers')    
 
     depends_on('hdf5', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -47,6 +48,10 @@ class Cgns(CMakePackage):
                 '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
             ])
+
+        options.append(
+            '-DCGNS_ENABLE_64BIT:BOOL={0}'.format(
+                'ON' if '+int64' in spec else 'OFF'))
 
         if '+hdf5' in spec:
             options.extend([

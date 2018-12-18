@@ -24,6 +24,8 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.7.5', sha256='7658e7d568d74e3c4338312ee07c5313a9505bc8f25709dc0cabb9525a5bba89')
+    version('1.7.4', sha256='ef0c97fda9984f53011020aff3e61523833320f5f5719af2f2ed84463cccb98b')
     version('1.7.3', sha256='ab2d853c9ba13bcd3069fcc61c359cb412466a2e4b22ebbd2f5263cffa685126')
     version('1.7.2', sha256='29b504d78b5efd57b87d2ca6e20bc8a32b1ba55b40f5a5b7189cc0d28e43bcc0')
     version('1.6.1', sha256='4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d')
@@ -42,6 +44,10 @@ class Phist(CMakePackage):
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
                         '3: +verbose 4: +extreme 5; +debug')
+
+    variant('host', default=True,
+            description='allow PHIST to use compiler flags that lead to host-'
+            'specific code. Set this to False when cross-compiling.')
 
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
@@ -71,6 +77,12 @@ class Phist(CMakePackage):
     variant('fortran', default=True,
             description='generate Fortran 2003 bindings (requires Python3 and '
                         'a Fortran compiler)')
+
+    # in older versions, it is not possible to completely turn off OpenMP
+    conflicts('~openmp', when='@:1.7.3')
+    # in older versions, it is not possible to turn off the use of host-
+    # specific compiler flags in Release mode.
+    conflicts('~host', when='@:1.7.3')
 
     # ###################### Dependencies ##########################
 
@@ -127,6 +139,8 @@ class Phist(CMakePackage):
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DXSDK_ENABLE_Fortran:BOOL=%s'
                 % ('ON' if '+fortran' in spec else 'OFF'),
+                '-DPHIST_HOST_OPTIMIZE:BOOL=%s'
+                % ('ON' if '+host' in spec else 'OFF'),
                 ]
 
         return args

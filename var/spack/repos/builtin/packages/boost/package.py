@@ -24,6 +24,7 @@ class Boost(Package):
     list_depth = 1
 
     version('develop', branch='develop', submodules=True)
+    version('1.69.0', 'ea6eee4b5999f9c02105386850f63a53f0250eaa')
     version('1.68.0', '18863a7cae4d58ae85eb63d400f774f60a383411')
     version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae')
     version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459')
@@ -151,7 +152,7 @@ class Boost(Package):
     patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
-    patch('boost_1.67.0_pgi.patch', when='@1.67.0%pgi')
+    patch('boost_1.67.0_pgi.patch', when='@1.67.0:1.68.9999%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
@@ -365,6 +366,8 @@ class Boost(Package):
             return
 
         # Remove libraries that the release version does not support
+        if spec.satisfies('@1.69.0:'):
+            with_libs.remove('signals')
         if not spec.satisfies('@1.54.0:'):
             with_libs.remove('log')
         if not spec.satisfies('@1.53.0:'):
