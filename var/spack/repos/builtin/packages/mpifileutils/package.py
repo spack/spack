@@ -58,6 +58,10 @@ class Mpifileutils(AutotoolsPackage):
         args.append("libcircle_CFLAGS=-I%s" % self.spec['libcircle'].prefix.include)
         args.append("libcircle_LIBS=%s" % self.spec['libcircle'].libs.search_flags)
         args.append("--with-dtcmp=%s" % self.spec['dtcmp'].prefix)
+
+        if '+xattr' in self.spec:
+            args.append('CFLAGS=-DDCOPY_USE_XATTRS')
+
         if '+lustre' in self.spec:
             args.append('--enable-lustre')
         else:
@@ -68,12 +72,4 @@ class Mpifileutils(AutotoolsPackage):
                 args.append('--enable-experimental')
             else:
                 args.append('--disable-experimental')
-
         return args
-
-    @property
-    def build_targets(self):
-        targets = []
-        if '+xattr' in self.spec:
-            targets.append('CFLAGS=-DDCOPY_USE_XATTRS')
-        return targets
