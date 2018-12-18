@@ -55,6 +55,9 @@ class Mpifileutils(AutotoolsPackage):
         args = []
         args.append("libarchive_CFLAGS=-I%s" % self.spec['libarchive'].prefix.include)
         args.append("libarchive_LIBS=%s" % self.spec['libarchive'].libs.search_flags)
+        args.append("libcircle_CFLAGS=-I%s" % self.spec['libcircle'].prefix.include)
+        args.append("libcircle_LIBS=%s" % self.spec['libcircle'].libs.search_flags)
+        args.append("--with-dtcmp=%s" % self.spec['dtcmp'].prefix)
         if '+lustre' in self.spec:
             args.append('--enable-lustre')
         else:
