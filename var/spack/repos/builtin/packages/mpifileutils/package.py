@@ -54,10 +54,16 @@ class Mpifileutils(AutotoolsPackage):
     def configure_args(self):
         args = []
         args.append("CPPFLAGS=-I%s/src/common" % pwd())
-        args.append("libarchive_CFLAGS=-I%s" % self.spec['libarchive'].prefix.include)
-        args.append("libarchive_LIBS=%s %s" % (self.spec['libarchive'].libs.search_flags, self.spec['libarchive'].libs.link_flags))
-        args.append("libcircle_CFLAGS=-I%s" % self.spec['libcircle'].prefix.include)
-        args.append("libcircle_LIBS=%s %s" % (self.spec['libcircle'].libs.search_flags, self.spec['libcircle'].libs.link_flags))
+        args.append("libarchive_CFLAGS=-I%s"
+                    % self.spec['libarchive'].prefix.include)
+        args.append("libarchive_LIBS=%s %s"
+                    % (self.spec['libarchive'].libs.search_flags,
+                       self.spec['libarchive'].libs.link_flags))
+        args.append("libcircle_CFLAGS=-I%s"
+                    % self.spec['libcircle'].prefix.include)
+        args.append("libcircle_LIBS=%s %s"
+                    % (self.spec['libcircle'].libs.search_flags,
+                       self.spec['libcircle'].libs.link_flags))
         args.append("--with-dtcmp=%s" % self.spec['dtcmp'].prefix)
 
         if '+xattr' in self.spec:
