@@ -124,8 +124,10 @@ def simmetrix_makedocurl(name):
 def simmetrix_setkernelcmakeprefixpath(spec, path, env):
     if '+acis' in spec:
         env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'acisKrnl'))
+        env.append_path('LD_LIBRARY_PATH', join_path(path, 'acisKrnl'))
     if '+parasolid' in spec:
         env.append_path('CMAKE_PREFIX_PATH', join_path(path, 'psKrnl'))
+        env.append_path('LD_LIBRARY_PATH', join_path(path, 'psKrnl'))
 
 
 def simmetrix_resource(name, url, md5, condition):
